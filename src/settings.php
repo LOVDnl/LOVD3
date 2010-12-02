@@ -1,0 +1,137 @@
+<?php
+/*******************************************************************************
+ *
+ * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ *
+ * Created     : 2010-02-12
+ * Modified    : 2010-10-12
+ * For LOVD    : 3.0-pre-09
+ *
+ * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *
+ *
+ * This file is part of LOVD.
+ *
+ * LOVD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LOVD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *************/
+
+define('ROOT_PATH', './');
+require ROOT_PATH . 'inc-init.php';
+
+if ($_AUTH) {
+    // If authorized, check for updates.
+    require ROOT_PATH . 'inc-upgrade.php';
+}
+
+// Require manager clearance.
+lovd_requireAUTH(LEVEL_MANAGER);
+
+
+
+
+
+if (ACTION == 'edit') {
+    // URL: /settings?edit
+    // Edit system settings.
+
+    define('PAGE_TITLE', 'Edit system settings');
+    define('LOG_EVENT', 'ConfigEdit');
+
+    require ROOT_PATH . 'class/object_system_settings.php';
+    $_DATA = new SystemSetting();
+    $zData = $_CONF;
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Standard fields to be used.
+            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'refseq_build', 'api_feed_history', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
+
+            // Prepare values.
+            // Make sure the database URL ends in a /.
+            if ($_POST['location_url'] && substr($_POST['location_url'], -1) != '/') {
+                $_POST['location_url'] .= '/';
+            }
+
+            // Query text.
+            $sSQL = 'UPDATE ' . TABLE_CONFIG . ' SET ';
+            $aSQL = array();
+            foreach ($aFields as $key => $sField) {
+                $sSQL .= (!$key? '' : ', ') . $sField . ' = ?';
+                $aSQL[] = $_POST[$sField];
+            }
+
+            $q = lovd_queryDB($sSQL, $aSQL);
+            if (!$q) {
+                lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
+            }
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Edited system configuration');
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'setup');
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully edited the system settings!', 'success');
+
+            require 'inc-bot.php';
+            exit;
+        }
+
+    } else {
+        // Default values.
+        foreach ($zData as $key => $val) {
+            $_POST[$key] = $val;
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+    // Allow checking the database URL.
+    lovd_includeJS('inc-js-submit-settings.php');
+
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
+          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        'skip',
+                        array('', '', 'submit', PAGE_TITLE),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</TABLE></FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+?>

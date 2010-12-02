@@ -1,0 +1,71 @@
+LOVD v.3.0 INSTALLATION GUIDE
+=============================
+
+REQUIREMENTS
+============
+
+LOVD 3.0 requires a webserver (preferably Apache), PHP >= 4.3.0 and 
+MySQL >= 4.1.
+
+
+PREPARATIONS
+============
+
+To install LOVD, first copy and rename the standard config file
+config.ini.php-lovd to config.ini.php and edit it in, for example, a basic text
+editor. This is absolutely mandatory, because you will need to enter the MySQL
+hostname, database name, username and password here.
+Please go through the entire config.ini.php file to determine if you need to
+change any of the other settings.
+
+
+!!!NOTE!!!
+==========
+A .htaccess file is put in the root directory of your LOVD installation
+protecting the .ini file. This will prevent the .ini file from being viewed on
+Apache HTTP servers (if configured properly), the most commonly used webserver.
+If you use Apache, please check that your version and configuration support this
+feature. Make sure you have the .htaccess file into your LOVD directory, on Unix
+and Linux systems it's a hidden file so it can be missed easily. For the
+.htaccess file to work, you need to have "Limit" and "Options" enabled in
+Apache's "AllowOverride" setting.
+
+More information about .htaccess files:
+http://httpd.apache.org/docs/2.0/howto/htaccess.html
+
+More information about AllowOverride:
+http://httpd.apache.org/docs/2.0/mod/core.html#allowoverride
+
+If you use a different webserver, make sure to configure it to deny access to
+the config.ini file. LOVD will access the .ini file through the filesystem.
+
+
+INSTALLATION
+============
+
+To install LOVD on a remote webserver, upload the LOVD directory with all the
+files to the webserver by, for instance, FTP. If you install LOVD on your own
+computer, you do not need to follow this step.
+
+Next, point your browser to the install directory of the LOVD package.
+Installation of LOVD takes just a couple of minutes. The forms should explain
+itself. For more information, see the LOVD manual.
+
+
+QUESTIONS?
+==========
+
+If you have any questions, please see our website: www.LOVD.nl
+For the FAQ, see www.LOVD.nl/2.0/faq.php
+
+
+LOVD DEVELOPMENT TEAM
+=====================
+
+The LOVD development team currently consists of:
+Ivo Fokkema
+Gerard Schaafsma
+
+And is led by:
+Johan den Dunnen
+Peter Taschner

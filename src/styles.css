@@ -1,0 +1,209 @@
+/*******************************************************************************
+ *
+ * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ *
+ * Created     : 2009-10-20
+ * Modified    : 2010-06-25
+ * For LOVD    : 3.0-pre-07
+ *
+ * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *
+ *
+ * This file is part of LOVD.
+ *
+ * LOVD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LOVD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *************/
+
+/* Standard styles */
+body                            {font-family : Verdana, Helvetica, Arial, sans-serif; font-size : 13px; color : #000000;}
+table                           {font-family : Verdana, Helvetica, Arial, sans-serif; font-size : 13px; color : #000000; text-align : left;}
+input, textarea, button, select {font-family : Verdana, Helvetica, Arial, sans-serif; font-size : 13px; color : #000000; background : #FFFFFF; border : 1px solid #224488; margin-top : 1px; margin-bottom : 1px; padding-left : 2px; padding-right : 2px;}
+select                          {padding-left : 0px; padding-right : 0px;}
+input:hover, input:focus, textarea:hover, textarea:focus, button:hover, select:hover, select:focus
+								{background : #F0F3FF; border : 1px solid #112244;}
+
+
+
+/* Headings */
+H1             {font-size : 24px; font-weight : bold; margin-top : 0px; margin-bottom : 10px;}
+H2             {font-size : 20px; font-weight : bold; font-style : italic; margin-top : 0px; margin-bottom : 5px;}
+H2.LOVD        {margin-bottom : 10px; color : #224488; border-bottom : 1px solid #224488;}
+H3             {font-size : 18px; font-weight : bold; margin-top : 0px; margin-bottom : 2px;}
+H4             {font-size : 16px; font-weight : bold; font-style : italic; margin-top : 0px; margin-bottom : 0px;}
+H5             {font-size : 15px; font-weight : bold; margin-top : 0px; margin-bottom : 0px;}
+H6             {font-size : 14px; font-weight : bold; margin-top : 0px; margin-bottom : 0px;}
+
+.S18           {font-size : 18px;}
+.S16           {font-size : 16px;}
+.S15           {font-size : 15px;}
+.S13           {font-size : 13px;}
+.S11           {font-size : 11px;}
+.S09           {font-size : 9px;}
+
+
+
+/* Links */
+a              {color : #0000FF}
+a:active       {color : #0000FF}
+a:visited      {color : #0000FF}
+a img          {border : 0px;}
+
+
+
+/* Top table with the logo */
+table.logo           {font-size : 11px; background : #224488; color : #FFFFFF;}
+table.logo a         {color : #FFFFFF;}
+table.logo a:visited {color : #FFFFFF;}
+table.logo a:active  {color : #FFFFFF;}
+/* Needed if space shows up around the images in my top table:
+table.logo img       {display : block;}
+*/
+
+
+
+/* Top table with the submenu *//*
+table.submenu           {font-size : 11px; background : #F0F3FF; border : 1px solid #224488;}
+table.submenu table     {font-size : 11px;}
+table.submenu table td  {padding : 5px;}
+table.submenu a         {color : #000000; text-decoration : none;}
+table.submenu a:visited {color : #000000;}
+table.submenu a:active  {color : #000000;}
+
+
+
+/* Footer message: Powered by LOVD ... */
+table.footer           {font-size : 11px; background : #224488; color : #FFFFFF; border-top : 2px solid #000000; border-bottom : 2px solid #000000;}
+table.footer a         {color : #FFFFFF;}
+table.footer a:visited {color : #FFFFFF;}
+table.footer a:active  {color : #FFFFFF;}
+
+
+
+/* For lovd_showInfoTable() */
+table.info     {border : 1px solid #224488; background : #F0F3FF;}
+
+
+
+/* Error table required by lovd_displayError(); */
+table.error    {font-size : 11px; border: 1px solid #000000; background : #F0F3FF; margin-left : auto; margin-right : auto;}
+table.error th {font-size : 13px; border-bottom : 1px dotted #000000; background : #224488; color : #FFFFFF; padding : 0px 4px;}
+table.error td {padding : 0px 4px;}
+
+
+
+/* For lovd_showNavigation() */
+table.navigation                {font-size : 11px; border-top : 3px double #000000; border-bottom : 3px double #000000;}
+table.navigation a              {font-weight : bold; text-decoration : none; color : #000000;}
+table.navigation td             {padding-left : 5px; padding-right : 5px;}
+
+
+
+/* Error messages on forms, required by lovd_errorPrint() */
+div.err                         {font-size : 11px; border : 1px solid #FF0000; background : #F3F3F3; padding : 5px;}
+input.err, textarea.err, button.err, select.err
+								{border : 1px solid #EE0000;}
+input.err:hover, input.err:focus, textarea.err:hover, textarea.err:focus, button.err:hover, select.err:hover, select.err:focus
+								{background : #FFF3F0; border : 1px solid #CC0000;}
+
+
+
+
+
+/* Lines and notes on the forms */
+img.form_hr    {background : #CCCCCC;}
+img.help       {margin-top : 4px; cursor : help;}
+span.form_note {font-size : 11px; color : #666666;}
+div.tooltip    {background : #F0F3FF; border : 1px solid #224488; padding : 2px; font-size : 11px; width : 300px; position : absolute; visibility : hidden;}
+
+
+
+/* For tables on the setup page */
+table.setup                     {border : 1px solid #224488; background : #F0F3FF; padding : 5px;}
+table.setup td                  {padding-left : 5px; font-size : 11px;}
+table.setup tr.pointer          {cursor : pointer;}
+table.setup tr.pointer:hover    {background : #E0E9FF;}
+
+
+
+/* Table for LOVD gene homepage and variant detail view. *//*
+table.gene                      {border : 1px solid #AFC8FA;}
+table.gene th                   {background : #AFC8FA; padding-left : 4px; padding-right : 4px;}
+table.gene td                   {background : #F0F3FF; padding-left : 4px; padding-right : 4px;}
+
+
+
+/* Often used table for views of lists and entries. */
+table.data                      {font-size : 11px; border : 1px solid #AFC8FA;}
+table.data a                    {color : #0000FF;}
+table.data a.hide               {color : #000000; text-decoration : none;} /* Somehow it doesn't get the color-thing when it's not defined within table.data */
+table.data th                   {background : #AFC8FA; padding-left : 4px; padding-right : 4px;}
+table.data td                   {background : #F0F3FF; padding-left : 4px; padding-right : 4px;}
+table.data tr.data:hover td     {background : #C8DCFA;}
+/*table.data tr.del a             {color : #AAAAAA;}
+table.data tr.del td            {background : #F8FAFF; color : #AAAAAA;}
+table.data tr.del_hover a       {color : #AAAAAA;}
+table.data tr.del_hover td      {background : #C8DCFA; color : #AAAAAA;}
+table.data tr.marked td         {background : #FFF0F0;}
+table.data tr.marked_hover td   {background : #FAD5D5;}*/
+
+/* Used for ordering the data tables per column. */
+table.data th.order             {cursor : pointer;}
+table.data th.ordered           {background : #8CAFF0; cursor : pointer;}
+table.data td.ordered           {background : #C8DCFA;}
+/*table.data tr.del td.ordered    {background : #F0F3FF;}
+table.data tr.del_hover td.ordered    {background : #AFC8FA;}
+table.data tr.marked td.ordered {background : #FFD5D5;}
+table.data tr.marked_hover td.ordered {background : #FFC0C0;}*/
+table.data tr.data:hover td.ordered {background : #AFC8FA;}
+
+/* Searching styles... */
+table.data input                {font-size : 11px;}/*
+table.data select               {font-size : 11px;}
+table.data textarea             {font-size : 11px;}
+
+
+
+/* Table for pagination */
+table.pagesplit_nav             {font-size : 11px;}
+table.pagesplit_nav td.num      {border : 1px solid #224488; cursor : pointer; width : 20px; text-align : center;}
+table.pagesplit_nav td.selected {border : 1px solid #224488; cursor : default; width : 20px; text-align : center; background : #224488; color : #FFFFFF; font-weight : bold;}
+table.pagesplit_nav th          {border : 1px solid #224488; cursor : pointer; text-align : center; padding : 0px 5px;}
+table.pagesplit_nav th.inactive {border : 1px solid #888888; cursor : default; color : #888888;}
+table.pagesplit_nav a           {color : #000000; text-decoration: none;}
+table.pagesplit_nav select      {font-size : 11px;}
+
+
+
+/* setup_logs uses an alternative for the data table. *//*
+table.data_red                  {font-size : 11px; border : 1px solid rgb(255, 100, 100);}
+table.data_red a                {color : #000000;}
+table.data_red th               {background : rgb(255, 100, 100); padding-left : 4px; padding-right : 4px;}
+table.data_red td               {background : rgb(255, 230, 230); padding-left : 4px; padding-right : 4px;}
+table.data_red tr.hover td      {background : rgb(255, 210, 210);}
+
+/* Searching styles for the alternative data table... *//*
+table.data_red input            {font-size : 11px;}
+table.data_red select           {font-size : 11px;}
+table.data_red textarea         {font-size : 11px;}
+
+
+
+/* For Richard Heyes' AutoComplete library: *//*
+.autocomplete                  {font-family: Verdana; font-size: 11px; background-color: white; border: 1px solid black; position: absolute; cursor: default; overflow: auto; overflow-x: hidden;}
+.autocomplete_item             {padding: 1px; padding-left: 5px; color: black; width: 100%;}
+.autocomplete_item_highlighted {padding: 1px; padding-left: 5px; color: white; background-color: #0A246A;}
+*/

@@ -1,0 +1,35 @@
+# Disallow requests for the config.ini.php file, although it's already protected.
+# Requires AllowOverride Limit
+<Files config.ini.php>
+    Order deny,allow
+    Deny from all
+</Files>
+
+# Requires AllowOverride Options
+php_flag register_globals Off
+php_flag magic_quotes_gpc Off
+php_flag mysql.trace_mode Off
+
+# We rely on MultiViews or the RewriteEngine. We can't check on MultiViews here,
+# nor can we cleanly try to enable it here without the need for AllowOverride All.
+# If you do not want to use the RewriteEngine, make sure "MultiViews" is enabled
+# *explicitly* in the Apache configuration, and remove the code below.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^check_update(.*)$ check_update.php
+    RewriteRule ^columns(.*)$ columns.php
+    RewriteRule ^diseases(.*)$ diseases.php
+    RewriteRule ^genes(.*)$ genes.php
+#    RewriteRule ^install(.*)$ install/index.php # I'm having trouble using /install?etc because Apache is redirecting to /install/?etc which looses the $_POST info. Very annoying.
+    RewriteRule ^links(.*)$ links.php
+    RewriteRule ^login(.*)$ login.php
+    RewriteRule ^logout(.*)$ logout.php
+    RewriteRule ^logs(.*)$ logs.php
+    RewriteRule ^uninstall(.*)$ uninstall.php
+    RewriteRule ^users(.*)$ users.php
+    RewriteRule ^variants(.*)$ variants.php
+    RewriteRule ^settings(.*)$ settings.php
+    RewriteRule ^setup(.*)$ setup.php
+</IfModule>
