@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2010-11-24
+ * Modified    : 2010-12-09
  * For LOVD    : 3.0-pre-09
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -203,12 +203,18 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
 
     // Check if, and which, top include has been used.
     if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {
-        if (is_readable('inc-top.php')) {
+        if ($sError == 'Init') {
+            // We can't load the normal inc-top.php and inc-bot.php now, because that will result in more errors on the screen.
+            $sFile = ROOT_PATH . 'install/inc-top.php';
+        } elseif (is_readable('inc-top.php')) {
             $sFile = 'inc-top.php';
         } else {
             $sFile = ROOT_PATH . 'inc-top.php';
         }
         require $sFile;
+        if ($sFile == ROOT_PATH . 'install/inc-top.php') {
+            print('<BR>' . "\n");
+        }
 
         if (defined('PAGE_TITLE')) {
             lovd_printHeader(PAGE_TITLE);
@@ -234,7 +240,12 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     if (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false) {
         die('</BODY>' . "\n" . '</HTML>' . "\n\n");
     } elseif (defined('_INC_TOP_INCLUDED_') && _INC_TOP_INCLUDED_ === true) {
-        require ROOT_PATH . 'inc-bot.php';
+        if ($sError == 'Init') {
+            // We can't load the normal inc-top.php and inc-bot.php now, because that will result in more errors on the screen.
+            require ROOT_PATH . 'install/inc-bot.php';
+        } else {
+            require ROOT_PATH . 'inc-bot.php';
+        }
     } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
         require ROOT_PATH . 'inc-bot-clean.php';
     }

@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2010-10-12
+ * Modified    : 2010-12-09
  * For LOVD    : 3.0-pre-09
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -600,6 +600,17 @@ if ($_GET['step'] == 4 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
     if (!$hDir) {
         print('Failed to open modules directory.' . "\n" .
               '      </PRE>' . "\n");
+
+        // FIXME; TEMPORARY CODE:
+        // Yes, we know, the module directory currently does not exist!!!
+        // Already advance the install progress bar.
+        print('      <SCRIPT type="text/javascript">' . "\n" .
+              '        var bar = document.getElementById(\'lovd_install_bar\');' . "\n" .
+              '        bar.style.width = \'' . $aInstallSteps[$_GET['step'] + 1][0] . '%\'; bar.title = \'' . $aInstallSteps[$_GET['step'] + 1][0] . '%\';' . "\n" .
+              '      </SCRIPT>' . "\n\n");
+        lovd_printInstallForm(false);
+        // FIXME; TEMPORARY CODE.
+
         require 'inc-bot.php';
         exit;
     }
