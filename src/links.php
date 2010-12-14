@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2010-10-06
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-14
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -186,8 +186,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -197,7 +196,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                       ));
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -320,8 +319,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -331,7 +329,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
                       ));
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -408,8 +406,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -422,7 +419,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
                       ));
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

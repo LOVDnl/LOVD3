@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2010-06-25
- * For LOVD    : 3.0-pre-07
+ * Modified    : 2010-12-14
+ * For LOVD    : 3.0-pre-09
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -117,8 +117,16 @@ if (!isset($_COOKIE['lovd_cookie_check']) && !empty($_POST)) {
                     $_SESSION['password_force_change'] = true;
                 }
 
-                // Redirect to proper location will be done somewhere else in this code.
-                header('Location: ' . lovd_getInstallURL() . 'login');
+                // Check if referer is given, check it, then forward the user.
+                if (!empty($_POST['referer']) && strpos($_POST['referer'], lovd_getInstallURL()) === 0) {
+                    // Location is whithin this LOVD installation.
+                    $sLocation = $_POST['referer'];
+                } else {
+                    // Redirect to proper location will be done somewhere else in this code.
+                    $sLocation = lovd_getInstallURL() . 'login';
+                }
+
+                header('Location: ' . $sLocation);
                 exit;
             }
         }
@@ -155,9 +163,20 @@ if (!$_AUTH) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    // Security check will be performed when actually logging in.
+    if (empty($_POST['referer'])) {
+        if (!empty($_SERVER['HTTP_REFERER'])) {
+            $_POST['referer'] = $_SERVER['HTTP_REFERER'];
+        } else {
+            $_POST['referer'] = '';
+        }
+    }
+
     lovd_errorPrint();
 
     print('      <FORM action="login" method="post" id="login">' . "\n" .
+         (!$_POST['referer']? '' :
+          '        <INPUT type="hidden" name="referer" value="' . htmlspecialchars($_POST['referer']) . '">' . "\n") .
           '        <TABLE border="0" cellpadding="0" cellspacing="0" width="275">' . "\n" .
           '          <TR align="right">' . "\n" .
           '            <TD width="100" style="padding-right : 5px;">Username</TD>' . "\n" .

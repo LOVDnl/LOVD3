@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-12
- * Modified    : 2010-10-12
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-14
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,7 +63,8 @@ if (ACTION == 'edit') {
 
         if (!lovd_error()) {
             // Standard fields to be used.
-            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'refseq_build', 'api_feed_history', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
+            // FIXME; refseq_build is now just removed. Under certain conditions maybe it should be possible to change this setting, though.
+            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'api_feed_history', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
 
             // Prepare values.
             // Make sure the database URL ends in a /.
@@ -117,8 +118,7 @@ if (ACTION == 'edit') {
     // Allow checking the database URL.
     lovd_includeJS('inc-js-submit-settings.php');
 
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -129,7 +129,7 @@ if (ACTION == 'edit') {
                       ));
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

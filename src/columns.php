@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2010-09-24
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-14
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -257,8 +257,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of loosing data!', 'warning');
         }
 
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
-              '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
 
         // If we've been here before, select last used option.
         if (!empty($_SESSION['data_wizard']['form_type'])) {
@@ -289,7 +288,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
                       );
         lovd_viewForm($aForm);
 
-        print('</TABLE></FORM>' . "\n\n");
+        print('</FORM>' . "\n\n");
 
         require ROOT_PATH . 'inc-bot-clean.php';
         exit;
@@ -557,8 +556,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
     lovd_includeJS('inc-js-tooltip.php');
 
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
-          '        <INPUT type="hidden" name="form_type" value="' . $_POST['form_type'] . '">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+          '        <INPUT type="hidden" name="form_type" value="' . $_POST['form_type'] . '">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -621,7 +619,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
     $aForm[] = array('', '', 'submit', 'Finish');
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot-clean.php';
     exit;
@@ -780,8 +778,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
           '        <INPUT type="hidden" name="select_options" value="' . $_POST['select_options'] . '">' . "\n" .
           '        <INPUT type="hidden" name="preg_pattern" value="' . $_POST['preg_pattern'] . '">' . "\n" .
 // DMD_SPECIFIC; remove this when implemented properly.
-          '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+          '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -791,7 +788,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                       ));
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -1162,8 +1159,7 @@ die();
           '        <INPUT type="hidden" name="select_options" value="' . $_POST['select_options'] . '">' . "\n" .
           '        <INPUT type="hidden" name="preg_pattern" value="' . $_POST['preg_pattern'] . '">' . "\n" .
 // DMD_SPECIFIC; remove this when implemented properly.
-          '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+          '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n");
 /*
 
     // Allow to update all active columns as well.
@@ -1216,7 +1212,7 @@ die();
                       ));
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -1340,8 +1336,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . rawurlencode($zData['colid']) . '&amp;sent=true" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . rawurlencode($zData['colid']) . '&amp;sent=true" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -1354,7 +1349,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
     $_MODULES->processForm('SetupColumnsDelete', $aForm);
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -1502,8 +1497,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;edit_colid=' . rawurlencode($zData['colid']) . '&amp;sent=true" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;edit_colid=' . rawurlencode($zData['colid']) . '&amp;sent=true" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -1518,7 +1512,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
     $_MODULES->processForm('SetupColumnsGlobalEdit', $aForm);
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -1907,8 +1901,7 @@ authorization
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . rawurlencode($zData['colid']) . '&amp;sent=true" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . rawurlencode($zData['colid']) . '&amp;sent=true" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -1921,7 +1914,7 @@ authorization
     $_MODULES->processForm('SetupColumnsRemove', $aForm);
     lovd_viewForm($aForm);
 
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

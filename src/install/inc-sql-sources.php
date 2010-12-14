@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2009-10-23
- * For LOVD    : 3.0-pre-01
+ * Modified    : 2010-12-14
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -37,8 +37,8 @@ $aSourceSQL =
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("genecards",    "http://www.genecards.org/cgi-bin/carddisp.pl?gene={{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("genetests",    "http://www.ncbi.nlm.nih.gov/sites/GeneTests/lab/gene/{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hgmd",         "http://www.hgmd.cf.ac.uk/ac/gene.php?gene={{ ID }}")',
-                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("omim_disease", "http://www.ncbi.nlm.nih.gov/entrez/dispomim.cgi?id={{ ID }}")',
-                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("omim_gene",    "http://www.ncbi.nlm.nih.gov/entrez/dispomim.cgi?id={{ ID }}")',
+                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("omim_disease", "http://www.ncbi.nlm.nih.gov/omim/{{ ID }}")',
+                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("omim_gene",    "http://www.ncbi.nlm.nih.gov/omim/{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("uniprot",      "http://www.uniprot.org/uniprot/{{ ID }}")',
               );
 ?>

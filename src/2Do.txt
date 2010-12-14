@@ -35,9 +35,7 @@ LOVD 3.0
     Het hele HTML/XSS probleem. Nu hebben we nog overal XSS checks, behalve in de custom link script, toch? Deny HTML input voor column data?
         Het hele probleem is dat alle output moet ge-htmlspecialchar()ed worden om normaal getoond te worden als er een < in zit. Maar echte HTML gaat dan verloren.
         Toch overal maar htmlspecialchars invoeren? Dan moet bij de custom links worden uitgekeken dat het niet twee keer gebeurt, en daarnaast moeten de custom links later worden toegepast.
-    Login script: REFERER opvragen, die in hidden field zetten, DEZE CHECKEN!!! en terugsturen als succesvol ingelogd.
 ++++ListView: stick header to top met code die ook voor LOVD 2 was geschreven.
-    OMIM custom links moeten http://www.ncbi.nlm.nih.gov/omim/300377#300377Variants0027 worden, sources moeten http://www.ncbi.nlm.nih.gov/omim/{{ ID }} worden
     Een array opbouwen van $_PATH_ELEMENTS / ACTIONS met titels waar we zijn geweest (edits, dels, creates e.d. niet opgeslagen) zodat je makkelijk terug kunt?
     Probeer iets in te bouwen, dat een upgrade te negeren is. Dat dus iemand kan zeggen; ik wil blijven werken, ik weet dat er een probleem is. Maak dan het scherm duidelijk anders. Continue bericht bovenaan o.i.d.?
         $_SESSION VAR, uitgelezen door inc-top.php.
@@ -45,13 +43,11 @@ LOVD 3.0
     Revisie aanmaken ja/nee is een optie, ik hoef dan niet in de system settings te kiezen om dit aan of uit te zetten?
         Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
     Data license? Mummi schreef er over (Science Commons) 8 november 2009
-++++Edit system settings: Je hoor niet zomaar de human build te kunnen veranderen!!! alle genomische posities komen dan te vervallen!! Zet hier een waarschuwing in, of zet 't gewoon uit voor nu.
-    // Ik heb die install bar vaker nodig. Class van gemaakt. Install, uninstall en inc-upgrade.php kunnen daar dan ook gebruik van gaan maken.
+++++Ik heb die install bar vaak nodig. Class van gemaakt, is in gebruik door columns.php. Install, uninstall en inc-upgrade.php kunnen daar dan ook gebruik van gaan maken.
     Implement tokens for forms that do not ask passwords? Tokens valid for 5 minutes only? Not to prevent abuse of computers left logged in, becase the token will be regenerated, but against CSRF.
+    Create disease: probeer te standaardiseren door data op te halen van OMIM of iets anders, zoals create gene ook basis data ophaalt.
+    De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
 
-Create disease: probeer te standaardiseren door data op te halen van OMIM of iets anders, zoals create gene ook basis data ophaalt.
-++++Volgens mij moet ik alle formulieren nog bijwerken, dat ze geen openende <TABLE> meer nodig hebben, of een sluitende </TABLE>.
-Hoe kan de inc-init nou geen autocommit hebben? waarom staat dat niet aan??????????????
 wellicht IP based blocking eerder doen? geen login_attempts increment either? in de login meteen!
 WORDT EEN COLID ALTIJD MET EEN HOOFDLETTER GEMAAKT???
 col create hoeft geen insertEntry() te gebruiken ofzo? hoezo niet???

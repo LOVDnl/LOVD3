@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2010-10-12
+ * Modified    : 2010-12-13
  * For LOVD    : 3.0-pre-09
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -123,8 +123,8 @@ class SystemSetting extends Object {
                         'hr',
                         array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'checkbox', 'send_admin_submissions', 1),
                         'hr',
-                        array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
-                        'hr',
+      'refseq_build' => array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
+   'refseq_build_hr' => 'hr',
                         array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'select', 'api_feed_history', 1, $aFeedHistory, false, false, false),
                         'hr',
                         'skip',
@@ -158,7 +158,7 @@ class SystemSetting extends Object {
       'uninstall_hr' => 'hr',
                       );
         if (lovd_getProjectFile() != '/install/index.php') {
-            unset($this->aFormData['uninstall'], $this->aFormData['uninstall_hr']);
+            unset($this->aFormData['refseq_build'], $this->aFormData['refseq_build_hr'], $this->aFormData['uninstall'], $this->aFormData['uninstall_hr']);
         }
 
         return parent::getForm();

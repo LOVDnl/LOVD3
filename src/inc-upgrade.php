@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-09-16
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-14
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -132,7 +132,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_PHENOTYPE_COLS . ' CHANGE COLUMN public_form public_add TINYINT(1) UNSIGNED NOT NULL',
                                     'ALTER TABLE ' . TABLE_CURATES . ' ADD COLUMN show_order TINYINT(2) UNSIGNED NOT NULL DEFAULT 1 AFTER allow_edit',
                                   ),
-//////////////////// 3.0-pre-09; handmatig want te veel gewijzigd.
+//////////////////// 3.0-pre-09; you'll need to re-install, too much stuff changed!!!
+                    '3.0-pre-10' =>
+                             array(
+                                    'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/omim/[1]#[1]Variants[2]\" target=\"_blank\">(OMIM [2])</A>" WHERE id = 4',
+                                    'UPDATE ' . TABLE_SOURCES . ' SET url = "http://www.ncbi.nlm.nih.gov/omim/{{ ID }}" WHERE name IN ("omim_disease", "omim_gene")',
+                                  ),
                   );
 
     // Addition for upgrade to LOVD v.3.0-pre-07.
