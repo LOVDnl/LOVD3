@@ -90,7 +90,7 @@ print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="400" class
 $aForm = array(
                 array('GET', 'header', 'data', '60%', '40%'),
                 array('Delete entries older than', 'print', '<INPUT type="text" name="del_days" size="3" value="' . (isset($_GET['del_days'])? $_GET['del_days'] : '') . '">&nbsp;day(s)'),
-                array('Delete all entries in log', 'checkbox', 'delete_all', 0),
+                array('Delete all entries in log', 'checkbox', 'delete_all'),
                 array('', 'submit', 'Delete', 'delete'),
               );
 $_MODULES->processForm('SetupLogsDelete', $aForm);

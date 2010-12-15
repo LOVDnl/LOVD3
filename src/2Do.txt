@@ -48,8 +48,11 @@ LOVD 3.0
     Create disease: probeer te standaardiseren door data op te halen van OMIM of iets anders, zoals create gene ook basis data ophaalt.
     De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
 
+Kleinere dingen om te controleren:
+==================================
+Formulier voor toevoegen kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.
 wellicht IP based blocking eerder doen? geen login_attempts increment either? in de login meteen!
-WORDT EEN COLID ALTIJD MET EEN HOOFDLETTER GEMAAKT???
+Een column ID moet altijd met een hoofdletter gemaakt worden, dus daar moet een controle op!
 col create hoeft geen insertEntry() te gebruiken ofzo? hoezo niet???
 FINISH COLUMNS EDIT??? First think about how to do this???
     Display settings en global settings patient cols zijn in 2.0 gescheiden, dat heeft echt 0 nut en is verwarrend. Kappen, dus!
@@ -58,8 +61,11 @@ FINISH COLUMNS EDIT??? First think about how to do this???
         Dit al in 2.0 regelen? Zet dan op de global edit form bij de Variant cols: changes to *these* fields will not show on the gene's column display settings (whatever) unless you reset these columns to the new default settings.
 ik moet nog eens kijken naar welke formulieren een password nodig hebben
 
-+++++Add col to data table
-    // Daarna deze code naar installatie code
+Waar we echt mee bezig zijn:
+============================
+Finish add col to data table
+    (Er staan nog FIXMEs in en het bevestigingsbericht moet nog maar gekeken worden.
+    // Daarna deze code naar install/index.php kopiëren
 show genes, create, edit, delete, link naar diseases.
 linken vanaf setup naar disease opties en gene opties.
 Overnemen van LOVD2: view users zien in welke genen ze gesubmit hebben?
@@ -138,6 +144,10 @@ Update process
 
 Needed before release
 =====================
+    Hoe kunnen we multiple select velden duidelijker maken?
+        Standaard mouseover met uitleg? Standaard notes er bij?
+        Opsplitsen in twee boxen waar entries heen gesleept kunnen worden?
+        Omzetten naar lijst checkboxes?
     Loop nog een keer goed door de authenticatie heen; wat moet het publiek kunnen zien en wat niet? staat dat goed ingesteld?
     Import: choose character set
         Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2010-12-14
+ * Modified    : 2010-12-15
  * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -474,8 +474,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
                     break;
                 case 'checkbox':
                     $sMySQLType = 'TINYINT(1) UNSIGNED';
-                    // FIXME; allow option to choose from V or X?
-                    $sFormType .= '|checkbox|1';
+                    $sFormType .= '|checkbox';
                     break;
             }
 
@@ -575,14 +574,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
     $aDecimal   = array(
                     array('Number of digits before the decimal point', '', 'text', 'maxlength', 5),
                     array('Number of digits following the decimal point', '', 'text', 'scale', 5));
-    $aTime      = array(array('Also store time?', '', 'checkbox', 'time', 1));
+    $aTime      = array(array('Also store time?', '', 'checkbox', 'time'));
     $aRegExp    = array(
                     array('Regular expression pattern (optional)', '', 'text', 'preg_pattern', 50),
                     array('', '', 'note', 'Note: for advanced users only. Type in a full regular expression pattern (PHP\'s Perl-compatible regexp syntax), including \'/\' delimiters and possible modifiers. Make sure it\'s valid, otherwise you risk getting all this column\'s data input rejected.'));
     $aDefault   = array(array('Default value (optional)', '', 'text', 'default_val', 20));
-    $aPositive  = array(array('Allow only positive values', '', 'checkbox', 'unsigned', 1));
-    $aSelect    = array(array('Provide "-- select --" option', 'This will add an option called "-- select --" that will be regarded as an empty value.', 'checkbox', 'select', 1));
-    $aSelectAll = array(array('Provide "select all" link', 'This will add a link next to the selection list that allows the user to instantly select all available options.', 'checkbox', 'select_all', 1));
+    $aPositive  = array(array('Allow only positive values', '', 'checkbox', 'unsigned'));
+    $aSelect    = array(array('Provide "-- select --" option', 'This will add an option called "-- select --" that will be regarded as an empty value.', 'checkbox', 'select'));
+    $aSelectAll = array(array('Provide "select all" link', 'This will add a link next to the selection list that allows the user to instantly select all available options.', 'checkbox', 'select_all'));
     $aOptions   = array(
                     array('List of possible options', '', 'print', '<TEXTAREA name="select_options" cols="70" rows="5" class="S11">' . (empty($_POST['select_options'])? '' : $_POST['select_options']) . '</TEXTAREA>'),
                     array('', '', 'note', 'This is used to build the available options for the selection list.<BR>One option per line.<BR>If you want to use abbreviations, use: Abbreviation = Long name<BR>Example: &quot;DMD = Duchenne Muscular Dystrophy&quot;'));
@@ -1183,11 +1182,11 @@ die();
                     array('Form type', 'text', 'form_type', 30),
                     'skip',
                     array('', 'print', '<B>Column settings</B>'),
-                    array('Standard for new genes (Variant columns only)', 'checkbox', 'standard', 1),
-                    array('Mandatory field', 'checkbox', 'mandatory', 1),
-                    array('Show contents to public', 'checkbox', 'public', 1),
-                    array('Show field on public forms', 'checkbox', 'public_form', 1),
-                    array('Include in search form', 'checkbox', 'allow_count_all', 1),
+                    array('Standard for new genes (Variant columns only)', 'checkbox', 'standard'),
+                    array('Mandatory field', 'checkbox', 'mandatory'),
+                    array('Show contents to public', 'checkbox', 'public'),
+                    array('Show field on public forms', 'checkbox', 'public_form'),
+                    array('Include in search form', 'checkbox', 'allow_count_all'),
                     array('', 'print', '<SPAN class="form_note">Selecting this checkbox allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on this column.</SPAN>'),
                     'skip',
                     array('', 'print', '<B>Link settings</B>'),
@@ -1197,9 +1196,9 @@ die();
     // 2009-04-15; 2.0-18; Allow to update all active columns as well.
     if ($bInUse) {
         if (substr($zData['colid'], 0, 7) == 'Variant') {
-            $aForm[] = array('Apply changes to all genes where this column is active', 'checkbox', 'apply_to_all', 1);
+            $aForm[] = array('Apply changes to all genes where this column is active', 'checkbox', 'apply_to_all');
         } else {
-            $aForm[] = array('Apply changes to patient table where this column is active', 'checkbox', 'apply_to_all', 1);
+            $aForm[] = array('Apply changes to patient table where this column is active', 'checkbox', 'apply_to_all');
         }
     }
 *////////////////////////////////////

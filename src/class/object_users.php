@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2010-09-30
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-15
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -306,7 +306,7 @@ class User extends Object {
           'username' => array('Username', '', 'text', 'username', 20),
             'passwd' => array('Password', '', 'password', 'password_1', 20),
     'passwd_confirm' => array('Password (confirm)', '', 'password', 'password_2', 20),
-     'passwd_change' => array('Must change password at next logon', '', 'checkbox', 'password_force_change', 1),
+     'passwd_change' => array('Must change password at next logon', '', 'checkbox', 'password_force_change'),
                         'skip',
                         array('', '', 'print', '<B>Referencing the lab</B>'),
                         array('Country', '', 'select', 'countryid', 1, ($bInstall? $aCountryList : $qCountryList), true, false, false),
@@ -317,7 +317,7 @@ class User extends Object {
              'level' => array('Level', '', 'select', 'level', 1, $aUserLevels, false, false, false),
                         array('Allowed IP address list', 'To help prevent others to try and guess the username/password combination, you can restrict access to the account to a number of IP addresses or ranges.', 'text', 'allowed_ip', 20),
                         array('', '', 'note', '<I>Your current IP address: ' . $_SERVER['REMOTE_ADDR'] . '</I><BR><B>Please be extremely careful using this setting.</B> Using this setting too strictly, can deny the user access to LOVD, even if the correct credentials have been provided.<BR>Set to \'*\' to allow all IP addresses, use \'-\' to specify a range and use \';\' to separate addresses or ranges.'),
-            'locked' => array('Locked', '', 'checkbox', 'locked', 0),
+            'locked' => array('Locked', '', 'checkbox', 'locked'),
 'authorization_skip' => 'skip',
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20));
 

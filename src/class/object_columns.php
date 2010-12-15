@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2010-09-09
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-15
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -217,18 +217,18 @@ class Column extends Object {
                         'skip',
                         array('', '', 'print', '<B>Column settings</B>'),
      'settings_note' => array('', '', 'print', '<I>Please note that fields marked with * are merely default values. For each configured {{ DATATYPE }}, these values may be changed at any later time.</I>'),
-          'standard' => array('Include this column for newly configured ', '', 'checkbox', 'standard', 1),
+          'standard' => array('Include this column for newly configured ', '', 'checkbox', 'standard'),
              'width' => array('Column display width in pixels', '', 'text', 'width', 5),
                         array('', '', 'print', '<IMG src="gfx/trans.png" alt="" width="' . (int) $_POST['width'] . '" height="3" style="background : #000000;"><BR><SPAN class="form_note">(This is ' . (int) $_POST['width'] . ' pixels)</SPAN>'),
-         'mandatory' => array('Mandatory field', '', 'checkbox', 'mandatory', 1),
-       'public_view' => array('Show contents to public', '', 'checkbox', 'public_view', 1),
-        'public_add' => array('Show field on submission form', '', 'checkbox', 'public_add', 1),
+         'mandatory' => array('Mandatory field', '', 'checkbox', 'mandatory'),
+       'public_view' => array('Show contents to public', '', 'checkbox', 'public_view'),
+        'public_add' => array('Show field on submission form', '', 'checkbox', 'public_add'),
 // DMD_SPECIFIC; implement this later.
-//                        array('Include in "hidden entries" search form', '', 'checkbox', 'allow_count_all', 1),
+//                        array('Include in "hidden entries" search form', '', 'checkbox', 'allow_count_all'),
 //                        array('', '', 'print', '<SPAN class="form_note">Selecting this checkbox allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on this column.</SPAN>'),
                         'skip',
                         array('', '', 'print', '<B>Link settings</B>'),
-                        array('Active custom links', '', 'select', 'active_links', $nLinkSize, $aLinks, false, true, false),
+                        array('Active custom links', '', 'select', 'active_links', $nLinkSize, $aLinks, false, true, true),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20));
 
