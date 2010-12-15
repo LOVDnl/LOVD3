@@ -149,7 +149,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD>Manage installed LOVD modules.</TD></TR>') .
       '</TABLE>' . "\n");
 */
-          );
+		  );
 // Remove uninstall.
 if ($_CONF['lock_uninstall'] || $_AUTH['level'] < LEVEL_ADMIN) {
     unset($aItems['General LOVD Setup']['uninstall']);
@@ -175,9 +175,14 @@ print('          </TD>' . "\n" .
       '          <TD valign="top" width="50%" style="padding-left : 10px;">' . "\n");
 
 
-
-/*
+$aItems = 
+	array(
 // Gene databases.
+			'Gene databases' =>
+                 array(
+                        array('genes?create', 'lovd_database_create.png', 'Create new gene databases', 'Create a new gene database.'),
+                        array('genes', 'lovd_database_edit.png', 'View all gene databases', 'Manage configured gene databases.'),
+/*
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="2"><B>Gene databases</B></TD></TR>' . "\n" .
@@ -191,8 +196,22 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD>Manage configured gene databases.</TD></TR>') .
       '</TABLE><BR>' . "\n");
 */
+					   ),
+
+// Diseases.
+			'Diseases' =>
+                 array(
+                        array('diseases?create', 'lovd_form_question.png', 'Create new disease', 'Create a new disease.'),
+                        array('diseases', 'lovd_form_question.png', 'View all diseases', 'Manage diseases.'),
+                      ),
+
 
 // Users.
+			'Authorized users' =>
+                 array(
+                        array('users?create', 'lovd_users_create.png', 'Create new authorized user', 'Create a new authorized user.'),
+                        array('users', 'lovd_users_edit.png', 'View all users', 'Manage authorized users.'),
+/*
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TH colspan="2">Authorized users</TH></TR>' . "\n" .
@@ -202,7 +221,8 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '              <TR class="pointer" onclick="window.location.href=\'users\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_users_edit.png" alt="View all users" width="32" height="32"></TD>' . "\n" .
       '                <TD>View all users.</TD></TR></TABLE><BR>' . "\n");
-
+*/
+                      ),
 /*
 // Export central repository format.
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
@@ -213,15 +233,35 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD>Download the variant data for central repositories. This format includes the gene name, DNA change, DB ID, and possible OMIM and DbSNP IDs.</TD></TR></TABLE><BR>' . "\n");
 */
 
-// System logs.
+// System Logs.
+			'System logs' =>
+                 array(
+                        array('logs', 'lovd_logs.png', 'System logs', 'View, search and delete system logs.'),
+/*
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TH colspan="2">System logs</TH></TR>' . "\n" .
       '              <TR class="pointer" onclick="window.location.href=\'logs\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_logs.png" alt="System logs" width="32" height="32"></TD>' . "\n" .
       '                <TD>View, search and delete system logs.</TD></TR></TABLE>' . "\n");
+*/
+					  ),
+		  );
 
 
+foreach ($aItems as $sTitle => $aLinks) {
+    print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
+          '              <TR>' . "\n" .
+          '                <TH colspan="2">' . $sTitle . '</TH></TR>');
+    foreach ($aLinks as $val) {
+        list($sLink, $sIMG, $sAlt, $sText) = $val;
+        print("\n" .
+              '              <TR class="pointer" onclick="window.location.href=\'' . $sLink . '\';">' . "\n" .
+              '                <TD align="center" width="40"><IMG src="gfx/' . $sIMG . '" alt="' . $sAlt . '" width="32" height="32"></TD>' . "\n" .
+              '                <TD>' . $sText . '</TD></TR>');
+    }
+    print('</TABLE><BR>' . "\n\n");
+}
 
 print('          </TD>' . "\n" .
       '        </TR>' . "\n" .
