@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-12-14
+ * Modified    : 2010-12-16
  * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -137,6 +137,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              array(
                                     'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/omim/[1]#[1]Variants[2]\" target=\"_blank\">(OMIM [2])</A>" WHERE id = 4',
                                     'UPDATE ' . TABLE_SOURCES . ' SET url = "http://www.ncbi.nlm.nih.gov/omim/{{ ID }}" WHERE name IN ("omim_disease", "omim_gene")',
+                                    'INSERT INTO ' . TABLE_PATHOGENIC . ' (SELECT * FROM ' . TABLE_DATA_STATUS . ' WHERE id > 9)',
+                                    'DELETE FROM ' . TABLE_DATA_STATUS . ' WHERE id > 9',
                                   ),
                   );
 

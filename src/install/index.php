@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2010-12-09
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-16
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -328,7 +328,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     // (5) Registering LOVD variant pathogenicities.
     $nPathogenicities = count($_SETT['var_pathogenic_short']);
     foreach ($_SETT['var_pathogenic_short'] as $nPath => $sPath) {
-        $aInstallSQL['Registering LOVD variant pathogenicities...'][] = 'INSERT INTO ' . TABLE_DATA_STATUS . ' VALUES (' . $nPath . ', "' . $sPath . '")';
+        $aInstallSQL['Registering LOVD variant pathogenicities...'][] = 'INSERT INTO ' . TABLE_PATHOGENIC . ' VALUES (' . $nPath . ', "' . $sPath . '")';
     }
     $nInstallSQL += $nPathogenicities;
 
