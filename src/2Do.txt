@@ -67,7 +67,6 @@ Finish add col to data table
     (Er staan nog FIXMEs in en het bevestigingsbericht moet nog maar gekeken worden.
     // Daarna deze code naar install/index.php kopiëren
 show genes, create, edit, delete, link naar diseases.
-linken vanaf setup naar disease opties en gene opties.
 Overnemen van LOVD2: view users zien in welke genen ze gesubmit hebben?
 Store list_size per data type in a $_COOKIE, just like hidden columns and stuff
 USER LOCK/UNLOCK, FORCE LOGOUT, WELLICHT ALLEBEI AL MET AJAX DINGEN

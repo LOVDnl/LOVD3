@@ -201,8 +201,8 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
 // Diseases.
 			'Diseases' =>
                  array(
-                        array('diseases?create', 'lovd_form_question.png', 'Create new disease', 'Create a new disease.'),
-                        array('diseases', 'lovd_form_question.png', 'View all diseases', 'Manage diseases.'),
+                        array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease.'),
+                        array('diseases', 'lovd_question.png', 'View all diseases', 'Manage diseases.'),
                       ),
 
 
