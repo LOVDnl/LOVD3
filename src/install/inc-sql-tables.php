@@ -9,7 +9,6 @@
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -40,14 +39,6 @@
 // "Parental_origin and Origin attributes have been merged into one attribute called as genetic_source."
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
 // Allow download staat nu per gen, en de losse varianten dan?
-
-//insert into lovd_v3_genes VALUES ("DMD", "DMD", "Dystrophin", "Xp21.2", "", "", "hg19", 0, 0, 0, 0, 0, "", "", "", 0, 0, 2928, 1756, 300377, "", 1, 1, 1, "", "", 0, "", 0, "", 0, "", "", 0, "", 0, 1, NOW(), NULL, NULL, 1, NOW());
-//insert into lovd_v3_diseases values (null, "DMD", "Duchenne muscular dystrophy", 310200, 1, NOW(), NULL, NULL);
-//insert into lovd_v3_genes2diseases values ("DMD", 1);
-//insert into lovd_v3_diseases values (null, "BMD", "Becker muscular dystrophy", 300376, 1, NOW(), NULL, NULL);
-//insert into lovd_v3_genes2diseases values ("DMD", 2);
-//insert into lovd_v3_diseases values (null, "CMD-3B", "X-linked dilated cardiomyopathy", 302045, 1, NOW(), NULL, NULL);
-//insert into lovd_v3_genes2diseases values ("DMD", 3);
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {

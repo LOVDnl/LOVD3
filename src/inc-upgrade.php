@@ -5,12 +5,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-12-16
+ * Modified    : 2010-12-17
  * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -136,9 +135,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                     '3.0-pre-10' =>
                              array(
                                     'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/omim/[1]#[1]Variants[2]\" target=\"_blank\">(OMIM [2])</A>" WHERE id = 4',
-                                    'UPDATE ' . TABLE_SOURCES . ' SET url = "http://www.ncbi.nlm.nih.gov/omim/{{ ID }}" WHERE name IN ("omim_disease", "omim_gene")',
+                                    'DELETE FROM ' . TABLE_SOURCES . ' WHERE name = "omim_disease"',
+                                    'UPDATE ' . TABLE_SOURCES . ' SET name = "omim", url = "http://www.ncbi.nlm.nih.gov/omim/{{ ID }}" WHERE name = "omim_gene"',
                                     'INSERT INTO ' . TABLE_PATHOGENIC . ' (SELECT * FROM ' . TABLE_DATA_STATUS . ' WHERE id > 9)',
                                     'DELETE FROM ' . TABLE_DATA_STATUS . ' WHERE id > 9',
+                                    'UPDATE ' . TABLE_SOURCES . ' SET url = "http://www.ncbi.nlm.nih.gov/nuccore/{{ ID }}" WHERE name = "genbank"',
                                   ),
                   );
 

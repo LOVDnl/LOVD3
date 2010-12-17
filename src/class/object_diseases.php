@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2010-08-25
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-17
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -201,6 +200,10 @@ class Disease extends Object {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'diseases/' . rawurlencode($zData['id']);
             $zData['symbol'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['symbol'] . '</A>';
+        } else {
+            if (!empty($zData['id_omim'])) {
+                $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '">' . $zData['id_omim'] . '</A>';
+            }
         }
 
         return $zData;

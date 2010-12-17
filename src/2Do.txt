@@ -65,6 +65,10 @@ FINISH COLUMNS EDIT??? First think about how to do this???
         Variants & phenotypes zijn dan dus speciaal. "Edit gene-specific display settings" / "Edit disease-specific display settings" of iets dergelijks.
         Dit al in 2.0 regelen? Zet dan op de global edit form bij de Variant cols: changes to *these* fields will not show on the gene's column display settings (whatever) unless you reset these columns to the new default settings.
 ik moet nog eens kijken naar welke formulieren een password nodig hebben
+TABLE_VARIANTS_ON_TRANSCRIPTS heeft nu alleen een valid_from om te linken naar TABLE_VARIANTS. Maar dat is niet enforced, dat die combi voorkomt in TABLE_VARIANTS.
+    Hoe vaak zal de data in zowel TABLE_VARIANTS als TABLE_VARIANTS_ON_TRANSCRIPTS bewerkt worden??? Misschien moeten we het afhandelen als twee aparte entiteiten,
+        en TABLE_VARIANTS_ON_TRANSCRIPTS alle versioning kolommen geven; de juiste variant wordt er dan bijgezocht op basis van alleen de ID.
+    Kan TABLE_VARIANTS niet een AUTO_NUMBERING hebben?
 
 Waar we echt mee bezig zijn:
 ============================
