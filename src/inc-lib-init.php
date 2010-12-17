@@ -262,7 +262,7 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
     if (!count($aSources)) {
         $q = lovd_queryDB('SELECT * FROM ' . TABLE_SOURCES);
         while ($z = mysql_fetch_assoc($q)) {
-            $aSources[$z['source']] = $z['url'];
+            $aSources[$z['name']] = $z['url'];
         }
     }
     
