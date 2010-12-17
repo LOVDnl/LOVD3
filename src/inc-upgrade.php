@@ -6,7 +6,7 @@
  *
  * Created     : 2010-01-14
  * Modified    : 2010-12-17
- * For LOVD    : 3.0-pre-10
+ * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -60,40 +60,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     // Array of changes.
     $aUpdates =
              array(
-                    '3.0-pre-03' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_CONFIG . ' CHANGE COLUMN allow_unlock allow_unlock_accounts TINYINT(1) UNSIGNED NOT NULL',
-                                  ),
-                    '3.0-pre-04' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN password_autogen CHAR(32)',
-                                    'ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN phpsessid CHAR(32)',
-                                    'ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN current_db VARCHAR(12)',
-                                  ),
-                    '3.0-pre-05' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_MODULES . ' CHANGE COLUMN date_install installed_date DATE NOT NULL',
-                                    'ALTER TABLE ' . TABLE_MODULES . ' CHANGE COLUMN date_updated updated_date DATE',
-                                    'ALTER TABLE ' . TABLE_GENES . ' ADD COLUMN id_hgnc INT(10) UNSIGNED NOT NULL AFTER allow_index_wiki',
-                                    'ALTER TABLE ' . TABLE_PATIENTS . ' CHANGE COLUMN statusid statusid TINYINT(1) UNSIGNED AFTER ownerid',
-                                    'DROP TABLE ' . TABLE_SCREENING_COLS,
-                                    'RENAME TABLE ' . TABLE_PATIENT_COLS . ' TO ' . TABLE_ACTIVE_COLS,
-                                    'ALTER TABLE ' . TABLE_COLS . ' ADD COLUMN width SMALLINT(5) UNSIGNED NOT NULL AFTER col_order',
-                                    'UPDATE ' . TABLE_COLS . ' SET width = 200',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN col_order',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN width',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN mandatory',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN description_form',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN description_legend_short',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN description_legend_full',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN select_options',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN public',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN public_form',
-                                    // Note to self: This constraint name (NOT THE KEY NAME!) may not be predicable like used here.
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP FOREIGN KEY lovd_v3_active_columns_ibfk_3',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN edited_by',
-                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP COLUMN edited_date',
-                                  ),
                     '3.0-pre-06' =>
                              array(
                                     'ALTER TABLE ' . TABLE_VARIANTS . ' DROP COLUMN sort',
@@ -140,6 +106,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'INSERT INTO ' . TABLE_PATHOGENIC . ' (SELECT * FROM ' . TABLE_DATA_STATUS . ' WHERE id > 9)',
                                     'DELETE FROM ' . TABLE_DATA_STATUS . ' WHERE id > 9',
                                     'UPDATE ' . TABLE_SOURCES . ' SET url = "http://www.ncbi.nlm.nih.gov/nuccore/{{ ID }}" WHERE name = "genbank"',
+                                  ),
+                    '3.0-pre-11' =>
+                             array(
+                                    'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN id_uniprot',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN id_protein_uniprot VARCHAR(8) NOT NULL AFTER id_protein_ensembl',
                                   ),
                   );
 

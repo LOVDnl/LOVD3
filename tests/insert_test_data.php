@@ -30,7 +30,7 @@ mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nID . ', NUL
 mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nID . ', ' . $nTranscriptID . ', NULL, "X", 30, 0, 30, 0, NOW())');
 
 // Second of two transcripts, linked to this gene.
-//mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "Dystrophin Dp427c isoform", "NM_000109.3", NULL, NULL, NULL, "X", -344, 13749, 11034, 33357726, 31137345, 1, NOW(), NULL, NULL)');
+mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "Dystrophin Dp427c isoform", "NM_000109.3", NULL, NULL, NULL, "X", -344, 13749, 11034, 33357726, 31137345, 1, NOW(), NULL, NULL)');
 $nTranscriptID = mysql_insert_id();
 
 // One variant in this gene, mapped on first transcript.

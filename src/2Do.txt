@@ -50,6 +50,8 @@ LOVD 3.0
 
 Kleinere dingen om te controleren:
 ==================================
+TABLE_SOURCES heeft als kolommen name, url. Waarom niet id, url? Verander. Doe dit in install/inc-tables.php, inc-upgrade.php én inc-lib-init.php.
+Link tussen patient en disease leggen dmv koppelings tabel?
 AJAX response codes in text doen, niet meer in nummers. Bijvoorbeeld:
   OK
   SESSION_LOST

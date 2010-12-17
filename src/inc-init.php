@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2010-10-12
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-10-17
+ * For LOVD    : 3.0-pre-10
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -88,7 +87,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-pre-09',
+                            'version' => '3.0-pre-10',
                           ),
                 'user_levels' =>
                      array(
@@ -400,7 +399,7 @@ $_TABLES =
                 'TABLE_USERS' => TABLEPREFIX . '_users',
                 'TABLE_GENES' => TABLEPREFIX . '_genes',
                 'TABLE_CURATES' => TABLEPREFIX . '_users2genes',
-                'TABLE_TRANSCRIPTS' => TABLEPREFIX . '_transripts',
+                'TABLE_TRANSCRIPTS' => TABLEPREFIX . '_transcripts',
                 'TABLE_DISEASES' => TABLEPREFIX . '_diseases',
                 'TABLE_GEN2DIS' => TABLEPREFIX . '_genes2diseases',
                 'TABLE_DATA_STATUS' => TABLEPREFIX . '_data_status',

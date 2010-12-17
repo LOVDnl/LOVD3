@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2010-09-25
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-17
+ * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -108,7 +108,6 @@ $aTableSQL =
     id_hgnc INT(10) UNSIGNED NOT NULL,
     id_entrez INT(10) UNSIGNED NOT NULL,
     id_omim INT(10) UNSIGNED NOT NULL,
-    id_uniprot VARCHAR(8) NOT NULL,
     show_hgmd BOOLEAN NOT NULL,
     show_genecards BOOLEAN NOT NULL,
     show_genetests BOOLEAN NOT NULL,
@@ -162,6 +161,7 @@ $aTableSQL =
     id_ensembl VARCHAR(255) NOT NULL,
     id_protein_ncbi VARCHAR(255) NOT NULL,
     id_protein_ensembl VARCHAR(255) NOT NULL,
+    id_protein_uniprot VARCHAR(8) NOT NULL,
     chromosome VARCHAR(2) NOT NULL,
     position_c_mrna_start SMALLINT NOT NULL,
     position_c_mrna_end MEDIUMINT UNSIGNED NOT NULL,
