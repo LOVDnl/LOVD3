@@ -5,11 +5,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-12-17
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2010-12-20
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *             : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *
  *
  * This file is part of LOVD.
@@ -111,6 +112,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              array(
                                     'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN id_uniprot',
                                     'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN id_protein_uniprot VARCHAR(8) NOT NULL AFTER id_protein_ensembl',
+                                  ),
+                    '3.0-pre-12' =>
+                             array(
+                                    'INSERT INTO ' . TABLE_SOURCES . ' VALUES("hgnc", "http://www.genenames.org/data/hgnc_data.php?hgnc_id={{ ID }}")',
                                   ),
                   );
 

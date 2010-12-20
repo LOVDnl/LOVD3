@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2010-09-22
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-20
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *             : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -410,14 +410,20 @@ class Object {
         $zData = $this->prepareData($zData, 'entry');
 
         // Print the data.
-        print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
         foreach ($this->aColumnsViewEntry as $sField => $sHeader) {
-            print("\n" .
+            if (preg_match("/TableStart/", $sField)) {
+                print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
+                print('         <TH colspan="2" class="S15" valign="top">' . $sHeader . '</TH>');
+            } else if (preg_match("/TableEnd/", $sField)) {
+                print('</TABLE>' . "\n\n");
+                print('<hr>');
+            } else {
+                print("\n" .
                   '        <TR>' . "\n" .
                   '          <TH valign="top">' . str_replace(' ', '&nbsp;', $sHeader) . '</TH>' . "\n" .
                   '          <TD>' . ($zData[$sField] === ''? '' : str_replace(array("\r\n", "\r", "\n"), '<BR>', $zData[$sField])) . '</TD></TR>');
+            }
         }
-        print('</TABLE>' . "\n\n");
         return $zData;
     }
 
