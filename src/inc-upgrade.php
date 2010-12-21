@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-12-20
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2010-12-21
+ * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -112,9 +112,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              array(
                                     'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN id_uniprot',
                                     'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN id_protein_uniprot VARCHAR(8) NOT NULL AFTER id_protein_ensembl',
-                                  ),
-                    '3.0-pre-12' =>
-                             array(
                                     'INSERT INTO ' . TABLE_SOURCES . ' VALUES("hgnc", "http://www.genenames.org/data/hgnc_data.php?hgnc_id={{ ID }}")',
                                   ),
                   );
@@ -182,7 +179,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     // Try to update the upgrade lock.
     $sQ = 'UPDATE ' . TABLE_STATUS . ' SET lock_update = 1 WHERE lock_update = 0';
-    $nMax = 30;
+    $nMax = 3; //FIXME should be higher, this value is for dev only
     for ($i = 0; $i < $nMax; $i ++) {
         lovd_queryDB($sQ);
         $bLocked = !mysql_affected_rows();

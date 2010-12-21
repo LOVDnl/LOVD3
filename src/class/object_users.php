@@ -5,7 +5,7 @@
  *
  * Created     : 2009-10-21
  * Modified    : 2010-12-20
- * For LOVD    : 3.0-pre-12
+ * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -69,7 +69,6 @@ class User extends Object {
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
                  array(
-                        'TableStart_1' => 'General Information',
                         'id' => 'User ID',
                         'name' => 'Name',
                         'institute' => 'Institute',
@@ -96,7 +95,6 @@ class User extends Object {
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
                         'edited_date' => 'Date last edited',
-                        'TableEnd_1' => '',
                       );
 
         // List of columns and (default?) order for viewing a list of entries.

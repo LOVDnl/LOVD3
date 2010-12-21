@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2010-12-20
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2010-12-21
+ * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -408,14 +408,18 @@ class Object {
         }
 
         $zData = $this->prepareData($zData, 'entry');
-
+        
+        
+        print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
         // Print the data.
         foreach ($this->aColumnsViewEntry as $sField => $sHeader) {
             if (preg_match("/TableStart/", $sField)) {
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
+            } else if (preg_match("/TableHeader/", $sField)) {
                 print('         <TH colspan="2" class="S15" valign="top">' . $sHeader . '</TH>');
             } else if (preg_match("/TableEnd/", $sField)) {
                 print('</TABLE>' . "\n\n");
+            } else if (preg_match("/HR/", $sField)) {
                 print('<hr>');
             } else {
                 print("\n" .
@@ -424,6 +428,7 @@ class Object {
                   '          <TD>' . ($zData[$sField] === ''? '' : str_replace(array("\r\n", "\r", "\n"), '<BR>', $zData[$sField])) . '</TD></TR>');
             }
         }
+        print('</TABLE>' . "\n\n");
         return $zData;
     }
 
