@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2010-12-21
+ * Modified    : 2010-12-22
  * For LOVD    : 3.0-pre-11
  *
  * Access      : Administrator and managers.
@@ -67,7 +67,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /transcripts/00001
     // View specific entry.
 	
@@ -101,6 +101,91 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
     exit;
 }
 
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+    // URL: /transcripts/00001?delete
+    // Drop specific entry.
+
+    $nID = $_PATH_ELEMENTS[1];
+    define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
+    define('LOG_EVENT', 'TranscriptDelete');
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_transcripts.php';
+    $_DATA = new Transcript();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        // Mandatory fields.
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        }
+
+        // User had to enter his/her password for authorization.
+        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+            // Query text.
+            // This also deletes the entries in variants.
+            // FIXME; implement deleteEntry()
+            $sSQL = 'DELETE FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?';
+            $aSQL = array($zData['id']);
+            $q = lovd_queryDB($sSQL, $aSQL);
+            if (!$q) {
+                lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
+            }
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted transcript information entry ' . $nID . ' - ' . $zData['geneid'] . ' (' . $zData['name'] . ')');
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'transcripts');
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully deleted the transcript information entry!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_errorPrint();
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 array(
+                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('Deleting transcript information entry', '', 'print', $zData['geneid'] . ' (' . $zData['name'] . ')'),
+                        'skip',
+                        array('Enter your password for authorization', '', 'password', 'password', 20),
+                        array('', '', 'submit', 'Delete transcript information entry'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
 /*
 	// Standard query, will be extended later on.
     $sQ = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';

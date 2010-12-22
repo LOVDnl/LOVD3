@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2010-12-16
- * For LOVD    : 3.0-pre-10
+ * Modified    : 2010-12-22
+ * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -113,7 +113,6 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_edit.png" alt="Manage custom patient columns" width="32" height="32"></TD>' . "\n" .
       '                <TD>Manage selected custom patient columns.</TD></TR></TABLE><BR>' . "\n");
 */
-// Custom columns (global).
             'Custom data columns' =>
                  array(
                         array('columns?create', 'lovd_columns_create.png', 'Create new custom data column', 'Create new custom data column.'),
@@ -127,7 +126,6 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD>Import new LOVD custom columns.</TD></TR>
 */
                       ),
-            // Custom links.
             'Custom links' =>
                  array(
                         array('links?create', 'lovd_links_create.png', 'Create new custom link', 'Create a new custom link. Custom links allow you to quickly insert references to other data sources, using short tags.'),
@@ -177,7 +175,6 @@ print('          </TD>' . "\n" .
 
 $aItems = 
 	array(
-// Gene databases.
 			'Gene databases' =>
                  array(
                         array('genes?create', 'lovd_database_create.png', 'Create new gene databases', 'Create a new gene database.'),
@@ -198,15 +195,24 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
 */
 					   ),
 
-// Diseases.
 			'Diseases' =>
                  array(
                         array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease.'),
                         array('diseases', 'lovd_question.png', 'View all diseases', 'Manage diseases.'),
                       ),
 
+            'Transcripts' =>
+                 array(
+                        array('transcripts?create', 'lovd_question.png', 'Create new transcript', 'Create a new transcript.'),
+                        array('transcripts', 'lovd_question.png', 'View all transcripts', 'Manage transcripts.'),
+                      ),
 
-// Users.
+            'Variants' =>
+                 array(
+                        array('variants?create', 'lovd_question.png', 'Create new variant', 'Create a new variant.'),
+                        array('variants', 'lovd_question.png', 'View all variants', 'Manage variants.'),
+                      ),
+
 			'Authorized users' =>
                  array(
                         array('users?create', 'lovd_users_create.png', 'Create new authorized user', 'Create a new authorized user.'),

@@ -82,7 +82,7 @@ class Gene extends Object {
                         'note_index' => 'Notes for the LOVD gene homepage',
                         'note_listing' => 'Notes for the variant listings',
                         'genbank' => 'Has a genbank file',
-                        'genbank_uri' => 'Gebank URI',
+                        'genbank_uri' => 'Genbank URI',
                         'refseq' => 'Refseq',
                         'refseq_url' => 'Refseq URL',
                         'disclaimer' => 'Disclaimer',
