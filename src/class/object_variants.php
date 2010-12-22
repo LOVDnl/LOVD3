@@ -39,7 +39,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class Transcript extends Object {
+class Variant extends Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Transcript';
 
@@ -47,7 +47,7 @@ class Transcript extends Object {
 
 
 
-	function Transcript ($gene = "all")
+	function Variant ($transcript = "all")
 	{
 		// Default constructor.
         global $_AUTH;
@@ -56,32 +56,31 @@ class Transcript extends Object {
 		//$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
 		
 		// SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 't.*, uc.name AS created_by_, ue.name AS edited_by_, count(DISTINCT vot.id) AS variants';
-        $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (t.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (t.edited_by = ue.id)';
-//        $this->aSQLViewEntry['GROUP_BY'] = 't.id';
+        $this->aSQLViewEntry['SELECT']   = 'v.*, uc.name AS created_by_, ue.name AS edited_by_, count(DISTINCT vot.id) AS transcripts';
+        $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.transcriptid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (v.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (v.edited_by = ue.id)';
+//        $this->aSQLViewEntry['GROUP_BY'] = 'v.id';
 
-        // SQL code for viewing the list of transcripts
- 		$this->aSQLViewList['SELECT']   = 't.*, count(DISTINCT vot.id) AS variants';
-        $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
-        if ($gene != "all") {
-            $this->aSQLViewList['WHERE']    = 't.geneid="' . $gene . '"';
+        // SQL code for viewing the list of variants
+ 		$this->aSQLViewList['SELECT']   = 'v.*, count(DISTINCT vot.id) AS transcripts';
+        $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.transcriptid)';
+        if ($transcript != "all") {
+            $this->aSQLViewList['WHERE']    = 'vot.transcriptid="' . $transcript . '"';
         }
-        $this->aSQLViewList['GROUP_BY'] = 't.id';
-		
-        // List of columns and (default?) order for viewing an entry.
+        $this->aSQLViewList['GROUP_BY'] = 'v.id';
+
+		// List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
                  array(
-                        'name' => 'Transcript name',
-                        'id_ncbi' => 'NCBI ID',
-						'id_ensembl' => 'Ensembl ID',
-                        'id_protein_ncbi' => 'Protein - NCBI ID',
-                        'id_protein_ensembl' => 'Protein - Ensembl ID',
-                        'id_protein_uniprot' => 'Protein - Uniprot ID',
-                        'chromosome' => 'Chromosome',
+                        'patientid' => 'Patient ID',
+						'allele' => 'Allele',
+                        'pathogenicid' => 'Pathogenicity',
+                        'position_g_start' => 'Genomic start position',
+                        'position_g_end' => 'Genomic end position',
+                        'type' => 'Type',
+                        'statusid' => 'Status',
                         'created_by_' => 'Created by',
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
                       );
 
         // Because the disease information is publicly available, remove some columns for the public.
@@ -97,19 +96,19 @@ class Transcript extends Object {
                  array(
                         'id' => array(
                                     'view' => array('ID', 70),
-                                    'db'   => array('t.id', 'ASC', true)),
-                        'geneid' => array(
-                                    'view' => array('Gene ID', 70),
-                                    'db'   => array('t.geneid', 'ASC', true)),
-                        'name' => array(
-                                    'view' => array('Name', 300),
-                                    'db'   => array('t.name', 'ASC', true)),
-						'id_ncbi' => array(
-                                    'view' => array('NCBI ID', 120),
-                                    'db'   => array('t.id_ncbi', 'ASC', true)),
-                        'variants' => array(
-                                    'view' => array('Variants', 70),
-                                    'db'   => array('variants', 'ASC', true)),
+                                    'db'   => array('v.id', 'ASC', true)),
+                        'allele' => array(
+                                    'view' => array('Allele', 100),
+                                    'db'   => array('v.allele', 'ASC', true)),
+                        'pathogenicid' => array(
+                                    'view' => array('Pathogenicity', 100),
+                                    'db'   => array('v.pathogenicid', 'ASC', true)),
+						'type' => array(
+                                    'view' => array('Type', 70),
+                                    'db'   => array('v.type', 'ASC', true)),
+                        'transcripts' => array(
+                                    'view' => array('Transcripts', 100),
+                                    'db'   => array('transcripts', 'ASC', true)),
                       );
         $this->sSortDefault = 'id';
 
@@ -203,7 +202,7 @@ class Transcript extends Object {
 
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
+            $zData['row_link'] = 'variants/' . rawurlencode($zData['id']);
             //$zData['geneid'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['geneid'] . '</A>';
         }
 

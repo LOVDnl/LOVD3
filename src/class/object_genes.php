@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2010-12-20
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2010-12-21
+ * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -69,30 +69,51 @@ class Gene extends Object {
 		// List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
                  array(
-                        'TableStart_1' => 'General information',
+                        'TableHeader_General' => 'General information',
                         'symbol' => 'Gene symbol',
                         'name' => 'Gene name',
                         'chrom_location' => 'Chromosome location',
-						'genbank' => 'Has a genbank file',
-                        'allow_download' => 'Allow public to download all variant entries',
                         'reference' => 'Reference',
+                        'refseq_genomic' => 'Reference location',
+                        'url_homepage' => 'Homepage URL',
+                        'url_external' => 'External URL',
+                        'allow_download' => 'Allow public to download all variant entries',
+                        'allow_index_wiki' => 'Allow data to be indexed by WikiProfessional',
+                        'note_index' => 'Notes for the LOVD gene homepage',
+                        'note_listing' => 'Notes for the variant listings',
+                        'genbank' => 'Has a genbank file',
+                        'genbank_uri' => 'Gebank URI',
+                        'refseq' => 'Refseq',
+                        'refseq_url' => 'Refseq URL',
+                        'disclaimer' => 'Disclaimer',
+                        'disclaimer_text' => 'Disclaimer Text',
+                        'header' => 'Header',
+                        'header_align' => 'Page header (aligned to the left)',
+                        'footer' => 'Footer',
+                        'footer_align' => 'Page header (aligned to the left)',
                         'created_by_' => 'Created by',
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
                         'edited_date' => 'Date last edited',
 						'updated_by' => 'Last updated by',
 						'updated_date' => 'Date last update',
-                        'TableEnd_1' => '',
-                        'TableStart_2' => 'Additional information',
-						'variants' => 'Total number of variants',
+                        'TableEnd_General' => '',
+                        'HR_1' => '',
+                        'TableStart_Additional' => '',
+						'TableHeader_Additional' => 'Additional information',
+                        'variants' => 'Total number of variants',
 						'diseases_' => 'Associated with diseases',
-                        'TableEnd_2' => '',
-                        'TableStart_3' => 'Links to other resources',
+                        'TableEnd_Additional' => '',
+                        'HR_2' => '',
+                        'TableStart_Links' => '',
+                        'TableHeader_Links' => 'Links to other resources',
                         'id_hgnc' => 'HGNC',
                         'id_entrez' => 'Entrez Gene',
                         'id_omim' => 'OMIM - Gene',
                         'disease_omim_' => 'OMIM - Diseases',
-                        'TableEnd_3' => '',
+                        'show_hgmd' => 'HGMD',
+                        'show_genecards' => 'GeneCards',
+                        'show_genetests' => 'GeneTests',
                       );
 
         // Because the disease information is publicly available, remove some columns for the public.
@@ -217,6 +238,12 @@ class Gene extends Object {
             $zData['row_link'] = 'genes/' . rawurlencode($zData['id']);
             $zData['symbol'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['symbol'] . '</A>';
         } else {
+            $zData['allow_download']        = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
+            $zData['allow_index_wiki']               = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
+            $zData['genbank']               = '<IMG src="gfx/mark_' . $zData['genbank'] . '.png" alt="" width="11" height="11">';
+            $zData['disclaimer']               = '<IMG src="gfx/mark_' . $zData['disclaimer'] . '.png" alt="" width="11" height="11">';
+            $zData['header_align']               = '<IMG src="gfx/mark_' . $zData['header_align'] . '.png" alt="" width="11" height="11">';
+            $zData['footer_align']               = '<IMG src="gfx/mark_' . $zData['footer_align'] . '.png" alt="" width="11" height="11">';
             if (!empty($zData['id_omim'])) {
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
             }
@@ -233,6 +260,15 @@ class Gene extends Object {
                     $aDisease = explode("_", $sDisease);
                     $zData['disease_omim_'] .= '<A href="' . lovd_getExternalSource('omim', $aDisease[2], true) . '" target="_blank">' . $aDisease[1] . '(' . $aDisease[0] . ')</A><BR>';
                 }
+            }
+            if ($zData['show_hgmd']) {
+                $zData['show_hgmd'] = '<A href="' . lovd_getExternalSource('hgmd', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
+            }
+            if ($zData['show_genecards']) {
+                $zData['show_genecards'] = '<A href="' . lovd_getExternalSource('genecards', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
+            }
+            if ($zData['show_genetests']) {
+                $zData['show_genetests'] = '<A href="' . lovd_getExternalSource('genetests', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
             }
         }
 

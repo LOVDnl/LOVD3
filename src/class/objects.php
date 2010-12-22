@@ -425,7 +425,7 @@ class Object {
                 print("\n" .
                   '        <TR>' . "\n" .
                   '          <TH valign="top">' . str_replace(' ', '&nbsp;', $sHeader) . '</TH>' . "\n" .
-                  '          <TD>' . ($zData[$sField] === ''? '' : str_replace(array("\r\n", "\r", "\n"), '<BR>', $zData[$sField])) . '</TD></TR>');
+                  '          <TD>' . ($zData[$sField] === ''? '-' : str_replace(array("\r\n", "\r", "\n"), '<BR>', $zData[$sField])) . '</TD></TR>');
             }
         }
         print('</TABLE>' . "\n\n");
@@ -640,7 +640,7 @@ class Object {
             print("\n" .
                   '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (empty($zData['row_id'])? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (empty($zData['id'])? '' : ' style="cursor : pointer;"') . (empty($zData['row_link'])? '' : ' onclick="window.location.href = \'' . $zData['row_link'] . '\';"') . '>');
             foreach ($this->aColumnsViewList as $sField => $aCol) {
-                print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($aOrder[0] == $sField? ' class="ordered"' : '') . '>' . ($zData[$sField] === ''? '' : $zData[$sField]) . '</TD>');
+                print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($aOrder[0] == $sField? ' class="ordered"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
             }
             print('</TR>');
         }

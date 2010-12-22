@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2010-12-15
- * Modified    : 2010-12-20
+ * Created     : 2010-12-21
+ * Modified    : 2010-12-21
  * For LOVD    : 3.0-pre-11
  *
  * Access      : Administrator and managers.
@@ -12,8 +12,7 @@
  *               dropping existing gene databases.
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -49,15 +48,15 @@ if ($_AUTH) {
 
 
 if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
-    // URL: /genes
+    // URL: /variants
     // View all entries.
 
-    define('PAGE_TITLE', 'LOVD Setup - Manage configured genes');
+    define('PAGE_TITLE', 'LOVD Setup - Manage configured variants');
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    require ROOT_PATH . 'class/object_genes.php';
-    $_DATA = new Gene();
+    require ROOT_PATH . 'class/object_variants.php';
+    $_DATA = new Variant();
     $_DATA->viewList();
 
     require ROOT_PATH . 'inc-bot.php';
@@ -69,36 +68,35 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
-    // URL: /genes/DMD
+    // URL: /variants/00000001
     // View specific entry.
 	
     $nID = $_PATH_ELEMENTS[1];
-    define('PAGE_TITLE', 'View gene ' . $nID);
+    define('PAGE_TITLE', 'View variant #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    require ROOT_PATH . 'class/object_genes.php';
-    $_DATA = new Gene();
+    require ROOT_PATH . 'class/object_variants.php';
+    $_DATA = new Variant();
     $zData = $_DATA->viewEntry($nID);
     
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="genes/' . $nID . '?edit">Edit gene information</A>';
-        $sNavigation .= ' | <A href="genes/' . $nID . '?delete">Delete gene entry</A>';
+        $sNavigation = '<A href="variants/' . $nID . '?edit">Edit variant information</A>';
+        $sNavigation .= ' | <A href="variants/' . $nID . '?delete">Delete variant entry</A>';
     }
 
     if ($sNavigation) {
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-    
-    print('<BR><BR><H2 class="LOVD">Transcripts for gene ' . $nID . '</H2>');
-    require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new Transcript($nID);
+/*
+    print('<BR><BR><H2 class="LOVD">Variants for transcript #' . $nID . '</H2>');
+    require ROOT_PATH . 'class/object_variants.php';
+    $_DATA = new Variant();
     $zData = $_DATA->viewList();
-    
-    
+*/
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
