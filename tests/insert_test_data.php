@@ -10,8 +10,8 @@ require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/plain; charset=UTF-8');
 
 // 1 Gene.
-mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("DMD", "DMD", "Duchenne Muscular Dystrophy", "Xp21.2", "", "hg19", "", "", 0, 0, 2928, 1756, 300377, "", 1, 1, 1, "", "", 0, "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
-mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("TTN", "TTN", "Titin", "2q32", "", "hg19", "", "", 0, 0, 2928, 1756, 300377, "", 1, 1, 1, "", "", 0, "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
+mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("DMD", "DMD", "Duchenne Muscular Dystrophy", "Xp21.2", "", "hg19", "", "", 0, 0, 2928, 1756, 300377, 1, 1, 1, "", "", 0, "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
+mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("TTN", "TTN", "Titin", "2q32", "", "hg19", "", "", 0, 0, 2928, 1756, 300377, 1, 1, 1, "", "", 0, "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
 
 // Three diseases, all linked to this one gene.
 mysql_query('INSERT IGNORE INTO ' . TABLE_DISEASES . ' VALUES ("00001", "DMD", "Duchenne muscular dystrophy", 310200, 1, NOW(), NULL, NULL)');
@@ -39,5 +39,8 @@ mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES ("00000002", NULL,
 mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES ("00000002", "00001", NULL, "X", 30, 0, 30, 0, NOW())');
 
 mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES ("00003", "TTN", "Titin variant N2-A", "NM_133378.2", NULL, NULL, NULL, NULL, "2", -224, 108864, 107841, 179672150, 179781238, 1, NOW(), NULL, NULL)');
+mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES ("00000003", NULL, 0, NULL, NULL, NULL, "dup", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
+mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES ("00000003", "00003", NULL, "X", 30, 0, 30, 0, NOW())');
+mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES ("00000004", NULL, 0, NULL, NULL, NULL, "subst", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
 echo "Done!";
 ?>
