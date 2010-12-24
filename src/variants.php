@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2010-12-21
+ * Modified    : 2010-12-24
  * For LOVD    : 3.0-pre-11
  *
  * Access      : Administrator and managers.
@@ -67,7 +67,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /variants/00000001
     // View specific entry.
 	
@@ -91,16 +91,93 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-/*
-    print('<BR><BR><H2 class="LOVD">Variants for transcript #' . $nID . '</H2>');
-    require ROOT_PATH . 'class/object_variants.php';
-    $_DATA = new Variant();
-    $zData = $_DATA->viewList();
-*/
+
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
 
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+    // URL: /variants/00001?delete
+    // Drop specific entry.
+
+    $nID = $_PATH_ELEMENTS[1];
+    define('PAGE_TITLE', 'Delete variant information entry #' . $nID);
+    define('LOG_EVENT', 'VariantDelete');
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_variants.php';
+    $_DATA = new Variant();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        // Mandatory fields.
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        }
+
+        // User had to enter his/her password for authorization.
+        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+            // Query text.
+            // This also deletes the entries in variants_on_transcripts.
+            // FIXME; implement deleteEntry()
+            $sSQL = 'DELETE FROM ' . TABLE_VARIANTS . ' WHERE id = ?';
+            $aSQL = array($zData['id']);
+            $q = lovd_queryDB($sSQL, $aSQL);
+            if (!$q) {
+                lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
+            }
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant information entry ' . $nID . ' - Patient: ' . ($zData['patientid']==''? '' : 'NULL'));
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants');
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully deleted the variant information entry!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_errorPrint();
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 array(
+                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('Deleting variant information entry', '', 'print', $nID . ' - Patient: ' . (!$zData['patientid']==''? '' : 'NULL')),
+                        'skip',
+                        array('Enter your password for authorization', '', 'password', 'password', 20),
+                        array('', '', 'submit', 'Delete variant information entry'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
 /*
 	// Standard query, will be extended later on.
     $sQ = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';

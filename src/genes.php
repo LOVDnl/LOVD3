@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2010-12-22
+ * Modified    : 2010-12-24
  * For LOVD    : 3.0-pre-11
  *
  * Access      : Administrator and managers.
@@ -93,12 +93,114 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
         lovd_showNavigation($sNavigation);
     }
     
+    $_GET['search_geneid'] = $nID;
     print('<BR><BR><H2 class="LOVD">Transcripts for gene ' . $nID . '</H2>');
     require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new Transcript($nID);
+    $_DATA = new Transcript();
     $zData = $_DATA->viewList();
     
     
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+    // URL: /genes?create
+    // Create a new entry.
+
+    define('PAGE_TITLE', 'Create a new gene information entry');
+    define('LOG_EVENT', 'GeneCreate');
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_genes.php';
+    $_DATA = new Gene();
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array('symbol', 'name', 'id_omim', 'created_by', 'created_date');
+
+            // Prepare values.
+            $_POST['created_by'] = $_AUTH['id'];
+            $_POST['created_date'] = date('Y-m-d H:i:s');
+
+            $nID = $_DATA->insertEntry($_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');
+
+            // Add genes.
+            $aSuccess = array();
+            foreach ($_POST['active_genes'] as $sGene) {
+                // Add gene to disease.
+                $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
+                if (!$q) {
+                    // Silent error.
+                    lovd_writeLog('Error', LOG_EVENT, 'Gene information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
+                } else {
+                    $aSuccess[] = $sGene;
+                }
+            }
+            if (count($aSuccess)) {
+                lovd_writeLog('Event', LOG_EVENT, 'Gene information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - successfully added to gene(s) ' . implode(', ', $aSuccess));
+            }
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully created the gene information entry!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']); // Currently does not have an effect here.
+        }
+
+    } else {
+        // Default values.
+        $_DATA->setDefaultValues();
+        $_POST['reference'] = 'hg19';
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+    
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        print('      To create a new gene database, please complete the form below and press "Create" at the bottom of the form..<BR>' . "\n" .
+              '      <BR>' . "\n\n");
+    }
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        array('', '', 'submit', 'Create gene information entry'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }

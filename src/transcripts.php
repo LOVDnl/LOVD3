@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2010-12-22
+ * Modified    : 2010-12-24
  * For LOVD    : 3.0-pre-11
  *
  * Access      : Administrator and managers.
@@ -91,10 +91,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-
+    $_GET['search_transcripts'] = $nID;
     print('<BR><BR><H2 class="LOVD">Variants for transcript #' . $nID . '</H2>');
     require ROOT_PATH . 'class/object_variants.php';
-    $_DATA = new Variant($nID);
+    $_DATA = new Variant();
     $zData = $_DATA->viewList();
     
     require ROOT_PATH . 'inc-bot.php';

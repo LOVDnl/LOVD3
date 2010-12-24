@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2010-12-21
+ * Modified    : 2010-12-24
  * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,13 +41,13 @@ require_once ROOT_PATH . 'class/objects.php';
 
 class Variant extends Object {
     // This class extends the basic Object class and it handles the Link object.
-    var $sObject = 'Transcript';
+    var $sObject = 'Variant';
 
 
 
 
 
-	function Variant ($transcript = "all")
+	function Variant ()
 	{
 		// Default constructor.
         global $_AUTH;
@@ -56,16 +56,13 @@ class Variant extends Object {
 		//$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
 		
 		// SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'v.*, uc.name AS created_by_, ue.name AS edited_by_, count(DISTINCT vot.id) AS transcripts';
-        $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.transcriptid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (v.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (v.edited_by = ue.id)';
+        $this->aSQLViewEntry['SELECT']   = 'v.*, uc.name AS created_by_, ue.name AS edited_by_, count(vot.transcriptid) AS transcripts';
+        $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (v.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (v.edited_by = ue.id)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 'v.id';
 
         // SQL code for viewing the list of variants
- 		$this->aSQLViewList['SELECT']   = 'v.*, count(DISTINCT vot.id) AS transcripts';
-        $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.transcriptid)';
-        if ($transcript != "all") {
-            $this->aSQLViewList['WHERE']    = 'vot.transcriptid="' . $transcript . '"';
-        }
+ 		$this->aSQLViewList['SELECT']   = 'v.*, GROUP_CONCAT(DISTINCT vot.transcriptid ORDER BY v.id SEPARATOR ", ") AS transcripts_';
+        $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id)';
         $this->aSQLViewList['GROUP_BY'] = 'v.id';
 
 		// List of columns and (default?) order for viewing an entry.
@@ -94,6 +91,9 @@ class Variant extends Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
+                        'transcripts_' => array(
+                                    'view' => array('Transcripts', 70),
+                                    'db'   => array('transcripts_', false, true)),
                         'id' => array(
                                     'view' => array('ID', 70),
                                     'db'   => array('v.id', 'ASC', true)),
@@ -106,9 +106,6 @@ class Variant extends Object {
 						'type' => array(
                                     'view' => array('Type', 70),
                                     'db'   => array('v.type', 'ASC', true)),
-                        'transcripts' => array(
-                                    'view' => array('Transcripts', 100),
-                                    'db'   => array('transcripts', 'ASC', true)),
                       );
         $this->sSortDefault = 'id';
 

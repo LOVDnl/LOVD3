@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2010-12-21
+ * Modified    : 2010-12-24
  * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -47,7 +47,7 @@ class Transcript extends Object {
 
 
 
-	function Transcript ($gene = "all")
+	function Transcript ()
 	{
 		// Default constructor.
         global $_AUTH;
@@ -63,9 +63,6 @@ class Transcript extends Object {
         // SQL code for viewing the list of transcripts
  		$this->aSQLViewList['SELECT']   = 't.*, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
-        if ($gene != "all") {
-            $this->aSQLViewList['WHERE']    = 't.geneid="' . $gene . '"';
-        }
         $this->aSQLViewList['GROUP_BY'] = 't.id';
 		
         // List of columns and (default?) order for viewing an entry.

@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2010-12-21
+ * Modified    : 2010-12-24
  * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *
+ * Programmer : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *     
  *
  * This file is part of LOVD.
  *
@@ -148,10 +148,6 @@ class Gene extends Object {
         parent::Object();
 	}
 
-
-
-
-	/*
 	function checkFields ($aData)
     {
         // Checks fields before submission of data.
@@ -184,40 +180,169 @@ class Gene extends Object {
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
     }
-	*/
 	
-
-
-	/*
+	
 	function getForm ()
     {
         // Build the form.
 
-        // Get list of diseases, to connect gene to disease.
+        // Get list of genes
         $aData = array();
-        $qData = mysql_query('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
+        $qData = mysql_query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
         $nFieldSize = ($nData < 20? $nData : 20);
         while ($r = mysql_fetch_row($qData)) {
             $aData[$r[0]] = $r[1];
         }
+        $aSelectGenbank = array(
+                                1 => 'Uploaded own GenBank file',
+                                2 => 'NCBI GenBank record',
+                                3 => 'Mutalyzer UD identifier'
+                               );
+                                
+        $aSelectReference = array(
+                                '----' => '---- / Non-Human',
+                                'hg18' => 'hg18 / Build 36.1',
+                                'hg19' => 'hg19 / GRCh37'
+                                 );
+                                  
+        $aSelectRefseq = array(
+                                'c' => 'Coding DNA',
+                                'g' => 'Genomic'
+                              );
+                               
+        $aSelectDisclaimer = array(
+                                1 => 'Use standard LOVD disclaimer',
+                                2 => 'Use own disclaimer (enter below)'
+                                  );
+                                    
+        $aSelectHeaderFooter = array(
+                                -1 => 'Left',
+                                0  => 'Center',
+                                -2 => 'Right'
+                              );
 
         // Array which will make up the form table.
         $this->aFormData =
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        array('', '', 'print', '<B>Gene information</B>'),
-                        array('Gene abbreviation', '', 'text', 'symbol', 15),
-                        array('Gene name', '', 'text', 'name', 40),
-                        array('OMIM ID', '', 'text', 'id_omim', 10),
+                        array('', '', 'print', '<B>General information</B>'),
+                        'hr',
+                        array('Full gene name', '', 'text', 'name', 40),
+                        'hr',
+                        array('Official gene symbol', '', 'text', 'name', 10),
+                        array('', '', 'note', 'The gene symbol is used by LOVD to reference to this gene and can\'t be changed later on. To create multiple databases for one gene, append \'_\' and an indentifier, i.e. \'DMD_point\' and \'DMD_deldup\' for the DMD gene.'),
+                        'hr',
+                        array('Chromosomal location', '', 'text', 'chrom_location', 10),
+                        array('', '', 'note', 'Example: Xp21.2'),
+                        'hr',
+                        array('Date of creation (optional)', '', 'text', 'created_date', 10),
+                        array('', '', 'note', 'Format: YYYY-MM-DD. If left empty, today\'s date will be used.'),
+                        'hr',
+                        'skip',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
+                        'hr',
                         array('This gene has been linked to these diseases', '', 'select', 'active_genes', $nFieldSize, $aData, false, true, false),
+                        'hr',
+                        'skip',
+                        'skip',
+                        array('', '', 'print', '<B>Reference sequences</B>'),
+                        array('', '', 'note', 'Collecting variants requires a proper reference sequence.'),
+                        'hr',
+                        array('This gene has a GenBank file', '', 'select', 'genbank', 1, $aSelectGenbank, 'No', false, false),
+                        array('', '', 'note', 'Without a (genomic) reference sequence the variants in this LOVD database cannot be interpreted properly. A valid genomic GenBank file can be used to map your variants to a genomic location, as well as creating a human-readable reference sequence format and linking to the mutation check Mutalyzer module. Select this option if you have a GenBank file uploaded to the genbank directory, if you want to use a GenBank record at the NCBI or if you have uploaded your GenBank file to Mutalyzer.'),
+                        'hr',
+                        array('GenBank file name or ID', '', 'text', 'genbank_uri', 30),
+                        array('', '', 'note', 'If you have a GenBank file uploaded to the genbank directory, fill in the filename. If you wish to use a NCBI GenBank record, fill in the GenBank accession number. If you have uploaded your GenBank file to Mutalyzer and have received a Mutalyzer UD identifier, fill in this identifier.'),
+                        'hr',
+                        'skip',
+                        array('', '', 'note', '<B>The following three fields are for the mapping of the variants to the genomic reference sequence. They are mandatory if you have a GenBank file, and highly recommended otherwise.</B>'),
+                        'hr',
+                        array('NCBI accession number for the genomic reference sequence', '', 'text', 'refseq_genomic', 15),
+                        array('', '', 'note', 'Fill in the NCBI GenBank ID of the genomic reference sequence (NG or NC accession numbers), such as "NG_012232.1" or "NC_000023.10". If you have already provided an NG or NC accession number above, please copy that value to this field. Always include the version number as well!'),
+                        'hr',
+                        array('NCBI accession number for the transcript reference sequence', '', 'print', '<B>Transcripts here!!!</B>'),
+                        array('', '', 'note', 'Fill in the NCBI GenBank ID of the transcript reference sequence (NM/NR accession numbers), such as "NM_004006.2". If you have already provided an NM/NR accession number above, please copy that value to this field. Always include the version number as well!'),
+                        'hr',
+                        array('Human Build to map to (UCSC/NCBI)', '', 'select', 'reference', 1, $aSelectReference, '', false, false),
+                        array('', '', 'note', 'We need to know which version of the Human Build we need to map to.'),
+                        'hr',
+                        'skip',
+                        'skip',
+                        array('', '', 'print', '<B>Links to information sources (optional)</B>'),
+                        array('', '', 'note', 'Here you can add links that will be displayed on the gene\'s LOVD gene homepage.'),
+                        'hr',
+                        array('Homepage URL', '', 'text', 'name', 40),
+                        array('', '', 'note', 'If you have a separate homepage about this gene, you can specify the URL here. Format: complete URL, including "http://".'),
+                        'hr',
+                        array('External links', '', 'textarea', 'url_external', 55, 3),
+                        array('', '', 'note', 'Here you can provide links to other resources on the internet that you would like to link to. One link per line, format: complete URLs or "Description <URL>".'),
+                        'hr',
+                        array('HGNC ID', '', 'text', 'id_hgnc', 10),
+                        'hr',
+                        array('Entrez Gene (Locuslink) ID', '', 'text', 'id_entrez', 10),
+                        'hr',
+                        array('OMIM Gene ID', '', 'text', 'id_omim', 10),
+                        'hr',
+                        array('Provide link to HGMD', '', 'checkbox', 'show_hgmd'),
+                        array('', '', 'note', 'Do you want a link to this gene\'s entry in the Human Gene Mutation Database added to the homepage?'),
+                        'hr',
+                        array('Provide link to GeneCards', '', 'checkbox', 'show_genecards'),
+                        array('', '', 'note', 'Do you want a link to this gene\'s entry in the GeneCards database added to the homepage?'),
+                        'hr',
+                        array('Provide link to GeneTests', '', 'checkbox', 'show_genetest'),
+                        array('', '', 'note', 'Do you want a link to this gene\'s entry in the GeneTests database added to the homepage?'),
+                        'hr',
+                        array('This gene has a human-readable reference sequence', '', 'select', 'refseq', 1, $aSelectRefseq, 'No', false, false),
+                        array('', '', 'note', 'Although GenBank files are the official reference sequence, they are not very readable for humans. If you have a human-readable format of your reference sequence online, please select the type here.'),
+                        'hr',
+                        array('Human-readable reference sequence location', '', 'text', 'refseq_url', 40),
+                        array('', '', 'note', 'If you used our Reference Sequence Parser to create a human-readable reference sequence, the result is located at "http://chromium.liacs.nl/LOVD2/refseq/GENESYMBOL_codingDNA.html".'),
+                        'hr',
+                        'skip',
+                        'skip',
+                        array('', '', 'print', '<B>Customizations (optional)</B>'),
+                        array('', '', 'note', 'You can use the following fields to customize the gene\'s LOVD gene homepage.'),
+                        'hr',
+                        array('Citation reference(s)', '', 'textarea', 'Gene/Reference', 30, 3),
+                        array('', '', 'note', '(Active custom link : <A href="#" onclick="javascript:lovd_openWindow(\'' . ROOT_PATH . 'links.php?view=1&amp;col=Gene/Reference\', \'LinkView\', \'800\', \'200\'); return false;">PubMed</A>)'),
+                        'hr',
+                        array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, 'No', false, false),
+                        array('', '', 'note', 'If you want a disclaimer added to the gene\'s LOVD gene homepage, select your preferred option here.'),
+                        'hr',
+                        array('Text for own disclaimer', '', 'textarea', 'disclaimer_text', 55, 3),
+                        array('', '', 'note', 'Only applicable if you choose to use your own disclaimer (see option above).'),
+                        'hr',
+                        array('Page header', '', 'textarea', 'header', 55, 3),
+                        array('', '', 'note', 'Text entered here will appear above all public gene-specific pages.'),
+                        array('Header aligned to', '', 'select', 'header_align', 1, $aSelectHeaderFooter, false, false, false),
+                        'hr',
+                        array('Page footer', '', 'textarea', 'footer', 55, 3),
+                        array('', '', 'note', 'Text entered here will appear below all public gene-specific pages.'),
+                        array('Footer aligned to', '', 'select', 'footer_align', 1, $aSelectHeaderFooter, false, false, false),
+                        'hr',
+                        array('Notes for the LOVD gene homepage', '', 'textarea', 'note_index', 55, 3),
+                        array('', '', 'note', 'Text entered here will appear in the General Information box on the gene\'s LOVD gene homepage.'),
+                        'hr',
+                        array('Notes for the variant listings', '', 'textarea', 'note_listing', 55, 3),
+                        array('', '', 'note', 'Text entered here will appear below the gene\'s variant listings.'),
+                        'hr',
+                        'skip',
+                        'skip',
+                        array('', '', 'print', '<B>Security settings</B>'),
+                        array('', '', 'note', 'Using the following settings you can control some security settings of LOVD.'),
+                        'hr',
+                        array('Allow public to download variant entries', '', 'checkbox', 'allow_download'),
+                        'hr',
+                        array('Allow my public variant and patient data to be indexed by WikiProfessional', '', 'checkbox', 'allow_index_wiki'),
+                        'hr',
+                        'skip',
                   );
 
         return parent::getForm();
     }
-	*/
+	
 	
 	
 	
