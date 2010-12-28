@@ -4,22 +4,19 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2010-12-24
- * For LOVD    : 3.0-pre-11
- *
- * Access      : Administrator and managers.
- * Purpose     : Allows to create new genes, edit previously added genes and
- *               dropping existing gene databases.
+ * Modified    : 2010-12-28
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
  *
- * LOVD is free software; you can redistribute it and/or modify
+ * LOVD is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * LOVD is distributed in the hope that it will be useful,
@@ -28,8 +25,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with LOVD; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
 
@@ -70,7 +66,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /transcripts/00001
     // View specific entry.
-	
+
     $nID = $_PATH_ELEMENTS[1];
     define('PAGE_TITLE', 'View transcript #' . $nID);
     require ROOT_PATH . 'inc-top.php';
@@ -91,7 +87,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-    $_GET['search_transcripts'] = $nID;
+    $_GET['search_transcripts_'] = $nID;
     print('<BR><BR><H2 class="LOVD">Variants for transcript #' . $nID . '</H2>');
     require ROOT_PATH . 'class/object_variants.php';
     $_DATA = new Variant();
@@ -187,7 +183,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     exit;
 }
 /*
-	// Standard query, will be extended later on.
+    // Standard query, will be extended later on.
     $sQ = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
 
     // SORT: Current settings.

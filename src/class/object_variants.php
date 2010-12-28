@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2010-12-24
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2010-12-28
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -47,29 +48,30 @@ class Variant extends Object {
 
 
 
-	function Variant ()
-	{
-		// Default constructor.
+    function Variant ()
+    {
+        // Default constructor.
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-		//$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
-		
-		// SQL code for viewing an entry.
+        //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
+
+        // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'v.*, uc.name AS created_by_, ue.name AS edited_by_, count(vot.transcriptid) AS transcripts';
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (v.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (v.edited_by = ue.id)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 'v.id';
 
         // SQL code for viewing the list of variants
- 		$this->aSQLViewList['SELECT']   = 'v.*, GROUP_CONCAT(DISTINCT vot.transcriptid ORDER BY v.id SEPARATOR ", ") AS transcripts_';
+//      $this->aSQLViewList['SELECT']   = 'v.*, GROUP_CONCAT(DISTINCT vot.transcriptid ORDER BY v.id SEPARATOR ", ") AS transcripts_';
+        $this->aSQLViewList['SELECT']   = 'v.*, vot.transcriptid AS transcripts_';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id)';
         $this->aSQLViewList['GROUP_BY'] = 'v.id';
 
-		// List of columns and (default?) order for viewing an entry.
+        // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
                  array(
                         'patientid' => 'Patient ID',
-						'allele' => 'Allele',
+                        'allele' => 'Allele',
                         'pathogenicid' => 'Pathogenicity',
                         'position_g_start' => 'Genomic start position',
                         'position_g_end' => 'Genomic end position',
@@ -93,7 +95,7 @@ class Variant extends Object {
                  array(
                         'transcripts_' => array(
                                     'view' => array('Transcripts', 70),
-                                    'db'   => array('transcripts_', false, true)),
+                                    'db'   => array('vot.transcriptid', false, true)),
                         'id' => array(
                                     'view' => array('ID', 70),
                                     'db'   => array('v.id', 'ASC', true)),
@@ -103,20 +105,20 @@ class Variant extends Object {
                         'pathogenicid' => array(
                                     'view' => array('Pathogenicity', 100),
                                     'db'   => array('v.pathogenicid', 'ASC', true)),
-						'type' => array(
+                        'type' => array(
                                     'view' => array('Type', 70),
                                     'db'   => array('v.type', 'ASC', true)),
                       );
         $this->sSortDefault = 'id';
 
         parent::Object();
-	}
+    }
 
 
 
 
-	/*
-	function checkFields ($aData)
+    /*
+    function checkFields ($aData)
     {
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
@@ -148,12 +150,12 @@ class Variant extends Object {
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
     }
-	*/
-	
+    */
 
 
-	/*
-	function getForm ()
+
+    /*
+    function getForm ()
     {
         // Build the form.
 
@@ -181,12 +183,12 @@ class Variant extends Object {
 
         return parent::getForm();
     }
-	*/
-	
-	
-	
-	
-	function prepareData ($zData = '', $sView = 'list')
+    */
+
+
+
+
+    function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
 

@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2010-12-24
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2010-12-28
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *     
  *
  * This file is part of LOVD.
@@ -47,26 +48,26 @@ class Gene extends Object {
 
 
 
-	function Gene ()
-	{
-		// Default constructor.
+    function Gene ()
+    {
+        // Default constructor.
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-		//$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
-		
-		// SQL code for viewing an entry.
+        //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
+
+        // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, GROUP_CONCAT(DISTINCT d.symbol, "_", d.name, "_", d.id_omim ORDER BY g2d.diseaseid SEPARATOR ", ") AS disease_omim_, uc.name AS created_by_, ue.name AS edited_by_, uu.name AS updated_by, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) LEFT JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
 
         // SQL code for viewing the list of genes
- 		$this->aSQLViewList['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, count(DISTINCT vot.id) AS variants';
+        $this->aSQLViewList['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
-		
+
         
-		// List of columns and (default?) order for viewing an entry.
+        // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
                  array(
                         'TableHeader_General' => 'General information',
@@ -81,8 +82,6 @@ class Gene extends Object {
                         'allow_index_wiki' => 'Allow data to be indexed by WikiProfessional',
                         'note_index' => 'Notes for the LOVD gene homepage',
                         'note_listing' => 'Notes for the variant listings',
-                        'genbank' => 'Has a genbank file',
-                        'genbank_uri' => 'Genbank URI',
                         'refseq' => 'Refseq',
                         'refseq_url' => 'Refseq URL',
                         'disclaimer' => 'Disclaimer',
@@ -95,14 +94,14 @@ class Gene extends Object {
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
                         'edited_date' => 'Date last edited',
-						'updated_by' => 'Last updated by',
-						'updated_date' => 'Date last update',
+                        'updated_by' => 'Last updated by',
+                        'updated_date' => 'Date last update',
                         'TableEnd_General' => '',
                         'HR_1' => '',
                         'TableStart_Additional' => '',
-						'TableHeader_Additional' => 'Additional information',
+                        'TableHeader_Additional' => 'Additional information',
                         'variants' => 'Total number of variants',
-						'diseases_' => 'Associated with diseases',
+                        'diseases_' => 'Associated with diseases',
                         'TableEnd_Additional' => '',
                         'HR_2' => '',
                         'TableStart_Links' => '',
@@ -136,19 +135,23 @@ class Gene extends Object {
                         'chrom_location' => array(
                                     'view' => array('Chrom.', 70),
                                     'db'   => array('g.chrom_location', false, true)),
-						'variants' => array(
+                        'variants' => array(
                                     'view' => array('Variants', 70),
                                     'db'   => array('variants', 'ASC', true)),
-						'diseases_' => array(
-									'view' => array('Associated with diseases', 200),
-									'db'   => array('diseases_', false, true)),
+                        'diseases_' => array(
+                                    'view' => array('Associated with diseases', 200),
+                                    'db'   => array('diseases_', false, true)),
                       );
         $this->sSortDefault = 'symbol';
 
         parent::Object();
-	}
+    }
 
-	function checkFields ($aData)
+
+
+
+
+    function checkFields ($aData)
     {
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
@@ -180,9 +183,12 @@ class Gene extends Object {
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
     }
-	
-	
-	function getForm ()
+
+
+
+
+
+    function getForm ()
     {
         // Build the form.
 
@@ -194,12 +200,6 @@ class Gene extends Object {
         while ($r = mysql_fetch_row($qData)) {
             $aData[$r[0]] = $r[1];
         }
-        $aSelectGenbank = array(
-                                1 => 'Uploaded own GenBank file',
-                                2 => 'NCBI GenBank record',
-                                3 => 'Mutalyzer UD identifier'
-                               );
-                                
         $aSelectReference = array(
                                 '----' => '---- / Non-Human',
                                 'hg18' => 'hg18 / Build 36.1',
@@ -210,12 +210,10 @@ class Gene extends Object {
                                 'c' => 'Coding DNA',
                                 'g' => 'Genomic'
                               );
-                               
         $aSelectDisclaimer = array(
                                 1 => 'Use standard LOVD disclaimer',
                                 2 => 'Use own disclaimer (enter below)'
                                   );
-                                    
         $aSelectHeaderFooter = array(
                                 -1 => 'Left',
                                 0  => 'Center',
@@ -250,20 +248,17 @@ class Gene extends Object {
                         array('', '', 'print', '<B>Reference sequences</B>'),
                         array('', '', 'note', 'Collecting variants requires a proper reference sequence.'),
                         'hr',
-                        array('This gene has a GenBank file', '', 'select', 'genbank', 1, $aSelectGenbank, 'No', false, false),
-                        array('', '', 'note', 'Without a (genomic) reference sequence the variants in this LOVD database cannot be interpreted properly. A valid genomic GenBank file can be used to map your variants to a genomic location, as well as creating a human-readable reference sequence format and linking to the mutation check Mutalyzer module. Select this option if you have a GenBank file uploaded to the genbank directory, if you want to use a GenBank record at the NCBI or if you have uploaded your GenBank file to Mutalyzer.'),
-                        'hr',
-                        array('GenBank file name or ID', '', 'text', 'genbank_uri', 30),
-                        array('', '', 'note', 'If you have a GenBank file uploaded to the genbank directory, fill in the filename. If you wish to use a NCBI GenBank record, fill in the GenBank accession number. If you have uploaded your GenBank file to Mutalyzer and have received a Mutalyzer UD identifier, fill in this identifier.'),
+                        array('', '', 'note', '<B>Find a proper place for this text here!!!</B><BR>Without a (genomic) reference sequence the variants in this LOVD database cannot be interpreted properly. A valid genomic reference sequence can be used to map your variants to a genomic location, as well as creating a human-readable reference sequence format and linking to the mutation check Mutalyzer module.'),
+                        array('', '', 'note', 'If you wish to use a NCBI GenBank record, fill in the GenBank accession number. If you have uploaded your GenBank file to Mutalyzer and have received a Mutalyzer UD identifier, fill in this identifier.'),
                         'hr',
                         'skip',
-                        array('', '', 'note', '<B>The following three fields are for the mapping of the variants to the genomic reference sequence. They are mandatory if you have a GenBank file, and highly recommended otherwise.</B>'),
+                        array('', '', 'note', '<B>The following three fields are for the mapping of the variants to the genomic reference sequence. They are mandatory, as variants without properly configured reference sequences, cannot be interpreted properly.</B>'),
                         'hr',
                         array('NCBI accession number for the genomic reference sequence', '', 'text', 'refseq_genomic', 15),
-                        array('', '', 'note', 'Fill in the NCBI GenBank ID of the genomic reference sequence (NG or NC accession numbers), such as "NG_012232.1" or "NC_000023.10". If you have already provided an NG or NC accession number above, please copy that value to this field. Always include the version number as well!'),
+                        array('', '', 'note', 'Fill in the NCBI GenBank ID of the genomic reference sequence (NG or NC accession numbers), such as "NG_012232.1" or "NC_000023.10". Always include the version number as well!'),
                         'hr',
                         array('NCBI accession number for the transcript reference sequence', '', 'print', '<B>Transcripts here!!!</B>'),
-                        array('', '', 'note', 'Fill in the NCBI GenBank ID of the transcript reference sequence (NM/NR accession numbers), such as "NM_004006.2". If you have already provided an NM/NR accession number above, please copy that value to this field. Always include the version number as well!'),
+                        array('', '', 'note', 'Fill in the NCBI GenBank ID of the transcript reference sequence (NM/NR accession numbers), such as "NM_004006.2". Always include the version number as well!'),
                         'hr',
                         array('Human Build to map to (UCSC/NCBI)', '', 'select', 'reference', 1, $aSelectReference, '', false, false),
                         array('', '', 'note', 'We need to know which version of the Human Build we need to map to.'),
@@ -342,12 +337,12 @@ class Gene extends Object {
 
         return parent::getForm();
     }
-	
-	
-	
-	
-	
-	function prepareData ($zData = '', $sView = 'list')
+
+
+
+
+
+    function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
 
@@ -363,12 +358,11 @@ class Gene extends Object {
             $zData['row_link'] = 'genes/' . rawurlencode($zData['id']);
             $zData['symbol'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['symbol'] . '</A>';
         } else {
-            $zData['allow_download']        = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
-            $zData['allow_index_wiki']               = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
-            $zData['genbank']               = '<IMG src="gfx/mark_' . $zData['genbank'] . '.png" alt="" width="11" height="11">';
-            $zData['disclaimer']               = '<IMG src="gfx/mark_' . $zData['disclaimer'] . '.png" alt="" width="11" height="11">';
-            $zData['header_align']               = '<IMG src="gfx/mark_' . $zData['header_align'] . '.png" alt="" width="11" height="11">';
-            $zData['footer_align']               = '<IMG src="gfx/mark_' . $zData['footer_align'] . '.png" alt="" width="11" height="11">';
+            $zData['allow_download']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
+            $zData['allow_index_wiki'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
+            $zData['disclaimer']       = '<IMG src="gfx/mark_' . $zData['disclaimer'] . '.png" alt="" width="11" height="11">';
+            $zData['header_align']     = '<IMG src="gfx/mark_' . $zData['header_align'] . '.png" alt="" width="11" height="11">';
+            $zData['footer_align']     = '<IMG src="gfx/mark_' . $zData['footer_align'] . '.png" alt="" width="11" height="11">';
             if (!empty($zData['id_omim'])) {
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
             }

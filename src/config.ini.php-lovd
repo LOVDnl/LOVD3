@@ -1,9 +1,9 @@
+                                <?php exit(); ?>                                
+#################### DO NOT MODIFY OR REMOVE THE LINE ABOVE ####################
 ################################################################################
 #                              LOVD settings file                              #
 #                                    v. 3.0                                    #
 ################################################################################
-#                               <?php exit(); ?>                               #
-#                    DO NOT MODIFY OR REMOVE THE LINE ABOVE                    #
 #                                                                              #
 # Lines starting with # are comments and ignored by LOVD, as are empty lines.  #
 #                                                                              #

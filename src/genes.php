@@ -7,10 +7,6 @@
  * Modified    : 2010-12-24
  * For LOVD    : 3.0-pre-11
  *
- * Access      : Administrator and managers.
- * Purpose     : Allows to create new genes, edit previously added genes and
- *               dropping existing gene databases.
- *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -18,9 +14,9 @@
  *
  * This file is part of LOVD.
  *
- * LOVD is free software; you can redistribute it and/or modify
+ * LOVD is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * LOVD is distributed in the hope that it will be useful,
@@ -29,8 +25,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with LOVD; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
 
@@ -71,7 +66,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /genes/DMD
     // View specific entry.
-	
+
     $nID = $_PATH_ELEMENTS[1];
     define('PAGE_TITLE', 'View gene ' . $nID);
     require ROOT_PATH . 'inc-top.php';
@@ -291,7 +286,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
     exit;
 }
 /*
-	// Standard query, will be extended later on.
+    // Standard query, will be extended later on.
     $sQ = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
 
     // SORT: Current settings.

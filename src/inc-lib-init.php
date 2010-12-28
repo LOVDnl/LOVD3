@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2010-12-17
- * For LOVD    : 3.0-pre-10
+ * Modified    : 2010-12-28
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -262,7 +262,7 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
     if (!count($aSources)) {
         $q = lovd_queryDB('SELECT * FROM ' . TABLE_SOURCES);
         while ($z = mysql_fetch_assoc($q)) {
-            $aSources[$z['name']] = $z['url'];
+            $aSources[$z['id']] = $z['url'];
         }
     }
     

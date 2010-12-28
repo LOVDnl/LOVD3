@@ -1,16 +1,16 @@
 <?php
 // DMD_SPECIFIC: REMEMBER. If you add code that adds SQL for all genes, you MUST add the key first to the large array. Otherwise, the order in which upgrades are done is WRONG!!!
-/******************************************************************************************
+/*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-12-21
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2010-12-28
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *             : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *
  *
  * This file is part of LOVD.
@@ -113,6 +113,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN id_uniprot',
                                     'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN id_protein_uniprot VARCHAR(8) NOT NULL AFTER id_protein_ensembl',
                                     'INSERT INTO ' . TABLE_SOURCES . ' VALUES("hgnc", "http://www.genenames.org/data/hgnc_data.php?hgnc_id={{ ID }}")',
+                                  ),
+                    '3.0-pre-12' =>
+                             array(
+                                    'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN genbank',
+                                    'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN genbank_uri',
+                                    'ALTER TABLE ' . TABLE_SOURCES . ' CHANGE COLUMN name id VARCHAR(15) NOT NULL',
                                   ),
                   );
 

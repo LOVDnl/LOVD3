@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2010-12-24
+ * Modified    : 2010-12-28
  * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -47,30 +48,30 @@ class Transcript extends Object {
 
 
 
-	function Transcript ()
-	{
-		// Default constructor.
+    function Transcript ()
+    {
+        // Default constructor.
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-		//$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
-		
-		// SQL code for viewing an entry.
+        //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
+
+        // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 't.*, uc.name AS created_by_, ue.name AS edited_by_, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (t.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (t.edited_by = ue.id)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 't.id';
 
         // SQL code for viewing the list of transcripts
- 		$this->aSQLViewList['SELECT']   = 't.*, count(DISTINCT vot.id) AS variants';
+         $this->aSQLViewList['SELECT']   = 't.*, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
         $this->aSQLViewList['GROUP_BY'] = 't.id';
-		
+
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
                  array(
                         'name' => 'Transcript name',
-                        'id_ncbi' => 'NCBI ID',
-						'id_ensembl' => 'Ensembl ID',
+                        'id_ncbi' => 'Transcript - NCBI ID',
+                        'id_ensembl' => 'Transcript - Ensembl ID',
                         'id_protein_ncbi' => 'Protein - NCBI ID',
                         'id_protein_ensembl' => 'Protein - Ensembl ID',
                         'id_protein_uniprot' => 'Protein - Uniprot ID',
@@ -101,7 +102,7 @@ class Transcript extends Object {
                         'name' => array(
                                     'view' => array('Name', 300),
                                     'db'   => array('t.name', 'ASC', true)),
-						'id_ncbi' => array(
+                        'id_ncbi' => array(
                                     'view' => array('NCBI ID', 120),
                                     'db'   => array('t.id_ncbi', 'ASC', true)),
                         'variants' => array(
@@ -111,13 +112,13 @@ class Transcript extends Object {
         $this->sSortDefault = 'id';
 
         parent::Object();
-	}
+    }
 
 
 
 
-	/*
-	function checkFields ($aData)
+    /*
+    function checkFields ($aData)
     {
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
@@ -149,12 +150,12 @@ class Transcript extends Object {
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
     }
-	*/
-	
+    */
 
 
-	/*
-	function getForm ()
+
+    /*
+    function getForm ()
     {
         // Build the form.
 
@@ -182,12 +183,12 @@ class Transcript extends Object {
 
         return parent::getForm();
     }
-	*/
-	
-	
-	
-	
-	function prepareData ($zData = '', $sView = 'list')
+    */
+
+
+
+
+    function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
 

@@ -1,11 +1,11 @@
 <?php
-/******************************************************************************************
+/*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2010-12-17
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2010-12-28
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -39,6 +39,7 @@
 // "Parental_origin and Origin attributes have been merged into one attribute called as genetic_source."
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
 // Allow download staat nu per gen, en de losse varianten dan?
+// Refseq velden staan nu bij gen, moeten naar transcript???
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {
@@ -113,8 +114,6 @@ $aTableSQL =
     show_genetests BOOLEAN NOT NULL,
     note_index TEXT NOT NULL,
     note_listing TEXT NOT NULL,
-    genbank TINYINT(1) UNSIGNED NOT NULL,
-    genbank_uri VARCHAR(25) NOT NULL,
     refseq VARCHAR(1) NOT NULL,
     refseq_url VARCHAR(255) NOT NULL,
     disclaimer TINYINT(1) UNSIGNED NOT NULL,
@@ -562,7 +561,7 @@ $aTableSQL =
 
          , 'TABLE_SOURCES' =>
    'CREATE TABLE ' . TABLE_SOURCES . ' (
-    name VARCHAR(15) NOT NULL,
+    id VARCHAR(15) NOT NULL,
     url VARCHAR(255) NOT NULL,
     PRIMARY KEY (name))
     TYPE=InnoDB,

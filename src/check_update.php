@@ -1,7 +1,7 @@
 <?php
 // FIXME; recompare to LOVD 2.0 version, because it has changed significantly.
 // DMD_SPECIFIC; finish this file later when website has package_update.php
-/******************************************************************************************
+/*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *

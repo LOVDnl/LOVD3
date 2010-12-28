@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2010-12-22
+ * Modified    : 2010-12-28
  * For LOVD    : 3.0-pre-11
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -91,15 +91,19 @@ foreach ($aTotalVars as $nStatus => $nVars) {
 print('</TD></TR></TABLE><BR>' . "\n\n");
 
 print('          </TD>' . "\n" .
-      '          <TD valign="top" width="50%" style="padding-left : 10px; padding-right : 10px; border-right : 1px solid #224488;">' . "\n");
+      '          <TD valign="top" width="50%" style="padding-left : 10px; padding-right : 10px; border-right : 1px solid #224488;" id="setupLeft">' . "\n\n");
 
 $aItems =
      array(
-            // LOVD settings and uninstall.
             'General LOVD Setup' =>
                  array(
                         array('settings?edit', 'lovd_settings.png', 'LOVD System settings', 'View and change LOVD System settings, including settings on statistics, security and the legend.'),
          'uninstall' => array('uninstall', 'lovd_warning.png', 'Uninstall LOVD', 'Uninstall LOVD.'),
+                      ),
+            'Authorized users' =>
+                 array(
+                        array('users?create', 'lovd_users_create.png', 'Create new authorized user', 'Create a new authorized user.'),
+                        array('users', 'lovd_users_edit.png', 'View all users', 'Manage authorized users.'),
                       ),
 /*
 // Custom patient columns.
@@ -147,7 +151,11 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD>Manage installed LOVD modules.</TD></TR>') .
       '</TABLE>' . "\n");
 */
-		  );
+            'System logs' =>
+                 array(
+                        array('logs', 'lovd_logs.png', 'System logs', 'View, search and delete system logs.'),
+                      ),
+          );
 // Remove uninstall.
 if ($_CONF['lock_uninstall'] || $_AUTH['level'] < LEVEL_ADMIN) {
     unset($aItems['General LOVD Setup']['uninstall']);
@@ -170,15 +178,16 @@ foreach ($aItems as $sTitle => $aLinks) {
 
 
 print('          </TD>' . "\n" .
-      '          <TD valign="top" width="50%" style="padding-left : 10px;">' . "\n");
+      '          <TD valign="top" width="50%" style="padding-left : 10px;" id="setupRight">' . "\n\n");
 
 
 $aItems = 
-	array(
-			'Gene databases' =>
+    array(
+            'Gene databases' =>
                  array(
                         array('genes?create', 'lovd_database_create.png', 'Create new gene databases', 'Create a new gene database.'),
                         array('genes', 'lovd_database_edit.png', 'View all gene databases', 'Manage configured gene databases.'),
+                      ),
 /*
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
@@ -193,30 +202,21 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD>Manage configured gene databases.</TD></TR>') .
       '</TABLE><BR>' . "\n");
 */
-					   ),
-
-			'Diseases' =>
-                 array(
-                        array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease.'),
-                        array('diseases', 'lovd_question.png', 'View all diseases', 'Manage diseases.'),
-                      ),
-
             'Transcripts' =>
                  array(
                         array('transcripts?create', 'lovd_question.png', 'Create new transcript', 'Create a new transcript.'),
                         array('transcripts', 'lovd_question.png', 'View all transcripts', 'Manage transcripts.'),
                       ),
-
+            'Diseases' =>
+                 array(
+                        array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease.'),
+                        array('diseases', 'lovd_question.png', 'View all diseases', 'Manage diseases.'),
+                      ),
             'Variants' =>
                  array(
                         array('variants?create', 'lovd_question.png', 'Create new variant', 'Create a new variant.'),
                         array('variants', 'lovd_question.png', 'View all variants', 'Manage variants.'),
                       ),
-
-			'Authorized users' =>
-                 array(
-                        array('users?create', 'lovd_users_create.png', 'Create new authorized user', 'Create a new authorized user.'),
-                        array('users', 'lovd_users_edit.png', 'View all users', 'Manage authorized users.'),
 /*
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
@@ -227,9 +227,6 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '              <TR class="pointer" onclick="window.location.href=\'users\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_users_edit.png" alt="View all users" width="32" height="32"></TD>' . "\n" .
       '                <TD>View all users.</TD></TR></TABLE><BR>' . "\n");
-*/
-                      ),
-/*
 // Export central repository format.
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
@@ -238,11 +235,6 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD align="center" width="40"><IMG src="gfx/lovd_save.png" alt="Download variant data" width="32" height="32"></TD>' . "\n" .
       '                <TD>Download the variant data for central repositories. This format includes the gene name, DNA change, DB ID, and possible OMIM and DbSNP IDs.</TD></TR></TABLE><BR>' . "\n");
 */
-
-// System Logs.
-			'System logs' =>
-                 array(
-                        array('logs', 'lovd_logs.png', 'System logs', 'View, search and delete system logs.'),
 /*
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
@@ -251,8 +243,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD align="center" width="40"><IMG src="gfx/lovd_logs.png" alt="System logs" width="32" height="32"></TD>' . "\n" .
       '                <TD>View, search and delete system logs.</TD></TR></TABLE>' . "\n");
 */
-					  ),
-		  );
+          );
 
 
 foreach ($aItems as $sTitle => $aLinks) {
@@ -279,7 +270,7 @@ print('          </TD>' . "\n" .
 if (isset($_GET['newly_installed'])) {
     print('      <SCRIPT type="text/javascript">' . "\n" .
           '        <!--' . "\n" .
-          '        varTR = document.getElementById(\'create_gene\');' . "\n");
+          '        varTR = document.getElementById(\'setupRight\').getElementsByTagName(\'tr\')[1];' . "\n");
     for ($i = 0; $i < 30; $i ++) {
         print('        setTimeout("varTR.style.background=\'#' . ($i%2? 'F0F3FF' : 'C8DCFA') . '\'", ' . ($i * 1000) . ');' . "\n");
     }
