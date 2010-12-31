@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2010-12-28
+ * Modified    : 2010-12-31
  * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -47,14 +47,23 @@ if (!defined('ROOT_PATH')) {
     require ROOT_PATH . 'inc-init.php';
 }
 
+// TYPE is older and therefore preferred for backward compatibility,
+// but it is removed from MySQL version 5.5. ENGINE was introduced in 4.1.2.
+if (mysql_get_server_info() >= '4.1.2') {
+    $sSettings = 'ENGINE';
+} else {
+    $sSettings = 'TYPE';
+}
+$sSettings .= '=InnoDB,
+    DEFAULT CHARACTER SET utf8';
+
 $aTableSQL =
          array('TABLE_COUNTRIES' =>
    'CREATE TABLE ' . TABLE_COUNTRIES . ' (
     id CHAR(2) NOT NULL,
     name VARCHAR(255) NOT NULL,
     PRIMARY KEY (id))
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_USERS' =>
    'CREATE TABLE ' . TABLE_USERS . ' (
@@ -91,8 +100,7 @@ $aTableSQL =
     FOREIGN KEY (countryid) REFERENCES ' . TABLE_COUNTRIES . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_GENES' =>
    'CREATE TABLE ' . TABLE_GENES . ' (
@@ -135,8 +143,7 @@ $aTableSQL =
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (updated_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_CURATES' =>
    'CREATE TABLE ' . TABLE_CURATES . ' (
@@ -148,8 +155,7 @@ $aTableSQL =
     INDEX (geneid),
     FOREIGN KEY (userid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_TRANSCRIPTS . ' (
@@ -178,8 +184,7 @@ $aTableSQL =
     FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_DISEASES' =>
    'CREATE TABLE ' . TABLE_DISEASES . ' (
@@ -197,8 +202,7 @@ $aTableSQL =
     INDEX (edited_by),
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_GEN2DIS' =>
    'CREATE TABLE ' . TABLE_GEN2DIS . ' (
@@ -208,24 +212,21 @@ $aTableSQL =
     INDEX (diseaseid),
     FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_DATA_STATUS' =>
    'CREATE TABLE ' . TABLE_DATA_STATUS . ' (
     id TINYINT(1) UNSIGNED NOT NULL,
     name VARCHAR(15) NOT NULL,
     PRIMARY KEY (id))
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_PATHOGENIC' =>
    'CREATE TABLE ' . TABLE_PATHOGENIC . ' (
     id TINYINT(2) UNSIGNED ZEROFILL NOT NULL,
     name VARCHAR(5) NOT NULL,
     PRIMARY KEY (id))
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_PATIENTS' =>
    'CREATE TABLE ' . TABLE_PATIENTS . ' (
@@ -251,8 +252,7 @@ $aTableSQL =
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_VARIANTS' =>
    'CREATE TABLE ' . TABLE_VARIANTS . ' (
@@ -287,8 +287,7 @@ $aTableSQL =
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_VARIANTS_ON_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (
@@ -308,8 +307,7 @@ $aTableSQL =
     INDEX (position_c_start, position_c_start_intron, position_c_end, position_c_end_intron),
     FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_PHENOTYPES' =>
    'CREATE TABLE ' . TABLE_PHENOTYPES . ' (
@@ -338,8 +336,7 @@ $aTableSQL =
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_SCREENINGS' =>
    'CREATE TABLE ' . TABLE_SCREENINGS . ' (
@@ -365,8 +362,7 @@ $aTableSQL =
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_SCR2GENE' =>
    'CREATE TABLE ' . TABLE_SCR2GENE . ' (
@@ -377,8 +373,7 @@ $aTableSQL =
     INDEX (geneid),
     FOREIGN KEY (screeningid) REFERENCES ' . TABLE_SCREENINGS . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_SCR2VAR' =>
    'CREATE TABLE ' . TABLE_SCR2VAR . ' (
@@ -389,8 +384,7 @@ $aTableSQL =
     INDEX (variantid),
     FOREIGN KEY (screeningid) REFERENCES ' . TABLE_SCREENINGS . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (variantid) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_COLS' =>
    'CREATE TABLE ' . TABLE_COLS . ' (
@@ -420,8 +414,7 @@ $aTableSQL =
     INDEX (edited_by),
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_ACTIVE_COLS' =>
    'CREATE TABLE ' . TABLE_ACTIVE_COLS . ' (
@@ -432,8 +425,7 @@ $aTableSQL =
     INDEX (created_by),
     FOREIGN KEY (colid) REFERENCES ' . TABLE_COLS . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_VARIANT_COLS' =>
    'CREATE TABLE ' . TABLE_VARIANT_COLS . ' (
@@ -460,8 +452,7 @@ $aTableSQL =
     FOREIGN KEY (colid) REFERENCES ' . TABLE_ACTIVE_COLS . ' (colid) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_PHENOTYPE_COLS' =>
    'CREATE TABLE ' . TABLE_PHENOTYPE_COLS . ' (
@@ -488,8 +479,7 @@ $aTableSQL =
     FOREIGN KEY (colid) REFERENCES ' . TABLE_ACTIVE_COLS . ' (colid) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_LINKS' =>
    'CREATE TABLE ' . TABLE_LINKS . ' (
@@ -509,8 +499,7 @@ $aTableSQL =
     INDEX (edited_by),
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_COLS2LINKS' =>
    'CREATE TABLE ' . TABLE_COLS2LINKS . ' (
@@ -520,8 +509,7 @@ $aTableSQL =
     INDEX (linkid),
     FOREIGN KEY (colid) REFERENCES ' . TABLE_COLS . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (linkid) REFERENCES ' . TABLE_LINKS . ' (id) ON DELETE CASCADE)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_CONFIG' =>
    'CREATE TABLE ' . TABLE_CONFIG . ' (
@@ -541,8 +529,7 @@ $aTableSQL =
     use_ssl BOOLEAN NOT NULL,
     use_versioning BOOLEAN NOT NULL,
     lock_uninstall BOOLEAN NOT NULL)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_STATUS' =>
    'CREATE TABLE ' . TABLE_STATUS . ' (
@@ -556,16 +543,14 @@ $aTableSQL =
     update_released_date DATE,
     installed_date DATE NOT NULL,
     updated_date DATE)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_SOURCES' =>
    'CREATE TABLE ' . TABLE_SOURCES . ' (
     id VARCHAR(15) NOT NULL,
     url VARCHAR(255) NOT NULL,
-    PRIMARY KEY (name))
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    PRIMARY KEY (id))
+    ' . $sSettings
 
          , 'TABLE_LOGS' =>
    'CREATE TABLE ' . TABLE_LOGS . ' (
@@ -578,8 +563,7 @@ $aTableSQL =
     PRIMARY KEY (name, date, mtime),
     INDEX (userid),
     FOREIGN KEY (userid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_MODULES' =>
    'CREATE TABLE ' . TABLE_MODULES . ' (
@@ -592,8 +576,7 @@ $aTableSQL =
     installed_date DATE NOT NULL,
     updated_date DATE,
     PRIMARY KEY (id))
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
 
          , 'TABLE_HITS' =>
    'CREATE TABLE ' . TABLE_HITS . ' (
@@ -604,8 +587,7 @@ $aTableSQL =
     hits SMALLINT(5) UNSIGNED NOT NULL,
     PRIMARY KEY (geneid, type, year, month),
     FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE)
-    TYPE=InnoDB,
-    DEFAULT CHARACTER SET utf8'
+    ' . $sSettings
           );
 
 // DMD_SPECIFIC;

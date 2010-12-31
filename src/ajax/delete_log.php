@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-01
- * Modified    : 2010-02-02
- * For LOVD    : 3.0-pre-03
+ * Modified    : 2010-12-31
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -35,7 +35,7 @@ require ROOT_PATH . 'inc-init.php';
 // Require manager clearance.
 if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
     // If not authorized, die with error message.
-    die('8'); // 'Not authorized' error.
+    die(AJAX_NO_AUTH);
 }
 
 // Delete log entry, if available.

@@ -51,12 +51,7 @@ LOVD 3.0
 Kleinere dingen om te controleren:
 ==================================
 Link tussen patient en disease leggen dmv koppelings tabel?
-AJAX response codes in text doen, niet meer in nummers. Bijvoorbeeld:
-  OK
-  SESSION_LOST
-  UNKNOWN_ERROR
-  etc...
-Formulier voor toevoegen kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.
+Formulier voor toevoegen/edit kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.
 wellicht IP based blocking eerder doen? geen login_attempts increment either? in de login meteen!
 Een column ID moet altijd met een hoofdletter gemaakt worden, dus daar moet een controle op!
 col create hoeft geen insertEntry() te gebruiken ofzo? hoezo niet???

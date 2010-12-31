@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2010-12-21
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2010-12-31
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -464,13 +464,13 @@ class Object {
         $sWHERE = '';
         $aArguments = array();
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
-            if (!empty($aCol['db'][2]) && !empty($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn])) {
+            if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
                 // Allow for searches where the order of words is forced by enclosing the values with double quotes;
                 // Replace spaces in sentences between double quotes so they don't get exploded.
                 $sSearch = preg_replace_callback('/"([^"]+)"/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
-                    if ($sWord) {
+                    if ($sWord !== '') {
                         if (substr_count($sWord, '|') && preg_match('/^[^|]+(\|[^|]+)+$/', $sWord)) {
                             // OR.
                             $aOR = explode('|', $sWord);
@@ -567,7 +567,7 @@ class Object {
         $q = lovd_queryDB($sSQL, $aArguments);
         if (!$q) {
 // FIXME; what if using AJAX? Probably we should generate a number here, indicating the system to try once more. If that fails also, the JS should throw a general error, maybe.
-            lovd_queryError((defined(LOG_EVENT)? LOG_EVENT : $this->sObject . '::viewList()'), $sSQL, mysql_error());
+            lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewList()'), $sSQL, mysql_error());
         }
 
         // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.

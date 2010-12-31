@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2010-12-15
- * For LOVD    : 3.0-pre-10
+ * Modified    : 2010-12-31
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -61,7 +61,7 @@ class Column extends Object {
         $this->aSQLViewEntry['FROM']     = TABLE_COLS . ' AS c LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id)';
 
         // SQL code for viewing a list of entries.
-        $this->aSQLViewList['SELECT']   = 'c.*, SUBSTRING_INDEX(c.id, "/", 1) AS category, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, (a.created_by > 0) AS active, u.name AS created_by_';
+        $this->aSQLViewList['SELECT']   = 'c.*, SUBSTRING_INDEX(c.id, "/", 1) AS category, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, IFNULL((a.created_by > 0), 0) AS active, u.name AS created_by_';
         $this->aSQLViewList['FROM']     = TABLE_COLS . ' AS c LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) LEFT JOIN ' . TABLE_USERS . ' AS u ON (c.created_by = u.id)';
         $this->aSQLViewList['ORDER_BY'] = 'category, colid';
 
@@ -105,16 +105,16 @@ class Column extends Object {
                                     'db'   => array('c.head_column', 'ASC', true)),
                         'active_' => array(
                                     'view' => array('Active', 60, 'align="center"'),
-                                    'db'   => array('active', 'DESC', false)),
+                                    'db'   => array('IFNULL((a.created_by > 0), 0)', 'DESC', true)),
                         'hgvs_' => array(
                                     'view' => array('HGVS', 50, 'align="center"'),
-                                    'db'   => array('c.hgvs', 'DESC', false)),
+                                    'db'   => array('c.hgvs', 'DESC', true)),
                         'standard_' => array(
                                     'view' => array('Standard', 80, 'align="center"'),
-                                    'db'   => array('c.standard', 'DESC', false)),
+                                    'db'   => array('c.standard', 'DESC', true)),
                         'public_view_' => array(
                                     'view' => array('Public', 60, 'align="center"'),
-                                    'db'   => array('c.public_view', 'DESC', false)),
+                                    'db'   => array('c.public_view', 'DESC', true)),
                         'form_type_' => array(
                                     'view' => array('Form type', 200)),
                         'created_by_' => array(

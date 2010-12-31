@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-09-10
- * Modified    : 2010-09-24
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2010-12-31
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -77,6 +77,30 @@ class ProgressBar {
               '        var oPB_' . $this->ID . '_message = document.getElementById(\'lovd_' . $this->sID . '_progress_message\');' . "\n" .
               '        var oPB_' . $this->ID . '_message_done = document.getElementById(\'lovd_' . $this->sID . '_progress_message_done\');' . "\n" .
               '      </SCRIPT>' . "\n\n\n");
+    }
+
+
+
+
+
+    function redirectTo ($sURL, $nTime = 1)
+    {
+        // Sends the JS necessary to redirect the viewer to another URL.
+        // When using this class, PHP's header() function does not work anymore.
+        // So it's quite logical putting this funtion here.
+
+        // Most likely, this function is available, but we can't be sure.
+        if (function_exists('lovd_matchURL') && !lovd_matchURL($sURL, true)) {
+            return false;
+        }
+        if (!is_numeric($nTime)) {
+            $nTime = 1;
+        }
+        $nTime *= 1000; // JS works in miliseconds, not seconds.
+
+        print('<SCRIPT type="text/javascript">setTimeout("window.location.href=\'' . str_replace('\'', '\\\'', $sURL) . '\'", ' . $nTime . ');</SCRIPT>' . "\n");
+        flush();
+        return true;
     }
 
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2010-12-15
- * For LOVD    : 3.0-pre-10
+ * Modified    : 2010-12-31
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1709,8 +1709,6 @@ if ($aTableInfo['shared'] && empty($_GET['to'])) {
 
             // When printing stuff on the page, NOTE that inc-bot.php has already been closed!!!!!!!!!!!!!!
 /**************************************
-            print('      Successfully added column "' . $zData['head_column'] . '"!<BR><BR>' . "\n\n");
-
             // 2010-07-26; 2.0-28; In case the column is mandatory, check for existing patient entries that cause problems importing downloaded data.
             $nEmptyValues = 0;
             if ($zData['mandatory'] == '1') {
@@ -1722,6 +1720,10 @@ if ($aTableInfo['shared'] && empty($_GET['to'])) {
             if (!$nEmptyValues) {
                 // Dit moet nu met JS!
                 header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true));
+*/
+// TMP:
+$_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
+/*
             }
 
             // Als we dan toch een lovd_showInfoTable() proberen te krijgen, doe die dan ook even voor de Done! message...

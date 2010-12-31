@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2010-07-26
- * For LOVD    : 3.0-pre-08
+ * Modified    : 2010-12-31
+ * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -32,14 +32,33 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-// Require manager clearance.
-if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
-    // If not authorized, die with error message.
-    die('8'); // 'Not authorized' error.
+if (empty($_GET['object']) || !preg_match('/^[A-Z]+$/i', $_GET['object'])) {
+    die(AJAX_DATA_ERROR);
 }
 
-if (empty($_GET['object']) || !preg_match('/^[A-Z]+$/i', $_GET['object'])) {
-    die('9');
+// The required security to load the viewList() depends on the data that is shown.
+// To prevent security problems if we forget to set a requirement here, we default to LEVEL_ADMIN.
+$aNeededLevel =
+         array(
+                'Column' => LEVEL_CURATOR,
+                'Disease' => 0,
+                'Gene' => 0,
+                'Link' => LEVEL_MANAGER,
+                'Log' => LEVEL_MANAGER,
+                'Transcript' => 0,
+                'User' => LEVEL_MANAGER,
+                'Variant' => 0,
+              );
+if (isset($aNeededLevel[$_GET['object']])) {
+    $nNeededLevel = $aNeededLevel[$_GET['object']];
+} else {
+    $nNeededLevel = LEVEL_ADMIN;
+}
+
+// Require special clearance?
+if ($nNeededLevel && (!$_AUTH || $_AUTH['level'] < $nNeededLevel)) {
+    // If not authorized, die with error message.
+    die(AJAX_NO_AUTH);
 }
 
 $sFile = ROOT_PATH . 'class/object_' . strtolower($_GET['object']) . 's.php';

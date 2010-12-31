@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2010-12-28
+ * Modified    : 2010-12-31
  * For LOVD    : 3.0-pre-12
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
@@ -78,8 +78,8 @@ class Gene extends Object {
                         'refseq_genomic' => 'Reference location',
                         'url_homepage' => 'Homepage URL',
                         'url_external' => 'External URL',
-                        'allow_download' => 'Allow public to download all variant entries',
-                        'allow_index_wiki' => 'Allow data to be indexed by WikiProfessional',
+                        'allow_download_' => 'Allow public to download all variant entries',
+                        'allow_index_wiki_' => 'Allow data to be indexed by WikiProfessional',
                         'note_index' => 'Notes for the LOVD gene homepage',
                         'note_listing' => 'Notes for the variant listings',
                         'refseq' => 'Refseq',
@@ -106,13 +106,13 @@ class Gene extends Object {
                         'HR_2' => '',
                         'TableStart_Links' => '',
                         'TableHeader_Links' => 'Links to other resources',
-                        'id_hgnc' => 'HGNC',
-                        'id_entrez' => 'Entrez Gene',
-                        'id_omim' => 'OMIM - Gene',
+                        'id_hgnc_' => 'HGNC',
+                        'id_entrez_' => 'Entrez Gene',
+                        'id_omim_' => 'OMIM - Gene',
                         'disease_omim_' => 'OMIM - Diseases',
-                        'show_hgmd' => 'HGMD',
-                        'show_genecards' => 'GeneCards',
-                        'show_genetests' => 'GeneTests',
+                        'show_hgmd_' => 'HGMD',
+                        'show_genecards_' => 'GeneCards',
+                        'show_genetests_' => 'GeneTests',
                       );
 
         // Because the disease information is publicly available, remove some columns for the public.
@@ -358,36 +358,40 @@ class Gene extends Object {
             $zData['row_link'] = 'genes/' . rawurlencode($zData['id']);
             $zData['symbol'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['symbol'] . '</A>';
         } else {
-            $zData['allow_download']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
-            $zData['allow_index_wiki'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
-            $zData['disclaimer']       = '<IMG src="gfx/mark_' . $zData['disclaimer'] . '.png" alt="" width="11" height="11">';
-            $zData['header_align']     = '<IMG src="gfx/mark_' . $zData['header_align'] . '.png" alt="" width="11" height="11">';
-            $zData['footer_align']     = '<IMG src="gfx/mark_' . $zData['footer_align'] . '.png" alt="" width="11" height="11">';
+            $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
+            $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
+// FIXME; Deze zijn niet correct; hier moet even iets anderes voor verzonnen worden.
+//            $zData['disclaimer']       = '<IMG src="gfx/mark_' . $zData['disclaimer'] . '.png" alt="" width="11" height="11">';
+//            $zData['header_align']     = '<IMG src="gfx/mark_' . $zData['header_align'] . '.png" alt="" width="11" height="11">';
+//            $zData['footer_align']     = '<IMG src="gfx/mark_' . $zData['footer_align'] . '.png" alt="" width="11" height="11">';
+
+            // FIXME; these three blocks do not look efficient. Write function in objects.php for this?
             if (!empty($zData['id_omim'])) {
-                $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
+                $zData['id_omim_'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
             }
             if (!empty($zData['id_hgnc'])) {
-                $zData['id_hgnc'] = '<A href="' . lovd_getExternalSource('hgnc', $zData['id_hgnc'], true) . '" target="_blank">' . $zData['id_hgnc'] . '</A>';
+                $zData['id_hgnc_'] = '<A href="' . lovd_getExternalSource('hgnc', $zData['id_hgnc'], true) . '" target="_blank">' . $zData['id_hgnc'] . '</A>';
             }
             if (!empty($zData['id_entrez'])) {
-                $zData['id_entrez'] = '<A href="' . lovd_getExternalSource('entrez', $zData['id_entrez'], true) . '" target="_blank">' . $zData['id_entrez'] . '</A>';
+                $zData['id_entrez_'] = '<A href="' . lovd_getExternalSource('entrez', $zData['id_entrez'], true) . '" target="_blank">' . $zData['id_entrez'] . '</A>';
             }
             if (!empty($zData['disease_omim_'])) {
-                $aDiseases = explode(", ", $zData['disease_omim_']);
-                $zData['disease_omim_'] = "";
+                $aDiseases = explode(', ', $zData['disease_omim_']);
+                $zData['disease_omim_'] = '';
                 foreach ($aDiseases as $sDisease) {
-                    $aDisease = explode("_", $sDisease);
-                    $zData['disease_omim_'] .= '<A href="' . lovd_getExternalSource('omim', $aDisease[2], true) . '" target="_blank">' . $aDisease[1] . '(' . $aDisease[0] . ')</A><BR>';
+                    $aDisease = explode('_', $sDisease);
+                    $zData['disease_omim_'] .= '<A href="' . lovd_getExternalSource('omim', $aDisease[2], true) . '" target="_blank">' . $aDisease[1] . ' (' . $aDisease[0] . ')</A><BR>';
                 }
             }
+            // FIXME; these three blocks do not look efficient. Write function in objects.php for this?
             if ($zData['show_hgmd']) {
-                $zData['show_hgmd'] = '<A href="' . lovd_getExternalSource('hgmd', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
+                $zData['show_hgmd_'] = '<A href="' . lovd_getExternalSource('hgmd', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
             }
             if ($zData['show_genecards']) {
-                $zData['show_genecards'] = '<A href="' . lovd_getExternalSource('genecards', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
+                $zData['show_genecards_'] = '<A href="' . lovd_getExternalSource('genecards', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
             }
             if ($zData['show_genetests']) {
-                $zData['show_genetests'] = '<A href="' . lovd_getExternalSource('genetests', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
+                $zData['show_genetests_'] = '<A href="' . lovd_getExternalSource('genetests', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
             }
         }
 
