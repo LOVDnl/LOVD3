@@ -47,6 +47,7 @@ LOVD 3.0
     Implement tokens for forms that do not ask passwords? Tokens valid for 5 minutes only? Not to prevent abuse of computers left logged in, becase the token will be regenerated, but against CSRF.
     Create disease: probeer te standaardiseren door data op te halen van OMIM of iets anders, zoals create gene ook basis data ophaalt.
     De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
+    Mouseover (hover) over kolom namen op viewList() ? Waar stellen we dat in? Alleen met custom columns of ook met andere views? Idem in viewEntry?
 
 Kleinere dingen om te controleren:
 ==================================
@@ -71,7 +72,9 @@ Waar we echt mee bezig zijn:
 Finish add col to data table
     (Er staan nog FIXMEs in en het bevestigingsbericht moet nog maar gekeken worden.
     // Daarna deze code naar install/index.php kopiëren
+    Nadenken over hoe dit in de GUI te doen; curatoren in LOVD 2.0 nu kunnen niet goed zien wat ze toevoegen. Dat moet anders.
 show genes, create, edit, delete, link naar diseases.
+Create genes moet het formulier gaan indelen in secties die geopend en gesloten kunnen worden.
 Overnemen van LOVD2: view users zien in welke genen ze gesubmit hebben?
 Store list_size per data type in a $_COOKIE, just like hidden columns and stuff
 USER LOCK/UNLOCK, FORCE LOGOUT, WELLICHT ALLEBEI AL MET AJAX DINGEN
@@ -136,6 +139,13 @@ Not sure yet how to...
 - Bij het editen insluiten de modified_date van de entry. Als die, bij het editen van de data ineens anders is, moet je een foutmelding geven. Twee mensen hebben tegelijkertijd er aan gewerkt!
     Wellicht direct in de update query?
 - All the traffic to variants and patients in LOVD 2.0 enters through variants.php, lucky me. So this file in 3.0 will both serve the "new" clean URLs, but if it detects the old LOVD 2.0 formatted URLs, it will forward to the standard URL.
+
+
+HANDLEIDING
+===========
+- Moet zo geschreven worden, dat er van dezelfde source een HTML en PDF gegenereerd kan worden.
+- Per pagina moet duidelijk zijn, welk level nodig is om deze feature te gebruiken, en vanaf welke versie dit is ingevoerd.
+- Vanuit LOVD moet de Help of Documentation tab direct verwijzen naar de pagina in de handleiding over het scherm waar de gebruiker op dat moment in zit.
 
 
 Update process

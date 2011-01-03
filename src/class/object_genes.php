@@ -57,7 +57,7 @@ class Gene extends Object {
         //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, GROUP_CONCAT(DISTINCT d.symbol, "_", d.name, "_", d.id_omim ORDER BY g2d.diseaseid SEPARATOR ", ") AS disease_omim_, uc.name AS created_by_, ue.name AS edited_by_, uu.name AS updated_by, count(DISTINCT vot.id) AS variants';
+        $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, uc.name AS created_by_, ue.name AS edited_by_, uu.name AS updated_by, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) LEFT JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
 
@@ -365,33 +365,22 @@ class Gene extends Object {
 //            $zData['header_align']     = '<IMG src="gfx/mark_' . $zData['header_align'] . '.png" alt="" width="11" height="11">';
 //            $zData['footer_align']     = '<IMG src="gfx/mark_' . $zData['footer_align'] . '.png" alt="" width="11" height="11">';
 
-            // FIXME; these three blocks do not look efficient. Write function in objects.php for this?
-            if (!empty($zData['id_omim'])) {
-                $zData['id_omim_'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
+            $zData['diseases_'] = $zData['disease_omim_'] = '';
+            $aDiseases = explode(';;', $zData['diseases']);
+            foreach ($aDiseases as $sDisease) {
+                list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
+                $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
+                $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
             }
-            if (!empty($zData['id_hgnc'])) {
-                $zData['id_hgnc_'] = '<A href="' . lovd_getExternalSource('hgnc', $zData['id_hgnc'], true) . '" target="_blank">' . $zData['id_hgnc'] . '</A>';
-            }
-            if (!empty($zData['id_entrez'])) {
-                $zData['id_entrez_'] = '<A href="' . lovd_getExternalSource('entrez', $zData['id_entrez'], true) . '" target="_blank">' . $zData['id_entrez'] . '</A>';
-            }
-            if (!empty($zData['disease_omim_'])) {
-                $aDiseases = explode(', ', $zData['disease_omim_']);
-                $zData['disease_omim_'] = '';
-                foreach ($aDiseases as $sDisease) {
-                    $aDisease = explode('_', $sDisease);
-                    $zData['disease_omim_'] .= '<A href="' . lovd_getExternalSource('omim', $aDisease[2], true) . '" target="_blank">' . $aDisease[1] . ' (' . $aDisease[0] . ')</A><BR>';
+
+            $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
+            foreach ($aExternal as $sColID) {
+                list($sType, $sSource) = explode('_', $sColID);
+                if (!empty($zData[$sColID])) {
+                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
+                } else {
+                    $zData[$sColID . '_'] = '';
                 }
-            }
-            // FIXME; these three blocks do not look efficient. Write function in objects.php for this?
-            if ($zData['show_hgmd']) {
-                $zData['show_hgmd_'] = '<A href="' . lovd_getExternalSource('hgmd', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
-            }
-            if ($zData['show_genecards']) {
-                $zData['show_genecards_'] = '<A href="' . lovd_getExternalSource('genecards', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
-            }
-            if ($zData['show_genetests']) {
-                $zData['show_genetests_'] = '<A href="' . lovd_getExternalSource('genetests', rawurlencode($zData['id']), true) . '" target="_blank">' . rawurlencode($zData['id']) . '</A>';
             }
         }
 

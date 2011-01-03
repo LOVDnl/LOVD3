@@ -63,7 +63,7 @@ if (substr(lovd_getProjectFile(), 0, 6) == '/docs/') {
     
 }
 print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-      '  &copy;2004-2010 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+      '  &copy;2004-2011 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">

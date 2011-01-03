@@ -40,6 +40,8 @@
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
 // Allow download staat nu per gen, en de losse varianten dan?
 // Refseq velden staan nu bij gen, moeten naar transcript???
+// Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan patient???
+// FIXME; chromosome moet naar table_variants, niet in table_variants_on_transcripts
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {

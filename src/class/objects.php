@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2010-12-31
+ * Modified    : 2011-01-03
  * For LOVD    : 3.0-pre-12
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -217,7 +217,7 @@ class Object {
 
         $q = lovd_queryDB($sSQL, $aSQL);
         if (!$q) {
-            lovd_queryError((defined(LOG_EVENT)? LOG_EVENT : $this->sObject . '::insertEntry()'), $sSQL, mysql_error());
+            lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::insertEntry()'), $sSQL, mysql_error());
         }
 
         $nID = mysql_insert_id();
@@ -348,7 +348,7 @@ class Object {
 
         $q = lovd_queryDB($sSQL, $aSQL);
         if (!$q) {
-            lovd_queryError((defined(LOG_EVENT)? LOG_EVENT : $this->sObject . '::updateEntry()'), $sSQL, mysql_error());
+            lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::updateEntry()'), $sSQL, mysql_error());
         }
 
         return mysql_affected_rows();
@@ -404,7 +404,7 @@ class Object {
         // Run the actual query.
         $zData = mysql_fetch_assoc(lovd_queryDB($sSQL, array($nID)));
         if (!$zData) {
-            lovd_queryError((defined(LOG_EVENT)? LOG_EVENT : $this->sObject . '::viewEntry()'), $sSQL, mysql_error());
+            lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewEntry()'), $sSQL, mysql_error());
         }
 
         $zData = $this->prepareData($zData, 'entry');
