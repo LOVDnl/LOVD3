@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-12-28
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-04
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *
@@ -119,6 +119,16 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN genbank',
                                     'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN genbank_uri',
                                     'ALTER TABLE ' . TABLE_SOURCES . ' CHANGE COLUMN name id VARCHAR(15) NOT NULL',
+                                  ),
+                    '3.0-pre-13' =>
+                             array(
+                                    'ALTER TABLE ' . TABLE_GENES . ' ADD COLUMN chromosome VARCHAR(2) NOT NULL AFTER name',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' DROP COLUMN chromosome',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN chromosome VARCHAR(2) NOT NULL AFTER pathogenicid',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP COLUMN chromosome',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN ownerid SMALLINT(5) UNSIGNED ZEROFILL AFTER type',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (ownerid)',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL',
                                   ),
                   );
 

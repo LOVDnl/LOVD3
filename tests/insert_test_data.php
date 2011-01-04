@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-17
- * Modified    : 2010-12-28
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-04
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -38,7 +38,7 @@ require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/plain; charset=UTF-8');
 
 // DMD gene.
-mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("DMD", "DMD", "Duchenne Muscular Dystrophy", "Xp21.2", "", "hg19", "", "", 0, 0, 2928, 1756, 300377, 1, 1, 1, "", "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
+mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("DMD", "DMD", "Duchenne Muscular Dystrophy", "X", "Xp21.2", "", "hg19", "", "", 0, 0, 2928, 1756, 300377, 1, 1, 1, "", "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
 
 // Three diseases, all linked to this one gene.
 $b = mysql_query('INSERT IGNORE INTO ' . TABLE_DISEASES . ' VALUES (NULL, "DMD", "Duchenne muscular dystrophy", 310200, 1, NOW(), NULL, NULL)');
@@ -57,28 +57,28 @@ if ($b) {
 // First variant in this gene, mapping to both transcripts of this gene.
 list($nVarID) = mysql_fetch_row(mysql_query('SELECT MAX(id) FROM ' . TABLE_VARIANTS));
 $nVarID ++;
-$b = mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, 33229400, 33229400, "del", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
+$b = mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, "X", 33229400, 33229400, "del", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
 
 // First of two transcripts, having one variant.
-$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "Dystrophin Dp427m isoform", "NM_004006.2", NULL, NULL, NULL, NULL, "X", -244, 13749, 11058, 33229673, 31137345, 1, NOW(), NULL, NULL)');
+$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "Dystrophin Dp427m isoform", "NM_004006.2", NULL, NULL, NULL, NULL, -244, 13749, 11058, 33229673, 31137345, 1, NOW(), NULL, NULL)');
 if ($b) {
     $nFirstTranscriptID = mysql_insert_id();
-    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nFirstTranscriptID . ', NULL, "X", 30, 0, 30, 0, NOW())');
+    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nFirstTranscriptID . ', NULL, 30, 0, 30, 0, NOW())');
 }
 
 // Second of two transcripts, having one variant.
-$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "Dystrophin Dp427c isoform", "NM_000109.3", NULL, NULL, NULL, NULL, "X", -344, 13749, 11034, 33357726, 31137345, 1, NOW(), NULL, NULL)');
+$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "Dystrophin Dp427c isoform", "NM_000109.3", NULL, NULL, NULL, NULL, -344, 13749, 11034, 33357726, 31137345, 1, NOW(), NULL, NULL)');
 if ($b) {
     $nSecondTranscriptID = mysql_insert_id();
-    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nSecondTranscriptID . ', NULL, "X", 7, 127976, 7, 127976, NOW())');
+    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nSecondTranscriptID . ', NULL, 7, 127976, 7, 127976, NOW())');
 }
 
 // Second variant in this gene, mapped only to the first transcript.
 $nVarID ++;
 // FIXME; provide proper genomic locations.
-$b = mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, NULL, NULL, "ins", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
+$b = mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, "X", NULL, NULL, "ins", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
 if ($b) {
-    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nFirstTranscriptID . ', NULL, "X", 30, 0, 30, 0, NOW())');
+    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nFirstTranscriptID . ', NULL, 30, 0, 30, 0, NOW())');
 }
 
 
@@ -86,16 +86,16 @@ if ($b) {
 
 
 // TTN gene.
-mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("TTN", "TTN", "Titin", "2q32", "", "hg19", "", "", 0, 0, 2928, 1756, 300377, 1, 1, 1, "", "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
+mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("TTN", "TTN", "Titin", "2", "2q32", "", "hg19", "", "", 0, 0, 2928, 1756, 300377, 1, 1, 1, "", "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
 
 // One transcript, having one variant.
-$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "TTN", "Titin variant N2-A", "NM_133378.2", NULL, NULL, NULL, NULL, "2", -224, 108864, 107841, 179672150, 179781238, 1, NOW(), NULL, NULL)');
+$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "TTN", "Titin variant N2-A", "NM_133378.2", NULL, NULL, NULL, NULL, -224, 108864, 107841, 179672150, 179781238, 1, NOW(), NULL, NULL)');
 if ($b) {
     $nTranscriptID = mysql_insert_id();
     $nVarID ++;
     // FIXME; provide proper genomic locations.
-    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, NULL, NULL, "dup", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
-    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nTranscriptID . ', NULL, "X", 30, 0, 30, 0, NOW())');
+    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, "X", NULL, NULL, "dup", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
+    mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nTranscriptID . ', NULL, 30, 0, 30, 0, NOW())');
 }
 
 
@@ -105,7 +105,7 @@ if ($b) {
 // Fourth variant, completely unbound.
 $nVarID ++;
 // FIXME; provide proper genomic locations.
-mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, NULL, NULL, "subst", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
+mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, "X", NULL, NULL, "subst", 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
 
 echo "Done!";
 ?>

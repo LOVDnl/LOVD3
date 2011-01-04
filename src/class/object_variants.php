@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2010-12-28
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-04
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -58,7 +58,7 @@ class Variant extends Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'v.*, uc.name AS created_by_, ue.name AS edited_by_, count(vot.transcriptid) AS transcripts';
-        $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (v.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (v.edited_by = ue.id)';
+        $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (v.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (v.edited_by = ue.id)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 'v.id';
 
         // SQL code for viewing the list of variants
@@ -73,6 +73,7 @@ class Variant extends Object {
                         'patientid' => 'Patient ID',
                         'allele' => 'Allele',
                         'pathogenicid' => 'Pathogenicity',
+                        'chromosome' => 'Chromosome',
                         'position_g_start' => 'Genomic start position',
                         'position_g_end' => 'Genomic end position',
                         'type' => 'Type',
@@ -80,6 +81,7 @@ class Variant extends Object {
                         'created_by_' => 'Created by',
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
+                        'valid_from' => 'Date last edited',
                       );
 
         // Because the disease information is publicly available, remove some columns for the public.

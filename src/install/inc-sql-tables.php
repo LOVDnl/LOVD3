@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2010-12-31
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-04
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -30,8 +30,6 @@
 
 // STILL TODO: genomic DNA field is standard and not custom???
 // VARIANTS_COLS en PHENOTYPE_COLS samenvoegen... why not? Misschien zelfs samenvoegen met ACTIVE_COLS tot 1 tabel? Ik moet dat echt nog ff uitdenken...
-// Heeft variant niet een owner id nodig? Of dat is de owner van de screening? Maar dat kunnen meerdere mensen zijn...
-// De variant kolommen moeten nog verdeeld worden; kolommen moeten naar transcript specifieke tabel.
 // transcripts echt altijd aan genen vast??? Of misschien niet??? microRNA's??
 // PATHOGENICITY.....
 // All those IDs for the genes!!! Store differently?
@@ -39,9 +37,8 @@
 // "Parental_origin and Origin attributes have been merged into one attribute called as genetic_source."
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
 // Allow download staat nu per gen, en de losse varianten dan?
-// Refseq velden staan nu bij gen, moeten naar transcript???
+// Human readable refseq velden staan nu bij gen, moeten naar transcript???
 // Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan patient???
-// FIXME; chromosome moet naar table_variants, niet in table_variants_on_transcripts
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {
@@ -109,6 +106,7 @@ $aTableSQL =
     id VARCHAR(12) NOT NULL,
     symbol VARCHAR(12) NOT NULL,
     name VARCHAR(255) NOT NULL,
+    chromosome VARCHAR(2) NOT NULL,
     chrom_location VARCHAR(20) NOT NULL,
     refseq_genomic VARCHAR(15) NOT NULL,
     reference VARCHAR(255) NOT NULL,
@@ -169,7 +167,6 @@ $aTableSQL =
     id_protein_ncbi VARCHAR(255) NOT NULL,
     id_protein_ensembl VARCHAR(255) NOT NULL,
     id_protein_uniprot VARCHAR(8) NOT NULL,
-    chromosome VARCHAR(2) NOT NULL,
     position_c_mrna_start SMALLINT NOT NULL,
     position_c_mrna_end MEDIUMINT UNSIGNED NOT NULL,
     position_c_cds_end MEDIUMINT UNSIGNED NOT NULL,
@@ -262,9 +259,11 @@ $aTableSQL =
     patientid MEDIUMINT(8) UNSIGNED ZEROFILL,
     allele TINYINT(2) UNSIGNED NOT NULL,
     pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
+    chromosome VARCHAR(2) NOT NULL,
     position_g_start INT UNSIGNED,
     position_g_end INT UNSIGNED,
     type VARCHAR(10),
+    ownerid SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED,
     created_date DATETIME NOT NULL,
@@ -279,12 +278,14 @@ $aTableSQL =
     INDEX (allele),
     INDEX (pathogenicid),
     INDEX (position_g_start, position_g_end),
+    INDEX (ownerid),
     INDEX (statusid),
     INDEX (created_by),
     INDEX (edited_by),
     INDEX (deleted_by),
     FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL,
+    FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
@@ -296,7 +297,6 @@ $aTableSQL =
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
     transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
     pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
-    chromosome VARCHAR(2) NOT NULL,
     position_c_start MEDIUMINT,
     position_c_start_intron INT,
     position_c_end MEDIUMINT,

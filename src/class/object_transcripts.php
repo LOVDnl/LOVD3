@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2010-12-28
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2011-01-04
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -57,8 +57,8 @@ class Transcript extends Object {
         //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 't.*, uc.name AS created_by_, ue.name AS edited_by_, count(DISTINCT vot.id) AS variants';
-        $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (t.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (t.edited_by = ue.id)';
+        $this->aSQLViewEntry['SELECT']   = 't.*, g.name AS genename, g.chromosome, uc.name AS created_by_, ue.name AS edited_by_, count(DISTINCT vot.id) AS variants';
+        $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (t.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (t.edited_by = ue.id)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 't.id';
 
         // SQL code for viewing the list of transcripts
@@ -70,12 +70,13 @@ class Transcript extends Object {
         $this->aColumnsViewEntry =
                  array(
                         'name' => 'Transcript name',
+                        'genename_' => 'Gene name',
+                        'chromosome' => 'Chromosome',
                         'id_ncbi' => 'Transcript - NCBI ID',
                         'id_ensembl' => 'Transcript - Ensembl ID',
                         'id_protein_ncbi' => 'Protein - NCBI ID',
                         'id_protein_ensembl' => 'Protein - Ensembl ID',
                         'id_protein_uniprot' => 'Protein - Uniprot ID',
-                        'chromosome' => 'Chromosome',
                         'created_by_' => 'Created by',
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
@@ -203,6 +204,8 @@ class Transcript extends Object {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
             //$zData['geneid'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['geneid'] . '</A>';
+        } else {
+            $zData['genename_'] = '<A href="genes/' . $zData['geneid'] . '">' . $zData['geneid'] . '</A> (' . $zData['genename'] . ')';
         }
 
         return $zData;

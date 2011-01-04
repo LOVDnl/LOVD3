@@ -366,11 +366,13 @@ class Gene extends Object {
 //            $zData['footer_align']     = '<IMG src="gfx/mark_' . $zData['footer_align'] . '.png" alt="" width="11" height="11">';
 
             $zData['diseases_'] = $zData['disease_omim_'] = '';
-            $aDiseases = explode(';;', $zData['diseases']);
-            foreach ($aDiseases as $sDisease) {
-                list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
-                $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
-                $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
+            if (!empty($zData['diseases'])) {
+                $aDiseases = explode(';;', $zData['diseases']);
+                foreach ($aDiseases as $sDisease) {
+                    list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
+                    $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
+                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
+                }
             }
 
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
