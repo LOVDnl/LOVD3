@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-09-09
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2011-01-06
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -144,23 +144,23 @@ lovd_includeJS(ROOT_PATH . 'inc-js-toggle-visibility.js', 1); // Used on forms a
       <IMG src="gfx/LOVD_logo130x50.jpg" alt="LOVD - Leiden Open Variation Database" width="130" height="50">
     </TD>
 <?php
-$sSymbol = $sGene = '';
+$sCurrSymbol = $sCurrGene = '';
 // DMD_SPECIFIC; decide later what will happen here. Only show gene when you're truly working in it? In which case, it's a variable somewhere?
 /*
 // During submission, show the gene we're submitting to in stead of the currently selected gene.
 if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
     // Fetch gene's info from db... we don't have it anywhere yet.
-    list($sSymbol, $sGene) = mysql_fetch_row(mysql_query('SELECT symbol, gene FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['gene'] . '"'));
+    list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(mysql_query('SELECT symbol, gene FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['gene'] . '"'));
 } elseif (!empty($_SESSION['currdb'])) {
     // Just use currently selected database.
-    $sSymbol = $_SESSION['currdb'];
-    $sGene = $_SETT['currdb']['gene'];
+    $sCurrSymbol = $_SESSION['currdb'];
+    $sCurrGene = $_SETT['currdb']['gene'];
 }
 */
 
 print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
       '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>' . "\n" .
-      ($sSymbol && $sGene? '      <H5 id="gene_name">' . $sGene . ' (' . $sSymbol . ')&nbsp;<A href="#" onclick="javascript:lovd_switchGeneInline(); return false;"><IMG src="gfx/lovd_database_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top"></A></H5>' . "\n" : '') .
+      ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')&nbsp;<A href="#" onclick="javascript:lovd_switchGeneInline(); return false;"><IMG src="gfx/lovd_database_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top"></A></H5>' . "\n" : '') .
       '    </TD>' . "\n" .
       '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
       '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] . ' [ <A href="genes?status">Current LOVD status</A> ]<BR>' . "\n");
@@ -176,9 +176,9 @@ print('    </TD>' . "\n" .
 
 // Add curator info to header.
 // DMD_SPECIFIC; Note that users email is now more complex. It can contain more lines. So trim() and explode? Or preg_match until the first whitespace or something?
-if ($sSymbol && $sGene) {
+if ($sCurrSymbol && $sCurrGene) {
     $sCurators = '';
-    $qCurators = lovd_queryDB('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.geneid = ? AND u2g.allow_edit = 1 ORDER BY u.level DESC, u.name', array($sSymbol));
+    $qCurators = lovd_queryDB('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.geneid = ? AND u2g.allow_edit = 1 ORDER BY u.level DESC, u.name', array($sCurrSymbol));
     $nCurators = mysql_num_rows($qCurators);
     $i = 0;
     while ($z = mysql_fetch_assoc($qCurators)) {

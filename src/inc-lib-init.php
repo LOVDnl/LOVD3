@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2010-12-28
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-06
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *             : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  * This file is part of LOVD.
  *
@@ -427,7 +427,7 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
             // No use continuing - it will only cause errors.
             return false;
         }
-        $sRequest = ($sPOST? 'POST ' : 'GET ') . $aURL['path'] . '?' . $aURL['query'] . ' HTTP/1.0' . "\r\n" .
+        $sRequest = ($sPOST? 'POST ' : 'GET ') . $aURL['path'] . (empty($aURL['query'])? '' : '?' . $aURL['query']) . ' HTTP/1.0' . "\r\n" .
                     'Host: ' . $aURL['host'] . "\r\n" .
                     (!$sPOST? '' :
                     'Content-length: ' . strlen($sPOST) . "\r\n" .

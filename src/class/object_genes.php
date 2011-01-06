@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2010-12-31
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-06
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *     
@@ -157,7 +157,7 @@ class Gene extends Object {
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
         }
-
+        
         // Mandatory fields.
         $this->aCheckMandatory =
                  array(
@@ -191,7 +191,7 @@ class Gene extends Object {
     function getForm ()
     {
         // Build the form.
-
+        global $_CONF;
         // Get list of genes
         $aData = array();
         $qData = mysql_query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
@@ -200,12 +200,16 @@ class Gene extends Object {
         while ($r = mysql_fetch_row($qData)) {
             $aData[$r[0]] = $r[1];
         }
-        $aSelectReference = array(
-                                '----' => '---- / Non-Human',
-                                'hg18' => 'hg18 / Build 36.1',
-                                'hg19' => 'hg19 / GRCh37'
-                                 );
-                                  
+        
+        $aTranscripts = mutalyzer_SOAP_module_call("getTranscriptsByGeneName", array("build" => $_CONF['refseq_build'], "name" => $_POST['symbol']));
+        $aTranscriptsForm = array();
+        foreach ($aTranscripts as $sTranscript) {
+            $aTranscriptsForm[$sTranscript] = $sTranscript;
+        }
+        asort($aTranscriptsForm);
+        $nTranscriptsFormSize = count($aTranscriptsForm);
+        $nTranscriptsFormSize = ($nTranscriptsFormSize < 10? $nTranscriptsFormSize : 10);
+
         $aSelectRefseq = array(
                                 'c' => 'Coding DNA',
                                 'g' => 'Genomic'
@@ -224,11 +228,12 @@ class Gene extends Object {
         $this->aFormData =
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
+                        'skip',
                         array('', '', 'print', '<B>General information</B>'),
                         'hr',
                         array('Full gene name', '', 'text', 'name', 40),
                         'hr',
-                        array('Official gene symbol', '', 'text', 'name', 10),
+                        array('Official gene symbol', '', 'text', 'symbol', 10),
                         array('', '', 'note', 'The gene symbol is used by LOVD to reference to this gene and can\'t be changed later on. To create multiple databases for one gene, append \'_\' and an indentifier, i.e. \'DMD_point\' and \'DMD_deldup\' for the DMD gene.'),
                         'hr',
                         array('Chromosomal location', '', 'text', 'chrom_location', 10),
@@ -241,7 +246,7 @@ class Gene extends Object {
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
                         'hr',
-                        array('This gene has been linked to these diseases', '', 'select', 'active_genes', $nFieldSize, $aData, false, true, false),
+                        array('This gene has been linked to these diseases', '', 'select', 'active_diseases', $nFieldSize, $aData, false, true, false),
                         'hr',
                         'skip',
                         'skip',
@@ -257,18 +262,15 @@ class Gene extends Object {
                         array('NCBI accession number for the genomic reference sequence', '', 'text', 'refseq_genomic', 15),
                         array('', '', 'note', 'Fill in the NCBI GenBank ID of the genomic reference sequence (NG or NC accession numbers), such as "NG_012232.1" or "NC_000023.10". Always include the version number as well!'),
                         'hr',
-                        array('NCBI accession number for the transcript reference sequence', '', 'print', '<B>Transcripts here!!!</B>'),
+                        array('NCBI accession number for the transcript reference sequence', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
                         array('', '', 'note', 'Fill in the NCBI GenBank ID of the transcript reference sequence (NM/NR accession numbers), such as "NM_004006.2". Always include the version number as well!'),
-                        'hr',
-                        array('Human Build to map to (UCSC/NCBI)', '', 'select', 'reference', 1, $aSelectReference, '', false, false),
-                        array('', '', 'note', 'We need to know which version of the Human Build we need to map to.'),
                         'hr',
                         'skip',
                         'skip',
                         array('', '', 'print', '<B>Links to information sources (optional)</B>'),
                         array('', '', 'note', 'Here you can add links that will be displayed on the gene\'s LOVD gene homepage.'),
                         'hr',
-                        array('Homepage URL', '', 'text', 'name', 40),
+                        array('Homepage URL', '', 'text', 'url_homepage', 40),
                         array('', '', 'note', 'If you have a separate homepage about this gene, you can specify the URL here. Format: complete URL, including "http://".'),
                         'hr',
                         array('External links', '', 'textarea', 'url_external', 55, 3),
@@ -286,7 +288,7 @@ class Gene extends Object {
                         array('Provide link to GeneCards', '', 'checkbox', 'show_genecards'),
                         array('', '', 'note', 'Do you want a link to this gene\'s entry in the GeneCards database added to the homepage?'),
                         'hr',
-                        array('Provide link to GeneTests', '', 'checkbox', 'show_genetest'),
+                        array('Provide link to GeneTests', '', 'checkbox', 'show_genetests'),
                         array('', '', 'note', 'Do you want a link to this gene\'s entry in the GeneTests database added to the homepage?'),
                         'hr',
                         array('This gene has a human-readable reference sequence', '', 'select', 'refseq', 1, $aSelectRefseq, 'No', false, false),
@@ -300,7 +302,7 @@ class Gene extends Object {
                         array('', '', 'print', '<B>Customizations (optional)</B>'),
                         array('', '', 'note', 'You can use the following fields to customize the gene\'s LOVD gene homepage.'),
                         'hr',
-                        array('Citation reference(s)', '', 'textarea', 'Gene/Reference', 30, 3),
+                        array('Citation reference(s)', '', 'textarea', 'reference', 30, 3),
                         array('', '', 'note', '(Active custom link : <A href="#" onclick="javascript:lovd_openWindow(\'' . ROOT_PATH . 'links.php?view=1&amp;col=Gene/Reference\', \'LinkView\', \'800\', \'200\'); return false;">PubMed</A>)'),
                         'hr',
                         array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, 'No', false, false),
@@ -375,6 +377,7 @@ class Gene extends Object {
                 }
             }
 
+
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID);
@@ -388,6 +391,5 @@ class Gene extends Object {
 
         return $zData;
     }
-
 }
 ?>

@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2010-12-31
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-06
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *             : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -342,7 +342,7 @@ function lovd_getColumnType ($sTable, $sCol)
 
 
 
-/*
+
 // DMD_SPECIFIC
 function lovd_matchDate ($s, $bTime = false)
 {
@@ -351,7 +351,7 @@ function lovd_matchDate ($s, $bTime = false)
     // 2009-06-18; 2.0-19; Added $bTime flag to check DATETIME column types.
     return (preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}' . ($bTime? ' [0-2][0-9]\:[0-5][0-9]\:[0-5][0-9]' : '') . '$/', $s));
 }
-*/
+
 
 
 

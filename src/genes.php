@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2010-12-24
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2011-01-06
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -99,6 +99,100 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
     exit;
 }
 
+if (empty($_PATH_ELEMENTS[1]) && ACTION == 'find_hgnc') {
+    // URL: /genes?find_hgnc
+    // Find the hgnc entry
+    
+    define('PAGE_TITLE', 'LOVD Setup - Create new gene');
+    define('LOG_EVENT', 'GeneFindHgnc');
+    
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+    
+    require ROOT_PATH . 'inc-lib-form.php';
+    
+    if(!empty($_POST)) {
+        lovd_errorClean();
+        
+        if (preg_match("/^[0-9]+$/", $_POST['hgnc_id'])) {
+            $sWhere = 'gd_hgnc_id%3D' . $_POST['hgnc_id'];
+        } else {
+            $sWhere = 'gd_app_sym%3D%22' . $_POST['hgnc_id'] . '%22';
+        }
+        
+        $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_pub_chrom_map&col=gd_pub_eg_id&col=md_mim_id&status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit', false, false);
+        
+        if (isset($aHgncFile['1'])) {
+            $sHgncEntry = $aHgncFile['1'];
+            
+            @list($sHgncID, $sSymbol, $sName, $sChrom, $sEntrez, $sOmim) = explode("\t", $sHgncEntry);
+            if ($sName == 'entry withdrawn') {
+                lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' no longer exists in the HGNC database.');
+            } else if (preg_match('/^symbol withdrawn, see (.+)$/', $sName, $aRegs)) {
+                lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' is deprecated, please use ' . $aRegs[1]);
+            }
+        } else {
+            if ($_POST['hgnc_id'] == '') {
+                lovd_errorAdd('hgnc_id', 'No HGNC ID or Gene symbol was specified');
+            } else {
+                lovd_errorAdd('hgnc_id', 'Entry was not found in the HGNC database.');
+            }
+        }
+        
+        if (!lovd_error()) {
+            require ROOT_PATH . 'inc-top.php';
+            lovd_showInfoTable('Found gene in the HGNC database, now building form...', 'success');
+            print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create" method="post">' . "\n" .
+                  '        <INPUT type="hidden" name="symbol" value="' . $sSymbol . '">' . "\n" .
+                  '        <INPUT type="hidden" name="name" value="' . $sName . '">' . "\n" .
+                  '        <INPUT type="hidden" name="chrom_location" value="' . $sChrom . '">' . "\n" .
+                  '        <INPUT type="hidden" name="id_hgnc" value="' . $sHgncID . '">' . "\n" .
+                  '        <INPUT type="hidden" name="id_entrez" value="' . $sEntrez . '">' . "\n" .
+                  '        <INPUT type="hidden" name="id_omim" value="' . $sOmim . '">' . "\n" .
+                  '        <INPUT type="hidden" name="hgnc_found" value="true">' . "\n" .
+                  '        <INPUT type="submit" value="Continue &raquo;">' . "\n" .
+                  '      </FORM>' . "\n\n" .
+                  '      <SCRIPT type="text/javascript">' . "\n" .
+                  '        <!--' . "\n" .
+                  '        document.forms[0].submit();' . "\n" .
+                  '        // -->' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+        
+            lovd_checkXSS();
+        
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+    } else {
+        // Unset the input post value.
+        unset($_POST['hgnc_id']);
+    }
+    
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+    
+    print('      Please fill in the HGNC ID or Gene Symbol for the gene database you wish to create.<BR>' . "\n" .
+          '      <BR>' . "\n\n");
+    
+    lovd_errorPrint();
+    
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
+          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+
+    // Array which will make up the form table.
+    $aFormData = array(
+                    array('POST', '', '', '', '30%', '14', '70%'),
+                    array('HGNC ID or Gene Symbol', '', 'text', 'hgnc_id', 10),
+                    array('', '', 'submit', 'Continue &raquo;'),
+                  );
+    lovd_viewForm($aFormData);
+
+    print('</TABLE></FORM>' . "\n\n");
+    
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // URL: /genes?create
     // Create a new entry.
@@ -110,62 +204,86 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_genes.php';
-    $_DATA = new Gene();
     require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'class/REST2SOAP.php';
+    $_DATA = new Gene();
+    
+    if (!isset($_POST['hgnc_found'])) {
+        
+        if (!empty($_POST)) {
+            lovd_errorClean();
 
-    if (!empty($_POST)) {
-        lovd_errorClean();
+            $_DATA->checkFields($_POST);
+            
+            if (!lovd_error()) {
+                // Fields to be used.
+                $aFields = array(
+                                'id', 'symbol', 'name', 'chromosome', 'chrom_location', 'refseq_genomic', 'reference', 'url_homepage',
+                                'url_external', 'allow_download', 'allow_index_wiki', 'id_hgnc', 'id_entrez', 'id_omim', 'show_hgmd',
+                                'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer',
+                                'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align'
+                                );
 
-        $_DATA->checkFields($_POST);
+                // Prepare values.
+                $_POST['created_by'] = $_AUTH['id'];
+                $_POST['created_date'] = date('Y-m-d H:i:s');
+                $_POST['id'] = $_POST['symbol'];
+                $_POST['chromosome'] = substr($_POST['chrom_location'], 0, 1);
+                
+                $nID = $_DATA->insertEntry($_POST, $aFields);
 
-        if (!lovd_error()) {
-            // Fields to be used.
-            $aFields = array('symbol', 'name', 'id_omim', 'created_by', 'created_date');
+                // Write to log...
+                lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');
 
-            // Prepare values.
-            $_POST['created_by'] = $_AUTH['id'];
-            $_POST['created_date'] = date('Y-m-d H:i:s');
-
-            $nID = $_DATA->insertEntry($_POST, $aFields);
-
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');
-
-            // Add genes.
-            $aSuccess = array();
-            foreach ($_POST['active_genes'] as $sGene) {
-                // Add gene to disease.
-                $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
-                if (!$q) {
-                    // Silent error.
-                    lovd_writeLog('Error', LOG_EVENT, 'Gene information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
-                } else {
-                    $aSuccess[] = $sGene;
+                // Add diseases.
+                $aSuccessDiseases = array();
+                $aSuccessTranscripts = array();
+                foreach ($_POST['active_diseases'] as $sDisease) {
+                    // Add disease to gene.
+                    $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $sDisease));
+                    if (!$q) {
+                        // Silent error.
+                        lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $sDisease . ' - could not be added to gene ' . $_POST['id']);
+                    } else {
+                        $aSuccessDiseases[] = $sDisease;
+                    }
                 }
+                foreach($_POST['active_transcripts'] as $sTranscript) {
+                    // Add transcript to gene
+                    $q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())', array($_POST['id'], 'Transcript ' . $_POST['id'], $sTranscript, '1', '1', '1', '1', 1, 1, 1, 1, 1));
+                    //$q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NULL, NULL)', array($_POST['id'], 'TEST', $sTranscript, '1', '1', '1', '1', 1, 1, 1, 1, 1));
+                    if (!$q) {
+                        // Silent error.
+                        lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
+                    } else {
+                        $aSuccessTranscripts[] = $sTranscript;
+                    }
+                }
+                if (count($aSuccessDiseases) && count($aSuccessTranscripts)) {
+                    lovd_writeLog('Event', LOG_EVENT, 'Disease and transcript information entries successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['symbol']);
+                }
+
+                // Thank the user...
+                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_POST['id']);
+
+                require ROOT_PATH . 'inc-top.php';
+                lovd_printHeader(PAGE_TITLE);
+                lovd_showInfoTable('Successfully created the gene information entry!', 'success');
+
+                require ROOT_PATH . 'inc-bot.php';
+                exit;
+
+            } else {
+                // Because we're sending the data back to the form, I need to unset the password fields!
+                unset($_POST['password']); // Currently does not have an effect here.
             }
-            if (count($aSuccess)) {
-                lovd_writeLog('Event', LOG_EVENT, 'Gene information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - successfully added to gene(s) ' . implode(', ', $aSuccess));
-            }
-
-            // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
-
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Successfully created the gene information entry!', 'success');
-
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
 
         } else {
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']); // Currently does not have an effect here.
+            // Default values.
+            $_DATA->setDefaultValues();
         }
-
     } else {
-        // Default values.
-        $_DATA->setDefaultValues();
-        $_POST['reference'] = 'hg19';
+        unset($_POST['hgnc_found']);
     }
 
 
@@ -182,18 +300,19 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-
+    
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
+    
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
                         array('', '', 'submit', 'Create gene information entry'),
                       ));
     lovd_viewForm($aForm);
-
+    
     print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
