@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-01-04
+ * Modified    : 2011-01-12
  * For LOVD    : 3.0-pre-13
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -581,6 +581,16 @@ if (!defined('_NOT_INSTALLED_')) {
         define('ACTION', false);
     }
 
+    // STUB; This should be implemented properly later on.
+    define('OFFLINE_MODE', false);
+
+    // Define constant for request method.
+    define($_SERVER['REQUEST_METHOD'], true);
+    @define('GET', false);
+    @define('POST', false);
+    @define('PUT', false);
+    @define('DELETE', false);
+
     // We really don't need any of this, if we're loaded by the update picture.
     // DMD_SPECIFIC; CHECK THIS BLOCK LATER
     if (lovd_getProjectFile() != '/check_update.php') {
@@ -606,7 +616,7 @@ if (!defined('_NOT_INSTALLED_')) {
             if (in_array($_GET['select_db'], lovd_getGeneList())) {
                 // Change this in de database if user is logged in.
                 if ($_AUTH && $_AUTH['current_db'] != $_GET['select_db']) {
-                    $sQ = 'UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_GET['select_db'] . '" WHERE userid = "' . $_AUTH['userid'] . '"';
+                    $sQ = 'UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_GET['select_db'] . '" WHERE id = "' . $_AUTH['id'] . '"';
                     $q = @mysql_query($sQ);
                     if (!$q) {
                         lovd_dbFout('UpdateCurrDB', $sQ, mysql_error(), false);
@@ -655,7 +665,7 @@ if (!defined('_NOT_INSTALLED_')) {
                 define('ON_WINDOWS', false);
         }
 
-        $_SETT['headers'] = 'MIME-Version: 1.0' . $sEol .
+        $_SETT['email_headers'] = 'MIME-Version: 1.0' . $sEol .
                             'Content-Type: text/plain; charset=ISO-8859-1' . $sEol .
                             'X-Priority: 3' . $sEol .
                             'X-MSMail-Priority: Normal' . $sEol .

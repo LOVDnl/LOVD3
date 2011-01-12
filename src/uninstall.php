@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2010-05-07
- * For LOVD    : 3.0-pre-07
+ * Modified    : 2011-01-11
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -80,34 +80,21 @@ if (!empty($_POST)) {
                 print('      <B>Uninstalling LOVD...</B><BR>' . "\n" .
                       '      <BR>' . "\n\n");
 
-                print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="440">' . "\n" .
-                      '        <TR>' . "\n" .
-                      '          <TD width="400" style="border : 1px solid black; height : 15px;">' . "\n" .
-                      '            <IMG src="gfx/trans.png" alt="" title="0%" width="0%" height="15" id="lovd_install_progress_bar" style="background : #224488;"></TD>' . "\n" .
-                      '          <TD width="40" align="right" id="lovd_install_progress_value">0%</TD></TR></TABLE>' . "\n\n" .
-                      '      <DIV id="lovd_install_progress_text" style="margin-top : 0px;">' . "\n" .
-                      '        Initiating removal of LOVD...' . "\n" .
-                      '      </DIV><BR>' . "\n\n\n" .
-                      '      <DIV id="install_form" style="visibility : hidden;">' . "\n" .
-                      '      </DIV>' . "\n\n" .
-                      '      <SCRIPT type="text/javascript">' . "\n" .
-                      '        var progress_bar = document.getElementById(\'lovd_install_progress_bar\');' . "\n" .
-                      '        var progress_value = document.getElementById(\'lovd_install_progress_value\');' . "\n" .
-                      '        var progress_text = document.getElementById(\'lovd_install_progress_text\');' . "\n" .
-                      '        var install_form = document.getElementById(\'install_form\');' . "\n" .
-                      '      </SCRIPT>' . "\n\n\n");
+                require ROOT_PATH . 'class/progress_bar.php';
+                // This already puts the progress bar on the screen.
+                $_BAR = new ProgressBar('', 'Initiating removal of LOVD...');
 
-                define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually cloes the <BODY> and <HTML> tags.
+                define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
                 require ROOT_PATH . 'install/inc-bot.php';
 
+                // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
 
-                // Now we're still in the <BODY> so we can add <SCRIPT> tags as much as we want.
                 // The reason to invert the tables is to handle all foreign key constraints nicely.
                 $aTables = array_reverse($_TABLES);
                 $nTables = count($aTables);
 
-                print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'Removing data tables...\';</SCRIPT>' . "\n");
+                $_BAR->setMessage('Removing data tables...');
 
                 // Actually run the SQL...
                 $nSQLDone = 0;
@@ -122,7 +109,8 @@ if (!empty($_POST)) {
                         $sMessage = 'Error during uninstallation while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', mysql_error()) . '</DIV><BR><BR>' .
                                     'A failed uninstallation is most likely caused by a bug in LOVD.<BR>' .
                                     'Please <A href="' . $_SETT['upstream_URL'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
-                        print('<SCRIPT type="text/javascript">install_form.innerHTML=\'' . str_replace('\'', '\\\'', $sMessage) . '\'; install_form.style.visibility=\'visible\';</SCRIPT>' . "\n");
+                        $_BAR->setMessage($sMessage, 'done');
+                        $_BAR->setMessageVisibility('done', true);
                         lovd_queryDB('DROP TABLE IF EXISTS ' . implode(', ', $aTables)); // Try again to remove everything.
                         print('</BODY>' . "\n" .
                               '</HTML>' . "\n");
@@ -136,7 +124,7 @@ if (!empty($_POST)) {
                         $nSQLDonePercentage = 99;
                     }
                     if ($nSQLDonePercentage != $nSQLDonePercentagePrev) {
-                        print('<SCRIPT type="text/javascript">progress_bar.style.width = \'' . $nSQLDonePercentage . '%\'; progress_value.innerHTML = \'' . $nSQLDonePercentage . '%\'; </SCRIPT>' . "\n");
+                        $_BAR->setProgress($nSQLDonePercentage);
                         $nSQLDonePercentagePrev = $nSQLDonePercentage;
                     }
                     flush();
@@ -145,7 +133,8 @@ if (!empty($_POST)) {
                 usleep(300000);
 
                 // All done!
-                print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'LOVD successfully uninstalled!<BR>Thank you for having used LOVD!\'; install_form.style.visibility=\'visible\';</SCRIPT>' . "\n");
+                $_BAR->setMessage('LOVD successfully uninstalled!<BR>Thank you for having used LOVD!');
+                $_BAR->setMessageVisibility('done', true);
                 print('</BODY>' . "\n" .
                       '</HTML>' . "\n");
                 exit;

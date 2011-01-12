@@ -239,7 +239,7 @@ class User extends Object {
 
         // Level can't be higher or equal than the current user.
         if (!empty($aData['level']) && $aData['level'] >= $_AUTH['level']) {
-            lovd_writeLog('Error', 'HackAttempt', 'Tried to upgrade userid ' . $_PATH_ELEMENTS[1] . ' to level ' . $_SETT['user_levels'][$aData['level']] . ')');
+            lovd_writeLog('Error', 'HackAttempt', 'Tried to upgrade user ID ' . $_PATH_ELEMENTS[1] . ' to level ' . $_SETT['user_levels'][$aData['level']] . ')');
             lovd_errorAdd('level', 'User level is not permitted. Hack attempt.');
         }
 

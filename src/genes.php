@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-01-06
+ * Modified    : 2011-01-12
  * For LOVD    : 3.0-pre-13
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,6 +99,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
     exit;
 }
 
+
+
+
+
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'find_hgnc') {
     // URL: /genes?find_hgnc
     // Find the hgnc entry
@@ -192,6 +196,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'find_hgnc') {
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
+
+
+
+
 
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // URL: /genes?create
@@ -291,7 +299,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
     
-    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    if (GET) {
         print('      To create a new gene database, please complete the form below and press "Create" at the bottom of the form..<BR>' . "\n" .
               '      <BR>' . "\n\n");
     }
@@ -318,6 +326,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
+
+
+
+
 
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /genes/DMD?delete
@@ -509,7 +521,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
     lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
 
     // GROUP BY only necessary because of the COUNT(*) in the query.
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT d.*, COUNT(p2v.variantid) AS variants, u_c.name AS created_by, u_e.name AS edited_by, u_u.name AS updated_by FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol) LEFT JOIN ' . TABLE_USERS . ' AS u_c ON (d.created_by = u_c.userid) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_e ON (d.edited_by = u_e.userid) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_u ON (d.updated_by = u_u.userid) WHERE d.symbol = "' . $_GET['view'] . '" GROUP BY d.symbol'));
+    $zData = @mysql_fetch_assoc(mysql_query('SELECT d.*, COUNT(p2v.variantid) AS variants, u_c.name AS created_by, u_e.name AS edited_by, u_u.name AS updated_by FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol) LEFT JOIN ' . TABLE_USERS . ' AS u_c ON (d.created_by = u_c.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_e ON (d.edited_by = u_e.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_u ON (d.updated_by = u_u.id) WHERE d.symbol = "' . $_GET['view'] . '" GROUP BY d.symbol'));
     if (!$zData) {
         // Wrong ID, apparently.
         print('      No such ID!<BR>' . "\n");
@@ -856,7 +868,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
                 $_POST['created_date'] = 'NOW()';
             }
 
-            $sQ .= ', "' . $_AUTH['userid'] . '", ' . $_POST['created_date'] . ', NULL, NULL, "' . $_AUTH['userid'] . '", NOW())';
+            $sQ .= ', "' . $_AUTH['id'] . '", ' . $_POST['created_date'] . ', NULL, NULL, "' . $_AUTH['id'] . '", NOW())';
 
             // If using transactional tables; begin transaction.
             if ($_INI['database']['engine'] == 'InnoDB') {
@@ -875,7 +887,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
             }
 
             // Make current user curator of this gene.
-            $sQ = 'INSERT INTO ' . TABLE_CURATES . ' VALUES ("' . $_AUTH['userid'] . '", "' . $_POST['symbol'] . '", 1)';
+            $sQ = 'INSERT INTO ' . TABLE_CURATES . ' VALUES ("' . $_AUTH['id'] . '", "' . $_POST['symbol'] . '", 1)';
             $q = @mysql_query($sQ);
             if (!$q) {
                 // Save the mysql_error before it disappears.
@@ -1038,7 +1050,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
             header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/config.php?select_db=' . $_POST['symbol'] . lovd_showSID(true));
 
             // Set currdb.
-            @mysql_query('UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_POST['symbol'] . '" WHERE userid = "' . $_AUTH['userid'] . '"');
+            @mysql_query('UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_POST['symbol'] . '" WHERE id = "' . $_AUTH['id'] . '"');
             $_SESSION['currdb'] = $_POST['symbol'];
             // These just to have inc-top.php what it needs.
             $_SETT['currdb'] = array(

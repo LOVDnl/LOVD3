@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-01-03
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-07
+ * For LOVD    : 3.0-pre-13
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -123,12 +123,12 @@ class Object {
                 switch ($sMySQLType) {
                     case 'DATE':
                         if (!lovd_matchDate($aData[$sName])) {
-                            lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date.');
+                            lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date in the format YYYY-MM-DD.');
                         }
                         break;
                     case 'DATETIME':
                         if (!preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}\:[0-9]{2})?$/', $aData[$sName])) {
-                            lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time.');
+                            lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time, in the format YYYY-MM-DD HH:MM:SS.');
                         }
                         break;
                     case 'DEC':
@@ -408,10 +408,9 @@ class Object {
         }
 
         $zData = $this->prepareData($zData, 'entry');
-        
-        
-        print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
+
         // Print the data.
+        print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
         foreach ($this->aColumnsViewEntry as $sField => $sHeader) {
             if (preg_match("/TableStart/", $sField)) {
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
@@ -423,9 +422,9 @@ class Object {
                 print('<hr>');
             } else {
                 print("\n" .
-                  '        <TR>' . "\n" .
-                  '          <TH valign="top">' . str_replace(' ', '&nbsp;', $sHeader) . '</TH>' . "\n" .
-                  '          <TD>' . ($zData[$sField] === ''? '-' : str_replace(array("\r\n", "\r", "\n"), '<BR>', $zData[$sField])) . '</TD></TR>');
+                      '        <TR>' . "\n" .
+                      '          <TH valign="top">' . str_replace(' ', '&nbsp;', $sHeader) . '</TH>' . "\n" .
+                      '          <TD>' . ($zData[$sField] === ''? '-' : str_replace(array("\r\n", "\r", "\n"), '<BR>', $zData[$sField])) . '</TD></TR>');
             }
         }
         print('</TABLE>' . "\n\n");

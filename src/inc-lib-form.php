@@ -342,16 +342,12 @@ function lovd_getColumnType ($sTable, $sCol)
 
 
 
-
-// DMD_SPECIFIC
 function lovd_matchDate ($s, $bTime = false)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Matches a string to the date pattern, one that MySQL can understand.
-    // 2009-06-18; 2.0-19; Added $bTime flag to check DATETIME column types.
     return (preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}' . ($bTime? ' [0-2][0-9]\:[0-5][0-9]\:[0-5][0-9]' : '') . '$/', $s));
 }
-
 
 
 
@@ -440,7 +436,7 @@ function lovd_setUpdatedDate ($sGene)
     // Does this user have rights on this gene? It doesn't really matter that much, but still.
     if (lovd_isCurator($sGene)) {
         // Just update the database and we'll see what happens.
-        @mysql_query('UPDATE ' . TABLE_DBS . ' SET updated_by = "' . $_AUTH['userid'] . '", updated_date = NOW() WHERE symbol = "' . $sGene . '"');
+        @mysql_query('UPDATE ' . TABLE_DBS . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE symbol = "' . $sGene . '"');
         if (mysql_affected_rows() > 0) {
             return true;
         }

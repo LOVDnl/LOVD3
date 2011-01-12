@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-01-04
+ * Modified    : 2011-01-11
  * For LOVD    : 3.0-pre-13
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -153,49 +153,36 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         $aUpdates[$_SETT['system']['version']] = array();
     }
 
-    print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="440">' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TD width="400" style="border : 1px solid black; height : 15px;">' . "\n" .
-          '            <IMG src="gfx/trans.png" alt="" title="0%" width="0%" height="15" id="lovd_install_progress_bar" style="background : #224488;"></TD>' . "\n" .
-          '          <TD width="40" align="right" id="lovd_install_progress_value">0%</TD></TR></TABLE>' . "\n\n" .
-          '      <DIV id="lovd_install_progress_text" style="margin-top : 0px;">' . "\n" .
-          '        Checking upgrade lock...' . "\n" .
-          '      </DIV><BR>' . "\n\n\n" .
-          '      <DIV id="install_form" style="visibility : hidden;">' . "\n" .
-          '        <FORM action="' . $_SERVER['REQUEST_URI'] . '" method="post" id="upgrade_form">' . "\n");
+    require ROOT_PATH . 'class/progress_bar.php';
+    $sFormNextPage = '<FORM action="' . $_SERVER['REQUEST_URI'] . '" method="post" id="upgrade_form">' . "\n";
     foreach ($_POST as $key => $val) {
         // Added htmlspecialchars to prevent XSS and allow values to include quotes.
         if (is_array($val)) {
             foreach ($val as $value) {
-                print('          <INPUT type="hidden" name="' . $key . '[]" value="' . htmlspecialchars($value) . '">' . "\n");
+                $sFormNextPage .= '          <INPUT type="hidden" name="' . $key . '[]" value="' . htmlspecialchars($value) . '">' . "\n";
             }
         } else {
-            print('          <INPUT type="hidden" name="' . $key . '" value="' . htmlspecialchars($val) . '">' . "\n");
+            $sFormNextPage .= '          <INPUT type="hidden" name="' . $key . '" value="' . htmlspecialchars($val) . '">' . "\n";
         }
     }
-    print('          <INPUT type="submit" id="submit" value="Proceed &gt;&gt;">' . "\n" .
-          '        </FORM>' . "\n" .
-          '      </DIV>' . "\n\n" .
-          '      <SCRIPT type="text/javascript">' . "\n" .
-          '        var progress_bar = document.getElementById(\'lovd_install_progress_bar\');' . "\n" .
-          '        var progress_value = document.getElementById(\'lovd_install_progress_value\');' . "\n" .
-          '        var progress_text = document.getElementById(\'lovd_install_progress_text\');' . "\n" .
-          '        var install_form = document.getElementById(\'install_form\');' . "\n" .
-          '      </SCRIPT>' . "\n\n\n");
+    $sFormNextPage .= '          <INPUT type="submit" id="submit" value="Proceed &gt;&gt;">' . "\n" .
+                      '        </FORM>';
+    // This already puts the progress bar on the screen.
+    $_BAR = new ProgressBar('', 'Checking upgrade lock...', $sFormNextPage);
 
-    define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually cloes the <BODY> and <HTML> tags.
-    require 'inc-bot.php';
+    define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
+    require ROOT_PATH . 'inc-bot.php';
 
 
 
-    // Now we're still in the <BODY> so we can add <SCRIPT> tags as much as we want.
+    // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
     flush();
 
 
 
     // Try to update the upgrade lock.
     $sQ = 'UPDATE ' . TABLE_STATUS . ' SET lock_update = 1 WHERE lock_update = 0';
-    $nMax = 3; //FIXME should be higher, this value is for dev only
+    $nMax = 3; // FIXME; Should be higher, this value is for dev only
     for ($i = 0; $i < $nMax; $i ++) {
         lovd_queryDB($sQ);
         $bLocked = !mysql_affected_rows();
@@ -204,19 +191,19 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         }
 
         // No update means that someone else is updating the system.
-        print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'Update lock is in place, so someone else is already upgrading the database.<BR>Waiting for other user to finish... (' . ($nMax - $i) . ')\';</SCRIPT>' . "\n");
+        $_BAR->setMessage('Update lock is in place, so someone else is already upgrading the database.<BR>Waiting for other user to finish... (' . ($nMax - $i) . ')');
         flush();
         sleep(1);
     }
 
     if ($bLocked) {
         // Other user is taking ages! Or somethings wrong...
-        print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'Other user upgrading the database is still not finished.<BR>' . (isset($_GET['force_lock'])? 'Forcing upgrade as requested...' : 'This may indicate something went wrong during upgrade.') . '\';</SCRIPT>' . "\n");
+        $_BAR->setMessage('Other user upgrading the database is still not finished.<BR>' . (isset($_GET['force_lock'])? 'Forcing upgrade as requested...' : 'This may indicate something went wrong during upgrade.'));
         if (isset($_GET['force_lock'])) {
             $bLocked = false;
         }
     } else {
-        print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'Upgrading database backend...\';</SCRIPT>' . "\n");
+        $_BAR->setMessage('Upgrading database backend...');
     }
     flush();
 
@@ -243,7 +230,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
             if (lovd_calculateVersion($sVersion) <= $sCalcVersionDB || lovd_calculateVersion($sVersion) > $sCalcVersionFiles) {
                 continue;
             }
-            print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'To ' . $sVersion . '...\';</SCRIPT>' . "\n");
+            $_BAR->setMessage('To ' . $sVersion . '...');
 
             $aSQL[] = 'UPDATE ' . TABLE_STATUS . ' SET version = "' . $sVersion . '", updated_date = NOW()';
 
@@ -268,7 +255,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
                         $nSQLDonePercentage = floor(100*$nSQLDone / $nSQL); // Don't want to show 100% when an error occurs at 99.5%.
                         if ($nSQLDonePercentage != $nSQLDonePercentagePrev) {
-                            print('<SCRIPT type="text/javascript">progress_bar.style.width = \'' . $nSQLDonePercentage . '%\'; progress_value.innerHTML = \'' . $nSQLDonePercentage . '%\'; </SCRIPT>' . "\n");
+                            $_BAR->setProgress($nSQLDonePercentage);
                             $nSQLDonePercentagePrev = $nSQLDonePercentage;
                         }
 
@@ -285,8 +272,9 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
             if ($nSQLFailed) {
                 $sSQLFailed .= '</PRE>';
-                print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'' . str_replace('\'', '\\\'', $sSQLFailed) . '\';</SCRIPT>' . "\n" .
-                      '<SCRIPT type="text/javascript">install_form.innerHTML=\'After executing th' . ($nSQLFailed == 1? 'is query' : 'ese queries') . ', please try again.\'; install_form.style.visibility=\'visible\';</SCRIPT>' . "\n");
+                $_BAR->setMessage($sSQLFailed);
+                $_BAR->setMessage('After executing th' . ($nSQLFailed == 1? 'is query' : 'ese queries') . ', please try again.', 'done');
+                $_BAR->setMessageVisibility('done', true);
                 break;
             }
             usleep(300000);
@@ -295,8 +283,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         if (!$nSQLFailed) {
             // Upgrade complete, all OK!
             lovd_writeLog('Install', 'Upgrade', 'Successfully upgraded LOVD from ' . $_STAT['version'] . ' to ' . $_SETT['system']['version'] . ', executing ' . $nSQLDone . ' quer' . ($nSQLDone == 1? 'y' : 'ies'));
-            print('<SCRIPT type="text/javascript">progress_bar.style.width = \'100%\'; progress_value.innerHTML = \'100%\'; </SCRIPT>' . "\n" .
-                  '<SCRIPT type="text/javascript">progress_text.innerHTML=\'Successfully upgraded to ' . $_SETT['system']['version'] . '!<BR>Executed ' . $nSQLDone . ' database quer' . ($nSQLDone == 1? 'y' : 'ies') . '.\';</SCRIPT>' . "\n");
+            $_BAR->setProgress(100);
+            $_BAR->setMessage('Successfully upgraded to ' . $_SETT['system']['version'] . '!<BR>Executed ' . $nSQLDone . ' database quer' . ($nSQLDone == 1? 'y' : 'ies') . '.');
         } else {
             // Bye bye, they should not see the form!
             print('</BODY>' . "\n" .
@@ -321,8 +309,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     if ($bLocked) {
         print('<SCRIPT type="text/javascript">document.forms[\'upgrade_form\'].submit.value = document.forms[\'upgrade_form\'].submit.value.replace(\'Proceed\', \'Force upgrade\');</SCRIPT>' . "\n");
     }
-    print('<SCRIPT type="text/javascript">install_form.style.visibility=\'visible\';</SCRIPT>' . "\n" .
-          '</BODY>' . "\n" .
+    $_BAR->setMessageVisibility('done', true);
+    print('</BODY>' . "\n" .
           '</HTML>' . "\n");
     exit;
 }

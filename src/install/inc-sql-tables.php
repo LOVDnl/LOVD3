@@ -92,7 +92,7 @@ $aTableSQL =
     edited_by SMALLINT(5) UNSIGNED,
     edited_date DATETIME,
     PRIMARY KEY (id),
-    INDEX(countryid),
+    INDEX (countryid),
     UNIQUE (username),
     INDEX (created_by),
     INDEX (edited_by),

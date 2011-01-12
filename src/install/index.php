@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2010-12-16
- * For LOVD    : 3.0-pre-10
+ * Modified    : 2011-01-12
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -50,17 +50,26 @@ if (empty($_GET['step']) || !preg_match('/^[0-5]$/', $_GET['step'])) {
 
 
 
-function lovd_printInstallForm ($bPassPost = true) {
+function lovd_printInstallForm ($bPassPost = true)
+{
+    print(lovd_getInstallForm($bPassPost));
+}
+
+
+
+function lovd_getInstallForm ($bPassPost = true)
+{
     // Prints FORM tag providing the 'Next' button.
-    print('      <FORM action="install/?step=' . ($_GET['step'] + 1) . '" method="post">' . "\n");
+    $s = '      <FORM action="install/?step=' . ($_GET['step'] + 1) . '" method="post">' . "\n";
     if ($bPassPost) {
         foreach ($_POST as $key => $val) {
             // Added htmlspecialchars to prevent XSS and allow values to include quotes.
-            print('        <INPUT type="hidden" name="' . $key . '" value="' . htmlspecialchars($val) . '">' . "\n");
+            $s .= '        <INPUT type="hidden" name="' . $key . '" value="' . htmlspecialchars($val) . '">' . "\n";
         }
     }
-    print('        <INPUT type="submit" value="' . ($_GET['step']? 'Next' : 'Start') . ' &gt;&gt;" style="font-weight : bold; font-size : 11px;">' . "\n" .
-          '      </FORM>' . "\n\n");
+    $s .= '        <INPUT type="submit" value="' . ($_GET['step']? 'Next' : 'Start') . ' &gt;&gt;" style="font-weight : bold; font-size : 11px;">' . "\n" .
+          '      </FORM>' . "\n\n";
+    return $s;
 }
 
 
@@ -267,31 +276,19 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
               '      You may want to consider (re)moving th' . ($nTablesMatched == 1? 'is table' : 'ese tables') . '.<BR>' . "\n\n");
     }
 
-    print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="440">' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TD width="400" style="border : 1px solid black; height : 15px;">' . "\n" .
-          '            <IMG src="gfx/trans.png" alt="" title="0%" width="0%" height="15" id="lovd_install_progress_bar" style="background : #224488;"></TD>' . "\n" .
-          '          <TD width="40" align="right" id="lovd_install_progress_value">0%</TD></TR></TABLE>' . "\n\n" .
-          '      <DIV id="lovd_install_progress_text" style="margin-top : 0px;">' . "\n" .
-          '        Initiating installation...' . "\n" .
-          '      </DIV><BR>' . "\n\n\n" .
-          '      <DIV id="install_form" style="visibility : hidden;">' . "\n");
-    lovd_printInstallForm(false);
-    print('      </DIV>' . "\n\n" .
-          '      <SCRIPT type="text/javascript">' . "\n" .
+    require ROOT_PATH . 'class/progress_bar.php';
+    // This already puts the progress bar on the screen.
+    $_BAR = new ProgressBar('', 'Initiating installation...', lovd_getInstallForm(false));
+    print('      <SCRIPT type="text/javascript">' . "\n" .
           '        var bar = document.getElementById(\'lovd_install_bar\');' . "\n" .
-          '        var progress_bar = document.getElementById(\'lovd_install_progress_bar\');' . "\n" .
-          '        var progress_value = document.getElementById(\'lovd_install_progress_value\');' . "\n" .
-          '        var progress_text = document.getElementById(\'lovd_install_progress_text\');' . "\n" .
-          '        var install_form = document.getElementById(\'install_form\');' . "\n" .
           '      </SCRIPT>' . "\n\n\n");
 
-    define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually cloes the <BODY> and <HTML> tags.
+    define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
     require 'inc-bot.php';
 
+    // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
     flush();
 
-    // Now we're still in the <BODY> so we can add <SCRIPT> tags as much as we want.
     // OK, we need to gather all SQL, so we know how many steps we need to make. Then we can loop through it.
     $aInstallSQL = array();
     $nInstallSQL = 0;
@@ -436,7 +433,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     $nSQLDonePercentage = 0;
     $nSQLDonePercentagePrev = 0;
     foreach ($aInstallSQL as $sMessage => $aSQL) {
-        print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'' . str_replace('\'', '\\\'', $sMessage) . '\';</SCRIPT>' . "\n");
+        $_BAR->setMessage($sMessage);
 
         foreach ($aSQL as $sSQL) {
             $q = mysql_query($sSQL); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB(). It complains because there are ?s in the queries.
@@ -445,7 +442,8 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
                 $sMessage = 'Error during install while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', mysql_error()) . '</DIV><BR>' .
                             'A failed installation is most likely caused by a bug in LOVD.<BR>' .
                             'Please <A href="' . $_SETT['upstream_URL'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
-                print('<SCRIPT type="text/javascript">install_form.innerHTML=\'' . str_replace('\'', '\\\'', $sMessage) . '\'; install_form.style.visibility=\'visible\';</SCRIPT>' . "\n");
+                $_BAR->setMessage($sMessage, 'done');
+                $_BAR->setMessageVisibility('done', true);
                 // LOVD 2.0's lovd_rollback() has been replaced by a two-line piece of code...
                 $aTable = array_reverse($_TABLES);
                 lovd_queryDB('DROP TABLE IF EXISTS ' . implode(', ', $aTable));
@@ -461,7 +459,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
                 $nSQLDonePercentage = 99;
             }
             if ($nSQLDonePercentage != $nSQLDonePercentagePrev) {
-                print('<SCRIPT type="text/javascript">progress_bar.style.width = \'' . $nSQLDonePercentage . '%\'; progress_value.innerHTML = \'' . $nSQLDonePercentage . '%\'; </SCRIPT>' . "\n");
+                $_BAR->setProgress($nSQLDonePercentage);
                 $nSQLDonePercentagePrev = $nSQLDonePercentage;
             }
             flush();
@@ -470,8 +468,9 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
         usleep(300000);
     }
 
-    print('<SCRIPT type="text/javascript">progress_bar.style.width = \'100%\'; progress_value.innerHTML = \'100%\'; </SCRIPT>' . "\n");
-    print('<SCRIPT type="text/javascript">progress_text.innerHTML=\'Installation of data tables complete!\'; install_form.style.visibility=\'visible\';</SCRIPT>' . "\n");
+    $_BAR->setProgress(100);
+    $_BAR->setMessage('Installation of data tables complete!');
+    $_BAR->setMessageVisibility('done', true);
     print('</BODY>' . "\n" .
           '</HTML>' . "\n");
 
@@ -509,7 +508,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
 
         if (!lovd_error()) {
             // Store information and go to next page.
-            $q = lovd_queryDB('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['refseq_build'], $_POST['api_feed_history'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']));
+            $q = lovd_queryDB('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']));
             if (!$q) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .

@@ -918,7 +918,7 @@ die();
                 $sQ .= ($key? ', ' : '') . $val . ' = "' . $_POST[$val] . '"';
             }
 
-            $sQ .= ', edited_by = "' . $_AUTH['userid'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
+            $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
 
             $q = mysql_query($sQ);
             if (!$q) {
@@ -947,7 +947,7 @@ die();
                         foreach ($aColsToCopy as $key => $val) {
                             $sQ .= ($key? ', ' : '') . $val . ' = "' . $_POST[$val] . '"';
                         }
-                        $sQ .= ', edited_by = "' . $_AUTH['userid'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
+                        $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
 
                         $q = mysql_query($sQ);
                         if (mysql_affected_rows()) {
@@ -962,7 +962,7 @@ die();
                     foreach ($aColsToCopy as $key => $val) {
                         $sQ .= ($key? ', ' : '') . $val . ' = "' . $_POST[$val] . '"';
                     }
-                    $sQ .= ', edited_by = "' . $_AUTH['userid'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
+                    $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
 
                     $q = mysql_query($sQ);
                     if (mysql_affected_rows()) {
@@ -1438,7 +1438,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
         if (!lovd_error()) {
             // Query text.
             $_POST['colid'] = $_POST['col_cat'] . '/' . $_POST['colid'];
-            $sQ = 'UPDATE ' . TABLE_COLS . ' SET colid = "' . $_POST['colid'] . '", edited_by = "' . $_AUTH['userid'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
+            $sQ = 'UPDATE ' . TABLE_COLS . ' SET colid = "' . $_POST['colid'] . '", edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
             $q = mysql_query($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
@@ -1629,8 +1629,8 @@ if ($aTableInfo['shared'] && empty($_GET['to'])) {
             // This already puts the progress bar on the screen.
             $_BAR = new ProgressBar('', $sMessage);
 
-            define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually cloes the <BODY> and <HTML> tags.
-            require 'inc-bot.php';
+            define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
+            require ROOT_PATH . 'inc-bot.php';
             // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
             flush();
 

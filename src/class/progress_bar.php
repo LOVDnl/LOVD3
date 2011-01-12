@@ -87,7 +87,7 @@ class ProgressBar {
     {
         // Sends the JS necessary to redirect the viewer to another URL.
         // When using this class, PHP's header() function does not work anymore.
-        // So it's quite logical putting this funtion here.
+        // So it's quite logical putting this function here.
 
         // Most likely, this function is available, but we can't be sure.
         if (function_exists('lovd_matchURL') && !lovd_matchURL($sURL, true)) {

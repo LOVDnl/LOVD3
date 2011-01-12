@@ -43,7 +43,6 @@ LOVD 3.0
     Revisie aanmaken ja/nee is een optie, ik hoef dan niet in de system settings te kiezen om dit aan of uit te zetten?
         Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
     Data license? Mummi schreef er over (Science Commons) 8 november 2009
-++++Ik heb die install bar vaak nodig. Class van gemaakt, is in gebruik door columns.php. Install, uninstall en inc-upgrade.php kunnen daar dan ook gebruik van gaan maken.
     Implement tokens for forms that do not ask passwords? Tokens valid for 5 minutes only? Not to prevent abuse of computers left logged in, becase the token will be regenerated, but against CSRF.
     Create disease: probeer te standaardiseren door data op te halen van OMIM of iets anders, zoals create gene ook basis data ophaalt.
     De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
@@ -162,6 +161,8 @@ Update process
 
 Needed before release
 =====================
+    Later een OFFLINE_MODE inbouwen, die geen contact op neemt met remote servers, maar toestaat dat alles handmatig wordt gedaan.
+        Dit moet een (tijdelijke?) instelling zijn, en overal lekker irritant aangegeven worden, zodat mensen het niet gebruiken om van de standaarden af te kunnen wijken.
     Hoe kunnen we multiple select velden duidelijker maken?
         Standaard mouseover met uitleg? Standaard notes er bij?
         Opsplitsen in twee boxen waar entries heen gesleept kunnen worden?

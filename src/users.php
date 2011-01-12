@@ -168,7 +168,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    if (GET) {
         print('      To create a new user, please fill out the form below.<BR>' . "\n" .
               '      <BR>' . "\n\n");
     }
@@ -216,7 +216,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             // This is a hack-attempt.
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_writeLog('Error', 'HackAttempt', 'Tried to edit userid ' . $nID . ' (' . $_SETT['user_levels'][$nLevel] . ')');
+            lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$nLevel] . ')');
             lovd_showInfoTable('Now allowed to edit this user. This event has been logged.', 'stop');
             require ROOT_PATH . 'inc-bot.php';
             exit;
@@ -323,7 +323,7 @@ if ($_GET['action'] == 'boot' && is_numeric($_GET['boot'])) {
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT t1.phpsessid, t1.level FROM ' . TABLE_USERS . ' AS t1 WHERE t1.userid = "' . $_GET['boot'] . '"'));
+    $zData = @mysql_fetch_assoc(mysql_query('SELECT t1.phpsessid, t1.level FROM ' . TABLE_USERS . ' AS t1 WHERE t1.id = "' . $_GET['boot'] . '"'));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -359,7 +359,7 @@ if (in_array($_GET['action'], array('lock', 'unlock')) && is_numeric($_GET['lock
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE userid = "' . $_GET['lock'] . '"'));
+    $zData = @mysql_fetch_assoc(mysql_query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = "' . $_GET['lock'] . '"'));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -373,7 +373,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
     $sAction = ($zData['locked']? 'Unl' : 'L') . 'ock';
 
     // The actual query.
-    $sQ = 'UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE userid = "' . $_GET['lock'] . '"';
+    $sQ = 'UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = "' . $_GET['lock'] . '"';
     $q = @mysql_query($sQ);
     if (!$q) {
         $sError = mysql_error(); // Save the mysql_error before it disappears.
@@ -402,7 +402,7 @@ if ($_GET['action'] == 'delete' && is_numeric($_GET['delete'])) {
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_USERS . ' WHERE userid = "' . $_GET['drop'] . '"'));
+    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = "' . $_GET['drop'] . '"'));
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -424,7 +424,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
     // 2008-07-16; 2.0-09; Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
     // Find curated genes and see if they're alone.
-    $q = mysql_query('SELECT t1.symbol FROM ' . TABLE_CURATES . ' AS t1 LEFT OUTER JOIN ' . TABLE_CURATES . ' AS t2 ON (t1.symbol = t2.symbol AND t1.userid != t2.userid) WHERE t1.userid = "' . $zData['userid'] . '" AND t2.userid IS NULL');
+    $q = mysql_query('SELECT t1.symbol FROM ' . TABLE_CURATES . ' AS t1 LEFT OUTER JOIN ' . TABLE_CURATES . ' AS t2 ON (t1.symbol = t2.symbol AND t1.id != t2.userid) WHERE t1.id = "' . $zData['id'] . '" AND t2.userid IS NULL');
     $aGenesCurate = array();
     while ($r = mysql_fetch_row($q)) {
         // Gene has no curator, and user is going to be deleted!
@@ -456,7 +456,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
         if (!lovd_error()) {
             // Query text; clean curator associations first.
-            $sQ = 'DELETE FROM ' . TABLE_CURATES . ' WHERE userid = "' . $zData['userid'] . '"';
+            $sQ = 'DELETE FROM ' . TABLE_CURATES . ' WHERE userid = "' . $zData['id'] . '"';
             $q = mysql_query($sQ);
             if (!$q) {
                 lovd_dbFout('UserDrop', $sQ, mysql_error(), false);
@@ -466,7 +466,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
             // Now check if we need to make the current user curator of some gene(s).
             if (count($aGenesCurate)) {
                 foreach ($aGenesCurate as $sGene) {
-                    $sQ = 'INSERT INTO ' . TABLE_CURATES . ' VALUES ("' . $_AUTH['userid'] . '", "' . mysql_real_escape_string($sGene) . '")';
+                    $sQ = 'INSERT INTO ' . TABLE_CURATES . ' VALUES ("' . $_AUTH['id'] . '", "' . mysql_real_escape_string($sGene) . '")';
                     $q = mysql_query($sQ);
                     if (!$q) {
                         lovd_dbFout('UserDrop', $sQ, mysql_error(), false);
@@ -475,7 +475,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
             }
 
             // Query text.
-            $sQ = 'UPDATE ' . TABLE_USERS . ' SET deleted = 1 WHERE userid = "' . $zData['userid'] . '"';
+            $sQ = 'UPDATE ' . TABLE_USERS . ' SET deleted = 1 WHERE id = "' . $zData['id'] . '"';
 
             $q = mysql_query($sQ);
             if (!$q) {
@@ -515,7 +515,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . $zData['userid'] . '&amp;sent=true" method="post">' . "\n");
+    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . $zData['id'] . '&amp;sent=true" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(

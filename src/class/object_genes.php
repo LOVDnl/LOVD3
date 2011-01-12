@@ -157,7 +157,7 @@ class Gene extends Object {
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
         }
-        
+
         // Mandatory fields.
         $this->aCheckMandatory =
                  array(
@@ -192,6 +192,7 @@ class Gene extends Object {
     {
         // Build the form.
         global $_CONF;
+
         // Get list of genes
         $aData = array();
         $qData = mysql_query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
@@ -200,7 +201,7 @@ class Gene extends Object {
         while ($r = mysql_fetch_row($qData)) {
             $aData[$r[0]] = $r[1];
         }
-        
+
         $aTranscripts = mutalyzer_SOAP_module_call("getTranscriptsByGeneName", array("build" => $_CONF['refseq_build'], "name" => $_POST['symbol']));
         $aTranscriptsForm = array();
         foreach ($aTranscripts as $sTranscript) {
@@ -228,7 +229,6 @@ class Gene extends Object {
         $this->aFormData =
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        'skip',
                         array('', '', 'print', '<B>General information</B>'),
                         'hr',
                         array('Full gene name', '', 'text', 'name', 40),
@@ -376,7 +376,6 @@ class Gene extends Object {
                     $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
                 }
             }
-
 
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
             foreach ($aExternal as $sColID) {
