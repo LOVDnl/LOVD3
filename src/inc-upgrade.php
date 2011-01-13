@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-01-11
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-01-13
+ * For LOVD    : 3.0-pre-14
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -61,44 +61,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     // Array of changes.
     $aUpdates =
              array(
-                    '3.0-pre-06' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP COLUMN sort',
-                                    'UPDATE ' . TABLE_COLS . ' SET id = "Screening/Template" WHERE id = "Patient/Detection/Template"',
-                                    'UPDATE ' . TABLE_COLS . ' SET id = "Screening/Technique" WHERE id = "Patient/Detection/Technique"',
-                                    'UPDATE ' . TABLE_COLS . ' SET id = "Screening/Tissue" WHERE id = "Patient/Detection/Tissue"',
-                                    'ALTER TABLE ' . TABLE_COLS . ' MODIFY COLUMN form_type VARCHAR(255) NOT NULL',
-                                    'UPDATE ' . TABLE_COLS . ' SET form_type = CONCAT(SUBSTRING_INDEX(form_type, "|", 1), "||", SUBSTRING_INDEX(form_type, "|", -2))',
-                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Variant/Reference", 0, 200, 1, 1, 0, "Reference", "", "Reference describing the variant.", "Literature reference with possible link to publication in PubMed, dbSNP entry or other online resource.", "VARCHAR(200)", "Reference||text|50", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
-                                    'UPDATE ' . TABLE_COLS . ' SET description_legend_short = "Reference describing the patient, &quot;Submitted:&quot; indicating that the mutation was submitted directly to this database.", description_legend_full = "Literature reference with possible link to publication in PubMed or other online resource. &quot;Submitted:&quot; indicates that the mutation was submitted directly to this database by the laboratory indicated." WHERE id = "Patient/Reference"',
-                                    'ALTER TABLE ' . TABLE_LINKS . ' DROP COLUMN active',
-                                    'INSERT INTO ' . TABLE_LINKS . ' VALUES (001, "PubMed", "{PMID:[1]:[2]}", "<A href=\"http://www.ncbi.nlm.nih.gov/pubmed/[2]\" target=\"_blank\">[1]</A>", "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s).\r\n[2] = The PubMed ID.", 1, NOW(), NULL, NULL)',
-                                    'INSERT INTO ' . TABLE_LINKS . ' VALUES (002, "DbSNP", "{dbSNP:[1]}", "<A href=\"http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?type=rs&amp;rs=rs[1]\" target=\"_blank\">dbSNP</A>", "Links to the DbSNP database.\r\n[1] = The DbSNP ID.", 1, NOW(), NULL, NULL)',
-                                    'INSERT INTO ' . TABLE_LINKS . ' VALUES (003, "GenBank", "{GenBank:[1]}", "<A href=\"http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?cmd=Retrieve&amp;db=nucleotide&amp;dopt=GenBank&amp;list_uids=[1]\" target=\"_blank\">GenBank</A>", "Links to GenBank sequences.\r\n[1] = The GenBank ID.", 1, NOW(), NULL, NULL)',
-                                    'INSERT INTO ' . TABLE_LINKS . ' VALUES (004, "OMIM", "{OMIM:[1]:[2]}", "<A href=\"http://www.ncbi.nlm.nih.gov/entrez/dispomim.cgi?id=[1]&amp;a=[1]_AllelicVariant[2]\" target=\"_blank\">(OMIM [2])</A>", "Links to an allelic variant on the gene\'s OMIM page.\r\n[1] = The OMIM gene ID.\r\n[2] = The number of the OMIM allelic variant on that page.", 1, NOW(), NULL, NULL)',
-                                  ),
-                    '3.0-pre-07' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_COLS . ' MODIFY COLUMN description_form TEXT NOT NULL',
-                                    'ALTER TABLE ' . TABLE_COLS . ' MODIFY COLUMN description_legend_short TEXT NOT NULL',
-                                    'ALTER TABLE ' . TABLE_VARIANT_COLS . ' MODIFY COLUMN description_form TEXT NOT NULL',
-                                    'ALTER TABLE ' . TABLE_VARIANT_COLS . ' MODIFY COLUMN description_legend_short TEXT NOT NULL',
-                                    'ALTER TABLE ' . TABLE_PHENOTYPE_COLS . ' MODIFY COLUMN description_form TEXT NOT NULL',
-                                    'ALTER TABLE ' . TABLE_PHENOTYPE_COLS . ' MODIFY COLUMN description_legend_short TEXT NOT NULL',
-                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN name VARCHAR(175) NOT NULL',
-                                    'DELETE FROM ' . TABLE_COLS,
-                                  ),
-                    '3.0-pre-08' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_COLS . ' CHANGE COLUMN public public_view TINYINT(1) UNSIGNED NOT NULL',
-                                    'ALTER TABLE ' . TABLE_COLS . ' CHANGE COLUMN public_form public_add TINYINT(1) UNSIGNED NOT NULL',
-                                    'ALTER TABLE ' . TABLE_VARIANT_COLS . ' CHANGE COLUMN public public_view TINYINT(1) UNSIGNED NOT NULL',
-                                    'ALTER TABLE ' . TABLE_VARIANT_COLS . ' CHANGE COLUMN public_form public_add TINYINT(1) UNSIGNED NOT NULL',
-                                    'ALTER TABLE ' . TABLE_PHENOTYPE_COLS . ' CHANGE COLUMN public public_view TINYINT(1) UNSIGNED NOT NULL',
-                                    'ALTER TABLE ' . TABLE_PHENOTYPE_COLS . ' CHANGE COLUMN public_form public_add TINYINT(1) UNSIGNED NOT NULL',
-                                    'ALTER TABLE ' . TABLE_CURATES . ' ADD COLUMN show_order TINYINT(2) UNSIGNED NOT NULL DEFAULT 1 AFTER allow_edit',
-                                  ),
-//////////////////// 3.0-pre-09; you'll need to re-install, too much stuff changed!!!
                     '3.0-pre-10' =>
                              array(
                                     'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/omim/[1]#[1]Variants[2]\" target=\"_blank\">(OMIM [2])</A>" WHERE id = 4',
@@ -129,6 +91,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN ownerid SMALLINT(5) UNSIGNED ZEROFILL AFTER type',
                                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (ownerid)',
                                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL',
+                                  ),
+                    '3.0-pre-14' =>
+                             array(
+                                    'UPGRADING TO 3.0-pre-14 IS NOT SUPPORTED. UNINSTALL LOVD 3.0 AND REINSTALL TO GET THE LATEST.',
                                   ),
                   );
 

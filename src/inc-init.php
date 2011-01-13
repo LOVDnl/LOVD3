@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-01-12
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-01-13
+ * For LOVD    : 3.0-pre-14
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -93,7 +93,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-pre-13',
+                            'version' => '3.0-pre-14',
                           ),
                 'user_levels' =>
                      array(
@@ -418,11 +418,8 @@ $_TABLES =
                 'TABLE_SCR2GENE' => TABLEPREFIX . '_screenings2genes',
                 'TABLE_SCR2VAR' => TABLEPREFIX . '_screenings2variants',
                 'TABLE_COLS' => TABLEPREFIX . '_columns',
-//                'TABLE_PATIENT_COLS' => TABLEPREFIX . '_patient_columns', // DMD_SPECIFIC; Needs to be removed later.
                 'TABLE_ACTIVE_COLS' => TABLEPREFIX . '_active_columns',
-                'TABLE_VARIANT_COLS' => TABLEPREFIX . '_variant_columns',
-                'TABLE_PHENOTYPE_COLS' => TABLEPREFIX . '_phenotype_columns',
-//                'TABLE_SCREENING_COLS' => TABLEPREFIX . '_screening_columns', // DMD_SPECIFIC; Needs to be removed later.
+                'TABLE_SHARED_COLS' => TABLEPREFIX . '_shared_columns',
                 'TABLE_LINKS' => TABLEPREFIX . '_links',
                 'TABLE_COLS2LINKS' => TABLEPREFIX . '_columns2links',
                 'TABLE_CONFIG' => TABLEPREFIX . '_config',
@@ -431,6 +428,10 @@ $_TABLES =
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
                 'TABLE_HITS' => TABLEPREFIX . '_hits',
+
+                // FIXME; remove later. Has been removed in 3.0-pre-14.
+                'TABLE_VARIANT_COLS' => TABLEPREFIX . '_variant_columns',
+                'TABLE_PHENOTYPE_COLS' => TABLEPREFIX . '_phenotype_columns',
               );
 
 foreach ($_TABLES as $sConst => $sTable) {

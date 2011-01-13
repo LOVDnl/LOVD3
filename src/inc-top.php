@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-01-06
+ * Modified    : 2011-01-13
  * For LOVD    : 3.0-pre-13
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,13 +50,6 @@ $_MENU = array(
 // Remove certain menu entries, if the user has no access to them.
 if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
     unset($_MENU['setup']);
-}
-
-// Unnecessary entries.
-if (!GENE_COUNT) {
-    // No gene at all! Disable other options.
-// DMD_SPECIFIC
-//    unset($_MENU['variants'], $_MENU['submit']);
 }
 
 if (!defined('PAGE_TITLE')) {

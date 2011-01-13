@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2010-12-14
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2011-01-13
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -43,114 +43,123 @@ require ROOT_PATH . 'inc-lib-form.php';
 lovd_errorClean();
 
 // Force use of cookies!
-if (!isset($_COOKIE['lovd_cookie_check']) && !empty($_POST)) {
-    // We might not have that checking cookie if this is the first page. So we want to complain only if the form has been submitted.
-    lovd_errorAdd('', 'Cookies must be enabled before you can log in. Please enable cookies or lower your browser\'s security settings.');
+if (!empty($_POST)) {
+    if (!isset($_COOKIE['lovd_cookie_check'])) {
+        // We might not have that checking cookie if this is the first page. So we want to complain only if the form has been submitted.
+        lovd_errorAdd('', 'Cookies must be enabled before you can log in. Please enable cookies or lower your browser\'s security settings.');
+    } else {
+        // We're now also accepting unlocking accounts.
+        if (!empty($_POST['username']) && !empty($_POST['password'])) {
+            // First, retrieve account information.
+            $zUser = mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username'])));
 
-} else {
-    // We're now also accepting unlocking accounts.
-    if (!empty($_POST['username']) && !empty($_POST['password'])) {
-        // First, retrieve account information.
-        $zUser = mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username'])));
+            if ($zUser) {
+                // The user exists, now check account unlocking, locked accounts, successful and unsuccessful logins.
 
-        if ($zUser) {
-            // The user exists, now check account unlocking, locked accounts, successful and unsuccessful logins.
-
-            // First, check if the user is unlocking an account (forgot password).
-            if ($zUser['password_autogen'] && $zUser['password_autogen'] == md5($_POST['password']) && $_CONF['allow_unlock_accounts']) {
-                // Successfully unlocking an account! Log user in.
-                $_SESSION['auth'] = $zUser;
-                $_AUTH = & $_SESSION['auth'];
-
-                lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/unlocking code');
-                $_SESSION['last_login'] = $_AUTH['last_login'];
-                // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
-                if (function_exists('session_regenerate_id') && !(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
-                    session_regenerate_id();
-                    // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
-                    setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
+                // In stead of having inc-auth.php stop the user when his IP is not allowed to log in, it's better to do that here.
+                if ($zUser['allowed_ip'] && !lovd_validateIP($zUser['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
+                    lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') is not in IP allow list for ' . $_POST['username'] . ': "' . $zUser['allowed_ip'] . '"');
+                    lovd_errorAdd('', 'Your current IP address does not allow you access using this username.');
                 }
-                // Also update the password field, it needs to be used by the update password form.
-                $_AUTH['password'] = md5($_POST['password']);
-                lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
-
-                // Since this is the unlocking code, the user should be forced to change his/her password.
-                $_SESSION['password_force_change'] = true;
-
-                header('Location: ' . lovd_getInstallURL() . 'users/' . $_AUTH['id'] . '?change_password');
-                exit;
-            }
 
 
 
-            // Next, check if the account is locked.
-            elseif ($zUser['login_attempts'] >= 3) {
-                // Account is locked!
+                // Second, check if the user is unlocking an account (forgot password).
+                elseif ($zUser['password_autogen'] && $zUser['password_autogen'] == md5($_POST['password']) && $_CONF['allow_unlock_accounts']) {
+                    // Successfully unlocking an account! Log user in.
+                    $_SESSION['auth'] = $zUser;
+                    $_AUTH = & $_SESSION['auth'];
 
-                // Spit out error.
-// DMD_SPECIFIC; if we release the data of the admin and the managers online, because of the privacy policy, then we can mention the info (or a link) here, too.
-                lovd_errorAdd('', 'Your account is locked, usually because a wrong password was provided three times. ' . ($_CONF['allow_unlock_accounts']? 'Did you <A href="reset_password">forget your password</A>?' : 'Please contact a LOVD manager or the database administrator to unlock your account.'));
-            }
+                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/unlocking code');
+                    $_SESSION['last_login'] = $_AUTH['last_login'];
+                    // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
+                    if (function_exists('session_regenerate_id') && !(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
+                        session_regenerate_id();
+                        // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
+                        setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
+                    }
+                    // Also update the password field, it needs to be used by the update password form.
+                    $_AUTH['password'] = md5($_POST['password']);
+                    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
 
-
-
-            // Finally, log in user if the correct password has been given.
-            elseif ($zUser['password'] == md5($_POST['password'])) {
-                // Successfully logging in!
-                $_SESSION['auth'] = $zUser;
-                $_AUTH = & $_SESSION['auth'];
-
-
-
-                lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
-                $_SESSION['last_login'] = $_AUTH['last_login'];
-                // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
-                if (function_exists('session_regenerate_id') && !(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
-                    session_regenerate_id();
-                    // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
-                    setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
-                }
-                lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array(session_id(), $_AUTH['id']));
-
-                // Check if the user should be forced to change his/her password.
-                if (!empty($_AUTH['password_force_change'])) {
+                    // Since this is the unlocking code, the user should be forced to change his/her password.
                     $_SESSION['password_force_change'] = true;
+
+                    header('Location: ' . lovd_getInstallURL() . 'users/' . $_AUTH['id'] . '?change_password');
+                    exit;
                 }
 
-                // Check if referer is given, check it, then forward the user.
-                if (!empty($_POST['referer']) && strpos($_POST['referer'], lovd_getInstallURL()) === 0) {
-                    // Location is whithin this LOVD installation.
-                    $sLocation = $_POST['referer'];
-                } else {
-                    // Redirect to proper location will be done somewhere else in this code.
-                    $sLocation = lovd_getInstallURL() . 'login';
+
+
+                // Next, check if the account is locked.
+                elseif ($zUser['login_attempts'] >= 3) {
+                    // Account is locked!
+
+                    // Spit out error.
+                    // DMD_SPECIFIC; if we release the data of the admin and the managers online, because of the privacy policy, then we can mention the info (or a link) here, too.
+                    lovd_errorAdd('', 'Your account is locked, usually because a wrong password was provided three times. ' . ($_CONF['allow_unlock_accounts']? 'Did you <A href="reset_password">forget your password</A>?' : 'Please contact a LOVD manager or the database administrator to unlock your account.'));
                 }
 
-                header('Location: ' . $sLocation);
-                exit;
+
+
+                // Finally, log in user if the correct password has been given.
+                elseif ($zUser['password'] == md5($_POST['password'])) {
+                    // Successfully logging in!
+                    $_SESSION['auth'] = $zUser;
+                    $_AUTH = & $_SESSION['auth'];
+
+
+
+                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
+                    $_SESSION['last_login'] = $_AUTH['last_login'];
+                    // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
+                    if (function_exists('session_regenerate_id') && !(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
+                        session_regenerate_id();
+                        // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
+                        setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
+                    }
+                    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array(session_id(), $_AUTH['id']));
+
+                    // Check if the user should be forced to change his/her password.
+                    if (!empty($_AUTH['password_force_change'])) {
+                        $_SESSION['password_force_change'] = true;
+                    }
+
+                    // Check if referer is given, check it, then forward the user.
+                    if (!empty($_POST['referer']) && strpos($_POST['referer'], lovd_getInstallURL()) === 0) {
+                        // Location is whithin this LOVD installation.
+                        $sLocation = $_POST['referer'];
+                    } else {
+                        // Redirect to proper location will be done somewhere else in this code.
+                        $sLocation = lovd_getInstallURL() . 'login';
+                    }
+
+                    header('Location: ' . $sLocation);
+                    exit;
+                }
             }
-        }
 
 
 
-        // The bad logins end up here!
-        if (!$zUser || $zUser['password'] != md5($_POST['password'])) {
-            lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried logging in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
-            lovd_errorAdd('', 'Invalid Username/Password combination.');
+            // The bad logins end up here!
+            if (!$zUser || (!lovd_error() && $zUser['password'] != md5($_POST['password']))) {
+                lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried logging in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
+                lovd_errorAdd('', 'Invalid Username/Password combination.');
 
-            // This may not actually update (user misspelled his username) but we can call the query anyway.
-            if ($_CONF['lock_users']) {
-                lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET login_attempts = login_attempts + 1 WHERE username = ? AND level < 9', array($_POST['username']));
-            }
+                // This may not actually update (user misspelled his username) but we can call the query anyway.
+                if ($_CONF['lock_users']) {
+                    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET login_attempts = login_attempts + 1 WHERE username = ? AND level < 9', array($_POST['username']));
+                }
 
-            // Check if the user is locked, now.
-            if ($zUser && $zUser['login_attempts'] >= (3-1)) {
-                lovd_errorAdd('password', 'Your account is now locked, since this is the third time a wrong password was provided.');
-            }
+                // Check if the user is locked, now.
+                if ($zUser && $zUser['login_attempts'] >= (3-1)) {
+                    lovd_errorAdd('password', 'Your account is now locked, since this is the third time a wrong password was provided.');
+                }
 
-            // The "Forgot my password" option.
-            if ($_CONF['allow_unlock_accounts']) {
-                lovd_errorAdd('', 'Did you <A href="reset_password">forget your password</A>?');
+                // The "Forgot my password" option.
+                if ($_CONF['allow_unlock_accounts']) {
+                    lovd_errorAdd('', 'Did you <A href="reset_password">forget your password</A>?');
+                }
             }
         }
     }

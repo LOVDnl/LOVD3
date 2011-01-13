@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2010-03-04
- * For LOVD    : 3.0-pre-05
+ * Modified    : 2011-01-13
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -67,15 +67,6 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
 // IP based blocking.
 if ($_AUTH && $_AUTH['allowed_ip']) {
     if (!lovd_validateIP($_AUTH['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
-        // Not all of the inc-init code has been executed right now. So we need
-        // to fill some variables, to prevent errors thrown out.
-        if ($_SESSION['currdb']) {
-            define('GENE_COUNT', 1);
-        } else {
-            define('GENE_COUNT', 0);
-        }
-        $_SESSION['currdb'] = '';
-        // FIXME; this is basically a quick fix. Should we fix this?
         // Log the user out.
         session_destroy();
         $_AUTH = false;

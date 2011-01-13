@@ -53,9 +53,7 @@ Kleinere dingen om te controleren:
 Tabs instelbaar: system settings bepaalt welke tabs worden getoond; genes, diseases, transcripts, users, patients, etc.
 Link tussen patient en disease leggen dmv koppelings tabel?
 Formulier voor toevoegen/edit kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.
-wellicht IP based blocking eerder doen? geen login_attempts increment either? in de login meteen!
 Een column ID moet altijd met een hoofdletter gemaakt worden, dus daar moet een controle op!
-col create hoeft geen insertEntry() te gebruiken ofzo? hoezo niet???
 FINISH COLUMNS EDIT??? First think about how to do this???
     Display settings en global settings patient cols zijn in 2.0 gescheiden, dat heeft echt 0 nut en is verwarrend. Kappen, dus!
         Denk nog ff na of verschillende niveau's misschien verschillende dingen moeten kunnen editen, zo niet er gewoon 1 script van maken.
@@ -69,7 +67,7 @@ TABLE_VARIANTS_ON_TRANSCRIPTS heeft nu alleen een valid_from om te linken naar T
 
 Waar we echt mee bezig zijn:
 ============================
-Finish add col to data table
+++++Finish add col to data table
     (Er staan nog FIXMEs in en het bevestigingsbericht moet nog maar gekeken worden.
     // Daarna deze code naar install/index.php kopiëren
     Nadenken over hoe dit in de GUI te doen; curatoren in LOVD 2.0 nu kunnen niet goed zien wat ze toevoegen. Dat moet anders.

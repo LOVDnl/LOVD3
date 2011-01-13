@@ -29,7 +29,6 @@
  *************/
 
 // STILL TODO: genomic DNA field is standard and not custom???
-// VARIANTS_COLS en PHENOTYPE_COLS samenvoegen... why not? Misschien zelfs samenvoegen met ACTIVE_COLS tot 1 tabel? Ik moet dat echt nog ff uitdenken...
 // transcripts echt altijd aan genen vast??? Of misschien niet??? microRNA's??
 // PATHOGENICITY.....
 // All those IDs for the genes!!! Store differently?
@@ -103,7 +102,7 @@ $aTableSQL =
 
          , 'TABLE_GENES' =>
    'CREATE TABLE ' . TABLE_GENES . ' (
-    id VARCHAR(12) NOT NULL,
+    id INT(10) UNSIGNED NOT NULL,
     symbol VARCHAR(12) NOT NULL,
     name VARCHAR(255) NOT NULL,
     chromosome VARCHAR(2) NOT NULL,
@@ -114,7 +113,6 @@ $aTableSQL =
     url_external TEXT NOT NULL,
     allow_download BOOLEAN NOT NULL,
     allow_index_wiki BOOLEAN NOT NULL,
-    id_hgnc INT(10) UNSIGNED NOT NULL,
     id_entrez INT(10) UNSIGNED NOT NULL,
     id_omim INT(10) UNSIGNED NOT NULL,
     show_hgmd BOOLEAN NOT NULL,
@@ -148,7 +146,7 @@ $aTableSQL =
          , 'TABLE_CURATES' =>
    'CREATE TABLE ' . TABLE_CURATES . ' (
     userid SMALLINT(5) UNSIGNED NOT NULL,
-    geneid VARCHAR(12) NOT NULL,
+    geneid INT(10) UNSIGNED NOT NULL,
     allow_edit BOOLEAN NOT NULL,
     show_order TINYINT(2) UNSIGNED NOT NULL DEFAULT 1,
     PRIMARY KEY (userid, geneid),
@@ -160,7 +158,7 @@ $aTableSQL =
          , 'TABLE_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_TRANSCRIPTS . ' (
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
-    geneid VARCHAR(12) NOT NULL,
+    geneid INT(10) UNSIGNED NOT NULL,
     name VARCHAR(255) NOT NULL,
     id_ncbi VARCHAR(255) NOT NULL,
     id_ensembl VARCHAR(255) NOT NULL,
@@ -205,7 +203,7 @@ $aTableSQL =
 
          , 'TABLE_GEN2DIS' =>
    'CREATE TABLE ' . TABLE_GEN2DIS . ' (
-    geneid VARCHAR(12) NOT NULL,
+    geneid INT(10) UNSIGNED NOT NULL,
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
     PRIMARY KEY (geneid, diseaseid),
     INDEX (diseaseid),
@@ -369,7 +367,7 @@ $aTableSQL =
          , 'TABLE_SCR2GENE' =>
    'CREATE TABLE ' . TABLE_SCR2GENE . ' (
     screeningid INT(10) UNSIGNED ZEROFILL NOT NULL,
-    geneid VARCHAR(12) NOT NULL,
+    geneid INT(10) UNSIGNED NOT NULL,
     PRIMARY KEY (screeningid, geneid),
     INDEX (screeningid),
     INDEX (geneid),
@@ -429,9 +427,10 @@ $aTableSQL =
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
     ' . $sSettings
 
-         , 'TABLE_VARIANT_COLS' =>
-   'CREATE TABLE ' . TABLE_VARIANT_COLS . ' (
-    geneid VARCHAR(12) NOT NULL,
+         , 'TABLE_SHARED_COLS' =>
+   'CREATE TABLE ' . TABLE_SHARED_COLS . ' (
+    geneid INT(10) UNSIGNED,
+    diseaseid SMALLINT(5) UNSIGNED ZEROFILL,
     colid VARCHAR(100) NOT NULL,
     col_order TINYINT(3) UNSIGNED NOT NULL,
     width SMALLINT(5) UNSIGNED NOT NULL,
@@ -446,37 +445,12 @@ $aTableSQL =
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED,
     edited_date DATETIME,
-    PRIMARY KEY (geneid, colid),
+    UNIQUE (geneid, colid),
+    UNIQUE (diseaseid, colid),
     INDEX (colid),
     INDEX (created_by),
     INDEX (edited_by),
     FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE,
-    FOREIGN KEY (colid) REFERENCES ' . TABLE_ACTIVE_COLS . ' (colid) ON DELETE CASCADE,
-    FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
-    FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL)
-    ' . $sSettings
-
-         , 'TABLE_PHENOTYPE_COLS' =>
-   'CREATE TABLE ' . TABLE_PHENOTYPE_COLS . ' (
-    diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    colid VARCHAR(100) NOT NULL,
-    col_order TINYINT(3) UNSIGNED NOT NULL,
-    width SMALLINT(5) UNSIGNED NOT NULL,
-    mandatory BOOLEAN NOT NULL,
-    description_form TEXT NOT NULL,
-    description_legend_short TEXT NOT NULL,
-    description_legend_full TEXT NOT NULL,
-    select_options TEXT NOT NULL,
-    public_view BOOLEAN NOT NULL,
-    public_add BOOLEAN NOT NULL,
-    created_by SMALLINT(5) UNSIGNED,
-    created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
-    edited_date DATETIME,
-    PRIMARY KEY (diseaseid, colid),
-    INDEX (colid),
-    INDEX (created_by),
-    INDEX (edited_by),
     FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE,
     FOREIGN KEY (colid) REFERENCES ' . TABLE_ACTIVE_COLS . ' (colid) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL,
@@ -582,7 +556,7 @@ $aTableSQL =
 
          , 'TABLE_HITS' =>
    'CREATE TABLE ' . TABLE_HITS . ' (
-    geneid VARCHAR(12) NOT NULL,
+    geneid INT(10) UNSIGNED NOT NULL,
     type VARCHAR(10) NOT NULL,
     year SMALLINT(4) UNSIGNED NOT NULL,
     month TINYINT(2) UNSIGNED NOT NULL,

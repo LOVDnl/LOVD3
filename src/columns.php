@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2010-12-31
- * For LOVD    : 3.0-pre-12
+ * Modified    : 2011-01-13
+ * For LOVD    : 3.0-pre-13
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -696,19 +696,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_POST['standard'] = 0;
             }
 
-            // Query text.
-            $sSQL = 'INSERT INTO ' . TABLE_COLS . ' (';
-            $aSQL = array();
-            foreach ($aFields as $key => $sField) {
-                $sSQL .= (!$key? '' : ', ') . $sField;
-                $aSQL[] = $_POST[$sField];
-            }
-            $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
-
-            $q = lovd_queryDB($sSQL, $aSQL);
-            if (!$q) {
-                lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
-            }
+            // Return value doesn't matter here, since there is no AUTO_INCREMENT column available.
+            $_DATA->insertEntry($_POST, $aFields);
 
             // Store custom link connections.
             $aLinks = array();
@@ -908,6 +897,7 @@ die();
 
 
 
+            // Use ::updateEntry() here!
             // Query text.
             $sQ = 'UPDATE ' . TABLE_COLS . ' SET ';
 
@@ -1758,6 +1748,17 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+
+// FIXME; somewhere here check $_GET['to'] (or similar name), that is used if a column is added to a unit, like 'gene'.
+// $_GET['to'] is only relevent when $aTableInfo['shared'] == true;
+if ($aTableInfo['shared'] && empty($_GET['to'])) {
+// Mag niet.
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('Error: which ' . $aTableInfo['unit'] . ' should this column be added to?', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
 
     print('      <FORM action="' . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . '" method="post">' . "\n");
 
