@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2010-12-20
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2011-01-19
+ * For LOVD    : 3.0-pre-15
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -130,20 +130,6 @@ class Disease extends Object {
                         'name',
                       );
         parent::checkFields($aData);
-
-        // Disease symbol must be unique.
-        if (!empty($aData['symbol'])) {
-            // Enforced in the table, but we want to handle this gracefully.
-            $sSQL = 'SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?';
-            $aSQL = array($aData['symbol']);
-            if (ACTION == 'edit') {
-                $sSQL .= ' AND id != ?';
-                $aSQL[] = $zData['id'];
-            }
-            if (mysql_num_rows(lovd_queryDB($sSQL, $aSQL))) {
-                lovd_errorAdd('name', 'There is already a disease entry with this abbreviation. Please choose another one.');
-            }
-        }
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();

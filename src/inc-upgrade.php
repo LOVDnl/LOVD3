@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-01-13
- * For LOVD    : 3.0-pre-14
+ * Modified    : 2011-01-19
+ * For LOVD    : 3.0-pre-15
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -95,6 +95,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                     '3.0-pre-14' =>
                              array(
                                     'UPGRADING TO 3.0-pre-14 IS NOT SUPPORTED. UNINSTALL LOVD 3.0 AND REINSTALL TO GET THE LATEST.',
+                                  ),
+                    '3.0-pre-15' =>
+                             array(
+                                    'UPGRADING TO 3.0-pre-15 IS NOT SUPPORTED. UNINSTALL LOVD 3.0 AND REINSTALL TO GET THE LATEST.',
                                   ),
                   );
 

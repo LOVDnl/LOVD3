@@ -88,7 +88,7 @@ if (!defined('PAGE_TITLE')) {
 print('    function lovd_switchGeneInline () {' . "\n" .
 // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
       '      varForm = \'<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDBInline" method="get" style="margin : 0px;"><SELECT name="select_db" onchange="document.getElementById(\\\'SelectGeneDBInline\\\').submit();">');
-$q = mysql_query('SELECT id, CONCAT(id, " (", gene, ")") AS gene FROM ' . TABLE_DBS . ' ORDER BY symbol');
+$q = mysql_query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_DBS . ' ORDER BY id');
 while ($z = mysql_fetch_assoc($q)) {
     // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
     $z['gene'] = lovd_shortenString($z['gene'], 75);
@@ -143,7 +143,7 @@ $sCurrSymbol = $sCurrGene = '';
 // During submission, show the gene we're submitting to in stead of the currently selected gene.
 if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
     // Fetch gene's info from db... we don't have it anywhere yet.
-    list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(mysql_query('SELECT symbol, gene FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['gene'] . '"'));
+    list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(mysql_query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = "' . $_POST['gene'] . '"'));
 } elseif (!empty($_SESSION['currdb'])) {
     // Just use currently selected database.
     $sCurrSymbol = $_SESSION['currdb'];

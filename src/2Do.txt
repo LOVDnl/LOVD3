@@ -50,6 +50,9 @@ LOVD 3.0
 
 Kleinere dingen om te controleren:
 ==================================
+Voorstel schrijven voor nieuwe functies voor de Mutalyzer webservice, standaardisatie van de namen.
+Functies schrijven om van numerieke disease ID naar de symbol te komen? Zodat /diseases/DMD ook werken?
+    Indien /diseases/DMD meerdere hits heeft, moet die een viewList() geven, waarbij er op de symbol gezocht wordt.
 Tabs instelbaar: system settings bepaalt welke tabs worden getoond; genes, diseases, transcripts, users, patients, etc.
 Link tussen patient en disease leggen dmv koppelings tabel?
 Formulier voor toevoegen/edit kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.

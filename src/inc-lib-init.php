@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-01-12
+ * Modified    : 2011-01-18
  * For LOVD    : 3.0-pre-13
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -306,12 +306,12 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
 
 function lovd_getGeneList ()
 {
-    // Gets the list of genes (ids and symbols only), to prevent repeated queries.
+    // Gets the list of genes (ids only), to prevent repeated queries.
     static $aGenes = array();
     if (!count($aGenes)) {
-        $q = lovd_queryDB('SELECT id, symbol FROM ' . TABLE_GENES . ' ORDER BY symbol');
+        $q = lovd_queryDB('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id');
         while ($r = mysql_fetch_row($q)) {
-            $aGenes[$r[0]] = $r[1];
+            $aGenes[] = $r[0];
         }
     }
 
@@ -712,7 +712,7 @@ function lovd_switchDB ()
     // and bottom includes.
     global $_AUTH, $_SETT, $_CONF, $_STAT;
 
-    $qGenes = mysql_query('SELECT symbol, gene FROM ' . TABLE_DBS . ' ORDER BY symbol');
+    $qGenes = mysql_query('SELECT id, name FROM ' . TABLE_DBS . ' ORDER BY id');
     $nGenes = mysql_num_rows($qGenes);
 
     if (!defined('_INC_TOP_INCLUDED_') && $nGenes == 1) {
@@ -751,7 +751,7 @@ function lovd_switchDB ()
           '      <FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDB" method="get">' . "\n" .
           '        <SELECT name="select_db" onchange="document.getElementById(\'SelectGeneDB\').submit();">' . "\n");
     while ($zGenes = mysql_fetch_assoc($qGenes)) {
-        print('          <OPTION value="' . $zGenes['symbol'] . '"' . ($_SESSION['currdb'] == $zGenes['symbol']? ' selected' : '') . '>' . $zGenes['symbol'] . ' (' . $zGenes['gene'] . ')</OPTION>' . "\n");
+        print('          <OPTION value="' . $zGenes['id'] . '"' . ($_SESSION['currdb'] == $zGenes['id']? ' selected' : '') . '>' . $zGenes['id'] . ' (' . $zGenes['name'] . ')</OPTION>' . "\n");
     }
     print('        </SELECT><BR>' . "\n" .
           '        <INPUT type="submit" value="Select gene database">' . "\n" .

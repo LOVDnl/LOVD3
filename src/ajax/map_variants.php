@@ -62,7 +62,7 @@ ignore_user_abort(true);
 // Now, we'll traverse this array, pick max 10 variants and start processing...
 foreach ($_SESSION['mapping']['genes'] as $key => $sGene) {
     // Which human build, reference sequence?
-    list($sRefSeq, $sBuild) = mysql_fetch_row(mysql_query('SELECT refseq_mrna, refseq_build FROM ' . TABLE_DBS . ' WHERE symbol = "' . $sGene . '"'));
+    list($sRefSeq, $sBuild) = mysql_fetch_row(mysql_query('SELECT refseq_mrna, refseq_build FROM ' . TABLE_DBS . ' WHERE id = "' . $sGene . '"'));
     if (!$sRefSeq || !$sBuild) {
         unset($_SESSION['mapping']['genes'][$key]);
         continue;

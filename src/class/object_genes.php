@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-01-06
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-01-19
+ * For LOVD    : 3.0-pre-15
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -53,9 +53,6 @@ class Gene extends Object {
         // Default constructor.
         global $_AUTH;
 
-        // SQL code for loading an entry for an edit form.
-        //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
-
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, uc.name AS created_by_, ue.name AS edited_by_, uu.name AS updated_by, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) LEFT JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
@@ -71,7 +68,7 @@ class Gene extends Object {
         $this->aColumnsViewEntry =
                  array(
                         'TableHeader_General' => 'General information',
-                        'symbol' => 'Gene symbol',
+                        'id' => 'Gene symbol',
                         'name' => 'Gene name',
                         'chrom_location' => 'Chromosome location',
                         'reference' => 'Reference',
@@ -126,9 +123,9 @@ class Gene extends Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
-                        'symbol' => array(
+                        'id' => array(
                                     'view' => array('Symbol', 70),
-                                    'db'   => array('g.symbol', 'ASC', true)),
+                                    'db'   => array('g.id', 'ASC', true)),
                         'name' => array(
                                     'view' => array('Gene', 300),
                                     'db'   => array('g.name', 'ASC', true)),
@@ -142,7 +139,7 @@ class Gene extends Object {
                                     'view' => array('Associated with diseases', 200),
                                     'db'   => array('diseases_', false, true)),
                       );
-        $this->sSortDefault = 'symbol';
+        $this->sSortDefault = 'id';
 
         parent::Object();
     }
@@ -358,7 +355,7 @@ class Gene extends Object {
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'genes/' . rawurlencode($zData['id']);
-            $zData['symbol'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['symbol'] . '</A>';
+            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
             $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';

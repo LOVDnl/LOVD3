@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-01-07
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-01-14
+ * For LOVD    : 3.0-pre-14
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -120,28 +120,30 @@ class Object {
                 }
 
                 // Check data type.
-                switch ($sMySQLType) {
-                    case 'DATE':
-                        if (!lovd_matchDate($aData[$sName])) {
-                            lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date in the format YYYY-MM-DD.');
-                        }
-                        break;
-                    case 'DATETIME':
-                        if (!preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}\:[0-9]{2})?$/', $aData[$sName])) {
-                            lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time, in the format YYYY-MM-DD HH:MM:SS.');
-                        }
-                        break;
-                    case 'DEC':
-                        if (!is_numeric($aData[$sName])) {
-                            lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a number.');
-                        }
-                        break;
-                    case 'INT':
-                    case 'INT_UNSIGNED':
-                        if (!preg_match('/^' . ($sMySQLType != 'INT'? '' : '\-?') . '[0-9]*$/', $aData[$sName])) {
-                            lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a' . ($sMySQLType == 'INT'? 'n' : ' positive') . ' integer.');
-                        }
-                        break;
+                if (!empty($aData[$sName])) {
+                    switch ($sMySQLType) {
+                        case 'DATE':
+                            if (!lovd_matchDate($aData[$sName])) {
+                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date in the format YYYY-MM-DD.');
+                            }
+                            break;
+                        case 'DATETIME':
+                            if (!preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}\:[0-9]{2})?$/', $aData[$sName])) {
+                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time, in the format YYYY-MM-DD HH:MM:SS.');
+                            }
+                            break;
+                        case 'DEC':
+                            if (!is_numeric($aData[$sName])) {
+                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a number.');
+                            }
+                            break;
+                        case 'INT':
+                        case 'INT_UNSIGNED':
+                            if (!preg_match('/^' . ($sMySQLType != 'INT'? '' : '\-?') . '[0-9]*$/', $aData[$sName])) {
+                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a' . ($sMySQLType == 'INT'? 'n' : ' positive') . ' integer.');
+                            }
+                            break;
+                    }
                 }
 
             } elseif ($sType == 'select' && !empty($aField[7])) {
