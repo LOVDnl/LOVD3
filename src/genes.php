@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-01-12
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-01-26
+ * For LOVD    : 3.0-pre-16
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,7 +63,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\w)+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /genes/DMD
     // View specific entry.
 
@@ -103,104 +103,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'find_hgnc') {
-    // URL: /genes?find_hgnc
-    // Find the hgnc entry
-    
-    define('PAGE_TITLE', 'LOVD Setup - Create new gene');
-    define('LOG_EVENT', 'GeneFindHgnc');
-    
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
-    
-    require ROOT_PATH . 'inc-lib-form.php';
-    
-    if(!empty($_POST)) {
-        lovd_errorClean();
-        
-        if (preg_match("/^[0-9]+$/", $_POST['hgnc_id'])) {
-            $sWhere = 'gd_hgnc_id%3D' . $_POST['hgnc_id'];
-        } else {
-            $sWhere = 'gd_app_sym%3D%22' . $_POST['hgnc_id'] . '%22';
-        }
-        
-        $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_pub_chrom_map&col=gd_pub_eg_id&col=md_mim_id&status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit', false, false);
-        
-        if (isset($aHgncFile['1'])) {
-            $sHgncEntry = $aHgncFile['1'];
-            
-            @list($sHgncID, $sSymbol, $sName, $sChrom, $sEntrez, $sOmim) = explode("\t", $sHgncEntry);
-            if ($sName == 'entry withdrawn') {
-                lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' no longer exists in the HGNC database.');
-            } else if (preg_match('/^symbol withdrawn, see (.+)$/', $sName, $aRegs)) {
-                lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' is deprecated, please use ' . $aRegs[1]);
-            }
-        } else {
-            if ($_POST['hgnc_id'] == '') {
-                lovd_errorAdd('hgnc_id', 'No HGNC ID or Gene symbol was specified');
-            } else {
-                lovd_errorAdd('hgnc_id', 'Entry was not found in the HGNC database.');
-            }
-        }
-        
-        if (!lovd_error()) {
-            require ROOT_PATH . 'inc-top.php';
-            lovd_showInfoTable('Found gene in the HGNC database, now building form...', 'success');
-            print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create" method="post">' . "\n" .
-                  '        <INPUT type="hidden" name="symbol" value="' . $sSymbol . '">' . "\n" .
-                  '        <INPUT type="hidden" name="name" value="' . $sName . '">' . "\n" .
-                  '        <INPUT type="hidden" name="chrom_location" value="' . $sChrom . '">' . "\n" .
-                  '        <INPUT type="hidden" name="id_hgnc" value="' . $sHgncID . '">' . "\n" .
-                  '        <INPUT type="hidden" name="id_entrez" value="' . $sEntrez . '">' . "\n" .
-                  '        <INPUT type="hidden" name="id_omim" value="' . $sOmim . '">' . "\n" .
-                  '        <INPUT type="hidden" name="hgnc_found" value="true">' . "\n" .
-                  '        <INPUT type="submit" value="Continue &raquo;">' . "\n" .
-                  '      </FORM>' . "\n\n" .
-                  '      <SCRIPT type="text/javascript">' . "\n" .
-                  '        <!--' . "\n" .
-                  '        document.forms[0].submit();' . "\n" .
-                  '        // -->' . "\n" .
-                  '      </SCRIPT>' . "\n\n");
-        
-            lovd_checkXSS();
-        
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-        }
-    } else {
-        // Unset the input post value.
-        unset($_POST['hgnc_id']);
-    }
-    
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
-    
-    print('      Please fill in the HGNC ID or Gene Symbol for the gene database you wish to create.<BR>' . "\n" .
-          '      <BR>' . "\n\n");
-    
-    lovd_errorPrint();
-    
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
-
-    // Array which will make up the form table.
-    $aFormData = array(
-                    array('POST', '', '', '', '30%', '14', '70%'),
-                    array('HGNC ID or Gene Symbol', '', 'text', 'hgnc_id', 10),
-                    array('', '', 'submit', 'Continue &raquo;'),
-                  );
-    lovd_viewForm($aFormData);
-
-    print('</TABLE></FORM>' . "\n\n");
-    
-    require ROOT_PATH . 'inc-bot.php';
-    exit;
-}
-
-
-
-
-
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // URL: /genes?create
     // Create a new entry.
@@ -216,9 +118,201 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'class/REST2SOAP.php';
     $_DATA = new Gene();
     
-    if (!isset($_POST['hgnc_found'])) {
+    if (GET) {
+        $_POST['workID'] = lovd_generateRandomID();
+        $_SESSION['work'][$_POST['workID']] = array(
+                                                    'action' => '/genes?create',
+                                                    'step' => '1',
+                                                   );
+    }
+    
+    if ($_SESSION['work'][$_POST['workID']]['step'] == '1') {
+
+        if (POST) {
+
+            lovd_errorClean();
+
+            if ($_POST['hgnc_id'] == '') {
+                lovd_errorAdd('hgnc_id', 'No HGNC ID or Gene symbol was specified');
+            } else {
+                // Gene Symbol must be unique
+                // Enforced in the table, but we want to handle this gracefully.
+                $sSQL = 'SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?';
+                $aSQL = array($_POST['hgnc_id']);
+                
+                if (mysql_num_rows(lovd_queryDB($sSQL, $aSQL))) {
+                    lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation. Please choose another one.');
+                } else {
+                    if (preg_match("/^\d+$/", $_POST['hgnc_id'])) {
+                        $sWhere = 'gd_hgnc_id%3D' . $_POST['hgnc_id'];
+                    } else {
+                        $sWhere = 'gd_app_sym%3D%22' . $_POST['hgnc_id'] . '%22';
+                    }
+                    $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_pub_chrom_map&col=gd_pub_eg_id&col=md_mim_id&status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit', false, false);
+                    
+                    if (isset($aHgncFile['1'])) {
+                        list($sHgncID, $sSymbol, $sName, $sChromLocation, $sEntrez, $sOmim) = explode("\t", $aHgncFile['1']);
+                        list($sEntrez, $sOmim) = array_values(array_map('trim', array($sEntrez, $sOmim)));
+                        if ($sName == 'entry withdrawn') {
+                            lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' no longer exists in the HGNC database.');
+                        } else if (preg_match('/^symbol withdrawn, see (.+)$/', $sName, $aRegs)) {
+                            lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' is deprecated, please use ' . $aRegs[1]);
+                        }
+                    } else {
+                        lovd_errorAdd('hgnc_id', 'Entry was not found in the HGNC database.');
+                    }
+                }
+            }
+            
+            if (!lovd_error()) {
+                require ROOT_PATH . 'inc-top.php';
+                require ROOT_PATH . 'class/progress_bar.php';
+                require ROOT_PATH . 'inc-lib-genes.php';
+                
+                $sFormNextPage = '<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id="createGene" method="post">' . "\n" .
+                                 '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
+                                 '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
+                                 '        </FORM>';
+                
+                $_BAR = new ProgressBar('', 'Collecting gene information...', $sFormNextPage);
+
+                define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
+                require ROOT_PATH . 'inc-bot.php';
+
+                // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
+                flush();
+
+                $_MutalyzerWS = new REST2SOAP();
+                $_MutalyzerWS->sSoapURL = 'http://10.160.8.105/mutalyzer2/services';
+                //$_MutalyzerWS->sSoapURL = 'http://www.mutalyzer.nl/2.0/services';
+                //$_MutalyzerWS->sSoapURL = 'http://mutalyzer.martijn/services';
+                
+                // Get LRG if it exists
+                $aRefseqGenomic = array();
+                $_BAR->setMessage('Checking for LRG...');
+                if ($sLRG = getLrgByGeneSymbol($sSymbol)) {
+                    $aRefseqGenomic[] = $sLRG;
+                }
+
+                // Get NG if it exists
+                $_BAR->setMessage('Checking for NG...');
+                $_BAR->setProgress(16);
+                if ($sNG = getNgByGeneSymbol($sSymbol)) {
+                    $aRefseqGenomic[] = $sNG;
+                }
+
+                // Get NC from LOVD
+                $_BAR->setMessage('Checking for NC...');
+                $_BAR->setProgress(33);
+                preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches);
+                $sChromosome = $aMatches[1];
+                $sChromBand = $aMatches[2];
+                $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
+
+                // Get UDID from mutalyzer
+                $_BAR->setMessage('Making a gene slice of the NC...');
+                $_BAR->setProgress(49);
+                $aUDID = $_MutalyzerWS->moduleCall('sliceChromosomeByGene', array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'));
+                if (!is_array($aUDID)) {
+                    lovd_displayError('SOAP-ERROR', $aUDID);
+                } else {
+                    $sRefseqUD = $aUDID[0];
+                }
+
+                // Get transcripts for the hgnc entry from mutalyzer
+                $_BAR->setMessage('Collecting all available transcripts...');
+                $_BAR->setProgress(66);
+                $aTranscripts = $_MutalyzerWS->moduleCall("getTranscriptsByGeneName", array("build" => $_CONF['refseq_build'], "name" => $sSymbol));
+
+                if (!is_array($aTranscripts)) {
+                    if (!preg_match('/^Empty/', $aTranscripts)) {
+                        lovd_displayError('SOAP-ERROR', $aTranscripts);
+                    }
+                    $aTranscripts = array();
+                    $aTranscriptNames = array();
+                    $_BAR->setMessage('No transcripts to collect info from, continueing...');
+                    $_BAR->setProgress(83);
+                } else {
+                    // Get transcript info from mutalyzer
+                    $_BAR->setMessage('Collecting transcript info...');
+                    $_BAR->setProgress(83);
+                    foreach ($aTranscripts as $sTranscript) {
+                        $aTranscriptInfo = $_MutalyzerWS->moduleCall("getGeneAndTranscript", array("genomicReference" => $sRefseqUD, "transcriptReference" => $sTranscript));
+                        $aTranscriptNames[$sTranscript] = $aTranscriptInfo[1]; 
+                    }
+                    if (!is_array($aTranscriptNames)) {
+                        $aTranscriptNames = array();
+                    }
+                }
+
+                $_BAR->setProgress(100);
+                $_BAR->setMessage('Information collected, now building form...');
+                $_BAR->setMessageVisibility('done', true);
+                $_SESSION['work'][$_POST['workID']]['step'] = '2';
+                $_SESSION['work'][$_POST['workID']]['values'] = array(
+                                                                  'id' => $sSymbol,
+                                                                  'name' => $sName,
+                                                                  'chromosome' => $sChromosome,
+                                                                  'chrom_band' => $sChromBand,
+                                                                  'id_hgnc' => $sHgncID,
+                                                                  'id_entrez' => $sEntrez,
+                                                                  'id_omim' => $sOmim,
+                                                                  'transcripts' => $aTranscripts,
+                                                                  'transcriptNames' => $aTranscriptNames,
+                                                                  'genomic_references' => $aRefseqGenomic,
+                                                                  'refseq_UD' => $sRefseqUD,
+                                                                );
+
+                print('<SCRIPT type="text/javascript">' . "\n" .
+                      '  document.forms[\'createGene\'].submit();' . "\n" .
+                      '</SCRIPT>' . "\n\n");
+            
+                lovd_checkXSS();
+            
+                print('</BODY>' . "\n" .
+                  '</HTML>' . "\n");
+                exit;
+            }
+        }
         
-        if (!empty($_POST)) {
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        
+        if (GET) {
+            print('      Please fill in the HGNC ID or Gene Symbol for the gene database you wish to create.<BR>' . "\n" .
+                  '      <BR>' . "\n\n");
+        }
+        
+        lovd_errorPrint();
+        
+        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
+              '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
+
+        // Array which will make up the form table.
+        $aFormData = array(
+                            array('POST', '', '', '', '30%', '14', '70%'),
+                            array('HGNC ID or Gene Symbol', '', 'text', 'hgnc_id', 10),
+                            array('', '', 'submit', 'Continue &raquo;'),
+                          );
+        lovd_viewForm($aFormData);
+        print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+        print('</TABLE></FORM>' . "\n\n");
+        print('<SCRIPT type="text/javascript">' . "\n" .
+              '  <!--' . "\n" .
+              '    document.forms[0].hgnc_id.focus();' . "\n" .
+              '  // -->' . "\n" .
+              '</SCRIPT>' . "\n");
+        
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
+    
+    
+    
+    
+    if ($_SESSION['work'][$_POST['workID']]['step'] == '2') {
+        $zData = $_SESSION['work'][$_POST['workID']]['values'];
+        if (count($_POST) > 1) {
             lovd_errorClean();
 
             $_DATA->checkFields($_POST);
@@ -226,22 +320,28 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if (!lovd_error()) {
                 // Fields to be used.
                 $aFields = array(
-                                'id', 'symbol', 'name', 'chromosome', 'chrom_location', 'refseq_genomic', 'reference', 'url_homepage',
+                                'id', 'name', 'chromosome', 'chrom_band', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage',
                                 'url_external', 'allow_download', 'allow_index_wiki', 'id_hgnc', 'id_entrez', 'id_omim', 'show_hgmd',
-                                'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer',
-                                'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align'
+                                'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer', 
+                                'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date', 
                                 );
 
                 // Prepare values.
                 $_POST['created_by'] = $_AUTH['id'];
-                $_POST['created_date'] = date('Y-m-d H:i:s');
-                $_POST['id'] = $_POST['symbol'];
-                $_POST['chromosome'] = substr($_POST['chrom_location'], 0, 1);
-                
+                if (empty($_POST['created_date'])) {
+                    $_POST['created_date'] = date('Y-m-d H:i:s');
+                }
+                $_POST['id'] = $zData['id'];
+                $_POST['refseq_UD'] = $zData['refseq_UD'];
+                $_POST['chromosome'] = $zData['chromosome'];
+                $_POST['id_hgnc'] = $zData['id_hgnc'];
+                $_POST['id_entrez'] = ($zData['id_entrez']? $zData['id_entrez'] : '');
+                $_POST['id_omim'] = ($zData['id_omim']? $zData['id_omim'] : '');
+
                 $nID = $_DATA->insertEntry($_POST, $aFields);
 
                 // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');
+                lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');
 
                 // Add diseases.
                 $aSuccessDiseases = array();
@@ -256,19 +356,38 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                         $aSuccessDiseases[] = $sDisease;
                     }
                 }
-                foreach($_POST['active_transcripts'] as $sTranscript) {
-                    // Add transcript to gene
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())', array($_POST['id'], 'Transcript ' . $_POST['id'], $sTranscript, '1', '1', '1', '1', 1, 1, 1, 1, 1));
-                    //$q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NULL, NULL)', array($_POST['id'], 'TEST', $sTranscript, '1', '1', '1', '1', 1, 1, 1, 1, 1));
-                    if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
-                    } else {
-                        $aSuccessTranscripts[] = $sTranscript;
+                
+                if (empty($_POST['active_transcripts']) || $_POST['active_transcripts'][0] != 'None') {
+                    foreach($_POST['active_transcripts'] as $sTranscript) {
+                        // Add transcript to gene
+                        $_MutalyzerWS = new REST2SOAP();
+                        $_MutalyzerWS->sSoapURL = 'http://10.160.8.105/mutalyzer2/services';
+                        $aOutput = $_MutalyzerWS->moduleCall("transcriptInfo", array("LOVD_ver" => '3', "build" => $_CONF['refseq_build'], "accNo" => $sTranscript));
+                        if (!is_array($aOutput)) {
+                            $aTranscriptPositions = array(1, 1, 1);
+                            $aTranscriptGenomePositions = array(1, 1);
+                        } else {
+                            $aTranscriptPositions = $aOutput;
+                            $aOutput = $_MutalyzerWS->moduleCall("numberConversion", array("build" => $_CONF['refseq_build'], "variant" => $sTranscript . ':c.' . $aTranscriptPositions[0] . '_' . $aTranscriptPositions[1] . 'del'));
+                            if (!is_array($aOutput)) {
+                                $aTranscriptGenomePositions = array(1, 1);
+                            } else {
+                                preg_match('/^.+:g.(.+)_(.+)del$/', $aOutput[0], $aMatches);
+                                $aTranscriptGenomePositions = array($aMatches[1], $aMatches[2]);
+                            }
+                        }
+                        $sTranscriptName = str_replace('(' . $sTranscript . ')', '', $zData['transcriptNames'][$sTranscript]);
+                        $q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['id'], $sTranscriptName, $sTranscript, 'NULL', 'NULL', 'NULL', 'NULL', $aTranscriptPositions[0], $aTranscriptPositions[1], $aTranscriptPositions[2], $aTranscriptGenomePositions[0], $aTranscriptGenomePositions[1], date('Y-m-d'), $_POST['created_by']));
+                        if (!$q) {
+                            // Silent error.
+                            lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
+                        } else {
+                            $aSuccessTranscripts[] = $sTranscript;
+                        }
                     }
-                }
-                if (count($aSuccessDiseases) && count($aSuccessTranscripts)) {
-                    lovd_writeLog('Event', LOG_EVENT, 'Disease and transcript information entries successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['symbol']);
+                    if (count($aSuccessDiseases) && count($aSuccessTranscripts)) {
+                        lovd_writeLog('Event', LOG_EVENT, 'Disease and transcript information entries successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
+                    }
                 }
 
                 // Thank the user...
@@ -280,58 +399,189 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
-
-            } else {
-                // Because we're sending the data back to the form, I need to unset the password fields!
-                unset($_POST['password']); // Currently does not have an effect here.
             }
-
         } else {
             // Default values.
             $_DATA->setDefaultValues();
         }
-    } else {
-        unset($_POST['hgnc_found']);
+        
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+
+        if (!lovd_error()) {
+            print('      To create a new gene database, please complete the form below and press "Create" at the bottom of the form..<BR>' . "\n" .
+                  '      <BR>' . "\n\n");
+        }
+        
+        lovd_errorPrint();
+
+        // Tooltip JS code.
+        lovd_includeJS('inc-js-tooltip.php');   
+        
+        // Table.
+        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+
+        // Array which will make up the form table.
+        
+        $aForm = array_merge(
+                     $_DATA->getForm(),
+                     array(
+                            array('', '', 'submit', 'Create gene information entry'),
+                          ));
+        lovd_viewForm($aForm);
+        
+        print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+        print('</FORM>' . "\n\n");
+
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
     }
-
-
-
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
-    
-    if (GET) {
-        print('      To create a new gene database, please complete the form below and press "Create" at the bottom of the form..<BR>' . "\n" .
-              '      <BR>' . "\n\n");
-    }
-
-    lovd_errorPrint();
-
-    // Tooltip JS code.
-    lovd_includeJS('inc-js-tooltip.php');
-    
-    // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
-
-    // Array which will make up the form table.
-    
-    $aForm = array_merge(
-                 $_DATA->getForm(),
-                 array(
-                        array('', '', 'submit', 'Create gene information entry'),
-                      ));
-    lovd_viewForm($aForm);
-    
-    print('</FORM>' . "\n\n");
-
-    require ROOT_PATH . 'inc-bot.php';
-    exit;
 }
 
 
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+    // URL: /genes/DMD?edit
+    // Edit an entry.
+
+    $nID = $_PATH_ELEMENTS[1];
+    define('PAGE_TITLE', 'Edit gene information entry');
+    define('LOG_EVENT', 'GeneEdit');
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_genes.php';
+    require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'class/REST2SOAP.php';
+    $_DATA = new Gene();
+    $zData = $_DATA->loadEntry($nID);
+    
+    if (GET) {
+        require ROOT_PATH . 'inc-lib-genes.php';
+        
+        $aRefseqGenomic = array();
+        // Get LRG if it exists
+        if ($sLRG = getLrgByGeneSymbol($nID)) {
+            $aRefseqGenomic[] = $sLRG;
+        }
+        // Get NG if it exists
+        if ($sNG = getNgByGeneSymbol($nID)) {
+            $aRefseqGenomic[] = $sNG;
+        }
+        // Get NC from LOVD
+        $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
+        
+        $_POST['workID'] = lovd_generateRandomID();
+        $_SESSION['work'][$_POST['workID']] = array(
+                                                    'action' => '/genes/' . $nID . '?edit',
+                                                    'values' => array(
+                                                                        'genomic_references' => $aRefseqGenomic,
+                                                                     ),
+                                                   );
+    }
+    $zData['genomic_references'] = $_SESSION['work'][$_POST['workID']]['values']['genomic_references'];
+    if (count($_POST) > 1) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+        
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array(
+                            'name', 'chrom_band', 'refseq_genomic', 'reference', 'url_homepage', 'url_external', 'allow_download',
+                            'allow_index_wiki', 'show_hgmd', 'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq',
+                            'refseq_url', 'disclaimer', 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_date',
+                            'edited_by', 'edited_date', 
+                            );
+
+            // Prepare values.
+            if (empty($_POST['created_date'])) {
+                $_POST['created_date'] = date('Y-m-d H:i:s');
+            }
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
+            
+            $_DATA->updateEntry($nID, $_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Edited gene information entry ' . $nID . ' (' . $_POST['name'] . ')');
+
+            // Add diseases.
+            $aSuccessDiseases = array();
+            foreach ($_POST['active_diseases'] as $sDisease) {
+                // Add disease to gene.
+                lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid=?', array($sDisease));
+                $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?,?)', array($nID, $sDisease));
+                if (!$q) {
+                    // Silent error.
+                    lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $sDisease . ' - could not be edited for gene ' . $nID);
+                } else {
+                    $aSuccessDiseases[] = $sDisease;
+                }
+            }
+            if (count($aSuccessDiseases)) {
+                lovd_writeLog('Event', LOG_EVENT, 'Disease information entries successfully edited for gene ' . $nID . ' - ' . $_POST['name']);
+            }
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully edited the gene information entry!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+    } else {
+        // Default values.
+        foreach ($zData as $key => $val) {
+            $_POST[$key] = $val;
+        }
+        // Load connected diseases.
+        $_POST['active_diseases'] = explode(';', $_POST['active_diseases_']);
+    }
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    if (!lovd_error()) {
+        print('      To edit this gene database, please complete the form below and press "Edit" at the bottom of the form..<BR>' . "\n" .
+              '      <BR>' . "\n\n");
+    }
+    
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');   
+    
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        array('', '', 'submit', 'Edit gene information entry'),
+                      ));
+    lovd_viewForm($aForm);
+    
+    print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+
+}
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /genes/DMD?delete
     // Drop specific entry.
 
@@ -372,7 +622,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
             }
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $nID . ' - ' . $zData['symbol'] . ' (' . $zData['name'] . ')');
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $nID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes');
@@ -403,8 +653,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^([0-9]|[A-Z]|[a-z])+$/', $_PATH_
     // Array which will make up the form table.
     $aForm = array_merge(
                  array(
-                        array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Deleting gene information entry', '', 'print', $zData['symbol'] . ' (' . $zData['name'] . ')'),
+                        array('POST', '', '', '', '40%', '14', '60%'),
+                        array('Deleting gene information entry', '', 'print', $zData['id'] . ' (' . $zData['name'] . ')'),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete gene information entry'),

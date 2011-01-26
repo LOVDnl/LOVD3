@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-01-19
- * For LOVD    : 3.0-pre-15
+ * Modified    : 2011-01-26
+ * For LOVD    : 3.0-pre-16
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -93,7 +93,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-pre-15',
+                            'version' => '3.0-pre-16',
                           ),
                 'user_levels' =>
                      array(
@@ -576,7 +576,7 @@ if (!defined('_NOT_INSTALLED_')) {
     define('CURRENT_PATH', implode('/', $_PATH_ELEMENTS));
 
     // Define ACTION.
-    if ($_SERVER['QUERY_STRING'] && preg_match('/^([a-z_]+)(&.*)?$/', $_SERVER['QUERY_STRING'], $aRegs)) {
+    if ($_SERVER['QUERY_STRING'] && preg_match('/^(\w+)(&.*)?$/', $_SERVER['QUERY_STRING'], $aRegs)) {
         define('ACTION', $aRegs[1]);
     } else {
         define('ACTION', false);

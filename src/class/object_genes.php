@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-01-19
- * For LOVD    : 3.0-pre-15
+ * Modified    : 2011-01-26
+ * For LOVD    : 3.0-pre-16
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -15,7 +15,7 @@
  * This file is part of LOVD.
  *
  * LOVD is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the trunk/src/genes.phpGNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -53,6 +53,9 @@ class Gene extends Object {
         // Default constructor.
         global $_AUTH;
 
+        // SQL code for loading an entry for an edit form.
+        $this->sSQLLoadEntry = 'SELECT g.*, GROUP_CONCAT(DISTINCT g2d.diseaseid ORDER BY g2d.diseaseid SEPARATOR ";") AS active_diseases_ FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) WHERE g.id = ? GROUP BY g.id';
+
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, uc.name AS created_by_, ue.name AS edited_by_, uu.name AS updated_by, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) LEFT JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
@@ -70,9 +73,9 @@ class Gene extends Object {
                         'TableHeader_General' => 'General information',
                         'id' => 'Gene symbol',
                         'name' => 'Gene name',
-                        'chrom_location' => 'Chromosome location',
-                        'reference' => 'Reference',
-                        'refseq_genomic' => 'Reference location',
+                        'chromosome' => 'Chromosome',
+                        'chrom_band' => 'Chromosomal band',
+                        'refseq_genomic' => 'Reference',
                         'url_homepage' => 'Homepage URL',
                         'url_external' => 'External URL',
                         'allow_download_' => 'Allow public to download all variant entries',
@@ -112,7 +115,7 @@ class Gene extends Object {
                         'show_genetests_' => 'GeneTests',
                       );
 
-        // Because the disease information is publicly available, remove some columns for the public.
+        // Because the gene information is publicly available, remove some columns for the public.
         if ($_AUTH && $_AUTH['level'] < LEVEL_COLLABORATOR) {
             unset($this->aColumnsViewEntry['created_by_']);
             unset($this->aColumnsViewEntry['created_date']);
@@ -129,9 +132,9 @@ class Gene extends Object {
                         'name' => array(
                                     'view' => array('Gene', 300),
                                     'db'   => array('g.name', 'ASC', true)),
-                        'chrom_location' => array(
+                        'chromosome' => array(
                                     'view' => array('Chrom.', 70),
-                                    'db'   => array('g.chrom_location', false, true)),
+                                    'db'   => array('g.chromosome', false, true)),
                         'variants' => array(
                                     'view' => array('Variants', 70),
                                     'db'   => array('variants', 'ASC', true)),
@@ -151,32 +154,68 @@ class Gene extends Object {
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
-        if (ACTION == 'edit') {
-            global $zData; // FIXME; this could be done more elegantly.
-        }
-
+        global $zData; // FIXME; this could be done more elegantly.
+        
         // Mandatory fields.
         $this->aCheckMandatory =
                  array(
-                        'symbol',
-                        'name',
+                        
                       );
+        
+        if (isset($aData['workID'])) {
+            unset($aData['workID']);
+        }
+        
         parent::checkFields($aData);
 
-        // Disease symbol must be unique.
-        if (!empty($aData['symbol'])) {
-            // Enforced in the table, but we want to handle this gracefully.
-            $sSQL = 'SELECT id FROM ' . TABLE_GENES . ' WHERE symbol = ?';
-            $aSQL = array($aData['symbol']);
-            if (ACTION == 'edit') {
-                $sSQL .= ' AND id != ?';
-                $aSQL[] = $zData['id'];
-            }
-            if (mysql_num_rows(lovd_queryDB($sSQL, $aSQL))) {
-                lovd_errorAdd('name', 'There is already a gene entry with this abbreviation. Please choose another one.');
+        if (!in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
+            lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
+        }
+        
+        if (!empty($aData['refseq']) && empty($aData['refseq_url'])) {
+            lovd_errorAdd('refseq', 'You have selected that there is a human-readable reference sequence. Please fill in the "Human-readable reference sequence location" field. Otherwise, select \'No\' for the "This gene has a human-readable reference sequence" field.');
+        }
+        
+        if ($aData['disclaimer'] == 2 && empty($aData['disclaimer_text'])) {
+            lovd_errorAdd('disclaimer_text', 'If you wish to use an own disclaimer, please fill in the "Text for own disclaimer" field. Otherwise, select \'No\' for the "Include disclaimer" field.');
+        }
+        
+        // Numeric values
+        $aCheck =
+                 array(
+                        'header_align' => 'Header aligned to',
+                        'footer_align' => 'Footer aligned to',
+                      );
+        
+        foreach ($aCheck as $key => $val) {
+            if ($aData[$key] && !is_numeric($aData[$key])) {
+                lovd_errorAdd($key, 'The \'' . $val . '\' field has to contain a numeric value.');
             }
         }
+        
+        // URL values
+        $aCheck =
+                 array(
+                        'url_homepage' => 'Homepage URL',
+                        'refseq_url' => 'Human-readable reference sequence location',
+                      );
 
+        foreach ($aCheck as $key => $val) {
+            if ($aData[$key] && !lovd_matchURL($aData[$key])) {
+                lovd_errorAdd($key, 'The \'' . $val . '\' field does not seem to contain a correct URL.');
+            }
+        }
+        
+        // List of external links.
+        if ($aData['url_external']) {
+            $aExternalLinks = explode("\r\n", trim($aData['url_external']));
+            foreach ($aExternalLinks as $n => $sLink) {
+                if (!lovd_matchURL($sLink) && (!preg_match('/^[^<>]+ <?([^< >]+)>?$/', $sLink, $aRegs) || !lovd_matchURL($aRegs[1]))) {
+                    lovd_errorAdd('url_external', 'External link #' . ($n + 1) . ' (' . htmlspecialchars($sLink) . ') not understood.');
+                }
+            }
+        }
+        
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
     }
@@ -188,9 +227,9 @@ class Gene extends Object {
     function getForm ()
     {
         // Build the form.
-        global $_CONF;
+        global $_CONF, $zData;
 
-        // Get list of genes
+        // Get list of diseases
         $aData = array();
         $qData = mysql_query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
@@ -199,20 +238,25 @@ class Gene extends Object {
             $aData[$r[0]] = $r[1];
         }
 
-        $aTranscripts = mutalyzer_SOAP_module_call("getTranscriptsByGeneName", array("build" => $_CONF['refseq_build'], "name" => $_POST['symbol']));
-        $aTranscriptsForm = array();
-        foreach ($aTranscripts as $sTranscript) {
-            $aTranscriptsForm[$sTranscript] = $sTranscript;
+        $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
+        if (!empty($zData['transcripts'])) {
+            $aTranscriptsForm = array_combine($zData['transcripts'], $zData['transcripts']);
+            foreach ($aTranscriptsForm as $key) {
+                $aTranscriptsForm[$key] = $zData['transcriptNames'][$key] . '(' . $aTranscriptsForm[$key] . ')';
+            }
+            asort($aTranscriptsForm);
+        } else {
+            $aTranscriptsForm = array('None' => 'No transcripts available');
         }
-        asort($aTranscriptsForm);
-        $nTranscriptsFormSize = count($aTranscriptsForm);
-        $nTranscriptsFormSize = ($nTranscriptsFormSize < 10? $nTranscriptsFormSize : 10);
+
+        $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
 
         $aSelectRefseq = array(
                                 'c' => 'Coding DNA',
                                 'g' => 'Genomic'
                               );
         $aSelectDisclaimer = array(
+                                0 => 'No',
                                 1 => 'Use standard LOVD disclaimer',
                                 2 => 'Use own disclaimer (enter below)'
                                   );
@@ -220,7 +264,7 @@ class Gene extends Object {
                                 -1 => 'Left',
                                 0  => 'Center',
                                 -2 => 'Right'
-                              );
+                                    );
 
         // Array which will make up the form table.
         $this->aFormData =
@@ -228,16 +272,15 @@ class Gene extends Object {
                         array('POST', '', '', '', '50%', '14', '50%'),
                         array('', '', 'print', '<B>General information</B>'),
                         'hr',
-                        array('Full gene name', '', 'text', 'name', 40),
+                        array('Full gene name', '', 'text', 'name', 50),
                         'hr',
-                        array('Official gene symbol', '', 'text', 'symbol', 10),
-                        array('', '', 'note', 'The gene symbol is used by LOVD to reference to this gene and can\'t be changed later on. To create multiple databases for one gene, append \'_\' and an indentifier, i.e. \'DMD_point\' and \'DMD_deldup\' for the DMD gene.'),
+                        array('Official gene symbol', '', 'print', $zData['id']),
                         'hr',
-                        array('Chromosomal location', '', 'text', 'chrom_location', 10),
-                        array('', '', 'note', 'Example: Xp21.2'),
+                        array('Chromosome', '', 'print', $zData['chromosome']),
                         'hr',
-                        array('Date of creation (optional)', '', 'text', 'created_date', 10),
-                        array('', '', 'note', 'Format: YYYY-MM-DD. If left empty, today\'s date will be used.'),
+                        array('Chromosomal band', '', 'text', 'chrom_band', 10),
+                        'hr',
+                        array('Date of creation (optional)', 'Format: YYYY-MM-DD. If left empty, today\'s date will be used.', 'text', 'created_date', 10),
                         'hr',
                         'skip',
                         'skip',
@@ -256,11 +299,11 @@ class Gene extends Object {
                         'skip',
                         array('', '', 'note', '<B>The following three fields are for the mapping of the variants to the genomic reference sequence. They are mandatory, as variants without properly configured reference sequences, cannot be interpreted properly.</B>'),
                         'hr',
-                        array('NCBI accession number for the genomic reference sequence', '', 'text', 'refseq_genomic', 15),
-                        array('', '', 'note', 'Fill in the NCBI GenBank ID of the genomic reference sequence (NG or NC accession numbers), such as "NG_012232.1" or "NC_000023.10". Always include the version number as well!'),
+                        array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false),
+                        array('', '', 'note', 'Select the genomic reference sequence (NG, NC, LRG accession number). Only the references that are available to LOVD are shown'),
                         'hr',
-                        array('NCBI accession number for the transcript reference sequence', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
-                        array('', '', 'note', 'Fill in the NCBI GenBank ID of the transcript reference sequence (NM/NR accession numbers), such as "NM_004006.2". Always include the version number as well!'),
+    'transcripts' =>    array('Transcriptomic reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
+'transcript_info' =>    array('', '', 'note', 'Select transcript references (NM accession numbers). You can select multiple transcripts by holding "CTRL or CMD" and clicking all transcripts desired.'),
                         'hr',
                         'skip',
                         'skip',
@@ -273,20 +316,17 @@ class Gene extends Object {
                         array('External links', '', 'textarea', 'url_external', 55, 3),
                         array('', '', 'note', 'Here you can provide links to other resources on the internet that you would like to link to. One link per line, format: complete URLs or "Description <URL>".'),
                         'hr',
-                        array('HGNC ID', '', 'text', 'id_hgnc', 10),
+                        array('HGNC ID', '', 'print', $zData['id_hgnc']),
                         'hr',
-                        array('Entrez Gene (Locuslink) ID', '', 'text', 'id_entrez', 10),
+                        array('Entrez Gene (Locuslink) ID', '', 'print', ($zData['id_entrez']? $zData['id_entrez'] : 'Not Available')),
                         'hr',
-                        array('OMIM Gene ID', '', 'text', 'id_omim', 10),
+                        array('OMIM Gene ID', '', 'print', ($zData['id_omim']? $zData['id_omim'] : 'Not Available')),
                         'hr',
-                        array('Provide link to HGMD', '', 'checkbox', 'show_hgmd'),
-                        array('', '', 'note', 'Do you want a link to this gene\'s entry in the Human Gene Mutation Database added to the homepage?'),
+                        array('Provide link to HGMD', 'Do you want a link to this gene\'s entry in the Human Gene Mutation Database added to the homepage?', 'checkbox', 'show_hgmd'),
                         'hr',
-                        array('Provide link to GeneCards', '', 'checkbox', 'show_genecards'),
-                        array('', '', 'note', 'Do you want a link to this gene\'s entry in the GeneCards database added to the homepage?'),
+                        array('Provide link to GeneCards', 'Do you want a link to this gene\'s entry in the GeneCards database added to the homepage?', 'checkbox', 'show_genecards'),
                         'hr',
-                        array('Provide link to GeneTests', '', 'checkbox', 'show_genetests'),
-                        array('', '', 'note', 'Do you want a link to this gene\'s entry in the GeneTests database added to the homepage?'),
+                        array('Provide link to GeneTests', 'Do you want a link to this gene\'s entry in the GeneTests database added to the homepage?', 'checkbox', 'show_genetests'),
                         'hr',
                         array('This gene has a human-readable reference sequence', '', 'select', 'refseq', 1, $aSelectRefseq, 'No', false, false),
                         array('', '', 'note', 'Although GenBank files are the official reference sequence, they are not very readable for humans. If you have a human-readable format of your reference sequence online, please select the type here.'),
@@ -302,7 +342,7 @@ class Gene extends Object {
                         array('Citation reference(s)', '', 'textarea', 'reference', 30, 3),
                         array('', '', 'note', '(Active custom link : <A href="#" onclick="javascript:lovd_openWindow(\'' . ROOT_PATH . 'links.php?view=1&amp;col=Gene/Reference\', \'LinkView\', \'800\', \'200\'); return false;">PubMed</A>)'),
                         'hr',
-                        array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, 'No', false, false),
+                        array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, false, false, false),
                         array('', '', 'note', 'If you want a disclaimer added to the gene\'s LOVD gene homepage, select your preferred option here.'),
                         'hr',
                         array('Text for own disclaimer', '', 'textarea', 'disclaimer_text', 55, 3),
@@ -333,7 +373,11 @@ class Gene extends Object {
                         'hr',
                         'skip',
                   );
-
+        if (ACTION == 'edit') {
+            unset($this->aFormData['transcripts']);
+            $this->aFormData['transcript_info'] = array('Transcriptomic reference sequence(s)', '', 'note', '<B>Transcriptomic references (NM accession numbers) can only be modified in the transcripts page!!!</B>');
+        }
+        
         return parent::getForm();
     }
 
@@ -373,7 +417,7 @@ class Gene extends Object {
                     $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
                 }
             }
-
+            
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID);
@@ -386,6 +430,16 @@ class Gene extends Object {
         }
 
         return $zData;
+    }
+
+    function setDefaultValues ()
+    {
+        // Sets default values of fields in $_POST.
+        global $zData;
+        
+        $_POST['name'] = $zData['name'];
+        $_POST['chrom_band'] = $zData['chrom_band'];
+        $_POST['disclaimer'] = '1';
     }
 }
 ?>

@@ -4,11 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-06
- * Modified    : 2011-01-06
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-01-26
+ * For LOVD    : 3.0-pre-15
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *
  *
  * This file is part of LOVD.
  *
@@ -26,61 +28,85 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
- 
-function mutalyzer_SOAP_module_call($sModuleName, $aArgs) {
-	
-	$sInputXML = generate_input_XML($sModuleName, $aArgs);
-	$sOutputXML = feed_input_to_SOAP($sInputXML);
-	$aOutput = parse_output($sOutputXML);
-	return $aOutput;
+
+class REST2SOAP {
+    // This class provides basic functionality for the communication between REST and SOAP webservices.
+    var $sSoapURL = '';
+    
+    function moduleCall ($sModuleName, $aArgs = array())
+    {
+        // Basic function for calling the SOAP webservice. This function calls all the other functions
+        // sequentially to get the result from SOAP.
+
+        if (!is_array($aArgs)) {
+            return 'Arguments not an array';
+        }
+        // Generate XML
+        $sInputXML = $this->generateInputXML($sModuleName, $aArgs);
+        // Send XML to SOAP
+        $aOutputSOAP = lovd_php_file($this->sSoapURL, false, $sInputXML);
+        // Parse output
+        $sOutputSOAP = preg_replace(array('/>\s+/', '/\s+</'), array('>', '<'), implode('', $aOutputSOAP));
+        $aOutput = $this->parseOutput($sOutputSOAP);
+        // Check output
+        return $this->checkOutput($aOutput);
+    }
+
+
+
+    function generateInputXML ($sModuleName, $aArgs)
+    {
+        // Generate a XML file to send to the SOAP webservice 
+        $sXML = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
+                '<SOAP-ENV:Envelope' . "\n" .
+                'xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"' . "\n" .
+                'xmlns:ns1="http://mutalyzer.nl/2.0/services"' . "\n" .
+                'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">' . "\n" .
+                '   <SOAP-ENV:Header/>' . "\n" .
+                '   <ns0:Body>' . "\n" .
+                '      <ns1:' . $sModuleName. '>' . "\n";
+
+        foreach ($aArgs as $key => $value) {  
+            if (is_int($value)) {
+                $sType = 'int';
+            } else {
+                $sType = 'string';
+            }
+            $sArg = '         <ns1:' . $key . '>' . $value . '</ns1:' . $key . '>' . "\n";
+            $sXML = $sXML . $sArg;
+        }
+
+        $sXML = $sXML . '      </ns1:' . $sModuleName . '>' . "\n" .
+                '   </ns0:Body>' . "\n" .
+                '</SOAP-ENV:Envelope>';
+
+        return $sXML;
+    }
+
+
+
+    function parseOutput ($sOutputSOAP)
+    {
+        // Parse the output XML given by the SOAP webservice.
+        preg_match_all('/(>([^<]+)<)+/', $sOutputSOAP, $aMatches);
+        $aResult = $aMatches[2];
+
+        return $aResult;
+    }
+
+
+
+    function checkOutput ($aOutput)
+    {
+        // Check for empty return array or SOAP error messages and relay them to the user
+        // and logging them.
+        if (empty($aOutput)) {
+            return 'Empty array returned from SOAP';
+        } else if ($aOutput[0] == 'senv:EARG' || $aOutput[0] == 'senv:Client' || $aOutput[0] == 'senv:Server') {
+            return $aOutput[0] . ' - ' . str_replace("{http://mutalyzer.nl/2.0/services}", "", $aOutput[1]);
+        } else {
+            return $aOutput;
+        }
+    }
 }
-
-function generate_input_XML($sModuleName, $aArgs) {
-
-	$sXML = '<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope
-  SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
-  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-  xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance"
-  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-  xmlns:xsd="http://www.w3.org/1999/XMLSchema">
-  <SOAP-ENV:Body>
-    <' . $sModuleName. ' SOAP-ENC:root="1">
-';
-
-foreach ($aArgs as $key => $value) {  
-	
-	if (is_int($value)) {
-		$sType = "int";
-	} else {
-		$sType = "string";
-	}
-	$sArg = '      <' . $key . ' xsi:type="xsd:' . $sType . '">' . $value . '</' . $key . '>
-';
-	$sXML = $sXML . $sArg;
-}
-
-$sXML = $sXML . '    </' . $sModuleName . '>
-  </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>';
-
-return $sXML;
-}
-
-function feed_input_to_SOAP($sInputXML) {
-	
-	//$aOutputSOAP = lovd_php_file("http://www.mutalyzer.nl/2.0/services", false, $sInputXML);
-	$aOutputSOAP = lovd_php_file("http://10.160.8.105/mutalyzer2/services", false, $sInputXML);
-	
-	return $aOutputSOAP[0];
-}
-
-function parse_output($sOutputXML) {
-	
-	preg_match_all('/(>([^<]+)<)+/', $sOutputXML, $aMatches);
-	$aResult = $aMatches[2];
-	
-	return $aResult;
-}
-
 ?>
