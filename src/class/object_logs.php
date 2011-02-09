@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2010-05-07
- * For LOVD    : 3.0-pre-07
+ * Modified    : 2011-02-09
+ * For LOVD    : 3.0-pre-16
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -66,7 +66,7 @@ class Log extends Object {
                         'date' => array(
                                     'view' => array('Date', 130),
                                     'db'   => array('CONCAT(l.date, " ", l.mtime)', 'DESC', true)),
-                        'user' => array(
+                        'user_' => array(
                                     'view' => array('User', 160),
                                     'db'   => array('u.name', 'ASC', true)),
                         'event' => array(
@@ -99,6 +99,7 @@ class Log extends Object {
         $zData = parent::prepareData($zData, $sView);
 
         $zData['row_id'] = $zData['name'] . ',' . $zData['date'] . ',' . $zData['mtime'];
+        $zData['user_'] = '<A href="users/' . $zData['userid'] . '">' . $zData['user'] . '</A>';
         $zData['del'] = '<A href="#" onclick="lovd_AjaxDeleteLog(\'' . $zData['row_id'] . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Delete" title="Delete" width="11" height="11" style="margin-top : 3px;"/></A>';
         $zData['entry'] = str_replace(array("\r\n", "\r", "\n"), '<BR/>', $zData['log']);
 

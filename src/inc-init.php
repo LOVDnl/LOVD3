@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-01-26
+ * Modified    : 2011-02-09
  * For LOVD    : 3.0-pre-16
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -594,10 +594,10 @@ if (!defined('_NOT_INSTALLED_')) {
 
     // We really don't need any of this, if we're loaded by the update picture.
     // DMD_SPECIFIC; CHECK THIS BLOCK LATER
-    if (lovd_getProjectFile() != '/check_update.php') {
+    if (!in_array(lovd_getProjectFile(), array('/check_update.php', '/logout.php'))) {
         // Force user to change password.
         if ($_AUTH && $_AUTH['password_force_change'] && !(lovd_getProjectFile() == '/users.php' && in_array(ACTION, array('edit', 'change_password')) && $_PATH_ELEMENTS[1] == $_AUTH['id'])) {
-            header('Location: ' . lovd_getInstallURL() . 'users/' . $_AUTH['id'] . '?action=change_passwd');
+            header('Location: ' . lovd_getInstallURL() . 'users/' . $_AUTH['id'] . '?change_password');
             exit;
         }
 

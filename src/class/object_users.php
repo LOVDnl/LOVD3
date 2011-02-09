@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2010-12-20
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2011-02-09
+ * For LOVD    : 3.0-pre-16
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -170,10 +170,18 @@ class User extends Object {
         if (lovd_getProjectFile() != '/install/index.php') {
             $this->aCheckMandatory[] = 'password';
         }
+        if (lovd_getProjectFile() == '/users.php' && ACTION == 'change_password') {
+            $this->aCheckMandatory =
+                     array(
+                            'password',
+                            'password_1',
+                            'password_2',
+                          );
+        }
         parent::checkFields($aData);
 
         // Email address.
-        if ($aData['email']) {
+        if (!empty($aData['email'])) {
             $aEmail = explode("\r\n", trim($aData['email']));
             foreach ($aEmail as $sEmail) {
                 if (!lovd_matchEmail($sEmail)) {
@@ -203,7 +211,7 @@ class User extends Object {
             if ($aData['password_1'] && $aData['password_2']) {
                 // Both entered.
                 if ($aData['password_1'] != $aData['password_2']) {
-                    lovd_errorAdd('password_2', 'The \'' . (ACTION == 'edit'? 'New p' : 'P') . 'assword\' fields are not equal. Please try again.');
+                    lovd_errorAdd('password_2', 'The \'' . (in_array(ACTION, array('edit', 'change_password'))? 'New p' : 'P') . 'assword\' fields are not equal. Please try again.');
                 } else {
                     // Password quality.
                     if (!lovd_matchPassword($aData['password_1'])) {
@@ -211,7 +219,7 @@ class User extends Object {
                     }
                 }
             } else {
-                if (ACTION == 'edit') {
+                if (in_array(ACTION, array('edit', 'change_password'))) {
                     lovd_errorAdd('password_2', 'If you want to change the current password, please fill in both \'New password\' fields.');
                 } else {
                     lovd_errorAdd('password_2', 'Please fill in both \'Password\' fields.');
@@ -220,7 +228,7 @@ class User extends Object {
         }
 
         // Check given security IP range.
-        if (trim($aData['allowed_ip'])) {
+        if (!empty($aData['allowed_ip']) && trim($aData['allowed_ip'])) {
             // This function will throw an error itself (second argument).
             $bIP = lovd_matchIPRange($aData['allowed_ip'], 'allowed_ip');
 
@@ -333,6 +341,22 @@ class User extends Object {
             unset($this->aFormData['username']);
             $this->aFormData['passwd'] = str_replace('Password', 'New password (optional)', $this->aFormData['passwd']);
             $this->aFormData['passwd_confirm'] = str_replace('Password (confirm)', 'New password (confirm, optional)', $this->aFormData['passwd_confirm']);
+        }
+        if (!$bInstall && ACTION == 'change_password') {
+            // Sorry, seems easier to just redefine the whole thing.
+            $this->aFormData =
+                 array(
+                        array('POST', '', '', '', '50%', '14', '50%'),
+       'change_self' => array('Current password', '', 'password', 'password', 20),
+                        array('New password', '', 'password', 'password_1', 20),
+                        array('New password (confirm)', '', 'password', 'password_2', 20),
+                        'skip',
+      'change_other' => array('Enter your password for authorization', '', 'password', 'password', 20));
+            if ($_PATH_ELEMENTS[1] == $_AUTH['id']) {
+                unset($this->aFormData['change_other']);
+            } else {
+                unset($this->aFormData['change_self']);
+            }
         }
 
         return parent::getForm();

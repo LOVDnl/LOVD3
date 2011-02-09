@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2010-12-24
- * For LOVD    : 3.0-pre-10
+ * Modified    : 2011-02-09
+ * For LOVD    : 3.0-pre-16
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -73,6 +73,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    // FIXME; we need to think about this. To create a public submitters list, will we have a modified viewList() without viewEntry() or what?
+    // Allow everybody to see certain details, but only managers to view all? Hide username, certain info from others?
+    // Require valid user.
+    lovd_requireAUTH();
+    
     // Require manager clearance, if user is not viewing himself.
     if ($nID != $_AUTH['id']) {
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -207,6 +212,9 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     define('PAGE_TITLE', 'Edit user account #' . $nID);
     define('LOG_EVENT', 'UserEdit');
 
+    // Require valid user.
+    lovd_requireAUTH();
+
     // Require special clearance, if user is not editing himself.
     if ($nID != $_AUTH['id']) {
         // Neccessary level depends on level of user. Special case.
@@ -311,12 +319,115 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'change_password') {
+    // URL: /users/00001?change_password
+    // Change a user's password.
+
+    $nID = $_PATH_ELEMENTS[1];
+    define('PAGE_TITLE', 'Change password for user account #' . $nID);
+    define('LOG_EVENT', 'UserResetPassword');
+
+    // Require valid user.
+    lovd_requireAUTH();
+
+    // Require special clearance, if user is not editing himself.
+    if ($nID != $_AUTH['id']) {
+        // Neccessary level depends on level of user. Special case.
+        list($nLevel) = mysql_fetch_row(lovd_queryDB('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
+        // Simple solution: if level is not lower than what you have, you're out.
+        if ($nLevel >= $_AUTH['level']) {
+            // This is a hack-attempt.
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$nLevel] . ')');
+            lovd_showInfoTable('Now allowed to edit this user. This event has been logged.', 'stop');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+    }
+
+    require ROOT_PATH . 'class/object_users.php';
+    $_DATA = new User();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array('password', 'password_autogen', 'password_force_change', 'edited_by', 'edited_date');
+
+            // Prepare values.
+            $_POST['password'] = md5($_POST['password_1']);
+            $_POST['password_autogen'] = '';
+            $_POST['password_force_change'] = 0;
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
+
+            $_DATA->updateEntry($zData['id'], $_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Changed password for user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'users/' . $nID);
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully changed the password!', 'success');
+
+            // Change password, if requested.
+            if ($zData['id'] == $_AUTH['id']) {
+                // Was already md5'ed!
+                $_SESSION['auth']['password'] = $_POST['password'];
+            }
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password'], $_POST['password_1'], $_POST['password_2']);
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_errorPrint();
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                    array('', '', 'submit', 'Change password'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
 /*//////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 if ($_GET['action'] == 'boot' && is_numeric($_GET['boot'])) {
     // Throw a user out of the system.
 

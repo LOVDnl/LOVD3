@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-01-26
- * For LOVD    : 3.0-pre-16
+ * Modified    : 2011-02-09
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -146,7 +146,7 @@ $aTableSQL =
 
          , 'TABLE_CURATES' =>
    'CREATE TABLE ' . TABLE_CURATES . ' (
-    userid SMALLINT(5) UNSIGNED NOT NULL,
+    userid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
     geneid VARCHAR(12) NOT NULL,
     allow_edit BOOLEAN NOT NULL,
     show_order TINYINT(2) UNSIGNED NOT NULL DEFAULT 1,
@@ -533,7 +533,7 @@ $aTableSQL =
     name VARCHAR(10) NOT NULL,
     date DATETIME NOT NULL,
     mtime MEDIUMINT(6) UNSIGNED ZEROFILL NOT NULL,
-    userid SMALLINT(5) UNSIGNED,
+    userid SMALLINT(5) UNSIGNED ZEROFILL,
     event VARCHAR(20) NOT NULL,
     log TEXT NOT NULL,
     PRIMARY KEY (name, date, mtime),

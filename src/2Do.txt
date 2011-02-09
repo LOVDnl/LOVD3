@@ -47,6 +47,7 @@ LOVD 3.0
     Create disease: probeer te standaardiseren door data op te halen van OMIM of iets anders, zoals create gene ook basis data ophaalt.
     De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
     Mouseover (hover) over kolom namen op viewList() ? Waar stellen we dat in? Alleen met custom columns of ook met andere views? Idem in viewEntry?
+    Laat de install checken op de aanwezigheid van bepaalde functies, zoals XML functies.
 
 Kleinere dingen om te controleren:
 ==================================
@@ -162,6 +163,8 @@ Update process
 
 Needed before release
 =====================
+    Als mensen submitten (wat voor data dan ook), controleren of data al eerder in database gevonden is? Of data bijna gelijk hier aan?
+        Aangevraagd door Raymond, en hij acht dit zeer belangrijk.
     Later een OFFLINE_MODE inbouwen, die geen contact op neemt met remote servers, maar toestaat dat alles handmatig wordt gedaan.
         Dit moet een (tijdelijke?) instelling zijn, en overal lekker irritant aangegeven worden, zodat mensen het niet gebruiken om van de standaarden af te kunnen wijken.
     Hoe kunnen we multiple select velden duidelijker maken?
