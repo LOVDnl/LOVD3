@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-06
- * Modified    : 2011-01-26
- * For LOVD    : 3.0-pre-15
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -28,16 +28,30 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+ 
+if (!defined('ROOT_PATH')) {
+    exit;
+}
+
+require_once ROOT_PATH . 'inc-lib-xml.php';
+
 
 class REST2SOAP {
     // This class provides basic functionality for the communication between REST and SOAP webservices.
     var $sSoapURL = '';
     
-    function moduleCall ($sModuleName, $aArgs = array())
+    function REST2SOAP($sURL) {
+        $this->sSoapURL = $sURL;
+    }
+    
+    
+    
+    
+    
+    function moduleCall ($sModuleName, $aArgs = array(), $bDebug = false)
     {
         // Basic function for calling the SOAP webservice. This function calls all the other functions
         // sequentially to get the result from SOAP.
-
         if (!is_array($aArgs)) {
             return 'Arguments not an array';
         }
@@ -45,15 +59,22 @@ class REST2SOAP {
         $sInputXML = $this->generateInputXML($sModuleName, $aArgs);
         // Send XML to SOAP
         $aOutputSOAP = lovd_php_file($this->sSoapURL, false, $sInputXML);
+        
+        if ($bDebug) {
+            return array($sInputXML, $aOutputSOAP);
+        }
+
         // Parse output
-        $sOutputSOAP = preg_replace(array('/>\s+/', '/\s+</'), array('>', '<'), implode('', $aOutputSOAP));
-        $aOutput = $this->parseOutput($sOutputSOAP);
+        unset($aOutputSOAP[0]);
+        $aOutput = $this->parseOutput($sModuleName, implode("\n", $aOutputSOAP));
         // Check output
-        return $this->checkOutput($aOutput);
+        return $aOutput;
     }
 
 
 
+    
+    
     function generateInputXML ($sModuleName, $aArgs)
     {
         // Generate a XML file to send to the SOAP webservice 
@@ -62,22 +83,17 @@ class REST2SOAP {
                 'xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"' . "\n" .
                 'xmlns:ns1="http://mutalyzer.nl/2.0/services"' . "\n" .
                 'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">' . "\n" .
-                '   <SOAP-ENV:Header/>' . "\n" .
-                '   <ns0:Body>' . "\n" .
-                '      <ns1:' . $sModuleName. '>' . "\n";
+                '  <SOAP-ENV:Header/>' . "\n" .
+                '  <ns0:Body>' . "\n" .
+                '    <ns1:' . $sModuleName. '>' . "\n";
 
-        foreach ($aArgs as $key => $value) {  
-            if (is_int($value)) {
-                $sType = 'int';
-            } else {
-                $sType = 'string';
-            }
-            $sArg = '         <ns1:' . $key . '>' . $value . '</ns1:' . $key . '>' . "\n";
+        foreach ($aArgs as $key => $value) {
+            $sArg = '      <ns1:' . $key . '>' . "\n" . $value . "\n" . '      </ns1:' . $key . '>' . "\n";
             $sXML = $sXML . $sArg;
         }
 
-        $sXML = $sXML . '      </ns1:' . $sModuleName . '>' . "\n" .
-                '   </ns0:Body>' . "\n" .
+        $sXML = $sXML . '    </ns1:' . $sModuleName . '>' . "\n" .
+                '  </ns0:Body>' . "\n" .
                 '</SOAP-ENV:Envelope>';
 
         return $sXML;
@@ -85,27 +101,76 @@ class REST2SOAP {
 
 
 
-    function parseOutput ($sOutputSOAP)
+    
+    
+    function parseOutput ($sModuleName, $sOutputSOAP)
     {
         // Parse the output XML given by the SOAP webservice.
-        preg_match_all('/(>([^<]+)<)+/', $sOutputSOAP, $aMatches);
-        $aResult = $aMatches[2];
+        if (preg_match('/Fault/', $sOutputSOAP)) {
+            $nSkipTags = 2;
+        } else {
+            if (preg_match('/Internal Server Error/', $sOutputSOAP)) {
+                $nSkipTags = 0;
+            } else {
+                $nSkipTags = 3;
+            }
+        }
+        $aOutput = lovd_xml2array($sOutputSOAP, $nSkipTags, $sPrefixSeperator = ':');
+        if (!empty($aOutput)) {
+            $aOutput = $this->checkOutput($sModuleName, $aOutput);
+        }
 
-        return $aResult;
+        return $aOutput;
     }
 
 
 
-    function checkOutput ($aOutput)
+    
+    
+    function checkOutput ($sModuleName, $aOutput)
     {
         // Check for empty return array or SOAP error messages and relay them to the user
         // and logging them.
-        if (empty($aOutput)) {
-            return 'Empty array returned from SOAP';
-        } else if ($aOutput[0] == 'senv:EARG' || $aOutput[0] == 'senv:Client' || $aOutput[0] == 'senv:Server') {
-            return $aOutput[0] . ' - ' . str_replace("{http://mutalyzer.nl/2.0/services}", "", $aOutput[1]);
+        if (isset($aOutput['Fault'])) {
+            $aError = $aOutput['Fault'][0]['c'];
+            return $aError['faultcode'][0]['v'] . ' - ' . $aError['faultstring'][0]['v'] . ($aError['faultactor'][0]['v'] != ''? ' - ' . $aError['faultactor'][0]['v'] : '');
+        } elseif (isset($aOutput['html'])) {
+            $aError = $aOutput['html'][0]['c']['body'][0]['c'];
+            return $aError['h1'][0]['v'] . ' - ' . $aError['p'][0]['v'];
         } else {
-            return $aOutput;
+            return $aOutput[$sModuleName . 'Result'][0];
+        }
+    }
+    
+    
+    
+    
+    
+    function soapError ($sModuleName, $aArgs, $sSOAPError, $bHalt = true)
+    {
+        // Provides a wrapper for the error message that is returned by SOAP
+        // Derived from the lovd_queryError function in 'inc-lib-init.php'
+        global $_AUTH;
+        
+        $sTab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+        $sArgs = '';
+        foreach ($aArgs as $key => $value) {
+            $sArgs = $sArgs . $sTab . $sTab . $key . " = \"" . $value . "\"\n";
+        }
+        
+        // Format the error message.
+        $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in module \'' . $sModuleName . '\'.' . "\n\n" .
+                  'Arguments :' . "\n" .
+                  $sArgs . "\n" .
+                  'SOAP response :' . "\n" .
+                  $sTab . $sTab . $sSOAPError;
+
+        // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
+        // write it to the system log, and halt the system. Otherwise, just log it to the database.
+        if ($bHalt) {
+            return lovd_displayError('SOAP', $sError);
+        } else {
+            return lovd_writeLog('Error', 'SOAP', $sError);
         }
     }
 }

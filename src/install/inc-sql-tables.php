@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-02-09
+ * Modified    : 2011-02-16
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *             : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -504,7 +505,8 @@ $aTableSQL =
     allow_count_hidden_entries BOOLEAN NOT NULL,
     use_ssl BOOLEAN NOT NULL,
     use_versioning BOOLEAN NOT NULL,
-    lock_uninstall BOOLEAN NOT NULL)
+    lock_uninstall BOOLEAN NOT NULL,
+    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD_logo130x50.jpg")
     ' . $sSettings
 
          , 'TABLE_STATUS' =>

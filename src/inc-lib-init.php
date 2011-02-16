@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-01-18
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -578,9 +578,9 @@ function lovd_queryError ($sErrorCode, $sSQL, $sSQLError, $bHalt = true)
     // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
     // write it to the system log, and halt the system. Otherwise, just log it to the database.
     if ($bHalt) {
-        lovd_displayError('Query', $sError);
+        return lovd_displayError('Query', $sError);
     } else {
-        lovd_writeLog('Error', 'Query', $sError);
+        return lovd_writeLog('Error', 'Query', $sError);
     }
 }
 

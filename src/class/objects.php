@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-01-14
- * For LOVD    : 3.0-pre-14
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -416,11 +416,11 @@ class Object {
         foreach ($this->aColumnsViewEntry as $sField => $sHeader) {
             if (preg_match("/TableStart/", $sField)) {
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
-            } else if (preg_match("/TableHeader/", $sField)) {
+            } elseif (preg_match("/TableHeader/", $sField)) {
                 print('         <TH colspan="2" class="S15" valign="top">' . $sHeader . '</TH>');
-            } else if (preg_match("/TableEnd/", $sField)) {
+            } elseif (preg_match("/TableEnd/", $sField)) {
                 print('</TABLE>' . "\n\n");
-            } else if (preg_match("/HR/", $sField)) {
+            } elseif (preg_match("/HR/", $sField)) {
                 print('<hr>');
             } else {
                 print("\n" .

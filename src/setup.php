@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2010-12-28
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -211,6 +211,11 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                  array(
                         array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease.'),
                         array('diseases', 'lovd_question.png', 'View all diseases', 'Manage diseases.'),
+                      ),
+            'Patients' =>
+                 array(
+                        array('patients?create', 'lovd_question.png', 'Create new patient', 'Create new patient'),
+                        array('patients', 'lovd_question.png', 'View all patients', 'View all patients'),
                       ),
             'Variants' =>
                  array(

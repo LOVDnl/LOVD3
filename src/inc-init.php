@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-09
- * For LOVD    : 3.0-pre-16
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -93,7 +93,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-pre-16',
+                            'version' => '3.0-pre-17',
                           ),
                 'user_levels' =>
                      array(
@@ -159,6 +159,13 @@ DMD_SPECIFIC
                             STATUS_MARKED => 'Marked',
                             STATUS_OK => 'Public',
                           ),
+                'SOAP_URL' =>
+                     array(
+                            'default' => 'http://www.mutalyzer.nl/2.0/services',
+                            'jeroen' => 'http://10.160.8.105/mutalyzer2/services',
+                            'mutalyzer' => 'http://www.mutalyzer.nl/2.0/services',
+                            'martijn' => 'http://mutalyzer.martijn/services',
+                        ),
                 'update_levels' =>
                      array(
                             1 => 'Optional',

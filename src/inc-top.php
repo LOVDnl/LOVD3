@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-01-13
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -40,8 +40,11 @@ define('_INC_TOP_INCLUDED_', true);
 // Load menu.
 $_MENU = array(
                 'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'Home'),
+                'diseases' => 'View diseases',
+                'transcripts' => 'View transcripts',
                 'variants' => 'View variants',
-                'users' => 'LOVD Users &amp; Submitters',
+                'patients' => 'View patients',
+                'users' => 'LOVD users &amp; submitters',
                 'submit' => 'Submit new data',
                 'setup' => 'LOVD system setup',
                 'docs' => 'LOVD documentation',
@@ -133,8 +136,11 @@ lovd_includeJS(ROOT_PATH . 'inc-js-toggle-visibility.js', 1); // Used on forms a
 
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">
   <TR>
-    <TD width="150">
-      <IMG src="gfx/LOVD_logo130x50.jpg" alt="LOVD - Leiden Open Variation Database" width="130" height="50">
+<?php    
+    list($width, $height, $type, $attr) = getimagesize($_CONF['logo_uri']);
+    echo '  <TD width="' . ($width + 20) . '">' . "\n" .
+         '    <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" width="' . $width . '" height="' . $height . '">' . "\n";
+?>
     </TD>
 <?php
 $sCurrSymbol = $sCurrGene = '';

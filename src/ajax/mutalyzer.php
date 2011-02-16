@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-18
- * Modified    : 2011-01-26
- * For LOVD    : 3.0-pre-15
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *
  *
  *
  * This file is part of LOVD.
@@ -32,7 +33,7 @@ define('ROOT_PATH', '../');
 
 require ROOT_PATH . 'inc-init.php';
 
-if (!ACTION || count($_GET) <= 2 ) {
+if (!ACTION || count($_GET) <= 1 ) {
     echo 'Insufficient arguments given.';
     exit;
 }
@@ -40,7 +41,7 @@ if (!ACTION || count($_GET) <= 2 ) {
 require ROOT_PATH . '/class/REST2SOAP.php';
 
 $_MutalyzerWS = new REST2SOAP();
-$_MutalyzerWS->sSoapURL = 'http://10.160.8.105/mutalyzer2/services';
+$_MutalyzerWS->sSoapURL = 'http://mutalyzer.martijn/services';
 
 $aArgs = array();
 foreach ($_GET as $key => $value) {

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-01-26
- * For LOVD    : 3.0-pre-16
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -80,6 +80,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\w)+$/', $_PATH_ELEMENTS[1]) &&
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="genes/' . $nID . '?edit">Edit gene information</A>';
+        $sNavigation .= ' | <A href="transcripts/' . $nID . '?create">Add transcript(s) to gene</A>';
         $sNavigation .= ' | <A href="genes/' . $nID . '?delete">Delete gene entry</A>';
     }
 
@@ -151,11 +152,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_pub_chrom_map&col=gd_pub_eg_id&col=md_mim_id&status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit', false, false);
                     
                     if (isset($aHgncFile['1'])) {
-                        list($sHgncID, $sSymbol, $sName, $sChromLocation, $sEntrez, $sOmim) = explode("\t", $aHgncFile['1']);
+                        list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = explode("\t", $aHgncFile['1']);
                         list($sEntrez, $sOmim) = array_values(array_map('trim', array($sEntrez, $sOmim)));
-                        if ($sName == 'entry withdrawn') {
+                        if ($sGeneName == 'entry withdrawn') {
                             lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' no longer exists in the HGNC database.');
-                        } else if (preg_match('/^symbol withdrawn, see (.+)$/', $sName, $aRegs)) {
+                        } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $sGeneName, $aRegs)) {
                             lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' is deprecated, please use ' . $aRegs[1]);
                         }
                     } else {
@@ -182,10 +183,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
 
-                $_MutalyzerWS = new REST2SOAP();
-                $_MutalyzerWS->sSoapURL = 'http://10.160.8.105/mutalyzer2/services';
-                //$_MutalyzerWS->sSoapURL = 'http://www.mutalyzer.nl/2.0/services';
-                //$_MutalyzerWS->sSoapURL = 'http://mutalyzer.martijn/services';
+                $_MutalyzerWS = new REST2SOAP($_SETT['SOAP_URL']['default']);
+                //$_MutalyzerWS->sSoapURL = ;
                 
                 // Get LRG if it exists
                 $aRefseqGenomic = array();
@@ -213,52 +212,66 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_BAR->setMessage('Making a gene slice of the NC...');
                 $_BAR->setProgress(49);
                 $aUDID = $_MutalyzerWS->moduleCall('sliceChromosomeByGene', array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'));
-                if (!is_array($aUDID)) {
-                    lovd_displayError('SOAP-ERROR', $aUDID);
+
+                if (!is_array($aUDID) || empty($aUDID)) {
+                    (empty($aUDID)? $aUDID = 'Empty array returned from SOAP' : false);
+                    $_MutalyzerWS->soapError('sliceChromosomeByGene', array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'), $aUDID);
                 } else {
-                    $sRefseqUD = $aUDID[0];
+                    $sRefseqUD = $aUDID['v'];
                 }
 
-                // Get transcripts for the hgnc entry from mutalyzer
+                // Get all transcripts and info
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress(66);
-                $aTranscripts = $_MutalyzerWS->moduleCall("getTranscriptsByGeneName", array("build" => $_CONF['refseq_build'], "name" => $sSymbol));
-
-                if (!is_array($aTranscripts)) {
-                    if (!preg_match('/^Empty/', $aTranscripts)) {
-                        lovd_displayError('SOAP-ERROR', $aTranscripts);
-                    }
-                    $aTranscripts = array();
-                    $aTranscriptNames = array();
-                    $_BAR->setMessage('No transcripts to collect info from, continueing...');
-                    $_BAR->setProgress(83);
+                $nProgress = 0.0;
+                $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $sRefseqUD));
+                if (!is_array($aOutput)) {
+                    $_MutalyzerWS->soapError ('getTranscriptsAndInfo', array('genomicReference' => $sRefseqUD), $aOutput);
                 } else {
-                    // Get transcript info from mutalyzer
-                    $_BAR->setMessage('Collecting transcript info...');
-                    $_BAR->setProgress(83);
-                    foreach ($aTranscripts as $sTranscript) {
-                        $aTranscriptInfo = $_MutalyzerWS->moduleCall("getGeneAndTranscript", array("genomicReference" => $sRefseqUD, "transcriptReference" => $sTranscript));
-                        $aTranscriptNames[$sTranscript] = $aTranscriptInfo[1]; 
-                    }
-                    if (!is_array($aTranscriptNames)) {
-                        $aTranscriptNames = array();
+                    if (empty($aOutput)) {
+                        $aTranscripts = array();
+                    } else {
+                        $aTranscriptsInfo = $aOutput['c']['TranscriptInfo'];
+                        $aTranscripts = array();
+                        $aTranscriptsName = array();
+                        $aTranscriptsPositions = array();
+                        $aTranscriptsProtein = array();
+                        $nTranscripts = count($aTranscriptsInfo);
+                        foreach($aTranscriptsInfo as $aTranscriptInfo) {
+                            $nProgress = $nProgress + (34/$nTranscripts);
+                            $sTranscript = $aTranscriptInfo['c']['id'][0]['v'];
+                            $_BAR->setMessage('Collecting ' . $sTranscript . ' info...');
+                            $sTranscriptName = $aTranscriptInfo['c']['product'][0]['v'];
+                            $sTranscriptGstart = $aTranscriptInfo['c']['gTransStart'][0]['v'];
+                            $sTranscriptGend = $aTranscriptInfo['c']['gTransEnd'][0]['v'];
+                            $sTranscriptCstart = $aTranscriptInfo['c']['cTransStart'][0]['v'];
+                            $sTranscriptCend = $aTranscriptInfo['c']['sortableTransEnd'][0]['v'];
+                            $sTranscriptCcdsStop = $aTranscriptInfo['c']['cCDSStop'][0]['v'];
+                            $aTranscriptPositions = array('gTransStart' => $sTranscriptGstart, 'gTransEnd' => $sTranscriptGend, 'cTransStart' => $sTranscriptCstart, 'cTransEnd' => $sTranscriptCend, 'cCDSStop' => $sTranscriptCcdsStop);
+                            $aTranscripts[] = $sTranscript;
+                            $aTranscriptsName[preg_replace('/\.\d+/', '', $sTranscript)] = str_replace($sGeneName . ', ', '', $sTranscriptName);
+                            $aTranscriptsPositions[$sTranscript] = $aTranscriptPositions;
+                            $aTranscriptsProtein[$sTranscript] = $aTranscriptInfo['c']['proteinTranscript'][0]['c']['id'][0]['v'];
+                            $_BAR->setProgress(66 + $nProgress);
+                        }
                     }
                 }
-
                 $_BAR->setProgress(100);
                 $_BAR->setMessage('Information collected, now building form...');
                 $_BAR->setMessageVisibility('done', true);
                 $_SESSION['work'][$_POST['workID']]['step'] = '2';
                 $_SESSION['work'][$_POST['workID']]['values'] = array(
                                                                   'id' => $sSymbol,
-                                                                  'name' => $sName,
+                                                                  'name' => $sGeneName,
                                                                   'chromosome' => $sChromosome,
                                                                   'chrom_band' => $sChromBand,
                                                                   'id_hgnc' => $sHgncID,
                                                                   'id_entrez' => $sEntrez,
                                                                   'id_omim' => $sOmim,
                                                                   'transcripts' => $aTranscripts,
-                                                                  'transcriptNames' => $aTranscriptNames,
+                                                                  'transcriptsProtein' => $aTranscriptsProtein,
+                                                                  'transcriptNames' => $aTranscriptsName,
+                                                                  'transcriptPositions' => $aTranscriptsPositions,
                                                                   'genomic_references' => $aRefseqGenomic,
                                                                   'refseq_UD' => $sRefseqUD,
                                                                 );
@@ -332,6 +345,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     $_POST['created_date'] = date('Y-m-d H:i:s');
                 }
                 $_POST['id'] = $zData['id'];
+                $_POST['name'] = $zData['name'];
                 $_POST['refseq_UD'] = $zData['refseq_UD'];
                 $_POST['chromosome'] = $zData['chromosome'];
                 $_POST['id_hgnc'] = $zData['id_hgnc'];
@@ -357,27 +371,13 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     }
                 }
                 
-                if (empty($_POST['active_transcripts']) || $_POST['active_transcripts'][0] != 'None') {
+                if (!empty($_POST['active_transcripts']) && $_POST['active_transcripts'][0] != 'None') {
                     foreach($_POST['active_transcripts'] as $sTranscript) {
                         // Add transcript to gene
-                        $_MutalyzerWS = new REST2SOAP();
-                        $_MutalyzerWS->sSoapURL = 'http://10.160.8.105/mutalyzer2/services';
-                        $aOutput = $_MutalyzerWS->moduleCall("transcriptInfo", array("LOVD_ver" => '3', "build" => $_CONF['refseq_build'], "accNo" => $sTranscript));
-                        if (!is_array($aOutput)) {
-                            $aTranscriptPositions = array(1, 1, 1);
-                            $aTranscriptGenomePositions = array(1, 1);
-                        } else {
-                            $aTranscriptPositions = $aOutput;
-                            $aOutput = $_MutalyzerWS->moduleCall("numberConversion", array("build" => $_CONF['refseq_build'], "variant" => $sTranscript . ':c.' . $aTranscriptPositions[0] . '_' . $aTranscriptPositions[1] . 'del'));
-                            if (!is_array($aOutput)) {
-                                $aTranscriptGenomePositions = array(1, 1);
-                            } else {
-                                preg_match('/^.+:g.(.+)_(.+)del$/', $aOutput[0], $aMatches);
-                                $aTranscriptGenomePositions = array($aMatches[1], $aMatches[2]);
-                            }
-                        }
-                        $sTranscriptName = str_replace('(' . $sTranscript . ')', '', $zData['transcriptNames'][$sTranscript]);
-                        $q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['id'], $sTranscriptName, $sTranscript, 'NULL', 'NULL', 'NULL', 'NULL', $aTranscriptPositions[0], $aTranscriptPositions[1], $aTranscriptPositions[2], $aTranscriptGenomePositions[0], $aTranscriptGenomePositions[1], date('Y-m-d'), $_POST['created_by']));
+                        $sTranscriptProtein = $zData['transcriptsProtein'][$sTranscript];
+                        $sTranscriptName = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)];
+                        $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
+                        $q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($_POST['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['gTransStart'], $aTranscriptPositions['gTransEnd'], $_POST['created_by']));
                         if (!$q) {
                             // Silent error.
                             lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
@@ -387,6 +387,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     }
                     if (count($aSuccessDiseases) && count($aSuccessTranscripts)) {
                         lovd_writeLog('Event', LOG_EVENT, 'Disease and transcript information entries successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
+                    }
+                }
+                else {
+                    if (count($aSuccessDiseases)) {
+                        lovd_writeLog('Event', LOG_EVENT, 'Disease entries successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
                     }
                 }
 
@@ -503,6 +508,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             }
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
+            $_POST['name'] = $zData['name'];
             
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
@@ -513,7 +519,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             $aSuccessDiseases = array();
             foreach ($_POST['active_diseases'] as $sDisease) {
                 // Add disease to gene.
-                lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid=?', array($sDisease));
+                lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid=? AND geneid=?', array($sDisease, $nID));
                 $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?,?)', array($nID, $sDisease));
                 if (!$q) {
                     // Silent error.
@@ -543,6 +549,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
         }
         // Load connected diseases.
         $_POST['active_diseases'] = explode(';', $_POST['active_diseases_']);
+        $_POST['created_date'] = substr($_POST['created_date'], 0, 10);
     }
 
     require ROOT_PATH . 'inc-top.php';

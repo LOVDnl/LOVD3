@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-01-04
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -80,7 +80,7 @@ class Transcript extends Object {
                         'created_by_' => 'Created by',
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
+                        'edited_date_' => 'Date last edited',
                       );
 
         // Because the disease information is publicly available, remove some columns for the public.
@@ -118,73 +118,72 @@ class Transcript extends Object {
 
 
 
-    /*
+
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
-        if (ACTION == 'edit') {
-            global $zData; // FIXME; this could be done more elegantly.
-        }
+        global $zData; // FIXME; this could be done more elegantly.
 
-        // Mandatory fields.
-        $this->aCheckMandatory =
-                 array(
-                        'symbol',
-                        'name',
-                      );
         parent::checkFields($aData);
 
-        // Disease symbol must be unique.
-        if (!empty($aData['symbol'])) {
-            // Enforced in the table, but we want to handle this gracefully.
-            $sSQL = 'SELECT id FROM ' . TABLE_GENES . ' WHERE symbol = ?';
-            $aSQL = array($aData['symbol']);
-            if (ACTION == 'edit') {
-                $sSQL .= ' AND id != ?';
-                $aSQL[] = $zData['id'];
-            }
-            if (mysql_num_rows(lovd_queryDB($sSQL, $aSQL))) {
-                lovd_errorAdd('name', 'There is already a gene entry with this abbreviation. Please choose another one.');
+        // Check if transcripts are in the list, so no data manipulation from user!
+        foreach ($aData['active_transcripts'] as $sTranscript) {
+            if (!in_array($sTranscript, $zData['transcripts']) || in_array($sTranscript, $zData['transcriptsAdded'])) {
+                return lovd_errorAdd('active_transcripts' ,'Please select a proper transcriptomic reference from the selection box.');
             }
         }
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
     }
-    */
 
 
 
-    /*
+
+
     function getForm ()
     {
         // Build the form.
+        global $zData;
 
-        // Get list of diseases, to connect gene to disease.
-        $aData = array();
-        $qData = mysql_query('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
-        $nData = mysql_num_rows($qData);
-        $nFieldSize = ($nData < 20? $nData : 20);
-        while ($r = mysql_fetch_row($qData)) {
-            $aData[$r[0]] = $r[1];
+        $atranscriptNames = array();
+        $aTranscriptsForm = array();
+        if (!empty($zData['transcripts'])) {
+            foreach ($zData['transcripts'] as $sTranscript) {
+                if (!isset($atranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
+                    $aTranscriptsForm[$sTranscript] = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)] . ' (' . $sTranscript . ')';
+                }
+            }
+            asort($aTranscriptsForm);
+        } else {
+            $aTranscriptsForm = array('None' => 'No transcripts available');
         }
-
+        
+        $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
+        
         // Array which will make up the form table.
         $this->aFormData =
                  array(
-                        array('POST', '', '', '', '50%', '14', '50%'),
-                        array('', '', 'print', '<B>Gene information</B>'),
-                        array('Gene abbreviation', '', 'text', 'symbol', 15),
-                        array('Gene name', '', 'text', 'name', 40),
-                        array('OMIM ID', '', 'text', 'id_omim', 10),
-                        'skip',
-                        array('', '', 'print', '<B>Relation to diseases</B>'),
-                        array('This gene has been linked to these diseases', '', 'select', 'active_genes', $nFieldSize, $aData, false, true, false),
+                           array('POST', '', '', '', '40%', '14', '60%'),
+           'transcript' => array('Transcriptomic reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
+       'transcriptInfo' => array('', '', 'note', 'Select transcript references (NM accession numbers). You can select multiple transcripts by holding "CTRL or CMD" and clicking all transcripts desired.'),
+'transcript_ensembl_id' => array('Transcript Ensembl ID', '', 'text', 'id_ensembl', 10),
+   'protein_ensembl_id' => array('Protein Ensembl ID', '', 'text', 'id_protein_ensembl', 10),
+   'protein_uniprot_id' => array('Protein Uniprot ID', '', 'text', 'id_protein_uniprot', 10),
+                           'skip',
                   );
-
+        if (ACTION == 'edit') {
+            unset($this->aFormData['transcript']);
+            unset($this->aFormData['transcriptInfo']);
+        } elseif (ACTION == 'create') {
+            unset($this->aFormData['protein_uniprot_id']);
+            unset($this->aFormData['protein_ensembl_id']);
+            unset($this->aFormData['transcript_ensembl_id']);
+        }
+        
         return parent::getForm();
     }
-    */
+
 
 
 
@@ -207,6 +206,9 @@ class Transcript extends Object {
         } else {
             $zData['genename_'] = '<A href="genes/' . $zData['geneid'] . '">' . $zData['geneid'] . '</A> (' . $zData['genename'] . ')';
         }
+        
+        $zData['edited_date_'] = (!empty($zData['edited_date'])? $zData['edited_date'] : 'N/A');
+        $zData['edited_by_'] = (!empty($zData['edited_by'])? $zData['edited_by'] : 'N/A');
 
         return $zData;
     }

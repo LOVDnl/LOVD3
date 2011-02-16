@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-01-26
- * For LOVD    : 3.0-pre-16
+ * Modified    : 2011-02-16
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -57,7 +57,7 @@ class Gene extends Object {
         $this->sSQLLoadEntry = 'SELECT g.*, GROUP_CONCAT(DISTINCT g2d.diseaseid ORDER BY g2d.diseaseid SEPARATOR ";") AS active_diseases_ FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) WHERE g.id = ? GROUP BY g.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, uc.name AS created_by_, ue.name AS edited_by_, uu.name AS updated_by, count(DISTINCT vot.id) AS variants';
+        $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, uc.name AS created_by, ue.name AS edited_by, uu.name AS updated_by, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) LEFT JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
 
@@ -75,7 +75,7 @@ class Gene extends Object {
                         'name' => 'Gene name',
                         'chromosome' => 'Chromosome',
                         'chrom_band' => 'Chromosomal band',
-                        'refseq_genomic' => 'Reference',
+                        'refseq_genomic' => 'Genomic reference',
                         'url_homepage' => 'Homepage URL',
                         'url_external' => 'External URL',
                         'allow_download_' => 'Allow public to download all variant entries',
@@ -84,18 +84,16 @@ class Gene extends Object {
                         'note_listing' => 'Notes for the variant listings',
                         'refseq' => 'Refseq',
                         'refseq_url' => 'Refseq URL',
-                        'disclaimer' => 'Disclaimer',
-                        'disclaimer_text' => 'Disclaimer Text',
-                        'header' => 'Header',
-                        'header_align' => 'Page header (aligned to the left)',
-                        'footer' => 'Footer',
-                        'footer_align' => 'Page header (aligned to the left)',
+                        'disclaimer_' => 'Disclaimer',
+                        'disclaimer_text_' => 'Disclaimer Text',
+                        'header_' => 'Header',
+                        'footer_' => 'Footer',
                         'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
+                        'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
-                        'updated_by' => 'Last updated by',
-                        'updated_date' => 'Date last update',
+                        'edited_date_' => 'Date last edited',
+                        'updated_by_' => 'Last updated by',
+                        'updated_date_' => 'Date last update',
                         'TableEnd_General' => '',
                         'HR_1' => '',
                         'TableStart_Additional' => '',
@@ -118,9 +116,9 @@ class Gene extends Object {
         // Because the gene information is publicly available, remove some columns for the public.
         if ($_AUTH && $_AUTH['level'] < LEVEL_COLLABORATOR) {
             unset($this->aColumnsViewEntry['created_by_']);
-            unset($this->aColumnsViewEntry['created_date']);
+            unset($this->aColumnsViewEntry['created_date_']);
             unset($this->aColumnsViewEntry['edited_by_']);
-            unset($this->aColumnsViewEntry['edited_date']);
+            unset($this->aColumnsViewEntry['edited_date_']);
         }
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -239,16 +237,19 @@ class Gene extends Object {
         }
 
         $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
+        $atranscriptNames = array();
+        $aTranscriptsForm = array();
         if (!empty($zData['transcripts'])) {
-            $aTranscriptsForm = array_combine($zData['transcripts'], $zData['transcripts']);
-            foreach ($aTranscriptsForm as $key) {
-                $aTranscriptsForm[$key] = $zData['transcriptNames'][$key] . '(' . $aTranscriptsForm[$key] . ')';
+            foreach ($zData['transcripts'] as $sTranscript) {
+                if (!isset($atranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
+                    $aTranscriptsForm[$sTranscript] = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)] . ' (' . $sTranscript . ')';
+                }
             }
             asort($aTranscriptsForm);
         } else {
             $aTranscriptsForm = array('None' => 'No transcripts available');
         }
-
+        
         $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
 
         $aSelectRefseq = array(
@@ -262,8 +263,8 @@ class Gene extends Object {
                                   );
         $aSelectHeaderFooter = array(
                                 -1 => 'Left',
-                                0  => 'Center',
-                                -2 => 'Right'
+                                 0 => 'Center',
+                                 1 => 'Right'
                                     );
 
         // Array which will make up the form table.
@@ -272,7 +273,7 @@ class Gene extends Object {
                         array('POST', '', '', '', '50%', '14', '50%'),
                         array('', '', 'print', '<B>General information</B>'),
                         'hr',
-                        array('Full gene name', '', 'text', 'name', 50),
+                        array('Full gene name', '', 'print', $zData['name'], 50),
                         'hr',
                         array('Official gene symbol', '', 'print', $zData['id']),
                         'hr',
@@ -403,10 +404,18 @@ class Gene extends Object {
         } else {
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
             $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
-// FIXME; Deze zijn niet correct; hier moet even iets anderes voor verzonnen worden.
-//            $zData['disclaimer']       = '<IMG src="gfx/mark_' . $zData['disclaimer'] . '.png" alt="" width="11" height="11">';
-//            $zData['header_align']     = '<IMG src="gfx/mark_' . $zData['header_align'] . '.png" alt="" width="11" height="11">';
-//            $zData['footer_align']     = '<IMG src="gfx/mark_' . $zData['footer_align'] . '.png" alt="" width="11" height="11">';
+            
+            // FIXME; Er is nog geen default disclaimer geschreven!!!!.            
+            $aDisclaimer = array(0 => 'No', 1 => 'Standard LOVD disclaimer', 2 => 'Own disclaimer');
+            $zData['disclaimer_']       = $aDisclaimer[$zData['disclaimer']];
+            $zData['disclaimer_text_']   = ($zData['disclaimer'] > 0 ? ($zData['disclaimer'] == 1? "Official LOVD disclaimer\n\nDON'T COPY!!!!\n\nEVER!" : $zData['disclaimer_text']) : '');
+            
+            // FIXME; Voor zover ik weet doen de header en de footer nog niks.    
+            $aAlign = array(-1 => 'left', 0 => 'center', 1 => 'right');
+            $this->aColumnsViewEntry['header_'] = 'Header (aligned to the ' . $aAlign[$zData['header_align']] . ')';
+            $this->aColumnsViewEntry['footer_'] = 'Footer (aligned to the ' . $aAlign[$zData['footer_align']] . ')';
+            $zData['header_']          = $zData['header'];
+            $zData['footer_']          = $zData['footer'];
 
             $zData['diseases_'] = $zData['disease_omim_'] = '';
             if (!empty($zData['diseases'])) {
@@ -418,6 +427,12 @@ class Gene extends Object {
                 }
             }
             
+            $zData['created_date_'] = substr($zData['created_date'], 0, 10);
+            $zData['created_by_'] = (!empty($zData['created_by'])? $zData['created_by'] : 'N/A');
+            $zData['updated_date_'] = (!empty($zData['updated_date'])? $zData['updated_date'] : 'N/A');
+            $zData['updated_by_'] = (!empty($zData['updated_by'])? $zData['updated_by'] : 'N/A');
+            $zData['edited_date_'] = (!empty($zData['edited_date'])? $zData['edited_date'] : 'N/A');
+            $zData['edited_by_'] = (!empty($zData['edited_by'])? $zData['edited_by'] : 'N/A');
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID);
@@ -437,7 +452,6 @@ class Gene extends Object {
         // Sets default values of fields in $_POST.
         global $zData;
         
-        $_POST['name'] = $zData['name'];
         $_POST['chrom_band'] = $zData['chrom_band'];
         $_POST['disclaimer'] = '1';
     }
