@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-20
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -497,6 +497,7 @@ $aTableSQL =
     send_admin_submissions BOOLEAN NOT NULL,
     api_feed_history TINYINT(2) UNSIGNED NOT NULL,
     refseq_build VARCHAR(4) NOT NULL,
+    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD_logo130x50.jpg",
     send_stats BOOLEAN NOT NULL,
     include_in_listing BOOLEAN NOT NULL,
     lock_users BOOLEAN NOT NULL,
@@ -505,8 +506,7 @@ $aTableSQL =
     allow_count_hidden_entries BOOLEAN NOT NULL,
     use_ssl BOOLEAN NOT NULL,
     use_versioning BOOLEAN NOT NULL,
-    lock_uninstall BOOLEAN NOT NULL,
-    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD_logo130x50.jpg")
+    lock_uninstall BOOLEAN NOT NULL)
     ' . $sSettings
 
          , 'TABLE_STATUS' =>

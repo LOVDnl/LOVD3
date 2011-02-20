@@ -51,6 +51,7 @@ LOVD 3.0
 
 Kleinere dingen om te controleren:
 ==================================
+During installation LOVD does not worry about an empty database URL. However, when editing the settings it does mention that this URL is empty. Make sure the install has this behaviour as well.
 Voorstel schrijven voor nieuwe functies voor de Mutalyzer webservice, standaardisatie van de namen.
 Functies schrijven om van numerieke disease ID naar de symbol te komen? Zodat /diseases/DMD ook werken?
     Indien /diseases/DMD meerdere hits heeft, moet die een viewList() geven, waarbij er op de symbol gezocht wordt.
@@ -83,6 +84,8 @@ USER LOCK/UNLOCK, FORCE LOGOUT, WELLICHT ALLEBEI AL MET AJAX DINGEN
 USERS: stel tijdzone in?
     Maar dan moet je eerst even goed inlezen over die tijdzones, over de nieuwe functies en hoe dat goed te gebruiken...
 Code weggegooid om user curator te maken, omdat dat anders moet.
+Create gene: herstel percentages van voorgang, zodat het logischer verloopt.
+Edit gene: created date kunnen veranderen???? Beetje vreemd, maar sowieso slikt hij de H:i:s niet die er achter staat.
 
 
 // Lijst van questions about the future:

@@ -159,6 +159,7 @@ DMD_SPECIFIC
                             STATUS_MARKED => 'Marked',
                             STATUS_OK => 'Public',
                           ),
+                // FIXME; Change this later into a string (not array) called something like 'mutalyzer_soap_url'.
                 'SOAP_URL' =>
                      array(
                             'default' => 'http://www.mutalyzer.nl/2.0/services',

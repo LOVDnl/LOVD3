@@ -5,12 +5,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-01-12
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-02-20
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -508,7 +507,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
 
         if (!lovd_error()) {
             // Store information and go to next page.
-            $q = lovd_queryDB('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']));
+            $q = lovd_queryDB('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['logo_uri'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']));
             if (!$q) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .

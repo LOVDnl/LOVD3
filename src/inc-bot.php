@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2010-03-31
- * For LOVD    : 3.0-pre-06
+ * Modified    : 2011-02-10
+ * For LOVD    : 3.0-pre-16
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -155,4 +155,6 @@ if (!defined('_INC_BOT_CLOSE_HTML_') || _INC_BOT_CLOSE_HTML_ !== false) {
     // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
     print('</BODY>' . "\n" .
           '</HTML>' . "\n");
+} else {
+    flush();
 }

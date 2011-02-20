@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2010-12-15
- * For LOVD    : 3.0-pre-10
+ * Modified    : 2011-02-20
+ * For LOVD    : 3.0-pre-17
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -82,6 +81,22 @@ class SystemSetting extends Object {
             lovd_errorAdd('refseq_build', 'Please select one of the available Human Builds.');
         }
 
+        // Custom logo must exist.
+        if (!empty($aData['logo_uri'])) {
+            // Determine if file can be read and is an image or not.
+            if (!is_readable(ROOT_PATH . $aData['logo_uri'])) {
+                lovd_errorAdd('logo_uri', 'Cannot read the custom logo file. Please make sure the path is correct and that the file can be read.');
+            } else {
+                $a = @getimagesize(ROOT_PATH . $aData['logo_uri']);
+                if (!is_array($a)) {
+                    lovd_errorAdd('logo_uri', 'The custom logo file that you selected does not seem to be a picture.');
+                }
+            }
+        } else {
+            // FIXME; this is probably not the best way of doing this...
+            $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
+        }
+
         // SSL check.
         if (!empty($_POST['use_ssl']) && !SSL) {
             lovd_errorAdd('use_ssl', 'You\'ve selected to force the use of SSL, but SSL is not currently activated for this session. To force SSL, I must be sure it\'s possible to approach LOVD through an SSL connection (use <A href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . ($_SERVER['QUERY_STRING']? '?' . str_replace('&sent=true', '', $_SERVER['QUERY_STRING']) : '') . '" target="_blank">https://</A> in stead of http://).');
@@ -129,6 +144,14 @@ class SystemSetting extends Object {
                         'hr',
                         'skip',
                         'skip',
+                        array('', '', 'print', '<B>Customize LOVD</B>'),
+                        array('', '', 'note', 'Here you can customize the way LOVD looks. We will add new options here later.'),
+                        'hr',
+                        array('System logo', 'If you wish to have your custom logo on the top left of every page in stead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.', 'text', 'logo_uri', 40),
+                        array('', '', 'note', 'Currently, only images already uploaded to the LOVD server are allowed here.'),
+                        'hr',
+                        'skip',
+                        'skip',
                         array('', '', 'print', '<B>Global LOVD statistics</B>'),
                         array('', '', 'note', 'The following settings apply to the kind of information your LOVD install sends to the development team to gather statistics about global LOVD usage.'),
                         'hr',
@@ -172,6 +195,7 @@ class SystemSetting extends Object {
         $_POST['system_title'] = 'LOVD - Leiden Open Variation Database';
         $_POST['refseq_build'] = 'hg19';
         $_POST['api_feed_history'] = 3;
+        $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
         $_POST['send_stats'] = 1;
         $_POST['include_in_listing'] = 1;
         $_POST['allow_submitter_mods'] = 1;

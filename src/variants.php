@@ -91,6 +91,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     exit;
 }
 
+
+
+
+
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /variants/00001?delete
     // Drop specific entry.

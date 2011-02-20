@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-09-10
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-20
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * 
  *
  *
  * This file is part of LOVD.
@@ -78,7 +77,7 @@ class ProgressBar {
               '        var oPB_' . $this->ID . '_message_done = document.getElementById(\'lovd_' . $this->sID . '_progress_message_done\');' . "\n" .
               '      </SCRIPT>' . "\n\n\n");
               flush();
-              ob_end_flush();
+              @ob_end_flush(); // Can generate errors on the screen if no buffer found.
     }
 
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-20
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,10 +49,11 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 // Some info & statistics.
-list($nUsers) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_USERS));
-list($nLogs)  = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_LOGS));
-$aTotalVars   = array();
-$nTotalVars   = 0;
+list($nUsers)    = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_USERS));
+list($nLogs)     = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_LOGS));
+list($nPatients) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_PATIENTS));
+$aTotalVars      = array();
+$nTotalVars      = 0;
 $q = lovd_queryDB('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
 while ($r = mysql_fetch_row($q)) {
     $aTotalVars[$r[1]] = $r[0];
@@ -77,8 +78,9 @@ print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . 
       '              <TR>' . "\n" .
       '                <TD>' . "\n" .
       '                  Users : ' . $nUsers . '<BR>' . "\n" .
-      '                  Genes : ' . GENE_COUNT . '<BR>' . "\n" .
-      '                  Log entries : ' . $nLogs . '</TD></TR>' . "\n" .
+      '                  Log entries : ' . $nLogs . '<BR>----------<BR>' . "\n" .
+      '                  Patients : ' . $nPatients . '<BR>' . "\n" .
+      '                  Genes : ' . GENE_COUNT . '</TD></TR>' . "\n" .
       '              <TR>' . "\n" .
       '                <TH>Variants</TH></TR>' . "\n" .
       '              <TR>' . "\n" .

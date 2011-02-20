@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-01-06
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-02-14
+ * For LOVD    : 3.0-pre-16
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -87,6 +87,27 @@ function lovd_checkXSS ($aInput = '')
     }
 
     return false;
+}
+
+
+
+
+
+function lovd_emailError ($sErrorCode, $sType, $bHalt = false)
+{
+    // Formats email errors for the error log, and optionally halts the system.
+
+    // Format the error message.
+    $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . $sErrorCode . '.' . "\n" .
+              'Email type : ' . $sType;
+
+    // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
+    // write it to the system log, and halt the system. Otherwise, just log it to the database.
+    if ($bHalt) {
+        lovd_displayError('Email', $sError);
+    } else {
+        lovd_writeLog('Error', 'Email', $sError);
+    }
 }
 
 

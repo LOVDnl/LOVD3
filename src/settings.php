@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-12
- * Modified    : 2010-12-14
- * For LOVD    : 3.0-pre-10
+ * Modified    : 2010-12-20
+ * For LOVD    : 3.0-pre-17
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -64,7 +63,7 @@ if (ACTION == 'edit') {
         if (!lovd_error()) {
             // Standard fields to be used.
             // FIXME; refseq_build is now just removed. Under certain conditions maybe it should be possible to change this setting, though.
-            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'api_feed_history', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
+            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'api_feed_history', 'logo_uri', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
 
             // Prepare values.
             // Make sure the database URL ends in a /.

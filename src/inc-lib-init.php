@@ -538,9 +538,9 @@ function lovd_queryDB ($sQuery, $aArgs = array(), $bDebug = false)
 
     // A mismatch between the number of ? in the query and the number of items
     // in $aArgs indicates a bug in LOVD.
-    $nSlots = count($aQuery);
+    $nSlots = count($aQuery) - 1;
     $nArgs = count($aArgs);
-    if (($nSlots - 1) != $nArgs) {
+    if ($nSlots != $nArgs) {
         lovd_displayError('LOVD-Lib', 'lovd_queryDB() - ' . $nArgs . ' argument' . ($nArgs == 1? ' does' : 's do') . ' not fit in ' . $nSlots . ' slot' . ($nSlots == 1? '' : 's') . ' from ' . $_SERVER['REQUEST_URI'] . "\n" . 'Query: ' . $sQuery);
     }
 
@@ -568,7 +568,6 @@ function lovd_queryError ($sErrorCode, $sSQL, $sSQLError, $bHalt = true)
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Formats query errors for the error log, and optionally halts the system.
     // Used to be called lovd_dbFout() in LOVD 2.0.
-    global $_AUTH;
 
     // Format the error message.
     $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . $sErrorCode . '.' . "\n" .
