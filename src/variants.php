@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2010-12-24
- * For LOVD    : 3.0-pre-11
+ * Modified    : 2011-02-20
+ * For LOVD    : 3.0-pre-17
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -129,10 +130,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             // FIXME; implement deleteEntry()
             $sSQL = 'DELETE FROM ' . TABLE_VARIANTS . ' WHERE id = ?';
             $aSQL = array($zData['id']);
-            $q = lovd_queryDB($sSQL, $aSQL);
-            if (!$q) {
-                lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
-            }
+            $q = lovd_queryDB($sSQL, $aSQL, true);
+
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted variant information entry ' . $nID . ' - Patient: ' . ($zData['patientid']==''? '' : 'NULL'));
 

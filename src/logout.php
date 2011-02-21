@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-19
- * Modified    : 2011-01-06
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-02-20
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -38,7 +37,7 @@ if (!$_AUTH) {
     exit;
 }
 
-@mysql_query('UPDATE ' . TABLE_USERS . ' SET phpsessid = "" WHERE id = "' . $_AUTH['id'] . '"');
+@lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET phpsessid = "" WHERE id = ?', array($_AUTH['id']));
 $nSec = time() - strtotime($_AUTH['last_login']);
 // DMD_SPECIFIC; FIXME; we still need to decide how to store this information.
 $sCurrDB = $_SESSION['currdb']; // Temp storage.

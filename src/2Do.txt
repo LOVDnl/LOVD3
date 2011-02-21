@@ -72,7 +72,7 @@ TABLE_VARIANTS_ON_TRANSCRIPTS heeft nu alleen een valid_from om te linken naar T
 
 Waar we echt mee bezig zijn:
 ============================
-++++Finish add col to data table
+++++Finish add col to shared data table
     (Er staan nog FIXMEs in en het bevestigingsbericht moet nog maar gekeken worden.
     // Daarna deze code naar install/index.php kopiëren
     Nadenken over hoe dit in de GUI te doen; curatoren in LOVD 2.0 nu kunnen niet goed zien wat ze toevoegen. Dat moet anders.

@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-01-13
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-01-20
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -106,7 +105,13 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
     $sNavigation = '';
     if ($_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="columns/' . $zData['id'] . '?edit">Edit custom data column settings</A>';
+        if (!$zData['active']) {
+            // FIXME; should also be available for curators! (Once we fix the "add to gene" part)
+            $sNavigation = '<A href="columns/' . $zData['id'] . '?add">Enable column</A>';
+        } else {
+            $sNavigation = '<A style="color : #999999;">Enable column</A>';
+        }
+        $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?edit">Edit custom data column settings</A>';
 /*
 
         // Drop global column.

@@ -79,10 +79,7 @@ if (ACTION == 'edit') {
                 $aSQL[] = $_POST[$sField];
             }
 
-            $q = lovd_queryDB($sSQL, $aSQL);
-            if (!$q) {
-                lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
-            }
+            $q = lovd_queryDB($sSQL, $aSQL, true);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited system configuration');

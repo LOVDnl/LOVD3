@@ -187,7 +187,7 @@ $aItems =
     array(
             'Gene databases' =>
                  array(
-                        array('genes?create', 'lovd_database_create.png', 'Create new gene databases', 'Create a new gene database.'),
+                        array('genes?create', 'lovd_database_create.png', 'Create new gene database', 'Create a new gene database.'),
                         array('genes', 'lovd_database_edit.png', 'View all gene databases', 'Manage configured gene databases.'),
                       ),
 /*
@@ -211,13 +211,13 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                       ),
             'Diseases' =>
                  array(
-                        array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease.'),
-                        array('diseases', 'lovd_question.png', 'View all diseases', 'Manage diseases.'),
+                        array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease information entry.'),
+                        array('diseases', 'lovd_question.png', 'View all diseases', 'Manage disease information entries.'),
                       ),
             'Patients' =>
                  array(
-                        array('patients?create', 'lovd_question.png', 'Create new patient', 'Create new patient'),
-                        array('patients', 'lovd_question.png', 'View all patients', 'View all patients'),
+                        array('patients?create', 'lovd_question.png', 'Create new patient', 'Create new patient entry.'),
+                        array('patients', 'lovd_question.png', 'View all patients', 'View all patient entries.'),
                       ),
             'Variants' =>
                  array(

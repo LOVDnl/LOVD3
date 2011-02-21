@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-20
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -254,10 +254,7 @@ class Object {
         if (!$zData) {
             global $_CONF, $_SETT, $_STAT, $_AUTH;
 
-            $sError = '';
-            if (mysql_error()) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
-            }
+            $sError = mysql_error(); // Save the mysql_error before it disappears.
 
             // Check if, and which, top include has been used.
             if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {

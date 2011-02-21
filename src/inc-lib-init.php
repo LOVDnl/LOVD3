@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-20
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -521,7 +521,7 @@ function lovd_printHeader ($sTitle)
 
 
 
-function lovd_queryDB ($sQuery, $aArgs = array(), $bDebug = false)
+function lovd_queryDB ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = false)
 {
     // Queries the database and protects against SQL injection with
     // mysql_real_escape_string. No code in LOVD should query the database
@@ -556,7 +556,12 @@ function lovd_queryDB ($sQuery, $aArgs = array(), $bDebug = false)
     if ($bDebug) {
         echo htmlspecialchars($sQuery);
     }
-    return mysql_query($sQuery);
+    $q = mysql_query($sQuery);
+    if (!$q && $bHalt) {
+        // lovd_queryError() will call lovd_displayError() which will halt the system.
+        lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
+    }
+    return $q;
 }
 
 
