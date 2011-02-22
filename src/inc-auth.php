@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-01-13
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-01-21
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -46,16 +45,19 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
         }
 
         // Load curated DBs.
-        $_AUTH['curates'] = array();
-        $bCurator = false;
+        $_AUTH['curates']      = array();
+        $_AUTH['collaborates'] = array();
         $q = lovd_queryDB('SELECT geneid, allow_edit FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($_AUTH['id']));
         while ($r = mysql_fetch_row($q)) {
-            $_AUTH['curates'][$r[0]] = $r[1];
-            $bCurator = ($bCurator || $r[1]);
+            if ($r[1]) {
+                $_AUTH['curates'][] = $r[0];
+            } else {
+                $_AUTH['collaborates'][] = $r[0];
+            }
         }
-        if (count($_AUTH['curates'])) {
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
             // Collaborator or Curator, depending on 'allow_edit'.
-            if ($bCurator) {
+            if (count($_AUTH['curates'])) {
                 $_AUTH['level'] = LEVEL_CURATOR;
             } else {
                 $_AUTH['level'] = LEVEL_COLLABORATOR;

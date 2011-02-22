@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-20
+ * Modified    : 2011-02-21
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -367,6 +367,7 @@ function lovd_includeJS ($sFile, $nPrefix = 3)
 
 /*
 DMD_SPECIFIC
+// FIXME; needs additional argument for whether or not the gene should be editable for the user.
 function lovd_isCurator ($sGene = '')
 {
     // Returns true if current user is allowed to act as a curator for the given
@@ -559,7 +560,7 @@ function lovd_queryDB ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = fals
     $q = mysql_query($sQuery);
     if (!$q && $bHalt) {
         // lovd_queryError() will call lovd_displayError() which will halt the system.
-        lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
+        lovd_queryError(LOG_EVENT, $sQuery, mysql_error());
     }
     return $q;
 }

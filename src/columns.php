@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-01-20
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-01-22
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -101,12 +101,15 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new Column();
     $zData = $_DATA->viewEntry($sColumnID);
+    $aTableInfo = lovd_getTableInfoByCategory($zData['category']);
 
     $sNavigation = '';
     if ($_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        if (!$zData['active']) {
-            // FIXME; should also be available for curators! (Once we fix the "add to gene" part)
+        if (!$zData['active'] || $aTableInfo['shared']) {
+            // FIXME; should also be available for curators if shared!
+            // FIXME; needs exact check if there are genes/diseases left that do not have this column.
+            // A check on 'active' is way too simple and does not work for shared columns.
             $sNavigation = '<A href="columns/' . $zData['id'] . '?add">Enable column</A>';
         } else {
             $sNavigation = '<A style="color : #999999;">Enable column</A>';
@@ -396,15 +399,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             }
         }
 
-        // Default values in text field cannot contain a quote.
-        if ($_POST['form_type'] == 'text' && $_POST['default_val'] && !preg_match('/^[^"]*$/', $_POST['default_val'])) {
-            lovd_errorAdd('default_val', 'The \'Default value\' field can not contain a quote.');
-        }
+        if (!empty($_POST['default_val'])) {
+            // Default values in text field cannot contain a quote.
+            if ($_POST['form_type'] == 'text' && !preg_match('/^[^"]*$/', $_POST['default_val'])) {
+                lovd_errorAdd('default_val', 'The \'Default value\' field can not contain a quote.');
+            }
 
-        // Check the format of the default value for the DATE/DATETIME column types.
-        if ($_POST['form_type'] == 'date') {
-            if (!lovd_matchDate($_POST['default_val'], $_POST['time'])) {
-                lovd_errorAdd('default_val', 'The \'Default value\' for the date field should be like YYYY-MM-DD' . ($_POST['time'] ? ' HH:MM:SS.' : '.'));
+            // Format for the DATE/DATETIME column types.
+            if ($_POST['form_type'] == 'date' && !lovd_matchDate($_POST['default_val'], !empty($_POST['time']))) {
+                lovd_errorAdd('default_val', 'The \'Default value\' for the date field should be like YYYY-MM-DD' . (empty($_POST['time'])? '.' : ' HH:MM:SS.'));
             }
         }
 
@@ -1545,16 +1548,139 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
     $_DATA = new Column();
     $zData = $_DATA->loadEntry($sColumnID);
 
-// FIXME; somewhere here check $_GET['to'] (or similar name), that is used if a column is added to a unit, like 'gene'.
-// $_GET['to'] is only relevent when $aTableInfo['shared'] == true;
-if ($aTableInfo['shared'] && empty($_GET['to'])) {
-// Mag niet.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
-        lovd_showInfoTable('Error: which ' . $aTableInfo['unit'] . ' should this column be added to?', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
+
+
+    // In case of a shared column (VariantOnTranscript & Phenotype), the user
+    // needs to select for which target (gene, disease) the column needs to be added to.
+    if ($aTableInfo['shared']) {
+        if (empty($_GET['target'])) {
+            if (POST && !empty($_POST['target']) && is_array($_POST['target'])) {
+                // I don't seem to be able to find a better way of doing this.
+                // I need this data in GET, but I have it in POST (and can't use a
+                // GET form with the current URL setup for ACTION in LOVD 3.0).
+                header('Location: ' . lovd_getInstallURL() . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . '&target=' . rawurlencode(implode(',', $_POST['target'])));
+                exit;
+            }
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+
+            if ($sCategory == 'VariantOnTranscript') {
+                // Add column to a certain gene.
+
+                // Retrieve list of genes which do NOT have this column yet.
+                $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (g.id = c.geneid AND c.colid = ?) WHERE c.colid IS NULL';
+                $aSQL = array($zData['id']);
+                if ($_AUTH['level'] < LEVEL_MANAGER) {
+                    // Maybe a JOIN would be simpler?
+                    $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+                    $aSQL = array_merge($aSQL, $_AUTH['curates']);
+                }
+                $sSQL .= ' ORDER BY g.id';
+                $qTargets = lovd_queryDB($sSQL, $aSQL);
+                $nTargets = mysql_num_rows($qTargets);
+                if ($nTargets) {
+                    print('      Please select the gene(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
+                } else {
+                    lovd_showInfoTable('There are no genes available that you can add this column to. Possibly all configured genes already have this column enabled, or you do not have the rights to edit the gene you wish to add this column to.', 'stop');
+                    require ROOT_PATH . 'inc-bot.php';
+                    exit;
+                }
+
+            } elseif ($sCategory == 'Phenotype') {
+                // Add column to a certain disease.
+
+                // Retrieve list of diseases which do NOT have this column yet.
+                $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
+                $aSQL = array($zData['id']);
+                if ($_AUTH['level'] < LEVEL_MANAGER) {
+                    // Maybe a JOIN would be simpler?
+                    $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+                    $aSQL = array_merge($aSQL, $_AUTH['curates']);
+                }
+                $sSQL .= ' ORDER BY d.symbol';
+                $qTargets = lovd_queryDB($sSQL, $aSQL);
+                $nTargets = mysql_num_rows($qTargets);
+                if ($nTargets) {
+                    print('      Please select the disease(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
+                } else {
+                    lovd_showInfoTable('There are no diseases available that you can add this column to. Possibly all configured diseases already have this column enabled, or you do not have the rights to edit the disease you wish to add this column to; make sure it\'s connected to a gene you are a curator of.', 'stop');
+                    require ROOT_PATH . 'inc-bot.php';
+                    exit;
+                }
+            }
+
+            print('      <FORM action="' . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . '" method="post">' . "\n");
+
+            $nTargets = ($nTargets > 10? 10 : $nTargets);
+
+            // Array which will make up the form table.
+            $aForm = array(
+                            array('POST', '', '', '', '50%', '14', '50%'),
+                            array('Add this column to', '', 'select', 'target', $nTargets, $qTargets, false, true, true),
+                            'skip',
+                            array('', '', 'submit', 'Next &gt;'),
+                          );
+            lovd_viewForm($aForm);
+
+            print('</FORM>' . "\n\n");
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+
+
+        } else {
+            // Verify that this target exists and is allowed to be modified by the current user.
+
+            $aTargets = explode(',', $_GET['target']);
+            if ($sCategory == 'VariantOnTranscript') {
+                // Check if targets (genes) exist and/or are editable for the user.
+                $aAvailableGenes = ($_AUTH['level'] < LEVEL_MANAGER? $_AUTH['curates'] : lovd_getGeneList());
+                foreach ($aTargets as $sSymbol) {
+                    if (!in_array($sSymbol, $aAvailableGenes)) {
+                        require ROOT_PATH . 'inc-top.php';
+                        lovd_printHeader(PAGE_TITLE);
+                        lovd_showInfoTable('Gene ' . htmlspecialchars($sSymbol) . ' does not exist or you do not have permission to edit it.', 'stop');
+                        require ROOT_PATH . 'inc-bot.php';
+                        exit;
+                    }
+                }
+
+
+
+            } elseif ($sCategory == 'Phenotype') {
+                // Add column to a certain disease.
+
+                // First, build list of diseases, then go through them.
+                $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
+                $aSQL = array();
+                if ($_AUTH['level'] < LEVEL_MANAGER) {
+                    // Maybe a JOIN would be simpler?
+                    $sSQL .= ' WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+                    $aSQL = $_AUTH['curates'];
+                }
+                $qDiseases = lovd_queryDB($sSQL, $aSQL);
+                $nDiseases = mysql_num_rows($qDiseases);
+                $aDiseases = array();
+                while ($r = mysql_fetch_row($qDiseases)) {
+                    $aDiseases[$r[0]] = $r[1];
+                }
+
+                foreach ($aTargets as $nID) {
+                    if (!array_key_exists($nID, $aDiseases)) {
+                        require ROOT_PATH . 'inc-top.php';
+                        lovd_printHeader(PAGE_TITLE);
+                        lovd_showInfoTable('Disease ' . htmlspecialchars($nID) . ' does not exist or you do not have the rights to edit it.', 'stop');
+                        require ROOT_PATH . 'inc-bot.php';
+                        exit;
+                    }
+                }
+            }
+        }
     }
+
+
 
     // Verify in the data table if column is already active or not.
     $zData['active_checked'] = false;
@@ -1567,13 +1693,24 @@ if ($aTableInfo['shared'] && empty($_GET['to'])) {
     }
 
     // If already active and this is not a shared table, adding it again is useless!
-// FIXME; if $_GET['to'] has been verified, also check if $aTableInfo['shared'] == true, if $_GET['to'] doesn't already have this column!
-    if ($zData['active'] && $zData['active_checked'] && !$aTableInfo['shared']) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
-        lovd_showInfoTable('This column has already been added to the ' . $aTableInfo['table_name'] . ' table!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
+    if ($zData['active'] && $zData['active_checked']) {
+        if (!$aTableInfo['shared']) {
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('This column has already been added to the ' . $aTableInfo['table_name'] . ' table!', 'stop');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        } else {
+            list($nError) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ? AND ' . ($sCategory == 'VariantOnTranscript'? 'geneid' : 'diseaseid') . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ')', array_merge(array($zData['id']), $aTargets)));
+            if ($nError) {
+                // Target already has this column enabled!
+                require ROOT_PATH . 'inc-top.php';
+                lovd_printHeader(PAGE_TITLE);
+                lovd_showInfoTable('This column has already been added to ' . ($nError == 1? 'the ' . $aTableInfo['unit'] : $nError . ' of the ' . $aTableInfo['unit'] . 's') . ' you selected!', 'stop');
+                require ROOT_PATH . 'inc-bot.php';
+                exit;
+            }
+        }
     }
 
     // If not active yet, check size of table where this column needs to be added to and determine necessary time.
@@ -1591,7 +1728,9 @@ if ($aTableInfo['shared'] && empty($_GET['to'])) {
         $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
     }
 
-    if (!empty($_POST)) {
+
+
+    if (POST) {
         lovd_errorClean();
 
         // Mandatory fields.
@@ -1658,36 +1797,51 @@ if ($aTableInfo['shared'] && empty($_GET['to'])) {
                 }
             }
 
+            // Write to log...
+            if (!$zData['active']) {
+                lovd_writeLog('Event', LOG_EVENT,  'Added column ' . $zData['id'] . ' (' . $zData['head_column'] . ') to ' . $aTableInfo['table_name'] . ' table');
+            }
+
             $_BAR->setProgress(90);
             $_BAR->setMessage('Registering column settings...');
 
             // If this is a VARIANT_ON_TRANSCRIPT or PHENOTYPE column, report in specific tables. So, check $sCategory.
             if ($aTableInfo['shared']) {
-                // Register default settings in $aTableInfo['table_column_settings'].
+                // Register default settings in TABLE_SHARED_COLS.
                 $aFields = array($aTableInfo['unit'] . 'id', 'colid', 'col_order', 'width', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public_view', 'public_add', 'created_by', 'created_date');
 
-                // We'll add the column to the end of the list. Max order number?
-                list($zData['col_order']) = mysql_fetch_row(lovd_queryDB('SELECT MAX(col_order) FROM ' . $aTableInfo['table_column_settings']));
-                $zData['col_order'] ++;
-
-                // Created_* columns...
+                // Prepare values.
+                $zData['colid'] = $zData['id'];
                 $zData['created_by'] = $_AUTH['id'];
                 $zData['created_date'] = date('Y-m-d H:i:s');
 
-                // Query text.
-                $sSQL = 'INSERT INTO ' . $aTableInfo['table_column_settings'] . ' (';
-                $aSQL = array($_GET['to']);
-                foreach ($aFields as $key => $sField) {
-                    $sSQL .= (!$key? '' : ', ') . $sField;
-                    $aSQL[] = $aData[$sField];
-                }
-                $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
+                $aTargets = explode(',', $_GET['target']);
+                $nTargets = count($aTargets);
+                $i = 1;
+                foreach ($aTargets as $sID) {
+                    // We'll add the column to the end of the list. Max order number?
+                    list($zData['col_order']) = mysql_fetch_row(lovd_queryDB('SELECT MAX(col_order) FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ?', array($zData['category'] . '%')));
+                    $zData['col_order'] ++;
+                    $zData[$aTableInfo['unit'] . 'id'] = $sID;
 
-                $q = lovd_queryDB($sSQL, $aSQL);
-                if (!$q) {
-                    $sError = mysql_error(); // Save the mysql_error before it disappears...
-                    lovd_queryDB('ROLLBACK'); // ... because we need to end the transaction.
-                    lovd_queryError(LOG_EVENT, $sSQL, $sError);
+                    // Query text.
+                    $sSQL = 'INSERT INTO ' . TABLE_SHARED_COLS . ' (';
+                    $aSQL = array();
+                    foreach ($aFields as $key => $sField) {
+                        $sSQL .= (!$key? '' : ', ') . $sField;
+                        $aSQL[] = $zData[$sField];
+                    }
+                    $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
+
+                    $q = lovd_queryDB($sSQL, $aSQL);
+                    if (!$q) {
+                        $sError = mysql_error(); // Save the mysql_error before it disappears...
+                        lovd_queryDB('ROLLBACK'); // ... because we need to end the transaction.
+                        lovd_queryError(LOG_EVENT, $sSQL, $sError);
+                    }
+                    // FIXME; individual messages?
+                    $_BAR->setProgress(90 + round(($i/$nTargets)*10));
+                    $i ++;
                 }
             }
 
@@ -1696,7 +1850,9 @@ if ($aTableInfo['shared'] && empty($_GET['to'])) {
             $_BAR->setMessage('Done!');
 
             // Write to log...
-            lovd_writeLog('Event', 'ColAdd',  'Added column ' . $zData['id'] . ' (' . $zData['head_column'] . ') to ' . $aTableInfo['table_name'] . ' table');
+            if ($aTableInfo['shared']) {
+                lovd_writeLog('Event', LOG_EVENT,  'Enabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . $_GET['target']);
+            }
 
             // Thank the user...
             $_BAR->setMessage('Successfully added column "' . $zData['head_column'] . '"!', 'done');
@@ -1754,18 +1910,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
 
-// FIXME; somewhere here check $_GET['to'] (or similar name), that is used if a column is added to a unit, like 'gene'.
-// $_GET['to'] is only relevent when $aTableInfo['shared'] == true;
-if ($aTableInfo['shared'] && empty($_GET['to'])) {
-// Mag niet.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
-        lovd_showInfoTable('Error: which ' . $aTableInfo['unit'] . ' should this column be added to?', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
-    print('      <FORM action="' . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . (empty($_GET['target'])? '' : '&target=' . htmlspecialchars($_GET['target'])) . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -1777,7 +1922,7 @@ if ($aTableInfo['shared'] && empty($_GET['to'])) {
         $aForm[] = array('', '', 'print', '<B>Adding the ' . $zData['id'] . ' column to the ' . $aTableInfo['table_name'] . ' data table</B>');
     }
     if ($aTableInfo['shared']) {
-        $aForm[] = array('', '', 'print', '<B>Enabling the ' . $zData['id'] . ' column for the ' . $_GET['to'] . ' ' . $aTableInfo['unit'] . '</B>');
+        $aForm[] = array('', '', 'print', '<B>Enabling the ' . $zData['id'] . ' column for the ' . $aTableInfo['unit'] . '(s) ' . $_GET['target'] . '</B>');
     }
 
     if (count($aForm) == 1) {

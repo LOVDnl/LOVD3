@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-02-20
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-02-21
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -110,6 +110,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_CURATES . ' MODIFY COLUMN userid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL',
                                     'ALTER TABLE ' . TABLE_LOGS . ' MODIFY COLUMN userid SMALLINT(5) UNSIGNED ZEROFILL',
                                     'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD_logo130x50.jpg" AFTER refseq_build',
+                                  ),
+                    '3.0-pre-18' =>
+                             array(
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(12)',
                                   ),
                   );
 

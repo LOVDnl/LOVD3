@@ -72,10 +72,8 @@ TABLE_VARIANTS_ON_TRANSCRIPTS heeft nu alleen een valid_from om te linken naar T
 
 Waar we echt mee bezig zijn:
 ============================
-++++Finish add col to shared data table
-    (Er staan nog FIXMEs in en het bevestigingsbericht moet nog maar gekeken worden.
-    // Daarna deze code naar install/index.php kopiëren
-    Nadenken over hoe dit in de GUI te doen; curatoren in LOVD 2.0 nu kunnen niet goed zien wat ze toevoegen. Dat moet anders.
+Col add: Er moet nog gekeken worden naar het bevestigingsbericht. Ook moeten diseases goed omschreven worden in messages; bij voorkeur met hun symbol.
+    Deze code naar install/index.php kopiëren, om de standaard kolommen alvast toe te voegen tijdens installatie.
 show genes, create, edit, delete, link naar diseases.
 Create genes moet het formulier gaan indelen in secties die geopend en gesloten kunnen worden.
 Overnemen van LOVD2: view users zien in welke genen ze gesubmit hebben?

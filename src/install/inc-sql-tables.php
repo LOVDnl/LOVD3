@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-02-20
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-02-21
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -430,7 +430,7 @@ $aTableSQL =
 
          , 'TABLE_SHARED_COLS' =>
    'CREATE TABLE ' . TABLE_SHARED_COLS . ' (
-    geneid VARCHAR(12) NOT NULL,
+    geneid VARCHAR(12),
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL,
     colid VARCHAR(100) NOT NULL,
     col_order TINYINT(3) UNSIGNED NOT NULL,

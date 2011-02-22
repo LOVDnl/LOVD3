@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2010-09-24
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2011-02-21
+ * For LOVD    : 3.0-pre-18
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -79,7 +78,6 @@ function lovd_getTableInfoByCategory ($sCategory)
                      array(
                             'table_sql' => TABLE_PHENOTYPES,
                             'table_name' => 'Phenotype',
-                            'table_column_settings' => TABLE_PHENOTYPE_COLS,
                             'shared' => true,
                             'unit' => 'disease', // Is also used to determine the key (diseaseid).
                           ),
@@ -101,7 +99,6 @@ function lovd_getTableInfoByCategory ($sCategory)
                      array(
                             'table_sql' => TABLE_VARIANTS_ON_TRANSCRIPTS,
                             'table_name' => 'Transcript Variant',
-                            'table_column_settings' => TABLE_VARIANT_COLS,
                             'shared' => true,
                             'unit' => 'gene', // Is also used to determine the key (geneid).
                           ),
