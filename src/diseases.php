@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-01-20
+ * Modified    : 2011-02-22
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,7 +50,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_printHeader(PAGE_TITLE);
 
     require ROOT_PATH . 'class/object_diseases.php';
-    $_DATA = new Disease();
+    $_DATA = new LOVD_Disease();
     $_DATA->viewList();
 
     require ROOT_PATH . 'inc-bot.php';
@@ -71,7 +71,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     lovd_printHeader(PAGE_TITLE);
 
     require ROOT_PATH . 'class/object_diseases.php';
-    $_DATA = new Disease();
+    $_DATA = new LOVD_Disease();
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
@@ -105,7 +105,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_diseases.php';
-    $_DATA = new Disease();
+    $_DATA = new LOVD_Disease();
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (!empty($_POST)) {
@@ -210,7 +210,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_diseases.php';
-    $_DATA = new Disease();
+    $_DATA = new LOVD_Disease();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -339,7 +339,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_diseases.php';
-    $_DATA = new Disease();
+    $_DATA = new LOVD_Disease();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 

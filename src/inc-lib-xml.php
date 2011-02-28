@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-15
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-24
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,8 +46,8 @@ function lovd_xml2array($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
             <s0:Animal legs="4" type="mammal">
                 <s0:cat>
                     <s0:hairLength>20 mm</s0:hairLength>
-                    <s0:favoriteToy>Yarn</s0:FavoriteToy>
-                    <s0:favoriteToy>Toy Mouse</s0:FavoriteToy>
+                    <s0:favoriteToy>Yarn</s0:favoriteToy>
+                    <s0:favoriteToy>Toy Mouse</s0:favoriteToy>
                 </s0:cat>
             </s0:Animal>
             ###Example###
@@ -103,12 +103,12 @@ function lovd_xml2array($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
         echo 'Please provide valid arguments, $nSkipTags should be an integer!';
         exit;
     }
-    $parser = xml_parser_create();
-    xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, 0);                             // Don't use case-folding
-    xml_parser_set_option($parser, XML_OPTION_SKIP_WHITE, 0);                               // Don't skip tags that contain only whitespaces
+    $rParser = xml_parser_create("UTF-8");
+    xml_parser_set_option($rParser, XML_OPTION_CASE_FOLDING, 0);                             // Don't use case-folding
+    xml_parser_set_option($rParser, XML_OPTION_SKIP_WHITE, 0);                               // Don't skip tags that contain only whitespaces
     if ($sPrefixSeperator != '') {
         if (is_int($sPrefixSeperator)) {
-            xml_parser_set_option($parser, XML_OPTION_SKIP_TAGSTART, $sPrefixSeperator);    // Skips the first n characters from the tag names
+            xml_parser_set_option($rParser, XML_OPTION_SKIP_TAGSTART, $sPrefixSeperator);    // Skips the first n characters from the tag names
         } elseif (is_string($sPrefixSeperator)) {
             $sXml = preg_replace('/(<\/?)\w+\\' . $sPrefixSeperator . '/', '$1', $sXml);    // Skips all characters until the prefix seperator
         } else{
@@ -116,50 +116,136 @@ function lovd_xml2array($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
             exit;
         }
     }
-    xml_parse_into_struct($parser, $sXml, $tags);
-    xml_parser_free($parser);
+    xml_parse_into_struct($rParser, $sXml, $aTags);
+    xml_parser_free($rParser);
    
-    $elements = array();
-    $stack = array();
+    $aStructure = array();
+    $aStack = array();
     $nLevel = 0;
     // Skips the first $skip amount of tags found
     for ($i = 0; $i < $nSkipTags; $i++) {
-        array_shift($tags);
-        array_pop($tags);
+        array_shift($aTags);
+        array_pop($aTags);
     }
 
-    foreach ($tags as $tag)
+    foreach ($aTags as $aTag)
     {
-        if ($tag['type'] == "complete" || $tag['type'] == "open")
+        if ($aTag['type'] == "complete" || $aTag['type'] == "open")
         {
             // Check if the tag already exists in this level, if so the next item is appended to the array on the next index ($nLevel)
-            if (isset($elements[$tag['tag']])) {
-                $nLevel = count($elements[$tag['tag']]);
+            if (isset($aStructure[$aTag['tag']])) {
+                $nLevel = count($aStructure[$aTag['tag']]);
             } else {
                 $nLevel = 0;
             }
 
-            $elements[$tag['tag']][$nLevel] = array('c' => array(), 'a' => array(), 'v' => '');
-            (isset($tag['attributes'])? $elements[$tag['tag']][$nLevel]['a'] = $tag['attributes'] : false);
+            $aStructure[$aTag['tag']][$nLevel] = array('c' => array(), 'a' => array(), 'v' => '');
+            (isset($aTag['attributes'])? $aStructure[$aTag['tag']][$nLevel]['a'] = $aTag['attributes'] : false);
 
-            if ($tag['type'] == "open")
+            if ($aTag['type'] == "open")
             {
                 # Push new element into the array
-                $stack[count($stack)] = &$elements;
-                $elements = &$elements[$tag['tag']][$nLevel]['c'];
-            } elseif ($tag['type'] == "complete" && isset($tag['value'])) {
-                $elements[$tag['tag']][$nLevel]['v'] = $tag['value'];
+                $aStack[count($aStack)] = &$aStructure;
+                $aStructure = &$aStructure[$aTag['tag']][$nLevel]['c'];
+            } elseif ($aTag['type'] == "complete" && isset($aTag['value'])) {
+                $aStructure[$aTag['tag']][$nLevel]['v'] = $aTag['value'];
             }
         }
 
-        if ($tag['type'] == "close")
+        if ($aTag['type'] == "close")
         {
             # Pop last element from the array
-            $elements = &$stack[count($stack) - 1];
-            unset($stack[count($stack) - 1]);
+            $aStructure = &$aStack[count($aStack) - 1];
+            unset($aStack[count($aStack) - 1]);
         }
     }
-    return $elements;
+    return $aStructure;
 }
 
+
+
+
+
+function lovd_getElementFromArray($sPath = '', $aArray = array(), $sType = '')
+{
+    /* 
+        Designed to easily parse the array returned by lovd_xml2array() 
+        Example: "Animal/Cat/favoriteToy[1]" will result in "$aXML['Animal'][0]['c']['Cat'][0]['c']['favoriteToy'][1]"
+    */
+       
+    if (empty($aArray) || !is_array($aArray)) {
+        return false;
+    }
+    $aStructure = $aArray;
+    
+    if (is_string($sPath) && strlen($sPath) > 0) {
+        $aPath = explode("/", $sPath);
+    
+        foreach ($aPath as $sElement) {
+            if (preg_match("/\[(\d+)\]/", $sElement, $aMatches)) {
+                $nLevel = intVal($aMatches[1]);
+                $sName  = str_replace("[" . $nLevel . "]", "", $sElement);
+            } else {
+                $nLevel = false;
+                $sName  = $sElement;           
+            }
+                    
+            if (!isset($aStructure[$sName][($nLevel === false? 0 : $nLevel)]['c'])) {
+                return false;
+            }
+                    
+            if ($sElement == end($aPath)) {
+                if ($sType == '') {
+                    return ($nLevel === false? $aStructure[$sName] : $aStructure[$sName][$nLevel]);
+                } else {
+                    return $aStructure[$sName][($nLevel === false? 0 : $nLevel)][$sType];
+                }
+            } else {
+                $aStructure = &$aStructure[$sName][($nLevel === false? 0 : $nLevel)]['c'];
+            }
+            
+        }
+    } else {
+        return false;
+    }
+
+    return array(
+                 'Fatal Error' => array(
+                                  0 => array(
+                                             'c' => array(),
+                                             'a' => array(),
+                                             'v' => "Something went wrong in looping through the elements"
+                                            )
+                                 )
+                );
+}
+
+
+
+
+
+function lovd_getAllValuesFromArray ($sPath = '', $aArray = array())
+{
+    /* 
+        Designed to easily parse the array returned by lovd_xml2array() 
+        Will loop through all elements(only current level of specified path) in $aArray and return their value if it is set
+    */
+    
+    if (!empty($sPath)) {
+        $aArray = lovd_getElementFromArray($sPath, $aArray, $sType = 'c');
+    } else { 
+        if (empty($aArray) || !is_array($aArray)) {
+            return false;
+        }
+    }
+        
+    $aValues = array();
+    
+    foreach ($aArray as $entity => $index) {
+        foreach ($index as $elements) {
+            $aValues[$entity] = $elements['v'];
+        } 
+    }
+    return $aValues;
+}
 ?>

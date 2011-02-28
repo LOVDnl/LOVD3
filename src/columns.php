@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-01-22
+ * Modified    : 2011-01-25
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -62,7 +63,7 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_columns.php';
-    $_DATA = new Column();
+    $_DATA = new LOVD_Column();
     if ($_DATA->getCount()) {
         lovd_showInfoTable('Please note that these are all columns available in this LOVD installation. This is not the list of columns actually added to the system. Also, modifications made to the columns added to the system are not shown.', 'information', 950);
     }
@@ -99,7 +100,7 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
     lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_columns.php';
-    $_DATA = new Column();
+    $_DATA = new LOVD_Column();
     $zData = $_DATA->viewEntry($sColumnID);
     $aTableInfo = lovd_getTableInfoByCategory($zData['category']);
 
@@ -681,7 +682,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_columns.php';
-    $_DATA = new Column();
+    $_DATA = new LOVD_Column();
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (count($_POST) > 1) {
@@ -811,7 +812,7 @@ die();
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_columns.php';
-    $_DATA = new Column();
+    $_DATA = new LOVD_Column();
     $zData = $_DATA->loadEntry($sColumnID);
 
     // Require form functions.
@@ -1545,7 +1546,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
     }
 
     require ROOT_PATH . 'class/object_columns.php';
-    $_DATA = new Column();
+    $_DATA = new LOVD_Column();
     $zData = $_DATA->loadEntry($sColumnID);
 
 

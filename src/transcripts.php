@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-02-20
+ * Modified    : 2011-02-28
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,7 +52,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_printHeader(PAGE_TITLE);
 
     require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new Transcript();
+    $_DATA = new LOVD_Transcript();
     $_DATA->viewList();
 
     require ROOT_PATH . 'inc-bot.php';
@@ -73,7 +73,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
     lovd_printHeader(PAGE_TITLE);
 
     require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new Transcript();
+    $_DATA = new LOVD_Transcript();
     $zData = $_DATA->viewEntry($nID);
     
     $sNavigation = '';
@@ -87,10 +87,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-    $_GET['search_transcripts_'] = $nID;
+    $_GET['search_transcriptid'] = $nID;
     print('<BR><BR><H2 class="LOVD">Variants for transcript #' . $nID . '</H2>');
     require ROOT_PATH . 'class/object_variants.php';
-    $_DATA = new Variant();
+    $_DATA = new LOVD_Variant();
     $zData = $_DATA->viewList();
     
     require ROOT_PATH . 'inc-bot.php';
@@ -113,7 +113,7 @@ if (ACTION == 'create') {
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'class/REST2SOAP.php';
     require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new Transcript();
+    $_DATA = new LOVD_Transcript();
 
 
     if (GET) {
@@ -165,19 +165,18 @@ if (ACTION == 'create') {
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
                 
-                $_MutalyzerWS = new REST2SOAP($_SETT['SOAP_URL']['default']);
-                //$_MutalyzerWS->sSoapURL = ;
+                $_MutalyzerWS = new REST2SOAP($_SETT['mutalyzer_soap_url']);
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress(0);
                 
-                $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $zData['genes'][$_POST['geneSymbol']]['refseq_UD']));
+                $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $zData['genes'][$_POST['geneSymbol']]['refseq_UD'], 'geneName' => $_POST['geneSymbol']));
                 if (!is_array($aOutput)) {
-                    $_MutalyzerWS->soapError ('getTranscriptsAndInfo', array('genomicReference' => $zData['genes'][$_POST['geneSymbol']]['refseq_UD']), $aOutput);
+                    $_MutalyzerWS->soapError ('getTranscriptsAndInfo', array('genomicReference' => $zData['genes'][$_POST['geneSymbol']]['refseq_UD'], 'geneName' => $_POST['geneSymbol']), $aOutput);
                 } else {
                     if (empty($aOutput)) {
                         $aTranscripts = array();
                     } else {
-                        $aTranscriptsInfo = $aOutput['c']['TranscriptInfo'];
+                        $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
                         $aTranscripts = array();
                         $aTranscriptsName = array();
                         $aTranscriptsPositions = array();
@@ -188,21 +187,15 @@ if (ACTION == 'create') {
                         $nTranscripts = count($aTranscriptsInfo) - count($aTranscriptsAdded);
                         $nProgress = 0.0;
                         foreach($aTranscriptsInfo as $aTranscriptInfo) {
-                            $sTranscript = $aTranscriptInfo['c']['id'][0]['v'];
-                            if (!in_array($sTranscript, $aTranscriptsAdded)) {
+                            $aTranscriptInfo = $aTranscriptInfo['c'];
+                            $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo);
+                            if (!in_array($aTranscriptValues['id'], $aTranscriptsAdded)) {
                                 $nProgress = $nProgress + (100/$nTranscripts);
-                                $_BAR->setMessage('Collecting ' . $sTranscript . ' info...');
-                                $sTranscriptName = $aTranscriptInfo['c']['product'][0]['v'];
-                                $sTranscriptGstart = $aTranscriptInfo['c']['gTransStart'][0]['v'];
-                                $sTranscriptGend = $aTranscriptInfo['c']['gTransEnd'][0]['v'];
-                                $sTranscriptCstart = $aTranscriptInfo['c']['cTransStart'][0]['v'];
-                                $sTranscriptCend = $aTranscriptInfo['c']['sortableTransEnd'][0]['v'];
-                                $sTranscriptCcdsStop = $aTranscriptInfo['c']['cCDSStop'][0]['v'];
-                                $aTranscriptPositions = array('gTransStart' => $sTranscriptGstart, 'gTransEnd' => $sTranscriptGend, 'cTransStart' => $sTranscriptCstart, 'cTransEnd' => $sTranscriptCend, 'cCDSStop' => $sTranscriptCcdsStop);
-                                $aTranscripts[] = $sTranscript;
-                                $aTranscriptsName[preg_replace('/\.\d+/', '', $sTranscript)] = str_replace($zData['genes'][$_POST['geneSymbol']]['name'] . ', ', '', $sTranscriptName);
-                                $aTranscriptsPositions[$sTranscript] = $aTranscriptPositions;
-                                $aTranscriptsProtein[$sTranscript] = $aTranscriptInfo['c']['proteinTranscript'][0]['c']['id'][0]['v'];
+                                $_BAR->setMessage('Collecting ' . $aTranscriptValues['id'] . ' info...');
+                                $aTranscripts[] = $aTranscriptValues['id'];
+                                $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($zData['genes'][$_POST['geneSymbol']]['name'] . ', ', '', $aTranscriptValues['product']);
+                                $aTranscriptsPositions[$aTranscriptValues['id']] = array('gTransStart' => $aTranscriptValues['gTransStart'], 'gTransEnd' => $aTranscriptValues['gTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
+                                $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getElementFromArray('proteinTranscript/id', $aTranscriptInfo, 'v');
                                 $_BAR->setProgress(0 + $nProgress);
                             }
                         }
@@ -218,7 +211,6 @@ if (ACTION == 'create') {
                                                                   'transcriptsAdded' => $aTranscriptsAdded
                                                                 );
                 unset($_SESSION['work'][$_POST['workID']]['values']['genes']);
-
                 $_BAR->setProgress(100);
                 $_BAR->setMessage('Information collected, now building form...');
                 $_BAR->setMessageVisibility('done', true);
@@ -388,7 +380,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     
     require ROOT_PATH . 'class/object_transcripts.php';
     require ROOT_PATH . 'inc-lib-form.php';
-    $_DATA = new Transcript();
+    $_DATA = new LOVD_Transcript();
     $zData = $_DATA->loadEntry($nID);
     
     if (count($_POST) > 1) {
@@ -476,7 +468,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new Transcript();
+    $_DATA = new LOVD_Transcript();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 

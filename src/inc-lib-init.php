@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-21
+ * Modified    : 2011-02-25
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *             : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -234,7 +234,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
         <TR>
           <TH>Error: ' . $sError . ($bLog? ' (Logged)' : '') . '</TH></TR>
         <TR>
-          <TD>' . str_replace("\n", '<BR>', $sMessage) . '</TD></TR></TABLE>' . "\n\n");
+          <TD>' . str_replace(array("\n", "\t"), array('<BR>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $sMessage) . '</TD></TR></TABLE>' . "\n\n");
 
     // If fatal, get bottom and exit.
     if (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false) {
@@ -458,8 +458,8 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
         fputs($f, $sRequest);
         $bListen = false; // We want to start capturing the output AFTER the headers have ended.
         while (!feof($f)) {
-            // FIXME; actually we should check here, if $s ends in "\r\n"; if not, we're simply not done yet with a looong response line and we're breaking it off.
-            $s = rtrim(fgets($f, 20480), "\r\n");
+            // FIXME; actually we should check here, if $s ends in "\r\n".
+            $s = rtrim(fgets($f), "\r\n");
             if ($bListen) {
                 $aOutput[] = $s;
             } else {

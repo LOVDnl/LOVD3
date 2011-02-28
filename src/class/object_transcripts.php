@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-21
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class Transcript extends Object {
+class LOVD_Transcript extends Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Transcript';
 
@@ -48,7 +48,7 @@ class Transcript extends Object {
 
 
 
-    function Transcript ()
+    function LOVD_Transcript ()
     {
         // Default constructor.
         global $_AUTH;
@@ -110,7 +110,7 @@ class Transcript extends Object {
                                     'view' => array('Variants', 70),
                                     'db'   => array('variants', 'ASC', true)),
                       );
-        $this->sSortDefault = 'id';
+        $this->sSortDefault = 'geneid';
 
         parent::Object();
     }
@@ -129,7 +129,9 @@ class Transcript extends Object {
         // Check if transcripts are in the list, so no data manipulation from user!
         foreach ($aData['active_transcripts'] as $sTranscript) {
             if (!in_array($sTranscript, $zData['transcripts']) || in_array($sTranscript, $zData['transcriptsAdded'])) {
-                return lovd_errorAdd('active_transcripts' ,'Please select a proper transcriptomic reference from the selection box.');
+                if ($sTranscript != 'None') {
+                    return lovd_errorAdd('active_transcripts' ,'Please select a proper transcriptomic reference from the selection box.');
+                }
             }
         }
 

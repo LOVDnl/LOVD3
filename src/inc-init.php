@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-28
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -159,14 +159,9 @@ DMD_SPECIFIC
                             STATUS_MARKED => 'Marked',
                             STATUS_OK => 'Public',
                           ),
-                // FIXME; Change this later into a string (not array) called something like 'mutalyzer_soap_url'.
-                'SOAP_URL' =>
-                     array(
-                            'default' => 'http://www.mutalyzer.nl/2.0/services',
-                            'jeroen' => 'http://10.160.8.105/mutalyzer2/services',
-                            'mutalyzer' => 'http://www.mutalyzer.nl/2.0/services',
-                            'martijn' => 'http://mutalyzer.martijn/services',
-                        ),
+                //'mutalyzer_soap_url' => 'http://www.mutalyzer.nl/2.0/services',
+                //'mutalyzer_soap_url' => 'http://10.160.8.105/mutalyzer2/services',
+                'mutalyzer_soap_url' => 'http://mutalyzer.martijn/services',
                 'update_levels' =>
                      array(
                             1 => 'Optional',

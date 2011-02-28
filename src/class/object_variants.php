@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-01-04
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-02-21
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class Variant extends Object {
+class LOVD_Variant extends Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Variant';
 
@@ -48,11 +48,12 @@ class Variant extends Object {
 
 
 
-    function Variant ()
+    function LOVD_Variant ()
     {
         // Default constructor.
         global $_AUTH;
-
+        global $_PATH_ELEMENTS;
+        $sPage = $_PATH_ELEMENTS[0];
         // SQL code for loading an entry for an edit form.
         //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (id)';
 
@@ -62,10 +63,16 @@ class Variant extends Object {
 //        $this->aSQLViewEntry['GROUP_BY'] = 'v.id';
 
         // SQL code for viewing the list of variants
-//      $this->aSQLViewList['SELECT']   = 'v.*, GROUP_CONCAT(DISTINCT vot.transcriptid ORDER BY v.id SEPARATOR ", ") AS transcripts_';
-        $this->aSQLViewList['SELECT']   = 'v.*, vot.transcriptid AS transcripts_';
-        $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id)';
-        $this->aSQLViewList['GROUP_BY'] = 'v.id';
+        if ($sPage == 'variants' || $sPage == 'transcripts') {
+            $this->aSQLViewList['SELECT']   = 'v.*, vot.transcriptid';
+            $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id)';
+            $this->aSQLViewList['GROUP_BY'] = 'v.id';
+        } elseif ($sPage == 'patients') {
+            $this->aSQLViewList['SELECT']   = 'v.*, s.patientid';
+            $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS sv ON (v.id = sv.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (sv.screeningid = s.id)';
+            $this->aSQLViewList['GROUP_BY'] = 'v.id';
+        }
+        
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
@@ -95,11 +102,11 @@ class Variant extends Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
-                        'transcripts_' => array(
-                                    'view' => array('Transcripts', 70),
+                        'transcriptid' => array(
+                                    'view' => array('Transcript ID', 80),
                                     'db'   => array('vot.transcriptid', false, true)),
                         'id' => array(
-                                    'view' => array('ID', 70),
+                                    'view' => array('Variant ID', 90),
                                     'db'   => array('v.id', 'ASC', true)),
                         'allele' => array(
                                     'view' => array('Allele', 100),
@@ -110,7 +117,16 @@ class Variant extends Object {
                         'type' => array(
                                     'view' => array('Type', 70),
                                     'db'   => array('v.type', 'ASC', true)),
+                        'patientid' => array(
+                                    'view' => array('Patient ID', 80),
+                                    'db'   => array('s.patientid', 'ASC', true)),
                       );
+        
+        if ($sPage == 'variants' || $sPage == 'transcripts') {
+            unset($this->aColumnsViewList['patientid']);
+        } elseif ($sPage == 'patients') {
+            unset($this->aColumnsViewList['transcriptid']);
+        }
         $this->sSortDefault = 'id';
 
         parent::Object();

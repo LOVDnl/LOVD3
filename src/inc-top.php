@@ -5,11 +5,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-02-20
+ * Modified    : 2011-02-21
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -73,7 +74,7 @@ if (!defined('PAGE_TITLE')) {
   <META name="generator" content="gPHPEdit / GIMP @ GNU/Linux (Ubuntu)">
   <BASE href="<?php echo lovd_getInstallURL(); ?>">
   <LINK rel="stylesheet" type="text/css" href="styles.css">
-  <LINK rel="shortcut icon" href="favicon.ico">
+  <LINK rel="shortcut icon" href=".//gfx/favicon.ico" type="image/x-icon">
 <?php
 // DMD_SPECIFIC; later?
 /*  <LINK rel="alternate" type="application/atom+xml" title="<?php echo $_CONF['system_title']; ?> Atom 1.0 feed" href="<?php echo ROOT_PATH; ?>api/feed.php" />*/

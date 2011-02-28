@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-06
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-24
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -29,6 +29,7 @@
  *
  *************/
  
+// Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
 }
@@ -59,11 +60,10 @@ class REST2SOAP {
         $sInputXML = $this->generateInputXML($sModuleName, $aArgs);
         // Send XML to SOAP
         $aOutputSOAP = lovd_php_file($this->sSoapURL, false, $sInputXML);
-        
+        // Output debug values
         if ($bDebug) {
-            return array($sInputXML, $aOutputSOAP);
+            return array('inputXML' => $sInputXML, 'outputXML' => $aOutputSOAP[0] . $aOutputSOAP[1]);
         }
-
         // Parse output
         unset($aOutputSOAP[0]);
         $aOutput = $this->parseOutput($sModuleName, implode("\n", $aOutputSOAP));
@@ -80,15 +80,15 @@ class REST2SOAP {
         // Generate a XML file to send to the SOAP webservice 
         $sXML = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
                 '<SOAP-ENV:Envelope' . "\n" .
-                'xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"' . "\n" .
-                'xmlns:ns1="http://mutalyzer.nl/2.0/services"' . "\n" .
-                'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">' . "\n" .
+                ' xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"' . "\n" .
+                ' xmlns:ns1="http://mutalyzer.nl/2.0/services"' . "\n" .
+                ' xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">' . "\n" .
                 '  <SOAP-ENV:Header/>' . "\n" .
                 '  <ns0:Body>' . "\n" .
                 '    <ns1:' . $sModuleName. '>' . "\n";
 
         foreach ($aArgs as $key => $value) {
-            $sArg = '      <ns1:' . $key . '>' . "\n" . $value . "\n" . '      </ns1:' . $key . '>' . "\n";
+            $sArg = '      <ns1:' . $key . '>' . trim($value) . '</ns1:' . $key . '>' . "\n";
             $sXML = $sXML . $sArg;
         }
 
@@ -138,7 +138,12 @@ class REST2SOAP {
             $aError = $aOutput['html'][0]['c']['body'][0]['c'];
             return $aError['h1'][0]['v'] . ' - ' . $aError['p'][0]['v'];
         } else {
-            return $aOutput[$sModuleName . 'Result'][0];
+            if (isset($aOutput[$sModuleName . 'Result'][0])) {
+                $aOutput = $aOutput[$sModuleName . 'Result'][0];
+                return (empty($aOutput['c'])? $aOutput['v'] : $aOutput['c']);
+            } else {
+                return $aOutput;
+            }
         }
     }
     
@@ -152,10 +157,9 @@ class REST2SOAP {
         // Derived from the lovd_queryError function in 'inc-lib-init.php'
         global $_AUTH;
         
-        $sTab = '&nbsp;&nbsp;&nbsp;&nbsp;';
         $sArgs = '';
         foreach ($aArgs as $key => $value) {
-            $sArgs = $sArgs . $sTab . $sTab . $key . " = \"" . $value . "\"\n";
+            $sArgs = $sArgs . "\t\t" . $key . " = \"" . $value . "\"\n";
         }
         
         // Format the error message.
@@ -163,7 +167,7 @@ class REST2SOAP {
                   'Arguments :' . "\n" .
                   $sArgs . "\n" .
                   'SOAP response :' . "\n" .
-                  $sTab . $sTab . $sSOAPError;
+                  "\t\t" . str_replace("\n", "\n\t\t", $sSOAPError);
 
         // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
         // write it to the system log, and halt the system. Otherwise, just log it to the database.

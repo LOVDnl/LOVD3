@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-12
- * Modified    : 2010-12-20
+ * Modified    : 2011-02-22
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -51,7 +52,7 @@ if (ACTION == 'edit') {
     define('LOG_EVENT', 'ConfigEdit');
 
     require ROOT_PATH . 'class/object_system_settings.php';
-    $_DATA = new SystemSetting();
+    $_DATA = new LOVD_SystemSetting();
     $zData = $_CONF;
     require ROOT_PATH . 'inc-lib-form.php';
 

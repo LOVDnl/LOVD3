@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-02-09
- * For LOVD    : 3.0-pre-16
+ * Modified    : 2011-02-21
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -53,7 +53,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_users.php';
-    $_DATA = new User();
+    $_DATA = new LOVD_User();
     $_DATA->viewList();
 
     require ROOT_PATH . 'inc-bot.php';
@@ -64,7 +64,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /users/00001
     // View specific entry.
 
@@ -84,7 +84,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     }
 
     require ROOT_PATH . 'class/object_users.php';
-    $_DATA = new User();
+    $_DATA = new LOVD_User();
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
@@ -125,7 +125,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_users.php';
-    $_DATA = new User();
+    $_DATA = new LOVD_User();
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (!empty($_POST)) {
@@ -204,7 +204,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /users/00001?edit
     // Edit specific entry.
 
@@ -232,7 +232,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     }
 
     require ROOT_PATH . 'class/object_users.php';
-    $_DATA = new User();
+    $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -324,7 +324,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'change_password') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'change_password') {
     // URL: /users/00001?change_password
     // Change a user's password.
 
@@ -352,7 +352,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     }
 
     require ROOT_PATH . 'class/object_users.php';
-    $_DATA = new User();
+    $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -414,6 +414,96 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
                  $_DATA->getForm(),
                  array(
                     array('', '', 'submit', 'Change password'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+    // URL: /users/00001?delete
+    // Remove a user from the system
+    
+    $nID = $_PATH_ELEMENTS[1];
+    define('PAGE_TITLE', 'Delete user account #' . $nID);
+    define('LOG_EVENT', 'UserDelete');
+
+    // Require valid user.
+    lovd_requireAUTH();
+    
+    require ROOT_PATH . 'class/object_users.php';
+    $_DATA = new LOVD_User();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        // Mandatory fields.
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        }
+
+        // User had to enter his/her password for authorization.
+        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+            // Query text.
+            // This also deletes the entries in variants??????.
+            // FIXME; implement deleteEntry()
+            $sSQL = 'DELETE FROM ' . TABLE_USERS . ' WHERE id = ?';
+            $aSQL = array($zData['id']);
+            $q = lovd_queryDB($sSQL, $aSQL);
+            if (!$q) {
+                lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
+            }
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted user entry ' . $nID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'users');
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully deleted the user entry!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_errorPrint();
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 array(
+                        array('POST', '', '', '', '40%', '14', '60%'),
+                        array('Deleting user information entry', '', 'print', $zData['id'] . ' (' . $zData['name'] . ')'),
+                        'skip',
+                        array('Enter your password for authorization', '', 'password', 'password', 20),
+                        array('', '', 'submit', 'Delete user entry'),
                       ));
     lovd_viewForm($aForm);
 

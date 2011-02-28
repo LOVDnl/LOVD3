@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-01-19
- * For LOVD    : 3.0-pre-15
+ * Modified    : 2011-02-22
+ * For LOVD    : 3.0-pre-17
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class Disease extends Object {
+class LOVD_Disease extends Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Disease';
 
@@ -48,7 +48,7 @@ class Disease extends Object {
 
 
 
-    function Disease ()
+    function LOVD_Disease ()
     {
         // Default constructor.
         global $_AUTH;

@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-26
- * Modified    : 2010-04-16
- * For LOVD    : 3.0-pre-06
+ * Modified    : 2011-02-22
+ * For LOVD    : 3.0-pre-17
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -101,7 +101,7 @@ print('</TABLE>' . "\n" .
 
 lovd_includeJS(ROOT_PATH . 'inc-js-ajax-delete_logs.php');
 
-$_DATA = new Log();
+$_DATA = new LOVD_Log();
 $_DATA->viewList();
 
 require ROOT_PATH . 'inc-bot.php';

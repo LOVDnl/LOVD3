@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-02-20
+ * Modified    : 2011-02-22
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -39,7 +40,7 @@ require ROOT_PATH . 'class/objects.php';
 
 
 
-class SystemSetting extends Object {
+class LOVD_SystemSetting extends Object {
     // This class, handling the System Settings, extends the basic Object class.
     var $sObject = 'Settings';
     var $sTable  = 'TABLE_CONFIG';

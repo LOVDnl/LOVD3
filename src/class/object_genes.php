@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-02-16
+ * Modified    : 2011-02-21
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -15,7 +15,7 @@
  * This file is part of LOVD.
  *
  * LOVD is free software: you can redistribute it and/or modify
- * it under the terms of the trunk/src/genes.phpGNU General Public License as published by
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class Gene extends Object {
+class LOVD_Gene extends Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Gene';
 
@@ -48,7 +48,7 @@ class Gene extends Object {
 
 
 
-    function Gene ()
+    function LOVD_Gene ()
     {
         // Default constructor.
         global $_AUTH;

@@ -5,11 +5,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-20
+ * Modified    : 2011-02-22
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -136,7 +137,7 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
 
     // Load User class.
     require ROOT_PATH . 'class/object_users.php';
-    $_USER = new User();
+    $_USER = new LOVD_User();
 
     print('      <B>Administrator account details</B><BR>' . "\n" .
           '      <BR>' . "\n\n");
@@ -495,7 +496,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
 
     // Load System Settings class.
     require ROOT_PATH . 'class/object_system_settings.php';
-    $_SYSSETTING = new SystemSetting();
+    $_SYSSETTING = new LOVD_SystemSetting();
 
     print('      <B>Configuring LOVD system settings</B><BR>' . "\n" .
           '      <BR>' . "\n\n");
