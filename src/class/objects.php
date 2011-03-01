@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-02-20
+ * Modified    : 2011-02-28
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -434,9 +434,13 @@ class Object {
 
 
 
-    function viewList ($bOnlyRows = false)
+    function viewList ($aColsToSkip = array(), $bHideNav = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
+
+        if (!is_array($aColsToSkip)) {
+            $aColsToSkip = array($aColsToSkip);
+        }
 
         require ROOT_PATH . 'inc-lib-viewlist.php';
 
@@ -532,9 +536,21 @@ class Object {
             print('      <FORM action="' . CURRENT_PATH . '" method="get" id="viewlist_form" style="margin : 0px;" onsubmit="return false;">' . "\n" .
                   '        <INPUT type="hidden" name="object" value="' . $this->sObject . '">' . "\n" .
 // FIXME; do we ever use ACTION in a ViewList? Wait until we've made variants.php to know for sure.
+// FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
                   (!ACTION? '' :
                   '        <INPUT type="hidden" name="' . ACTION . '" value="">' . "\n") .
-                  '        <INPUT type="hidden" name="order" value="' . implode(',', $aOrder) . '">' . "\n\n");
+                  '        <INPUT type="hidden" name="order" value="' . implode(',', $aOrder) . '">' . "\n");
+            // Skipping (permanently hiding) columns.
+            foreach ($aColsToSkip as $sCol) {
+                if (array_key_exists($sCol, $this->aColumnsViewList)) {
+                    print('        <INPUT type="hidden" name="skip[]" value="' . $sCol . '">' . "\n");
+                    // Check if we're skipping columns, that do have a search value. If so, it needs to be sent on like this.
+                    if (!empty($_GET['search_' . $sCol])) {
+                        print('        <INPUT type="hidden" name="search_' . $sCol . '" value="' . htmlspecialchars($_GET['search_' . $sCol]) . '">' . "\n");
+                    }
+                }
+            }
+            print("\n");
         }
 
         // Manipulate SELECT to include SQL_CALC_FOUND_ROWS.
@@ -547,12 +563,14 @@ class Object {
                ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
                ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
 
-        // Implement LIMIT.
-        // We have a problem here, because we don't know how many hits there are,
-        // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
-        // of hits AFTER we run the whole query. This means we should just assume
-        // the page number is possible.
-        $sSQL .= ' LIMIT ' . lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
+        if (!$bHideNav) {
+            // Implement LIMIT only if navigation is not hidden.
+            // We have a problem here, because we don't know how many hits there are,
+            // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
+            // of hits AFTER we run the whole query. This means we should just assume
+            // the page number is possible.
+            $sSQL .= ' LIMIT ' . lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
+        }
 
         // Using the SQL_CALC_FOUND_ROWS technique to find the amount of hits in one go.
         // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
@@ -585,7 +603,9 @@ class Object {
         if (!$bOnlyRows) {
             print('      <DIV id="viewlist_div">' . "\n"); // These contents will be replaced by Ajax.
 
-            lovd_pagesplitShowNav($nTotal);
+            if (!$bHideNav) {
+                lovd_pagesplitShowNav($nTotal);
+            }
 
             // Table and search headers (if applicable).
             print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlist_table">' . "\n" .
@@ -593,6 +613,10 @@ class Object {
                   '        <TR>');
 
             foreach ($this->aColumnsViewList as $sField => $aCol) {
+                if (in_array($sField, $aColsToSkip)) {
+                    continue;
+                }
+
                 $bSortable   = !empty($aCol['db'][1]);
                 $bSearchable = !empty($aCol['db'][2]);
                 $sImg = '';
@@ -610,7 +634,7 @@ class Object {
                         (!$bSearchable? '' :
                              "\n" .
                              // SetTimeOut() is necessary because if the function gets executed right away, selecting a previously used value from a *browser-generated* list in one of the fields, gets aborted and it just sends whatever is typed in at that moment.
-                             '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars(stripslashes($_GET['search_' . $sField]))) . '" title="' . $aCol['view'][0] . ' field should contain..." style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { document.forms[\'viewlist_form\'].page.value=1; setTimeout(\'lovd_submitList()\', 0); }">') .
+                             '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain..." style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { document.forms[\'viewlist_form\'].page.value=1; setTimeout(\'lovd_submitList()\', 0); }">') .
                       '</TH>');
             }
             print('</TR></THEAD>');
@@ -623,11 +647,13 @@ class Object {
             if ($bOnlyRows) {
                 die('0'); // Silent error.
             }
-            print('</TABLE>' . "\n" .
-                  '        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
-                  '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
-                  '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n" .
-                  '      </FORM><BR>' . "\n\n");
+            print('</TABLE>' . "\n");
+            if (!$bHideNav) {
+                print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
+                      '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
+                      '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
+            }
+            print('      </FORM><BR>' . "\n\n");
             lovd_showInfoTable($sMessage, 'stop');
             return true;
         }
@@ -638,6 +664,9 @@ class Object {
             print("\n" .
                   '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (empty($zData['row_id'])? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (empty($zData['id'])? '' : ' style="cursor : pointer;"') . (empty($zData['row_link'])? '' : ' onclick="window.location.href = \'' . $zData['row_link'] . '\';"') . '>');
             foreach ($this->aColumnsViewList as $sField => $aCol) {
+                if (in_array($sField, $aColsToSkip)) {
+                    continue;
+                }
                 print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($aOrder[0] == $sField? ' class="ordered"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
             }
             print('</TR>');
@@ -645,13 +674,15 @@ class Object {
 
         // Only print stuff if we're not just loading one entry right now.
         if (!$bOnlyRows) {
-            print('</TABLE>' . "\n" .
-                  '        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
-                  '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
-                  '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n" .
-                  '      </FORM>' . "\n\n");
+            if (!$bHideNav) {
+                print('</TABLE>' . "\n" .
+                      '        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
+                      '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
+                      '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n" .
+                      '      </FORM>' . "\n\n");
 
-            lovd_pagesplitShowNav($nTotal);
+                lovd_pagesplitShowNav($nTotal);
+            }
             print('      </DIV>' . "\n"); // These contents will be replaced by Ajax.
         }
         return true;

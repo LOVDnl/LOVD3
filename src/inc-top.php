@@ -5,12 +5,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-02-21
+ * Modified    : 2011-02-28
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -38,9 +37,18 @@ if (!defined('ROOT_PATH')) {
 define('_INC_TOP_INCLUDED_', true);
 
 // Load menu.
+// FIXME; this needs to be a dropdown menu (like www.lgtc.nl)
 $_MENU = array(
                 'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'Home'),
+                 array(
+                        '' => 'View all gene entries',
+                        'create' => 'Create a new gene entry',
+                      ),
                 'diseases' => 'View diseases',
+                 array(
+                        '' => 'View all disease entries',
+                        'create' => 'Create a new disease information entry',
+                      ),
                 'transcripts' => 'View transcripts',
                 'variants' => 'View variants',
                 'patients' => 'View patients',
@@ -74,7 +82,7 @@ if (!defined('PAGE_TITLE')) {
   <META name="generator" content="gPHPEdit / GIMP @ GNU/Linux (Ubuntu)">
   <BASE href="<?php echo lovd_getInstallURL(); ?>">
   <LINK rel="stylesheet" type="text/css" href="styles.css">
-  <LINK rel="shortcut icon" href=".//gfx/favicon.ico" type="image/x-icon">
+  <LINK rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <?php
 // DMD_SPECIFIC; later?
 /*  <LINK rel="alternate" type="application/atom+xml" title="<?php echo $_CONF['system_title']; ?> Atom 1.0 feed" href="<?php echo ROOT_PATH; ?>api/feed.php" />*/
@@ -211,6 +219,11 @@ $n         = 0;
 $bSel      = false;
 $bPrevSel  = false;
 foreach ($_MENU as $sPrefix => $sTitle) {
+    // Array (children links of parent tabs) are not processed here.
+    if (is_array($sTitle)) {
+        continue;
+    }
+
     // Determine if we're the current tab.
     $bSel = (substr(lovd_getProjectFile(), 1, strrpos(lovd_getProjectFile(), '.') - 1) == $sPrefix);
     // Auch! Hard coded exception!

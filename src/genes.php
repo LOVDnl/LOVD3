@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-02-24
+ * Modified    : 2011-02-28
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -90,12 +90,12 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\w)+$/', $_PATH_ELEMENTS[1]) &&
     }
     
     $_GET['search_geneid'] = $nID;
-    print('<BR><BR><H2 class="LOVD">Transcripts for gene ' . $nID . '</H2>');
+    print('<BR><BR>' . "\n\n");
+    lovd_printHeader('Transcripts for gene ' . $nID);
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
-    $zData = $_DATA->viewList();
-    
-    
+    $zData = $_DATA->viewList('geneid', true);
+
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }

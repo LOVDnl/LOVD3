@@ -88,10 +88,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
         lovd_showNavigation($sNavigation);
     }
     $_GET['search_transcriptid'] = $nID;
-    print('<BR><BR><H2 class="LOVD">Variants for transcript #' . $nID . '</H2>');
+    print('<BR><BR>' . "\n\n");
+    lovd_printHeader('Variants for transcript #' . $nID);
     require ROOT_PATH . 'class/object_variants.php';
     $_DATA = new LOVD_Variant();
-    $zData = $_DATA->viewList();
+    $zData = $_DATA->viewList('transcriptid');
     
     require ROOT_PATH . 'inc-bot.php';
     exit;

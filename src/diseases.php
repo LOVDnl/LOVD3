@@ -94,6 +94,35 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
+if (!empty($_PATH_ELEMENTS[1]) && !preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+    // URL: /diseases/DMD
+    // Try to find a disease by its abbreviation and forward.
+    // When we have multiple hits, refer to listView.
+
+    $sID = $_PATH_ELEMENTS[1];
+    $q = lovd_queryDB('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($sID), true);
+    $n = mysql_num_rows($q);
+    @list($nID) = mysql_fetch_row($q);
+    if (!$n) {
+        define('PAGE_TITLE', 'View disease');
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('No such ID!', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+    } elseif ($n == 1) {
+        header('Location: ' . lovd_getInstallURL() . 'diseases/' . $nID);
+    } else {
+        // Multiple hits. This forward would allow for even more hits,
+        // because this search method below works on partial matches.
+        header('Location: ' . lovd_getInstallURL() . 'diseases?search_symbol=' . rawurlencode($sID));
+    }
+    exit;
+}
+
+
+
+
+
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // URL: /diseases?create
     // Create a new entry.

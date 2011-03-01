@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-25
+ * Modified    : 2011-02-26
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -458,7 +458,6 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
         fputs($f, $sRequest);
         $bListen = false; // We want to start capturing the output AFTER the headers have ended.
         while (!feof($f)) {
-            // FIXME; actually we should check here, if $s ends in "\r\n".
             $s = rtrim(fgets($f), "\r\n");
             if ($bListen) {
                 $aOutput[] = $s;
@@ -560,7 +559,7 @@ function lovd_queryDB ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = fals
     $q = mysql_query($sQuery);
     if (!$q && $bHalt) {
         // lovd_queryError() will call lovd_displayError() which will halt the system.
-        lovd_queryError(LOG_EVENT, $sQuery, mysql_error());
+        lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sQuery, mysql_error());
     }
     return $q;
 }

@@ -9,7 +9,6 @@ LOVD 3.0
     When a transaction rollback occurs due to a deadlock or lock wait timeout, it cancels the effect of the statements within the transaction. But if the
         start-transaction statement was START TRANSACTION or BEGIN statement, rollback does not cancel that statement. Further SQL statements become part
         of the transaction until the occurrence of COMMIT, ROLLBACK, or some SQL statement that causes an implicit commit.
-    Kunnen we wat slimmers bedenken, dan de TABLE_PHENOTYPE_COLS en TABLE_VARIANT_COLS gescheiden houden?
     Submission:
         !!! Save by default: thus after every completed form, save the data for later retrieval.
         1) Vul patient info in
@@ -49,13 +48,17 @@ LOVD 3.0
     Mouseover (hover) over kolom namen op viewList() ? Waar stellen we dat in? Alleen met custom columns of ook met andere views? Idem in viewEntry?
     Laat de install checken op de aanwezigheid van bepaalde functies, zoals XML functies.
 
-Kleinere dingen om te controleren:
-==================================
+KNOWN BUGS:
+===========
+Removing a user does NOT have any security checks!!!
+
+Overdenkingen / Kleinere dingen om te doen:
+===========================================
 During installation LOVD does not worry about an empty database URL. However, when editing the settings it does mention that this URL is empty. Make sure the install has this behaviour as well.
 Voorstel schrijven voor nieuwe functies voor de Mutalyzer webservice, standaardisatie van de namen.
-Functies schrijven om van numerieke disease ID naar de symbol te komen? Zodat /diseases/DMD ook werken?
-    Indien /diseases/DMD meerdere hits heeft, moet die een viewList() geven, waarbij er op de symbol gezocht wordt.
 Tabs instelbaar: system settings bepaalt welke tabs worden getoond; genes, diseases, transcripts, users, patients, etc.
+    Misschien niet de system settings maar individueel? Extra tabje toevoegen die + heet, die de lijst mogelijke tabs geeft met een checkbox er voor? Gebruiker vinkt aan en uit, klikt Save en pagina herlaad?
+        Beter nog: inc-top herlaad? Ajax daarvoor gebruiken?
 Link tussen patient en disease leggen dmv koppelings tabel?
 Formulier voor toevoegen/edit kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.
 Een column ID moet altijd met een hoofdletter gemaakt worden, dus daar moet een controle op!
@@ -94,7 +97,13 @@ Submenu's weg, knopjes met uitschuif met opties?
     Gebruik kleuren om te scheiden? Laat zien nu geen verschil zien tussen var + pat; maar straks nog meer categoriën!
         Hide set columns, unhide all columns = algemeen
     Vinkjes voor iedere entry om snel te curaten/deleten/booten/etc oid?
-Suggesties: Includen van de Setup in de Configuration, de dropdown als alternatief voor het horizontale menu was een goed idee, submitters should be able to edit info to whichever patient, but edit only their own data, can the table header stick to the top of the screen?, dropdown menu "tools" above variants is a good idea, right click on variant -> maybe left click on a small button or mouseover explaining to right-click?, transpose/flip the variant view to gain space?, show pathogenicity in color values for the whole line?, skip the download format - people can use the system to edit?, maybe check out the uniprot download format?, mouseover column or column header for legend info? The uniprot format by the way has the advantage to use lines for the data, so adding more lines for a patient's phenotype data is just fine, but the file gets so long...
+Suggesties:
+    Includen van de Setup in de Configuration, de dropdown als alternatief voor het horizontale menu was een goed idee,
+    submitters should be able to edit info to whichever patient, but edit only their own data,
+    dropdown menu "tools" above variants is a good idea, right click on variant -> maybe left click on a small button or mouseover explaining to right-click?,
+    show pathogenicity in color values for the whole line?, skip the download format - people can use the system to edit?, maybe check out the uniprot download format?,
+        The uniprot format by the way has the advantage to use lines for the data, so adding more lines for a patient's phenotype data is just fine, but the file gets so long...
+    mouseover column or column header for legend info?
 CURRDB in cookie!
 
 
