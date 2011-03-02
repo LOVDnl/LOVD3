@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-02-28
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-02
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -183,7 +183,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
 
-                $_MutalyzerWS = new REST2SOAP($_SETT['mutalyzer_soap_url']);
+                $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
                 
                 // Get LRG if it exists
                 $aRefseqGenomic = array();

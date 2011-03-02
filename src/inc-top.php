@@ -5,11 +5,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-02-28
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-02
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -145,11 +146,19 @@ lovd_includeJS(ROOT_PATH . 'inc-js-toggle-visibility.js', 1); // Used on forms a
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">
   <TR>
 <?php
-if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
-    $_CONF['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
+$aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
+
+if (!is_array($aImage)) {
+    $aImage = @getimagesize(ROOT_PATH . 'gfx/LOVD_logo130x50.jpg');
+    
+    if (!is_array($aImage)) {
+        $aImage = array('130', '50', '', 'width=130 heigth=50');
+        $_CONF['logo_uri'] = '#';
+    }
 }
-// FIXME; add proper checks; prevent errors when image does not exist.
-list($nWidth, $nHeight, $sType, $sSize) = getimagesize(ROOT_PATH . $_CONF['logo_uri']);
+
+list($nWidth, $nHeight, $sType, $sSize) = $aImage;
+
 print('    <TD width="' . ($nWidth + 20) . '">' . "\n" .
       '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n");
 ?>

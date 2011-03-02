@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-02-21
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-02
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Gene extends Object {
+class LOVD_Gene extends LOVD_Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Gene';
 
@@ -142,7 +142,7 @@ class LOVD_Gene extends Object {
                       );
         $this->sSortDefault = 'id';
 
-        parent::Object();
+        parent::LOVD_Object();
     }
 
 

@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-02-21
+ * Modified    : 2011-03-02
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -114,6 +114,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                     '3.0-pre-18' =>
                              array(
                                     'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(12)',
+                                    'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "http://www.mutalyzer.nl/2.0/services" AFTER logo_uri',
                                   ),
                   );
 

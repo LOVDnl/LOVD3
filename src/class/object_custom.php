@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-02-21
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-02
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class Custom extends Object {
+class LOVD_Custom extends LOVD_Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Custom';
     
@@ -48,12 +48,12 @@ class Custom extends Object {
     
     
     
-    function Custom ()
+    function LOVD_Custom ()
     {
         // Default constructor.
         global $_AUTH;
         
-        parent::Object();
+        parent::LOVD_Object();
         /*$qCols = 'SELECT cust.id FROM ' . TABLE_COLS . ' AS cust, ' . TABLE_ACTIVE_COLS . ' AS a WHERE SUBSTRING_INDEX(cust.id, "/", 1)="Patient" AND cust.id=a.colid';
         echo "<BR><BR>";
         $result = mysql_query($qCols);

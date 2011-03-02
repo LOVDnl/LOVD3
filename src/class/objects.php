@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-02-28
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-02
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -38,7 +38,7 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class Object {
+class LOVD_Object {
     // This class is the base class which is inherited by other object classes.
     // It provides basic functionality for setting up forms and showing data.
     var $sObject = '';
@@ -71,7 +71,7 @@ class Object {
 
 
 
-    function Object ()
+    function LOVD_Object ()
     {
         // Default constructor.
         if (!$this->sTable) {

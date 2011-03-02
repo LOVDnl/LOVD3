@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-02-28
+ * Modified    : 2011-03-02
  * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -166,7 +166,7 @@ if (ACTION == 'create') {
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
                 
-                $_MutalyzerWS = new REST2SOAP($_SETT['mutalyzer_soap_url']);
+                $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress(0);
                 
@@ -239,7 +239,7 @@ if (ACTION == 'create') {
             
             lovd_printHeader(PAGE_TITLE);
 
-            print('<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '"id="selectedGene" method="post">' . "\n" .
+            print('<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id= "selectedGene" method="post">' . "\n" .
                   '    <TABLE border="0" cellpadding="0" cellspacing="1" width="760">'. "\n" .
                   '        <INPUT type="hidden" name="geneSymbol" value="' . $sGeneID . '">' . "\n" .
                   '        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .

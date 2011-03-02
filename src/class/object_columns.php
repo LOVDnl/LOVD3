@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-02-21
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-02
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Column extends Object {
+class LOVD_Column extends LOVD_Object {
     // This class extends the basic Object class and it handles the Column object.
     var $sObject = 'Column';
     var $sTable  = 'TABLE_COLS';
@@ -123,7 +123,7 @@ class LOVD_Column extends Object {
                       );
         $this->sSortDefault = 'category';
 
-        parent::Object();
+        parent::LOVD_Object();
     }
 
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-06
- * Modified    : 2011-02-24
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-02
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -65,7 +65,6 @@ class REST2SOAP {
             return array('inputXML' => $sInputXML, 'outputXML' => $aOutputSOAP[0] . $aOutputSOAP[1]);
         }
         // Parse output
-        unset($aOutputSOAP[0]);
         $aOutput = $this->parseOutput($sModuleName, implode("\n", $aOutputSOAP));
         // Check output
         return $aOutput;
