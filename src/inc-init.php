@@ -86,7 +86,7 @@ define('AJAX_DATA_ERROR', '9');
 
 $aRequired =
          array(
-                'PHP' => '4.3.0',
+                'PHP'   => '4.3.0',
                 'MySQL' => '4.1',
               );
 
@@ -97,11 +97,11 @@ $_SETT = array(
                           ),
                 'user_levels' =>
                      array(
-                            LEVEL_ADMIN => 'Database administrator',
-                            LEVEL_MANAGER => 'LOVD manager',
-                            LEVEL_CURATOR => 'Curator',
+                            LEVEL_ADMIN        => 'Database administrator',
+                            LEVEL_MANAGER      => 'LOVD manager',
+                            LEVEL_CURATOR      => 'Curator',
                             LEVEL_COLLABORATOR => 'Collaborator',
-                            LEVEL_SUBMITTER => 'Submitter',
+                            LEVEL_SUBMITTER    => 'Submitter',
                           ),
 /*
 DMD_SPECIFIC
@@ -192,18 +192,18 @@ DMD_SPECIFIC
                             // http://www.ncbi.nlm.nih.gov/genome/guide/human/release_notes.html
                             'hg18' =>
                                      array(
-                                            'ncbi_name' => 'Build 36.1',
+                                            'ncbi_name'      => 'Build 36.1',
                                             'ncbi_sequences' =>
                                                      array(
-                                                            '1' => 'NC_000001.9',
-                                                            '2' => 'NC_000002.10',
-                                                            '3' => 'NC_000003.10',
-                                                            '4' => 'NC_000004.10',
-                                                            '5' => 'NC_000005.8',
-                                                            '6' => 'NC_000006.10',
-                                                            '7' => 'NC_000007.12',
-                                                            '8' => 'NC_000008.9',
-                                                            '9' => 'NC_000009.10',
+                                                            '1'  => 'NC_000001.9',
+                                                            '2'  => 'NC_000002.10',
+                                                            '3'  => 'NC_000003.10',
+                                                            '4'  => 'NC_000004.10',
+                                                            '5'  => 'NC_000005.8',
+                                                            '6'  => 'NC_000006.10',
+                                                            '7'  => 'NC_000007.12',
+                                                            '8'  => 'NC_000008.9',
+                                                            '9'  => 'NC_000009.10',
                                                             '10' => 'NC_000010.9',
                                                             '11' => 'NC_000011.8',
                                                             '12' => 'NC_000012.10',
@@ -217,24 +217,24 @@ DMD_SPECIFIC
                                                             '20' => 'NC_000020.9',
                                                             '21' => 'NC_000021.7',
                                                             '22' => 'NC_000022.9',
-                                                            'X' => 'NC_000023.9',
-                                                            'Y' => 'NC_000024.8',
+                                                            'X'  => 'NC_000023.9',
+                                                            'Y'  => 'NC_000024.8',
                                                           ),
                                           ),
                             'hg19' =>
                                      array(
-                                            'ncbi_name' => 'GRCh37',
+                                            'ncbi_name'      => 'GRCh37',
                                             'ncbi_sequences' =>
                                                      array(
-                                                            '1' => 'NC_000001.10',
-                                                            '2' => 'NC_000002.11',
-                                                            '3' => 'NC_000003.11',
-                                                            '4' => 'NC_000004.11',
-                                                            '5' => 'NC_000005.9',
-                                                            '6' => 'NC_000006.11',
-                                                            '7' => 'NC_000007.13',
-                                                            '8' => 'NC_000008.10',
-                                                            '9' => 'NC_000009.11',
+                                                            '1'  => 'NC_000001.10',
+                                                            '2'  => 'NC_000002.11',
+                                                            '3'  => 'NC_000003.11',
+                                                            '4'  => 'NC_000004.11',
+                                                            '5'  => 'NC_000005.9',
+                                                            '6'  => 'NC_000006.11',
+                                                            '7'  => 'NC_000007.13',
+                                                            '8'  => 'NC_000008.10',
+                                                            '9'  => 'NC_000009.11',
                                                             '10' => 'NC_000010.10',
                                                             '11' => 'NC_000011.9',
                                                             '12' => 'NC_000012.11',
@@ -248,8 +248,8 @@ DMD_SPECIFIC
                                                             '20' => 'NC_000020.10',
                                                             '21' => 'NC_000021.8',
                                                             '22' => 'NC_000022.10',
-                                                            'X' => 'NC_000023.10',
-                                                            'Y' => 'NC_000024.9',
+                                                            'X'  => 'NC_000023.10',
+                                                            'Y'  => 'NC_000024.9',
                                                           ),
                                           ),
                           ),
@@ -433,6 +433,11 @@ $_TABLES =
                 'TABLE_VARIANT_COLS' => TABLEPREFIX . '_variant_columns',
                 'TABLE_PHENOTYPE_COLS' => TABLEPREFIX . '_phenotype_columns',
               );
+
+// FIXME; remove later when the FIXME before this one will be removed.
+if ((int) str_replace('3.0-pre-', '', $_SETT['system']['version']) > 14) {
+    unset($_TABLES['TABLE_VARIANT_COLS'], $_TABLES['TABLE_PHENOTYPE_COLS']);
+}
 
 foreach ($_TABLES as $sConst => $sTable) {
     define($sConst, $sTable);

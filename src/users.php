@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-03
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -96,9 +96,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
         }
         $sNavigation .= ' | <A href="users/' . $nID . '?' . ($zData['locked']? 'un' : '') . 'lock">' . ($zData['locked']? 'Unl' : 'L') . 'ock user</A>';
         $sNavigation .= ' | <A href="users/' . $nID . '?delete">Delete user</A>';
-    } elseif ($_AUTH['level'] == LEVEL_ADMIN && $_AUTH['id'] != $nID) {
-        // Admins have to be able to delete other admins from the system one of the admins stop working on the LOVD installation. 
-        $sNavigation = '<A href="users/' . $nID . '?delete">Delete user</A>';
     } elseif ($_AUTH['id'] == $nID) {
         // Viewing himself!
         $sNavigation = '<A href="users/' . $nID . '?edit">Update your registration</A>';
@@ -454,7 +451,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             // Neccessary level depends on level of user. Special case.
             list($nLevel) = mysql_fetch_row(lovd_queryDB('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
             // Simple solution: if level is not lower than what you have, you're out.
-            if ($nLevel >= $_AUTH['level'] && $nLevel != LEVEL_ADMIN) {
+            if ($nLevel >= $_AUTH['level']) {
                 // This is a hack-attempt.
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
@@ -472,28 +469,17 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             exit;
         }
     
-        require ROOT_PATH . 'class/object_users.php';
-        $_DATA = new LOVD_User();
-        $zData = $_DATA->loadEntry($nID);
         require ROOT_PATH . 'inc-lib-form.php';
 
         if (count($_POST) > 1) {
             lovd_errorClean();
 
-            if (empty($_POST['password_1']) || empty($_POST['password_2'])) {
-                lovd_errorAdd('password_1', 'Please fill in both the \'Enter your password for authorization\' and \'Password (confirm)\' fields.');
-                lovd_errorAdd('password_2', '');
+            if (empty($_POST['password_1'])) {
+                lovd_errorAdd('password_1', 'Please fill in the \'Enter your password for authorization\' field.');
             }
             
-            if ($_POST['password_1'] != $_POST['password_2']) {
-                lovd_errorAdd('password_1', 'The entered passwords did not match!');
-                lovd_errorAdd('password_2', '');
-            }
-
-            // User had to enter his/her password for authorization.
             if ($_POST['password_1'] && md5($_POST['password_1']) != $_AUTH['password']) {
-                lovd_errorAdd('password_1', 'Please enter your correct password for authorization in both fields.');
-                lovd_errorAdd('password_2', '');
+                lovd_errorAdd('password_1', 'Please enter your correct password for authorization.');
             }
             
             if (!lovd_error()) {
@@ -511,7 +497,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                 exit;
             } else {
                 // Because we're sending the data back to the form, I need to unset the password fields!
-                unset($_POST['password_1'], $_POST['password_2']);
+                unset($_POST['password_1']);
             }
         }
     }
@@ -525,13 +511,21 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
         
         if (count($_POST) > 1) {
             lovd_errorClean();
-        
-            if (empty($_POST['password_3'])) {
-                lovd_errorAdd('password_3', 'Please fill in the \'Enter your password for authorization\' field.');
+            
+            if (empty($_POST['password_2']) || empty($_POST['password_3'])) {
+                lovd_errorAdd('password_2', 'Please fill in both the \'Enter your password for authorization\' and \'Password (confirm)\' fields.');
+                lovd_errorAdd('password_3', '');
             }
             
-            if ($_POST['password_3'] && md5($_POST['password_3']) != $_AUTH['password']) {
-                lovd_errorAdd('password_3', 'Please enter your correct password for authorization.');
+            if ($_POST['password_2'] != $_POST['password_3']) {
+                lovd_errorAdd('password_2', 'The entered passwords did not match!');
+                lovd_errorAdd('password_3', '');
+            }
+
+            // User had to enter his/her password for authorization.
+            if ($_POST['password_2'] && md5($_POST['password_2']) != $_AUTH['password']) {
+                lovd_errorAdd('password_2', 'Please enter your correct password for authorization in both fields.');
+                lovd_errorAdd('password_3', '');
             }
             
             if (!lovd_error()) {
@@ -562,11 +556,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
             } else {
-                unset($_POST['password_3']);
+                unset($_POST['password_2'], $_POST['password_3']);
             }
         }
             
         require ROOT_PATH . 'inc-top.php';
+        require ROOT_PATH . 'class/object_users.php';
+        $_DATA = new LOVD_User();
+        $zData = $_DATA->loadEntry($nID);
+        
         lovd_printHeader(PAGE_TITLE);
 
         lovd_errorPrint();
@@ -585,7 +583,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
               '      </PRE>' . "\n");
               
         if ($nGenes || $nPats || $nVars) {
-            lovd_showInfoTable('FINAL WARNING! If you delete this user, you will loose all the references to this person in the data!', 'warning');
+            lovd_showInfoTable('FINAL WARNING! If you delete this user, you will lose all the references to this person in the data!', 'warning');
         }
         
         // Table.
@@ -594,10 +592,13 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
         // Array which will make up the form table.
         $aForm = array_merge(
                      array(
-                     array('POST', '', '', '', '40%', '14', '60%'),
-                     array('Enter your password for authorization', '', 'password', 'password_3', 20),
-                     array('', '', 'submit', 'Delete user entry'),
-                   ));
+                            array('POST', '', '', '', '40%', '14', '60%'),
+                            array('Deleting user information entry', '', 'print', $zData['id'] . ' - ' . $zData['name'] . ' (' . $_SETT['user_levels'][$zData['level']] . ')'),
+                            'skip',
+                            array('Enter your password for authorization', '', 'password', 'password_2', 20),
+                            array('Password (confirm)', '', 'password', 'password_3', 20),
+                            array('', '', 'submit', 'Delete user entry'),
+                          ));
         lovd_viewForm($aForm);
         
         print('        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
@@ -623,15 +624,12 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
     // Array which will make up the form table.
     $aForm = array_merge(
-                 array(
-                        array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting user information entry', '', 'print', $zData['id'] . ' (' . $zData['name'] . ')'),
-                        'skip',
-                        array('Enter your password for authorization', '', 'password', 'password_1', 20),
-                        array('Password (confirm)', '', 'password', 'password_2', 20),
-                        array('', '', 'submit', 'Delete user entry'),
-                      ));
-    lovd_viewForm($aForm);
+                     array(
+                     array('POST', '', '', '', '40%', '14', '60%'),
+                     array('Enter your password for authorization', '', 'password', 'password_1', 20),
+                     array('', '', 'submit', 'Delete user entry'),
+                   ));
+        lovd_viewForm($aForm);
     
     print('    <INPUT name="workID" type="hidden" value="' . $_POST['workID'] . '">');
     print('</FORM>' . "\n\n");

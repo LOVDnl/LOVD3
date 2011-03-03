@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-22
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-03
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -115,7 +115,7 @@ if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
     }
 
     print('      The installation of LOVD consists of ' . (count($aInstallSteps) - 1) . ' simple steps.
-      This installer will create the LOVD tables in the MySQL database, create the Administrator account and will help you configuring LOVD. Installation and initial configuration of LOVD should be simple for a relatively experienced computer user.<BR>
+      This installer will create the LOVD tables in the MySQL database, create the Administrator account and will help you configure LOVD. Installation and initial configuration of LOVD should be simple for a relatively experienced computer user.<BR>
       <BR>
       The installation progress bar at the top of the screen shows how far you are in the installation process. The installation steps are shown at the left of the screen.<BR>
       <BR>' . "\n\n");
@@ -508,7 +508,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
 
         if (!lovd_error()) {
             // Store information and go to next page.
-            $q = lovd_queryDB('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['logo_uri'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']));
+            $q = lovd_queryDB('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']));
             if (!$q) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .
@@ -563,7 +563,8 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
                       ));
     lovd_viewForm($aForm);
 
-    print('</FORM>' . "\n\n");
+    print('    <INPUT name="mutalyzer_soap_url" type="hidden">' . "\n" .
+          '</FORM>' . "\n\n");
 
     require 'inc-bot.php';
     exit;

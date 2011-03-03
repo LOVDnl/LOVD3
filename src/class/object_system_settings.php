@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-03
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -97,7 +97,12 @@ class LOVD_SystemSetting extends LOVD_Object {
             // FIXME; this is probably not the best way of doing this...
             $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
         }
-
+        
+        // FIXME; Like above, not the best solution, but gets the job done for now.
+        if (empty($aData['mutalyzer_soap_url'])) {
+            $_POST['mutalyzer_soap_url'] = 'http://www.mutalyzer.nl/2.0/services';
+        }
+        
         // SSL check.
         if (!empty($_POST['use_ssl']) && !SSL) {
             lovd_errorAdd('use_ssl', 'You\'ve selected to force the use of SSL, but SSL is not currently activated for this session. To force SSL, I must be sure it\'s possible to approach LOVD through an SSL connection (use <A href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . ($_SERVER['QUERY_STRING']? '?' . str_replace('&sent=true', '', $_SERVER['QUERY_STRING']) : '') . '" target="_blank">https://</A> in stead of http://).');
@@ -197,6 +202,7 @@ class LOVD_SystemSetting extends LOVD_Object {
         $_POST['refseq_build'] = 'hg19';
         $_POST['api_feed_history'] = 3;
         $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
+        $_POST['mutalyzer_soap_url'] = 'http://www.mutalyzer.nl/2.0/services';
         $_POST['send_stats'] = 1;
         $_POST['include_in_listing'] = 1;
         $_POST['allow_submitter_mods'] = 1;
