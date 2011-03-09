@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-09
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -341,8 +341,7 @@ class LOVD_User extends LOVD_Object {
             unset($this->aFormData['username']);
             $this->aFormData['passwd'] = str_replace('Password', 'New password (optional)', $this->aFormData['passwd']);
             $this->aFormData['passwd_confirm'] = str_replace('Password (confirm)', 'New password (confirm, optional)', $this->aFormData['passwd_confirm']);
-        }
-        if (!$bInstall && ACTION == 'change_password') {
+        } elseif (ACTION == 'change_password' && !$bInstall) {
             // Sorry, seems easier to just redefine the whole thing.
             $this->aFormData =
                  array(

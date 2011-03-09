@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-03-02
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-08
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -239,7 +239,7 @@ if (ACTION == 'create') {
             
             lovd_printHeader(PAGE_TITLE);
 
-            print('<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id= "selectedGene" method="post">' . "\n" .
+            print('<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id="selectedGene" method="post">' . "\n" .
                   '    <TABLE border="0" cellpadding="0" cellspacing="1" width="760">'. "\n" .
                   '        <INPUT type="hidden" name="geneSymbol" value="' . $sGeneID . '">' . "\n" .
                   '        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
@@ -892,7 +892,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             }
 
             // 2009-11-11; 2.0-23; The c. -> g. mapping fields are mandatory if the database is using a GenBank file.
-            // FIXME; maybe before these checks, check if the field is empty but $_POST['genbank_uri'] contains useful information... then copy, in stead of complain.
+            // FIXME; maybe before these checks, check if the field is empty but $_POST['genbank_uri'] contains useful information... then copy, instead of complain.
             if (empty($_POST['refseq_genomic'])) {
                 lovd_errorAdd('Please fill in the \'NCBI accession number for the genomic reference sequence\' field.');
             } elseif (!preg_match('/^N(G|C)_[0-9]{6,9}\.[0-9]{1,2}$/', $_POST['refseq_genomic'])) {

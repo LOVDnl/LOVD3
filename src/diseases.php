@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-02-22
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-09
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -358,7 +358,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
 
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /diseases/00001?delete
-    // Drop specific entry.
+    // Delete specific entry.
 
     $nID = $_PATH_ELEMENTS[1];
     define('PAGE_TITLE', 'Delete disease information entry #' . $nID);
@@ -389,9 +389,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             // Query text.
             // This also deletes the entries in gen2dis.
             // FIXME; implement deleteEntry()
-            $sSQL = 'DELETE FROM ' . TABLE_DISEASES . ' WHERE id = ?';
-            $aSQL = array($zData['id']);
-            $q = lovd_queryDB($sSQL, $aSQL, true);
+            lovd_queryDB('DELETE FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($zData['id']), true);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted disease information entry ' . $nID . ' - ' . $zData['symbol'] . ' (' . $zData['name'] . ')');
@@ -423,14 +421,13 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
-    $aForm = array_merge(
-                 array(
-                        array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Deleting disease information entry', '', 'print', $zData['symbol'] . ' (' . $zData['name'] . ')'),
-                        'skip',
-                        array('Enter your password for authorization', '', 'password', 'password', 20),
-                        array('', '', 'submit', 'Delete disease information entry'),
-                      ));
+    $aForm = array(
+                    array('POST', '', '', '', '50%', '14', '50%'),
+                    array('Deleting disease information entry', '', 'print', $zData['symbol'] . ' (' . $zData['name'] . ')'),
+                    'skip',
+                    array('Enter your password for authorization', '', 'password', 'password', 20),
+                    array('', '', 'submit', 'Delete disease information entry'),
+                  );
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");

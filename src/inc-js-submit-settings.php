@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2010-06-25
- * For LOVD    : 3.0-pre-07
+ * Modified    : 2011-03-08
+ * For LOVD    : 3.0-pre-18
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -44,6 +43,11 @@ if (isset($_GET['check_url'])) {
 }
 
 require ROOT_PATH . 'inc-js-ajax.php';
+
+// If not installed...
+if (!isset($_CONF['location_url'])) {
+    $_CONF['location_url'] = '';
+}
 ?>
 function lovd_checkForm () {
     sMessage = '';

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-02-14
- * For LOVD    : 3.0-pre-16
+ * Modified    : 2011-03-09
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -231,10 +231,15 @@ function lovd_getColumnData ($sTable)
     // Gets and returns the column data for a certain table.
     static $aTableCols = array();
 
+    // Only for tables that actually exist.
+    if (!in_array($sTable, $_TABLES)) {
+        return false;
+    }
+
     if (empty($aTableCols[$sTable])) {
-        $q = mysql_query('SHOW COLUMNS FROM ' . $sTable);
+        $q = lovd_queryDB('SHOW COLUMNS FROM ' . mysql_real_escape_string($sTable));
         if (!$q) {
-            // Table does not exist.
+            // Should never happen!
             return false;
         }
         $aTableCols[$sTable] = array();

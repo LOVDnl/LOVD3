@@ -105,7 +105,7 @@ class LOVD_SystemSetting extends LOVD_Object {
         
         // SSL check.
         if (!empty($_POST['use_ssl']) && !SSL) {
-            lovd_errorAdd('use_ssl', 'You\'ve selected to force the use of SSL, but SSL is not currently activated for this session. To force SSL, I must be sure it\'s possible to approach LOVD through an SSL connection (use <A href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . ($_SERVER['QUERY_STRING']? '?' . str_replace('&sent=true', '', $_SERVER['QUERY_STRING']) : '') . '" target="_blank">https://</A> in stead of http://).');
+            lovd_errorAdd('use_ssl', 'You\'ve selected to force the use of SSL, but SSL is not currently activated for this session. To force SSL, I must be sure it\'s possible to approach LOVD through an SSL connection (use <A href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . ($_SERVER['QUERY_STRING']? '?' . str_replace('&sent=true', '', $_SERVER['QUERY_STRING']) : '') . '" target="_blank">https://</A> instead of http://).');
         }
 
         // XSS attack prevention. Deny input of HTML.
@@ -153,7 +153,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('', '', 'print', '<B>Customize LOVD</B>'),
                         array('', '', 'note', 'Here you can customize the way LOVD looks. We will add new options here later.'),
                         'hr',
-                        array('System logo', 'If you wish to have your custom logo on the top left of every page in stead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.', 'text', 'logo_uri', 40),
+                        array('System logo', 'If you wish to have your custom logo on the top left of every page instead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.', 'text', 'logo_uri', 40),
                         array('', '', 'note', 'Currently, only images already uploaded to the LOVD server are allowed here.'),
                         'hr',
                         'skip',

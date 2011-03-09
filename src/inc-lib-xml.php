@@ -29,7 +29,7 @@
  *
  *************/
 
-function lovd_xml2array($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
+function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
 {
     /*
         Converts a XML file into an array
@@ -103,7 +103,8 @@ function lovd_xml2array($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
         echo 'Please provide valid arguments, $nSkipTags should be an integer!';
         exit;
     }
-    
+
+    // FIXME; "<\?xml encoding=etc" matcht nu niet. Kan er niet makkelijker [^ ]* gebruikt worden?
     if (preg_match("/<\?xml (?U:.+)? encoding='(.+)'/", $sXml, $aMatches)) {
         $sEncoding = strtoupper($aMatches[1]);
     } else {
@@ -172,7 +173,7 @@ function lovd_xml2array($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
 
 
 
-function lovd_getElementFromArray($sPath = '', $aArray = array(), $sType = '')
+function lovd_getElementFromArray ($sPath = '', $aArray = array(), $sType = '')
 {
     // Designed to easily parse the array returned by lovd_xml2array() 
     // Example: "Animal/Cat/favoriteToy[1]" will result in "$aXML['Animal'][0]['c']['Cat'][0]['c']['favoriteToy'][1]"
@@ -219,7 +220,7 @@ function lovd_getElementFromArray($sPath = '', $aArray = array(), $sType = '')
 
 
 
-function lovd_getAllValuesFromArray($sPath = '', $aArray = array())
+function lovd_getAllValuesFromArray ($sPath = '', $aArray = array())
 {
     // Designed to easily parse the array returned by lovd_xml2array() 
     // Will loop through all elements(only current level of specified path) in $aArray and return their value if it is set
@@ -245,7 +246,7 @@ function lovd_getAllValuesFromArray($sPath = '', $aArray = array())
 
 
 
-function lovd_getValueFromElement($sPath = '', $aArray = array())
+function lovd_getValueFromElement ($sPath = '', $aArray = array())
 {
     // Basically a redirect to lovd_getElementFromArray($sPath, $aArray, 'v'), but with less arguments
     
@@ -263,7 +264,7 @@ function lovd_getValueFromElement($sPath = '', $aArray = array())
 
 
 
-function lovd_getAttributesFromElement($sPath = '', $aArray = array())
+function lovd_getAttributesFromElement ($sPath = '', $aArray = array())
 {
     // Basically a redirect to lovd_getElementFromArray($sPath, $aArray, 'a'), but with less arguments
     
@@ -281,7 +282,7 @@ function lovd_getAttributesFromElement($sPath = '', $aArray = array())
 
 
 
-function lovd_getChildFromElement($sPath = '', $aArray = array())
+function lovd_getChildFromElement ($sPath = '', $aArray = array())
 {
     // Basically a redirect to lovd_getElementFromArray($sPath, $aArray, 'c'), but with less arguments
     

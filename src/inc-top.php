@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-09
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -146,19 +146,14 @@ lovd_includeJS(ROOT_PATH . 'inc-js-toggle-visibility.js', 1); // Used on forms a
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">
   <TR>
 <?php
-$aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
-
-if (!is_array($aImage)) {
-    $aImage = @getimagesize(ROOT_PATH . 'gfx/LOVD_logo130x50.jpg');
-    
-    if (!is_array($aImage)) {
-        $aImage = array('130', '50', '', 'width=130 heigth=50');
-        $_CONF['logo_uri'] = '#';
-    }
+if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
+    $_CONF['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
 }
-
+$aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
+if (!is_array($aImage)) {
+    $aImage = array('130', '50', '', 'width="130" heigth="50"');
+}    
 list($nWidth, $nHeight, $sType, $sSize) = $aImage;
-
 print('    <TD width="' . ($nWidth + 20) . '">' . "\n" .
       '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n");
 ?>
@@ -167,7 +162,7 @@ print('    <TD width="' . ($nWidth + 20) . '">' . "\n" .
 $sCurrSymbol = $sCurrGene = '';
 // DMD_SPECIFIC; decide later what will happen here. Only show gene when you're truly working in it? In which case, it's a variable somewhere?
 /*
-// During submission, show the gene we're submitting to in stead of the currently selected gene.
+// During submission, show the gene we're submitting to instead of the currently selected gene.
 if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
     // Fetch gene's info from db... we don't have it anywhere yet.
     list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(mysql_query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = "' . $_POST['gene'] . '"'));

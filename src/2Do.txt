@@ -50,7 +50,7 @@ LOVD 3.0
 
 KNOWN BUGS:
 ===========
-Removing a user does NOT have any security checks!!!
+The user lists viewEntry() and viewList() should know the difference between submitters, collaborators and curators.
 
 Overdenkingen / Kleinere dingen om te doen:
 ===========================================

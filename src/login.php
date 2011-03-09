@@ -56,7 +56,7 @@ if (!empty($_POST)) {
             if ($zUser) {
                 // The user exists, now check account unlocking, locked accounts, successful and unsuccessful logins.
 
-                // In stead of having inc-auth.php stop the user when his IP is not allowed to log in, it's better to do that here.
+                // Instead of having inc-auth.php stop the user when his IP is not allowed to log in, it's better to do that here.
                 if ($zUser['allowed_ip'] && !lovd_validateIP($zUser['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
                     lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') is not in IP allow list for ' . $_POST['username'] . ': "' . $zUser['allowed_ip'] . '"');
                     lovd_errorAdd('', 'Your current IP address does not allow you access using this username.');

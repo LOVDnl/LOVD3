@@ -51,8 +51,8 @@ class LOVD_Variant extends LOVD_Object {
     function LOVD_Variant ()
     {
         // Default constructor.
-        global $_AUTH;
-        global $_PATH_ELEMENTS;
+        global $_AUTH, $_PATH_ELEMENTS;
+
         $sPage = $_PATH_ELEMENTS[0];
         // SQL code for loading an entry for an edit form.
         //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (id)';

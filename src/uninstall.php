@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2011-01-11
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-03-09
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -147,7 +147,7 @@ if (!empty($_POST)) {
             // Does any of these tables exist yet?
             print('Checking LOVD installation...' . "\n");
             $aTables = array();
-            $q = mysql_query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
+            $q = lovd_queryDB('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
             while ($r = mysql_fetch_row($q)) {
                 if (in_array($r[0], $_TABLES)) {
                     $aTables[] = $r[0];
@@ -156,12 +156,13 @@ if (!empty($_POST)) {
             $nTables = count($aTables);
             print('  Found ' . $nTables . '/' . count($_TABLES) . ' tables.' . "\n");
 
+            // FIXME; add more later.
             // General statistics...
             print("\n");
-            list($nUsers) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_USERS));
-            list($nPats) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_PATIENTS));
-            list($nScreenings) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS));
-            list($nVars) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
+            list($nUsers) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS));
+            list($nPats) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS));
+            list($nScreenings) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS));
+            list($nVars) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
             $nGenes = GENE_COUNT;
             print('  Found ' . $nUsers . ' user' . ($nUsers == 1? '' : 's') . '.' . "\n" .
                   '  Found ' . $nPats . ' patient' . ($nPats == 1? '' : 's') . '.' . "\n" .

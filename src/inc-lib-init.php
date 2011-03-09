@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-02-26
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-09
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -226,6 +226,12 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
 
     if (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false) {
         print('<BR>' . "\n\n");
+    }
+
+    // A LOVD-Lib or Query error is always an LOVD bug! (unless MySQL went down)
+    if ($sError == 'LOVD-Lib' || ($sError == 'Query' && strpos($sMessage, 'You have an error in your SQL syntax'))) {
+        $sMessage .= "\n\n" .
+                     'A failed query is usually an LOVD bug. Please report this bug by copying the above text and send it to us by opening a new ticket in our <A href="' . $_SETT['upstream_BTS_URL'] . '" target="_blank">bug tracking system</A>.';
     }
 
     // Display error.
@@ -558,8 +564,10 @@ function lovd_queryDB ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = fals
     }
     $q = mysql_query($sQuery);
     if (!$q && $bHalt) {
+        $sError = mysql_error(); // Save the mysql_error before it disappears.
+        lovd_queryDB('ROLLBACK'); // In case we were in a transaction.
         // lovd_queryError() will call lovd_displayError() which will halt the system.
-        lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sQuery, mysql_error());
+        lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sQuery, $sError);
     }
     return $q;
 }

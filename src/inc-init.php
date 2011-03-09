@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-09
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -169,6 +169,7 @@ DMD_SPECIFIC
                             9 => '<SPAN style="color:red;"><B>Critical</B></SPAN>',
                           ),
                 'upstream_URL' => 'http://www.LOVD.nl/',
+                'upstream_BTS_URL' => 'https://eu.liacs.nl/projects/LOVD3/newticket',
                 'wikiprofessional_iprange' => '131.174.88.0-255',
                 'list_sizes' =>
                      array(
@@ -428,16 +429,7 @@ $_TABLES =
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
                 'TABLE_HITS' => TABLEPREFIX . '_hits',
-
-                // FIXME; remove later. Has been removed in 3.0-pre-14.
-                'TABLE_VARIANT_COLS' => TABLEPREFIX . '_variant_columns',
-                'TABLE_PHENOTYPE_COLS' => TABLEPREFIX . '_phenotype_columns',
               );
-
-// FIXME; remove later when the FIXME before this one will be removed.
-if ((int) str_replace('3.0-pre-', '', $_SETT['system']['version']) > 14) {
-    unset($_TABLES['TABLE_VARIANT_COLS'], $_TABLES['TABLE_PHENOTYPE_COLS']);
-}
 
 foreach ($_TABLES as $sConst => $sTable) {
     define($sConst, $sTable);
@@ -473,10 +465,10 @@ ini_set('default_charset','UTF-8');
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
 // Read system-wide configuration from the database.
-$_CONF = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_CONFIG));
+$_CONF = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_CONFIG));
 
 // Read LOVD status from the database.
-$_STAT = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_STATUS));
+$_STAT = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_STATUS));
 
 if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) || !isset($_STAT['version']) || !preg_match('/^([1-9]\.[0-9](\.[0-9])?)\-([0-9a-z-]{2,11})$/', $_STAT['version'], $aRegsVersion)) {
     // We couldn't get the installation's configuration or status. Are we properly installed, then?
@@ -488,7 +480,7 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
 
     // Are we installed properly?
     $aTables = array();
-    $q = mysql_query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
+    $q = lovd_queryDB('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
     while ($r = mysql_fetch_row($q)) {
         if (in_array($r[0], $_TABLES)) {
             $aTables[] = $r[0];

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-09
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -577,7 +577,7 @@ class LOVD_Object {
         // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
         // Last checked 2010-01-25, by Ivo Fokkema.
         lovd_queryDB('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
-        lovd_queryDB('BEGIN TRANSACTION');
+        lovd_queryDB('START TRANSACTION');
 
         // Run the actual query.
         $q = lovd_queryDB($sSQL, $aArguments);

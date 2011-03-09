@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-03
+ * Modified    : 2011-03-09
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -234,7 +234,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     // Do any of these tables exist yet?
     $aTablesMatched = array();
     $aTablesFound = array();
-    $q = mysql_query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
+    $q = lovd_queryDB('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
     while ($r = mysql_fetch_row($q)) {
         $aTablesMatched[] = $r[0];
         if (in_array($r[0], $_TABLES)) {
@@ -483,7 +483,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
 
 
 
-if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_CONFIG))) {
+if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE_CONFIG))) {
     // Step 3: Configuring general LOVD system settings.
     if (@mysql_num_rows(lovd_queryDB('SHOW TABLES LIKE ?', array(TABLE_CONFIG))) != 1) {
         // Didn't finish previous step correctly.
@@ -549,7 +549,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
     // Tooltip JS code.
     lovd_includeJS('../inc-js-tooltip.php');
     // Allow checking the database URL.
-    lovd_includeJS('inc-js-submit-settings.php');
+    lovd_includeJS('../inc-js-submit-settings.php');
 
     // Table.
     print('      <FORM action="install/?step=' . $_GET['step'] . '&amp;sent=true" method="post">' . "\n");
@@ -563,8 +563,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
                       ));
     lovd_viewForm($aForm);
 
-    print('    <INPUT name="mutalyzer_soap_url" type="hidden">' . "\n" .
-          '</FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require 'inc-bot.php';
     exit;
@@ -574,14 +573,14 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
 
 
 
-if ($_GET['step'] == 4 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_MODULES))) {
+if ($_GET['step'] == 4 && !@mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE_MODULES))) {
     // Step 4: Configuring LOVD modules.
-    if (@mysql_num_rows(mysql_query('SHOW TABLES LIKE "' . TABLE_MODULES . '"')) != 1) {
+    if (@mysql_num_rows(lovd_queryDB('SHOW TABLES LIKE ?', array(TABLE_MODULES))) != 1) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 2));
         exit;
     }
-    if (!@mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_CONFIG))) {
+    if (!@mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_CONFIG))) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 1));
         exit;
@@ -723,7 +722,7 @@ if ($_GET['step'] == 4 && !@mysql_num_rows(mysql_query('SELECT * FROM ' . TABLE_
 
 if ($_GET['step'] == 5) {
     // Step 5: Done.
-    if (!@mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_CONFIG))) {
+    if (!@mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_CONFIG))) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 2));
         exit;

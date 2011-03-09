@@ -57,7 +57,7 @@ class LOVD_Gene extends LOVD_Object {
         $this->sSQLLoadEntry = 'SELECT g.*, GROUP_CONCAT(DISTINCT g2d.diseaseid ORDER BY g2d.diseaseid SEPARATOR ";") AS active_diseases_ FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) WHERE g.id = ? GROUP BY g.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, uc.name AS created_by, ue.name AS edited_by, uu.name AS updated_by, count(DISTINCT vot.id) AS variants';
+        $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, uc.name AS created_by_, ue.name AS edited_by_, uu.name AS updated_by_, count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) LEFT JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
 
@@ -428,11 +428,11 @@ class LOVD_Gene extends LOVD_Object {
             }
             
             $zData['created_date_'] = substr($zData['created_date'], 0, 10);
-            $zData['created_by_'] = (!empty($zData['created_by'])? $zData['created_by'] : 'N/A');
+            $zData['created_by_'] = (!empty($zData['created_by'])? $zData['created_by_'] : 'N/A');
             $zData['updated_date_'] = (!empty($zData['updated_date'])? $zData['updated_date'] : 'N/A');
-            $zData['updated_by_'] = (!empty($zData['updated_by'])? $zData['updated_by'] : 'N/A');
+            $zData['updated_by_'] = (!empty($zData['updated_by'])? $zData['updated_by_'] : 'N/A');
             $zData['edited_date_'] = (!empty($zData['edited_date'])? $zData['edited_date'] : 'N/A');
-            $zData['edited_by_'] = (!empty($zData['edited_by'])? $zData['edited_by'] : 'N/A');
+            $zData['edited_by_'] = (!empty($zData['edited_by'])? $zData['edited_by_'] : 'N/A');
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID);

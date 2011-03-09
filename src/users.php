@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-03
+ * Modified    : 2011-03-09
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -215,26 +215,23 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // Require valid user.
     lovd_requireAUTH();
 
-    // Require special clearance, if user is not editing himself.
-    if ($nID != $_AUTH['id']) {
-        // Neccessary level depends on level of user. Special case.
-        list($nLevel) = mysql_fetch_row(lovd_queryDB('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
-        // Simple solution: if level is not lower than what you have, you're out.
-        if ($nLevel >= $_AUTH['level']) {
-            // This is a hack-attempt.
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
-            lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$nLevel] . ')');
-            lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-        }
-    }
-
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
+
+    // Require special clearance, if user is not editing himself.
+    // Neccessary level depends on level of user. Special case.
+    if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
+        // Simple solution: if level is not lower than what you have, you're out.
+        // This is a hack-attempt.
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
 
     if (!empty($_POST)) {
         lovd_errorClean();
@@ -335,26 +332,23 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // Require valid user.
     lovd_requireAUTH();
 
-    // Require special clearance, if user is not editing himself.
-    if ($nID != $_AUTH['id']) {
-        // Neccessary level depends on level of user. Special case.
-        list($nLevel) = mysql_fetch_row(lovd_queryDB('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
-        // Simple solution: if level is not lower than what you have, you're out.
-        if ($nLevel >= $_AUTH['level']) {
-            // This is a hack-attempt.
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
-            lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$nLevel] . ')');
-            lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-        }
-    }
-
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
+
+    // Require special clearance, if user is not editing himself.
+    // Neccessary level depends on level of user. Special case.
+    if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
+        // Simple solution: if level is not lower than what you have, you're out.
+        // This is a hack-attempt.
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
 
     if (!empty($_POST)) {
         lovd_errorClean();
@@ -415,6 +409,185 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                  array(
                     array('', '', 'submit', 'Change password'),
                       ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+    // URL: /users/00001?delete
+    // Delete a specific user.
+
+    $nID = $_PATH_ELEMENTS[1];
+    define('PAGE_TITLE', 'Delete user account #' . $nID);
+    define('LOG_EVENT', 'UserDelete');
+
+    // Require valid user.
+    lovd_requireAUTH();
+
+    require ROOT_PATH . 'class/object_users.php';
+    $_DATA = new LOVD_User();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    // Require special clearance, user must be of higher level (and therefore automatically cannot delete himself).
+    if ($zData['level'] >= $_AUTH['level']) {
+        // Simple solution: if level is not lower than what you have, you're out.
+        // This is a hack-attempt.
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_writeLog('Error', 'HackAttempt', 'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
+
+    // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
+    // Find curated genes and see if they're alone.
+    $q = lovd_queryDB('SELECT DISTINCT geneid FROM lovd_v3_users2genes WHERE geneid NOT IN (SELECT DISTINCT geneid FROM lovd_v3_users2genes WHERE userid != ? AND allow_edit = 1)', array($zData['id']), true);
+    $aCuratedGenes = array();
+    while ($r = mysql_fetch_row($q)) {
+        // Gene has no curator, and user is going to be deleted!
+        $aCuratedGenes[] = $r[0];
+    }
+
+    // Define this here, since it's repeated.
+    // Array which will make up the form table.
+    $aForm = array(
+                    array('POST', '', '', '', '40%', '14', '60%'),
+                    array('Deleting user', '', 'print', '<SPAN style="font-family: monospace;"><I>' . $zData['username'] . '</I></SPAN>, ' . $zData['name'] . ' (' . $_SETT['user_levels'][$zData['level']] . ')'),
+                    // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
+                    (!count($aCuratedGenes)? false : 
+                    array('&nbsp;', '', 'print', '<B>This user is the only curator of ' . count($aCuratedGenes) . ' gene' . (count($aCuratedGenes) == 1? '' : 's') . ': ' . implode(', ', $aCuratedGenes) . '. You will become the curator of ' . (count($aCuratedGenes) == 1? 'this gene' : 'these genes') . ' once this user is deleted.</B>')),
+                    'skip',
+                    array('Enter your password for authorization', '', 'password', 'password', 20),
+                    array('', '', 'submit', 'Delete user'),
+                  );
+
+
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        // Mandatory fields.
+        if (!isset($_GET['confirm'])) {
+            // User had to enter his/her password for authorization.
+            if (md5($_POST['password']) != $_AUTH['password']) {
+                lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+            }
+        }
+
+        if (!lovd_error()) {
+            if (isset($_GET['confirm'])) {
+                // User had to enter his/her password for authorization.
+                if (md5($_POST['password']) != $_AUTH['password']) {
+                    lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+                }
+
+                if (!lovd_error()) {
+                    // First, make the current user curator for the genes about to be abandoned by this user.
+                    lovd_queryDB('START TRANSACTION');
+                    if ($aCuratedGenes) {
+                        lovd_queryDB('UPDATE ' . TABLE_CURATES . ' SET userid = ? WHERE userid = ? AND geneid IN (?' . str_repeat(', ?', count($aCuratedGenes) - 1) . ')', array_merge(array($_AUTH['id'], $nID), $aCuratedGenes), true);
+                    }
+
+                    // Query text.
+                    // This also deletes the entries in TABLE_CURATES.
+                    // FIXME; implement deleteEntry()
+                    lovd_queryDB('DELETE FROM ' . TABLE_USERS . ' WHERE id = ?', array($zData['id']), true);
+                    lovd_queryDB('COMMIT');
+
+                    // Write to log...
+                    lovd_writeLog('Event', LOG_EVENT, 'Deleted user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
+
+                    // Thank the user...
+                    header('Refresh: 3; url=' . lovd_getInstallURL() . 'users');
+
+                    require ROOT_PATH . 'inc-top.php';
+                    lovd_printHeader(PAGE_TITLE);
+                    lovd_showInfoTable('Successfully deleted the user account!', 'success');
+
+                    require ROOT_PATH . 'inc-bot.php';
+                    exit;
+
+                } else {
+                    // Because we're sending the data back to the form, I need to unset the password fields!
+                    unset($_POST['password']);
+                }
+            } else {
+                // Because we're sending the data back to the form, I need to unset the password fields!
+                unset($_POST['password']);
+            }
+
+
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+
+            // FIXME; extend this later.
+            list($nLogs) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID)));
+            list($nCurates) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($nID)));
+            list($nPats) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
+            list($nScreenings) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
+            list($nVars) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
+            list($nGenes) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE created_by = ? OR edited_by = ?', array($nID, $nID)));
+
+            lovd_showInfoTable('<B>The user you are about to delete has the following references to data in this installation:</B><BR>' .
+                               $nLogs . ' log entr' . ($nLogs == 1? 'y' : 'ies') . ' will be deleted,<BR>' .
+                               $nCurates . ' gene' . ($nCurates == 1? '' : 's') . ' will have this user removed as curator,<BR>' . 
+                               $nPats . ' patient' . ($nPats == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
+                               $nScreenings . ' screening' . ($nScreenings == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
+                               $nVars . ' variant' . ($nVars == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
+                               $nGenes . ' gene' . ($nGenes == 1? '' : 's') . ' are created by or last edited by this user (you will no longer be able to see that).', 'information');
+
+            if ($nCurates || $nPats || $nScreenings || $nVars || $nGenes) {
+                lovd_showInfoTable('<B>Final warning!</B> If you delete this user, all log entries related to this person will be deleted and all references to this person in the data will be removed!', 'warning');
+            }
+
+            lovd_errorPrint();
+
+            // Tooltip JS code.
+            lovd_includeJS('inc-js-tooltip.php');
+
+            // Table.
+            print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '&confirm" method="post">' . "\n");
+
+            // $aForm is repeated, and therefore defined in the beginning of this code block.
+            lovd_viewForm($aForm);
+
+            print('</FORM>' . "\n\n");
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_showInfoTable('<B>Warning!</B> If you delete this user, all log entries related to this person will be deleted and all references to this person in the data will be removed! Such references include data ownership and information about who created or edited certain content.', 'warning');
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+
+    // $aForm is repeated, and therefore defined in the beginning of this code block.
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
@@ -715,155 +888,6 @@ lovd_requireAUTH(LEVEL_MANAGER);
     // FIXME; wasn't this for the menu that was never implemented?
     $sAction = (!empty($_GET['return'])? $_GET['return'] . (isset($_GET[$_GET['return']])? '&' . $_GET['return'] . '=' . $_GET[$_GET['return']] : ''): 'view_all');
     header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=' . $sAction);
-    exit;
-}
-
-
-
-
-
-if ($_GET['action'] == 'delete' && is_numeric($_GET['delete'])) {
-    // Delete specific entry.
-
-// Require manager clearance.
-lovd_requireAUTH(LEVEL_MANAGER);
-
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = "' . $_GET['drop'] . '"'));
-    if (!$zData) {
-        // Wrong ID, apparently.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_users_manage', 'LOVD Setup - Manage authorized users');
-        print('      No such ID!<BR>' . "\n");
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
-    if ($zData['level'] >= $_AUTH['level']) {
-        // This is a hack-attempt.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_users_manage', 'LOVD Setup - Manage authorized users');
-        lovd_writeLog('Error', 'HackAttempt', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') tried to drop ' . $zData['username'] . ' (' . mysql_real_escape_string($zData['name']) . ')');
-        print('      Hack Attempt.<BR>' . "\n");
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
-    // 2008-07-16; 2.0-09; Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
-    // Find curated genes and see if they're alone.
-    $q = mysql_query('SELECT t1.symbol FROM ' . TABLE_CURATES . ' AS t1 LEFT OUTER JOIN ' . TABLE_CURATES . ' AS t2 ON (t1.symbol = t2.symbol AND t1.id != t2.userid) WHERE t1.id = "' . $zData['id'] . '" AND t2.userid IS NULL');
-    $aGenesCurate = array();
-    while ($r = mysql_fetch_row($q)) {
-        // Gene has no curator, and user is going to be deleted!
-        $aGenesCurate[] = $r[0];
-    }
-
-    // Require form functions.
-    require ROOT_PATH . 'inc-lib-form.php';
-
-    if (isset($_GET['sent'])) {
-        lovd_errorClean();
-
-        // Mandatory fields.
-        $aCheck =
-                 array(
-                        'password' => 'Enter your password for authorization',
-                      );
-
-        foreach ($aCheck as $key => $val) {
-            if (empty($_POST[$key])) {
-                lovd_errorAdd($key, 'Please fill in the \'' . $val . '\' field.');
-            }
-        }
-
-        // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
-            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
-
-        if (!lovd_error()) {
-            // Query text; clean curator associations first.
-            $sQ = 'DELETE FROM ' . TABLE_CURATES . ' WHERE userid = "' . $zData['id'] . '"';
-            $q = mysql_query($sQ);
-            if (!$q) {
-                lovd_dbFout('UserDrop', $sQ, mysql_error(), false);
-            }
-
-            // 2008-07-16; 2.0-09; Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
-            // Now check if we need to make the current user curator of some gene(s).
-            if (count($aGenesCurate)) {
-                foreach ($aGenesCurate as $sGene) {
-                    $sQ = 'INSERT INTO ' . TABLE_CURATES . ' VALUES ("' . $_AUTH['id'] . '", "' . mysql_real_escape_string($sGene) . '")';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        lovd_dbFout('UserDrop', $sQ, mysql_error(), false);
-                    }
-                }
-            }
-
-            // Query text.
-            $sQ = 'UPDATE ' . TABLE_USERS . ' SET deleted = 1 WHERE id = "' . $zData['id'] . '"';
-
-            $q = mysql_query($sQ);
-            if (!$q) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_users_manage', 'LOVD Setup - Manage authorized users');
-                lovd_dbFout('UserDrop', $sQ, $sError);
-            }
-
-            // Write to log...
-            lovd_writeLog('Event', 'UserDrop', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully deleted user ' . $zData['username'] . ' (' . mysql_real_escape_string($zData['name']) . ')');
-
-            // Thank the user...
-            header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all');
-
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader('setup_users_manage', 'LOVD Setup - Manage authorized users');
-            print('      Successfully deleted user ' . $zData['name'] . '!<BR><BR>' . "\n\n");
-
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-
-        } else {
-            // Errors, so the whole lot returns to the form.
-            lovd_magicUnquoteAll();
-
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
-        }
-    }
-
-
-
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader('setup_users_manage', 'LOVD Setup - Manage authorized users');
-
-    lovd_errorPrint();
-
-    // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . $zData['id'] . '&amp;sent=true" method="post">' . "\n");
-
-    // Array which will make up the form table.
-    $aForm = array(
-                    array('POST', '', '', '50%', '50%'),
-                    array('Deleting user', 'print', $zData['username'] . ' (' . $zData['name'] . ')'),
-                  );
-    // 2008-07-16; 2.0-09; Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
-    if (count($aGenesCurate)) {
-        $aForm[] = array('&nbsp;', 'print', '<B>This user is the only curator of ' . count($aGenesCurate) . ' gene' . (count($aGenesCurate) == 1? '' : 's') . ': ' . implode(', ', $aGenesCurate) . '. You will become the curator of ' . (count($aGenesCurate) == 1? 'this gene' : 'these genes') . ' once this user is deleted.</B>');
-    }
-    $aForm = array_merge(
-            $aForm,
-             array(
-                    'skip',
-                    array('Enter your password for authorization', 'password', 'password', 20),
-                    array('', 'submit', 'Delete user'),
-                  ));
-    lovd_viewForm($aForm);
-
-    print('</FORM>' . "\n\n");
-
-    require ROOT_PATH . 'inc-bot.php';
     exit;
 }
 *///////////////////////////////////////////////////////////////////////////////

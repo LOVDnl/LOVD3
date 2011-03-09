@@ -105,16 +105,21 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
     $aTableInfo = lovd_getTableInfoByCategory($zData['category']);
 
     $sNavigation = '';
-    if ($_AUTH['level'] >= LEVEL_MANAGER) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
+    if ($_AUTH['level'] >= LEVEL_MANAGER || ($aTableInfo['shared'] && $_AUTH['level'] >= LEVEL_CURATOR)) {
+        // Authorized user (admin or manager, or curator in case of shared column) is logged in. Provide tools.
         if (!$zData['active'] || $aTableInfo['shared']) {
-            // FIXME; should also be available for curators if shared!
             // FIXME; needs exact check if there are genes/diseases left that do not have this column.
             // A check on 'active' is way too simple and does not work for shared columns.
             $sNavigation = '<A href="columns/' . $zData['id'] . '?add">Enable column</A>';
         } else {
             $sNavigation = '<A style="color : #999999;">Enable column</A>';
         }
+//        // Remove column.
+//        if ($zData['active']) {
+//            $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?remove">Disable column</A>';
+//        } else {
+//            $sNavigation .= ' | <A style="color : #999999;">Disable column</A>';
+//        }
         $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?edit">Edit custom data column settings</A>';
 /*
 

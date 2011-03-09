@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2011-02-20
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-09
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -49,9 +49,9 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 // Some info & statistics.
-list($nUsers)    = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_USERS));
-list($nLogs)     = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_LOGS));
-list($nPatients) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_PATIENTS));
+list($nUsers)    = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS));
+list($nLogs)     = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_LOGS));
+list($nPatients) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS));
 $aTotalVars      = array();
 $nTotalVars      = 0;
 $q = lovd_queryDB('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
