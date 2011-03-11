@@ -112,7 +112,6 @@ Wat moet ik onthouden tijdens het coden?
 =========================================
 * $_SERVER['PHP_SELF'] werkt niet meer! Want daar kan vanalles in staan. SCRIPT_NAME niet gebruiken voor doorsturen, omdat we geen .php in de URL willen.
     Af en toe ff zoeken, om te kijken of het stiekem toch gebruikt wordt.
-* mysql_query() moeten omgezet worden
 * mail() moeten omgezet worden
 * column names have been changed for tables, or the order has been changed. setting names the same.
 * Unique variant overview toont alleen DNA veld???

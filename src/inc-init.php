@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-09
+ * Modified    : 2011-03-10
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -615,7 +615,7 @@ if (!defined('_NOT_INSTALLED_')) {
                 // Change this in de database if user is logged in.
                 if ($_AUTH && $_AUTH['current_db'] != $_GET['select_db']) {
                     $sQ = 'UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_GET['select_db'] . '" WHERE id = "' . $_AUTH['id'] . '"';
-                    $q = @mysql_query($sQ);
+                    $q = @lovd_queryDB($sQ, array());
                     if (!$q) {
                         lovd_dbFout('UpdateCurrDB', $sQ, mysql_error(), false);
                     }

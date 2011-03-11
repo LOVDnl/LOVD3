@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-09
+ * Modified    : 2011-03-10
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -64,7 +64,7 @@ function lovd_buildLinks (& $zData)
     if (!count($aLinks)) {
         // Retrieve Custom Link information from the database.
         // Backwards compatible with MySQL 4.0 and earlier; GROUP_CONCAT is available since MySQL 4.1.
-        $qLinks = mysql_query('SELECT l.pattern_text, l.replace_text, c2l.colid FROM ' . TABLE_LINKS . ' AS l LEFT JOIN ' . TABLE_COLS2LINKS . ' AS c2l USING (linkid) WHERE l.active = 1 AND c2l.colid IS NOT NULL');
+        $qLinks = lovd_queryDB('SELECT l.pattern_text, l.replace_text, c2l.colid FROM ' . TABLE_LINKS . ' AS l LEFT JOIN ' . TABLE_COLS2LINKS . ' AS c2l USING (linkid) WHERE l.active = 1 AND c2l.colid IS NOT NULL');
 
         // Loop through and build array.
         while ($r = mysql_fetch_row($qLinks)) {
@@ -724,7 +724,7 @@ function lovd_switchDB ()
     // and bottom includes.
     global $_AUTH, $_SETT, $_CONF, $_STAT;
 
-    $qGenes = mysql_query('SELECT id, name FROM ' . TABLE_DBS . ' ORDER BY id');
+    $qGenes = lovd_queryDB('SELECT id, name FROM ' . TABLE_DBS . ' ORDER BY id');
     $nGenes = mysql_num_rows($qGenes);
 
     if (!defined('_INC_TOP_INCLUDED_') && $nGenes == 1) {

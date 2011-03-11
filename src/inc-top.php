@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-09
+ * Modified    : 2011-03-10
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -100,7 +100,7 @@ if (!defined('PAGE_TITLE')) {
 print('    function lovd_switchGeneInline () {' . "\n" .
 // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
       '      varForm = \'<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDBInline" method="get" style="margin : 0px;"><SELECT name="select_db" onchange="document.getElementById(\\\'SelectGeneDBInline\\\').submit();">');
-$q = mysql_query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_DBS . ' ORDER BY id');
+$q = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_DBS . ' ORDER BY id', array());
 while ($z = mysql_fetch_assoc($q)) {
     // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
     $z['gene'] = lovd_shortenString($z['gene'], 75);
@@ -165,7 +165,7 @@ $sCurrSymbol = $sCurrGene = '';
 // During submission, show the gene we're submitting to instead of the currently selected gene.
 if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
     // Fetch gene's info from db... we don't have it anywhere yet.
-    list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(mysql_query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = "' . $_POST['gene'] . '"'));
+    list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(lovd_queryDB('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene'])));
 } elseif (!empty($_SESSION['currdb'])) {
     // Just use currently selected database.
     $sCurrSymbol = $_SESSION['currdb'];
@@ -178,7 +178,7 @@ print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
       ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')&nbsp;<A href="#" onclick="javascript:lovd_switchGeneInline(); return false;"><IMG src="gfx/lovd_database_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top"></A></H5>' . "\n" : '') .
       '    </TD>' . "\n" .
       '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
-      '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] . ' [ <A href="genes?status">Current LOVD status</A> ]<BR>' . "\n");
+      '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] . ' [ <A href="status">Current LOVD status</A> ]<BR>' . "\n");
 if ($_AUTH) {
     print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
           '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . ($_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A><BR>' . "\n");

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-11
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,13 +56,13 @@ class LOVD_Custom extends LOVD_Object {
         parent::LOVD_Object();
         /*$qCols = 'SELECT cust.id FROM ' . TABLE_COLS . ' AS cust, ' . TABLE_ACTIVE_COLS . ' AS a WHERE SUBSTRING_INDEX(cust.id, "/", 1)="Patient" AND cust.id=a.colid';
         echo "<BR><BR>";
-        $result = mysql_query($qCols);
+        $result = lovd_queryDB($qCols);
         $qPatients = 'SELECT p.id';
         while($data = mysql_fetch_row($result)) {
             $qPatients .= ', p.`' . $data[0] . '`';
         }
         $qPatients .= ', uo.name AS owner, s.name AS status FROM ' . TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) LEFT JOIN ' . TABLE_DATA_STATUS . ' AS s ON (p.statusid = s.id)';
-        $result = mysql_query($qPatients);
+        $result = lovd_queryDB($qPatients);
         while ($data = mysql_fetch_row($result)) {
             $this->aColumnsViewList['Patient/Age_of_diagnosis'] = array
                                                                       (
@@ -72,7 +72,7 @@ class LOVD_Custom extends LOVD_Object {
         }*/
         
         //$qPatients = 'SELECT p.*, uo.name AS owner, s.name AS status FROM ' . TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) LEFT JOIN ' . TABLE_DATA_STATUS . ' AS s ON (p.statusid = s.id)';
-        //$result = mysql_query($qPatients);
+        //$result = lovd_queryDB($qPatients);
         //$aHidden = array('statusid', 'created_by', 'created_date', 'edited_by' ,'valid_from' ,'valid_to', 'deleted', 'deleted_by');
         //while ($data = mysql_fetch_assoc($result)) {
             //foreach ($aHidden as $sHidden) {

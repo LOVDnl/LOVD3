@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2011-03-09
+ * Modified    : 2011-03-10
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -139,7 +139,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                       ),
 /*
 // Modules.
-list($nModules) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_MODULES));
+list($nModules) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_MODULES));
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="2"><B>Modules</B></TD></TR>' . "\n" .

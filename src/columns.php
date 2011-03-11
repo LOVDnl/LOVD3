@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-01-25
+ * Modified    : 2011-03-11
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -129,7 +129,7 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
             // Check genes to find if column is active.
             $aGenes = lovd_getGeneList();
             foreach ($aGenes as $sSymbol) {
-                list($bSelected) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
+                list($bSelected) = mysql_fetch_row(lovd_queryDB('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
                 if ($bSelected) {
                     // Column present in this gene.
                     break;
@@ -137,7 +137,7 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
             }
         } elseif (substr($zData['colid'], 0, 7) == 'Patient') {
             // Patient column.
-            list($bSelected) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
+            list($bSelected) = mysql_fetch_row(lovd_queryDB('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
         }
 
         if ($zData['created_by'] && !$bSelected) {
@@ -172,7 +172,7 @@ if ($_GET['action'] == 'order') {
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $qData = mysql_query('SELECT colid, CONCAT(colid, " (", head_column, ")") AS name FROM ' . TABLE_COLS . ' WHERE LEFT(colid, 8) = "Variant/" AND (hgvs = 1 OR standard = 1) ORDER BY col_order');
+    $qData = lovd_queryDB('SELECT colid, CONCAT(colid, " (", head_column, ")") AS name FROM ' . TABLE_COLS . ' WHERE LEFT(colid, 8) = "Variant/" AND (hgvs = 1 OR standard = 1) ORDER BY col_order');
     $nData = mysql_num_rows($qData);
 
     if (!$nData) {
@@ -189,7 +189,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
             // Query text.
             $sQ = 'UPDATE ' . TABLE_COLS . ' SET col_order = ' . $nOrderID . ' WHERE colid = "' . $sColID . '"';
 
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top-clean.php';
@@ -871,7 +871,7 @@ die();
                     // Check genes to find if column is active.
                     $aGenes = lovd_getGeneList();
                     foreach ($aGenes as $sSymbol) {
-                        list($b) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
+                        list($b) = mysql_fetch_row(lovd_queryDB('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
                         if ($b) {
                             // Column present in this gene.
                             // 2009-02-16; 2.0-16; Added stripslashes to allow receiving quotes. This variable has been checked using regexps, so can be considered safe.
@@ -881,7 +881,7 @@ die();
 
                 } else {
                     // Patient column.
-                    list($b) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
+                    list($b) = mysql_fetch_row(lovd_queryDB('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
                     if ($b) {
                         // Column present in patient table.
                         // 2009-02-16; 2.0-16; Added stripslashes to allow receiving quotes. This variable has been checked using regexps, so can be considered safe.
@@ -894,7 +894,7 @@ die();
                 if ($nSQL) {
                     // Loop needed queries...
                     foreach ($aSQL as $sTable => $sQ) {
-                        $q = mysql_query($sQ);
+                        $q = lovd_queryDB($sQ);
                         if (!$q) {
                             $sError = mysql_error(); // Save the mysql_error before it disappears.
                             require ROOT_PATH . 'inc-top.php';
@@ -924,7 +924,7 @@ die();
 
             $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
 
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top.php';
@@ -953,7 +953,7 @@ die();
                         }
                         $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
 
-                        $q = mysql_query($sQ);
+                        $q = lovd_queryDB($sQ);
                         if (mysql_affected_rows()) {
                             // Write to log...
                             lovd_writeLog('MySQL:Event', 'ColEdit', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully edited variant column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ') in ' . $sSymbol . ' gene');
@@ -968,7 +968,7 @@ die();
                     }
                     $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
 
-                    $q = mysql_query($sQ);
+                    $q = lovd_queryDB($sQ);
                     if (mysql_affected_rows()) {
                         // Write to log...
                         lovd_writeLog('MySQL:Event', 'ColEdit', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully edited patient column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
@@ -981,7 +981,7 @@ die();
             // 2008-12-02; 2.0-15; Change active columns. added by Gerard
             // Fetch columns link is currently active for.
             $aLinksActive = array();
-            $q = mysql_query('SELECT l.linkid, l.linkname FROM ' . TABLE_COLS2LINKS . ' AS c2l LEFT JOIN ' . TABLE_LINKS . ' AS l USING (linkid) WHERE c2l.colid = "' . $zData['colid'] . '"');
+            $q = lovd_queryDB('SELECT l.linkid, l.linkname FROM ' . TABLE_COLS2LINKS . ' AS c2l LEFT JOIN ' . TABLE_LINKS . ' AS l USING (linkid) WHERE c2l.colid = "' . $zData['colid'] . '"');
             while (list($nLinkID, $sLinkName) = mysql_fetch_row($q)) {
                 $aLinksActive[$nLinkID] = $sLinkName;
             }
@@ -995,7 +995,7 @@ die();
             foreach ($aLinksActive AS $nLinkID => $sLinkName) {
                 if (!in_array($nLinkID, $_POST['active_links'])) {
                     // User has requested removal...
-                    $q = mysql_query('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE linkid = "' . $nLinkID . '" AND colid = "' . $zData['colid'] . '"');
+                    $q = lovd_queryDB('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE linkid = "' . $nLinkID . '" AND colid = "' . $zData['colid'] . '"');
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('MySQL:Error', 'ColEdit', 'Custom link ' . $nLinkID . ' (' . $sLinkName . ') could not be removed from ' . $zData['colid']);
@@ -1008,7 +1008,7 @@ die();
             // Fetch requested custom link names.
             $aLinksRequested = array();
             if (count($_POST['active_links'])) {
-                $q = mysql_query('SELECT linkid, linkname FROM ' . TABLE_LINKS . ' WHERE linkid IN (' . implode(', ', $_POST['active_links']) . ')');
+                $q = lovd_queryDB('SELECT linkid, linkname FROM ' . TABLE_LINKS . ' WHERE linkid IN (' . implode(', ', $_POST['active_links']) . ')');
                 while (list($nLinkID, $sLinkName) = mysql_fetch_row($q)) {
                     $aLinksRequested[$nLinkID] = $sLinkName;
                 }
@@ -1018,7 +1018,7 @@ die();
             foreach ($_POST['active_links'] AS $nLinkID) {
                 if (!array_key_exists($nLinkID, $aLinksActive)) {
                     // User has requested addition...
-                    $q = mysql_query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("' . $zData['colid'] . '", "' . $nLinkID . '")');
+                    $q = lovd_queryDB('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("' . $zData['colid'] . '", "' . $nLinkID . '")');
                     if (!$q) {
                         // Silent error
                         lovd_writeLog('MySQL:Error', 'ColEdit', 'Custom link ' . $nLinkID . ' (' . $aLinksRequested[$nLinkID] . ') could not be added to ' . $zData['colid']);
@@ -1061,7 +1061,7 @@ die();
 
         // 2008-12-02; 2.0-15; Load connected links.
         $_POST['active_links'] = array();
-        $q = mysql_query('SELECT linkid FROM ' . TABLE_COLS2LINKS . ' WHERE colid = "' . $zData['colid'] . '"');
+        $q = lovd_queryDB('SELECT linkid FROM ' . TABLE_COLS2LINKS . ' WHERE colid = "' . $zData['colid'] . '"');
         while (list($nLinkID) = @mysql_fetch_row($q)) {
             $_POST['active_links'][] = $nLinkID;
         }
@@ -1167,7 +1167,7 @@ die();
 
     // Allow to update all active columns as well.
         // Check if column is active anywhere.
-        list($bInUse) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_COLS . ' WHERE colid = "' . $zData['colid'] . '" UNION SELECT COUNT(*) FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
+        list($bInUse) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_COLS . ' WHERE colid = "' . $zData['colid'] . '" UNION SELECT COUNT(*) FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
     }
 
     // Array which will make up the form table.
@@ -1232,7 +1232,7 @@ if ($_GET['action'] == 'drop' && !empty($_GET['drop'])) {
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_CURATOR);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['drop'] . '"'));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['drop'] . '"'));
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -1247,7 +1247,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
         // Check genes to find if column is active.
         $aGenes = lovd_getGeneList();
         foreach ($aGenes as $sSymbol) {
-            list($bSelected) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
+            list($bSelected) = mysql_fetch_row(lovd_queryDB('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
             if ($bSelected) {
                 // Column present in this gene.
                 break;
@@ -1255,7 +1255,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
         }
     } elseif (substr($zData['colid'], 0, 7) == 'Patient') {
         // Patient column.
-        list($bSelected) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
+        list($bSelected) = mysql_fetch_row(lovd_queryDB('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
     }
 
     if (!$zData['created_by'] || $bSelected) {
@@ -1291,7 +1291,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
         if (!lovd_error()) {
             // Delete the row in the general_columns table.
             $sQ = 'DELETE FROM ' . TABLE_COLS . ' WHERE colid = "' . $_GET['drop'] . '"';
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top.php';
@@ -1301,7 +1301,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
 
             // Delete the links in the general_columns2links table.
             $sQ = 'DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = "' . $_GET['drop'] . '"';
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 // Silent error.
                 lovd_writeLog('MySQL:Error', 'ColDrop', 'Custom links could not be removed from ' . $zData['colid']);
@@ -1367,7 +1367,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_CURATOR);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"'));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"'));
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -1382,7 +1382,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
         // Check genes to find if column is active.
         $aGenes = lovd_getGeneList();
         foreach ($aGenes as $sSymbol) {
-            list($bSelected) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
+            list($bSelected) = mysql_fetch_row(lovd_queryDB('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
             if ($bSelected) {
                 // Column present in this gene.
                 break;
@@ -1390,7 +1390,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
         }
     } elseif (substr($zData['colid'], 0, 7) == 'Patient') {
         // Patient column.
-        list($bSelected) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
+        list($bSelected) = mysql_fetch_row(lovd_queryDB('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
     }
 
     if (!$zData['created_by'] || $bSelected) {
@@ -1428,7 +1428,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
 
         // ColID must not exist in the database.
         if ($_POST['col_cat'] && $_POST['colid'] && $_POST['col_cat'] . '/' . $_POST['colid'] != $zData['colid']) {
-            list($n) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE colid = "' . $_POST['col_cat'] . '/' . $_POST['colid'] . '"'));
+            list($n) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE colid = "' . $_POST['col_cat'] . '/' . $_POST['colid'] . '"'));
             if ($n) {
                 lovd_errorAdd('colid', 'There is already a ' . $_POST['col_cat'] . ' column with this column ID. Please choose another one.');
             }
@@ -1443,7 +1443,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
             // Query text.
             $_POST['colid'] = $_POST['col_cat'] . '/' . $_POST['colid'];
             $sQ = 'UPDATE ' . TABLE_COLS . ' SET colid = "' . $_POST['colid'] . '", edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top.php';
@@ -1456,7 +1456,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
 
             // 2008-12-03; 2.0-15; Update links (whether they exist or not)
             $sQ = 'UPDATE ' . TABLE_COLS2LINKS . ' SET colid="' . $_POST['colid'] . '" WHERE colid="' . $zData['colid'] . '"';
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 // Silent error.
                 lovd_writeLog('MySQL:Error', 'ColEdit', 'Custom links could not be updated for ' . $_POST['colid']);
@@ -1870,7 +1870,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             $nEmptyValues = 0;
             if ($zData['mandatory'] == '1') {
                 $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PATIENTS;
-                $nEmptyValues = @mysql_fetch_row(mysql_query($sQ));
+                $nEmptyValues = @mysql_fetch_row(lovd_queryDB($sQ));
             }
 
             // 2010-07-27; 2.0-28; Only forward the user when there is no problem adding the column.
@@ -1963,7 +1963,7 @@ if ($_GET['action'] == 'remove' && !empty($_GET['remove'])) {
 
 authorization
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT c1.hgvs, c1.head_column, c2.* FROM ' . TABLE_COLS . ' AS c1 LEFT JOIN ' . TABLE_PATIENTS_COLS . ' AS c2 USING (colid) WHERE c1.colid = "' . $_GET['drop'] . '" AND c1.colid = c2.colid'));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c1.hgvs, c1.head_column, c2.* FROM ' . TABLE_COLS . ' AS c1 LEFT JOIN ' . TABLE_PATIENTS_COLS . ' AS c2 USING (colid) WHERE c1.colid = "' . $_GET['drop'] . '" AND c1.colid = c2.colid'));
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -2009,7 +2009,7 @@ authorization
         if (!lovd_error()) {
             // Query text; remove column registration first.
             $sQ = 'DELETE FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"';
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top.php';
@@ -2021,7 +2021,7 @@ authorization
 
             // Alter patient table.
             $sQ = 'ALTER TABLE ' . TABLE_PATIENTS . ' DROP COLUMN `' . $zData['colid'] . '`';
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top.php';

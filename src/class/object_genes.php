@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-10
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -229,7 +229,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // Get list of diseases
         $aData = array();
-        $qData = mysql_query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
+        $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id', array());
         $nData = mysql_num_rows($qData);
         $nFieldSize = ($nData < 20? $nData : 20);
         while ($r = mysql_fetch_row($qData)) {

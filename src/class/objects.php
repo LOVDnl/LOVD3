@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-09
+ * Modified    : 2011-03-11
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -59,6 +59,7 @@ class LOVD_Object {
                     'FROM' => '',
                     'WHERE' => '',
                     'GROUP_BY' => '',
+                    'HAVING' => '',
                     'ORDER_BY' => '',
                     'LIMIT' => '',
                   );
@@ -464,40 +465,52 @@ class LOVD_Object {
 
         // SEARCH: Advanced text search.
         $sWHERE = '';
-        $aArguments = array();
+        $sHAVING = '';
+        $bAggregate = 0;
+        $aArguments = array(
+                        'WHERE' => array(),
+                        'HAVING' => array()
+                           );
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
                 // Allow for searches where the order of words is forced by enclosing the values with double quotes;
                 // Replace spaces in sentences between double quotes so they don't get exploded.
+                $bAggregate = (preg_match('/\./', $aCol['db'][0])? 0 : 1);
                 $sSearch = preg_replace_callback('/"([^"]+)"/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
+                $sSearch = preg_replace('/(\w+)(?U:\s+)?\|(?U:\s+)?(\w+)/', '$1|$2', $sSearch);
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
                     if ($sWord !== '') {
                         if (substr_count($sWord, '|') && preg_match('/^[^|]+(\|[^|]+)+$/', $sWord)) {
                             // OR.
                             $aOR = explode('|', $sWord);
-                            $sWHERE .= ($sWHERE? ' AND ' : '') . '(';
+                            if (!$bAggregate) {
+                                $sWHERE .= ($sWHERE? ' AND ' : '') . '(';
+                            } else {
+                                $sHAVING .= ($sHAVING? ' AND ' : '') . '(';
+                            }
                             foreach ($aOR as $nTerm => $sTerm) {
                                 // 2009-03-03; 2.0-17; Advanced searching did not allow to combine NOT and OR searches.
-                                if (substr($sTerm, 0, 1) == '!') {
-                                    // NOT.
-                                    $sWHERE .= ($nTerm? ' OR ' : '') . $aCol['db'][0] . ' NOT LIKE ?';
-                                    $aArguments[] = '%' . lovd_escapeSearchTerm(substr($sTerm, 1)) . '%';
+                                if (!$bAggregate) {
+                                    $sWHERE .= ($nTerm? ' OR ' : '') . $aCol['db'][0] . (substr($sTerm, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
                                 } else {
-                                    // Common search term.
-                                    $sWHERE .= ($nTerm? ' OR ' : '') . $aCol['db'][0] . ' LIKE ?';
-                                    $aArguments[] = '%' . lovd_escapeSearchTerm($sTerm) . '%';
+                                    $sHAVING .= ($nTerm? ' OR ' : '') . $aCol['db'][0] . (substr($sTerm, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
                                 }
+                                $aArguments[(!$bAggregate? 'WHERE' : 'HAVING')][] = '%' . lovd_escapeSearchTerm((substr($sTerm, 0, 1) == '!'? substr($sTerm, 1) : $sTerm)) . '%';
                             }
-                            $sWHERE .= ')';
-                        } elseif (substr($sWord, 0, 1) == '!') {
-                            // NOT.
-                            $sWHERE .= ($sWHERE? ' AND ' : '') .  $aCol['db'][0] . ' NOT LIKE ?';
-                            $aArguments[] = '%' . lovd_escapeSearchTerm(substr($sWord, 1)) . '%';
+                            if (!$bAggregate) {
+                                $sWHERE .= ')';
+                            } else {
+                                $sHAVING .= ')';
+                            }
                         } else {
                             // Common search term.
-                            $sWHERE .= ($sWHERE? ' AND ' : '') .  $aCol['db'][0] . ' LIKE ?';
-                            $aArguments[] = '%' . lovd_escapeSearchTerm($sWord) . '%';
+                            if (!$bAggregate) {
+                                $sWHERE .= ($sWHERE? ' AND ' : '') .  $aCol['db'][0] . (substr($sWord, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
+                            } else {
+                                $sHAVING .= ($sHAVING? ' AND ' : '') .  $aCol['db'][0] . (substr($sWord, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
+                            }
+                            $aArguments[(!$bAggregate? 'WHERE' : 'HAVING')][] = '%' . lovd_escapeSearchTerm((substr($sWord, 0, 1) == '!'? substr($sWord, 1) : $sWord)) . '%';
                         }
                     }
                 }
@@ -506,7 +519,9 @@ class LOVD_Object {
         if ($sWHERE) {
             $this->aSQLViewList['WHERE'] .= ($this->aSQLViewList['WHERE']? ' AND ' : '') . $sWHERE;
         }
-
+        if ($sHAVING) {
+            $this->aSQLViewList['HAVING'] .= ($this->aSQLViewList['HAVING']? ' AND ' : '') . $sHAVING;
+        }
         // SORT: Current settings, also implementing XSS check.
         if (!empty($_GET['order']) && $_GET['order'] === strip_tags($_GET['order'])) {
             $aOrder = explode(',', $_GET['order']);
@@ -557,10 +572,12 @@ class LOVD_Object {
         $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
         $sSQL = 'SELECT ' . $this->aSQLViewList['SELECT'] .
                ' FROM ' . $this->aSQLViewList['FROM'] .
-              (!$this->aSQLViewList['WHERE']? '' :
+            (!$this->aSQLViewList['WHERE']? '' :
                ' WHERE ' . $this->aSQLViewList['WHERE']) .
-              (!$this->aSQLViewList['GROUP_BY']? '' :
+            (!$this->aSQLViewList['GROUP_BY']? '' :
                ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
+            (!$this->aSQLViewList['HAVING']? '' :
+               ' HAVING ' . $this->aSQLViewList['HAVING']) .
                ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
 
         if (!$bHideNav) {
@@ -580,7 +597,15 @@ class LOVD_Object {
         lovd_queryDB('START TRANSACTION');
 
         // Run the actual query.
-        $q = lovd_queryDB($sSQL, $aArguments);
+        $aArgs = array();
+        foreach ($aArguments['WHERE'] as $aArg) {
+            $aArgs[] = $aArg;
+        }
+        foreach($aArguments['HAVING'] as $aArg) {
+            $aArgs[] = $aArg;
+        }
+
+        $q = lovd_queryDB($sSQL, $aArgs);
         if (!$q) {
 // FIXME; what if using AJAX? Probably we should generate a number here, indicating the system to try once more. If that fails also, the JS should throw a general error, maybe.
             lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewList()'), $sSQL, mysql_error());

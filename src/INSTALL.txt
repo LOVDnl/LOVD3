@@ -56,7 +56,7 @@ QUESTIONS?
 ==========
 
 If you have any questions, please see our website: www.LOVD.nl
-For the FAQ, see www.LOVD.nl/2.0/faq.php
+For the FAQ, see www.LOVD.nl/3.0/faq.php
 
 
 LOVD DEVELOPMENT TEAM
@@ -64,7 +64,7 @@ LOVD DEVELOPMENT TEAM
 
 The LOVD development team currently consists of:
 Ivo Fokkema
-Gerard Schaafsma
+Ivar Lugtenburg
 
 And is led by:
 Johan den Dunnen

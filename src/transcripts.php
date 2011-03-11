@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-03-08
+ * Modified    : 2011-03-11
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -574,7 +574,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
           '        <INPUT type="hidden" name="order" value="' . implode(',', $aOrder) . '">');
     print('</FORM>' . "\n\n");
 
-    $q = mysql_query($sQ);
+    $q = lovd_queryDB($sQ);
     if (!$q) {
         lovd_dbFout('Genes' . ucfirst($_GET['action']), $sQ, mysql_error());
     }
@@ -644,7 +644,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
 
     // GROUP BY only necessary because of the COUNT(*) in the query.
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT d.*, COUNT(p2v.variantid) AS variants, u_c.name AS created_by, u_e.name AS edited_by, u_u.name AS updated_by FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol) LEFT JOIN ' . TABLE_USERS . ' AS u_c ON (d.created_by = u_c.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_e ON (d.edited_by = u_e.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_u ON (d.updated_by = u_u.id) WHERE d.symbol = "' . $_GET['view'] . '" GROUP BY d.symbol'));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT d.*, COUNT(p2v.variantid) AS variants, u_c.name AS created_by, u_e.name AS edited_by, u_u.name AS updated_by FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol) LEFT JOIN ' . TABLE_USERS . ' AS u_c ON (d.created_by = u_c.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_e ON (d.edited_by = u_e.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_u ON (d.updated_by = u_u.id) WHERE d.symbol = "' . $_GET['view'] . '" GROUP BY d.symbol'));
     if (!$zData) {
         // Wrong ID, apparently.
         print('      No such ID!<BR>' . "\n");
@@ -699,10 +699,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     $zData['allow_index_wiki'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="' . $zData['allow_index_wiki'] . '" width="11" height="11">';
     $zData['disclaimer']       = '<IMG src="gfx/mark_' . ($zData['disclaimer']? 1 : 0) . '.png" alt="' . $zData['disclaimer'] . '" width="11" height="11">';
     $zData['refseq']           = '<IMG src="gfx/mark_' . ($zData['refseq'] != ''? 1 : 0) . '.png" alt="' . ($zData['refseq'] != ''? 1 : 0) . '" width="11" height="11">';
-    list($nUnique) = mysql_fetch_row(mysql_query('SELECT COUNT(DISTINCT `Variant/DNA`) FROM ' . TABLEPREFIX . '_' . $zData['symbol'] . '_variants'));
+    list($nUnique) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(DISTINCT `Variant/DNA`) FROM ' . TABLEPREFIX . '_' . $zData['symbol'] . '_variants'));
     $zData['variants'] .= ' (' . $nUnique . ' unique entr' . ($nUnique == 1? 'y' : 'ies') . ')';
     $zData['curators_'] = '';
-    $qCurators = mysql_query('SELECT u.name, u2g.show_order FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g USING (userid) WHERE u2g.symbol = "' . $zData['symbol'] . '" ORDER BY (u2g.show_order > 0) DESC, u2g.show_order, u.level DESC, u.name');
+    $qCurators = lovd_queryDB('SELECT u.name, u2g.show_order FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g USING (userid) WHERE u2g.symbol = "' . $zData['symbol'] . '" ORDER BY (u2g.show_order > 0) DESC, u2g.show_order, u.level DESC, u.name');
     $nCurators = mysql_num_rows($qCurators);
     $i = 0;
     while ($r = mysql_fetch_row($qCurators)) {
@@ -997,11 +997,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             if ($_INI['database']['engine'] == 'InnoDB') {
                 // FIXME; It's better to use 'START TRANSACTION', but that's only available from 4.0.11.
                 //   This works from the introduction of InnoDB in 3.23
-                @mysql_query('BEGIN WORK');
+                @lovd_queryDB('BEGIN WORK');
             }
 
             // Run query to create entry in DBS table.
-            $q = mysql_query($sQ);
+            $q = lovd_queryDB($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top.php';
@@ -1011,15 +1011,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
             // Make current user curator of this gene.
             $sQ = 'INSERT INTO ' . TABLE_CURATES . ' VALUES ("' . $_AUTH['id'] . '", "' . $_POST['symbol'] . '", 1)';
-            $q = @mysql_query($sQ);
+            $q = @lovd_queryDB($sQ);
             if (!$q) {
                 // Save the mysql_error before it disappears.
                 $sError = mysql_error();
 
                 if ($_INI['database']['engine'] == 'InnoDB') {
-                    @mysql_query('ROLLBACK');
+                    @lovd_queryDB('ROLLBACK');
                 } else {
-                    @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                    @lovd_queryDB('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
                 }
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
@@ -1028,7 +1028,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
             // Commit, since a CREATE TABLE will commit either way (MySQL 5.0, too?).
             if ($_INI['database']['engine'] == 'InnoDB') {
-                @mysql_query('COMMIT');
+                @lovd_queryDB('COMMIT');
             }
 
 
@@ -1036,14 +1036,14 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             // Create table for column information, based on the patient_columns table.
             require ROOT_PATH . 'install/inc-sql-tables.php';
             $sQ = str_replace(TABLE_PATIENTS_COLS, TABLEPREFIX . '_' . $_POST['symbol'] . '_columns', $aTableSQL['TABLE_PATIENTS_COLS']);
-            $q = @mysql_query($sQ);
+            $q = @lovd_queryDB($sQ);
             if (!$q) {
                 // Save the mysql_error before it disappears.
                 $sError = mysql_error();
 
                 // Rollback;
-                @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                @lovd_queryDB('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                @lovd_queryDB('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
@@ -1054,7 +1054,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
             // Gather info on standard custom variant columns.
             $aColsToCopy = array('colid', 'col_order', 'width', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public', 'public_form', 'created_by', 'created_date');
-            $qCols = mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE (hgvs = 1 OR standard = 1) AND colid LIKE "Variant/%"');
+            $qCols = lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE (hgvs = 1 OR standard = 1) AND colid LIKE "Variant/%"');
 
             while ($z = mysql_fetch_assoc($qCols)) {
                 // $z comes from the database, and is therefore not quoted.
@@ -1093,15 +1093,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                 $sQ .= ')';
 
                 // Insert default LOVD custom column.
-                $q = @mysql_query($sQ);
+                $q = @lovd_queryDB($sQ);
                 if (!$q) {
                     // Save the mysql_error before it disappears.
                     $sError = mysql_error();
 
                     // Rollback;
-                    @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                    @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                    @mysql_query('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
+                    @lovd_queryDB('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                    @lovd_queryDB('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                    @lovd_queryDB('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
 
                     require ROOT_PATH . 'inc-top.php';
                     lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
@@ -1127,7 +1127,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                     sort VARCHAR(52) NOT NULL';
 
             // Load standard columns.
-            $q = mysql_query('SELECT t1.colid, t2.mysql_type FROM ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns AS t1 LEFT JOIN ' . TABLE_COLS . ' AS t2 USING (colid)');
+            $q = lovd_queryDB('SELECT t1.colid, t2.mysql_type FROM ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns AS t1 LEFT JOIN ' . TABLE_COLS . ' AS t2 USING (colid)');
             while ($z = mysql_fetch_assoc($q)) {
                 // Fetch cols for this gene and insert them into the query.
                 $sQ .= ',' . "\n" . 
@@ -1142,15 +1142,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
             $sQ .= ') TYPE=' . $_INI['database']['engine'];
 
-            $q = @mysql_query($sQ);
+            $q = @lovd_queryDB($sQ);
             if (!$q) {
                 // Save the mysql_error before it disappears.
                 $sError = mysql_error();
 
                 // Rollback;
-                @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @mysql_query('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
+                @lovd_queryDB('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                @lovd_queryDB('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                @lovd_queryDB('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
@@ -1173,7 +1173,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/config.php?select_db=' . $_POST['symbol'] . lovd_showSID(true));
 
             // Set currdb.
-            @mysql_query('UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_POST['symbol'] . '" WHERE id = "' . $_AUTH['id'] . '"');
+            @lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_POST['symbol'] . '" WHERE id = "' . $_AUTH['id'] . '"');
             $_SESSION['currdb'] = $_POST['symbol'];
             // These just to have inc-top.php what it needs.
             $_SETT['currdb'] = array(
@@ -1370,7 +1370,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 } elseif ($_GET['action'] == 'drop' && !empty($_GET['drop'])) {
     // Drop specific gene.
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_GET['drop'] . '"'));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_GET['drop'] . '"'));
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -1440,7 +1440,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                           '      Removing columns ... ');
                     flush();
                     $sQ = 'DROP TABLE IF EXISTS ' . TABLEPREFIX . '_' . $zData['symbol'] . '_columns';
-                    $q = mysql_query($sQ);
+                    $q = lovd_queryDB($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropA', $sQ, mysql_error());
                     }
@@ -1450,7 +1450,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Removing variants ... ');
                     flush();
                     $sQ = 'DROP TABLE IF EXISTS ' . TABLEPREFIX . '_' . $zData['symbol'] . '_variants';
-                    $q = mysql_query($sQ);
+                    $q = lovd_queryDB($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropB', $sQ, mysql_error());
                     }
@@ -1460,7 +1460,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Removing variants <-> patients links ... ');
                     flush();
                     $sQ = 'DELETE FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = mysql_query($sQ);
+                    $q = lovd_queryDB($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropC', $sQ, mysql_error());
                     }
@@ -1470,7 +1470,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Removing gene entry ... ');
                     flush();
                     $sQ = 'DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = mysql_query($sQ);
+                    $q = lovd_queryDB($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropD', $sQ, mysql_error());
                     }
@@ -1480,7 +1480,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Removing curator permissions ... ');
                     flush();
                     $sQ = 'DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = mysql_query($sQ);
+                    $q = lovd_queryDB($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropE', $sQ, mysql_error());
                     }
@@ -1490,7 +1490,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Updating user settings ... ');
                     flush();
                     $sQ = 'UPDATE ' . TABLE_USERS . ' SET current_db = "" WHERE current_db = "' . $zData['symbol'] . '"';
-                    $q = mysql_query($sQ);
+                    $q = lovd_queryDB($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropF', $sQ, mysql_error());
                     }
@@ -1506,14 +1506,14 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                     // Backwards compatible with MySQL 4.0 and earlier. These versions do not support subqueries, which would really come in handy now.
                     // First, determine the ID's of the orphaned patients. Then construct the DELETE query.
                     $aOrphaned = array();
-                    $qOrphaned = mysql_query('SELECT p.patientid FROM ' . TABLE_PATIENTS . ' AS p LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (patientid) WHERE p2v.symbol IS NULL');
+                    $qOrphaned = lovd_queryDB('SELECT p.patientid FROM ' . TABLE_PATIENTS . ' AS p LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (patientid) WHERE p2v.symbol IS NULL');
                     while ($rOrphaned = mysql_fetch_row($qOrphaned)) {
                         $aOrphaned[] = $rOrphaned[0];
                     }
                     if (count($aOrphaned)) {
                         // Construct DELETE query.
                         $sQ = 'DELETE FROM ' . TABLE_PATIENTS . ' WHERE patientid IN (' . implode(', ', $aOrphaned) . ')';
-                        $q = mysql_query($sQ);
+                        $q = lovd_queryDB($sQ);
                         if (!$q) {
                             lovd_dbFout('GeneDropG', $sQ, mysql_error());
                         }
@@ -1551,7 +1551,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
             // Total number of variants found in this gene (incl. non curated).
             // 2008-07-08; 2.0-09; Check number of variants using $zData['symbol'], not $_SESSION['currdb'] of course...
-            list($nTotalVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $zData['symbol'] . '"'));
+            list($nTotalVariants) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $zData['symbol'] . '"'));
 
             lovd_showInfoTable('<B>FINAL WARNING! Removing the ' . $zData['symbol'] . ' gene will imply the loss of ' . $nTotalVariants . ' variant entr' . ($nTotalVariants == 1? 'y' : 'ies') . '. If you didn\'t download the varation data stored for the ' . $zData['symbol'] . ' gene in the LOVD system, everything will be lost.</B>', 'warning');
 

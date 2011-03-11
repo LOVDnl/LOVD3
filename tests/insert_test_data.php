@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-17
- * Modified    : 2011-01-18
- * For LOVD    : 3.0-pre-13
+ * Modified    : 2011-03-11
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -38,7 +38,7 @@ require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/plain; charset=UTF-8');
 
 // DMD gene.
-mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("DMD", "Duchenne Muscular Dystrophy", "X", "Xp21.2", "", "", "", "", "", 0, 0, 2928, 1756, 300377, 1, 1, 1, "", "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
+mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("DMD", "Duchenne Muscular Dystrophy", "X", "p21.2", "NG_012232.1", "UD_127955523176", "", "", "", 0, 0, 2928, 1756, 300377, 1, 1, 1, "", "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
 
 // Three diseases, all linked to this one gene.
 $b = mysql_query('INSERT IGNORE INTO ' . TABLE_DISEASES . ' VALUES (NULL, "DMD", "Duchenne muscular dystrophy", 310200, 1, NOW(), NULL, NULL)');
@@ -60,14 +60,14 @@ $nVarID ++;
 $b = mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, "X", 33229400, 33229400, "del", 1, 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
 
 // First of two transcripts, having one variant.
-$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "Dystrophin Dp427m isoform", "NM_004006.2", NULL, NULL, NULL, NULL, -244, 13749, 11058, 33229673, 31137345, 1, NOW(), NULL, NULL)');
+$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "transcript variant Dp427m", "NM_004006.2", NULL, NULL, NULL, NULL, -244, 13749, 11058, 33229673, 31137345, 1, NOW(), NULL, NULL)');
 if ($b) {
     $nFirstTranscriptID = mysql_insert_id();
     mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nFirstTranscriptID . ', NULL, 30, 0, 30, 0, NOW())');
 }
 
 // Second of two transcripts, having one variant.
-$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "Dystrophin Dp427c isoform", "NM_000109.3", NULL, NULL, NULL, NULL, -344, 13749, 11034, 33357726, 31137345, 1, NOW(), NULL, NULL)');
+$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "transcript variant Dp40", "NM_000109.3", NULL, NULL, NULL, NULL, -344, 13749, 11034, 33357726, 31137345, 1, NOW(), NULL, NULL)');
 if ($b) {
     $nSecondTranscriptID = mysql_insert_id();
     mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nSecondTranscriptID . ', NULL, 7, 127976, 7, 127976, NOW())');
@@ -86,7 +86,7 @@ if ($b) {
 
 
 // TTN gene.
-mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("TTN", "Titin", "2", "2q32", "", "", "", "", "", 0, 0, 12403, 7273, 188840, 1, 1, 1, "", "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
+mysql_query('INSERT IGNORE INTO ' . TABLE_GENES . ' VALUES ("TTN", "Titin", "2", "q32", "NG_011618.2", "UD_129502170264", "", "", "", 0, 0, 12403, 7273, 188840, 1, 1, 1, "", "", "", "", 0, "", "", 0, "", 0, "00001", NOW(), "00001", NOW(), "00001", NOW())');
 
 // One transcript, having one variant.
 $b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "TTN", "Titin variant N2-A", "NM_133378.2", NULL, NULL, NULL, NULL, -224, 108864, 107841, 179672150, 179781238, 1, NOW(), NULL, NULL)');
@@ -106,6 +106,19 @@ if ($b) {
 $nVarID ++;
 // FIXME; provide proper genomic locations.
 mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS . ' VALUES (' . $nVarID . ', NULL, 0, NULL, "X", NULL, NULL, "subst", 1, 9, "00001", NOW(), "00001", NOW(), "9999-12-31", 0, "00001")');
+
+
+
+
+
+
+
+// First patient, having been screened
+mysql_query('INSERT IGNORE INTO ' . TABLE_PATIENTS . ' VALUES (NULL, "00001", 9, "00001", NOW(), NULL, NOW(), "9999-12-31 00:00:00", 0, NULL');
+mysql_query('INSERT INTO ' . TABLE_SCREENINGS . ' VALUES("0000000001", "00000001", "00001", "00001", NOW(), NULL, NOW(), "9999-12-31 00:00:00", 0, NULL)');
+
+// First Variant found with first screening
+mysql_query('INSERT IGNORE INTO ' TABLE_SCR2VAR . ' VALUES("0000000001", "00000001")');
 
 echo "Done!";
 ?>

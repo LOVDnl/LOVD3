@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-09
+ * Modified    : 2011-03-10
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -742,10 +742,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
         lovd_errorPrint();
         
-        list($nPats) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_PATIENTS . ' WHERE ownerid=' . $nID));
-        list($nScreenings) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE ownerid=' . $nID));
-        list($nVars) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE ownerid=' . $nID));
-        list($nGenes) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE edited_by=' . $nID));
+        list($nPats) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS . ' WHERE ownerid=?', array($nID)));
+        list($nScreenings) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE ownerid=?', array($nID)));
+        list($nVars) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE ownerid=?', array($nID)));
+        list($nGenes) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE edited_by=?', array($nID)));
         
         print('      <PRE>' . "\n" .
               '  <b>The user you are about to delete has the following references to data in this installation:</b>' . "\n" .
@@ -822,7 +822,7 @@ if ($_GET['action'] == 'boot' && is_numeric($_GET['boot'])) {
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT t1.phpsessid, t1.level FROM ' . TABLE_USERS . ' AS t1 WHERE t1.id = "' . $_GET['boot'] . '"'));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT t1.phpsessid, t1.level FROM ' . TABLE_USERS . ' AS t1 WHERE t1.id = "' . $_GET['boot'] . '"'));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -858,7 +858,7 @@ if (in_array($_GET['action'], array('lock', 'unlock')) && is_numeric($_GET['lock
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = "' . $_GET['lock'] . '"'));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = "' . $_GET['lock'] . '"'));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -873,7 +873,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
     // The actual query.
     $sQ = 'UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = "' . $_GET['lock'] . '"';
-    $q = @mysql_query($sQ);
+    $q = @lovd_queryDB($sQ);
     if (!$q) {
         $sError = mysql_error(); // Save the mysql_error before it disappears.
         require ROOT_PATH . 'inc-top.php';
