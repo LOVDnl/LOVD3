@@ -67,21 +67,21 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\w)+$/', $_PATH_ELEMENTS[1]) &&
     // URL: /genes/DMD
     // View specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
-    define('PAGE_TITLE', 'View gene ' . $nID);
+    $sID = $_PATH_ELEMENTS[1];
+    define('PAGE_TITLE', 'View gene ' . $sID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
-    $zData = $_DATA->viewEntry($nID);
+    $zData = $_DATA->viewEntry($sID);
     
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="genes/' . $nID . '?edit">Edit gene information</A>';
-        $sNavigation .= ' | <A href="transcripts/' . $nID . '?create">Add transcript(s) to gene</A>';
-        $sNavigation .= ' | <A href="genes/' . $nID . '?delete">Delete gene entry</A>';
+        $sNavigation = '<A href="genes/' . $sID . '?edit">Edit gene information</A>';
+        $sNavigation .= ' | <A href="transcripts/' . $sID . '?create">Add transcript(s) to gene</A>';
+        $sNavigation .= ' | <A href="genes/' . $sID . '?delete">Delete gene entry</A>';
     }
 
     if ($sNavigation) {
@@ -89,9 +89,9 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\w)+$/', $_PATH_ELEMENTS[1]) &&
         lovd_showNavigation($sNavigation);
     }
     
-    $_GET['search_geneid'] = $nID;
+    $_GET['search_geneid'] = $sID;
     print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Transcripts for gene ' . $nID);
+    lovd_printHeader('Transcripts for gene ' . $sID);
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $zData = $_DATA->viewList('geneid', true);
@@ -341,7 +341,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_POST['id_entrez'] = ($zData['id_entrez']? $zData['id_entrez'] : '');
                 $_POST['id_omim'] = ($zData['id_omim']? $zData['id_omim'] : '');
 
-                $nID = $_DATA->insertEntry($_POST, $aFields);
+                $_DATA->insertEntry($_POST, $aFields);
 
                 // Write to log...
                 lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');
@@ -440,7 +440,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /genes/DMD?edit
     // Edit an entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $sID = $_PATH_ELEMENTS[1];
     define('PAGE_TITLE', 'Edit gene information entry');
     define('LOG_EVENT', 'GeneEdit');
 
@@ -451,32 +451,35 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'class/REST2SOAP.php';
     $_DATA = new LOVD_Gene();
-    $zData = $_DATA->loadEntry($nID);
+    $zData = $_DATA->loadEntry($sID);
     
     if (GET) {
         require ROOT_PATH . 'inc-lib-genes.php';
         
         $aRefseqGenomic = array();
         // Get LRG if it exists
-        if ($sLRG = getLrgByGeneSymbol($nID)) {
+        if ($sLRG = getLrgByGeneSymbol($sID)) {
             $aRefseqGenomic[] = $sLRG;
         }
         // Get NG if it exists
-        if ($sNG = getNgByGeneSymbol($nID)) {
+        if ($sNG = getNgByGeneSymbol($sID)) {
             $aRefseqGenomic[] = $sNG;
         }
         // Get NC from LOVD
         $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
         
         $_POST['workID'] = lovd_generateRandomID();
-        $_SESSION['work'][$_POST['workID']] = array(
-                                                    'action' => '/genes/' . $nID . '?edit',
-                                                    'values' => array(
-                                                                        'genomic_references' => $aRefseqGenomic,
-                                                                     ),
-                                                   );
+        $_SESSION['work'][$_POST['workID']] =
+                 array(
+                        'action' => '/genes/' . $sID . '?edit',
+                        'values' =>
+                                 array(
+                                        'genomic_references' => $aRefseqGenomic,
+                                      ),
+                      );
     }
     $zData['genomic_references'] = $_SESSION['work'][$_POST['workID']]['values']['genomic_references'];
+
     if (count($_POST) > 1) {
         lovd_errorClean();
 
@@ -499,53 +502,57 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             $_POST['edited_date'] = date('Y-m-d H:i:s');
             $_POST['name'] = $zData['name'];
             
-            $_DATA->updateEntry($nID, $_POST, $aFields);
+            $_DATA->updateEntry($sID, $_POST, $aFields);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Edited gene information entry ' . $nID . ' (' . $_POST['name'] . ')');
+            lovd_writeLog('Event', LOG_EVENT, 'Edited gene information entry ' . $sID . ' (' . $_POST['name'] . ')');
 
             // Change linked diseases?
             // Diseases the gene is currently linked to.
             $aDiseases = explode(';', $zData['active_diseases_']);
-            
+
             // Remove diseases.
-            $aSuccess = array();
-            foreach ($aDiseases AS $sDisease) {
-                if ($sDisease && !in_array($sDisease, $_POST['active_diseases'])) {
+            $aToRemove = array();
+            foreach ($aDiseases as $nDisease) {
+                if ($nDisease && !in_array($nDisease, $_POST['active_diseases'])) {
                     // User has requested removal...
-                    $q = lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid = ?', array($zData['id'], $sDisease));
-                    if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $sDisease . ' - could not be removed from gene ' . $nID);
-                    } else {
-                        $aSuccess[] = $sDisease;
-                    }
+                    $aToRemove[] = $nDisease;
                 }
             }
-            if (count($aSuccess)) {
-                lovd_writeLog('Event', LOG_EVENT, 'Disease information entr' . (count($aSuccess) > 1? 'y' : 'ies') . ' - ' . implode(', ', $aSuccess) . ' successfully removed from gene ' . $nID);
+            if ($aToRemove) {
+                $q = lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove));
+                if (!$q) {
+                    // Silent error.
+                    lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from gene ' . $sID);
+                } else {
+                    lovd_writeLog('Event', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' successfully removed from gene ' . $nID);
+                }
             }
 
             // Add diseases.
             $aSuccess = array();
-            foreach ($_POST['active_diseases'] as $sDisease) {
-                if (!in_array($sDisease, $aDiseases)) {
+            $aFailed = array();
+            foreach ($_POST['active_diseases'] as $nDisease) {
+                if (!in_array($nDisease, $aDiseases)) {
                     // Add disease to gene.
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($nID, $sDisease));
+                    $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
                     if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $sDisease . ' - could not be added to gene ' . $nID);
+                        $aFailed[] = $nDisease;
                     } else {
                         $aSuccess[] = $sDisease;
                     }
                 }
             }
-            if (count($aSuccess)) {
-                lovd_writeLog('Event', LOG_EVENT, 'Disease information entr' . (count($aSuccess) > 1? 'y' : 'ies') . ' - ' . implode(', ', $aSuccess) . ' successfully added to gene ' . $nID);
+            if ($aFailed) {
+                // Silent error.
+                lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aFailed) == 1? 'y' : 'ies') . ' ' . implode(', ', $aFailed) . ' could not be added to gene ' . $sID);
+            }
+            if ($aSuccess) {
+                lovd_writeLog('Event', LOG_EVENT, 'Disease information entr' . (count($aSuccess) == 1? 'y' : 'ies') . ' ' . implode(', ', $aSuccess) . ' successfully added to gene ' . $sID);
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $sID);
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
@@ -578,7 +585,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     lovd_includeJS('inc-js-tooltip.php');   
     
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -604,8 +611,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /genes/DMD?delete
     // Drop specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
-    define('PAGE_TITLE', 'Delete gene information entry ' . $nID);
+    $sID = $_PATH_ELEMENTS[1];
+    define('PAGE_TITLE', 'Delete gene information entry ' . $sID);
     define('LOG_EVENT', 'GeneDelete');
 
     // Require manager clearance.
@@ -613,7 +620,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
-    $zData = $_DATA->loadEntry($nID);
+    $zData = $_DATA->loadEntry($sID);
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (!empty($_POST)) {
@@ -638,7 +645,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             $q = lovd_queryDB($sSQL, $aSQL, true);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $nID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes');
@@ -664,7 +671,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -1035,7 +1042,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             }
 
             // 2009-11-11; 2.0-23; The c. -> g. mapping fields are mandatory if the database is using a GenBank file.
-            // FIXME; maybe before these checks, check if the field is empty but $_POST['genbank_uri'] contains useful information... then copy, in stead of complain.
+            // FIXME; maybe before these checks, check if the field is empty but $_POST['genbank_uri'] contains useful information... then copy, instead of complain.
             if (empty($_POST['refseq_genomic'])) {
                 lovd_errorAdd('Please fill in the \'NCBI accession number for the genomic reference sequence\' field.');
             } elseif (!preg_match('/^N(G|C)_[0-9]{6,9}\.[0-9]{1,2}$/', $_POST['refseq_genomic'])) {

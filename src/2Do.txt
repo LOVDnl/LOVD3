@@ -75,6 +75,9 @@ TABLE_VARIANTS_ON_TRANSCRIPTS heeft nu alleen een valid_from om te linken naar T
 
 Waar we echt mee bezig zijn:
 ============================
+ViewList() moet een ID krijgen, zodat meerdere viewList() op dezelfde pagina zullen kunnen werken.
+ViewList() moet geconfigureerd kunnen worden om geen hashes te gebruiken, zodat meerdere viewLists() op 1 pagina elkaar niet storen.
+  - $bNoHistory? of $bNoHash?
 Col add: Er moet nog gekeken worden naar het bevestigingsbericht. Ook moeten diseases goed omschreven worden in messages; bij voorkeur met hun symbol.
     Deze code naar install/index.php kopiëren, om de standaard kolommen alvast toe te voegen tijdens installatie.
 show genes, create, edit, delete, link naar diseases.
@@ -87,6 +90,7 @@ USERS: stel tijdzone in?
 Code weggegooid om user curator te maken, omdat dat anders moet.
 Create gene: herstel percentages van voorgang, zodat het logischer verloopt.
 Edit gene: created date kunnen veranderen???? Beetje vreemd, maar sowieso slikt hij de H:i:s niet die er achter staat.
+Model opnieuw overdenken en nieuw figuur maken er voor.
 
 
 // Lijst van questions about the future:
@@ -112,6 +116,7 @@ Wat moet ik onthouden tijdens het coden?
 =========================================
 * $_SERVER['PHP_SELF'] werkt niet meer! Want daar kan vanalles in staan. SCRIPT_NAME niet gebruiken voor doorsturen, omdat we geen .php in de URL willen.
     Af en toe ff zoeken, om te kijken of het stiekem toch gebruikt wordt.
+* mysql_query() moeten omgezet worden
 * mail() moeten omgezet worden
 * column names have been changed for tables, or the order has been changed. setting names the same.
 * Unique variant overview toont alleen DNA veld???

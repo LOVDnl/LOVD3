@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-11
+ * Modified    : 2011-03-16
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -415,11 +415,14 @@ class LOVD_Object {
             if (preg_match("/TableStart/", $sField)) {
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
             } elseif (preg_match("/TableHeader/", $sField)) {
-                print('         <TH colspan="2" class="S15" valign="top">' . $sHeader . '</TH>');
+                print("\n" .
+                      '        <TR>' . "\n" .
+                      '          <TH colspan="2" class="S15" valign="top">' . $sHeader . '</TH></TR>');
             } elseif (preg_match("/TableEnd/", $sField)) {
                 print('</TABLE>' . "\n\n");
             } elseif (preg_match("/HR/", $sField)) {
-                print('<hr>');
+                print("\n" .
+                      '      <HR>' . "\n");
             } else {
                 print("\n" .
                       '        <TR>' . "\n" .
@@ -564,6 +567,9 @@ class LOVD_Object {
                         print('        <INPUT type="hidden" name="search_' . $sCol . '" value="' . htmlspecialchars($_GET['search_' . $sCol]) . '">' . "\n");
                     }
                 }
+            }
+            if ($bHideNav) {
+                print('        <INPUT type="hidden" name="hidenav" value="true">' . "\n");
             }
             print("\n");
         }
