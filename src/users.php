@@ -822,7 +822,7 @@ if ($_GET['action'] == 'boot' && is_numeric($_GET['boot'])) {
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT t1.phpsessid, t1.level FROM ' . TABLE_USERS . ' AS t1 WHERE t1.id = "' . $_GET['boot'] . '"'));
+    $zData = @mysql_fetch_assoc(mysql_query('SELECT t1.phpsessid, t1.level FROM ' . TABLE_USERS . ' AS t1 WHERE t1.id = "' . $_GET['boot'] . '"'));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -858,7 +858,7 @@ if (in_array($_GET['action'], array('lock', 'unlock')) && is_numeric($_GET['lock
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = "' . $_GET['lock'] . '"'));
+    $zData = @mysql_fetch_assoc(mysql_query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = "' . $_GET['lock'] . '"'));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -873,7 +873,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
     // The actual query.
     $sQ = 'UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = "' . $_GET['lock'] . '"';
-    $q = @lovd_queryDB($sQ);
+    $q = @mysql_query($sQ);
     if (!$q) {
         $sError = mysql_error(); // Save the mysql_error before it disappears.
         require ROOT_PATH . 'inc-top.php';

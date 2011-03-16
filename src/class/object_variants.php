@@ -179,7 +179,7 @@ class LOVD_Variant extends LOVD_Object {
 
         // Get list of diseases, to connect gene to disease.
         $aData = array();
-        $qData = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id', array());
+        $qData = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
         $nFieldSize = ($nData < 20? $nData : 20);
         while ($r = mysql_fetch_row($qData)) {

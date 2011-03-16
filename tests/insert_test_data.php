@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-17
- * Modified    : 2011-03-11
+ * Modified    : 2011-03-16
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -67,7 +67,7 @@ if ($b) {
 }
 
 // Second of two transcripts, having one variant.
-$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "transcript variant Dp40", "NM_000109.3", NULL, NULL, NULL, NULL, -344, 13749, 11034, 33357726, 31137345, 1, NOW(), NULL, NULL)');
+$b = mysql_query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' VALUES (NULL, "DMD", "transcript variant Dp427c", "NM_000109.3", NULL, NULL, NULL, NULL, -344, 13749, 11034, 33357726, 31137345, 1, NOW(), NULL, NULL)');
 if ($b) {
     $nSecondTranscriptID = mysql_insert_id();
     mysql_query('INSERT IGNORE INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' VALUES (' . $nVarID . ', ' . $nSecondTranscriptID . ', NULL, 7, 127976, 7, 127976, NOW())');

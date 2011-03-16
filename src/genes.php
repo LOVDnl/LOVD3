@@ -689,103 +689,13 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
+
+
+
+
+
 /*
-    // Standard query, will be extended later on.
-    $sQ = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol)';
-
-    // SORT: Current settings.
-    // 2008-08-07; 2.0-10; Implement XSS check on order variable.
-    if (isset($_GET['order']) && $_GET['order'] && $_GET['order'] == strip_tags($_GET['order'])) {
-        $aOrder = explode(',', $_GET['order']);
-    } else {
-        $aOrder = array('', '');
-    }
-
-    // SORT: Column data.
-    $aOrderList = array('symbol' => array('symbol', 'ASC'), 'gene' => array('gene', 'ASC'), 'variants' => array('variants', 'ASC'), 'created_date' => array('created_date', 'ASC'), 'updated_date' => array('updated_date', 'DESC'));
-    if (!array_key_exists($aOrder[0], $aOrderList)) {
-        $aOrder[0] = 'symbol';
-    }
-    if ($aOrder[1] != 'ASC' && $aOrder[1] != 'DESC') {
-        $aOrder[1] = $aOrderList[$aOrder[0]][1];
-    }
-
-    // GROUP BY only necessary because of the COUNT(*) in the query.
-    $sQ .= ' GROUP BY d.symbol';
-
-    $sQueryLimit = lovd_pagesplitInit($nTotal, 25);
-    $sQ .= ' ORDER BY ' . $aOrderList[$aOrder[0]][0] . ' ' . $aOrder[1] . ', symbol ASC ' . $sQueryLimit;
-
-
-
-    // Show form; required for sorting and searching.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '" method="get" style="margin : 0px;">' . "\n" .
-          '        <INPUT type="hidden" name="action" value="' . $_GET['action'] . '">' . "\n" .
-          '        <INPUT type="hidden" name="order" value="' . implode(',', $aOrder) . '">');
-    print('</FORM>' . "\n\n");
-
-    $q = lovd_queryDB($sQ);
-    if (!$q) {
-        lovd_dbFout('Genes' . ucfirst($_GET['action']), $sQ, mysql_error());
-    }
-
-    $n = (isset($nResults)? $nResults : $nTotal);
-    print('      <SPAN class="S11">' . $n . ' entr' . ($n == 1? 'y' : 'ies') . '</SPAN><BR>' . "\n");
-
-    // Array which will make up the table (header and data).
-    $aTable =
-             array(
-                    'symbol' => array('Symbol', '70'),
-                    'gene' => array('Gene', '*'),
-                    'chrom_location' => array('Chrom.', '70'),
-                    'allow_download' => array('Download?', '70', 'align="center"'),
-                    'refseq' => array('RefSeq?', '55', 'align="center"'),
-                    'variants' => array('Variants', '70', 'align="right"'),
-                    'created_date' => array('Created', '130'),
-                    'updated_date' => array('Last updated', '130'),
-                  );
-
-    // Table.
-    print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="950" class="data">' . "\n" .
-          '        <TR>');
-
-    foreach ($aTable as $sField => $aCol) {
-        print("\n" . '          <TH' . (!empty($aCol[2])? ' ' . $aCol[2] : '') . (is_numeric($aCol[1])? ' width="' . $aCol[1] . '"' : '') . (array_key_exists($sField, $aOrderList)? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '" onclick="document.forms[0].order.value=\'' . $sField . ',' . ($aOrder[0] == $sField? ($aOrder[1] == 'ASC'? 'DESC' : 'ASC') : $aOrderList[$sField][1]) . '\';document.forms[0].submit();"' : '') . '>' .
-              (array_key_exists($sField, $aOrderList)? "\n" .
-                                                           '            <TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="S11">' . "\n" .
-                                                           '              <TR>' . "\n" .
-                                                           '                <TH>' . str_replace(' ', '&nbsp;', $aCol[0]) . '</TH>' . "\n" .
-                                                           '                <TD align="right"><IMG src="gfx/order_arrow_desc' . ($aOrder[0] == $sField && $aOrder[1] == 'DESC'? '_sel' : '') . '.png" alt="Descending" title="Descending" width="13" height="6"><BR><IMG src="gfx/order_arrow_asc' . ($aOrder[0] == $sField && $aOrder[1] == 'ASC'? '_sel' : '') . '.png" alt="Ascending" title="Ascending" width="13" height="6"></TD></TR></TABLE>' : $aCol[0]) . '</TH>');
-    }
-    print('</TR>');
-
-    while ($zData = mysql_fetch_assoc($q)) {
-        print("\n" .
-              '        <TR style="cursor : pointer; cursor : hand;" onmouseover="this.className = \'hover\';" onmouseout="this.className = \'\';" onclick="window.location.href = \'' . $_SERVER['PHP_SELF'] . '?action=view&amp;view=' . $zData['symbol'] . lovd_showSID(true, true) . '\';">');
-
-        $zData['symbol']         = '<A href="' . $_SERVER['PHP_SELF'] . '?action=view&amp;view=' . $zData['symbol'] . '" class="data">' . $zData['symbol'] . '</A>';
-        $zData['allow_download'] = '<IMG src="' . ROOT_PATH . 'gfx/mark_' . $zData['allow_download'] . '.png" alt="' . $zData['allow_download'] . '" width="11" height="11">';
-        $zData['refseq']         = '<IMG src="' . ROOT_PATH . 'gfx/mark_' . ($zData['genbank']? 1 : 0) . '.png" alt="Has ' . ($zData['genbank']? 'a' : 'no') . ' GenBank Reference sequence" title="Has ' . ($zData['genbank']? 'a' : 'no') . ' GenBank Reference sequence" width="11" height="11">&nbsp;&nbsp;&nbsp;' .
-                                   '<IMG src="' . ROOT_PATH . 'gfx/mark_' . ($zData['refseq'] != ''? 1 : 0) . '.png" alt="Has ' . ($zData['refseq'] != ''? 'a' : 'no') . ' human-readable reference sequence" title="Has ' . ($zData['refseq'] != ''? 'a' : 'no') . ' human-readable reference sequence" width="11" height="11">';
-
-        foreach ($aTable as $sField => $aCol) {
-            print("\n" . '          <TD' . (!empty($aCol[2])? ' ' . $aCol[2] : '') . (is_numeric($aCol[1])? ' width="' . $aCol[1] . '"' : '') . ($aOrder[0] == $sField? ' class="ordered"' : '') . '>' . (!$zData[$sField]? '-' : $zData[$sField]) . '</TD>');
-        }
-        print('</TR>');
-    }
-    print('</TABLE>' . "\n\n");
-
-    // URL pagelink.
-    $sPageLink = 'order=' . rawurlencode(implode(',', $aOrder));
-
-    lovd_pagesplitShowNav($sPageLink);
-
-    require ROOT_PATH . 'inc-bot.php';
-    exit;
-
-
-
-
+LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality is included in LOVD 3.0 as well.
 
 } elseif ($_GET['action'] == 'view' && isset($_GET['view'])) {
     // View specific gene.
@@ -794,7 +704,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
 
     // GROUP BY only necessary because of the COUNT(*) in the query.
-    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT d.*, COUNT(p2v.variantid) AS variants, u_c.name AS created_by, u_e.name AS edited_by, u_u.name AS updated_by FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol) LEFT JOIN ' . TABLE_USERS . ' AS u_c ON (d.created_by = u_c.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_e ON (d.edited_by = u_e.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_u ON (d.updated_by = u_u.id) WHERE d.symbol = "' . $_GET['view'] . '" GROUP BY d.symbol'));
+    $zData = @mysql_fetch_assoc(mysql_query('SELECT d.*, COUNT(p2v.variantid) AS variants, u_c.name AS created_by, u_e.name AS edited_by, u_u.name AS updated_by FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol) LEFT JOIN ' . TABLE_USERS . ' AS u_c ON (d.created_by = u_c.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_e ON (d.edited_by = u_e.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_u ON (d.updated_by = u_u.id) WHERE d.symbol = "' . $_GET['view'] . '" GROUP BY d.symbol'));
     if (!$zData) {
         // Wrong ID, apparently.
         print('      No such ID!<BR>' . "\n");
@@ -852,7 +762,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     list($nUnique) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(DISTINCT `Variant/DNA`) FROM ' . TABLEPREFIX . '_' . $zData['symbol'] . '_variants'));
     $zData['variants'] .= ' (' . $nUnique . ' unique entr' . ($nUnique == 1? 'y' : 'ies') . ')';
     $zData['curators_'] = '';
-    $qCurators = lovd_queryDB('SELECT u.name, u2g.show_order FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g USING (userid) WHERE u2g.symbol = "' . $zData['symbol'] . '" ORDER BY (u2g.show_order > 0) DESC, u2g.show_order, u.level DESC, u.name');
+    $qCurators = mysql_query('SELECT u.name, u2g.show_order FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g USING (userid) WHERE u2g.symbol = "' . $zData['symbol'] . '" ORDER BY (u2g.show_order > 0) DESC, u2g.show_order, u.level DESC, u.name');
     $nCurators = mysql_num_rows($qCurators);
     $i = 0;
     while ($r = mysql_fetch_row($qCurators)) {
@@ -882,93 +792,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_viewNavigation($sNavigation);
     }
-
-    require ROOT_PATH . 'inc-bot.php';
-    exit;
-
-
-
-
-
-} elseif ($_GET['action'] == 'find_hgnc') {
-    // 2010-02-23; 2.0-25; Option added to use preset values taken from the HUGO Gene Nomenclature Committee (HGNC) website (www.genenames.org).
-    // Require form functions.
-    require ROOT_PATH . 'inc-lib-form.php';
-
-    if (isset($_GET['sent'])) {
-        lovd_errorClean();
-
-        if (empty($_POST['id_hgnc'])) {
-            // user did not fill in a HGNC ID.
-            header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=create' . lovd_showSID(true));
-            exit;
-        }
-
-        if (!preg_match('/^\d+$/', $_POST['id_hgnc'])) {
-            // User did not fill in a proper HGNC ID.
-            lovd_errorAdd('Please fill in a valid value (digits only), or leave the textbox blank.');
-        }
-
-        if (!lovd_error()) {      
-            // Search for values from the HGNC site to use as preset values.
-            $sUrl = 'http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?col=gd_app_sym&col=gd_app_name&col=gd_pub_chrom_map&col=gd_pub_eg_id&col=md_mim_id&col=md_prot_id&status_opt=2&where=gd_hgnc_id%3D' . $_POST['id_hgnc'] . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit';
-            $aHGNCValues = lovd_php_file($sUrl); // Headers are stored in the first element of the array, values in the second element of the array.
-
-            if (empty($aHGNCValues[1]) || substr_count($aHGNCValues[1], 'symbol withdrawn')) {
-                lovd_errorAdd('This number does not seem to be a valid HGNC ID!');
-            } else {
-                $aHGNCValues = explode("\t", $aHGNCValues[1]); // Separate the returned values.
-                require ROOT_PATH . 'inc-top.php';
-                print('      Successfully retrieved data from the HGNC website.<BR>' . "\n" .
-                      '      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=create" method="post">' . "\n" .
-                      '        <INPUT type="hidden" name="symbol" value="' . $aHGNCValues[0] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="gene" value="' . $aHGNCValues[1] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="chrom_location" value="' . $aHGNCValues[2] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="id_hgnc" value="' . $_POST['id_hgnc'] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="id_entrez" value="' . $aHGNCValues[3] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="id_omim_gene" value="' . $aHGNCValues[4] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="id_uniprot" value="' . $aHGNCValues[5] . '">' . "\n" .
-                      '        <INPUT type="submit" value="Continue &raquo;">' . "\n" .
-                      '      </FORM>' . "\n\n" .
-                      '      <SCRIPT type="text/javascript">' . "\n" .
-                      '        <!--' . "\n" .
-                      '        document.forms[0].submit();' . "\n" .
-                      '        // -->' . "\n" .
-                      '      </SCRIPT>' . "\n\n");
-    
-                require ROOT_PATH . 'inc-bot.php';
-                exit;
-            }
-        }
-    }
-
-
-
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
-
-    if (!isset($_GET['sent'])) {
-        print('      Please fill in the HGNC ID for the gene you wish to create. If you don\'t know the HGNC ID, leave the field blank.<BR>' . "\n" .
-              '      <BR>' . "\n\n");
-    }
-
-    lovd_errorPrint();
-
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;sent" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
-
-    $_POST['id_hgnc'] = '';
-
-    // Array which will make up the form table.
-    $aForm = array(
-                    array('POST', '', '', '100', ''),
-                    array('HGNC ID', 'text', 'id_hgnc', 10),
-                    array('', 'submit', 'Continue &raquo;'),
-                  );
-    $_MODULES->processForm('SetupGenesFindHGNC', $aForm);
-    lovd_viewForm($aForm);
-
-    print('</TABLE></FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -1151,7 +974,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             }
 
             // Run query to create entry in DBS table.
-            $q = lovd_queryDB($sQ);
+            $q = mysql_query($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top.php';
@@ -1161,7 +984,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 
             // Make current user curator of this gene.
             $sQ = 'INSERT INTO ' . TABLE_CURATES . ' VALUES ("' . $_AUTH['id'] . '", "' . $_POST['symbol'] . '", 1)';
-            $q = @lovd_queryDB($sQ);
+            $q = @mysql_query($sQ);
             if (!$q) {
                 // Save the mysql_error before it disappears.
                 $sError = mysql_error();
@@ -1169,7 +992,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                 if ($_INI['database']['engine'] == 'InnoDB') {
                     @lovd_queryDB('ROLLBACK');
                 } else {
-                    @lovd_queryDB('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                    @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
                 }
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
@@ -1186,14 +1009,14 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             // Create table for column information, based on the patient_columns table.
             require ROOT_PATH . 'install/inc-sql-tables.php';
             $sQ = str_replace(TABLE_PATIENTS_COLS, TABLEPREFIX . '_' . $_POST['symbol'] . '_columns', $aTableSQL['TABLE_PATIENTS_COLS']);
-            $q = @lovd_queryDB($sQ);
+            $q = @mysql_query($sQ);
             if (!$q) {
                 // Save the mysql_error before it disappears.
                 $sError = mysql_error();
 
                 // Rollback;
-                @lovd_queryDB('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @lovd_queryDB('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
@@ -1204,7 +1027,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 
             // Gather info on standard custom variant columns.
             $aColsToCopy = array('colid', 'col_order', 'width', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public', 'public_form', 'created_by', 'created_date');
-            $qCols = lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE (hgvs = 1 OR standard = 1) AND colid LIKE "Variant/%"');
+            $qCols = mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE (hgvs = 1 OR standard = 1) AND colid LIKE "Variant/%"');
 
             while ($z = mysql_fetch_assoc($qCols)) {
                 // $z comes from the database, and is therefore not quoted.
@@ -1243,15 +1066,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                 $sQ .= ')';
 
                 // Insert default LOVD custom column.
-                $q = @lovd_queryDB($sQ);
+                $q = @mysql_query($sQ);
                 if (!$q) {
                     // Save the mysql_error before it disappears.
                     $sError = mysql_error();
 
                     // Rollback;
-                    @lovd_queryDB('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                    @lovd_queryDB('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                    @lovd_queryDB('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
+                    @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                    @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                    @mysql_query('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
 
                     require ROOT_PATH . 'inc-top.php';
                     lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
@@ -1277,7 +1100,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                     sort VARCHAR(52) NOT NULL';
 
             // Load standard columns.
-            $q = lovd_queryDB('SELECT t1.colid, t2.mysql_type FROM ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns AS t1 LEFT JOIN ' . TABLE_COLS . ' AS t2 USING (colid)');
+            $q = mysql_query('SELECT t1.colid, t2.mysql_type FROM ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns AS t1 LEFT JOIN ' . TABLE_COLS . ' AS t2 USING (colid)');
             while ($z = mysql_fetch_assoc($q)) {
                 // Fetch cols for this gene and insert them into the query.
                 $sQ .= ',' . "\n" . 
@@ -1292,15 +1115,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 
             $sQ .= ') TYPE=' . $_INI['database']['engine'];
 
-            $q = @lovd_queryDB($sQ);
+            $q = @mysql_query($sQ);
             if (!$q) {
                 // Save the mysql_error before it disappears.
                 $sError = mysql_error();
 
                 // Rollback;
-                @lovd_queryDB('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @lovd_queryDB('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @lovd_queryDB('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
+                @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
+                @mysql_query('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
@@ -1323,7 +1146,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/config.php?select_db=' . $_POST['symbol'] . lovd_showSID(true));
 
             // Set currdb.
-            @lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_POST['symbol'] . '" WHERE id = "' . $_AUTH['id'] . '"');
+            @mysql_query('UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_POST['symbol'] . '" WHERE id = "' . $_AUTH['id'] . '"');
             $_SESSION['currdb'] = $_POST['symbol'];
             // These just to have inc-top.php what it needs.
             $_SETT['currdb'] = array(
@@ -1520,7 +1343,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 } elseif ($_GET['action'] == 'drop' && !empty($_GET['drop'])) {
     // Drop specific gene.
 
-    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_GET['drop'] . '"'));
+    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_GET['drop'] . '"'));
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -1590,7 +1413,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                           '      Removing columns ... ');
                     flush();
                     $sQ = 'DROP TABLE IF EXISTS ' . TABLEPREFIX . '_' . $zData['symbol'] . '_columns';
-                    $q = lovd_queryDB($sQ);
+                    $q = mysql_query($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropA', $sQ, mysql_error());
                     }
@@ -1600,7 +1423,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Removing variants ... ');
                     flush();
                     $sQ = 'DROP TABLE IF EXISTS ' . TABLEPREFIX . '_' . $zData['symbol'] . '_variants';
-                    $q = lovd_queryDB($sQ);
+                    $q = mysql_query($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropB', $sQ, mysql_error());
                     }
@@ -1610,7 +1433,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Removing variants <-> patients links ... ');
                     flush();
                     $sQ = 'DELETE FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = lovd_queryDB($sQ);
+                    $q = mysql_query($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropC', $sQ, mysql_error());
                     }
@@ -1620,7 +1443,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Removing gene entry ... ');
                     flush();
                     $sQ = 'DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = lovd_queryDB($sQ);
+                    $q = mysql_query($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropD', $sQ, mysql_error());
                     }
@@ -1630,7 +1453,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Removing curator permissions ... ');
                     flush();
                     $sQ = 'DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = lovd_queryDB($sQ);
+                    $q = mysql_query($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropE', $sQ, mysql_error());
                     }
@@ -1640,7 +1463,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                     print('      Updating user settings ... ');
                     flush();
                     $sQ = 'UPDATE ' . TABLE_USERS . ' SET current_db = "" WHERE current_db = "' . $zData['symbol'] . '"';
-                    $q = lovd_queryDB($sQ);
+                    $q = mysql_query($sQ);
                     if (!$q) {
                         lovd_dbFout('GeneDropF', $sQ, mysql_error());
                     }
@@ -1663,7 +1486,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
                     if (count($aOrphaned)) {
                         // Construct DELETE query.
                         $sQ = 'DELETE FROM ' . TABLE_PATIENTS . ' WHERE patientid IN (' . implode(', ', $aOrphaned) . ')';
-                        $q = lovd_queryDB($sQ);
+                        $q = mysql_query($sQ);
                         if (!$q) {
                             lovd_dbFout('GeneDropG', $sQ, mysql_error());
                         }
@@ -1701,7 +1524,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 
             // Total number of variants found in this gene (incl. non curated).
             // 2008-07-08; 2.0-09; Check number of variants using $zData['symbol'], not $_SESSION['currdb'] of course...
-            list($nTotalVariants) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $zData['symbol'] . '"'));
+            list($nTotalVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $zData['symbol'] . '"'));
 
             lovd_showInfoTable('<B>FINAL WARNING! Removing the ' . $zData['symbol'] . ' gene will imply the loss of ' . $nTotalVariants . ' variant entr' . ($nTotalVariants == 1? 'y' : 'ies') . '. If you didn\'t download the varation data stored for the ' . $zData['symbol'] . ' gene in the LOVD system, everything will be lost.</B>', 'warning');
 

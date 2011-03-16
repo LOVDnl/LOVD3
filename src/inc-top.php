@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-10
+ * Modified    : 2011-03-16
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -100,7 +100,7 @@ if (!defined('PAGE_TITLE')) {
 print('    function lovd_switchGeneInline () {' . "\n" .
 // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
       '      varForm = \'<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDBInline" method="get" style="margin : 0px;"><SELECT name="select_db" onchange="document.getElementById(\\\'SelectGeneDBInline\\\').submit();">');
-$q = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_DBS . ' ORDER BY id', array());
+$q = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_DBS . ' ORDER BY id');
 while ($z = mysql_fetch_assoc($q)) {
     // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
     $z['gene'] = lovd_shortenString($z['gene'], 75);

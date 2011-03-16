@@ -75,6 +75,8 @@ TABLE_VARIANTS_ON_TRANSCRIPTS heeft nu alleen een valid_from om te linken naar T
 
 Waar we echt mee bezig zijn:
 ============================
+Ik merkte dat viewList() standaard twee keer wordt uitgevoerd, als er een hash is. Dat moet niet altijd!
+Check objects.php::viewList() in de volgende commit van Ivar.
 ViewList() moet een ID krijgen, zodat meerdere viewList() op dezelfde pagina zullen kunnen werken.
 ViewList() moet geconfigureerd kunnen worden om geen hashes te gebruiken, zodat meerdere viewLists() op 1 pagina elkaar niet storen.
   - $bNoHistory? of $bNoHash?

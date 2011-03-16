@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-03-10
+ * Modified    : 2011-03-16
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -133,9 +133,15 @@ class LOVD_Gene extends LOVD_Object {
                         'chromosome' => array(
                                     'view' => array('Chrom.', 70),
                                     'db'   => array('g.chromosome', false, true)),
+                        'chrom_band' => array(
+                                    'view' => array('Band', 70),
+                                    'db'   => array('g.chrom_band', false, true)),
                         'variants' => array(
                                     'view' => array('Variants', 70),
-                                    'db'   => array('variants', 'ASC', true)),
+                                    'db'   => array('variants', 'DESC', true)),
+                        'updated_date_' => array(
+                                    'view' => array('Last updated', 110),
+                                    'db'   => array('g.updated_date', 'DESC', true)),
                         'diseases_' => array(
                                     'view' => array('Associated with diseases', 200),
                                     'db'   => array('diseases_', false, true)),
@@ -229,7 +235,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // Get list of diseases
         $aData = array();
-        $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id', array());
+        $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
         $nFieldSize = ($nData < 20? $nData : 20);
         while ($r = mysql_fetch_row($qData)) {
@@ -401,6 +407,7 @@ class LOVD_Gene extends LOVD_Object {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'genes/' . rawurlencode($zData['id']);
             $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            $zData['updated_date_'] = substr($zData['updated_date'], 0, 10);
         } else {
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
             $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';

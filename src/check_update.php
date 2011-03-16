@@ -6,12 +6,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2011-03-10
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2010-01-28
+ * For LOVD    : 3.0-pre-02
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -83,9 +83,8 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
 
         // Number of unique variants.
 // DMD_SPECIFIC, I disabled this.
-          // DELETED THE QUERY!
-//        list($nUniqueVariants) = QUERY;
-list($nUniqueVariants) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
+//        list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(DISTINCT geneid, REPLACE(REPLACE(REPLACE(`Variant/DNA`, "(", ""), ")", ""), "?", "")) FROM ' . TABLE_VARIANTS));
+list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
         $sURLVars .= '&uniquevariant_count=' . $nUniqueVariants;
 
 // DMD_SPECIFIC, I disabled this part. Fix it. Re-enable CurrDB.

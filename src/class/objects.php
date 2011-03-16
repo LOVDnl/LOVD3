@@ -459,13 +459,6 @@ class LOVD_Object {
             return true;
         }
 
-        // SEARCH: Implement XSS check on search terms.
-        foreach ($_GET as $key => $val) {
-            if (!is_array($val) && $val !== strip_tags($val)) {
-                $_GET[$key] = '';
-            }
-        }
-
         // SEARCH: Advanced text search.
         $sWHERE = '';
         $sHAVING = '';
@@ -480,7 +473,6 @@ class LOVD_Object {
                 // Replace spaces in sentences between double quotes so they don't get exploded.
                 $bAggregate = (preg_match('/\./', $aCol['db'][0])? 0 : 1);
                 $sSearch = preg_replace_callback('/"([^"]+)"/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
-                $sSearch = preg_replace('/(\w+)(?U:\s+)?\|(?U:\s+)?(\w+)/', '$1|$2', $sSearch);
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
                     if ($sWord !== '') {
@@ -630,10 +622,10 @@ class LOVD_Object {
             exit;
         }
 
+        print('      <DIV id="viewlist_div">' . "\n"); // These contents will be replaced by Ajax.
+
         // Only print stuff if we're not just loading one entry right now.
         if (!$bOnlyRows) {
-            print('      <DIV id="viewlist_div">' . "\n"); // These contents will be replaced by Ajax.
-
             if (!$bHideNav) {
                 lovd_pagesplitShowNav($nTotal);
             }
@@ -714,8 +706,8 @@ class LOVD_Object {
 
                 lovd_pagesplitShowNav($nTotal);
             }
-            print('      </DIV>' . "\n"); // These contents will be replaced by Ajax.
         }
+        print('      </DIV>' . "\n"); // These contents will be replaced by Ajax.
         return true;
     }
 }

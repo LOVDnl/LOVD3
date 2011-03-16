@@ -387,12 +387,12 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
         $sQ .= ')';
 
         // Insert default LOVD custom column.
-        $q = @lovd_queryDB($sQ);
+        $q = @mysql_query($sQ);
 
         // Alter patient table to include column.
         // 2009-02-16; 2.0-16; Added stripslashes to allow receiving quotes. This variable has been checked using regexps, so can be considered safe.
         $sQ = 'ALTER TABLE ' . TABLE_PATIENTS . ' ADD COLUMN `' . $z['colid'] . '` ' . stripslashes($z['mysql_type']) . ' NOT NULL AFTER patientid';
-        $q = @lovd_queryDB($sQ);
+        $q = @mysql_query($sQ);
     }
 
     // (8) Adding standard phenotype columns.
@@ -667,7 +667,7 @@ if ($_GET['step'] == 4 && !@mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE
 
         // All seems to be OK... install module, but do not activate right now.
         $sQ = 'INSERT INTO ' . TABLE_MODULES . ' VALUES ("' . $sModuleID . '", "' . $aModule['name'] . '", "' . $aModule['version'] . '", "' . $aModule['description'] . '", 0, "' . $aModule['settings'] . '", NOW(), NULL)';
-        $q = lovd_queryDB($sQ);
+        $q = mysql_query($sQ);
         if (!$q) {
             lovd_writeLog('Error', 'ModuleScan', 'Error while scanning for new modules: ' . $sModuleID . '/module.php does not install properly:' . "\n" . 'Query : ' . $sQ . "\n" . 'Error : ' . mysql_error());
             $aFailed[] = $sModuleID;

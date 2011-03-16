@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-11
+ * Modified    : 2011-03-16
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,10 +46,10 @@ function lovd_checkDBID ($sGene, $sVariant, $sMutationCol = 'Variant/DNA', $sDBI
 
     $sVariant = str_replace(array('(', ')', '?'), '', $sVariant);
     // Variant/DBID combo already exists?
-    list($n) = @mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE REPLACE(REPLACE(REPLACE(`' . $sMutationCol . '`, "(", ""), ")", ""), "?", "") = "' . $sVariant . '" AND `Variant/DBID` LIKE "' . $sDBID . '%"' . ($nIDtoIgnore? ' AND variantid != "' . $nIDtoIgnore . '"' : '')));
+    list($n) = @mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE REPLACE(REPLACE(REPLACE(`' . $sMutationCol . '`, "(", ""), ")", ""), "?", "") = "' . $sVariant . '" AND `Variant/DBID` LIKE "' . $sDBID . '%"' . ($nIDtoIgnore? ' AND variantid != "' . $nIDtoIgnore . '"' : '')));
     if (!$n) {
         // Check if the chosen ID is empty, then.
-        list($n) = @mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE `Variant/DBID` LIKE "' . $sDBID . '%"' . ($nIDtoIgnore? ' AND variantid != "' . $nIDtoIgnore . '"' : '')));
+        list($n) = @mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE `Variant/DBID` LIKE "' . $sDBID . '%"' . ($nIDtoIgnore? ' AND variantid != "' . $nIDtoIgnore . '"' : '')));
         if ($n) {
             return false;
         }
@@ -74,19 +74,21 @@ function lovd_checkXSS ($aInput = '')
         }
     }
 
-    if (is_array($aInput)) {
-        foreach ($aInput as $key => $val) {
-            if (is_array($val)) {
-                lovd_checkXSS($val);
-            } elseif (!empty($val) && preg_match('/<.*>/', $val)) {
-                // Disallowed tag found.
-                lovd_errorAdd($key, 'Disallowed tag found in form field' . (is_numeric($key)? '.' : ' "' . $key . '".') . ' XSS attack?');
-            }
-        }
-        return true;
+    if (!is_array($aInput)) {
+        $aInput = array($aInput);
     }
 
-    return false;
+    $bSuccess = true;
+    foreach ($aInput as $key => $val) {
+        if (is_array($val)) {
+            $bSuccess = $bSuccess && lovd_checkXSS($val);
+        } elseif (!empty($val) && preg_match('/<.*>/s', $val)) {
+            // Disallowed tag found.
+            $bSuccess = false;
+            lovd_errorAdd($key, 'Disallowed tag found in form field' . (is_numeric($key)? '.' : ' "' . $key . '".') . ' XSS attack?');
+        }
+    }
+    return $bSuccess;
 }
 
 
@@ -202,10 +204,10 @@ function lovd_fetchDBID ($sGene, $sVariant, $sMutationCol = 'Variant/DNA')
     $lID = strlen($sSymb) + 6;
     $sVariant = str_replace(array('(', ')', '?'), '', $sVariant);
     // 2008-06-27; 2.0-08; Drop the regexp check. The field either contains an ID or not, and the actual regexp is much more extensive anyway!
-    list($sVariantDB, $sID) = @mysql_fetch_row(lovd_queryDB('SELECT DISTINCT `' . $sMutationCol . '`, `Variant/DBID` FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE REPLACE(REPLACE(REPLACE(`' . $sMutationCol . '`, "(", ""), ")", ""), "?", "") = "' . $sVariant . '" AND `Variant/DBID` != "" ORDER BY `Variant/DBID`'));
+    list($sVariantDB, $sID) = @mysql_fetch_row(mysql_query('SELECT DISTINCT `' . $sMutationCol . '`, `Variant/DBID` FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE REPLACE(REPLACE(REPLACE(`' . $sMutationCol . '`, "(", ""), ")", ""), "?", "") = "' . $sVariant . '" AND `Variant/DBID` != "" ORDER BY `Variant/DBID`'));
     if (empty($sVariantDB)) {
         // Nieuwe!
-        list($sID) = @mysql_fetch_row(lovd_queryDB('SELECT MAX(LEFT(`Variant/DBID`, ' . $lID . ')) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE LEFT(`Variant/DBID`, ' . $lID . ') REGEXP "^' . $sSymb . '_[0-9]{5}"'));
+        list($sID) = @mysql_fetch_row(mysql_query('SELECT MAX(LEFT(`Variant/DBID`, ' . $lID . ')) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE LEFT(`Variant/DBID`, ' . $lID . ') REGEXP "^' . $sSymb . '_[0-9]{5}"'));
         if (!$sID) {
             $sID = $sSymb . '_00001';
         } else {
@@ -464,7 +466,7 @@ function lovd_setUpdatedDate ($sGene)
     // Does this user have rights on this gene? It doesn't really matter that much, but still.
     if (lovd_isCurator($sGene)) {
         // Just update the database and we'll see what happens.
-        @lovd_queryDB('UPDATE ' . TABLE_DBS . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE id = "' . $sGene . '"');
+        @mysql_query('UPDATE ' . TABLE_DBS . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE id = "' . $sGene . '"');
         if (mysql_affected_rows() > 0) {
             return true;
         }
