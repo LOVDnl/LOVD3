@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-18
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-03-09
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -93,7 +93,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-pre-19',
+                            'version' => '3.0-pre-18',
                           ),
                 'user_levels' =>
                      array(
@@ -281,9 +281,7 @@ if (!$aConfig = file(CONFIG_URI)) {
     lovd_displayError('Init', 'Can\'t open config.ini.php');
 }
 
-// FIXME Allows more mem usage, so scripts don't use too much. Had to increase it because of:
-// 'Fatal error: Allowed memory size of 16777216 bytes exhausted (tried to allocate 72 bytes) in /var/www/LOVD3/trunk/src/inc-lib-xml.php on line 149'
-ini_set("memory_limit","48M");
+
 
 // Parse config file.
 $_INI = array();

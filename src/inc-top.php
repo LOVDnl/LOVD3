@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-18
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-03-21
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -45,9 +45,9 @@ $_MENU = array(
                         '' => 'View all gene entries',
                         'create' => 'Create a new gene entry',
                       ),
-				'transcripts' => 'View transcripts',
-				'variants' => 'View variants',
-				'patients' => 'View patients',
+                'transcripts' => 'View transcripts',
+                'variants' => 'View variants',
+                'patients' => 'View patients',
                 'diseases' => 'View diseases',
                  array(
                         '' => 'View all disease entries',
@@ -55,7 +55,7 @@ $_MENU = array(
                       ),
                 'screenings' => 'View screenings',
                 'submit' => 'Submit new data',
-				'users' => 'LOVD users &amp; submitters',
+                'users' => 'LOVD users &amp; submitters',
                 'setup' => 'LOVD system setup',
                 'docs' => 'LOVD documentation',
               );
@@ -155,7 +155,7 @@ if (!is_array($aImage)) {
     $aImage = array('130', '50', '', 'width="130" heigth="50"');
 }    
 list($nWidth, $nHeight, $sType, $sSize) = $aImage;
-print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($nHeight + 20) . '">' . "\n" .
+print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($_CONF['logo_uri'] == 'gfx/LOVD_logo130x50'? $nHeight : $nHeight + 20) . '">' . "\n" .
       '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n");
 ?>
     </TD>

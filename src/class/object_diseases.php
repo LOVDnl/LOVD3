@@ -190,8 +190,8 @@ class LOVD_Disease extends LOVD_Object {
         } else {
             if (!empty($zData['id_omim'])) {
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
-			}
-			if (!empty($zData['genes'])) {
+            }
+            if (!empty($zData['genes'])) {
                 $aGenes = explode(';;', $zData['genes']);
                 foreach ($aGenes as $sGene) {
                     list($sID, $nOMIMID, $sName) = explode(';', $sGene);

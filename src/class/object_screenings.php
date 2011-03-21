@@ -62,7 +62,7 @@ class LOVD_Screening extends LOVD_Object {
         $this->aSQLViewEntry['SELECT']   = 's.*, uo.name AS owner, uc.name AS created_by';
         $this->aSQLViewEntry['FROM']     = TABLE_SCREENINGS . ' AS s LEFT JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (s.created_by = uc.id)';
 
-		// SQL code for viewing the list of screenings
+        // SQL code for viewing the list of screenings
         $this->aSQLViewList['SELECT']   = 's.*, uo.name AS owner';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s LEFT JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id)';
         //$this->aSQLViewList['GROUP_BY'] = 'p.id';
@@ -73,7 +73,7 @@ class LOVD_Screening extends LOVD_Object {
                  array(
                         'TableHeader_General' => 'Screening ID (#' . $nID . ')',
                         'patientid' => 'Patient ID',
-						'owner' => 'Owner name',
+                        'owner' => 'Owner name',
                         'created_by_' => 'Created by',
                         'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
@@ -99,7 +99,7 @@ class LOVD_Screening extends LOVD_Object {
                         'patientid' => array(
                                     'view' => array('Patient ID', 80),
                                     'db'   => array('s.patientid', 'ASC', true)),
-						'owner' => array(
+                        'owner' => array(
                                     'view' => array('Owner', 200),
                                     'db'   => array('uo.name', 'ASC', true)),
                       );

@@ -90,7 +90,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
     print('<BR><BR><H2 class="LOVD">Variants for patient #' . $nID . '</H2>');
     require ROOT_PATH . 'class/object_variants.php';
     $_DATA = new LOVD_Variant();
-	$_DATA->sSortDefault = 'id';
+    $_DATA->sSortDefault = 'id';
     $zData = $_DATA->viewList('patientid', true);
     
     

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-03-18
+ * Modified    : 2011-03-21
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -68,10 +68,10 @@ class LOVD_Variant extends LOVD_Object {
             $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id)';
             $this->aSQLViewList['GROUP_BY'] = 'v.id';
         } elseif ($sPage == 'screenings') {
-			$this->aSQLViewList['SELECT']   = 'v.*, s.id';
+            $this->aSQLViewList['SELECT']   = 'v.*, s.id AS screeningid';
             $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS sv ON (v.id = sv.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (sv.screeningid = s.id)';
             $this->aSQLViewList['GROUP_BY'] = 'v.id';
-		} elseif ($sPage == 'patients') {
+        } elseif ($sPage == 'patients') {
             $this->aSQLViewList['SELECT']   = 'v.*, s.patientid';
             $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS sv ON (v.id = sv.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (sv.screeningid = s.id)';
             $this->aSQLViewList['GROUP_BY'] = 'v.id';
@@ -114,7 +114,7 @@ class LOVD_Variant extends LOVD_Object {
                                     'db'   => array('vot.transcriptid', false, true)),
                         'screeningid' => array(
                                     'view' => array('Screening ID', 100),
-                                    'db'   => array('s.id', 'ASC', true)),
+                                    'db'   => array('screeningid', 'ASC', true)),
                         'id' => array(
                                     'view' => array('Variant ID', 90),
                                     'db'   => array('v.id', 'ASC', true)),
@@ -136,9 +136,9 @@ class LOVD_Variant extends LOVD_Object {
             unset($this->aColumnsViewList['transcriptid']);
             unset($this->aColumnsViewList['screeningid']);
         } elseif ($sPage == 'screenings') {
-			unset($this->aColumnsViewList['patientid']);
-			unset($this->aColumnsViewList['transcriptid']);
-		}
+            unset($this->aColumnsViewList['patientid']);
+            unset($this->aColumnsViewList['transcriptid']);
+        }
         $this->sSortDefault = 'id';
 
         parent::LOVD_Object();

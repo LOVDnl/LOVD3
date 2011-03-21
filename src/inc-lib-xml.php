@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-15
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-21
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -28,6 +28,10 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
+if (str_replace('M', '', ini_get('memory_limit')) < 48) {
+    ini_set('memory_limit', '48M');
+}
 
 function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
 {
