@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-03-10
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-18
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -67,7 +67,11 @@ class LOVD_Variant extends LOVD_Object {
             $this->aSQLViewList['SELECT']   = 'v.*, vot.transcriptid';
             $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id)';
             $this->aSQLViewList['GROUP_BY'] = 'v.id';
-        } elseif ($sPage == 'patients') {
+        } elseif ($sPage == 'screenings') {
+			$this->aSQLViewList['SELECT']   = 'v.*, s.id';
+            $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS sv ON (v.id = sv.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (sv.screeningid = s.id)';
+            $this->aSQLViewList['GROUP_BY'] = 'v.id';
+		} elseif ($sPage == 'patients') {
             $this->aSQLViewList['SELECT']   = 'v.*, s.patientid';
             $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS sv ON (v.id = sv.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (sv.screeningid = s.id)';
             $this->aSQLViewList['GROUP_BY'] = 'v.id';
@@ -102,9 +106,15 @@ class LOVD_Variant extends LOVD_Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
+                        'patientid' => array(
+                                    'view' => array('Patient ID', 80),
+                                    'db'   => array('s.patientid', 'ASC', true)),
                         'transcriptid' => array(
                                     'view' => array('Transcript ID', 80),
                                     'db'   => array('vot.transcriptid', false, true)),
+                        'screeningid' => array(
+                                    'view' => array('Screening ID', 100),
+                                    'db'   => array('s.id', 'ASC', true)),
                         'id' => array(
                                     'view' => array('Variant ID', 90),
                                     'db'   => array('v.id', 'ASC', true)),
@@ -117,16 +127,18 @@ class LOVD_Variant extends LOVD_Object {
                         'type' => array(
                                     'view' => array('Type', 70),
                                     'db'   => array('v.type', 'ASC', true)),
-                        'patientid' => array(
-                                    'view' => array('Patient ID', 80),
-                                    'db'   => array('s.patientid', 'ASC', true)),
                       );
         
         if ($sPage == 'variants' || $sPage == 'transcripts') {
             unset($this->aColumnsViewList['patientid']);
+            unset($this->aColumnsViewList['screeningid']);
         } elseif ($sPage == 'patients') {
             unset($this->aColumnsViewList['transcriptid']);
-        }
+            unset($this->aColumnsViewList['screeningid']);
+        } elseif ($sPage == 'screenings') {
+			unset($this->aColumnsViewList['patientid']);
+			unset($this->aColumnsViewList['transcriptid']);
+		}
         $this->sSortDefault = 'id';
 
         parent::LOVD_Object();

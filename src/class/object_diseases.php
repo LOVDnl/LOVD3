@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-03-16
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-18
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -57,8 +57,8 @@ class LOVD_Disease extends LOVD_Object {
         $this->sSQLLoadEntry = 'SELECT d.*, GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS active_genes_ FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE d.id = ? GROUP BY d.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'd.*, GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_, uc.name AS created_by_, ue.name AS edited_by_';
-        $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (d.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (d.edited_by = ue.id)';
+        $this->aSQLViewEntry['SELECT']   = 'd.*, GROUP_CONCAT(DISTINCT g.id, ";", g.id_omim, ";", g.name ORDER BY g.id SEPARATOR ";;") AS genes, uc.name AS created_by_, ue.name AS edited_by_';
+        $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)  LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (g.id = g2d.geneid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (d.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (d.edited_by = ue.id)';
 //        $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
 
         // SQL code for viewing a list of entries.
@@ -190,6 +190,14 @@ class LOVD_Disease extends LOVD_Object {
         } else {
             if (!empty($zData['id_omim'])) {
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
+			}
+			if (!empty($zData['genes'])) {
+                $aGenes = explode(';;', $zData['genes']);
+                foreach ($aGenes as $sGene) {
+                    list($sID, $nOMIMID, $sName) = explode(';', $sGene);
+                    $zData['genes_'] .= (!$zData['genes_']? '' : ', ') . '<A href="genes/' . $sID . '">' . $sID . '</A>';
+                    $zData['genes_omim_'] .= (!$zData['genes_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sID . ')</A>';
+                }
             }
         }
 

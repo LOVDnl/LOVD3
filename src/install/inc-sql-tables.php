@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-03-02
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-18
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -228,7 +228,7 @@ $aTableSQL =
 
          , 'TABLE_PATIENTS' =>
    'CREATE TABLE ' . TABLE_PATIENTS . ' (
-    id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+    id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     ownerid SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED,
@@ -254,7 +254,7 @@ $aTableSQL =
 
          , 'TABLE_VARIANTS' =>
    'CREATE TABLE ' . TABLE_VARIANTS . ' (
-    id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+    id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     patientid MEDIUMINT(8) UNSIGNED ZEROFILL,
     allele TINYINT(2) UNSIGNED NOT NULL,
     pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
@@ -341,7 +341,7 @@ $aTableSQL =
 
          , 'TABLE_SCREENINGS' =>
    'CREATE TABLE ' . TABLE_SCREENINGS . ' (
-    id INT(10) UNSIGNED ZEROFILL NOT NULL,
+    id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     patientid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
     ownerid SMALLINT(5) UNSIGNED ZEROFILL,
     created_by SMALLINT(5) UNSIGNED,

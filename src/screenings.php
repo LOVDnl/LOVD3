@@ -3,7 +3,7 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2011-02-16
+ * Created     : 2011-03-18
  * Modified    : 2011-03-18
  * For LOVD    : 3.0-pre-19
  *
@@ -42,15 +42,15 @@ if ($_AUTH) {
 
 
 if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
-    // URL: /patients
+    // URL: /screenings
     // View all entries.
 
-    define('PAGE_TITLE', 'LOVD Setup - Manage patients');
+    define('PAGE_TITLE', 'LOVD Setup - Manage screenings');
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    require ROOT_PATH . 'class/object_patients.php';
-    $_DATA = new LOVD_Patient();
+    require ROOT_PATH . 'class/object_screenings.php';
+    $_DATA = new LOVD_Screening();
     $_DATA->viewList();
 
     require ROOT_PATH . 'inc-bot.php';
@@ -62,23 +62,23 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
-    // URL: /patients/00000001
+    // URL: /screenings/00000001
     // View specific entry.
 
     $nID = $_PATH_ELEMENTS[1];
-    define('PAGE_TITLE', 'View Patient #' . $nID);
+    define('PAGE_TITLE', 'View Screening #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    require ROOT_PATH . 'class/object_patients.php';
-    $_DATA = new LOVD_Patient($nID);
+    require ROOT_PATH . 'class/object_screenings.php';
+    $_DATA = new LOVD_Screening($nID);
     $zData = $_DATA->viewEntry($nID);
     
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="patients/' . $nID . '?edit">Edit patient information</A>';
-        $sNavigation .= ' | <A href="patients/' . $nID . '?delete">Delete patient entry</A>';
+        $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
+        $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
     }
 
     if ($sNavigation) {
@@ -86,12 +86,12 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
         lovd_showNavigation($sNavigation);
     }
     
-    $_GET['search_patientid'] = $nID;
-    print('<BR><BR><H2 class="LOVD">Variants for patient #' . $nID . '</H2>');
+    $_GET['search_screeningid'] = $nID;
+    print('<BR><BR><H2 class="LOVD">Variants found</H2>');
     require ROOT_PATH . 'class/object_variants.php';
     $_DATA = new LOVD_Variant();
 	$_DATA->sSortDefault = 'id';
-    $zData = $_DATA->viewList('patientid', true);
+    $zData = $_DATA->viewList('screeningid', true);
     
     
     require ROOT_PATH . 'inc-bot.php';
@@ -103,18 +103,18 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
 
 
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
-    // URL: /patients/00000001?delete
+    // URL: /screenings/00000001?delete
     // Drop specific entry.
 
     $nID = $_PATH_ELEMENTS[1];
-    define('PAGE_TITLE', 'Delete patient information entry ' . $nID);
-    define('LOG_EVENT', 'PatientDelete');
+    define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
+    define('LOG_EVENT', 'ScreeningDelete');
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    require ROOT_PATH . 'class/object_patients.php';
-    $_DATA = new LOVD_Patient();
+    require ROOT_PATH . 'class/object_screenings.php';
+    $_DATA = new LOVD_Screening();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -135,7 +135,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             // Query text.
             // This also deletes the entries in gen2dis and transcripts.
             // FIXME; implement deleteEntry()
-            $sSQL = 'DELETE FROM ' . TABLE_PATIENTS . ' WHERE id = ?';
+            $sSQL = 'DELETE FROM ' . TABLE_SCREENINGS . ' WHERE id = ?';
             $aSQL = array($zData['id']);
             $q = lovd_queryDB($sSQL, $aSQL);
             if (!$q) {
@@ -143,14 +143,14 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             }
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted patient information entry ' . $nID . ' - ' . $zData['id'] . ' (Owner: ' . $zData['owner'] . ')');
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted screening information entry ' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'patients');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'screenings');
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Successfully deleted the patient information entry!', 'success');
+            lovd_showInfoTable('Successfully deleted the screening information entry!', 'success');
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
@@ -175,10 +175,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting patient information entry', '', 'print', $zData['id'] . ' (Owner: ' . $zData['owner'] . ')'),
+                        array('Deleting screening information entry', '', 'print', $zData['id']),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
-                        array('', '', 'submit', 'Delete patient information entry'),
+                        array('', '', 'submit', 'Delete screening information entry'),
                       ));
     lovd_viewForm($aForm);
 
