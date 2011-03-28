@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-16
+ * Modified    : 2011-03-28
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -438,9 +438,16 @@ class LOVD_Object {
 
 
 
-    function viewList ($aColsToSkip = array(), $bHideNav = false, $bOnlyRows = false)
+    function viewList ($sViewListID = false, $aColsToSkip = array(), $bHideNav = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
+
+        // ViewLists need an ID to identify the specific viewList, in case there are a few in one document.
+        if (!$sViewListID || !is_string($sViewListID)) {
+            $sViewListID = lovd_generateRandomID();
+        } else {
+            $sViewListID = preg_replace('/[^A-Z0-9._-]+/i', '', $sViewListID);
+        }
 
         if (!is_array($aColsToSkip)) {
             $aColsToSkip = array($aColsToSkip);
@@ -543,7 +550,8 @@ class LOVD_Object {
         
             // Print form; required for sorting and searching.
             // Because we don't want the form to submit itself while we are waiting for the Ajax response, we need to kill the native submit() functionality.
-            print('      <FORM action="' . CURRENT_PATH . '" method="get" id="viewlist_form" style="margin : 0px;" onsubmit="return false;">' . "\n" .
+            print('      <FORM action="' . CURRENT_PATH . '" method="get" id="viewlistForm_' . $sViewListID . '" style="margin : 0px;" onsubmit="return false;">' . "\n" .
+                  '        <INPUT type="hidden" name="viewlistid" value="' . $sViewListID . '">' . "\n" .
                   '        <INPUT type="hidden" name="object" value="' . $this->sObject . '">' . "\n" .
 // FIXME; do we ever use ACTION in a ViewList? Wait until we've made variants.php to know for sure.
 // FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
@@ -622,16 +630,16 @@ class LOVD_Object {
             exit;
         }
 
-        print('      <DIV id="viewlist_div">' . "\n"); // These contents will be replaced by Ajax.
+        print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
 
         // Only print stuff if we're not just loading one entry right now.
         if (!$bOnlyRows) {
             if (!$bHideNav) {
-                lovd_pagesplitShowNav($nTotal);
+                lovd_pagesplitShowNav($sViewListID, $nTotal);
             }
 
             // Table and search headers (if applicable).
-            print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlist_table">' . "\n" .
+            print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
                   '        <THEAD>' . "\n" .
                   '        <TR>');
 
@@ -649,15 +657,15 @@ class LOVD_Object {
                     $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                 }
                 print("\n" . '          <TH valign="top"' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . '>' . "\n" .
-                             '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlist_table_colwidth_' . $sField . '"><BR>' .
+                             '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                         (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                              "\n" .
-                             '            <DIV onclick="document.forms[\'viewlist_form\'].order.value=\'' . $sField . ',' . ($aOrder[0] == $sField? ($aOrder[1] == 'ASC'? 'DESC' : 'ASC') : $aCol['db'][1]) . '\';lovd_submitList();">' . "\n" .
+                             '            <DIV onclick="document.forms[\'viewlistForm_' . $sViewListID . '\'].order.value=\'' . $sField . ',' . ($aOrder[0] == $sField? ($aOrder[1] == 'ASC'? 'DESC' : 'ASC') : $aCol['db'][1]) . '\';lovd_submitList(\'' . $sViewListID . '\');">' . "\n" .
                              '              <IMG src="gfx/order_arrow' . $sImg . '.png" alt="' . $sAlt . '" title="' . $sAlt . '" width="13" height="12" style="float : right; margin-top : 2px;">' . str_replace(' ', '&nbsp;', $aCol['view'][0]) . '</DIV>') .
                         (!$bSearchable? '' :
                              "\n" .
                              // SetTimeOut() is necessary because if the function gets executed right away, selecting a previously used value from a *browser-generated* list in one of the fields, gets aborted and it just sends whatever is typed in at that moment.
-                             '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain..." style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { document.forms[\'viewlist_form\'].page.value=1; setTimeout(\'lovd_submitList()\', 0); }">') .
+                             '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain..." style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_submitList(\\\'' . $sViewListID . '\\\')\', 0); }">') .
                       '</TH>');
             }
             print('</TR></THEAD>');
@@ -704,7 +712,7 @@ class LOVD_Object {
                       '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n" .
                       '      </FORM>' . "\n\n");
 
-                lovd_pagesplitShowNav($nTotal);
+                lovd_pagesplitShowNav($sViewListID, $nTotal);
             }
         }
         print('      </DIV>' . "\n"); // These contents will be replaced by Ajax.

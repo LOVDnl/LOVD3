@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2010-06-25
- * For LOVD    : 3.0-pre-07
+ * Modified    : 2011-03-28
+ * For LOVD    : 3.0-pre-18
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -49,7 +48,16 @@ function lovd_loadListView ()
         if (window.location.hash != prevHash) {
             var aGET = window.location.hash.substr(1).split('&');
             var GET = new Array();
-            var oForm = document.forms['viewlist_form'];
+
+            // In case multiple viewList's exist, we choose the first one. In practice, most likely hashing is turned off on pages with multiple viewLists.
+            for (var i in document.forms) {
+                if (document.forms[i].id && document.forms[i].id.substring(0, 13) == 'viewlistForm_') {
+                    oForm = document.forms[i];
+                    sViewListID = document.forms[i].id.substring(13);
+                    break;
+                }
+            }
+
             for (var i in aGET) {
                 var tmp = aGET[i].split('=');
                 GET[tmp[0]] = tmp[1];
@@ -65,7 +73,7 @@ function lovd_loadListView ()
                 oForm.page_size.value = decodeURIComponent(GET['page_size']);
                 oForm.page.value = decodeURIComponent(GET['page']);
             }
-            lovd_submitList();
+            lovd_submitList(sViewListID);
             prevHash = window.location.hash;
         }
     }
@@ -73,16 +81,16 @@ function lovd_loadListView ()
 
 
 
-function lovd_navPage (nPage) {
-    oForm = document.forms['viewlist_form'];
+function lovd_navPage (sViewListID, nPage) {
+    oForm = document.forms['viewlistForm_' + sViewListID];
     oForm.page.value = nPage;
-    lovd_submitList();
+    lovd_submitList(sViewListID);
 }
 
 
 
-function lovd_submitList () {
-    oForm = document.forms['viewlist_form'];
+function lovd_submitList (sViewListID) {
+    oForm = document.forms['viewlistForm_' + sViewListID];
     // Used to have a simple loop through oForm, but Google Chrome does not like that.
     aInput = oForm.getElementsByTagName('input');
     for (var i in aInput) {
@@ -95,12 +103,13 @@ function lovd_submitList () {
     var objHTTP = lovd_createHTTPRequest();
     if (!objHTTP) {
         // Ajax not supported. Use fallback non-Ajax navigation.
+        oForm['viewlistid'].disabled = true; // We use this for Ajax capabilities, but don't want it to show in the URL.
         oForm['object'].disabled = true; // We use this for Ajax capabilities, but don't want it to show in the URL.
         oForm.submit();
     } else {
         // Submit the form over Ajax. Sort of.
 
-        var oDiv = document.getElementById('viewlist_div');
+        var oDiv = document.getElementById('viewlistDiv_' + sViewListID);
         document.body.style.cursor = 'progress'; // 'wait' is probably too much.
 
         objHTTP.onreadystatechange = function ()
@@ -112,11 +121,11 @@ function lovd_submitList () {
                         // Successfully retrieved stuff.
                         oDiv.innerHTML = objHTTP.responseText;
                         // The following adds the page to the history in Firefox, such that the user *can* push the back button.
-                        // I chose not to use sGET (created somewhere below) here, because it contains 'object' which I don't want to use now and I guess it would be possible that it won't be set.
+                        // I chose not to use sGET (created somewhere below) here, because it contains 'viewlistid' and 'object' which I don't want to use now and I guess it would be possible that it won't be set.
                         var sHash = '';
                         aInput = oForm.getElementsByTagName('input');
                         for (var i in aInput) {
-                            if (!aInput[i].disabled && aInput[i].value && aInput[i].name != 'object') {
+                            if (!aInput[i].disabled && aInput[i].value && aInput[i].name != 'viewlistid' && aInput[i].name != 'object') {
                                 sHash = (sHash? sHash + '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
                             }
                         }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-10
+ * Modified    : 2011-03-28
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -355,11 +355,19 @@ function lovd_getProjectFile ()
 function lovd_includeJS ($sFile, $nPrefix = 3)
 {
     // Searches for and includes a .js include file.
-    
+
     if (substr($sFile, 0, 4) != 'http' && (!file_exists($sFile) || !is_readable($sFile))) {
         return false;
     }
-    
+
+    static $aIncludedFiles = array();
+    // Include a file just once!
+    if (in_array($sFile, $aIncludedFiles)) {
+        return true;
+    } else {
+        $aIncludedFiles[] = $sFile;
+    }
+
     $sPrefix = str_repeat('  ', $nPrefix);
     // This basename() implementation is necessary because in HTML the BASE header indicate the relative href, but PHP does not know this.
     // Therefore, simply sending {ROOT_PATH . $sFile} will not work with ROOT_PATH other than ./ because the browser won't find the file. 

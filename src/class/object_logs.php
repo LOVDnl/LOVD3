@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-28
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -100,7 +100,7 @@ class LOVD_Log extends LOVD_Object {
 
         $zData['row_id'] = $zData['name'] . ',' . $zData['date'] . ',' . $zData['mtime'];
         $zData['user_'] = '<A href="users/' . $zData['userid'] . '">' . $zData['user'] . '</A>';
-        $zData['del'] = '<A href="#" onclick="lovd_AjaxDeleteLog(\'' . $zData['row_id'] . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Delete" title="Delete" width="11" height="11" style="margin-top : 3px;"/></A>';
+        $zData['del'] = '<A href="#" onclick="lovd_AjaxDeleteLog(\'LOVDLogs\', \'' . $zData['row_id'] . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Delete" title="Delete" width="11" height="11" style="margin-top : 3px;"/></A>';
         $zData['entry'] = str_replace(array("\r\n", "\r", "\n"), '<BR/>', $zData['log']);
         $zData['entry'] = str_replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;", $zData['entry']);
 

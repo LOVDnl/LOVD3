@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2010-07-29
- * For LOVD    : 3.0-pre-08
+ * Modified    : 2011-03-28
+ * For LOVD    : 3.0-pre-18
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -82,7 +81,7 @@ $_SETT['list_sizes'][] = 10;
 
 
 
-function lovd_pagesplitShowNav ($nTotal, $nShownPages = 10)
+function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Initializes page splitting function which converts long lists of results
@@ -108,7 +107,7 @@ function lovd_pagesplitShowNav ($nTotal, $nShownPages = 10)
 
     if (empty($_PAGESPLIT['printed'])) {
         // First, print the range currently on the screen.
-        print('      <SPAN class="S11" id="pagesplit_num">' . "\n" .
+        print('      <SPAN class="S11" id="viewlistPageSplitText_' . $sViewListID . '">' . "\n" .
               '        ' . $total . ' entr' . ($total == 1? 'y' : 'ies') . ' on ' . $nPages . ' page' . ($nPages == 1? '' : 's') . '.');
 
         if ($first_entry == $last_entry) {
@@ -122,7 +121,7 @@ function lovd_pagesplitShowNav ($nTotal, $nShownPages = 10)
     print('      <TABLE border="0" cellpadding="0" cellspacing="3" class="pagesplit_nav">' . "\n" .
           '        <TR>' . "\n" .
           '          <TD style="border : 0px; cursor : default; padding-right : 10px;">' . "\n" .
-          '            <SELECT onchange="document.forms[\'viewlist_form\'].page_size.value = this.value; lovd_submitList();">');
+          '            <SELECT onchange="document.forms[\'viewlistForm_' . $sViewListID . '\'].page_size.value = this.value; lovd_submitList(\'' . $sViewListID . '\');">');
     foreach ($_SETT['list_sizes'] as $nSize) {
         print("\n" .
               '              <OPTION value="' . $nSize . '"' . ($nSize == $_GET['page_size']? ' selected' : '') . '>' . $nSize . ' per page</OPTION>');
@@ -139,8 +138,8 @@ function lovd_pagesplitShowNav ($nTotal, $nShownPages = 10)
 
         // Provide "First" and "Previous" buttons; even though they may not be active.
         print("\n" .
-              '          <TH ' . ($_GET['page'] > 1? 'onclick="lovd_navPage(1);"' : 'class="inactive"') . '>&laquo; First</TH>' . "\n" .
-              '          <TH ' . ($_GET['page'] > 1? 'onclick="lovd_navPage(' . ($_GET['page'] - 1) . ');"' : 'class="inactive"') . '>&#139; Prev</TH>' . "\n" .
+              '          <TH ' . ($_GET['page'] > 1? 'onclick="lovd_navPage(\'' . $sViewListID . '\', 1);"' : 'class="inactive"') . '>&laquo; First</TH>' . "\n" .
+              '          <TH ' . ($_GET['page'] > 1? 'onclick="lovd_navPage(\'' . $sViewListID . '\', ' . ($_GET['page'] - 1) . ');"' : 'class="inactive"') . '>&#139; Prev</TH>' . "\n" .
               '          <TD>&nbsp;&nbsp;&nbsp;</TD>');
 
         // Pages that aren't be printed.
@@ -151,7 +150,7 @@ function lovd_pagesplitShowNav ($nTotal, $nShownPages = 10)
         // Loop through all pages that need to be printed.
         for ($i = $nFirstPage; $i <= $nPages && $i <= ($_GET['page'] + $nShownPages); $i ++) {
             print("\n" .
-                  '          <TD class="' . ($_GET['page'] == $i? 'selected' : 'num" onclick="lovd_navPage(' . $i . ');') . '">' . $i . '</TD>');
+                  '          <TD class="' . ($_GET['page'] == $i? 'selected' : 'num" onclick="lovd_navPage(\'' . $sViewListID . '\', ' . $i . ');') . '">' . $i . '</TD>');
         }
 
         // Last printed page block.
@@ -165,8 +164,8 @@ function lovd_pagesplitShowNav ($nTotal, $nShownPages = 10)
         // Provide "Next" and "Last" buttons; even though they may not be active.
         print("\n" .
               '          <TD>&nbsp;&nbsp;&nbsp;</TD>' . "\n" .
-              '          <TH ' . (($_GET['page_size'] * $_GET['page']) < $total? 'onclick="lovd_navPage(' . ($_GET['page'] + 1) . ');"' : 'class="inactive"') . '>Next &#155;</TH>' . "\n" .
-              '          <TH ' . ($_GET['page'] != $nPages? 'onclick="lovd_navPage(' . $nPages .');"' : 'class="inactive"') . '>Last &raquo;</TH>');
+              '          <TH ' . (($_GET['page_size'] * $_GET['page']) < $total? 'onclick="lovd_navPage(\'' . $sViewListID . '\', ' . ($_GET['page'] + 1) . ');"' : 'class="inactive"') . '>Next &#155;</TH>' . "\n" .
+              '          <TH ' . ($_GET['page'] != $nPages? 'onclick="lovd_navPage(\'' . $sViewListID . '\', ' . $nPages .');"' : 'class="inactive"') . '>Last &raquo;</TH>');
     }
 
     print('</TR></TABLE>' . "\n\n");

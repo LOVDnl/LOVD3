@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2011-03-16
+ * Modified    : 2011-03-28
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,7 +32,7 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-if (empty($_GET['object']) || !preg_match('/^[A-Z]+$/i', $_GET['object'])) {
+if (empty($_GET['viewlistid']) || empty($_GET['object']) || !preg_match('/^[A-Z]+$/i', $_GET['object'])) {
     die(AJAX_DATA_ERROR);
 }
 
@@ -77,5 +77,5 @@ $_GET['object'] = 'LOVD_' . ucwords($_GET['object']);
 $aColsToSkip = (!empty($_GET['skip'])? $_GET['skip'] : array());
 $_DATA = new $_GET['object']();
 // Set $bHideNav to false always, since this ajax request could only have been sent if there were navigation buttons.
-$_DATA->viewList($aColsToSkip, (!empty($_GET['hidenav'])? true : false), (!empty($_GET['only_rows'])? true : false));
+$_DATA->viewList($_GET['viewlistid'], $aColsToSkip, (!empty($_GET['hidenav'])? true : false), (!empty($_GET['only_rows'])? true : false));
 ?>

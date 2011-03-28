@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-01
- * Modified    : 2010-07-26
- * For LOVD    : 3.0-pre-08
+ * Modified    : 2011-03-28
+ * For LOVD    : 3.0-pre-18
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -42,12 +41,12 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
 }
 ?>
 
-function lovd_addNextRow ()
+function lovd_addNextRow (sViewListID)
 {
     // Load row for next page, because one row got deleted. So basically we're
     // asking for the row that we *expect* to be the first on the next page,
     // but we provide coordinates for the last row on this page.
-    oForm = document.forms['viewlist_form'];
+    oForm = document.forms['viewlistForm_' + sViewListID];
 
     // However, make sure we only do this when it's needed!
     // Check if we're the last page or not...!
@@ -72,7 +71,7 @@ function lovd_addNextRow ()
         //oForm.submit(); // Simply refresh the page.
     } else {
         // Find the next entry and add it to the table.
-        oTable = document.getElementById('viewlist_table');
+        oTable = document.getElementById('viewlistTable_' + sViewListID);
 
         objHTTP.onreadystatechange = function ()
         {
@@ -114,7 +113,7 @@ function lovd_addNextRow ()
 
 
 
-function lovd_AjaxDeleteLog (nID)
+function lovd_AjaxDeleteLog (sViewListID, nID)
 {
     // Create HTTP request object.
     var objHTTP = lovd_createHTTPRequest();
@@ -128,12 +127,12 @@ function lovd_AjaxDeleteLog (nID)
                 if (objHTTP.status == 200) {
                     if (objHTTP.responseText == '1') {
                         // Object successfully deleted.
-                        lovd_hideRow(nID);
-                        document.forms['viewlist_form'].total.value --;
-                        lovd_updateEntriesMessage();
+                        lovd_hideRow(sViewListID, nID);
+                        document.forms['viewlistForm_' + sViewListID].total.value --;
+                        lovd_updateEntriesMessage(sViewListID);
 // FIXME; disable for IE or try to fix?
                         // This one doesn't really work in IE 7. Other versions not known.
-                        lovd_addNextRow();
+                        lovd_addNextRow(sViewListID);
                         return true;
                     } else if (objHTTP.responseText == '8') {
                         window.alert('Lost your session. Please log in again.');
@@ -158,10 +157,10 @@ function lovd_AjaxDeleteLog (nID)
 
 
 
-function lovd_hideRow (sElementID)
+function lovd_hideRow (sViewListID, sElementID)
 {
     // FIXME; not really correct; the entire first part gets repeatedly called. It should only be the last part.
-    oTable = document.getElementById('viewlist_table');
+    oTable = document.getElementById('viewlistTable_' + sViewListID);
     oElement = document.getElementById(sElementID);
     // Get current height and set it in the style.
     nHeight = oElement.offsetHeight;
@@ -177,7 +176,7 @@ function lovd_hideRow (sElementID)
     if (nHeight > 1) {
         nHeight = parseInt(parseInt(oElement.style.height)/1.8);
         oElement.style.height = nHeight + 'px';
-        setTimeout('lovd_hideRow(\'' + sElementID + '\');', 50);
+        setTimeout('lovd_hideRow(\'' + sViewListID + '\', \'' + sElementID + '\');', 50);
     } else {
         // Really remove this row now.
         oTable.tBodies[0].removeChild(oElement);
@@ -186,10 +185,10 @@ function lovd_hideRow (sElementID)
 
 
 
-function lovd_updateEntriesMessage ()
+function lovd_updateEntriesMessage (sViewListID)
 {
     // Updates the line above the table that says; "# entries on # pages". Showing entries # - ##."
-    oForm = document.forms['viewlist_form'];
+    oForm = document.forms['viewlistForm_' + sViewListID];
     var nPages = Math.ceil(oForm.total.value / oForm.page_size.value);
     var nFirstEntry = ((oForm.page.value - 1) * oForm.page_size.value + 1);
     var nLastEntry = oForm.page.value * oForm.page_size.value;
@@ -202,5 +201,5 @@ function lovd_updateEntriesMessage ()
     } else if (nFirstEntry <= oForm.total.value) {
         sMessage += ' Showing entries ' + nFirstEntry + ' - ' + nLastEntry + '.';
     }
-    document.getElementById('pagesplit_num').innerHTML = sMessage;
+    document.getElementById('viewlistPageSplitText_' + sViewListID).innerHTML = sMessage;
 }

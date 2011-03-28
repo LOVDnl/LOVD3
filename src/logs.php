@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-26
- * Modified    : 2011-02-22
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-03-28
+ * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -102,7 +102,8 @@ print('</TABLE>' . "\n" .
 lovd_includeJS(ROOT_PATH . 'inc-js-ajax-delete_logs.php');
 
 $_DATA = new LOVD_Log();
-$_DATA->viewList();
+$_DATA->viewList('LOVDLogs'); // Setting known viewListID, such that the log's prepareData() can refer to itself.
+// FIXME; is there another solution for this?
 
 require ROOT_PATH . 'inc-bot.php';
 ?>
