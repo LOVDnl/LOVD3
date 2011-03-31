@@ -1,6 +1,10 @@
 Doen voordat LOVD 3.0 online gebruikt kan worden:
 =================================================
 - Bij het aanmaken van een gen, moet de gebruiker automatisch curator worden.
+- Patient -> Individual?
+  Introduce Panel?
+- Check Update. Code overnemen van LOVD 2: check_update.php en stukje in config die waarschuwt voor update?
+  Op de LOVD 3.0 website dan natuurlijk ook implementeren.
 
 
 
@@ -44,6 +48,8 @@ Kán later, maar VOOR dat er externe gebruikers actief worden:
 - Bespreek met Ivar: als een viewList() gesorteerd wordt, moet de page terug naar 1?
 
 
+- Hoe slaan we functional effect op?
+- Hoe slaan we pathogeniciteit op?
 
 
 
@@ -120,7 +126,6 @@ Voorstel schrijven voor nieuwe functies voor de Mutalyzer webservice, standaardi
 Tabs instelbaar: system settings bepaalt welke tabs worden getoond; genes, diseases, transcripts, users, patients, etc.
     Misschien niet de system settings maar individueel? Extra tabje toevoegen die + heet, die de lijst mogelijke tabs geeft met een checkbox er voor? Gebruiker vinkt aan en uit, klikt Save en pagina herlaad?
         Beter nog: inc-top herlaad? Ajax daarvoor gebruiken?
-Link tussen patient en disease leggen dmv koppelings tabel?
 Formulier voor toevoegen/edit kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.
 Een column ID moet altijd met een hoofdletter gemaakt worden, dus daar moet een controle op!
 FINISH COLUMNS EDIT??? First think about how to do this???
@@ -141,13 +146,9 @@ TABLE_VARIANTS_ON_GENOME heeft geen foreign key naar TABLE_VARIANTS.
 checkFields() roept getForm() aan om te bepalen hoe de velden heten. Dus als er een error is, wordt getForm() twee keer aangeroepen.
     Voor forms met veel queries is dat een beetje vervelend. Kan getForm() niet een static variabele in gebruik nemen,
     die ziet dat het formulier al eerder gemaakt is (door de checkFields() call) en die dan direct returnen?
-Ik merkte dat viewList() standaard twee keer wordt uitgevoerd, als er een hash is. Dat moet niet altijd, toch?
 Check objects.php::viewList() in de volgende commit van Ivar.
-ViewList() moet geconfigureerd kunnen worden om geen hashes te gebruiken, zodat meerdere viewLists() op 1 pagina elkaar niet storen.
-  - $bNoHistory? of $bNoHash?
 Col add: Er moet nog gekeken worden naar het bevestigingsbericht. Ook moeten diseases goed omschreven worden in messages; bij voorkeur met hun symbol.
     Deze code naar install/index.php kopiëren, om de standaard kolommen alvast toe te voegen tijdens installatie.
-show genes, create, edit, delete, link naar diseases.
 Create genes moet het formulier gaan indelen in secties die geopend en gesloten kunnen worden.
 Overnemen van LOVD2: view users zien in welke genen ze gesubmit hebben?
 Store list_size per data type in a $_COOKIE, just like hidden columns and stuff

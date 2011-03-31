@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-03-02
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-30
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -196,6 +196,7 @@ $aTableSQL =
     edited_by SMALLINT(5) UNSIGNED,
     edited_date DATETIME,
     PRIMARY KEY (id),
+    UNIQUE(id_omim),
     INDEX (created_by),
     INDEX (edited_by),
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -250,6 +251,16 @@ $aTableSQL =
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+    ' . $sSettings
+
+         , 'TABLE_PAT2DIS' =>
+   'CREATE TABLE ' . TABLE_PAT2DIS . ' (
+    patientid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+    diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+    PRIMARY KEY (patientid, diseaseid),
+    INDEX (diseaseid),
+    FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE)
     ' . $sSettings
 
          , 'TABLE_VARIANTS' =>

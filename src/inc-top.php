@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-21
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-31
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -135,8 +135,8 @@ print('<INPUT type="submit" value="Switch"></FORM>\';' . "\n" .
     //-->
   </SCRIPT>
 <?php
-lovd_includeJS(ROOT_PATH . 'inc-js-openwindow.php', 1);
-lovd_includeJS(ROOT_PATH . 'inc-js-toggle-visibility.js', 1); // Used on forms and variant overviews for small info tables.
+lovd_includeJS('inc-js-openwindow.php', 1);
+lovd_includeJS('inc-js-toggle-visibility.js', 1); // Used on forms and variant overviews for small info tables.
 ?>
 </HEAD>
 

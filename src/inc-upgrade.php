@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-02
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-31
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -115,6 +115,18 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              array(
                                     'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(12)',
                                     'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "http://www.mutalyzer.nl/2.0/services" AFTER logo_uri',
+                                  ),
+                    '3.0-pre-19' =>
+                             array(
+                                    'DELETE FROM ' . TABLE_COLS . ' WHERE id IN ("Patient/Patient_ID", "Screening/Template", "Screening/Technique", "Screening/Tissue")',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Patient/Lab_ID",           0,  80, 1, 1, 1, "Lab\'s ID", "", "The ID given to this individual by its reference.", "The ID given to this individual by its reference, such as a hospital, diagnostic laboratory or a paper.", "VARCHAR(15)", "Lab ID||text|10", "", "", 0, 1, 0, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Template",       0,  80, 1, 1, 1, "Template",  "", "Screening performed on DNA, RNA and/or Protein level.", "Screening performed on DNA, RNA and/or Protein level.", "VARCHAR(20)", "Detection template||select|3|false|true|false", "DNA\r\nRNA\r\nProtein", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Technique",      0, 200, 1, 1, 1, "Technique", "", "Technique used to detect variants.", "Technique used to reveal the variants reported.", "VARCHAR(150)", "Technique(s) used||select|5|false|true|false", "BESS = Base Excision Sequence Scanning\r\nCMC = Chemical Mismatch Cleavage\r\nDGGE = Denaturing-Gradient Gel-Electrophoresis\r\nDHPLC = Denaturing High-Performance Liquid Chromatography\r\nDOVAM = Detection Of Virtually All Mutations (SSCA variant)\r\nDSCA = Double-Strand DNA Conformation Analysis\r\nHD = HeteroDuplex analysis\r\nIHC = Immuno-Histo-Chemistry\r\nmPCR = multiplex PCR\r\nMAPH = Multiplex Amplifiable Probe Hybridisation\r\nMLPA = Multiplex Ligation-dependent Probe Amplification\r\nNGS = Next Generation Sequencing\r\nPAGE = Poly-Acrylamide Gel-Electrophoresis\r\nPCR = Polymerase Chain Reaction\r\nPTT = Protein Truncation Test\r\nRT-PCR = Reverse Transcription and PCR\r\nSEQ = SEQuencing\r\nSouthern = Southern Blotting\r\nSSCA = Single-Strand DNA Conformation Analysis (SSCP)\r\nWestern = Western Blotting", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Tissue",         0, 100, 0, 0, 1, "Tissue",    "", "Tissue type used for the detection of sequence variants.", "Tissue type used for the detection of sequence variants.", "VARCHAR(25)", "Tissue||text|20", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Date",           0,  80, 0, 0, 0, "Date",      "Format: YYYY-MM-DD.", "Date the detection technique was performed.", "Date the detection technique was performed, in YYYY-MM-DD format.", "DATE", "Date||text|10", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/DBID", 6, 200, 1, 1, 1, "DB-ID",     "The ID-field should start with the ID; the gene symbol followed by an underscore (_) and the ID code, usually five digits.", "Database IDentifier; When available, links to OMIM ID\'s are provided.", "Database IDentifier; When available, links to OMIM ID\'s are provided.", "VARCHAR(100)", "ID||text|40", "", "/^[A-Z][A-Z0-9]+_([0-9]{5}([a-z]{2})?|(SO|MP|e)[0-9]{1,2}((SO|MP|e)[0-9]{1,2})?b?)\\\\b/", 1, 0, 1, 1, NOW(), NULL, NULL)',
+                                    'CREATE TABLE ' . TABLE_PAT2DIS . ' (patientid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL, diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL, PRIMARY KEY (patientid, diseaseid), INDEX (diseaseid), FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE) ENGINE=InnoDB, DEFAULT CHARACTER SET utf8',
+                                    'ALTER TABLE ' . TABLE_DISEASES . ' ADD UNIQUE (id_omim)',
                                   ),
                   );
 

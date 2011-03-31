@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-03-28
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-31
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -91,7 +91,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
     require ROOT_PATH . 'class/object_variants.php';
     $_DATA = new LOVD_Variant();
     $_DATA->sSortDefault = 'id';
-    $_DATA->viewList(false, 'screeningid', true);
+    $_DATA->viewList(false, 'screeningid');
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

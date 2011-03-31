@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-28
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-31
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -438,7 +438,7 @@ class LOVD_Object {
 
 
 
-    function viewList ($sViewListID = false, $aColsToSkip = array(), $bHideNav = false, $bOnlyRows = false)
+    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
 
@@ -546,7 +546,7 @@ class LOVD_Object {
         // Only print stuff if we're not in Ajax right now.
         if (substr(lovd_getProjectFile(), 0, 6) != '/ajax/') {
             // Keep the URL clean; disable any fields that are not used.
-            lovd_includeJS('inc-js-viewlist.php');
+            lovd_includeJS('inc-js-viewlist.php' . (!$bNoHistory? '' : '?nohistory'));
         
             // Print form; required for sorting and searching.
             // Because we don't want the form to submit itself while we are waiting for the Ajax response, we need to kill the native submit() functionality.

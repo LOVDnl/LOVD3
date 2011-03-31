@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-28
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-31
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -356,6 +356,11 @@ function lovd_includeJS ($sFile, $nPrefix = 3)
 {
     // Searches for and includes a .js include file.
 
+    // Remove '?argument' that may be at the end of the file name.
+    $aFile = explode('?', $sFile, 2);
+    $aFile[] = false;
+    list($sFile, $sArg) = $aFile;
+    
     if (substr($sFile, 0, 4) != 'http' && (!file_exists($sFile) || !is_readable($sFile))) {
         return false;
     }
@@ -370,8 +375,8 @@ function lovd_includeJS ($sFile, $nPrefix = 3)
 
     $sPrefix = str_repeat('  ', $nPrefix);
     // This basename() implementation is necessary because in HTML the BASE header indicate the relative href, but PHP does not know this.
-    // Therefore, simply sending {ROOT_PATH . $sFile} will not work with ROOT_PATH other than ./ because the browser won't find the file. 
-    print($sPrefix . '<SCRIPT type="text/javascript" src="' . (substr($sFile, 0, 4) == 'http'? $sFile : basename($sFile)) . '"></SCRIPT>' . "\n");
+    // Therefore, simply sending {ROOT_PATH . $sFile} will not work with ROOT_PATH other than ./ because the browser won't find the file.
+    print($sPrefix . '<SCRIPT type="text/javascript" src="' . (substr($sFile, 0, 4) == 'http'? $sFile : basename($sFile)) . (empty($sArg)? '' : '?' . $sArg) . '"></SCRIPT>' . "\n");
     return true;
 }
 

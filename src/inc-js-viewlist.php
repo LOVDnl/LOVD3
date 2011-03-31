@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2011-03-28
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-03-31
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -39,7 +39,10 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
 } else {
     define('PROTOCOL', 'http://');
 }
+
+if (!isset($_GET['nohistory'])) {
 ?>
+
 
 function lovd_loadListView ()
 {
@@ -59,7 +62,7 @@ function lovd_loadListView ()
             }
 
             for (var i in aGET) {
-                var tmp = aGET[i].split('=');
+                var tmp = aGET[i].split(/=(.+)?/); // Split on the *first* = character.
                 GET[tmp[0]] = tmp[1];
                 // Search fields.
                 if (tmp[0].substr(0,7) == 'search_' && tmp[1] && oForm[tmp[0]]) {
@@ -79,6 +82,9 @@ function lovd_loadListView ()
     }
 }
 
+<?php
+}
+?>
 
 
 function lovd_navPage (sViewListID, nPage) {
@@ -120,6 +126,9 @@ function lovd_submitList (sViewListID) {
                     if (objHTTP.responseText.length > 100) {
                         // Successfully retrieved stuff.
                         oDiv.innerHTML = objHTTP.responseText;
+<?php
+if (!isset($_GET['nohistory'])) {
+?>
                         // The following adds the page to the history in Firefox, such that the user *can* push the back button.
                         // I chose not to use sGET (created somewhere below) here, because it contains 'viewlistid' and 'object' which I don't want to use now and I guess it would be possible that it won't be set.
                         var sHash = '';
@@ -133,6 +142,9 @@ function lovd_submitList (sViewListID) {
                         // lovd_loadListView() itself will actually allow that when the back button is pressed, the correct page is loaded.
                         // The following makes sure this change we just made does not have reload lovd_loadListView().
                         prevHash = window.location.hash;
+<?php
+}
+?>
                         return true;
                     } else if (objHTTP.responseText == '8') {
                         window.alert('Lost your session. Please log in again.');
@@ -162,7 +174,9 @@ function lovd_submitList (sViewListID) {
         objHTTP.send(null);
     }
 }
-
+<?php
+if (!isset($_GET['nohistory'])) {
+?>
 
 
 
@@ -173,4 +187,6 @@ window.onload = function ()
     lovd_loadListView();
     setInterval(lovd_loadListView, 250);
 }
-
+<?php
+}
+?>
