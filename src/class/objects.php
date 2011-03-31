@@ -464,9 +464,8 @@ class LOVD_Object {
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
+        $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
 
-        require ROOT_PATH . 'inc-lib-form.php';
-        
         // ViewLists need an ID to identify the specific viewList, in case there are a few in one document.
         if (!$sViewListID || !is_string($sViewListID)) {
             $sViewListID = lovd_generateRandomID();
@@ -478,7 +477,8 @@ class LOVD_Object {
             $aColsToSkip = array($aColsToSkip);
         }
 
-        require ROOT_PATH . 'inc-lib-viewlist.php';
+        require_once ROOT_PATH . 'inc-lib-form.php'; // For checking column type.
+        require_once ROOT_PATH . 'inc-lib-viewlist.php';
 
         // First, check if entries are in the database at all.
         $nTotal = $this->getCount();
@@ -623,7 +623,7 @@ class LOVD_Object {
 
 
         // Only print stuff if we're not in Ajax right now.
-        if (substr(lovd_getProjectFile(), 0, 6) != '/ajax/') {
+        if (!$bAjax) {
             // Keep the URL clean; disable any fields that are not used.
             lovd_includeJS('inc-js-viewlist.php' . (!$bNoHistory? '' : '?nohistory'));
         
@@ -711,10 +711,12 @@ class LOVD_Object {
                 exit;
             }
         }
-        print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
-
         // Only print stuff if we're not just loading one entry right now.
         if (!$bOnlyRows) {
+            if (!$bAjax) {
+                print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
+            }
+
             if (!$bHideNav) {
                 lovd_pagesplitShowNav($sViewListID, $nTotal);
             }
@@ -770,7 +772,7 @@ class LOVD_Object {
                       '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                       '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
             }
-            print('      </FORM><BR>' . "\n\n");
+            print('      </DIV></FORM><BR>' . "\n\n");
             lovd_showInfoTable($sMessage, 'stop');
             return true;
         }
@@ -791,17 +793,22 @@ class LOVD_Object {
 
         // Only print stuff if we're not just loading one entry right now.
         if (!$bOnlyRows) {
+            print('</TABLE>' . "\n");
             if (!$bHideNav) {
-                print('</TABLE>' . "\n" .
-                      '        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
+                print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
                       '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n" .
-                      '      </FORM>' . "\n\n");
+                      '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");
 
                 lovd_pagesplitShowNav($sViewListID, $nTotal);
             }
+            if (!$bAjax) {
+                print('      </DIV></FORM><BR>' . "\n"); // These contents will be replaced by Ajax.
+            }
         }
-        print('      </DIV>' . "\n"); // These contents will be replaced by Ajax.
+
+
+
+
         return true;
     }
 }
