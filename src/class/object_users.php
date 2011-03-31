@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-10
+ * Modified    : 2011-03-31
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -117,7 +117,7 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('c.name', 'ASC', true)),
                         'curates' => array(
                                     'view' => array('Curated DBs', 100),
-                                    'db'   => array('curates', 'DESC')),
+                                    'db'   => array('curates', 'DESC', 'INT_UNSIGNED')),
 /*
                         'submits' => array(
                                     'view' => array('Submits', 75, 'align="right"'),
@@ -133,7 +133,7 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('u.created_date', 'ASC', true)),
                         'level' => array(
                                     'view' => array('Level', 150),
-                                    'db'   => array('u.level', 'DESC')),
+                                    'db'   => array('u.level', 'DESC', true)),
                       );
         $this->sSortDefault = 'level';
 

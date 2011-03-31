@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-03-02
+ * Modified    : 2011-03-17
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -108,7 +108,7 @@ class LOVD_Transcript extends LOVD_Object {
                                     'db'   => array('t.id_ncbi', 'ASC', true)),
                         'variants' => array(
                                     'view' => array('Variants', 70),
-                                    'db'   => array('variants', 'ASC', true)),
+                                    'db'   => array('variants', 'ASC', 'INT_UNSIGNED')),
                       );
         $this->sSortDefault = 'geneid';
 
@@ -152,8 +152,9 @@ class LOVD_Transcript extends LOVD_Object {
         $aTranscriptsForm = array();
         if (!empty($zData['transcripts'])) {
             foreach ($zData['transcripts'] as $sTranscript) {
-                if (!isset($atranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
-                    $aTranscriptsForm[$sTranscript] = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)] . ' (' . $sTranscript . ')';
+                if (!isset($aTranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
+                    $aTranscriptsForm[$sTranscript] = lovd_shortenString($zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)], 50);
+                    $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
                 }
             }
             asort($aTranscriptsForm);

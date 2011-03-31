@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-03-16
+ * Modified    : 2011-03-17
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -132,19 +132,19 @@ class LOVD_Gene extends LOVD_Object {
                                     'db'   => array('g.name', 'ASC', true)),
                         'chromosome' => array(
                                     'view' => array('Chrom.', 70),
-                                    'db'   => array('g.chromosome', false, true)),
+                                    'db'   => array('g.chromosome', 'ASC', true)),
                         'chrom_band' => array(
                                     'view' => array('Band', 70),
                                     'db'   => array('g.chrom_band', false, true)),
                         'variants' => array(
                                     'view' => array('Variants', 70),
-                                    'db'   => array('variants', 'DESC', true)),
+                                    'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
                         'updated_date_' => array(
                                     'view' => array('Last updated', 110),
                                     'db'   => array('g.updated_date', 'DESC', true)),
                         'diseases_' => array(
                                     'view' => array('Associated with diseases', 200),
-                                    'db'   => array('diseases_', false, true)),
+                                    'db'   => array('diseases_', false, 'TEXT')),
                       );
         $this->sSortDefault = 'id';
 
@@ -243,12 +243,13 @@ class LOVD_Gene extends LOVD_Object {
         }
 
         $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
-        $atranscriptNames = array();
+        $aTranscriptNames = array();
         $aTranscriptsForm = array();
         if (!empty($zData['transcripts'])) {
             foreach ($zData['transcripts'] as $sTranscript) {
-                if (!isset($atranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
-                    $aTranscriptsForm[$sTranscript] = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)] . ' (' . $sTranscript . ')';
+                if (!isset($aTranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
+                    $aTranscriptsForm[$sTranscript] = lovd_shortenString($zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)], 50);
+                    $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
                 }
             }
             asort($aTranscriptsForm);

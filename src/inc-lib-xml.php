@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-15
- * Modified    : 2011-03-21
+ * Modified    : 2011-03-24
  * For LOVD    : 3.0-pre-18
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -29,8 +29,11 @@
  *
  *************/
 
-if (str_replace('M', '', ini_get('memory_limit')) < 48) {
-    ini_set('memory_limit', '48M');
+preg_match('/^(/d+)([KM])/', ini_get('memory_limit'), $aMatches);
+if (!empty($aMatches[1]) && !empty($aMatches[2])) {
+    if ($aMatches[2] == 'K' || $aMatches[1] < 48) {
+        ini_set('memory_limit', '48M');
+    }
 }
 
 function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
@@ -108,8 +111,7 @@ function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
         exit;
     }
 
-    // FIXME; "<\?xml encoding=etc" matcht nu niet. Kan er niet makkelijker [^ ]* gebruikt worden?
-    if (preg_match("/<\?xml (?U:.+)? encoding='(.+)'/", $sXml, $aMatches)) {
+    if (preg_match("/<\?xml(?U:.+)? encoding=[\"|']?([^\"|^']+)[\"|']?\?>/", $sXml, $aMatches)) {
         $sEncoding = strtoupper($aMatches[1]);
     } else {
         $sEncoding = 'UTF-8'; // We want to tell the parser what encoding to use(PHP4) even if we don't know which one is being used.

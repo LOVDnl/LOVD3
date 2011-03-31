@@ -65,7 +65,7 @@ class LOVD_Log extends LOVD_Object {
                                     'db'   => array('l.name', 'ASC', true)),
                         'date' => array(
                                     'view' => array('Date', 130),
-                                    'db'   => array('CONCAT(l.date, " ", l.mtime)', 'DESC', true)),
+                                    'db'   => array('CONCAT(l.date, " ", l.mtime)', 'DESC', 'DATETIME')),
                         'user_' => array(
                                     'view' => array('User', 160),
                                     'db'   => array('u.name', 'ASC', true)),

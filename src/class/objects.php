@@ -199,6 +199,15 @@ class LOVD_Object {
 
 
 
+    function getSortDefault ()
+    {
+        return $this->sSortDefault;
+    }
+
+
+
+
+
     function insertEntry ($aData, $aFields = array())
     {
         // Inserts data in $aData into the database, using only fields defined in $aFields.
@@ -324,6 +333,20 @@ class LOVD_Object {
 
 
 
+    function setSortDefault ($sCol)
+    {
+        if (!empty($sCol) && array_key_exists($sCol, $this->aColumnsViewList)) {
+            $this->sSortDefault = $sCol;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+
+
+
     function updateEntry ($nID, $aData, $aFields = array())
     {
         // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
@@ -442,6 +465,8 @@ class LOVD_Object {
     {
         // Views list of entries in the database, allowing search.
 
+        require ROOT_PATH . 'inc-lib-form.php';
+        
         // ViewLists need an ID to identify the specific viewList, in case there are a few in one document.
         if (!$sViewListID || !is_string($sViewListID)) {
             $sViewListID = lovd_generateRandomID();
@@ -456,7 +481,7 @@ class LOVD_Object {
         require ROOT_PATH . 'inc-lib-viewlist.php';
 
         // First, check if entries are in the database at all.
-        list($nTotal) = $this->getCount();
+        $nTotal = $this->getCount();
         if (!$nTotal) {
             $sMessage = 'No entries in the database yet!';
             if ($bOnlyRows) {
@@ -467,62 +492,116 @@ class LOVD_Object {
         }
 
         // SEARCH: Advanced text search.
-        $sWHERE = '';
-        $sHAVING = '';
-        $bAggregate = 0;
+        $WHERE = '';
+        $HAVING = '';
+        $CLAUSE = '';
         $aArguments = array(
                         'WHERE' => array(),
                         'HAVING' => array()
                            );
+        $aBadSyntaxColumns = array();
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
-                // Allow for searches where the order of words is forced by enclosing the values with double quotes;
-                // Replace spaces in sentences between double quotes so they don't get exploded.
-                $bAggregate = (preg_match('/\./', $aCol['db'][0])? 0 : 1);
-                $sSearch = preg_replace_callback('/"([^"]+)"/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
+                $CLAUSE = (strpos($aCol['db'][0], '.') === false? 'HAVING' : 'WHERE');
+                $sColType = lovd_getColumnType(constant($this->sTable), $sColumn);
+                if (!$sColType && $aCol['db'][2] !== true) {
+                    // Column type of an alias may be given by LOVD.
+                    $sColType = $aCol['db'][2];
+                }
+                $sSearch = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
                     if ($sWord !== '') {
-                        if (substr_count($sWord, '|') && preg_match('/^[^|]+(\|[^|]+)+$/', $sWord)) {
-                            // OR.
-                            $aOR = explode('|', $sWord);
-                            if (!$bAggregate) {
-                                $sWHERE .= ($sWHERE? ' AND ' : '') . '(';
-                            } else {
-                                $sHAVING .= ($sHAVING? ' AND ' : '') . '(';
+                        $aOR = (preg_match('/^[^|]+(\|[^|]+)+$/', $sWord)? explode('|', $sWord) : array($sWord));
+                        $$CLAUSE .= ($$CLAUSE? ' AND ' : '') . (!empty($aOR[1])? '(' : '');
+                        foreach ($aOR as $nTerm => $sTerm) {
+                            $$CLAUSE .= ($nTerm? ' OR ' : '');
+                            switch ($sColType) {
+                                case 'DEC':
+                                case 'INT_UNSIGNED':
+                                case 'INT':
+                                    if (preg_match('/^([><]=?|!)?(\d+(\.\d+)?)$/', $sTerm, $aMatches)) {
+                                        $sOperator = $aMatches[1];
+                                        $sTerm = $aMatches[2];
+                                        if ($sOperator) {
+                                            $sCondition = (substr($sOperator, 0, 1) == '!'? ' !=' : ' ' . $sOperator) . ' ?';
+                                        } else {
+                                            $sCondition = ' = ?';
+                                        }
+                                        $$CLAUSE .= $aCol['db'][0] . $sCondition;
+                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
+                                    } else {
+                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    }
+                                    break;
+                                case 'DATE':
+                                case 'DATETIME':
+                                    if (preg_match('/^([><]=?|!)?(\d{4})(-\d{2})?(-\d{2})?$/', $sTerm, $aMatches) && checkdate(12, 31, 2000)) {
+                                        if (!checkdate(($aMatches[3]? substr($aMatches[3], 1) : '01'), ($aMatches[4]? substr($aMatches[4], 1) : '01'), $aMatches[2])) {
+                                            $aBadSyntaxColumns[] = $aCol['view'][0];
+                                        }
+                                        $sOperator = $aMatches[1];
+                                        $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '-01') . ($aMatches[4]? $aMatches[4] : '-01');
+                                        switch ($sOperator) {
+                                            case '>':
+                                                $sCondition = ' ' . $sOperator . ' ?';
+                                                $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '-12') . ($aMatches[4]? $aMatches[4] : '-31') . ' 23:59:59';
+                                                break;
+                                            case '<=':
+                                                $sCondition = ' <= ?';
+                                                $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '-12') . ($aMatches[4]? $aMatches[4] : '-31') . ' 23:59:59';
+                                                break;
+                                            case '<':
+                                            case '>=':
+                                                $sCondition = ' ' . $sOperator . ' ?';
+                                                $sTerm .= ' 00:00:00';
+                                                break;
+                                            case '!':
+                                                $sCondition = ' NOT LIKE ?';
+                                                $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '') . ($aMatches[4]? $aMatches[4] : '');
+                                                break;
+                                            default:
+                                                $sCondition = ' LIKE ?';
+                                                $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '') . ($aMatches[4]? $aMatches[4] : '');
+                                                break;
+                                        }
+                                        $$CLAUSE .= $aCol['db'][0] . $sCondition;
+                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm) . (preg_match('/LIKE/', $sCondition)? '%' : '');
+                                    } else {
+                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    }
+                                    break;
+                                default:
+                                    if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
+                                        $sTerm = trim($sTerm, '"');
+                                        $sCondition = (substr($sTerm, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
+                                        $$CLAUSE .= $aCol['db'][0] . $sCondition;
+                                        $sTerm = preg_replace('/^!/', '', $sTerm);
+                                        $sTerm = trim($sTerm, '"');
+                                        $aArguments[$CLAUSE][] = '%' . lovd_escapeSearchTerm($sTerm) . '%';
+                                    } elseif (preg_match('/^!?="([^"]+)"$/', $sTerm, $aMatches)) {
+                                        $sCondition = (substr($sTerm, 0, 1) == '!'? ' !=' : ' =') . ' ?';
+                                        $$CLAUSE .= $aCol['db'][0] . $sCondition;
+                                        $sTerm = preg_replace('/^[!=]=?/', '', $sTerm);
+                                        $sTerm = trim($sTerm, '"');
+                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
+                                    } else {
+                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    }
+                                    break;
                             }
-                            foreach ($aOR as $nTerm => $sTerm) {
-                                // 2009-03-03; 2.0-17; Advanced searching did not allow to combine NOT and OR searches.
-                                if (!$bAggregate) {
-                                    $sWHERE .= ($nTerm? ' OR ' : '') . $aCol['db'][0] . (substr($sTerm, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
-                                } else {
-                                    $sHAVING .= ($nTerm? ' OR ' : '') . $aCol['db'][0] . (substr($sTerm, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
-                                }
-                                $aArguments[(!$bAggregate? 'WHERE' : 'HAVING')][] = '%' . lovd_escapeSearchTerm((substr($sTerm, 0, 1) == '!'? substr($sTerm, 1) : $sTerm)) . '%';
-                            }
-                            if (!$bAggregate) {
-                                $sWHERE .= ')';
-                            } else {
-                                $sHAVING .= ')';
-                            }
-                        } else {
-                            // Common search term.
-                            if (!$bAggregate) {
-                                $sWHERE .= ($sWHERE? ' AND ' : '') .  $aCol['db'][0] . (substr($sWord, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
-                            } else {
-                                $sHAVING .= ($sHAVING? ' AND ' : '') .  $aCol['db'][0] . (substr($sWord, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
-                            }
-                            $aArguments[(!$bAggregate? 'WHERE' : 'HAVING')][] = '%' . lovd_escapeSearchTerm((substr($sWord, 0, 1) == '!'? substr($sWord, 1) : $sWord)) . '%';
                         }
+                        $$CLAUSE .= (!empty($aOR[1])? ')' : '');
                     }
                 }
             }
         }
-        if ($sWHERE) {
-            $this->aSQLViewList['WHERE'] .= ($this->aSQLViewList['WHERE']? ' AND ' : '') . $sWHERE;
+
+        if ($WHERE) {
+            $this->aSQLViewList['WHERE'] .= ($this->aSQLViewList['WHERE']? ' AND ' : '') . $WHERE;
         }
-        if ($sHAVING) {
-            $this->aSQLViewList['HAVING'] .= ($this->aSQLViewList['HAVING']? ' AND ' : '') . $sHAVING;
+        if ($HAVING) {
+            $this->aSQLViewList['HAVING'] .= ($this->aSQLViewList['HAVING']? ' AND ' : '') . $HAVING;
         }
         // SORT: Current settings, also implementing XSS check.
         if (!empty($_GET['order']) && $_GET['order'] === strip_tags($_GET['order'])) {
@@ -595,41 +674,43 @@ class LOVD_Object {
             $sSQL .= ' LIMIT ' . lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
         }
 
-        // Using the SQL_CALC_FOUND_ROWS technique to find the amount of hits in one go.
-        // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
-        // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
-        // Last checked 2010-01-25, by Ivo Fokkema.
-        lovd_queryDB('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
-        lovd_queryDB('START TRANSACTION');
+        $nTotal = 0;
+        if (!count($aBadSyntaxColumns)) {
+            // Using the SQL_CALC_FOUND_ROWS technique to find the amount of hits in one go.
+            // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
+            // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
+            // Last checked 2010-01-25, by Ivo Fokkema.
+            lovd_queryDB('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+            lovd_queryDB('START TRANSACTION');
 
-        // Run the actual query.
-        $aArgs = array();
-        foreach ($aArguments['WHERE'] as $aArg) {
-            $aArgs[] = $aArg;
-        }
-        foreach($aArguments['HAVING'] as $aArg) {
-            $aArgs[] = $aArg;
-        }
+            // Run the actual query.
+            $aArgs = array();
+            foreach ($aArguments['WHERE'] as $aArg) {
+                $aArgs[] = $aArg;
+            }
+            foreach($aArguments['HAVING'] as $aArg) {
+                $aArgs[] = $aArg;
+            }
 
-        $q = lovd_queryDB($sSQL, $aArgs);
-        if (!$q) {
+            $q = lovd_queryDB($sSQL, $aArgs);
+            if (!$q) {
 // FIXME; what if using AJAX? Probably we should generate a number here, indicating the system to try once more. If that fails also, the JS should throw a general error, maybe.
-            lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewList()'), $sSQL, mysql_error());
+                lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewList()'), $sSQL, mysql_error());
+            }
+
+            // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
+            list($nTotal) = mysql_fetch_row(lovd_queryDB('SELECT FOUND_ROWS()'));
+            lovd_queryDB('COMMIT'); // To end the transaction and the locks that come with it.
+
+            // It is possible, when increasing the page size from a page > 1, that you're ending up in an invalid page with no results.
+            // Catching this error, by redirecting from here. Only Ajax handles this correctly, because in normal requests inc-top.php already executed.
+            // NOTE: if we ever decide to have a page_size change reset page to 1, we can drop this code.
+            if (!mysql_num_rows($q) && $nTotal && !headers_sent()) {
+                // No results retrieved, but there are definitely hits to this query. Limit was wrong!
+                header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?' . preg_replace('/page=[^&]+/', 'page=1', $_SERVER['QUERY_STRING']));
+                exit;
+            }
         }
-
-        // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
-        list($nTotal) = mysql_fetch_row(lovd_queryDB('SELECT FOUND_ROWS()'));
-        lovd_queryDB('COMMIT'); // To end the transaction and the locks that come with it.
-
-        // It is possible, when increasing the page size from a page > 1, that you're ending up in an invalid page with no results.
-        // Catching this error, by redirecting from here. Only Ajax handles this correctly, because in normal requests inc-top.php already executed.
-        // NOTE: if we ever decide to have a page_size change reset page to 1, we can drop this code.
-        if (!mysql_num_rows($q) && $nTotal && !headers_sent()) {
-            // No results retrieved, but there are definitely hits to this query. Limit was wrong!
-            header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?' . preg_replace('/page=[^&]+/', 'page=1', $_SERVER['QUERY_STRING']));
-            exit;
-        }
-
         print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
 
         // Only print stuff if we're not just loading one entry right now.
@@ -672,9 +753,14 @@ class LOVD_Object {
         }
 
         // If no results are found, quit here.
+        $sBadSyntaxColumns = '';
+        $i = 1;
         if (!$nTotal) {
-            // Searched, but no results.
-            $sMessage = 'No results have been found that match your criteria.';
+            // Searched, but no results. FIXME: link to the proper documentation entry about search expressions
+            $sBadSyntaxColumns = implode(', ', $aBadSyntaxColumns);
+            $sMessageNormal = 'No results have been found that match your criteria.<BR>Please redefine your search criteria.';
+            $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) >= 2? 's' : '') . ' contain incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';
+            $sMessage = (empty($aBadSyntaxColumns)? $sMessageNormal : $sMessageBadSyntax);
             if ($bOnlyRows) {
                 die('0'); // Silent error.
             }

@@ -94,7 +94,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\w)+$/', $_PATH_ELEMENTS[1]) &&
     lovd_printHeader('Transcripts for gene ' . $sID);
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
-    $_DATA->sSortDefault = 'id';
+    $_DATA->setSortDefault('id');
     $_DATA->viewList(false, 'geneid', true, true);
 
     require ROOT_PATH . 'inc-bot.php';
