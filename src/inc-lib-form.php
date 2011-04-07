@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-16
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-07
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -593,7 +593,7 @@ function lovd_viewForm ($a,
                     // $nKey needs to be > 1 because if fieldset is the first thing the form does, there is no opening table yet.
                     print('        </FIELDSET>' . "\n");
                 }
-                print('        <FIELDSET style="width : ' . $nFormWidth . 'px;"><LEGEND><B>' . $aField[2] . '</B> <SPAN class="S11">[<A href="#" id="' . $aField[1] . '_link" onClick="lovd_toggleVisibility(\'' . $aField[1] . '\'); return false;">' . ($bShow? 'Hide' : 'Show') . '</A>]</SPAN></LEGEND>' . "\n" .
+                print('        <FIELDSET style="width : ' . ($nFormWidth + 4) . 'px; margin-left : -9px;"><LEGEND><B>' . $aField[2] . '</B> <SPAN class="S11">[<A href="#" id="' . $aField[1] . '_link" onClick="lovd_toggleVisibility(\'' . $aField[1] . '\'); return false;">' . ($bShow? 'Hide' : 'Show') . '</A>]</SPAN></LEGEND>' . "\n" .
                       '        <TABLE border="0" cellpadding="0" cellspacing="1" width="' . $nFormWidth . '" id="' . $aField[1] . '"' . ($bShow? '' : ' style="display : none"') . '>');
                 $bInFieldset = true;
                 continue;

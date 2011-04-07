@@ -62,7 +62,8 @@ function lovd_loadListView ()
             }
 
             for (var i in aGET) {
-                var tmp = aGET[i].split(/=(.+)?/); // Split on the *first* = character.
+                // Split on the *first* = character. Firefox (at least 3.6.16@Ubuntu) doesn't get that %3D is not the same as =. IE and Chrome do well.
+                var tmp = aGET[i].split(/=(.+)?/);
                 GET[tmp[0]] = tmp[1];
                 // Search fields.
                 if (tmp[0].substr(0,7) == 'search_' && tmp[1] && oForm[tmp[0]]) {

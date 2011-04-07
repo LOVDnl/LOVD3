@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-31
+ * Modified    : 2011-04-07
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -361,7 +361,7 @@ function lovd_includeJS ($sFile, $nPrefix = 3)
     $aFile[] = false;
     list($sFile, $sArg) = $aFile;
     
-    if (substr($sFile, 0, 4) != 'http' && (!file_exists($sFile) || !is_readable($sFile))) {
+    if (substr($sFile, 0, 4) != 'http' && !is_readable(ROOT_PATH . $sFile)) {
         return false;
     }
 
@@ -454,7 +454,7 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
 
     if (substr($sURL, 0, 4) != 'http' || (ini_get('allow_url_fopen') && !$sPOST)) {
         // Normal file() is fine.
-        return @file($sURL);
+        return @file($sURL, FILE_IGNORE_NEW_LINES);
     }
 
     $aHeaders = array();
@@ -530,10 +530,14 @@ function lovd_printGeneHeader ()
 
 
 
-function lovd_printHeader ($sTitle)
+function lovd_printHeader ($sTitle, $sStyle = 'H2')
 {
     // Prints the page's header.
-    print('      <H2 class="LOVD">' . $sTitle . '</H2>' . "\n\n");
+    $aStyles = array('H2', 'H3', 'H4');
+    if (!in_array($sStyle, $aStyles)) {
+        $sStyle = $aStyles[0];
+    }
+    print('      <' . $sStyle . ' class="LOVD">' . $sTitle . '</' . $sStyle . '>' . "\n\n");
 }
 
 

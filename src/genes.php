@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-03-31
+ * Modified    : 2011-04-06
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -91,7 +91,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\w)+$/', $_PATH_ELEMENTS[1]) &&
     
     $_GET['search_geneid'] = $sID;
     print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Transcripts for gene ' . $sID);
+    lovd_printHeader('Transcripts for gene ' . $sID, 'H4');
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $_DATA->setSortDefault('id');
@@ -346,6 +346,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 // Write to log...
                 lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');
+
+                // Make current user curator of this gene.
+                lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1), true);
 
                 // Add diseases.
                 $aSuccessDiseases = array();
@@ -810,37 +813,6 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
     if (isset($_GET['sent'])) {
         lovd_errorClean();
 
-        // Mandatory fields.
-        $aCheck =
-                 array(
-                        'gene' => 'Full gene name',
-                        'symbol' => 'Official gene symbol',
-                        'chrom_location' => 'Chromosome location',
-                      );
-
-        foreach ($aCheck as $key => $val) {
-            if (empty($_POST[$key])) {
-                lovd_errorAdd('Please fill in the \'' . $val . '\' field.');
-            }
-        }
-
-        // 2010-06-28; 2.0-27; Updated gene symbol format check; allowed gene symbols were rejected. Relaxed the rules a bit.
-        // This regexp is based on the list of guidelines taken from http://www.genenames.org/guidelines.html#2.%20Gene%20symbols
-        // Exception: we are not allowing gene names with hyphens.
-        // FIXME; LOVD 2 CANNOT WORK WITH HYPHENS IN TABLE NAMES...!!! I SHOULD QUOTE ALL QUERIES TO THOSE TABLES!
-//        // Exception: we are not specifically checking which genes were allowed to contain hyphens, a difficult pattern, little advantage.
-//        if ($_POST['symbol'] && (!preg_match('/^(C([XY0-9]|[0-9]{2})orf[0-9]+|[A-Z][A-Z0-9-]*)(_[A-Za-z0-9_-]+)?$/', $_POST['symbol']) || strlen($_POST['symbol']) > 12)) {
-        if ($_POST['symbol'] && (!preg_match('/^(C([XY0-9]|[0-9]{2})orf[0-9]+|[A-Z][A-Z0-9]*)(_[A-Za-z0-9_]+)?$/', $_POST['symbol']) || strlen($_POST['symbol']) > 12)) {
-            // Error in genesymbol.
-            lovd_errorAdd('Incorrect gene symbol. This field can contain up to 12 characters. The offical gene symbol can only contain uppercase letters and numbers, it may be appended with an underscore followed by letters, numbers, hyphens and underscores.');
-        }
-
-        if (!lovd_error()) {
-            if (in_array($_POST['symbol'], lovd_getGeneList())) {
-                lovd_errorAdd('There is already a gene in place with symbol ' . $_POST['symbol'] . '.');
-            }
-        }
-
         // 2010-01-13; 2.0-24; Added proper check on chromosome information because we need this to map to the genome!
         if (!empty($_POST['chrom_location']) && !empty($_POST['refseq_build']) && substr($_POST['refseq_build'], 0, 2) == 'hg' && !preg_match('/^([0-9]{1,2}|[XY])([pqtercen0-9.-]+)?$/', $_POST['chrom_location'])) {
             lovd_errorAdd('Incorrect chromosome location. Chromosome locations have to start with the chromosome number or name (X,Y), possibly followed by the chromosome band location.');
@@ -892,22 +864,6 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
             lovd_errorAdd('If you wish to use an own disclaimer, please fill in the "Text for own disclaimer" field. Otherwise, select \'No\' for the "Include disclaimer" field.');
         }
 
-        // Numeric fields.
-        $aCheck =
-                 array(
-                        'id_hgnc' => 'HGNC ID',
-                        'id_entrez' => 'Entrez Gene (Locuslink) ID',
-                        'id_omim_gene' => 'OMIM Gene ID',
-                        'header_align' => 'Header aligned to',
-                        'footer_align' => 'Footer aligned to',
-                      );
-
-        foreach ($aCheck as $key => $val) {
-            if ($_POST[$key] && !is_numeric($_POST[$key])) {
-                lovd_errorAdd('The \'' . $val . '\' field has to contain a numeric value.');
-            }
-        }
-
         // URLs.
         $aCheck =
                  array(
@@ -927,17 +883,6 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
             foreach ($aExternalLinks as $n => $sLink) {
                 if (!lovd_matchURL($sLink) && (!preg_match('/^[^<>]+ <?([^< >]+)>?$/', $sLink, $aRegs) || !lovd_matchURL($aRegs[1]))) {
                     lovd_errorAdd('External link #' . ($n + 1) . ' (' . htmlspecialchars($sLink) . ') not understood.');
-                }
-            }
-        }
-
-        // OMIM disease ID list.
-        if ($_POST['id_omim_disease']) {
-            // OMIM Disease ID's.
-            $aOMIM = explode("\r\n", $_POST['id_omim_disease']);
-            foreach ($aOMIM as $n => $sOMIM) {
-                if (!preg_match('/^[0-9]{1,6} [^<>]+$/', $sOMIM)) {
-                    lovd_errorAdd('OMIM Disease ID #' . ($n + 1) . ' (' . htmlspecialchars($sOMIM) . ') not understood.');
                 }
             }
         }

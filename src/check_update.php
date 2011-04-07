@@ -6,12 +6,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2010-01-28
- * For LOVD    : 3.0-pre-02
+ * Modified    : 2011-04-07
+ * For LOVD    : 3.0-pre-19
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -49,6 +48,8 @@ if ($_STAT['update_checked_date'] == NULL || (isset($_GET['force_check']) && md5
 if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
     // If we're checking for updates, we want to see if we're sending statistics as well.
     $sURLVars = '?version=' . $_SETT['system']['version'] . '&signature=' . $_STAT['signature'];
+    // Some variables will be sent over POST, because of the size limit that GET has.
+    $sPOSTVars = '';
 
     // Software information.
     $sServer = PHP_OS . ' ' . $_SERVER['SERVER_SOFTWARE'];
@@ -62,32 +63,32 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $sServer .= ' PHP/' . PHP_VERSION;
     }
     $sServer = rawurlencode($sServer . ' MySQL/' . mysql_get_server_info());
-    $sURLVars .= '&software=' . $sServer;
+    $sPOSTVars .= '&software=' . $sServer;
     $sGeneList = '';
 
     if ($_CONF['send_stats']) {
         // Collect stats...
-        // Number of users.
-        list($nUsers) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS));
-        $sURLVars .= '&user_count=' . $nUsers;
+        // Number of submitters.
+        list($nSubs) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE level <= ?', array(LEVEL_CURATOR)));
+        $sPOSTVars .= '&submitter_count=' . $nSubs;
 
         // Number of genes.
         $aGenes = lovd_getGeneList();
         $nGenes = count($aGenes);
-        $sGeneList = implode(',', $aGenes);
-        $sURLVars .= '&gene_count=' . $nGenes;
+        $sGeneList = implode(',', $aGenes); // Used later.
+        $sPOSTVars .= '&gene_count=' . $nGenes;
 
         // Patient count.
-        list($nPatients) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS));
-        $sURLVars .= '&patient_count=' . $nPatients;
+        list($nPatients) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS . ' WHERE valid_to = ?', array('9999-12-31')));
+        $sPOSTVars .= '&patient_count=' . $nPatients;
 
         // Number of unique variants.
-// DMD_SPECIFIC, I disabled this.
+// FIXME, DMD_SPECIFIC, I disabled this.
 //        list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(DISTINCT geneid, REPLACE(REPLACE(REPLACE(`Variant/DNA`, "(", ""), ")", ""), "?", "")) FROM ' . TABLE_VARIANTS));
 list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
-        $sURLVars .= '&uniquevariant_count=' . $nUniqueVariants;
+        $sPOSTVars .= '&uniquevariant_count=' . $nUniqueVariants;
 
-// DMD_SPECIFIC, I disabled this part. Fix it. Re-enable CurrDB.
+// DMD_SPECIFIC, FIXME, I disabled this part. Fix it. Re-enable CurrDB.
         // Number of variants.
         // $_CURRDB does not necessarily exists, if there is no gene this will return an error.
         if (false && isset($_CURRDB) && $_CURRDB->colExists('Patient/Times_Reported')) {
@@ -96,38 +97,88 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
         } else {
             list($nVariants) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
         }
-        $sURLVars .= '&variant_count=' . $nVariants;
+        $sPOSTVars .= '&variant_count=' . $nVariants;
+/****** LOVD 2.0 code: *********************************************************
+        // Number of unique variants.
+        $nUniqueVariants = 0;
+        $nVariants = 0;
+        foreach ($aGenes as $sSymbol) {
+            $_CURRDB = new CurrDB(true, $sSymbol);
+            $sMutationCol = $_CURRDB->getMutationCol();
+
+            // Number of unique variants.
+            if (!$sMutationCol) {
+                $n = 0;
+            } else {
+                list($n) = mysql_fetch_row(mysql_query('SELECT COUNT(DISTINCT `' . $sMutationCol . '`) FROM ' . TABLEPREFIX . '_' . $sSymbol . '_variants WHERE `' . $sMutationCol . '` NOT IN ("c.=", "c.0")'));
+            }
+            $nUniqueVariants += $n;
+
+            // Number of variants.
+            if ($_CURRDB->colExists('Patient/Times_Reported')) {
+                $sQ = 'SELECT SUM(p.`Patient/Times_Reported`) FROM ' . TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (patientid)';
+            } else {
+                $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PAT2VAR . ' AS p2v';
+            }
+            $sQ .= ' LEFT JOIN ' . TABLEPREFIX . '_' . $sSymbol . '_variants AS v USING (variantid) WHERE p2v.symbol = "' . $sSymbol . '" AND `' . $sMutationCol . '` NOT IN ("c.=", "c.0")';
+            list($n) = mysql_fetch_row(mysql_query($sQ));
+            $nVariants += $n;
+            $sGeneList .= ($sGeneList? ',' : '') . $sSymbol;
+        }
+        $sPOSTVars .= '&uniquevariant_count=' . $nUniqueVariants;
+        $sPOSTVars .= '&variant_count=' . $nVariants;
+*///////////////////////////////////////////////////////////////////////////////
     }
 
     if ($_CONF['include_in_listing']) {
         // Fetch install directory and gene listings.
-        $sURLVars .= '&install_name=' . rawurlencode($_CONF['system_title']);
+        $sPOSTVars .= '&install_name=' . rawurlencode($_CONF['system_title']);
 
         // Get the installation location from the database, if available.
-        if (!empty($_CONF['location_url'])) {
-            $sInstallDir = $_CONF['location_url'];
-        } else {
-            $sInstallDir = PROTOCOL . $_SERVER['HTTP_HOST'] . lovd_cleanDirName(dirname($_SERVER['PHP_SELF']) . '/' . ROOT_PATH);
+        $sInstallDir = (!empty($_CONF['location_url'])? $_CONF['location_url'] : lovd_getInstallURL());
+        $sPOSTVars .= '&install_dir=' . rawurlencode($sInstallDir) . '&gene_listing=' . rawurlencode($sGeneList);
+
+        // Send gene edit dates, curator names, emails & institutes as well.
+        // This is not very efficient, but for something done once a day (max) it will do.
+        $aData = array('genes' => array(), 'users' => array(), 'diseases' => array());
+        $aUserIDs = array(); // Temporary array for query purposes only.
+        $aDiseaseIDs = array(); // Temporary array for query purposes only.
+        // First, get the gene info (we store name, diseases, date last updated and curator ids).
+        $q = lovd_queryDB('SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) INNER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 ORDER BY g.id', array(), true);
+        while ($z = mysql_fetch_assoc($q)) {
+            $aData['genes'][$z['id']] =
+                     array(
+                            'gene_name' => $z['name'],
+                            'diseases' => explode(',', $z['diseases']),
+                            'updated_date' => $z['updated_date'],
+                            'curators' => explode(',', $z['users']));
+            $aUserIDs = array_merge($aUserIDs, explode(',', $z['users']));
+            $aDiseaseIDs = array_merge($aDiseaseIDs, explode(',', $z['diseases']));
         }
-        $sURLVars .= '&install_dir=' . rawurlencode($sInstallDir) . '&gene_listing=' . rawurlencode($sGeneList);
+
+        // Then, get the actual curator data (name, email, institute).
+        $q = @lovd_queryDB('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' WHERE id IN (' . implode(',', array_unique($aUserIDs)) . ') ORDER BY id');
+        while ($z = @mysql_fetch_assoc($q)) {
+            $aData['users'][$z['id']] = array('name' => $z['name'], 'email' => $z['email'], 'institute' => $z['institute']);
+        }
+
+        // Finally, get the actual disease data (ID, symbol, name).
+        $q = @lovd_queryDB('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (' . implode(',', array_unique($aDiseaseIDs)) . ') ORDER BY id');
+        while ($z = @mysql_fetch_assoc($q)) {
+            $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
+        }
+        $sData = serialize($aData);
+        $sPOSTVars .= '&data=' . rawurlencode($sData);
 
         // Send setting for wiki indexing.
         list($bAllowIndex) = mysql_fetch_row(lovd_queryDB('SELECT MAX(allow_index_wiki) FROM ' . TABLE_GENES));
-        $sURLVars .= '&allow_index_wiki=' . (int) $bAllowIndex;
+        $sPOSTVars .= '&allow_index_wiki=' . (int) $bAllowIndex;
     }
-////////////////////////////////////////////////////////////////////////////////
 
     // Contact upstream.
-// DMD_SPECIFIC; fix this, test all this code below.
-    $aOutput = lovd_php_file($_SETT['update_URL'] . $sURLVars);
-
-    $sUpdates = '';
-    foreach ($aOutput as $sLine) {
-        if (!trim($sLine)) {
-            break;
-        }
-        $sUpdates .= $sLine;
-    }
+    $aOutput = lovd_php_file($_SETT['update_URL'] . $sURLVars, false, ltrim($sPOSTVars, '&'));
+    // Check if output is valid.
+    $sUpdates = (!is_array($aOutput)? '' : implode("\n", $aOutput));
 
     $sNow = date('Y-m-d H:i:s');
     if (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*' . $_SETT['system']['version'] . '(\nReleased\s*:\s*[0-9]{4}\-[0-9]{2}\-[0-9]{2})?$/', $sUpdates)) {
@@ -149,14 +200,14 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
         $_STAT['update_level'] = 0;
         $_STAT['update_description'] = '';
 
-    } elseif (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*([1-9]\.[0-9](\.[0-9])?\-([0-9a-z-]{2,11}))(\nReleased\s*:\s*([0-9]{4}\-[0-9]{2}\-[0-9]{2}))?\nPriority\s*:\s*([0-9])\nDescription\s*:\s*(.+)$/', $sUpdates, $aUpdates) && is_array($aUpdates)) {
+    } elseif (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*([1-9]\.[0-9](\.[0-9])?\-([0-9a-z-]{2,11}))(\nReleased\s*:\s*([0-9]{4}\-[0-9]{2}\-[0-9]{2}))?\nPriority\s*:\s*([0-9])\nDescription\s*:\s*(.+)$/s', $sUpdates, $aUpdates) && is_array($aUpdates)) {
         // Now update the database - new version detected.
-        lovd_queryDB('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = ?, update_description = ?, update_releaseded_date = ?', array($sNow, $aUpdates[1], $aUpdates[6], $aUpdates[7], $aUpdates[5]));
+        lovd_queryDB('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = ?, update_description = ?, update_released_date = ?', array($sNow, $aUpdates[1], $aUpdates[6], $aUpdates[7], $aUpdates[5]));
         $_STAT['update_checked_date'] = $sNow;
         $_STAT['update_version'] = $aUpdates[1];
         $_STAT['update_released_date'] = $aUpdates[5];
         $_STAT['update_level'] = $aUpdates[6];
-        $_STAT['update_description'] = $aUpdates[7];
+        $_STAT['update_description'] = rtrim($aUpdates[7]);
 
     } else {
         // Error during update check.
@@ -183,9 +234,10 @@ if ($_STAT['update_version'] == 'Error') {
                 '<B>Latest version</B>: ' . $_STAT['update_version'] . '<BR>' . "\n" .
                 '<B>Release date</B>: ' . $_STAT['update_released_date'] . '<BR>' . "\n" .
                 '<B>Priority level</B>: ' . $_SETT['update_levels'][$_STAT['update_level']] . '<BR>' . "\n" .
-                '<B>Release info</B>: ' . $_STAT['update_description'] . '<BR>' . "\n" .
-                '<B>Download</B>: <A href="' . dirname($_SETT['update_URL']) . '/download.php?version=' . $_STAT['update_version'] . '&amp;type=tar.gz">GZIPped TARball</A> or <A href="' . dirname($_SETT['update_URL']) . '/download.php?version=' . $_STAT['update_version'] . '&amp;type=zip">ZIP archive</A><BR>' . "\n" .
-                '<A href="' . $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/changelog.txt" target="_blank">See the changelog</A>' . "\n";
+                '<B>Release info</B>: ' . str_replace("\n", '<BR>', $_STAT['update_description']) . '<BR>' . "\n";
+// FIXME; DMD_SPECIFIC.
+//                '<B>Download</B>: <A href="' . dirname($_SETT['update_URL']) . '/download.php?version=' . $_STAT['update_version'] . '&amp;type=tar.gz">GZIPped TARball</A> or <A href="' . dirname($_SETT['update_URL']) . '/download.php?version=' . $_STAT['update_version'] . '&amp;type=zip">ZIP archive</A><BR>' . "\n" .
+//                '<A href="' . $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/changelog.txt" target="_blank">See the changelog</A>' . "\n";
 
 } else {
     $sType = 'newest';
@@ -207,7 +259,6 @@ if (isset($_GET['icon'])) {
     // Print what we know about new versions...
     require ROOT_PATH . 'inc-top-clean.php';
     
-    // 2009-02-25; 2.0-16; Added "check now" option.
     print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="100%" class="info" style="font-size : 11px;">' . "\n" .
           '        <TR>' . "\n" .
           '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_update_' . $sType . '.png" alt="' . ucfirst($sType) . '" title="' . ucfirst($sType) . '" width="32" height="32" hspace="4" vspace="4"></TD>' . "\n" .

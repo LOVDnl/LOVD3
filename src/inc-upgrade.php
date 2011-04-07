@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-31
+ * Modified    : 2011-04-06
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -127,6 +127,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/DBID", 6, 200, 1, 1, 1, "DB-ID",     "The ID-field should start with the ID; the gene symbol followed by an underscore (_) and the ID code, usually five digits.", "Database IDentifier; When available, links to OMIM ID\'s are provided.", "Database IDentifier; When available, links to OMIM ID\'s are provided.", "VARCHAR(100)", "ID||text|40", "", "/^[A-Z][A-Z0-9]+_([0-9]{5}([a-z]{2})?|(SO|MP|e)[0-9]{1,2}((SO|MP|e)[0-9]{1,2})?b?)\\\\b/", 1, 0, 1, 1, NOW(), NULL, NULL)',
                                     'CREATE TABLE ' . TABLE_PAT2DIS . ' (patientid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL, diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL, PRIMARY KEY (patientid, diseaseid), INDEX (diseaseid), FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE) ENGINE=InnoDB, DEFAULT CHARACTER SET utf8',
                                     'ALTER TABLE ' . TABLE_DISEASES . ' ADD UNIQUE (id_omim)',
+                                    'ALTER TABLE ' . TABLE_STATUS . ' MODIFY COLUMN update_description TEXT',
                                   ),
                   );
 

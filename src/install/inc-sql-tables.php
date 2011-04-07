@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-03-30
+ * Modified    : 2011-04-06
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -529,7 +529,7 @@ $aTableSQL =
     update_checked_date DATETIME,
     update_version VARCHAR(15),
     update_level TINYINT(1) UNSIGNED,
-    update_description VARCHAR(255),
+    update_description TEXT,
     update_released_date DATE,
     installed_date DATE NOT NULL,
     updated_date DATE)
