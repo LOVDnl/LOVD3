@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-03-03
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -161,7 +161,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('', '', 'print', '<B>Global LOVD statistics</B>'),
                         array('', '', 'note', 'The following settings apply to the kind of information your LOVD install sends to the development team to gather statistics about global LOVD usage.'),
                         'hr',
-                        array('Send statistics?', 'This sends <I>anonymous</I> statistics about the number of submitters, genes, patients and mutations in your installation of LOVD.', 'checkbox', 'send_stats'),
+                        array('Send statistics?', 'This sends <I>anonymous</I> statistics about the number of submitters, genes, individuals and mutations in your installation of LOVD.', 'checkbox', 'send_stats'),
                         'hr',
                         array('Include in the global LOVD listing?', 'We keep a public listing of LOVD installations, their genes and their URLs. Deselect this checkbox if you do not want to be included in this public listing.', 'checkbox', 'include_in_listing'),
                         'hr',
@@ -179,9 +179,9 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'hr',
                         array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'checkbox', 'allow_count_hidden_entries'),
                         'hr',
-                        array('Force SSL-only access to LOVD?', 'SSL is a secure protocol allowing for encryption of data sent between you and LOVD. When you will record sensitive patient information in LOVD, you <B>should</B> enable this setting, as the patient information can otherwise be \'sniffed\' off the network. If you do not record sensitive information, enabling SSL is <I>recommended</I>.', 'checkbox', 'use_ssl'),
+                        array('Force SSL-only access to LOVD?', 'SSL is a secure protocol allowing for encryption of data sent between you and LOVD. When you will record sensitive individual information in LOVD, you <B>should</B> enable this setting, as the individual information can otherwise be \'sniffed\' off the network. If you do not record sensitive information, enabling SSL is <I>recommended</I>.', 'checkbox', 'use_ssl'),
                         'hr',
-                        array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (patients, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'checkbox', 'use_versioning'),
+                        array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'checkbox', 'use_versioning'),
                         'hr',
          'uninstall' => array('Disable LOVD uninstall?', 'Select this to disable the "Uninstall LOVD" option in the Setup area. Please note that this uninstall lock can only be removed by directly accessing the MySQL database.', 'checkbox', 'lock_uninstall'),
       'uninstall_hr' => 'hr',

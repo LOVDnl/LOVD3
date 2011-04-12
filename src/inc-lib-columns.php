@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-02-21
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -67,10 +68,10 @@ function lovd_getTableInfoByCategory ($sCategory)
 
     $aTables =
          array(
-                'Patient' =>
+                'Individual' =>
                      array(
-                            'table_sql' => TABLE_PATIENTS,
-                            'table_name' => 'Patient',
+                            'table_sql' => TABLE_INDIVIDUALS,
+                            'table_name' => 'Individual',
                             'shared' => false,
                             'unit' => '',
                           ),

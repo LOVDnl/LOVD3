@@ -6,11 +6,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2011-04-07
+ * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -78,9 +79,9 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $sGeneList = implode(',', $aGenes); // Used later.
         $sPOSTVars .= '&gene_count=' . $nGenes;
 
-        // Patient count.
-        list($nPatients) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS . ' WHERE valid_to = ?', array('9999-12-31')));
-        $sPOSTVars .= '&patient_count=' . $nPatients;
+        // Individual count.
+        list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE valid_to = ?', array('9999-12-31')));
+        $sPOSTVars .= '&individual_count=' . $nIndividuals;
 
         // Number of unique variants.
 // FIXME, DMD_SPECIFIC, I disabled this.
@@ -91,8 +92,8 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
 // DMD_SPECIFIC, FIXME, I disabled this part. Fix it. Re-enable CurrDB.
         // Number of variants.
         // $_CURRDB does not necessarily exists, if there is no gene this will return an error.
-        if (false && isset($_CURRDB) && $_CURRDB->colExists('Patient/Times_Reported')) {
-            list($nVariants) = mysql_fetch_row(lovd_queryDB('SELECT SUM(p.`Patient/Times_Reported`) FROM ' . TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_VARIANTS . ' AS v ON (p.id = v.patientid)'));
+        if (false && isset($_CURRDB) && $_CURRDB->colExists('Individual/Times_Reported')) {
+            list($nVariants) = mysql_fetch_row(lovd_queryDB('SELECT SUM(p.`Individual/Times_Reported`) FROM ' . TABLE_INDIVIDUALS . ' AS p LEFT JOIN ' . TABLE_VARIANTS . ' AS v ON (p.id = v.individualid)'));
             settype($nVariants, 'int'); // Convert NULL to 0.
         } else {
             list($nVariants) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));

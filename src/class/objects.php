@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-31
+ * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -67,7 +67,7 @@ class LOVD_Object {
     var $aColumnsViewList = array();
     var $sSortDefault = '';
     var $nCount = 0;
-
+    var $sObjectID = '';
 
 
 
@@ -133,7 +133,7 @@ class LOVD_Object {
                                 lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time, in the format YYYY-MM-DD HH:MM:SS.');
                             }
                             break;
-                        case 'DEC':
+                        case 'DECIMAL':
                             if (!is_numeric($aData[$sName])) {
                                 lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a number.');
                             }
@@ -310,10 +310,21 @@ class LOVD_Object {
             $sView = 'list';
         }
 
-        // Quote special characters, disallowing HTML and other trics.
+        // Quote special characters, disallowing HTML and other tricks.
         reset($zData);
-        while (list($key, $val) = each($zData)) {
-            $zData[$key] = htmlspecialchars($val);
+        $zData = array_map('htmlspecialchars', $zData);
+        $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
+        foreach($aUserColumns as $sUserColumn) {
+            (isset($zData[$sUserColumn])? $zData[$sUserColumn . '_'] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>' : 'N/A') : false);
+        }
+        
+        $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');
+        foreach($aDateColumns as $sDateColumn) {
+            if ($sDateColumn == 'valid_from' && $zData['edited_by_'] == 'N/A') {
+                $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = 'N/A';
+            } else {
+                (isset($zData[$sDateColumn])? $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A') : false);
+            }
         }
 
         return $zData;
@@ -517,18 +528,18 @@ class LOVD_Object {
                         foreach ($aOR as $nTerm => $sTerm) {
                             $$CLAUSE .= ($nTerm? ' OR ' : '');
                             switch ($sColType) {
-                                case 'DEC':
+                                case 'DECIMAL':
                                 case 'INT_UNSIGNED':
                                 case 'INT':
                                     if (preg_match('/^([><]=?|!)?(\d+(\.\d+)?)$/', $sTerm, $aMatches)) {
                                         $sOperator = $aMatches[1];
                                         $sTerm = $aMatches[2];
                                         if ($sOperator) {
-                                            $sCondition = (substr($sOperator, 0, 1) == '!'? ' !=' : ' ' . $sOperator) . ' ?';
+                                            $sOperator = (substr($sOperator, 0, 1) == '!'? '!=' : $sOperator);
                                         } else {
-                                            $sCondition = ' = ?';
+                                            $sOperator = '=';
                                         }
-                                        $$CLAUSE .= $aCol['db'][0] . $sCondition;
+                                        $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
                                     } else {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
@@ -536,7 +547,7 @@ class LOVD_Object {
                                     break;
                                 case 'DATE':
                                 case 'DATETIME':
-                                    if (preg_match('/^([><]=?|!)?(\d{4})(-\d{2})?(-\d{2})?$/', $sTerm, $aMatches) && checkdate(12, 31, 2000)) {
+                                    if (preg_match('/^([><]=?|!)?(\d{4})(-\d{2})?(-\d{2})?$/', $sTerm, $aMatches)) {
                                         if (!checkdate(($aMatches[3]? substr($aMatches[3], 1) : '01'), ($aMatches[4]? substr($aMatches[4], 1) : '01'), $aMatches[2])) {
                                             $aBadSyntaxColumns[] = $aCol['view'][0];
                                         }
@@ -544,29 +555,21 @@ class LOVD_Object {
                                         $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '-01') . ($aMatches[4]? $aMatches[4] : '-01');
                                         switch ($sOperator) {
                                             case '>':
-                                                $sCondition = ' ' . $sOperator . ' ?';
-                                                $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '-12') . ($aMatches[4]? $aMatches[4] : '-31') . ' 23:59:59';
-                                                break;
                                             case '<=':
-                                                $sCondition = ' <= ?';
                                                 $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '-12') . ($aMatches[4]? $aMatches[4] : '-31') . ' 23:59:59';
                                                 break;
                                             case '<':
                                             case '>=':
-                                                $sCondition = ' ' . $sOperator . ' ?';
                                                 $sTerm .= ' 00:00:00';
                                                 break;
                                             case '!':
-                                                $sCondition = ' NOT LIKE ?';
-                                                $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '') . ($aMatches[4]? $aMatches[4] : '');
-                                                break;
                                             default:
-                                                $sCondition = ' LIKE ?';
-                                                $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '') . ($aMatches[4]? $aMatches[4] : '');
+                                                $sOperator = ($sOperator == '!'? 'NOT ' : '') . 'LIKE';
+                                                $sTerm = $aMatches[2] . $aMatches[3] . $aMatches[4];
                                                 break;
                                         }
-                                        $$CLAUSE .= $aCol['db'][0] . $sCondition;
-                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm) . (preg_match('/LIKE/', $sCondition)? '%' : '');
+                                        $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
+                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm) . (substr($sOperator, -4) == 'LIKE'? '%' : '');
                                     } else {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
@@ -574,14 +577,14 @@ class LOVD_Object {
                                 default:
                                     if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
                                         $sTerm = trim($sTerm, '"');
-                                        $sCondition = (substr($sTerm, 0, 1) == '!'? ' NOT' : '') . ' LIKE ?';
-                                        $$CLAUSE .= $aCol['db'][0] . $sCondition;
+                                        $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT' : '') . 'LIKE';
+                                        $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $sTerm = preg_replace('/^!/', '', $sTerm);
                                         $sTerm = trim($sTerm, '"');
                                         $aArguments[$CLAUSE][] = '%' . lovd_escapeSearchTerm($sTerm) . '%';
                                     } elseif (preg_match('/^!?="([^"]+)"$/', $sTerm, $aMatches)) {
-                                        $sCondition = (substr($sTerm, 0, 1) == '!'? ' !=' : ' =') . ' ?';
-                                        $$CLAUSE .= $aCol['db'][0] . $sCondition;
+                                        $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
+                                        $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $sTerm = preg_replace('/^[!=]=?/', '', $sTerm);
                                         $sTerm = trim($sTerm, '"');
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
@@ -632,6 +635,7 @@ class LOVD_Object {
             print('      <FORM action="' . CURRENT_PATH . '" method="get" id="viewlistForm_' . $sViewListID . '" style="margin : 0px;" onsubmit="return false;">' . "\n" .
                   '        <INPUT type="hidden" name="viewlistid" value="' . $sViewListID . '">' . "\n" .
                   '        <INPUT type="hidden" name="object" value="' . $this->sObject . '">' . "\n" .
+                  '        <INPUT type="hidden" name="object_id" value="' . $this->sObjectID . '">' . "\n" .
 // FIXME; do we ever use ACTION in a ViewList? Wait until we've made variants.php to know for sure.
 // FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
                   (!ACTION? '' :
@@ -755,8 +759,6 @@ class LOVD_Object {
         }
 
         // If no results are found, quit here.
-        $sBadSyntaxColumns = '';
-        $i = 1;
         if (!$nTotal) {
             // Searched, but no results. FIXME: link to the proper documentation entry about search expressions
             $sBadSyntaxColumns = implode(', ', $aBadSyntaxColumns);

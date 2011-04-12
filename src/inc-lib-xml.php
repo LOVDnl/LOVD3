@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-15
- * Modified    : 2011-03-24
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-07
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -29,11 +29,8 @@
  *
  *************/
 
-preg_match('/^(/d+)([KM])/', ini_get('memory_limit'), $aMatches);
-if (!empty($aMatches[1]) && !empty($aMatches[2])) {
-    if ($aMatches[2] == 'K' || $aMatches[1] < 48) {
-        ini_set('memory_limit', '48M');
-    }
+if (preg_match('/^(/d+)([KM])/', ini_get('memory_limit'), $aMatches) && ($aMatches[2] == 'K' || $aMatches[1] < 48)) {
+    ini_set('memory_limit', '48M');
 }
 
 function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')

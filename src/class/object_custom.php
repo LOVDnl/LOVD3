@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-03-11
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-07
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -43,43 +43,75 @@ require_once ROOT_PATH . 'class/objects.php';
 class LOVD_Custom extends LOVD_Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Custom';
+    var $bShared = false;
+    var $aColumns = array();
     
-    
-    
-    
-    
+
+
+
+
     function LOVD_Custom ()
     {
         // Default constructor.
-        global $_AUTH;
-        
-        parent::LOVD_Object();
-        /*$qCols = 'SELECT cust.id FROM ' . TABLE_COLS . ' AS cust, ' . TABLE_ACTIVE_COLS . ' AS a WHERE SUBSTRING_INDEX(cust.id, "/", 1)="Patient" AND cust.id=a.colid';
-        echo "<BR><BR>";
-        $result = lovd_queryDB($qCols);
-        $qPatients = 'SELECT p.id';
-        while($data = mysql_fetch_row($result)) {
-            $qPatients .= ', p.`' . $data[0] . '`';
+        global $_AUTH, $_SETT;
+
+        if (empty($this->sObjectID) && $this->bShared) {
+            lovd_displayError('BadObjectCall', 'LOVD_Custom::' . "\n\t" . 'Bad call for shared column using empty gene and disease variables.' . "\n\n" .
+                                               'Please go to our <A href="' . $_SETT['upstream_BTS_URL'] . '" target="_blank">bug tracking system</A> ' .
+                                               'and report this error to help improve LOVD3.');
         }
-        $qPatients .= ', uo.name AS owner, s.name AS status FROM ' . TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) LEFT JOIN ' . TABLE_DATA_STATUS . ' AS s ON (p.statusid = s.id)';
-        $result = lovd_queryDB($qPatients);
-        while ($data = mysql_fetch_row($result)) {
-            $this->aColumnsViewList['Patient/Age_of_diagnosis'] = array
-                                                                      (
-                                                                        'view' => array('Patient ID', 70),
-                                                                        'db'   => array('p.id', 'ASC', true)
-                                                                      )
-        }*/
         
-        //$qPatients = 'SELECT p.*, uo.name AS owner, s.name AS status FROM ' . TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) LEFT JOIN ' . TABLE_DATA_STATUS . ' AS s ON (p.statusid = s.id)';
-        //$result = lovd_queryDB($qPatients);
-        //$aHidden = array('statusid', 'created_by', 'created_date', 'edited_by' ,'valid_from' ,'valid_to', 'deleted', 'deleted_by');
-        //while ($data = mysql_fetch_assoc($result)) {
-            //foreach ($aHidden as $sHidden) {
-                //unset($data[$sHidden]);
-            //}
-            //var_dump($data);
-        //}
+        //$this->sObjectID = $sObjectID;
+        
+        if (!$this->bShared) {
+            $sSQL = 'SELECT c.*, a.* ' .
+                    'FROM ' . TABLE_ACTIVE_COLS . ' AS a ' .
+                    'LEFT OUTER JOIN ' . TABLE_COLS . ' AS c ON (c.id = a.colid) ' .
+                    'WHERE c.id LIKE "' . $this->sObject . '/%" ' .
+                    'ORDER BY c.col_order';
+        } else {
+            $sSQL = 'SELECT c.*, s.* ' .
+                    'FROM ' . TABLE_COLS . ' AS c ' .
+                    'INNER JOIN ' . TABLE_SHARED_COLS . ' AS s ON (s.colid = c.id) ' .
+                    'WHERE c.id LIKE "' . $this->sObject . '/%" ' .
+                    'AND ' . ($this->sObject == 'Phenotype'? 's.diseaseid="' : 's.geneid="') . $this->sObjectID . '" ' .
+                    'ORDER BY s.col_order';
+        }
+        $q = lovd_queryDB($sSQL, array());
+        while ($z = mysql_fetch_assoc($q)) {
+            $this->aColumns[$z['id']] = $z;
+        }
+        parent::LOVD_Object();
+    }
+    
+    
+    
+    
+    
+    function buildViewList ()
+    {
+        $aViewList = array();
+        foreach ($this->aColumns as $sID => $aCol) {
+            $aViewList[$sID] = 
+                            array(
+                                    'view' => array($aCol['head_column'], $aCol['width']),
+                                    'db'   => array('`' . $aCol['colid'] . '`', 'ASC', true),
+                                 );
+        }
+        return $aViewList;
+    }
+    
+    
+    
+    
+    
+    function buildViewEntry ()
+    {
+        $aViewEntry = array();
+        foreach ($this->aColumns as $sID => $aCol) {
+            $aViewEntry[$sID] = $aCol['head_column'];
+        }
+        return $aViewEntry;
     }
 }
 ?>

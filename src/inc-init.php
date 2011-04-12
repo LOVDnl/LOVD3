@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-30
+ * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -93,7 +93,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-pre-18',
+                            'version' => '3.0-pre-19',
                           ),
                 'user_levels' =>
                      array(
@@ -399,6 +399,7 @@ foreach ($aConfigValues as $sSection => $aVars) {
 
 
 // Define table names (system-wide).
+// FIXME: TABLE_SCR2GENE => TABLE_SCRS2GENES etc. etc.?
 define('TABLEPREFIX', $_INI['database']['table_prefix']);
 $_TABLES =
          array(
@@ -411,7 +412,9 @@ $_TABLES =
                 'TABLE_GEN2DIS' => TABLEPREFIX . '_genes2diseases',
                 'TABLE_DATA_STATUS' => TABLEPREFIX . '_data_status',
                 'TABLE_PATHOGENIC' => TABLEPREFIX . '_variant_pathogenicity',
+                'TABLE_INDIVIDUALS' => TABLEPREFIX . '_individuals',
                 'TABLE_PATIENTS' => TABLEPREFIX . '_patients',
+                'TABLE_IND2DIS' => TABLEPREFIX . '_individuals2diseases',
                 'TABLE_PAT2DIS' => TABLEPREFIX . '_patients2diseases',
                 'TABLE_VARIANTS' => TABLEPREFIX . '_variants',
                 'TABLE_VARIANTS_ON_TRANSCRIPTS' => TABLEPREFIX . '_variants_on_transcripts',

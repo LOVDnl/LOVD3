@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2011-03-10
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -51,7 +51,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 // Some info & statistics.
 list($nUsers)    = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS));
 list($nLogs)     = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_LOGS));
-list($nPatients) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS));
+list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
 $aTotalVars      = array();
 $nTotalVars      = 0;
 $q = lovd_queryDB('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
@@ -79,7 +79,7 @@ print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . 
       '                <TD>' . "\n" .
       '                  Users : ' . $nUsers . '<BR>' . "\n" .
       '                  Log entries : ' . $nLogs . '<BR>----------<BR>' . "\n" .
-      '                  Patients : ' . $nPatients . '<BR>' . "\n" .
+      '                  Individuals : ' . $nIndividuals . '<BR>' . "\n" .
       '                  Genes : ' . GENE_COUNT . '</TD></TR>' . "\n" .
       '              <TR>' . "\n" .
       '                <TH>Variants</TH></TR>' . "\n" .
@@ -108,16 +108,16 @@ $aItems =
                         array('users', 'lovd_users_edit.png', 'View all users', 'Manage authorized users.'),
                       ),
 /*
-// Custom patient columns.
+// Custom individual columns.
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
-      '                <TD colspan="2"><B>Custom patient columns</B></TD></TR>' . "\n" .
+      '                <TD colspan="2"><B>Custom individual columns</B></TD></TR>' . "\n" .
       '              <TR class="pointer" onclick="window.location.href=\'setup_columns.php?action=add\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_add.png" alt="Add pre-configured custom patient column" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Add unselected pre-configured custom patient column.</TD></TR>' . "\n" .
+      '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_add.png" alt="Add pre-configured custom individual column" width="32" height="32"></TD>' . "\n" .
+      '                <TD>Add unselected pre-configured custom individual column.</TD></TR>' . "\n" .
       '              <TR class="pointer" onclick="window.location.href=\'setup_columns.php?action=view_all\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_edit.png" alt="Manage custom patient columns" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Manage selected custom patient columns.</TD></TR></TABLE><BR>' . "\n");
+      '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_edit.png" alt="Manage custom individual columns" width="32" height="32"></TD>' . "\n" .
+      '                <TD>Manage selected custom individual columns.</TD></TR></TABLE><BR>' . "\n");
 */
             'Custom data columns' =>
                  array(
@@ -214,10 +214,10 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                         array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease information entry.'),
                         array('diseases', 'lovd_question.png', 'View all diseases', 'Manage disease information entries.'),
                       ),
-            'Patients' =>
+            'Individuals' =>
                  array(
-                        array('patients?create', 'lovd_question.png', 'Create new patient', 'Create new patient entry.'),
-                        array('patients', 'lovd_question.png', 'View all patients', 'View all patient entries.'),
+                        array('individuals?create', 'lovd_question.png', 'Create new individual', 'Create new individual entry.'),
+                        array('individuals', 'lovd_question.png', 'View all individuals', 'View all individual entries.'),
                       ),
             'Variants' =>
                  array(

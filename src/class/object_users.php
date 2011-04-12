@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-03-31
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -51,18 +51,35 @@ class LOVD_User extends LOVD_Object {
     function LOVD_User ()
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT *, (login_attempts >= 3) AS locked FROM ' . TABLE_USERS . ' WHERE id = ?';
+        $this->sSQLLoadEntry = 'SELECT *, (login_attempts >= 3) AS locked ' .
+                               'FROM ' . TABLE_USERS . ' ' .
+                               'WHERE id = ? ' .
+                               'GROUP BY=id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, GROUP_CONCAT(u2g.geneid ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, c.name AS country_, uc.name AS created_by_, ue.name AS edited_by_';
-        $this->aSQLViewEntry['FROM']     = TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) LEFT JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (u.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id)';
-//        $this->aSQLViewEntry['GROUP_BY'] = 'u.id';
+        $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
+                                           '(u.login_attempts >= 3) AS locked, ' .
+                                           'GROUP_CONCAT(u2g.geneid ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, ' .
+                                           'c.name AS country_, ' .
+                                           'uc.name AS created_by_, ' .
+                                           'ue.name AS edited_by_';
+        $this->aSQLViewEntry['FROM']     = TABLE_USERS . ' AS u ' .
+                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (u.created_by = uc.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'u.id';
 
-        // SQL code for viewing a list of entries.
-        $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, COUNT(u2g.geneid) AS curates, c.name AS country_';
-        $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) LEFT JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
+        // SQL code for viewing a list of users.
+        $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
+                                          'COUNT(u2g.geneid) AS curates, ' .
+                                          'c.name AS country_';
+        $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
+                                          'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
         $this->aSQLViewList['GROUP_BY'] = 'u.id';
         $this->aSQLViewList['ORDER_BY'] = 'u.level DESC, u.name ASC';
 
@@ -96,6 +113,15 @@ class LOVD_User extends LOVD_Object {
                         'edited_by_' => 'Last edited by',
                         'edited_date' => 'Date last edited',
                       );
+
+        // Because the gene information is publicly available, remove some columns for the public.
+        if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+            unset($this->aColumnsViewEntry['username']);
+            unset($this->aColumnsViewEntry['last_login']);
+            unset($this->aColumnsViewEntry['locked_']);
+            unset($this->aColumnsViewEntry['phpsessid']);
+            unset($this->aColumnsViewEntry['password_force_change_']);
+        }
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
@@ -133,7 +159,7 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('u.created_date', 'ASC', true)),
                         'level' => array(
                                     'view' => array('Level', 150),
-                                    'db'   => array('u.level', 'DESC', true)),
+                                    'db'   => array('u.level', 'DESC')),
                       );
         $this->sSortDefault = 'level';
 

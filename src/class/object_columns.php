@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-03-02
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -163,7 +163,7 @@ class LOVD_Column extends LOVD_Object {
         }
 
         // MySQL type format.
-        if ($aData['mysql_type'] && !preg_match('/^(TEXT|VARCHAR\([0-9]{1,3}\)|DATE(TIME)?|((TINY|SMALL|MEDIUM|BIG)?INT\([0-9]{1,2}\)|DEC\([0-9]{1,2}\,[0-9]{1,2}\))( UNSIGNED)?)( DEFAULT ([0-9]+|"[^"]+"))?$/i', $aData['mysql_type'])) {
+        if ($aData['mysql_type'] && !preg_match('/^(TEXT|VARCHAR\([0-9]{1,3}\)|DATE(TIME)?|((TINY|SMALL|MEDIUM|BIG)?INT\([0-9]{1,2}\)|DECIMAL\([0-9]{1,2}\,[0-9]{1,2}\))( UNSIGNED)?)( DEFAULT ([0-9]+|"[^"]+"))?$/i', $aData['mysql_type'])) {
             lovd_errorAdd('mysql_type', 'The MySQL data type is not recognized. Please use the data type wizard to generate a proper MySQL data type.');
         }
 
@@ -234,7 +234,7 @@ class LOVD_Column extends LOVD_Object {
 
         // Change some text on the form.
         switch ($_POST['category']) {
-            case 'Patient':
+            case 'Individual':
                 unset($this->aFormData['settings_note']);
                 unset($this->aFormData['standard']);
                 $this->aFormData['colid_note'][3] = str_replace('{{ EXAMPLE }}', 'Geograpic_origin/Country', $this->aFormData['colid_note'][3]);

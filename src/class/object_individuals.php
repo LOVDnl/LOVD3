@@ -3,7 +3,7 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2011-03-18
+ * Created     : 2011-02-16
  * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
@@ -40,58 +40,58 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_Screening extends LOVD_Custom {
+class LOVD_Individual extends LOVD_Custom {
     // This class extends the basic Object class and it handles the Link object.
-    var $sObject = 'Screening';
+    var $sObject = 'Individual';
     var $bShared = false;
 
 
 
 
 
-    function LOVD_Screening ()
+    function LOVD_Individual ()
     {
-
         // Default constructor.
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT s.*, ' .
-                               'uo.name AS owner ' .
-                               'FROM ' . TABLE_SCREENINGS . ' AS s ' .
-                               'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id) ' .
-                               'WHERE s.id = ? ' .
-                               'GROUP BY s.id';
+        $this->sSQLLoadEntry = 'SELECT i.*, uo.name AS owner ' .
+                               'FROM ' . TABLE_INDIVIDUALS . ' AS i ' .
+                               'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.ownerid = uo.id) ' .
+                               'WHERE i.id = ? ' .
+                               'GROUP BY i.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 's.*, ' .
+        $this->aSQLViewEntry['SELECT']   = 'i.*, ' .
                                            'uo.id AS owner, ' .
                                            'uo.name AS owner_, ' .
+                                           's.name AS status, ' .
                                            'uc.name AS created_by_';
-        $this->aSQLViewEntry['FROM']     = TABLE_SCREENINGS . ' AS s ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (s.created_by = uc.id)';
-        $this->aSQLViewEntry['GROUP_BY'] = 's.id';
+        $this->aSQLViewEntry['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.ownerid = uo.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS s ON (i.statusid = s.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'i.id';
 
-        // SQL code for viewing the list of screenings
-        $this->aSQLViewList['SELECT']   = 's.*, ' .
-                                          'uo.name AS owner';
-        $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
-                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id)';
-        $this->aSQLViewList['GROUP_BY'] = 's.id';
-
+        // SQL code for viewing the list of individuals
+        $this->aSQLViewList['SELECT']   = 'i.*, ' .
+                                          'uo.name AS owner, ' .
+                                          's.name AS status';
+        $this->aSQLViewList['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
+                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.ownerid = uo.id) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS s ON (i.statusid = s.id)';
+        $this->aSQLViewList['GROUP_BY'] = 'i.id';
+        
         parent::LOVD_Custom();
         
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
-                 array(
-                        'individualid_' => 'Individual ID',
-                      ),
                  $this->buildViewEntry(),
                  array(
                         'owner_' => 'Owner name',
+                        'status' => 'Individual data status',
                         'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
+                        'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
                         'valid_from_' => 'Date edited',
                       ));
@@ -108,27 +108,19 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aColumnsViewList = array_merge(
                  array(
                         'id' => array(
-                                    'view' => array('Screening ID', 90),
-                                    'db'   => array('s.id', 'ASC', true)),
+                                    'view' => array('Individual ID', 90),
+                                    'db'   => array('i.id', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(
-                        'individualid' => array(
-                                    'view' => array('Individual ID', 90),
-                                    'db'   => array('s.individualid', 'ASC', true)),
                         'owner' => array(
-                                    'view' => array('Owner', 200),
+                                    'view' => array('Owner', 300),
                                     'db'   => array('uo.name', 'ASC', true)),
-                        'created_date' => array(
-                                    'view' => array('Date created', 130),
-                                    'db'   => array('s.created_date', 'ASC', true)),
-                        'valid_from' => array(
-                                    'view' => array('Date edited', 130),
-                                    'db'   => array('s.valid_from', 'ASC', true)),
+                        'status' => array(
+                                    'view' => array('Status', 70),
+                                    'db'   => array('s.name', false, true)),
                       ));
         $this->sSortDefault = 'id';
-        parent::LOVD_Object();
-        
     }
 
 
@@ -168,7 +160,7 @@ class LOVD_Screening extends LOVD_Custom {
 
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'screenings/' . rawurlencode($zData['id']);
+            $zData['row_link'] = 'individuals/' . rawurlencode($zData['id']);
             $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             /*$zData['diseases_'] = $zData['disease_omim_'] = '';
@@ -181,7 +173,6 @@ class LOVD_Screening extends LOVD_Custom {
                 }
             }*/
             
-            $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
             $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
         }
 

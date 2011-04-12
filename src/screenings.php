@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-03-31
+ * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -45,7 +45,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /screenings
     // View all entries.
 
-    define('PAGE_TITLE', 'LOVD Setup - Manage screenings');
+    define('PAGE_TITLE', 'View screenings');
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
@@ -66,7 +66,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
     // View specific entry.
 
     $nID = $_PATH_ELEMENTS[1];
-    define('PAGE_TITLE', 'View Screening #' . $nID);
+    define('PAGE_TITLE', 'View screening #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
@@ -87,11 +87,20 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
     }
     
     $_GET['search_screeningid'] = $nID;
-    print('<BR><BR><H2 class="LOVD">Variants found</H2>');
+    print('<BR><BR>' . "\n\n");
+    lovd_printHeader('Genes screened', 'H4');
+    require ROOT_PATH . 'class/object_genes.php';
+    $_DATA = new LOVD_Gene();
+    $_DATA->setSortDefault('id');
+    $_DATA->viewList(false, 'screeningid', true, true, false);
+    
+    //$_GET['search_screeningid'] = $nID;
+    print('<BR><BR>' . "\n\n");
+    lovd_printHeader('Variants found', 'H4');
     require ROOT_PATH . 'class/object_variants.php';
     $_DATA = new LOVD_Variant();
-    $_DATA->sSortDefault = 'id';
-    $_DATA->viewList(false, 'screeningid');
+    $_DATA->setSortDefault('id');
+    $_DATA->viewList(false, 'screeningid', false, false, false);
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

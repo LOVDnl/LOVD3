@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2010-12-14
- * For LOVD    : 3.0-pre-09
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -32,7 +32,7 @@
 $aLinkSQL =
          array(
                 'PubMed' => 'INSERT INTO ' . TABLE_LINKS . ' VALUES (001, "PubMed", "{PMID:[1]:[2]}", "<A href=\"http://www.ncbi.nlm.nih.gov/pubmed/[2]\" target=\"_blank\">[1]</A>", "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s).\r\n[2] = The PubMed ID.", 1, NOW(), NULL, NULL)',
-                'INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("Patient/Reference", 001)',
+                'INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("Individual/Reference", 001)',
 // FIXME; foreign key constraint fails here.
 //                'INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("Gene/Reference", 001)',
                 'DbSNP' => 'INSERT INTO ' . TABLE_LINKS . ' VALUES (002, "DbSNP", "{dbSNP:[1]}", "<A href=\"http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?type=rs&amp;rs=rs[1]\" target=\"_blank\">dbSNP</A>", "Links to the DbSNP database.\r\n[1] = The DbSNP ID.", 1, NOW(), NULL, NULL)',

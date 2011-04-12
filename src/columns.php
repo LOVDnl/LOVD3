@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-03-17
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -43,7 +43,7 @@ if ($_AUTH) {
 
 if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     // URL: /columns
-    // URL: /columns/(VariantOnGenome|VariantOnTranscript|Patient|...)
+    // URL: /columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
     // View all columns.
 
     if (!empty($_PATH_ELEMENTS[1])) {
@@ -283,7 +283,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
                  array(
                         'text' => 'Text/numeric input field',
                         'int' => 'Integer input field',
-                        'dec' => 'Decimal input field',
+                        'decimal' => 'Decimal input field',
                         'textarea' => 'Large multi-row textual input field',
                         'select' => 'Drop down list (one option selected)',
                         'select_multiple' => 'Selection list (multiple options selected)',
@@ -342,7 +342,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
                 $aCheckN['maxlength'] = 'Maximum input length (characters)';
                 $aCheckN['default_val'] = 'Default value (optional)';
                 break;
-            case 'dec':
+            case 'decimal':
                 $aCheckM['size'] = 'Width on form (characters)';
                 $aCheckM['maxlength'] = 'Number of digits before the decimal point';
                 $aCheckM['scale'] = 'Number of digits following the decimal point';
@@ -464,9 +464,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
                     }
                     $sFormType .= '|text|' . $_POST['size'];
                     break;
-                case 'dec':
+                case 'decimal':
                     $_POST['maxlength'] += $_POST['scale']; // Maxlength was number of digits before the decimal point.
-                    $sMySQLType = 'DEC(' . ($_POST['maxlength'] > 65? 65 : $_POST['maxlength']) . ',' . $_POST['scale'] . ')' . ($_POST['unsigned']? ' UNSIGNED' : '');
+                    $sMySQLType = 'DECIMAL(' . ($_POST['maxlength'] > 65? 65 : $_POST['maxlength']) . ',' . $_POST['scale'] . ')' . ($_POST['unsigned']? ' UNSIGNED' : '');
                     $sFormType .= '|text|' . $_POST['size'];
                     break;
                 case 'date':
@@ -493,7 +493,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             }
 
             // Set default value.
-            if (in_array($_POST['form_type'], array('text', 'int', 'dec', 'date')) && $_POST['default_val']) {
+            if (in_array($_POST['form_type'], array('text', 'int', 'decimal', 'date')) && $_POST['default_val']) {
                 $sMySQLType .= ' DEFAULT "' . $_POST['default_val'] . '"';
             }
 
@@ -536,7 +536,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             case 'int':
                 $aVals = array('size' => 10, 'maxlength' => 8);
                 break;
-            case 'dec':
+            case 'decimal':
                 $aVals = array('size' => 10, 'maxlength' => 5, 'scale' => 2);
                 break;
             case 'date':
@@ -609,7 +609,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             $aDefault[0][4] = 5;
             $aForm = array_merge($aForm, $aWidth, $aMaxLength, $aPositive, $aDefault);
             break;
-        case 'dec':
+        case 'decimal':
             $aDefault[0][4] = 5;
             $aForm = array_merge($aForm, $aWidth, $aDecimal, $aPositive, $aDefault);
             break;
@@ -660,8 +660,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
               '        <TABLE border="0" cellpadding="10" cellspacing="1" width="950" class="data" style="font-size : 15px;">' . "\n" .
               '          <TR>' . "\n" .
-              '            <TD width="30"><INPUT type="radio" name="category" value="Patient"></TD>' . "\n" .
-              '            <TD><B>Information on the patient, not related to disease</B>, not changing over time, such as date of birth</TD></TR>' . "\n" .
+              '            <TD width="30"><INPUT type="radio" name="category" value="Individual"></TD>' . "\n" .
+              '            <TD><B>Information on the individual, not related to disease</B>, not changing over time, such as date of birth</TD></TR>' . "\n" .
               '          <TR>' . "\n" .
               '            <TD width="30"><INPUT type="radio" name="category" value="Phenotype"></TD>' . "\n" .
               '            <TD><B>Information on the phenotype, related to disease</B>, possibly changing over time, such as blood pressure</TD></TR>' . "\n" .
@@ -850,8 +850,8 @@ die();
 
         // MySQL type format.
         // 2009-02-16; 2.0-16; Allow for input of default values using "DEFAULT ..."
-        // 2009-06-16; 2.0-19; Added DEC, DATE and DATETIME types.
-        if ($_POST['mysql_type'] && !preg_match('/^(TEXT|VARCHAR\([0-9]{1,3}\)|DATE(TIME)?|((TINY|SMALL|MEDIUM|BIG)?INT\([0-9]{1,2}\)|DEC\([0-9]{1,2}\,[0-9]{1,2}\))( UNSIGNED)?)( DEFAULT ([0-9]+|"[^"]+"))?$/i', stripslashes($_POST['mysql_type']))) {
+        // 2009-06-16; 2.0-19; Added DECIMAL, DATE and DATETIME types.
+        if ($_POST['mysql_type'] && !preg_match('/^(TEXT|VARCHAR\([0-9]{1,3}\)|DATE(TIME)?|((TINY|SMALL|MEDIUM|BIG)?INT\([0-9]{1,2}\)|DECIMAL\([0-9]{1,2}\,[0-9]{1,2}\))( UNSIGNED)?)( DEFAULT ([0-9]+|"[^"]+"))?$/i', stripslashes($_POST['mysql_type']))) {
             lovd_errorAdd('mysql_type', 'The MySQL data type is not recognized. Please use the data type wizard to generate a proper MySQL data type.');
         }
 
@@ -1101,9 +1101,9 @@ die();
                     $_SESSION['data_wizard']['maxlength'] = $aRegs[2];
                     // 2009-02-16; 2.0-16; Should be $aRegs[3], not [2] of course.
                     $_SESSION['data_wizard']['unsigned']  = (!empty($aRegs[3])? 1 : 0);
-                } elseif (preg_match('/^DEC\(([0-9]+),([0-9]+)\) *(UNSIGNED)?/', $zData['mysql_type'], $aRegs)) {
-                    // 2009-06-11; 2.0-19; Added DEC, DATE and DATETIME types.
-                    $_SESSION['data_wizard']['form_type'] = 'dec';
+                } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\) *(UNSIGNED)?/', $zData['mysql_type'], $aRegs)) {
+                    // 2009-06-11; 2.0-19; Added DECIMAL, DATE and DATETIME types.
+                    $_SESSION['data_wizard']['form_type'] = 'decimal';
                     $_SESSION['data_wizard']['maxlength'] = $aRegs[1] - $aRegs[2];
                     $_SESSION['data_wizard']['scale'] = $aRegs[2];
                     $_SESSION['data_wizard']['unsigned']  = (!empty($aRegs[3])? 1 : 0);

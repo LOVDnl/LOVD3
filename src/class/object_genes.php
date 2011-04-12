@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-03-17
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -54,16 +54,42 @@ class LOVD_Gene extends LOVD_Object {
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT g.*, GROUP_CONCAT(DISTINCT g2d.diseaseid ORDER BY g2d.diseaseid SEPARATOR ";") AS active_diseases_ FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) WHERE g.id = ? GROUP BY g.id';
+        $this->sSQLLoadEntry = 'SELECT g.*, ' .
+                               'GROUP_CONCAT(DISTINCT g2d.diseaseid ORDER BY g2d.diseaseid SEPARATOR ";") AS active_diseases_ ' .
+                               'FROM ' . TABLE_GENES . ' AS g ' .
+                               'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
+                               'WHERE g.id = ? ' .
+                               'GROUP BY g.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, uc.name AS created_by_, ue.name AS edited_by_, uu.name AS updated_by_, count(DISTINCT vot.id) AS variants';
-        $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) LEFT JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
-//        $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
+        $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
+                                           'uc.name AS created_by_, ' .
+                                           'ue.name AS edited_by_, ' .
+                                           'uu.name AS updated_by_, ' .
+                                           'count(DISTINCT vot.id) AS variants';
+        $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
+                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'g.id';
 
         // SQL code for viewing the list of genes
-        $this->aSQLViewList['SELECT']   = 'g.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, count(DISTINCT vot.id) AS variants';
-        $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
+        $this->aSQLViewList['SELECT']   = 'g.*, ' .
+                                          'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
+                                          'count(DISTINCT vot.id) AS variants, ' .
+                                          'sc.id AS screeningid';
+        $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
+                                          'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' . 
+                                          'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS scg ON (g.id = scg.geneid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_SCREENINGS .' AS sc ON (scg.screeningid = sc.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
         
@@ -76,6 +102,7 @@ class LOVD_Gene extends LOVD_Object {
                         'chromosome' => 'Chromosome',
                         'chrom_band' => 'Chromosomal band',
                         'refseq_genomic' => 'Genomic reference',
+                        'diseases_' => 'Associated with diseases',
                         'url_homepage' => 'Homepage URL',
                         'url_external' => 'External URL',
                         'allow_download_' => 'Allow public to download all variant entries',
@@ -96,12 +123,6 @@ class LOVD_Gene extends LOVD_Object {
                         'updated_date_' => 'Date last update',
                         'TableEnd_General' => '',
                         'HR_1' => '',
-                        'TableStart_Additional' => '',
-                        'TableHeader_Additional' => 'Additional information',
-                        'variants' => 'Total number of variants',
-                        'diseases_' => 'Associated with diseases',
-                        'TableEnd_Additional' => '',
-                        'HR_2' => '',
                         'TableStart_Links' => '',
                         'TableHeader_Links' => 'Links to other resources',
                         'id_hgnc_' => 'HGNC',
@@ -114,11 +135,13 @@ class LOVD_Gene extends LOVD_Object {
                       );
 
         // Because the gene information is publicly available, remove some columns for the public.
-        if ($_AUTH && $_AUTH['level'] < LEVEL_COLLABORATOR) {
+        if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
             unset($this->aColumnsViewEntry['created_by_']);
             unset($this->aColumnsViewEntry['created_date_']);
             unset($this->aColumnsViewEntry['edited_by_']);
             unset($this->aColumnsViewEntry['edited_date_']);
+            unset($this->aColumnsViewEntry['updated_by_']);
+            unset($this->aColumnsViewEntry['updated_date_']);
         }
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -145,6 +168,9 @@ class LOVD_Gene extends LOVD_Object {
                         'diseases_' => array(
                                     'view' => array('Associated with diseases', 200),
                                     'db'   => array('diseases_', false, 'TEXT')),
+                        'screeningid' => array(
+                                    'view' => array('Screening ID', 100),
+                                    'db'   => array('screeningid', 'ASC', 'INT_UNSIGNED')),
                       );
         $this->sSortDefault = 'id';
 
@@ -377,7 +403,7 @@ class LOVD_Gene extends LOVD_Object {
                         'hr',
                         array('Allow public to download variant entries', '', 'checkbox', 'allow_download'),
                         'hr',
-                        array('Allow my public variant and patient data to be indexed by WikiProfessional', '', 'checkbox', 'allow_index_wiki'),
+                        array('Allow my public variant and individual data to be indexed by WikiProfessional', '', 'checkbox', 'allow_index_wiki'),
                         'hr',
                         'skip',
                   );
@@ -416,7 +442,7 @@ class LOVD_Gene extends LOVD_Object {
             // FIXME; Er is nog geen default disclaimer geschreven!!!!.            
             $aDisclaimer = array(0 => 'No', 1 => 'Standard LOVD disclaimer', 2 => 'Own disclaimer');
             $zData['disclaimer_']       = $aDisclaimer[$zData['disclaimer']];
-            $zData['disclaimer_text_']   = ($zData['disclaimer'] > 0 ? ($zData['disclaimer'] == 1? "Official LOVD disclaimer\n\nDON'T COPY!!!!\n\nEVER!" : $zData['disclaimer_text']) : '');
+            $zData['disclaimer_text_']   = ($zData['disclaimer'] > 0 ? ($zData['disclaimer'] == 1? "#\n#\n#\nOfficial LOVD disclaimer\n#\n#\n#" : $zData['disclaimer_text']) : '');
             
             // FIXME; Voor zover ik weet doen de header en de footer nog niks.    
             $aAlign = array(-1 => 'left', 0 => 'center', 1 => 'right');
@@ -431,16 +457,10 @@ class LOVD_Gene extends LOVD_Object {
                 foreach ($aDiseases as $sDisease) {
                     list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
                     $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
-                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
+                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . (!empty($nOMIMID)? '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>' : $sName . ' (' . $sSymbol . ')');
                 }
             }
             
-            $zData['created_date_'] = substr($zData['created_date'], 0, 10);
-            $zData['created_by_'] = (!empty($zData['created_by'])? $zData['created_by_'] : 'N/A');
-            $zData['updated_date_'] = (!empty($zData['updated_date'])? $zData['updated_date'] : 'N/A');
-            $zData['updated_by_'] = (!empty($zData['updated_by'])? $zData['updated_by_'] : 'N/A');
-            $zData['edited_date_'] = (!empty($zData['edited_date'])? $zData['edited_date'] : 'N/A');
-            $zData['edited_by_'] = (!empty($zData['edited_by'])? $zData['edited_by_'] : 'N/A');
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID);

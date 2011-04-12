@@ -1,11 +1,8 @@
 Doen voordat LOVD 3.0 online gebruikt kan worden:
 =================================================
-- Patient -> Individual?
-  Introduce Panel?
+- Introduce Panel?
 - Tabs instellen?
 - Kolommen activeren bij installatie?
-- Columns moet geen DEC meer noemen maar DECIMAL.
-    grep op DEC doen, om te zien waar 't gebruikt wordt.
 
 
 
@@ -42,7 +39,7 @@ Kán later, maar VOOR dat er externe gebruikers actief worden:
 
 
 - Denk uit hoe één data viewList() ingesteld kan worden; object_variants.php begint een zooitje te worden!!!
-    Eerste argument kan ook een categorie zijn? VariantOnGenome, VariantAll, VariantPatient, VariantScreeningPatient, whatever???
+    Eerste argument kan ook een categorie zijn? VariantOnGenome, VariantAll, VariantIndividual, VariantScreeningIndividual, whatever???
 - In commit #40 is er bij diseases viewEntry() van alles veranderd, maar het werkt niet goed (notices) en volgens mij is de query te uitgebreid. Ik moet hier later nog naar kijken.
 - Back button moet anders (ook #40)
 - Variant viewList() bij transcript viewEntry() geeft queryDB error bij sorteren.
@@ -72,13 +69,13 @@ LOVD 3.0
         of the transaction until the occurrence of COMMIT, ROLLBACK, or some SQL statement that causes an implicit commit.
     Submission:
         !!! Save by default: thus after every completed form, save the data for later retrieval.
-        1) Vul patient info in
+        1) Vul individual info in
         2) Phenotype info? Yes/No?
             If yes: Selecteer ziekte (pre-filled?) en vul phenotype in (formulieren anders per phenotype!)
         3) Detectie technieken invullen? Zo ja: geef per det. tech. aan welke genen (genlijst maken uit gegeven disease?) getest zijn), en aangeven of varianten gevonden zijn.
             (als men aangeeft dat er varianten waren, maar toen stopte, moeten ze later maar die koppeling weer aanleggen (verschil variantid = 0 / NULL om te helpen?))
                 Of anders: misschien dan verplichten door te gaan?
-        4) Varianten invullen: per gen is formulier anders, dus daarna per gen een variant invoeren, inclusief pat2var data? Of allele apart splitsen?
+        4) Varianten invullen: per gen is formulier anders, dus daarna per gen een variant invoeren, inclusief ind2var data? Of allele apart splitsen?
             Bij het invullen, aangeven door welke eerder ingevulde detection technieken hij gevonden is?
         Submissies over verschillende genen moet geen probleem meer zijn.
             Warning: multiple curators should be warned, then.
@@ -91,7 +88,7 @@ LOVD 3.0
     Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
     History/revision control: misschien max 5 levels terug ofzo? Instellen ergens? Of een bepaalde tijd maar? Auto clean up?
     Raymond Dalgleish wil beta-tester zijn.
-    Instelling: sta curatoren toe patientdata te wijzigen van patienten met mutaties ook in andere genen (dus nog steeds met minimaal 1 mutatie in eigen gen).
+    Instelling: sta curatoren toe individualdata te wijzigen van individuals met mutaties ook in andere genen (dus nog steeds met minimaal 1 mutatie in eigen gen).
     Het hele HTML/XSS probleem. Nu hebben we nog overal XSS checks, behalve in de custom link script, toch? Deny HTML input voor column data?
         Het hele probleem is dat alle output moet ge-htmlspecialchar()ed worden om normaal getoond te worden als er een < in zit. Maar echte HTML gaat dan verloren.
         Toch overal maar htmlspecialchars invoeren? Dan moet bij de custom links worden uitgekeken dat het niet twee keer gebeurt, en daarnaast moeten de custom links later worden toegepast.
@@ -99,7 +96,7 @@ LOVD 3.0
     Een array opbouwen van $_PATH_ELEMENTS / ACTIONS met titels waar we zijn geweest (edits, dels, creates e.d. niet opgeslagen) zodat je makkelijk terug kunt?
     Probeer iets in te bouwen, dat een upgrade te negeren is. Dat dus iemand kan zeggen; ik wil blijven werken, ik weet dat er een probleem is. Maak dan het scherm duidelijk anders. Continue bericht bovenaan o.i.d.?
         $_SESSION VAR, uitgelezen door inc-top.php.
-    Difference patient / panel is Times/reported field? Handle differently? Panels niet meetellen in enorme varianten tellers?
+    Difference individual / panel is Times/reported field? Handle differently? Panels niet meetellen in enorme varianten tellers?
     Revisie aanmaken ja/nee is een optie, ik hoef dan niet in de system settings te kiezen om dit aan of uit te zetten?
         Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
     Data license? Mummi schreef er over (Science Commons) 8 november 2009
@@ -132,13 +129,13 @@ Screenings zijn gekoppeld aan VARIANTS. Maar als 1 variant op twee transcripten 
     Via screenings2genes is wellicht te achterhalen wel gen het betrof, maar niet welk transcript!!!
 During installation LOVD does not worry about an empty database URL. However, when editing the settings it does mention that this URL is empty. Make sure the install has this behaviour as well.
 Voorstel schrijven voor nieuwe functies voor de Mutalyzer webservice, standaardisatie van de namen.
-Tabs instelbaar: system settings bepaalt welke tabs worden getoond; genes, diseases, transcripts, users, patients, etc.
+Tabs instelbaar: system settings bepaalt welke tabs worden getoond; genes, diseases, transcripts, users, individuals, etc.
     Misschien niet de system settings maar individueel? Extra tabje toevoegen die + heet, die de lijst mogelijke tabs geeft met een checkbox er voor? Gebruiker vinkt aan en uit, klikt Save en pagina herlaad?
         Beter nog: inc-top herlaad? Ajax daarvoor gebruiken?
 Formulier voor toevoegen/edit kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.
 Een column ID moet altijd met een hoofdletter gemaakt worden, dus daar moet een controle op!
 FINISH COLUMNS EDIT??? First think about how to do this???
-    Display settings en global settings patient cols zijn in 2.0 gescheiden, dat heeft echt 0 nut en is verwarrend. Kappen, dus!
+    Display settings en global settings individual cols zijn in 2.0 gescheiden, dat heeft echt 0 nut en is verwarrend. Kappen, dus!
         Denk nog ff na of verschillende niveau's misschien verschillende dingen moeten kunnen editen, zo niet er gewoon 1 script van maken.
         Variants & phenotypes zijn dan dus speciaal. "Edit gene-specific display settings" / "Edit disease-specific display settings" of iets dergelijks.
         Dit al in 2.0 regelen? Zet dan op de global edit form bij de Variant cols: changes to *these* fields will not show on the gene's column display settings (whatever) unless you reset these columns to the new default settings.
@@ -175,15 +172,15 @@ Tabs, volgorde goed?
     Submitters tab nu Users, ook zodat je db admin en managers kan zien?
         Voor de normale gebruikers moeten we bepaalde kolommen weghalen. En andere toevoegen? Adres staat niet genoemd. Zien de normale mensen de details ook (= doorklikken), of moeten we een nieuwe view maken?
 Submenu's weg, knopjes met uitschuif met opties?
-    Gebruik kleuren om te scheiden? Laat zien nu geen verschil zien tussen var + pat; maar straks nog meer categoriën!
+    Gebruik kleuren om te scheiden? Laat zien nu geen verschil zien tussen var + ind; maar straks nog meer categoriën!
         Hide set columns, unhide all columns = algemeen
     Vinkjes voor iedere entry om snel te curaten/deleten/booten/etc oid?
 Suggesties:
     Includen van de Setup in de Configuration, de dropdown als alternatief voor het horizontale menu was een goed idee,
-    submitters should be able to edit info to whichever patient, but edit only their own data,
+    submitters should be able to edit info to whichever individual, but edit only their own data,
     dropdown menu "tools" above variants is a good idea, right click on variant -> maybe left click on a small button or mouseover explaining to right-click?,
     show pathogenicity in color values for the whole line?, skip the download format - people can use the system to edit?, maybe check out the uniprot download format?,
-        The uniprot format by the way has the advantage to use lines for the data, so adding more lines for a patient's phenotype data is just fine, but the file gets so long...
+        The uniprot format by the way has the advantage to use lines for the data, so adding more lines for a individual's phenotype data is just fine, but the file gets so long...
     mouseover column or column header for legend info?
 CURRDB in cookie!
 
@@ -204,7 +201,7 @@ Wat moet ik onthouden tijdens het coden?
     // References anders regelen?
     // Alleles -> Anders noemen? Splitsen?
     // Extra tabel met Gene -> Chromosoom, mapping NG/NC_slice -> NC (1 cijfer genoeg? of strand info?), exon structuur? Data wat nu in die txt table zit?
-    // Allows for orphaned screening. BUT now also, one screening for multiple patients. (??? still true ???)
+    // Allows for orphaned screening. BUT now also, one screening for multiple individuals. (??? still true ???)
 * Add index op DNA!!! (if we know how to insert the DNA information into the db)
 * User levels:
     Submitter
@@ -231,7 +228,7 @@ Not sure yet how to...
 - Aanmaken disease - voorstellen cols dmv OMIM ID en ontology lookup?
 - Bij het editen insluiten de modified_date van de entry. Als die, bij het editen van de data ineens anders is, moet je een foutmelding geven. Twee mensen hebben tegelijkertijd er aan gewerkt!
     Wellicht direct in de update query?
-- All the traffic to variants and patients in LOVD 2.0 enters through variants.php, lucky me. So this file in 3.0 will both serve the "new" clean URLs, but if it detects the old LOVD 2.0 formatted URLs, it will forward to the standard URL.
+- All the traffic to variants and individuals in LOVD 2.0 enters through variants.php, lucky me. So this file in 3.0 will both serve the "new" clean URLs, but if it detects the old LOVD 2.0 formatted URLs, it will forward to the standard URL.
 - If we let people pick an NM for a gene, how do we get to more information about this NM? Does NCBI provide this?
   * Have been looking into this. Can we make this shorter: http://www.ncbi.nlm.nih.gov/nuccore/?EntrezSystem2.PEntrez.DbConnector.LastQueryKey=1&EntrezSystem2.PEntrez.DbConnector.Cmd=file&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.sPresentation=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.FFormat=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.Db=nuccore&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.QueryKey=1&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.CurrFilter=all&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.ResultCount=1&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.Id=NM_004006.2&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.uid=238018044&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.FileFormat=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.LastPresentation=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.Presentation=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.PageSize=20&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.LastPageSize=20&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_ResultsController.ResultCount=1&p%24a=EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.SendToSubmit&p%24l=EntrezSystem2&p%24st=nuccore
   * Or use eUtils???
@@ -267,14 +264,14 @@ Needed before release
         Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
         nodig... maar dat werkt pas vanaf 4.3.0... Toch proberen? Alleen laden met config_import.txt, denk ik.
         Testfile heb ik in mijn email, van David Bonthron (Wed, 18 Jun 2008 12:28:46 +0100).
-    Astrid Out en Carli Tops zouden graag de mogelijkheid hebben om een overzicht te krijgen van patienten naar mutaties, i.e.
+    Astrid Out en Carli Tops zouden graag de mogelijkheid hebben om een overzicht te krijgen van individuals naar mutaties, i.e.
         in de database van GenX kunnen zoeken op (aanwezigheid van?) varianten in GenY.
     Zorg er voor dat je LOVD 2.0 urls kan ontvangen, backward compatible.
         variants.php?select_db=GENE&action=view&view=    of zoeken op DBID links.
     Check alle links nog een keer, of die goed zijn gelegd. Ik ben begonnen zonder dat helder te hebben.
     Create column?
-        - Information on the patient, not related to disease, not changing over time, such as date of birth (patient kolom)
-        - Information on the patient, related to disease, possibly changing over time, such as blood pressure (phenotype kolom)
+        - Information on the individual, not related to disease, not changing over time, such as date of birth (individual kolom)
+        - Information on the individual, related to disease, possibly changing over time, such as blood pressure (phenotype kolom)
         - Information on the detection of new variants, such as detection technique or laboratory conditions (screening kolom)
         - Information on the variant(s) found, such as mutation type or predicted effect on protein level (variant kolom)
         (add something about functional assays)
@@ -289,12 +286,12 @@ Needed before release
     Cols - check huidige omschrijvingen in DMD of shared LOVD install, wellicht anders nu.
         DB-ID column heet ID op het formulier.
 +++ Kolommen verkeerd gemapped.
-        Peter: Patient/Independent_Families en Patient/Isolated_Cases naar Variant (SDH only?).
-        Johan: country/ethnicity kolommen van patient naar variant (Pat2Var!).
-            Patient/Origin/Geographic, Patient/Origin/Ethnic, Patient/Origin/Population
-                Ertussen dan maar? Wacht ff hoor... de speciale variant overview werkt alleen op de Patient cols...
+        Peter: Individual/Independent_Families en Individual/Isolated_Cases naar Variant (SDH only?).
+        Johan: country/ethnicity kolommen van individual naar variant (Ind2Var!).
+            Individual/Origin/Geographic, Individual/Origin/Ethnic, Individual/Origin/Population
+                Ertussen dan maar? Wacht ff hoor... de speciale variant overview werkt alleen op de Individual cols...
             (...) veel naar gevraagd wordt (Variant_Amino_acid_SIFT, Variant_Amino_acid_PolyPhen, Variant_Amino_acid_AlignGVGD, DNA-reported).
-            Er is verwarring en overlap over de onderwerpen Allele, Patient/Occurence, Patient/Mutation/Origin, Patient/Mutation/Origin_De_Novo.
+            Er is verwarring en overlap over de onderwerpen Allele, Individual/Occurence, Individual/Mutation/Origin, Individual/Mutation/Origin_De_Novo.
                 De Alelle kolom covert eigenlijk al de Inheritance.
                 Daarom heb ik een alternatief aangemaakt, te weten;
                 Variant_Origin
@@ -306,7 +303,7 @@ Needed before release
                     sporadic, consanguineous parents
                     sporadic, non-consanguineous parents
                     sporadic, consanguinity parents?
-                    de novo, in patient
+                    de novo, in individual
                     de novo, in mother
                     de novo, in mother (grandmaternal allele)
                     de novo, in mother (grandpaternal allele)

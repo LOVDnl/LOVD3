@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-04-06
+ * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -118,16 +118,92 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                   ),
                     '3.0-pre-19' =>
                              array(
-                                    'DELETE FROM ' . TABLE_COLS . ' WHERE id IN ("Patient/Patient_ID", "Screening/Template", "Screening/Technique", "Screening/Tissue")',
-                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Patient/Lab_ID",           0,  80, 1, 1, 1, "Lab\'s ID", "", "The ID given to this individual by its reference.", "The ID given to this individual by its reference, such as a hospital, diagnostic laboratory or a paper.", "VARCHAR(15)", "Lab ID||text|10", "", "", 0, 1, 0, 1, NOW(), NULL, NULL)',
-                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Template",       0,  80, 1, 1, 1, "Template",  "", "Screening performed on DNA, RNA and/or Protein level.", "Screening performed on DNA, RNA and/or Protein level.", "VARCHAR(20)", "Detection template||select|3|false|true|false", "DNA\r\nRNA\r\nProtein", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
-                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Technique",      0, 200, 1, 1, 1, "Technique", "", "Technique used to detect variants.", "Technique used to reveal the variants reported.", "VARCHAR(150)", "Technique(s) used||select|5|false|true|false", "BESS = Base Excision Sequence Scanning\r\nCMC = Chemical Mismatch Cleavage\r\nDGGE = Denaturing-Gradient Gel-Electrophoresis\r\nDHPLC = Denaturing High-Performance Liquid Chromatography\r\nDOVAM = Detection Of Virtually All Mutations (SSCA variant)\r\nDSCA = Double-Strand DNA Conformation Analysis\r\nHD = HeteroDuplex analysis\r\nIHC = Immuno-Histo-Chemistry\r\nmPCR = multiplex PCR\r\nMAPH = Multiplex Amplifiable Probe Hybridisation\r\nMLPA = Multiplex Ligation-dependent Probe Amplification\r\nNGS = Next Generation Sequencing\r\nPAGE = Poly-Acrylamide Gel-Electrophoresis\r\nPCR = Polymerase Chain Reaction\r\nPTT = Protein Truncation Test\r\nRT-PCR = Reverse Transcription and PCR\r\nSEQ = SEQuencing\r\nSouthern = Southern Blotting\r\nSSCA = Single-Strand DNA Conformation Analysis (SSCP)\r\nWestern = Western Blotting", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
-                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Tissue",         0, 100, 0, 0, 1, "Tissue",    "", "Tissue type used for the detection of sequence variants.", "Tissue type used for the detection of sequence variants.", "VARCHAR(25)", "Tissue||text|20", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
-                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Date",           0,  80, 0, 0, 0, "Date",      "Format: YYYY-MM-DD.", "Date the detection technique was performed.", "Date the detection technique was performed, in YYYY-MM-DD format.", "DATE", "Date||text|10", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
-                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/DBID", 6, 200, 1, 1, 1, "DB-ID",     "The ID-field should start with the ID; the gene symbol followed by an underscore (_) and the ID code, usually five digits.", "Database IDentifier; When available, links to OMIM ID\'s are provided.", "Database IDentifier; When available, links to OMIM ID\'s are provided.", "VARCHAR(100)", "ID||text|40", "", "/^[A-Z][A-Z0-9]+_([0-9]{5}([a-z]{2})?|(SO|MP|e)[0-9]{1,2}((SO|MP|e)[0-9]{1,2})?b?)\\\\b/", 1, 0, 1, 1, NOW(), NULL, NULL)',
-                                    'CREATE TABLE ' . TABLE_PAT2DIS . ' (patientid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL, diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL, PRIMARY KEY (patientid, diseaseid), INDEX (diseaseid), FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE) ENGINE=InnoDB, DEFAULT CHARACTER SET utf8',
+                                    'DELETE FROM ' . TABLE_COLS . ' WHERE id IN ("Patient/Patient_ID", "Screening/Template", "Screening/Technique", "Screening/Tissue", "Patient/Phenotype/Disease", "Patient/Reference", "Patient/Remarks", "Patient/Remarks_Non_Public", "Patient/Times_Reported", "Patient/Occurrence", "Patient/Gender", "Patient/Mutation/Origin", "Patient/Mutation/Origin_De_Novo", "Patient/Origin/Geographic", "Patient/Origin/Ethnic", "Patient/Origin/Population")',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Lab_ID",                    0,  80, 1, 1, 1, "Lab\'s ID",            "", "The ID given to this individual by its reference.", "The ID given to this individual by its reference, such as a hospital, diagnostic laboratory or a paper.", "VARCHAR(15)", "Lab ID||text|10", "", "", 0, 1, 0, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Template",                   0,  80, 1, 1, 1, "Template",             "", "Screening performed on DNA, RNA and/or Protein level.", "Screening performed on DNA, RNA and/or Protein level.", "VARCHAR(20)", "Detection template||select|3|false|true|false", "DNA\r\nRNA\r\nProtein", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Technique",                  0, 200, 1, 1, 1, "Technique",            "", "Technique used to detect variants.", "Technique used to reveal the variants reported.", "VARCHAR(150)", "Technique(s) used||select|5|false|true|false", "BESS = Base Excision Sequence Scanning\r\nCMC = Chemical Mismatch Cleavage\r\nDGGE = Denaturing-Gradient Gel-Electrophoresis\r\nDHPLC = Denaturing High-Performance Liquid Chromatography\r\nDOVAM = Detection Of Virtually All Mutations (SSCA variant)\r\nDSCA = Double-Strand DNA Conformation Analysis\r\nHD = HeteroDuplex analysis\r\nIHC = Immuno-Histo-Chemistry\r\nmPCR = multiplex PCR\r\nMAPH = Multiplex Amplifiable Probe Hybridisation\r\nMLPA = Multiplex Ligation-dependent Probe Amplification\r\nNGS = Next Generation Sequencing\r\nPAGE = Poly-Acrylamide Gel-Electrophoresis\r\nPCR = Polymerase Chain Reaction\r\nPTT = Protein Truncation Test\r\nRT-PCR = Reverse Transcription and PCR\r\nSEQ = SEQuencing\r\nSouthern = Southern Blotting\r\nSSCA = Single-Strand DNA Conformation Analysis (SSCP)\r\nWestern = Western Blotting", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Tissue",                     0, 100, 0, 0, 1, "Tissue",               "", "Tissue type used for the detection of sequence variants.", "Tissue type used for the detection of sequence variants.", "VARCHAR(25)", "Tissue||text|20", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Screening/Date",                       0,  80, 0, 0, 0, "Date",                 "Format: YYYY-MM-DD.", "Date the detection technique was performed.", "Date the detection technique was performed, in YYYY-MM-DD format.", "DATE", "Date||text|10", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/DBID",             6, 200, 1, 1, 1, "DB-ID",                "The ID-field should start with the ID; the gene symbol followed by an underscore (_) and the ID code, usually five digits.", "Database IDentifier; When available, links to OMIM ID\'s are provided.", "Database IDentifier; When available, links to OMIM ID\'s are provided.", "VARCHAR(100)", "ID||text|40", "", "/^[A-Z][A-Z0-9]+_([0-9]{5}([a-z]{2})?|(SO|MP|e)[0-9]{1,2}((SO|MP|e)[0-9]{1,2})?b?)\\\\b/", 1, 0, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Phenotype/Disease",         0, 200, 1, 1, 0, "Disease",              "", "Disease phenotype, as reported in paper/by submitter, unless modified by the curator.", "Disease phenotype of the individual(s).", "VARCHAR(50)", "Disease||select|4|false|true|false", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Reference",                 0, 200, 1, 1, 0, "Reference",            "", "Reference describing the individual, &quot;Submitted:&quot; indicating that the mutation was submitted directly to this database.", "Literature reference with possible link to publication in PubMed or other online resource. &quot;Submitted:&quot; indicates that the mutation was submitted directly to this database by the laboratory indicated.", "VARCHAR(200)", "Reference||text|50", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Remarks",                   0, 200, 0, 1, 0, "Remarks",              "", "", "", "TEXT", "Remarks||textarea|50|3", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Remarks_Non_Public",        0, 200, 0, 1, 0, "Remarks (non public)", "", "", "", "TEXT", "Remarks (non public)||textarea|50|3", "", "", 0, 0, 0, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Times_Reported",            0,  80, 0, 1, 1, "# Reported",           "", "Number of times this case has been reported", "Number of times this case has been reported", "SMALLINT(4) UNSIGNED DEFAULT 1", "Times reported||text|3", "", "", 1, 0, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Occurrence",                0, 200, 0, 0, 0, "Occurrence",           "", "Occurrence", "Occurrence", "VARCHAR(8)", "Occurrence||select|1|Unknown|false|false", "Familial\r\nSporadic", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Gender",                    0,  60, 0, 0, 0, "Gender",               "", "Individual gender", "Individual gender", "VARCHAR(6)", "Gender||select|1|Unknown|false|false", "Female\r\nMale", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Mutation/Origin",           0, 200, 0, 0, 0, "Mut. origin",          "", "Origin of mutation", "Origin of mutation", "VARCHAR(9)", "Origin of mutation||select|1|Unknown|false|false", "De novo\r\nInherited", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Mutation/Origin_De_Novo",   0, 200, 0, 0, 0, "De novo origin",       "", "If de novo, origin of mutation", "If de novo, origin of mutation", "VARCHAR(11)", "If de novo, origin of mutation||select|1|true|false|false", "Individual\r\nFather\r\nMother\r\nGrandfather\r\nGrandmother", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Origin/Geographic",         0, 200, 0, 0, 0, "Geographic origin",    "", "Geographic origin of individual", "Geographic origin of the individual", "VARCHAR(50)", "Geographic origin||text|30", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Origin/Ethnic",             0, 200, 0, 0, 0, "Ethnic origin",        "", "Ethnic origin of individual", "Ethnic origin of the individual", "VARCHAR(50)", "Ethnic origin||text|20", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Origin/Population",         0, 200, 0, 0, 0, "Population",           "", "Individual population", "Additional information on individual population", "VARCHAR(50)", "Individual population||text|30", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                                    'UPDATE ' . TABLE_COLS . ' SET id=REPLACE(`id`, "Patient/", "Individual/")',
+                                    'UPDATE ' . TABLE_COLS . ' SET description_legend_short=REPLACE(`description_legend_short`, "patient", "individual")',
+                                    'UPDATE ' . TABLE_COLS . ' SET description_legend_full=REPLACE(`description_legend_full`, "patient", "individual")',
                                     'ALTER TABLE ' . TABLE_DISEASES . ' ADD UNIQUE (id_omim)',
+                                    'ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN updated_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_DISEASES . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_DISEASES . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_PATIENTS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_PATIENTS . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_PATIENTS . ' MODIFY COLUMN deleted_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN deleted_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY COLUMN deleted_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' MODIFY COLUMN deleted_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_COLS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_COLS . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_LINKS . ' MODIFY COLUMN created_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                    'ALTER TABLE ' . TABLE_LINKS . ' MODIFY COLUMN edited_by SMALLINT(5) UNSIGNED ZEROFILL',
                                     'ALTER TABLE ' . TABLE_STATUS . ' MODIFY COLUMN update_description TEXT',
+                                    'CREATE TABLE ' . TABLE_INDIVIDUALS . ' LIKE ' . TABLE_PATIENTS,
+                                    'INSERT INTO ' . TABLE_INDIVIDUALS . ' SELECT * FROM ' . TABLE_PATIENTS,
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'CREATE TABLE ' . TABLE_IND2DIS . ' (individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL, diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL, PRIMARY KEY (individualid, diseaseid), INDEX (diseaseid), FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE) ENGINE=InnoDB, DEFAULT CHARACTER SET utf8',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP KEY patientid',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' CHANGE COLUMN patientid individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD INDEX (individualid)',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_ibfk_1 FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP KEY patientid',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' CHANGE COLUMN patientid individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD INDEX (individualid)',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_ibfk_2 FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP KEY patientid',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP COLUMN patientid',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_4',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_5',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_6',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_7',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_ibfk_1 FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_ibfk_2 FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_ibfk_3 FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_ibfk_4 FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_ibfk_5 FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_ibfk_6 FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'DROP TABLE ' . TABLE_PATIENTS,
                                   ),
                   );
 
@@ -138,7 +214,34 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         $aUpdates['3.0-pre-07'] = array_merge($aUpdates['3.0-pre-07'], $aColSQL);
     }
 
-
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-pre-19')) {
+        $q = lovd_queryDB('DESCRIBE ' . TABLE_PAT2DIS);
+        if ($q) {
+            $aUpdates['3.0-pre-19'][] = 'INSERT INTO ' . TABLE_IND2DIS . '(individualid, diseaseid) SELECT * FROM ' . TABLE_PAT2DIS;
+            $aUpdates['3.0-pre-19'][] = 'DROP TABLE ' . TABLE_PAT2DIS;
+        }
+        $aUpdates['3.0-pre-19'][] = ('DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid LIKE "Patient/%"');
+        $q = lovd_queryDB('DESCRIBE ' . TABLE_INDIVIDUALS);
+        if ($q) {
+            while($aColumn = mysql_fetch_assoc($q)) {
+                if (substr($aColumn['Field'], 0, 8) == 'Patient/') {
+                    $aUpdates['3.0-pre-19'][] = 'ALTER TABLE ' . TABLE_INDIVIDUALS . ' CHANGE `' . $aColumn['Field'] . '` `' . str_replace('Patient/', 'Individual/', $aColumn['Field']) . '` ' . strtoupper($aColumn['Type']) . ' ' . ($aColumn['Null'] == 'NO'? 'NOT NULL' : 'NULL') . (empty($aColumn['Default'])? '' : ' DEFAULT ' . $aColumn['Default']);
+                    $aUpdates['3.0-pre-19'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . str_replace('Patient/', 'Individual/', $aColumn['Field']) . '", 1, NOW())';
+                }
+                if ($aColumn['Field'] == 'Patient/Patient_ID') {
+                    $aUpdates['3.0-pre-19'][] = 'ALTER TABLE ' . TABLE_INDIVIDUALS . ' CHANGE `' .str_replace('Patient/', 'Individual/', $aColumn['Field']) . '` `Individual/Lab_ID` VARCHAR(15) NOT NULL';
+                }
+            }
+        }
+        $q = lovd_queryDB('DESCRIBE ' . TABLE_SCREENINGS);
+        if ($q) {
+            while($aColumn = mysql_fetch_assoc($q)) {
+                if (substr($aColumn['Field'], 0, 8) == 'Screening/') {
+                    $aUpdates['3.0-pre-19'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aColumn['Field'] . '", 1, NOW())';
+                }
+            }
+        }
+    }
 
 
 

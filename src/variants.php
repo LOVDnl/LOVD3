@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-03-11
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -47,7 +47,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /variants
     // View all entries.
 
-    define('PAGE_TITLE', 'LOVD Setup - Manage configured variants');
+    define('PAGE_TITLE', 'View variants');
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
@@ -133,7 +133,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             $q = lovd_queryDB($sSQL, $aSQL, true);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant information entry ' . $nID . ' - Patient: ' . ($zData['patientid']==''? '' : 'NULL'));
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant information entry ' . $nID);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants');
@@ -164,7 +164,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Deleting variant information entry', '', 'print', $nID . ' - Patient: ' . (!$zData['patientid']==''? '' : 'NULL')),
+                        array('Deleting variant information entry', '', 'print', $nID),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete variant information entry'),

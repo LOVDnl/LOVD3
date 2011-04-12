@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2011-03-09
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -154,25 +154,28 @@ if (!empty($_POST)) {
                 }
             }
             $nTables = count($aTables);
-            print('  Found ' . $nTables . '/' . count($_TABLES) . ' tables.' . "\n");
+            // FIXME. remove later when TABLE_PATIENTS AND TABLE_PATIENTS2DISEASES are exterminated in all LOVD installations.
+            $_TABLES_cleaned = $_TABLES;
+            unset($_TABLES_cleaned['TABLE_PATIENTS'], $_TABLES_cleaned['TABLE_PAT2DIS']);
+            print('  Found ' . $nTables . '/' . count($_TABLES_cleaned) . ' tables.' . "\n");
 
             // FIXME; add more later.
             // General statistics...
             print("\n");
             list($nUsers) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS));
-            list($nPats) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS));
+            list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
             list($nScreenings) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS));
             list($nVars) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
             $nGenes = GENE_COUNT;
             print('  Found ' . $nUsers . ' user' . ($nUsers == 1? '' : 's') . '.' . "\n" .
-                  '  Found ' . $nPats . ' patient' . ($nPats == 1? '' : 's') . '.' . "\n" .
+                  '  Found ' . $nIndividuals . ' individual' . ($nIndividuals == 1? '' : 's') . '.' . "\n" .
                   '  Found ' . $nScreenings . ' screening' . ($nScreenings == 1? '' : 's') . '.' . "\n" .
                   '  Found ' . $nVars . ' variant' . ($nVars == 1? '' : 's') . '.' . "\n" .
                   '  Found ' . $nGenes . ' gene' . ($nGenes == 1? '' : 's') . '.' . "\n" .
                   '      </PRE>' . "\n");
 
-            if ($nGenes || $nPats || $nVars) {
-                lovd_showInfoTable('FINAL WARNING! If you did not download the variation and patient data stored in the LOVD system, everything will be lost!', 'warning');
+            if ($nGenes || $nIndividuals || $nVars) {
+                lovd_showInfoTable('FINAL WARNING! If you did not download the variation and individual data stored in the LOVD system, everything will be lost!', 'warning');
             }
 
             print('      Please confirm uninstalling LOVD using your password.<BR>' . "\n" .

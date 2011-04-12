@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-03-10
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -534,7 +534,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             // FIXME; extend this later.
             list($nLogs) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID)));
             list($nCurates) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($nID)));
-            list($nPats) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
+            list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
             list($nScreenings) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
             list($nVars) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
             list($nGenes) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE created_by = ? OR edited_by = ?', array($nID, $nID)));
@@ -542,12 +542,12 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             lovd_showInfoTable('<B>The user you are about to delete has the following references to data in this installation:</B><BR>' .
                                $nLogs . ' log entr' . ($nLogs == 1? 'y' : 'ies') . ' will be deleted,<BR>' .
                                $nCurates . ' gene' . ($nCurates == 1? '' : 's') . ' will have this user removed as curator,<BR>' . 
-                               $nPats . ' patient' . ($nPats == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
+                               $nIndividuals . ' individual' . ($nIndividuals == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
                                $nScreenings . ' screening' . ($nScreenings == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
                                $nVars . ' variant' . ($nVars == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
                                $nGenes . ' gene' . ($nGenes == 1? '' : 's') . ' are created by or last edited by this user (you will no longer be able to see that).', 'information');
 
-            if ($nCurates || $nPats || $nScreenings || $nVars || $nGenes) {
+            if ($nCurates || $nIndividuals || $nScreenings || $nVars || $nGenes) {
                 lovd_showInfoTable('<B>Final warning!</B> If you delete this user, all log entries related to this person will be deleted and all references to this person in the data will be removed!', 'warning');
             }
 
@@ -742,20 +742,20 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
         lovd_errorPrint();
         
-        list($nPats) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_PATIENTS . ' WHERE ownerid=?', array($nID)));
+        list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE ownerid=?', array($nID)));
         list($nScreenings) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE ownerid=?', array($nID)));
         list($nVars) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE ownerid=?', array($nID)));
         list($nGenes) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE edited_by=?', array($nID)));
         
         print('      <PRE>' . "\n" .
               '  <b>The user you are about to delete has the following references to data in this installation:</b>' . "\n" .
-              '  Found ' . $nPats . ' patient' . ($nPats == 1? '' : 's') . '.' . "\n" .
+              '  Found ' . $nIndividuals . ' individual' . ($nIndividuals == 1? '' : 's') . '.' . "\n" .
               '  Found ' . $nScreenings . ' screening' . ($nScreenings == 1? '' : 's') . '.' . "\n" .
               '  Found ' . $nVars . ' variant' . ($nVars == 1? '' : 's') . '.' . "\n" .
               '  Found ' . $nGenes . ' gene' . ($nGenes == 1? '' : 's') . '.' . "\n" .
               '      </PRE>' . "\n");
               
-        if ($nGenes || $nPats || $nVars) {
+        if ($nGenes || $nIndividuals || $nVars) {
             lovd_showInfoTable('FINAL WARNING! If you delete this user, you will lose all the references to this person in the data!', 'warning');
         }
         

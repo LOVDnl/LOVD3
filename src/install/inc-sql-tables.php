@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-04-06
+ * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -38,7 +38,7 @@
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
 // Allow download staat nu per gen, en de losse varianten dan?
 // Human readable refseq velden staan nu bij gen, moeten naar transcript???
-// Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan patient???
+// Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {
@@ -87,9 +87,9 @@ $aTableSQL =
     allowed_ip VARCHAR(255) NOT NULL,
     login_attempts TINYINT(1) UNSIGNED NOT NULL,
     last_login DATETIME,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
     INDEX (countryid),
@@ -130,11 +130,11 @@ $aTableSQL =
     header_align TINYINT(1) NOT NULL,
     footer TEXT NOT NULL,
     footer_align TINYINT(1) NOT NULL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
-    updated_by SMALLINT(5) UNSIGNED,
+    updated_by SMALLINT(5) UNSIGNED ZEROFILL,
     updated_date DATETIME,
     PRIMARY KEY (id),
     INDEX (created_by),
@@ -172,9 +172,9 @@ $aTableSQL =
     position_c_cds_end MEDIUMINT UNSIGNED NOT NULL,
     position_g_mrna_start INT UNSIGNED NOT NULL,
     position_g_mrna_end INT UNSIGNED NOT NULL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
     INDEX (geneid),
@@ -191,9 +191,9 @@ $aTableSQL =
     symbol VARCHAR(15) NOT NULL,
     name VARCHAR(255) NOT NULL,
     id_omim INT(10) UNSIGNED NOT NULL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
     UNIQUE(id_omim),
@@ -226,19 +226,19 @@ $aTableSQL =
     name VARCHAR(5) NOT NULL,
     PRIMARY KEY (id))
     ' . $sSettings
-
-         , 'TABLE_PATIENTS' =>
-   'CREATE TABLE ' . TABLE_PATIENTS . ' (
+    
+          , 'TABLE_INDIVIDUALS' =>
+   'CREATE TABLE ' . TABLE_INDIVIDUALS . ' (
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
     ownerid SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     valid_from DATETIME NOT NULL,
     valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
     deleted BOOLEAN NOT NULL,
-    deleted_by SMALLINT(5) UNSIGNED,
+    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
     PRIMARY KEY (id, valid_from),
     INDEX (valid_to),
     INDEX (ownerid),
@@ -253,20 +253,19 @@ $aTableSQL =
     FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
 
-         , 'TABLE_PAT2DIS' =>
-   'CREATE TABLE ' . TABLE_PAT2DIS . ' (
-    patientid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+         , 'TABLE_IND2DIS' =>
+   'CREATE TABLE ' . TABLE_IND2DIS . ' (
+    individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    PRIMARY KEY (patientid, diseaseid),
+    PRIMARY KEY (individualid, diseaseid),
     INDEX (diseaseid),
-    FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE)
     ' . $sSettings
 
          , 'TABLE_VARIANTS' =>
    'CREATE TABLE ' . TABLE_VARIANTS . ' (
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
-    patientid MEDIUMINT(8) UNSIGNED ZEROFILL,
     allele TINYINT(2) UNSIGNED NOT NULL,
     pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
     chromosome VARCHAR(2) NOT NULL,
@@ -275,16 +274,15 @@ $aTableSQL =
     type VARCHAR(10),
     ownerid SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     valid_from DATETIME NOT NULL,
     valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
     deleted BOOLEAN NOT NULL,
-    deleted_by SMALLINT(5) UNSIGNED,
+    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
     PRIMARY KEY (id, valid_from),
     INDEX (valid_to),
-    INDEX (patientid),
     INDEX (allele),
     INDEX (pathogenicid),
     INDEX (position_g_start, position_g_end),
@@ -293,7 +291,6 @@ $aTableSQL =
     INDEX (created_by),
     INDEX (edited_by),
     INDEX (deleted_by),
-    FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -325,25 +322,25 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_PHENOTYPES . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL,
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    patientid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+    individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
     ownerid SMALLINT(5) UNSIGNED ZEROFILL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     valid_from DATETIME NOT NULL,
     valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
     deleted BOOLEAN NOT NULL,
-    deleted_by SMALLINT(5) UNSIGNED,
+    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
     PRIMARY KEY (id, valid_from),
     INDEX (valid_to),
     INDEX (diseaseid),
-    INDEX (patientid),
+    INDEX (individualid),
     INDEX (ownerid),
     INDEX (created_by),
     INDEX (edited_by),
     INDEX (deleted_by),
     FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -353,23 +350,23 @@ $aTableSQL =
          , 'TABLE_SCREENINGS' =>
    'CREATE TABLE ' . TABLE_SCREENINGS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL,
-    patientid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+    individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
     ownerid SMALLINT(5) UNSIGNED ZEROFILL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     valid_from DATETIME NOT NULL,
     valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
     deleted BOOLEAN NOT NULL,
-    deleted_by SMALLINT(5) UNSIGNED,
+    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
     PRIMARY KEY (id, valid_from),
     INDEX (valid_to),
-    INDEX (patientid),
+    INDEX (individualid),
     INDEX (ownerid),
     INDEX (created_by),
     INDEX (edited_by),
     INDEX (deleted_by),
-    FOREIGN KEY (patientid) REFERENCES ' . TABLE_PATIENTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -417,9 +414,9 @@ $aTableSQL =
     public_view BOOLEAN NOT NULL,
     public_add BOOLEAN NOT NULL,
     allow_count_all BOOLEAN NOT NULL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
     INDEX (created_by),
@@ -431,7 +428,7 @@ $aTableSQL =
          , 'TABLE_ACTIVE_COLS' =>
    'CREATE TABLE ' . TABLE_ACTIVE_COLS . ' (
     colid VARCHAR(100) NOT NULL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     PRIMARY KEY (colid),
     INDEX (created_by),
@@ -453,9 +450,9 @@ $aTableSQL =
     select_options TEXT NOT NULL,
     public_view BOOLEAN NOT NULL,
     public_add BOOLEAN NOT NULL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     UNIQUE (geneid, colid),
     UNIQUE (diseaseid, colid),
@@ -476,9 +473,9 @@ $aTableSQL =
     pattern_text VARCHAR(25) NOT NULL,
     replace_text TEXT NOT NULL,
     description TEXT NOT NULL,
-    created_by SMALLINT(5) UNSIGNED,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    edited_by SMALLINT(5) UNSIGNED,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
     UNIQUE (name),

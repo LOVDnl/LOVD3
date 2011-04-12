@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-04-07
+ * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -279,7 +279,7 @@ function lovd_getColumnLength ($sTable, $sCol)
         } elseif (preg_match('/^DATE(TIME)?/i', $sColType, $aRegs)) {
             return (10 + (empty($aRegs[1])? 0 : 9));
 
-        } elseif (preg_match('/^DEC\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
+        } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
             return (int) $aRegs[1];
 
         } elseif (preg_match('/^(TINY|MEDIUM|LONG)?(TEXT|BLOB)/i', $sColType, $aRegs)) {
@@ -313,7 +313,7 @@ function lovd_getColumnMaxValue ($sTable, $sCol)
         // Table && col exist.
         $sColType = $aTableCols[$sCol]['type'];
 
-        if (preg_match('/^DEC\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
+        if (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
             return (float) (str_repeat('9', $aRegs[1] - $aRegs[2]) . '.' . str_repeat('9', $aRegs[2]));
 
         } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?(INT)/i', $sColType, $aRegs)) {
@@ -355,8 +355,8 @@ function lovd_getColumnType ($sTable, $sCol)
             return 'DATE';
         } elseif (preg_match('/^DATETIME/i', $sColType)) {
             return 'DATETIME';
-        } elseif (preg_match('/^DEC\([0-9]+,[0-9]+\)/i', $sColType)) {
-            return 'DEC';
+        } elseif (preg_match('/^DEC|DECIMAL\([0-9]+,[0-9]+\)/i', $sColType)) {
+            return 'DECIMAL';
         } elseif (preg_match('/^((VAR)?CHAR|(TINY|MEDIUM|LONG)?TEXT)/i', $sColType)) {
             return 'TEXT';
         } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\([0-9]+\) UNSIGNED/i', $sColType)) {

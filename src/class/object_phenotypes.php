@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-03-02
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -40,82 +40,89 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_Patient extends LOVD_Custom {
+class LOVD_Phenotype extends LOVD_Custom {
     // This class extends the basic Object class and it handles the Link object.
-    var $sObject = 'Patient';
+    var $sObject = 'Phenotype';
+    var $bShared = true;
 
 
 
 
 
-    function LOVD_Patient ($nID = '')
+    function LOVD_Phenotype ($sObjectID = '')
     {
-        
-
         // Default constructor.
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT p.*, uo.name AS owner FROM ' . TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) WHERE p.id = ? GROUP BY p.id';
+        //$this->sSQLLoadEntry = 'SELECT p.*, ' .
+        //                       'uo.name AS owner ' .
+        //                       'FROM ' . TABLE_PHENOTYPES . ' AS p ' .
+        //                       'LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) ' .
+        //                       'WHERE p.id = ? ' .
+        //                       'GROUP BY p.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'p.*, uo.name AS owner, s.name AS status, uc.name AS created_by';
-        $this->aSQLViewEntry['FROM']     = TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) LEFT JOIN ' . TABLE_DATA_STATUS . ' AS s ON (p.statusid = s.id) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (p.created_by = uc.id)';
-//        $this->aSQLViewEntry['GROUP_BY'] = 'p.id';
+        $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
+                                           'uo.name AS owner, ' .
+                                           'uc.name AS created_by_' .
+                                           'ue.name AS edited_by_';
+        $this->aSQLViewEntry['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (p.created_by = uc.id)';
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (p.edited_by = ue.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'p.id';
 
         // SQL code for viewing the list of genes
-        $this->aSQLViewList['SELECT']   = 'p.*, uo.name AS owner, s.name AS status';
-        $this->aSQLViewList['FROM']     = TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) LEFT JOIN ' . TABLE_DATA_STATUS . ' AS s ON (p.statusid = s.id)';
-        //$this->aSQLViewList['GROUP_BY'] = 'p.id';
-
+        $this->aSQLViewList['SELECT']   = 'p.*, ' .
+                                          'uo.name AS owner';
+        $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
+                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id)';
+        $this->aSQLViewList['GROUP_BY'] = 'p.id';
+        
+        $this->sObjectID = $sObjectID;
+        parent::LOVD_Custom();
         
         // List of columns and (default?) order for viewing an entry.
-        $this->aColumnsViewEntry =
+        $this->aColumnsViewEntry = array_merge(
+                 $this->buildViewEntry(),
                  array(
-                        'TableHeader_General' => 'Patient ID (#' . $nID . ')',
-                        'id' => 'Patient ID',
                         'owner' => 'Owner name',
-                        'status' => 'Patient data status',
+                        'status' => 'Individual data status',
                         'created_by_' => 'Created by',
                         'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
                         'valid_from_' => 'Valid from',
-                        'valid_to_' => 'Valid until',
-                        'TableEnd_General' => '',
-                        'HR_1' => '',
-                        'TableStart_Additional' => '',
-                        'TableHeader_Additional' => 'Additional information',
-                        'TableEnd_Additional' => '',
-                        'HR_2' => '',
-                        'TableStart_Links' => '',
-                        'TableHeader_Links' => 'Links to other resources',
-                      );
+                      ));
 
         // Because the gene information is publicly available, remove some columns for the public.
-        if ($_AUTH && $_AUTH['level'] < LEVEL_COLLABORATOR) {
+        if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
             unset($this->aColumnsViewEntry['created_by_']);
             unset($this->aColumnsViewEntry['created_date_']);
             unset($this->aColumnsViewEntry['edited_by_']);
             unset($this->aColumnsViewEntry['valid_from_']);
-            unset($this->aColumnsViewEntry['valid_to_']);
         }
 
         // List of columns and (default?) order for viewing a list of entries.
-        $this->aColumnsViewList =
+        $this->aColumnsViewList = array_merge(
                  array(
                         'id' => array(
-                                    'view' => array('Patient ID', 70),
+                                    'view' => array('Phenotype ID', 90),
                                     'db'   => array('p.id', 'ASC', true)),
+                      ),
+                 $this->buildViewList(),
+                 array(
                         'owner' => array(
-                                    'view' => array('Owner', 300),
-                                    'db'   => array('uo.name', 'ASC', true)),
-                        'status' => array(
-                                    'view' => array('Status', 70),
-                                    'db'   => array('s.name', false, true)),
-                      );
+                                    'view' => array('Owner', 140),
+                                    'db'   => array('owner', 'ASC', true)),
+                        'individualid' => array(
+                                    'view' => array('Individual ID', 70),
+                                    'db'   => array('p.individualid', 'ASC', true)),
+                        'diseaseid' => array(
+                                    'view' => array('Disease ID', 70),
+                                    'db'   => array('p.diseaseid', 'ASC', true)),
+                      ));
         $this->sSortDefault = 'id';
-        parent::LOVD_Custom();
-        
     }
 
 
@@ -154,11 +161,9 @@ class LOVD_Patient extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'patients/' . rawurlencode($zData['id']);
-            //$zData['owner_link'] = 'users/' . rawurlencode($zData['owner']);
-            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
-            //$zData['owner'] = '<A href="' . $zData['owner_link'] . '" class="hide">' . $zData['owner'] . '</A>';
+            //$zData['row_id'] = $zData['id'];
+            //$zData['row_link'] = 'phenotypes/' . rawurlencode($zData['id']);
+            //$zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             /*$zData['diseases_'] = $zData['disease_omim_'] = '';
             if (!empty($zData['diseases'])) {
@@ -169,12 +174,6 @@ class LOVD_Patient extends LOVD_Custom {
                     $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
                 }
             }*/
-            
-            $zData['created_date_'] = substr($zData['created_date'], 0, 10);
-            $zData['created_by_'] = (!empty($zData['created_by'])? $zData['created_by'] : 'N/A');
-            $zData['valid_from_'] = (!empty($zData['valid_from'])? $zData['valid_from'] : 'N/A');
-            $zData['valid_to_'] = (!empty($zData['valid_to'])? $zData['valid_to'] : 'N/A');
-            $zData['edited_by_'] = (!empty($zData['edited_by'])? $zData['edited_by'] : 'N/A');
         }
 
         return $zData;

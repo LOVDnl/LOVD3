@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-03-17
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -54,16 +54,30 @@ class LOVD_Transcript extends LOVD_Object {
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-        //$this->sSQLLoadEntry = 'SELECT d.*, COUNT(p2v.variantid) AS variants FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (id)';
+        $this->sSQLLoadEntry = 'SELECT t.*, ' .
+                               'FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                               'WHERE id=? ' .
+                               'GROUP BY=t.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 't.*, g.name AS genename, g.chromosome, uc.name AS created_by_, ue.name AS edited_by_, count(DISTINCT vot.id) AS variants';
-        $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (t.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (t.edited_by = ue.id)';
-//        $this->aSQLViewEntry['GROUP_BY'] = 't.id';
+        $this->aSQLViewEntry['SELECT']   = 't.*, ' .
+                                           'g.name AS genename, ' .
+                                           'g.chromosome, ' .
+                                           'uc.name AS created_by_, ' .
+                                           'ue.name AS edited_by_, ' .
+                                           'count(DISTINCT vot.id) AS variants';
+        $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
+                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (t.created_by = uc.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (t.edited_by = ue.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 't.id';
 
         // SQL code for viewing the list of transcripts
-         $this->aSQLViewList['SELECT']   = 't.*, count(DISTINCT vot.id) AS variants';
-        $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
+        $this->aSQLViewList['SELECT']   = 't.*, ' .
+                                          'count(DISTINCT vot.id) AS variants';
+        $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
+                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
         $this->aSQLViewList['GROUP_BY'] = 't.id';
 
         // List of columns and (default?) order for viewing an entry.
@@ -84,11 +98,11 @@ class LOVD_Transcript extends LOVD_Object {
                       );
 
         // Because the disease information is publicly available, remove some columns for the public.
-        if ($_AUTH && $_AUTH['level'] < LEVEL_COLLABORATOR) {
+        if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
             unset($this->aColumnsViewEntry['created_by_']);
-            unset($this->aColumnsViewEntry['created_date']);
+            unset($this->aColumnsViewEntry['created_date_']);
             unset($this->aColumnsViewEntry['edited_by_']);
-            unset($this->aColumnsViewEntry['edited_date']);
+            unset($this->aColumnsViewEntry['edited_date_']);
         }
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -205,13 +219,9 @@ class LOVD_Transcript extends LOVD_Object {
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
-            //$zData['geneid'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['geneid'] . '</A>';
         } else {
             $zData['genename_'] = '<A href="genes/' . $zData['geneid'] . '">' . $zData['geneid'] . '</A> (' . $zData['genename'] . ')';
         }
-        
-        $zData['edited_date_'] = (!empty($zData['edited_date'])? $zData['edited_date'] : 'N/A');
-        $zData['edited_by_'] = (!empty($zData['edited_by'])? $zData['edited_by'] : 'N/A');
 
         return $zData;
     }

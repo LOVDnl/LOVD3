@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-03-31
+ * Modified    : 2011-04-08
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -54,16 +54,32 @@ class LOVD_Disease extends LOVD_Object {
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT d.*, GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS active_genes_ FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE d.id = ? GROUP BY d.id';
+        $this->sSQLLoadEntry = 'SELECT d.*, ' .
+                               'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS active_genes_ ' .
+                               'FROM ' . TABLE_DISEASES . ' AS d ' .
+                               'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ' .
+                               'WHERE d.id = ? ' .
+                               'GROUP BY d.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'd.*, GROUP_CONCAT(DISTINCT g.id, ";", g.id_omim, ";", g.name ORDER BY g.id SEPARATOR ";;") AS genes, uc.name AS created_by_, ue.name AS edited_by_';
-        $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)  LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (g.id = g2d.geneid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (d.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (d.edited_by = ue.id)';
-//        $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
+        $this->aSQLViewEntry['SELECT']   = 'd.*, ' .
+                                           'GROUP_CONCAT(DISTINCT g.id, ";", g.id_omim, ";", g.name ORDER BY g.id SEPARATOR ";;") AS genes, ' .
+                                           'uc.name AS created_by_, ' .
+                                           'ue.name AS edited_by_';
+        $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d ' .
+                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (g.id = g2d.geneid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (d.created_by = uc.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (d.edited_by = ue.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
 
         // SQL code for viewing a list of entries.
-        $this->aSQLViewList['SELECT']   = 'd.*, GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
-        $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
+        $this->aSQLViewList['SELECT']   = 'd.*, ' .
+                                          'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_, ' .
+                                          'i2d.individualid';
+        $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
+                                          'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)' .
+                                          'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid)';
         $this->aSQLViewList['GROUP_BY'] = 'd.id';
 
         // List of columns and (default?) order for viewing an entry.
@@ -75,17 +91,17 @@ class LOVD_Disease extends LOVD_Object {
                         'id_omim' => 'OMIM ID',
                         'genes_' => 'Associated with genes',
                         'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
+                        'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
+                        'edited_date_' => 'Date last edited',
                       );
 
         // Because the disease information is publicly available, remove some columns for the public.
-        if ($_AUTH && $_AUTH['level'] < LEVEL_COLLABORATOR) {
+        if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
             unset($this->aColumnsViewEntry['created_by_']);
-            unset($this->aColumnsViewEntry['created_date']);
+            unset($this->aColumnsViewEntry['created_date_']);
             unset($this->aColumnsViewEntry['edited_by_']);
-            unset($this->aColumnsViewEntry['edited_date']);
+            unset($this->aColumnsViewEntry['edited_date_']);
         }
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -106,6 +122,9 @@ class LOVD_Disease extends LOVD_Object {
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
                                     'db'   => array('genes_', false, 'TEXT')),
+                        'individualid' => array(
+                                    'view' => array('Individual ID', 90),
+                                    'db'   => array('i2d.individualid', 'ASC', true)),
                       );
         $this->sSortDefault = 'symbol';
 

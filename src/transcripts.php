@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-03-28
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-08
+ * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -47,7 +47,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /transcripts
     // View all entries.
 
-    define('PAGE_TITLE', 'LOVD Setup - Manage configured transcripts');
+    define('PAGE_TITLE', 'View transcripts');
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
@@ -89,7 +89,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
     }
     $_GET['search_transcriptid'] = $nID;
     print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Variants for transcript #' . $nID);
+    lovd_printHeader('Variants', 'H4');
     require ROOT_PATH . 'class/object_variants.php';
     $_DATA = new LOVD_Variant();
     $_DATA->viewList(false, 'transcriptid');
