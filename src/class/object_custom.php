@@ -56,20 +56,23 @@ class LOVD_Custom extends LOVD_Object {
         global $_AUTH, $_SETT;
 
         if (empty($this->sObjectID) && $this->bShared) {
+            // FIXME; Fix this text a bit and let displayError() add the sentence about the BTS.
             lovd_displayError('BadObjectCall', 'LOVD_Custom::' . "\n\t" . 'Bad call for shared column using empty gene and disease variables.' . "\n\n" .
-                                               'Please go to our <A href="' . $_SETT['upstream_BTS_URL'] . '" target="_blank">bug tracking system</A> ' .
+                                               'Please go to our <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">bug tracking system</A> ' .
                                                'and report this error to help improve LOVD3.');
         }
         
         //$this->sObjectID = $sObjectID;
         
         if (!$this->bShared) {
+            // FIXME; Hoewel $this->sObject door ons wordt gegenereerd, lijkt het me toch beter 'm niet in de SQL te zetten maar in de argumenten.
             $sSQL = 'SELECT c.*, a.* ' .
                     'FROM ' . TABLE_ACTIVE_COLS . ' AS a ' .
                     'LEFT OUTER JOIN ' . TABLE_COLS . ' AS c ON (c.id = a.colid) ' .
                     'WHERE c.id LIKE "' . $this->sObject . '/%" ' .
                     'ORDER BY c.col_order';
         } else {
+            // FIXME; SQL INJECTION!!!!!!! $this->sObjectID is ontvangen van de gebruiker!!!
             $sSQL = 'SELECT c.*, s.* ' .
                     'FROM ' . TABLE_COLS . ' AS c ' .
                     'INNER JOIN ' . TABLE_SHARED_COLS . ' AS s ON (s.colid = c.id) ' .

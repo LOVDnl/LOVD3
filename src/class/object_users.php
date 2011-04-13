@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-04-08
+ * Modified    : 2011-04-12
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,8 +56,7 @@ class LOVD_User extends LOVD_Object {
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT *, (login_attempts >= 3) AS locked ' .
                                'FROM ' . TABLE_USERS . ' ' .
-                               'WHERE id = ? ' .
-                               'GROUP BY=id';
+                               'WHERE id = ?';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
@@ -114,8 +113,10 @@ class LOVD_User extends LOVD_Object {
                         'edited_date' => 'Date last edited',
                       );
 
-        // Because the gene information is publicly available, remove some columns for the public.
-        if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+        // Because the user information is publicly available, remove some columns for the public.
+        // FIXME; Dit moet eigenlijk per user anders; curatoren mogen deze info wel van submitters zien.
+        // Dus eigenlijk if ($_AUTH['level'] <= $zData['level']) maar we hebben hier geen $zData...
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
             unset($this->aColumnsViewEntry['username']);
             unset($this->aColumnsViewEntry['last_login']);
             unset($this->aColumnsViewEntry['locked_']);

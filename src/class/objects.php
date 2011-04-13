@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-04-08
+ * Modified    : 2011-04-13
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -67,6 +67,7 @@ class LOVD_Object {
     var $aColumnsViewList = array();
     var $sSortDefault = '';
     var $nCount = 0;
+    // FIXME; moet deze niet in LOVD_Custom ?
     var $sObjectID = '';
 
 
@@ -311,16 +312,16 @@ class LOVD_Object {
         }
 
         // Quote special characters, disallowing HTML and other tricks.
-        reset($zData);
         $zData = array_map('htmlspecialchars', $zData);
         $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
         foreach($aUserColumns as $sUserColumn) {
-            (isset($zData[$sUserColumn])? $zData[$sUserColumn . '_'] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>' : 'N/A') : false);
+            (isset($zData[$sUserColumn . '_'])? $zData[$sUserColumn . '_'] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>' : 'N/A') : false);
         }
         
         $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');
         foreach($aDateColumns as $sDateColumn) {
-            if ($sDateColumn == 'valid_from' && $zData['edited_by_'] == 'N/A') {
+            // FIXME; this should go outside of this foreach().
+            if ($sDateColumn == 'valid_from' && isset($zData['edited_by_']) && $zData['edited_by_'] == 'N/A') {
                 $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = 'N/A';
             } else {
                 (isset($zData[$sDateColumn])? $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A') : false);
@@ -488,6 +489,7 @@ class LOVD_Object {
             $aColsToSkip = array($aColsToSkip);
         }
 
+        // FIXME; the needed function should then be in a different library because inc-lib-form.php is for forms, not for viewLists!
         require_once ROOT_PATH . 'inc-lib-form.php'; // For checking column type.
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
 
@@ -519,6 +521,8 @@ class LOVD_Object {
                     // Column type of an alias may be given by LOVD.
                     $sColType = $aCol['db'][2];
                 }
+                // Allow for searches where the order of words is forced by enclosing the values with double quotes; 
+                // Replace spaces in sentences between double quotes so they don't get exploded.
                 $sSearch = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
@@ -577,7 +581,7 @@ class LOVD_Object {
                                 default:
                                     if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
                                         $sTerm = trim($sTerm, '"');
-                                        $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT' : '') . 'LIKE';
+                                        $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'LIKE';
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $sTerm = preg_replace('/^!/', '', $sTerm);
                                         $sTerm = trim($sTerm, '"');
@@ -715,6 +719,7 @@ class LOVD_Object {
                 exit;
             }
         }
+
         // Only print stuff if we're not just loading one entry right now.
         if (!$bOnlyRows) {
             if (!$bAjax) {
@@ -762,6 +767,7 @@ class LOVD_Object {
         if (!$nTotal) {
             // Searched, but no results. FIXME: link to the proper documentation entry about search expressions
             $sBadSyntaxColumns = implode(', ', $aBadSyntaxColumns);
+            // FIXME; use an IF here.
             $sMessageNormal = 'No results have been found that match your criteria.<BR>Please redefine your search criteria.';
             $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) >= 2? 's' : '') . ' contain incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';
             $sMessage = (empty($aBadSyntaxColumns)? $sMessageNormal : $sMessageBadSyntax);

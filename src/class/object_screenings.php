@@ -51,12 +51,12 @@ class LOVD_Screening extends LOVD_Custom {
 
     function LOVD_Screening ()
     {
-
         // Default constructor.
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT s.*, ' .
+        // FIXME; kijkend hiernaar realiseer ik me, dat ik misschien "ownerid" beter "owned_by" had kunnen noemen... Wat denk jij?
                                'uo.name AS owner ' .
                                'FROM ' . TABLE_SCREENINGS . ' AS s ' .
                                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id) ' .
@@ -65,7 +65,9 @@ class LOVD_Screening extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
+        // FIXME; Waarom deze? Je hebt toch s.ownerid?
                                            'uo.id AS owner, ' .
+        // FIXME; Note: wat hier "owner_" heet, heet in de loadEntry() en de viewList() nu "owner". Beter om dat consistent te houden.
                                            'uo.name AS owner_, ' .
                                            'uc.name AS created_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_SCREENINGS . ' AS s ' .
@@ -78,6 +80,7 @@ class LOVD_Screening extends LOVD_Custom {
                                           'uo.name AS owner';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id)';
+        // FIXME; Deze GROUP BY is niet schadelijk, maar wel overbodig.
         $this->aSQLViewList['GROUP_BY'] = 's.id';
 
         parent::LOVD_Custom();
@@ -98,6 +101,7 @@ class LOVD_Screening extends LOVD_Custom {
 
         // Because the gene information is publicly available, remove some columns for the public.
         if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
+            // FIXME; Misschien een functie van maken? $this->unsetCol('created_by_', 'created_date_', 'edited_by_', 'edited_date_') o.i.d?
             unset($this->aColumnsViewEntry['created_by_']);
             unset($this->aColumnsViewEntry['created_date_']);
             unset($this->aColumnsViewEntry['edited_by_']);
@@ -181,6 +185,7 @@ class LOVD_Screening extends LOVD_Custom {
                 }
             }*/
             
+            // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
             $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
         }

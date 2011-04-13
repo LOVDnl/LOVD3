@@ -53,6 +53,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
+    // FIXME; waarom screeningid bij genes? (zie ook object_genes.php)
     $_DATA->viewList(false, 'screeningid');
 
     require ROOT_PATH . 'inc-bot.php';
@@ -154,6 +155,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     
                     if (isset($aHgncFile['1'])) {
                         list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = explode("\t", $aHgncFile['1']);
+                        // FIXME; why array_values()???
                         list($sEntrez, $sOmim) = array_values(array_map('trim', array($sEntrez, $sOmim)));
                         if ($sGeneName == 'entry withdrawn') {
                             lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' no longer exists in the HGNC database.');

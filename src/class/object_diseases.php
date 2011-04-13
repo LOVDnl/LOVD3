@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-04-08
+ * Modified    : 2011-04-13
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -75,11 +75,9 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'd.*, ' .
-                                          'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_, ' .
-                                          'i2d.individualid';
+                                          'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
-                                          'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)' .
-                                          'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid)';
+                                          'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
         $this->aSQLViewList['GROUP_BY'] = 'd.id';
 
         // List of columns and (default?) order for viewing an entry.
@@ -122,9 +120,6 @@ class LOVD_Disease extends LOVD_Object {
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
                                     'db'   => array('genes_', false, 'TEXT')),
-                        'individualid' => array(
-                                    'view' => array('Individual ID', 90),
-                                    'db'   => array('i2d.individualid', 'ASC', true)),
                       );
         $this->sSortDefault = 'symbol';
 
@@ -210,6 +205,8 @@ class LOVD_Disease extends LOVD_Object {
             if (!empty($zData['id_omim'])) {
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
             }
+            $zData['genes_'] = '';
+            $zData['genes_omim_'] = '';
             if (!empty($zData['genes'])) {
                 $aGenes = explode(';;', $zData['genes']);
                 foreach ($aGenes as $sGene) {

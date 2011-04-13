@@ -107,7 +107,7 @@ class LOVD_Variant extends LOVD_Custom {
             unset($this->aColumnsViewEntry['valid_from_']);
         }
         
-        // List of columns and (default?) order for viewing an entry.
+        // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  $this->buildViewList(),
                  array(

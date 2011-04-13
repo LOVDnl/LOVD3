@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-04-07
+ * Modified    : 2011-04-12
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -231,7 +231,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     // A LOVD-Lib or Query error is always an LOVD bug! (unless MySQL went down)
     if ($sError == 'LOVD-Lib' || ($sError == 'Query' && strpos($sMessage, 'You have an error in your SQL syntax'))) {
         $sMessage .= "\n\n" .
-                     'A failed query is usually an LOVD bug. Please report this bug by copying the above text and send it to us by opening a new ticket in our <A href="' . $_SETT['upstream_BTS_URL'] . '" target="_blank">bug tracking system</A>.';
+                     'A failed query is usually an LOVD bug. Please report this bug by copying the above text and send it to us by opening a new ticket in our <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">bug tracking system</A>.';
     }
 
     // Display error.

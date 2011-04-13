@@ -86,6 +86,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
         lovd_showNavigation($sNavigation);
     }
     
+    // FIXME; zoals ook bij diseases -> individuals nu; voeg niet screeningid toe aan de genes viewList, maar haal geneids op bij screenings viewEntry, en zoek daar op.
     $_GET['search_screeningid'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Genes screened', 'H4');

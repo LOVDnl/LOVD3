@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-04-08
+ * Modified    : 2011-04-13
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -86,7 +86,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
         lovd_showNavigation($sNavigation);
     }
     
-    $_GET['search_individualid'] = $nID;
+    $_GET['search_diseaseid'] = explode(',', $zData['diseases']);
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Diseases', 'H4');
     require ROOT_PATH . 'class/object_diseases.php';

@@ -62,7 +62,7 @@ $_MENU = array(
 
 // Remove certain menu entries, if the user has no access to them.
 if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
-    unset($_MENU['users']);
+    unset($_MENU['users']); // FIXME; Submitter list should be public.
     unset($_MENU['setup']);
 }
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-04-08
+ * Modified    : 2011-04-13
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,11 +63,13 @@ class LOVD_Individual extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'i.*, ' .
+                                           'GROUP_CONCAT(i2d.diseaseid) AS diseases, ' .
                                            'uo.id AS owner, ' .
                                            'uo.name AS owner_, ' .
                                            's.name AS status, ' .
                                            'uc.name AS created_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
+                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.ownerid = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS s ON (i.statusid = s.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)';
@@ -75,9 +77,11 @@ class LOVD_Individual extends LOVD_Custom {
 
         // SQL code for viewing the list of individuals
         $this->aSQLViewList['SELECT']   = 'i.*, ' .
+                                          'GROUP_CONCAT(i2d.diseaseid) AS diseases, ' .
                                           'uo.name AS owner, ' .
                                           's.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
+                                          'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.ownerid = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS s ON (i.statusid = s.id)';
         $this->aSQLViewList['GROUP_BY'] = 'i.id';
@@ -113,6 +117,10 @@ class LOVD_Individual extends LOVD_Custom {
                       ),
                  $this->buildViewList(),
                  array(
+                        // FIXME; added this to fix bug selecting users for disease viewEntry, but this doesn't look pretty in the viewList.
+                        'diseases' => array(
+                                    'view' => array('Disease', 300),
+                                    'db'   => array('i2d.diseaseid', false, true)),
                         'owner' => array(
                                     'view' => array('Owner', 300),
                                     'db'   => array('uo.name', 'ASC', true)),

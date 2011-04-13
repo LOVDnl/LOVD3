@@ -67,6 +67,7 @@ class LOVD_Gene extends LOVD_Object {
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
+        // FIXME; dit getal is niet "correct" (volgens de gebruiker) als een gen twee of meer transcripten heeft. Hoe lossen we dat op? Misschien count(distinct variantid) ??
                                            'count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
@@ -82,12 +83,14 @@ class LOVD_Gene extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'g.*, ' .
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
                                           'count(DISTINCT vot.id) AS variants, ' .
+        // FIXME; waarom screeningid bij genes? Bedoel je misschien count(sc.id)?
                                           'sc.id AS screeningid';
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' . 
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
+        // FIXME; (idem) waarom screeningid bij genes? Bedoel je misschien count(sc.id)? Niet heel erg informatief denk ik... toch?
                                           'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS scg ON (g.id = scg.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS .' AS sc ON (scg.screeningid = sc.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
@@ -136,6 +139,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // Because the gene information is publicly available, remove some columns for the public.
         if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
+            // FIXME; Misschien een functie van maken? $this->unsetCol('created_by_', 'created_date_', 'edited_by_', 'edited_date_', 'updated_by_', 'updated_date_') o.i.d?
             unset($this->aColumnsViewEntry['created_by_']);
             unset($this->aColumnsViewEntry['created_date_']);
             unset($this->aColumnsViewEntry['edited_by_']);
@@ -168,6 +172,7 @@ class LOVD_Gene extends LOVD_Object {
                         'diseases_' => array(
                                     'view' => array('Associated with diseases', 200),
                                     'db'   => array('diseases_', false, 'TEXT')),
+        // FIXME; dit kan anders; zie screenings.php.
                         'screeningid' => array(
                                     'view' => array('Screening ID', 100),
                                     'db'   => array('screeningid', 'ASC', 'INT_UNSIGNED')),
@@ -451,6 +456,7 @@ class LOVD_Gene extends LOVD_Object {
             $zData['header_']          = $zData['header'];
             $zData['footer_']          = $zData['footer'];
 
+            // FIXME; Hier moet nog 'ns een keer naar gekeken worden. We hebben nu 'diseases', 'diseases_' en 'disease_omim_' en ik volg niet meer waar wat in zit...
             $zData['diseases_'] = $zData['disease_omim_'] = '';
             if (!empty($zData['diseases'])) {
                 $aDiseases = explode(';;', $zData['diseases']);

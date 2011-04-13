@@ -118,6 +118,8 @@ LOVD 3.0
         Je kunt $_STAT gewoon analyseren, want het icoon is al geladen tijdens het inloggen dus hoort al te weten dat er een update is!
         Popup heeft andere kleur aan de hand van update belangrijkheid...
         Kan popup zo'n hoekje hebben die naar het logo wijst?
+    Kan de inc-upgrade intelligenter gemaakt worden zodat na een ALTER TABLE ADD COLUMN de foutmelding "Duplicate column name XXX" netjes wordt afgevangen?
+    Fouten tijdens upgraden loggen, zodat na te zoeken is waar 't fout ging?
 
 KNOWN BUGS:
 ===========

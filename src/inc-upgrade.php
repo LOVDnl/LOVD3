@@ -217,12 +217,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-pre-19')) {
         $q = lovd_queryDB('DESCRIBE ' . TABLE_PAT2DIS);
         if ($q) {
+            // User has installed his LOVD *before* 3.0-pre-19 officially came out, but *after* some files had already been put in the SVN repository.
             $aUpdates['3.0-pre-19'][] = 'INSERT INTO ' . TABLE_IND2DIS . '(individualid, diseaseid) SELECT * FROM ' . TABLE_PAT2DIS;
             $aUpdates['3.0-pre-19'][] = 'DROP TABLE ' . TABLE_PAT2DIS;
         }
-        $aUpdates['3.0-pre-19'][] = ('DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid LIKE "Patient/%"');
+        $aUpdates['3.0-pre-19'][] = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid LIKE "Patient/%"';
         $q = lovd_queryDB('DESCRIBE ' . TABLE_INDIVIDUALS);
         if ($q) {
+            // FIXME; this can never be true???
             while($aColumn = mysql_fetch_assoc($q)) {
                 if (substr($aColumn['Field'], 0, 8) == 'Patient/') {
                     $aUpdates['3.0-pre-19'][] = 'ALTER TABLE ' . TABLE_INDIVIDUALS . ' CHANGE `' . $aColumn['Field'] . '` `' . str_replace('Patient/', 'Individual/', $aColumn['Field']) . '` ' . strtoupper($aColumn['Type']) . ' ' . ($aColumn['Null'] == 'NO'? 'NOT NULL' : 'NULL') . (empty($aColumn['Default'])? '' : ' DEFAULT ' . $aColumn['Default']);
@@ -235,6 +237,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         }
         $q = lovd_queryDB('DESCRIBE ' . TABLE_SCREENINGS);
         if ($q) {
+            // FIXME; this should never be false???
             while($aColumn = mysql_fetch_assoc($q)) {
                 if (substr($aColumn['Field'], 0, 8) == 'Screening/') {
                     $aUpdates['3.0-pre-19'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aColumn['Field'] . '", 1, NOW())';

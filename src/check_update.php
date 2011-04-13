@@ -6,7 +6,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2011-04-08
+ * Modified    : 2011-04-12
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
 
         // Individual count.
         list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE valid_to = ?', array('9999-12-31')));
-        $sPOSTVars .= '&individual_count=' . $nIndividuals;
+        $sPOSTVars .= '&patient_count=' . $nIndividuals;
 
         // Number of unique variants.
 // FIXME, DMD_SPECIFIC, I disabled this.

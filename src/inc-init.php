@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-04-08
+ * Modified    : 2011-04-12
  * For LOVD    : 3.0-pre-19
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -169,7 +169,8 @@ DMD_SPECIFIC
                             9 => '<SPAN style="color:red;"><B>Critical</B></SPAN>',
                           ),
                 'upstream_URL' => 'http://www.LOVD.nl/',
-                'upstream_BTS_URL' => 'https://eu.liacs.nl/projects/LOVD3/newticket',
+                'upstream_BTS_URL' => 'https://eu.liacs.nl/projects/LOVD3/',
+                'upstream_BTS_URL_new_ticket' => 'https://eu.liacs.nl/projects/LOVD3/newticket',
                 'wikiprofessional_iprange' => '131.174.88.0-255',
                 'list_sizes' =>
                      array(
@@ -413,9 +414,7 @@ $_TABLES =
                 'TABLE_DATA_STATUS' => TABLEPREFIX . '_data_status',
                 'TABLE_PATHOGENIC' => TABLEPREFIX . '_variant_pathogenicity',
                 'TABLE_INDIVIDUALS' => TABLEPREFIX . '_individuals',
-                'TABLE_PATIENTS' => TABLEPREFIX . '_patients',
                 'TABLE_IND2DIS' => TABLEPREFIX . '_individuals2diseases',
-                'TABLE_PAT2DIS' => TABLEPREFIX . '_patients2diseases',
                 'TABLE_VARIANTS' => TABLEPREFIX . '_variants',
                 'TABLE_VARIANTS_ON_TRANSCRIPTS' => TABLEPREFIX . '_variants_on_transcripts',
                 'TABLE_PHENOTYPES' => TABLEPREFIX . '_phenotypes',
@@ -433,6 +432,11 @@ $_TABLES =
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
                 'TABLE_HITS' => TABLEPREFIX . '_hits',
+
+                // REMOVED in 3.0-pre-19; delete only if sure that there are no legacy versions still out there!
+                // SEE ALSO uninstall.php !!!
+                'TABLE_PATIENTS' => TABLEPREFIX . '_patients',
+                'TABLE_PAT2DIS' => TABLEPREFIX . '_patients2diseases',
               );
 
 foreach ($_TABLES as $sConst => $sTable) {

@@ -155,6 +155,7 @@ if (!empty($_POST)) {
             }
             $nTables = count($aTables);
             // FIXME. remove later when TABLE_PATIENTS AND TABLE_PATIENTS2DISEASES are exterminated in all LOVD installations.
+            //print('  Found ' . $nTables . '/' . count($_TABLES) . ' tables.' . "\n");
             $_TABLES_cleaned = $_TABLES;
             unset($_TABLES_cleaned['TABLE_PATIENTS'], $_TABLES_cleaned['TABLE_PAT2DIS']);
             print('  Found ' . $nTables . '/' . count($_TABLES_cleaned) . ' tables.' . "\n");

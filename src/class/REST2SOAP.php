@@ -62,6 +62,7 @@ class REST2SOAP {
         $aOutputSOAP = lovd_php_file($this->sSoapURL, false, $sInputXML);
         // Output debug values
         if ($bDebug) {
+            // FIXME; moet dit ook niet een implode() worden met \n ?
             return array('inputXML' => $sInputXML, 'outputXML' => $aOutputSOAP[0] . $aOutputSOAP[1]);
         }
         // Parse output
