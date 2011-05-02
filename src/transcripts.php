@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -67,7 +67,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
     // URL: /transcripts/00001
     // View specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'View transcript #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -233,10 +233,10 @@ if (ACTION == 'create') {
         if (isset($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1])) {
             // URL: /transcripts/DMD?create
             // Add a new transcript to the specified gene symbol
-            
+
             require ROOT_PATH . 'inc-top.php';
             $sGeneID = $_PATH_ELEMENTS[1];
-            
+
             lovd_printHeader(PAGE_TITLE);
 
             print('<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id="selectedGene" method="post">' . "\n" .
@@ -252,20 +252,20 @@ if (ACTION == 'create') {
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }
-        
+
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
-        
+
         if (GET) {
             print('      Please select the gene on which you wish to add a transcript.<BR>' . "\n" .
                   '      <BR>' . "\n\n");
         }
-        
+
         lovd_errorPrint();
-        
+
         print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
               '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
-        
+
         $aSelectGene = array();
         $aGenes = $_SESSION['work'][$_POST['workID']]['values']['genes'];
         foreach ($aGenes as $key => $val) {
@@ -280,7 +280,7 @@ if (ACTION == 'create') {
         lovd_viewForm($aFormData);
         print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
         print('</TABLE></FORM>' . "\n\n");
-        
+
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
@@ -330,35 +330,34 @@ if (ACTION == 'create') {
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
             }
-            
         }
-        
+
         require ROOT_PATH . 'inc-top.php';
-        
+
         lovd_printHeader(PAGE_TITLE);
 
         if (!lovd_error()) {
             print('      To add the selected transcripts to the gene, please press "Add" at the bottom of the form..<BR>' . "\n" .
                   '      <BR>' . "\n\n");
         }
-        
+
         lovd_errorPrint();
 
         // Tooltip JS code.
         lovd_includeJS('inc-js-tooltip.php');   
-        
+
         // Table.
         print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
 
         // Array which will make up the form table.
-        
+
         $aForm = array_merge(
                      $_DATA->getForm(),
                      array(
                             array('', '', 'submit', 'Add transcript(s) to gene'),
                           ));
         lovd_viewForm($aForm);
-        
+
         print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
         print('</FORM>' . "\n\n");
 
@@ -375,7 +374,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /transcripts/00001?edit
     // Edit a transcript
     
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit transcript #' . $nID);
     define('LOG_EVENT', 'TranscriptEdit');
     
@@ -425,17 +424,17 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
-    
+
     if (!lovd_error()) {
         print('      To edit this transcript, please complete the form below and press "Edit" at the bottom of the form..<BR>' . "\n" .
               '      <BR>' . "\n\n");
     }
-    
+
     lovd_errorPrint();
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');   
-    
+
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
 
@@ -446,7 +445,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                         array('', '', 'submit', 'Edit transcript information entry'),
                       ));
     lovd_viewForm($aForm);
-    
+
     print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
@@ -461,7 +460,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /transcripts/00001?delete
     // Drop specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
     define('LOG_EVENT', 'TranscriptDelete');
 
@@ -491,7 +490,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             // This also deletes the entries in variants.
             // FIXME; implement deleteEntry()
             $sSQL = 'DELETE FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?';
-            $aSQL = array($zData['id']);
+            $aSQL = array($nID);
             $q = lovd_queryDB($sSQL, $aSQL, true);
 
             // Write to log...
@@ -527,7 +526,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Deleting transcript information entry', '', 'print', $zData['geneid'] . ' (' . $zData['name'] . ')'),
+                        array('Deleting transcript information entry', '', 'print', $nID . ' - ' . $zData['name'] . ' (' . $zData['geneid'] . ')'),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete transcript information entry'),

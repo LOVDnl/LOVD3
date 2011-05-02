@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-04-13
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -73,6 +73,7 @@ class LOVD_Object {
 
 
 
+
     function LOVD_Object ()
     {
         // Default constructor.
@@ -96,6 +97,7 @@ class LOVD_Object {
     {
         // Checks fields before submission of data.
         $aForm = $this->getForm();
+        $aFormInfo = $aForm[0];
         unset($aForm[0]);
 
         // Validate form by looking at the form itself, and check what's needed.
@@ -153,7 +155,7 @@ class LOVD_Object {
                 // This is causing notices in the code.
                 // FIXME; is it also with selection lists with a size > 1? Then you should change the check above.
                 if (!isset($aData[$sName])) {
-                    $_POST[$sName] = array(); // Assuming we need $_POST here. FIXME; can be determined from $aForm[0].
+                    $GLOBALS['_' . $aFormInfo[0]][$sName] = array();
                 }
 
             } elseif ($sType == 'checkbox') {
@@ -161,7 +163,7 @@ class LOVD_Object {
                 // This is causing problems sometimes with MySQL, since INT
                 // columns can't receive an empty string if STRICT is on.
                 if (!isset($aData[$sName])) {
-                    $_POST[$sName] = 0; // Assuming we need $_POST here. FIXME; can be determined from $aForm[0].
+                    $GLOBALS['_' . $aFormInfo[0]][$sName] = 0;
                 }
             }
         }
@@ -171,6 +173,23 @@ class LOVD_Object {
 
 
 
+    function deleteEntry ($nID = false)
+    {
+        // Delete an entry from the database.
+        if (!$nID) {
+            // We were called, but the class wasn't initiated with an ID. Fail.
+            lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::deleteEntry() - Method didn\'t receive ID');
+        } else {
+            if ($this->getCount($nID)) {
+                lovd_queryDB('DELETE FROM ' . constant($this->sTable) . ' WHERE id = ?', array($nID));
+            }
+        }            
+    }
+    
+    
+    
+    
+    
     function getCount ($nID = false)
     {
         // Returns the number of entries in the database table.
@@ -223,7 +242,7 @@ class LOVD_Object {
         $sSQL = 'INSERT INTO ' . constant($this->sTable) . ' (';
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
-            $sSQL .= (!$key? '' : ', ') . $sField;
+            $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
             $aSQL[] = $aData[$sField];
         }
         $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
@@ -315,17 +334,16 @@ class LOVD_Object {
         $zData = array_map('htmlspecialchars', $zData);
         $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
         foreach($aUserColumns as $sUserColumn) {
-            (isset($zData[$sUserColumn . '_'])? $zData[$sUserColumn . '_'] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>' : 'N/A') : false);
+            (isset($zData[$sUserColumn])? $zData[$sUserColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . ($sView == 'list'? '' : '_')] . '</A>' : 'N/A') : false);
         }
         
         $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');
         foreach($aDateColumns as $sDateColumn) {
-            // FIXME; this should go outside of this foreach().
-            if ($sDateColumn == 'valid_from' && isset($zData['edited_by_']) && $zData['edited_by_'] == 'N/A') {
-                $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = 'N/A';
-            } else {
-                (isset($zData[$sDateColumn])? $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A') : false);
-            }
+            (isset($zData[$sDateColumn])? $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A') : false);
+        }
+        
+        if (isset($zData['edited_by_']) && $zData['edited_by_'] == 'N/A') {
+            $zData['valid_from' . ($sView == 'list'? '' : '_')] = 'N/A';
         }
 
         return $zData;
@@ -375,7 +393,7 @@ class LOVD_Object {
         $sSQL = 'UPDATE ' . constant($this->sTable) . ' SET ';
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
-            $sSQL .= (!$key? '' : ', ') . $sField . ' = ?';
+            $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
             $aSQL[] = $aData[$sField];
         }
         $sSQL .= ' WHERE id = ?';
@@ -766,7 +784,7 @@ class LOVD_Object {
         // If no results are found, quit here.
         if (!$nTotal) {
             // Searched, but no results. FIXME: link to the proper documentation entry about search expressions
-            $sBadSyntaxColumns = implode(', ', $aBadSyntaxColumns);
+            $sBadSyntaxColumns = implode(', ', array_unique($aBadSyntaxColumns));
             // FIXME; use an IF here.
             $sMessageNormal = 'No results have been found that match your criteria.<BR>Please redefine your search criteria.';
             $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) >= 2? 's' : '') . ' contain incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';

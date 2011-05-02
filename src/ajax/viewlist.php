@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-15
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -47,7 +47,12 @@ $aNeededLevel =
                 'Log' => LEVEL_MANAGER,
                 'Transcript' => 0,
                 'User' => LEVEL_MANAGER,
-                'Variant' => 0,
+                'Variant' => 0, // FIXME; Remove later when object Variant no longer exists.
+                'VariantOnGenome' => 0,
+                'VariantOnTranscript' => 0,
+                'Individual' => 0,
+                'Screening' => 0,
+                'Phenotype' => 0,
               );
 if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = $aNeededLevel[$_GET['object']];

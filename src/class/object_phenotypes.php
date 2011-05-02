@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -75,6 +75,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         // SQL code for viewing the list of genes
         $this->aSQLViewList['SELECT']   = 'p.*, ' .
+                                          'p.id AS phenotypeid, ' .
                                           'uo.name AS owner';
         $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id)';
@@ -106,9 +107,9 @@ class LOVD_Phenotype extends LOVD_Custom {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
-                        'id' => array(
-                                    'view' => array('Phenotype ID', 90),
-                                    'db'   => array('p.id', 'ASC', true)),
+                        'phenotypeid' => array(
+                                    'view' => array('Phenotype ID', 110),
+                                    'db'   => array('phenotypeid', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(

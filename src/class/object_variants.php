@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -85,7 +85,6 @@ class LOVD_Variant extends LOVD_Custom {
         $this->aColumnsViewEntry = array_merge(
                  $this->buildViewEntry(),
                  array(
-                        'individualid' => 'Individual ID',
                         'allele' => 'Allele',
                         'pathogenicid' => 'Pathogenicity',
                         'chromosome' => 'Chromosome',
@@ -112,7 +111,7 @@ class LOVD_Variant extends LOVD_Custom {
                  $this->buildViewList(),
                  array(
                         'transcriptid' => array(
-                                    'view' => array('Transcript ID', 90),
+                                    'view' => array('Transcript ID', 110),
                                     'db'   => array('vot.transcriptid', 'ASC', true)),
                         'id' => array(
                                     'view' => array('Variant ID', 90),
@@ -121,7 +120,7 @@ class LOVD_Variant extends LOVD_Custom {
                                     'view' => array('Allele', 100),
                                     'db'   => array('v.allele', 'ASC', true)),
                         'pathogenicid' => array(
-                                    'view' => array('Pathogenicity', 100),
+                                    'view' => array('Pathogenicity', 110),
                                     'db'   => array('v.pathogenicid', 'ASC', true)),
                         'type' => array(
                                     'view' => array('Type', 70),

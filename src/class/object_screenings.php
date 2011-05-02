@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -112,13 +112,13 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aColumnsViewList = array_merge(
                  array(
                         'id' => array(
-                                    'view' => array('Screening ID', 90),
+                                    'view' => array('Screening ID', 110),
                                     'db'   => array('s.id', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(
                         'individualid' => array(
-                                    'view' => array('Individual ID', 90),
+                                    'view' => array('Individual ID', 110),
                                     'db'   => array('s.individualid', 'ASC', true)),
                         'owner' => array(
                                     'view' => array('Owner', 200),

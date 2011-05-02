@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2011-03-09
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-26
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -64,11 +64,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
-    // URL: /links/00001
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+    // URL: /links/001
     // View specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 3, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'View custom link #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -206,11 +206,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /links/001?edit
     // Edit specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 3, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit custom link #' . $nID);
     define('LOG_EVENT', 'LinkEdit');
 
@@ -235,7 +235,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-            $_DATA->updateEntry($zData['id'], $_POST, $aFields);
+            $_DATA->updateEntry($nID, $_POST, $aFields);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited custom link ' . $nID . ' - ' . $_POST['name'] . ' (' . $_POST['pattern_text'] . ')');
@@ -249,7 +249,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             foreach ($aCols AS $sCol) {
                 if ($sCol && !in_array($sCol, $_POST['active_columns'])) {
                     // User has requested removal...
-                    $q = lovd_queryDB('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid = ?', array($sCol, $zData['id']));
+                    $q = lovd_queryDB('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid = ?', array($sCol, $nID));
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Custom link ' . $nID . ' - ' . $_POST['name'] . ' - could not be removed from column ' . $sCol);
@@ -271,7 +271,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
                 }
                 if (!in_array($sCol, $aCols)) {
                     // Add custom link to column.
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $zData['id']));
+                    $q = lovd_queryDB('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID));
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Custom link ' . $nID . ' - ' . $_POST['name'] . ' - could not be added to column ' . $sCol);
@@ -339,11 +339,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /links/001?delete
     // Delete specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 3, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete custom link #' . $nID);
     define('LOG_EVENT', 'LinkDelete');
 
@@ -372,7 +372,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             // Query text.
             // This also deletes the entries in cols2links.
             // FIXME; implement deleteEntry()
-            lovd_queryDB('DELETE FROM ' . TABLE_LINKS . ' WHERE id = ?', array($zData['id']), true);
+            lovd_queryDB('DELETE FROM ' . TABLE_LINKS . ' WHERE id = ?', array($nID), true);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted custom link ' . $nID . ' - ' . $zData['name'] . ' (' . $zData['pattern_text'] . ')');

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-18
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
-    // URL: /screenings/00000001
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+    // URL: /screenings/0000000001
     // View specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 10, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'View screening #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -95,7 +95,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
     $_DATA->setSortDefault('id');
     $_DATA->viewList(false, 'screeningid', true, true, false);
     
-    //$_GET['search_screeningid'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants found', 'H4');
     require ROOT_PATH . 'class/object_variants.php';
@@ -112,10 +111,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^(\d)+$/', $_PATH_ELEMENTS[1]) &&
 
 
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
-    // URL: /screenings/00000001?delete
+    // URL: /screenings/0000000001?delete
     // Drop specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
     define('LOG_EVENT', 'ScreeningDelete');
 
@@ -145,7 +144,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             // This also deletes the entries in gen2dis and transcripts.
             // FIXME; implement deleteEntry()
             $sSQL = 'DELETE FROM ' . TABLE_SCREENINGS . ' WHERE id = ?';
-            $aSQL = array($zData['id']);
+            $aSQL = array($nID);
             $q = lovd_queryDB($sSQL, $aSQL);
             if (!$q) {
                 lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
@@ -184,7 +183,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting screening information entry', '', 'print', $zData['id']),
+                        array('Deleting screening information entry', '', 'print', $nID),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete screening information entry'),

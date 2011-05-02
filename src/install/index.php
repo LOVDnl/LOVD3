@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-03-10
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -337,6 +337,27 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     $nInstallSQL += $nCols;
 
 
+    // (7) Activating standard custom columns.
+    foreach ($aColSQL as $sCol) {
+        $sCol = str_replace('INSERT INTO ' . TABLE_COLS . ' VALUES ', '', $sCol);
+        preg_match_all("/(\"(?:.*[^\\\\])?\"|\d+|NULL|NOW\(\)),\s+/U", trim($sCol, '()') . ', ', $aCol);
+        $aCol = array_map('preg_replace', array_fill(0, count($aCol[1]), '/^"(.*)"$/'), array_fill(0, count($aCol[1]), '$1'), $aCol[1]);
+        if ($aCol[3] == '1' || $aCol[4] == '1') {
+            $sCategory = preg_replace('/\/.*$/', '', $aCol[0]);
+            if ($sCategory == 'VariantOnGenome') {
+                $sTable = 'TABLE_VARIANTS';
+            } else {
+                $sTable = 'TABLE_' . strtoupper($sCategory) . 'S';
+            }
+
+            if (!in_array($sCategory, array('Phenotype', 'VariantOnTranscript'))) {
+                $aInstallSQL['Activating LOVD standard custom columns'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
+                $aInstallSQL['Activating LOVD standard custom columns'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aCol[0] . '", "00001", NOW())';
+            }
+        }
+    }
+    
+    
 /*
     // (7) Adding standard patient columns.
     // Gather info on standard custom patient columns.

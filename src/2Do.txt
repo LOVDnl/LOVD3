@@ -1,14 +1,15 @@
 Doen voordat LOVD 3.0 online gebruikt kan worden:
 =================================================
-- Introduce Panel?
-- Tabs instellen?
-- Kolommen activeren bij installatie?
+- (Ivo)  Stress test??? Als het datamodel écht moet worden aangepast, kan dat wellicht niet goed via inc-upgrade.php.
+- (Ivar) Testen wat public / curator wel en niet mag.
+  * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
+- (Ivar) replace delete queries with deleteEntry() in all pages (only genes.php has it implemented right now).
+
 
 
 
 Ook belangrijk, maar iets minder:
-  Stress test??? Als het datamodel écht moet worden aangepast, kan dat wellicht niet goed via inc-upgrade.php.
-  De volgende stap na het maken van een gen, moet je terecht komen op:
+- (Ivo)  De volgende stap na het maken van een gen, moet je terecht komen op:
       /genes/GENE?authorize en/of /genes/GENE?sortCurators
 
       Toont een viewList() van users (indien level >= LEVEL_MANAGER) met alle gebruikers die GEEN curator of collaborators zijn (op basis van user IDs)
@@ -18,9 +19,16 @@ Ook belangrijk, maar iets minder:
         De gebruiker verdwijnt dan uit de viewList(), gebruik code voor Logs hier voor?
         De gebruiker verschijnt dan in de lijst waar hij is aan is toegevoegd.
       De entries in de twee lijsten (curators en collaborators) moeten ook weer teruggeplaatst kunnen worden in de viewList.
-
-Encoding wachtwoorden omzetten, (random?) salt gebruiken.
-
+- (Ivar) Introduce Panel using is_panel in table_individuals?
+- (Ivo)  Encoding wachtwoorden omzetten, (random?) salt gebruiken.
+- (Ivar) Create gene? -> Enable standard custom VariantOnTranscript custom columns.
+  * Het werkelijk toevoegen van een kolom in een functie???
+  * DNA, RNA, Protein, DBID...
+  * Create genes moet in één transaction! Implement rollbacks!
+- (Ivar) Create disease? -> Enable standard custom Phenotype custom columns.
+  * Het werkelijk toevoegen van een kolom in een functie???
+  * Voorbeeld zou zijn age of diagnosis.
+  * Create disease: kies op hetzelfde formulier meteen de kolommen die meteen actief zijn?
 
 
 
@@ -29,11 +37,8 @@ Encoding wachtwoorden omzetten, (random?) salt gebruiken.
 
 Kán later, maar VOOR dat er externe gebruikers actief worden:
 =============================================================
-- Create genes moet in één transaction! Implement rollbacks!
 - Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.
 - User curator maken (wel/niet editable).
-- Testen wat curator wel en niet mag.
-  * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - Curator sorteren inbouwen.
 - Check_update.php heeft nog rare trucjes m.b.t. het tellen van de varianten.
 
@@ -52,6 +57,7 @@ Kán later, maar VOOR dat er externe gebruikers actief worden:
 - Hoe slaan we functional effect op?
 - Hoe slaan we pathogeniciteit op?
 
+- Tabs instellen?
 
 
 
@@ -149,8 +155,8 @@ TABLE_VARIANTS_ON_TRANSCRIPTS heeft nu alleen een valid_from om te linken naar T
 
 Waar we echt mee bezig zijn:
 ============================
+$nID die uit de URL wordt gehaald wordt ook in LOGS gebruikt. str_pad er over, zodat die altijd de correcte lengte heeft.
 position_g_mrna_start en position_g_mrna_end (TABLE_TRANSCRIPTS), volgens mij moet dat simpeler.
-TABLE_VARIANTS_ON_GENOME heeft geen foreign key naar TABLE_VARIANTS.
 checkFields() roept getForm() aan om te bepalen hoe de velden heten. Dus als er een error is, wordt getForm() twee keer aangeroepen.
     Voor forms met veel queries is dat een beetje vervelend. Kan getForm() niet een static variabele in gebruik nemen,
     die ziet dat het formulier al eerder gemaakt is (door de checkFields() call) en die dan direct returnen?

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-04-12
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-19
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -54,7 +54,7 @@ class LOVD_Transcript extends LOVD_Object {
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT t.*, ' .
+        $this->sSQLLoadEntry = 'SELECT t.* ' .
                                'FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                'WHERE id = ?';
 
@@ -181,7 +181,7 @@ class LOVD_Transcript extends LOVD_Object {
         $this->aFormData =
                  array(
                            array('POST', '', '', '', '40%', '14', '60%'),
-           'transcript' => array('Transcriptomic reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
+           'transcript' => array('Transcriptomic reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, true),
        'transcriptInfo' => array('', '', 'note', 'Select transcript references (NM accession numbers). You can select multiple transcripts by holding "CTRL or CMD" and clicking all transcripts desired.'),
 'transcript_ensembl_id' => array('Transcript Ensembl ID', '', 'text', 'id_ensembl', 10),
    'protein_ensembl_id' => array('Protein Ensembl ID', '', 'text', 'id_protein_ensembl', 10),

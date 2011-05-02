@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-26
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -64,11 +64,11 @@ class LOVD_Gene extends LOVD_Object {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
+                                           'COUNT(t.id) AS transcripts,' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
-        // FIXME; dit getal is niet "correct" (volgens de gebruiker) als een gen twee of meer transcripten heeft. Hoe lossen we dat op? Misschien count(distinct variantid) ??
-                                           'count(DISTINCT vot.id) AS variants';
+                                           'COUNT(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
@@ -82,7 +82,7 @@ class LOVD_Gene extends LOVD_Object {
         // SQL code for viewing the list of genes
         $this->aSQLViewList['SELECT']   = 'g.*, ' .
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
-                                          'count(DISTINCT vot.id) AS variants, ' .
+                                          'COUNT(DISTINCT vot.id) AS variants, ' .
         // FIXME; waarom screeningid bij genes? Bedoel je misschien count(sc.id)?
                                           'sc.id AS screeningid';
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
@@ -207,6 +207,19 @@ class LOVD_Gene extends LOVD_Object {
             lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
         }
         
+        $qDiseases = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES, array());
+        $aDiseases = mysql_fetch_row($qDiseases);
+        $aDiseases = explode(',', $aDiseases[0]);
+        if (isset($aData['active_diseases'])) {
+            foreach ($aData['active_diseases'] as $sDisease) {
+                if (!in_array($sDisease, $aDiseases)) {
+                    if ($sDisease != 'None') {
+                        lovd_errorAdd('active_diseases', 'Please select a proper disease in the \'This gene has been linked to these diseases\' selection box');
+                    }
+                }
+            }
+        }
+        
         if (!empty($aData['refseq']) && empty($aData['refseq_url'])) {
             lovd_errorAdd('refseq', 'You have selected that there is a human-readable reference sequence. Please fill in the "Human-readable reference sequence location" field. Otherwise, select \'No\' for the "This gene has a human-readable reference sequence" field.');
         }
@@ -265,14 +278,19 @@ class LOVD_Gene extends LOVD_Object {
         global $_CONF, $zData;
 
         // Get list of diseases
-        $aData = array();
+        $aDiseasesForm = array();
         $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
-        $nFieldSize = ($nData < 20? $nData : 20);
-        while ($r = mysql_fetch_row($qData)) {
-            $aData[$r[0]] = $r[1];
+        if ($nData) {
+            while ($r = mysql_fetch_row($qData)) {
+                $aDiseasesForm[$r[0]] = $r[1];
+            }
+        } else {
+            $aDiseasesForm = array('None' => 'No disease entries available');
         }
-
+        
+        $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
+        
         $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
         $aTranscriptNames = array();
         $aTranscriptsForm = array();
@@ -325,7 +343,7 @@ class LOVD_Gene extends LOVD_Object {
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
                         'hr',
-                        array('This gene has been linked to these diseases', '', 'select', 'active_diseases', $nFieldSize, $aData, false, true, false),
+                        array('This gene has been linked to these diseases', '', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
                         'hr',
                         'skip',
                         'skip',
@@ -379,7 +397,8 @@ class LOVD_Gene extends LOVD_Object {
                         array('', '', 'note', 'You can use the following fields to customize the gene\'s LOVD gene homepage.'),
                         'hr',
                         array('Citation reference(s)', '', 'textarea', 'reference', 30, 3),
-                        array('', '', 'note', '(Active custom link : <A href="#" onclick="javascript:lovd_openWindow(\'' . ROOT_PATH . 'links.php?view=1&amp;col=Gene/Reference\', \'LinkView\', \'800\', \'200\'); return false;">PubMed</A>)'),
+                        //array('', '', 'note', '(Active custom link : <A href="#" onclick="javascript:lovd_openWindow(\'' . ROOT_PATH . 'links.php?view=1&amp;col=Gene/Reference\', \'LinkView\', \'800\', \'200\'); return false;">PubMed</A>)'),
+                        array('', '', 'note', '(Active custom link : <A href="#" onmouseover="lovd_showToolTip(\'Links to abstracts in the PubMed database.<BR>[1] = The name of the author(s).<BR>[2] = The PubMed ID.\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'{PMID:[1]:[2]}\'); return false">Pubmed</A>)'),
                         'hr',
                         array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, false, false, false),
                         array('', '', 'note', 'If you want a disclaimer added to the gene\'s LOVD gene homepage, select your preferred option here.'),

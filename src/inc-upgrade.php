@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -205,6 +205,156 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_ibfk_6 FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                                     'DROP TABLE ' . TABLE_PATIENTS,
                                   ),
+                       '3.0-pre-20' =>
+                             array(           
+                                    'ALTER TABLE ' . TABLE_COLS2LINKS . ' MODIFY COLUMN linkid TINYINT(3) UNSIGNED ZEROFILL NOT NULL',
+                                    'UPDATE ' . TABLE_COLS . ' SET form_type="Gender||select|1|--Not specified--|false|false" WHERE id="Individual/Gender"',
+                                    'UPDATE ' . TABLE_COLS . ' SET width=70 WHERE id="Individual/Gender"',
+                                    'UPDATE ' . TABLE_COLS . ' SET select_options="Female\r\nMale\r\nUnknown" WHERE id="Individual/Gender"',
+                                    'UPDATE ' . TABLE_COLS . ' SET mysql_type=\'VARCHAR(7) NOT NULL\' WHERE id="Individual/Gender"',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' DROP FOREIGN KEY ' . TABLE_SCR2VAR . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' DROP FOREIGN KEY ' . TABLE_SCR2VAR . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' MODIFY COLUMN variantid INT(10) UNSIGNED ZEROFILL NOT NULL',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' ADD CONSTRAINT ' . TABLE_SCR2VAR . '_fk_screeningid FOREIGN KEY (screeningid) REFERENCES ' . TABLE_SCREENINGS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' ADD CONSTRAINT ' . TABLE_SCR2VAR . '_fk_variantid FOREIGN KEY (variantid) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id FOREIGN KEY (id) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN chrom_band VARCHAR(20) NOT NULL',
+                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN id_entrez INT(10) UNSIGNED',
+                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN id_omim INT(10) UNSIGNED',
+                                    'ALTER TABLE ' . TABLE_DISEASES . ' MODIFY COLUMN id_omim INT(10) UNSIGNED',
+                                    'UPDATE ' . TABLE_COLS . ' SET col_order = 255 WHERE col_order > 255',
+                                    'ALTER TABLE ' . TABLE_COLS . ' MODIFY COLUMN col_order TINYINT(3) UNSIGNED NOT NULL',
+
+                                    // DROP OLD FOREIGN KEYS
+                                    'ALTER TABLE ' . TABLE_USERS . ' DROP FOREIGN KEY ' . TABLE_USERS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_USERS . ' DROP FOREIGN KEY ' . TABLE_USERS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_USERS . ' DROP FOREIGN KEY ' . TABLE_USERS . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_GENES . ' DROP FOREIGN KEY ' . TABLE_GENES . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_GENES . ' DROP FOREIGN KEY ' . TABLE_GENES . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_GENES . ' DROP FOREIGN KEY ' . TABLE_GENES . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_4',
+                                    'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_5',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_TRANSCRIPTS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_TRANSCRIPTS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_TRANSCRIPTS . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_DISEASES . ' DROP FOREIGN KEY ' . TABLE_DISEASES . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_DISEASES . ' DROP FOREIGN KEY ' . TABLE_DISEASES . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_GEN2DIS . ' DROP FOREIGN KEY ' . TABLE_GEN2DIS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_GEN2DIS . ' DROP FOREIGN KEY ' . TABLE_GEN2DIS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP FOREIGN KEY ' . TABLE_INDIVIDUALS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP FOREIGN KEY ' . TABLE_INDIVIDUALS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP FOREIGN KEY ' . TABLE_INDIVIDUALS . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP FOREIGN KEY ' . TABLE_INDIVIDUALS . '_ibfk_4',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP FOREIGN KEY ' . TABLE_INDIVIDUALS . '_ibfk_5',
+                                    'ALTER TABLE ' . TABLE_IND2DIS . ' DROP FOREIGN KEY ' . TABLE_IND2DIS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_IND2DIS . ' DROP FOREIGN KEY ' . TABLE_IND2DIS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_4',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_5',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_ibfk_6',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_ibfk_4',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_ibfk_5',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_ibfk_6',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_ibfk_4',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_ibfk_5',
+                                    'ALTER TABLE ' . TABLE_SCR2GENE . ' DROP FOREIGN KEY ' . TABLE_SCR2GENE . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_SCR2GENE . ' DROP FOREIGN KEY ' . TABLE_SCR2GENE . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_COLS . ' DROP FOREIGN KEY ' . TABLE_COLS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_COLS . ' DROP FOREIGN KEY ' . TABLE_COLS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP FOREIGN KEY ' . TABLE_ACTIVE_COLS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' DROP FOREIGN KEY ' . TABLE_ACTIVE_COLS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' DROP FOREIGN KEY ' . TABLE_SHARED_COLS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' DROP FOREIGN KEY ' . TABLE_SHARED_COLS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' DROP FOREIGN KEY ' . TABLE_SHARED_COLS . '_ibfk_3',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' DROP FOREIGN KEY ' . TABLE_SHARED_COLS . '_ibfk_4',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' DROP FOREIGN KEY ' . TABLE_SHARED_COLS . '_ibfk_5',
+                                    'ALTER TABLE ' . TABLE_LINKS . ' DROP FOREIGN KEY ' . TABLE_LINKS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_LINKS . ' DROP FOREIGN KEY ' . TABLE_LINKS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_COLS2LINKS . ' DROP FOREIGN KEY ' . TABLE_COLS2LINKS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_COLS2LINKS . ' DROP FOREIGN KEY ' . TABLE_COLS2LINKS . '_ibfk_2',
+                                    'ALTER TABLE ' . TABLE_LOGS . ' DROP FOREIGN KEY ' . TABLE_LOGS . '_ibfk_1',
+                                    'ALTER TABLE ' . TABLE_HITS . ' DROP FOREIGN KEY ' . TABLE_HITS . '_ibfk_1',
+
+                                    // ADD NEW RENAMED FOREIGN KEYS
+                                    'ALTER TABLE ' . TABLE_USERS . ' ADD CONSTRAINT ' . TABLE_USERS . '_fk_countryid FOREIGN KEY (countryid) REFERENCES ' . TABLE_COUNTRIES . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_USERS . ' ADD CONSTRAINT ' . TABLE_USERS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_USERS . ' ADD CONSTRAINT ' . TABLE_USERS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_GENES . ' ADD CONSTRAINT ' . TABLE_GENES . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_GENES . ' ADD CONSTRAINT ' . TABLE_GENES . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_GENES . ' ADD CONSTRAINT ' . TABLE_GENES . '_fk_updated_by FOREIGN KEY (updated_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_CURATES . ' ADD CONSTRAINT ' . TABLE_CURATES . '_fk_userid FOREIGN KEY (userid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_CURATES . ' ADD CONSTRAINT ' . TABLE_CURATES . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_TRANSCRIPTS . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_TRANSCRIPTS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_TRANSCRIPTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_DISEASES . ' ADD CONSTRAINT ' . TABLE_DISEASES . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_DISEASES . ' ADD CONSTRAINT ' . TABLE_DISEASES . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_GEN2DIS . ' ADD CONSTRAINT ' . TABLE_GEN2DIS . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_GEN2DIS . ' ADD CONSTRAINT ' . TABLE_GEN2DIS . '_fk_diseaseid FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_IND2DIS . ' ADD CONSTRAINT ' . TABLE_IND2DIS . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_IND2DIS . ' ADD CONSTRAINT ' . TABLE_IND2DIS . '_fk_diseaseid FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_diseaseid FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCR2GENE . ' ADD CONSTRAINT ' . TABLE_SCR2GENE . '_fk_screeningid FOREIGN KEY (screeningid) REFERENCES ' . TABLE_SCREENINGS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCR2GENE . ' ADD CONSTRAINT ' . TABLE_SCR2GENE . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_COLS . ' ADD CONSTRAINT ' . TABLE_COLS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_COLS . ' ADD CONSTRAINT ' . TABLE_COLS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' ADD CONSTRAINT ' . TABLE_ACTIVE_COLS . '_fk_colid FOREIGN KEY (colid) REFERENCES ' . TABLE_COLS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' ADD CONSTRAINT ' . TABLE_ACTIVE_COLS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' ADD CONSTRAINT ' . TABLE_SHARED_COLS . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' ADD CONSTRAINT ' . TABLE_SHARED_COLS . '_fk_diseaseid FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' ADD CONSTRAINT ' . TABLE_SHARED_COLS . '_fk_colid FOREIGN KEY (colid) REFERENCES ' . TABLE_ACTIVE_COLS . ' (colid) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' ADD CONSTRAINT ' . TABLE_SHARED_COLS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' ADD CONSTRAINT ' . TABLE_SHARED_COLS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_LINKS . ' ADD CONSTRAINT ' . TABLE_LINKS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_LINKS . ' ADD CONSTRAINT ' . TABLE_LINKS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_COLS2LINKS . ' ADD CONSTRAINT ' . TABLE_COLS2LINKS . '_fk_colid FOREIGN KEY (colid) REFERENCES ' . TABLE_COLS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_COLS2LINKS . ' ADD CONSTRAINT ' . TABLE_COLS2LINKS . '_fk_linkid FOREIGN KEY (linkid) REFERENCES ' . TABLE_LINKS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_LOGS . ' ADD CONSTRAINT ' . TABLE_LOGS . '_fk_userid FOREIGN KEY (userid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_HITS . ' ADD CONSTRAINT ' . TABLE_HITS . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                  ),
                   );
 
     // Addition for upgrade to LOVD v.3.0-pre-07.
@@ -239,15 +389,23 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         if ($q) {
             // FIXME; this should never be false???
             while($aColumn = mysql_fetch_assoc($q)) {
-                if (substr($aColumn['Field'], 0, 8) == 'Screening/') {
+                if (substr($aColumn['Field'], 0, 10) == 'Screening/') {
                     $aUpdates['3.0-pre-19'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aColumn['Field'] . '", 1, NOW())';
                 }
             }
         }
     }
 
-
-
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-pre-20')) {
+        $q = lovd_queryDB('DESCRIBE ' . TABLE_INDIVIDUALS);
+        if ($q) {
+            while($aColumn = mysql_fetch_assoc($q)) {
+                if ($aColumn['Field'] == 'Individual/Gender') {
+                    $aUpdates['3.0-pre-20'][] = 'ALTER TABLE ' . TABLE_INDIVIDUALS . ' MODIFY COLUMN `Individual/Gender` VARCHAR(7) NOT NULL';
+                }
+            }
+        }
+    }
 
 
 

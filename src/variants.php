@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-18
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -63,11 +63,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /variants/00000001
     // View specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 8, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'View variant #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -96,11 +96,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
-    // URL: /variants/00001?delete
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+    // URL: /variants/00000001?delete
     // Drop specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 8, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete variant information entry #' . $nID);
     define('LOG_EVENT', 'VariantDelete');
 
@@ -129,7 +129,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             // This also deletes the entries in variants_on_transcripts.
             // FIXME; implement deleteEntry()
             $sSQL = 'DELETE FROM ' . TABLE_VARIANTS . ' WHERE id = ?';
-            $aSQL = array($zData['id']);
+            $aSQL = array($nID);
             $q = lovd_queryDB($sSQL, $aSQL, true);
 
             // Write to log...

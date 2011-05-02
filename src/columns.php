@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -701,7 +701,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             // Prepare values.
             $_POST['id'] = $_POST['category'] . '/' . $_POST['colid'];
-            $_POST['col_order'] = 9999; // New columns should sort at the end.
+            $_POST['col_order'] = 255; // New columns should sort at the end.
             $_POST['hgvs'] = '0';
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');

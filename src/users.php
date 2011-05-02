@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-26
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -68,7 +68,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
     // URL: /users/00001
     // View specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'View user account #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -208,7 +208,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /users/00001?edit
     // Edit specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit user account #' . $nID);
     define('LOG_EVENT', 'UserEdit');
 
@@ -256,7 +256,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                 unset($aFields[array_search('password_force_change', $aFields)], $aFields[array_search('level', $aFields)], $aFields[array_search('login_attempts', $aFields)]);
             }
 
-            $_DATA->updateEntry($zData['id'], $_POST, $aFields);
+            $_DATA->updateEntry($nID, $_POST, $aFields);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited user ' . $nID . ' - ' . $zData['username'] . ' (' . $_POST['name'] . ') - with level ' . $_SETT['user_levels'][(!empty($_POST['level'])? $_POST['level'] : $zData['level'])]);
@@ -269,7 +269,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             lovd_showInfoTable('Successfully edited the user account!', 'success');
 
             // Change password, if requested.
-            if ($zData['id'] == $_AUTH['id'] && !empty($_POST['password_1'])) {
+            if ($nID == $_AUTH['id'] && !empty($_POST['password_1'])) {
                 // Was already md5'ed!
                 $_SESSION['auth']['password'] = $_POST['password'];
             }
@@ -325,7 +325,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /users/00001?change_password
     // Change a user's password.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Change password for user account #' . $nID);
     define('LOG_EVENT', 'UserResetPassword');
 
@@ -366,7 +366,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-            $_DATA->updateEntry($zData['id'], $_POST, $aFields);
+            $_DATA->updateEntry($nID, $_POST, $aFields);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Changed password for user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
@@ -379,7 +379,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             lovd_showInfoTable('Successfully changed the password!', 'success');
 
             // Change password, if requested.
-            if ($zData['id'] == $_AUTH['id']) {
+            if ($nID == $_AUTH['id']) {
                 // Was already md5'ed!
                 $_SESSION['auth']['password'] = $_POST['password'];
             }
@@ -425,7 +425,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /users/00001?delete
     // Delete a specific user.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 
@@ -451,7 +451,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
     // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
     // Find curated genes and see if they're alone.
-    $q = lovd_queryDB('SELECT DISTINCT geneid FROM lovd_v3_users2genes WHERE geneid NOT IN (SELECT DISTINCT geneid FROM lovd_v3_users2genes WHERE userid != ? AND allow_edit = 1)', array($zData['id']), true);
+    $q = lovd_queryDB('SELECT DISTINCT geneid FROM lovd_v3_users2genes WHERE geneid NOT IN (SELECT DISTINCT geneid FROM lovd_v3_users2genes WHERE userid != ? AND allow_edit = 1)', array($nID), true);
     $aCuratedGenes = array();
     while ($r = mysql_fetch_row($q)) {
         // Gene has no curator, and user is going to be deleted!
@@ -501,7 +501,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                     // Query text.
                     // This also deletes the entries in TABLE_CURATES.
                     // FIXME; implement deleteEntry()
-                    lovd_queryDB('DELETE FROM ' . TABLE_USERS . ' WHERE id = ?', array($zData['id']), true);
+                    lovd_queryDB('DELETE FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID), true);
                     lovd_queryDB('COMMIT');
 
                     // Write to log...
@@ -604,7 +604,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /users/00001?delete
     // Remove a user from the system
     
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 
@@ -710,14 +710,14 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                 // This also deletes the entries in variants??????.
                 // FIXME; implement deleteEntry()
                 $sSQL = 'DELETE FROM ' . TABLE_USERS . ' WHERE id = ?';
-                $aSQL = array($zData['id']);
+                $aSQL = array($nID);
                 $q = lovd_queryDB($sSQL, $aSQL);
                 if (!$q) {
                     lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
                 }
 
                 // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, 'Deleted user entry ' . $nID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
+                lovd_writeLog('Event', LOG_EVENT, 'Deleted user entry ' . $nID . ' - ' . $zData['name'] . ' (' . $zData['level'] . ')');
 
                 // Thank the user...
                 header('Refresh: 3; url=' . lovd_getInstallURL() . 'users');
@@ -766,7 +766,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
         $aForm = array_merge(
                      array(
                             array('POST', '', '', '', '40%', '14', '60%'),
-                            array('Deleting user information entry', '', 'print', $zData['id'] . ' - ' . $zData['name'] . ' (' . $_SETT['user_levels'][$zData['level']] . ')'),
+                            array('Deleting user information entry', '', 'print', $nID . ' - ' . $zData['name'] . ' (' . $_SETT['user_levels'][$zData['level']] . ')'),
                             'skip',
                             array('Enter your password for authorization', '', 'password', 'password_2', 20),
                             array('Password (confirm)', '', 'password', 'password_3', 20),

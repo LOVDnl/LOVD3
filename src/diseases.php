@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-04-13
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-26
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /diseases/00001
     // View specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'View disease #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -86,13 +86,13 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
         lovd_showNavigation($sNavigation);
     }
     
-    $_GET['search_diseases'] = $nID;
+    $_GET['search_diseaseids'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Individuals', 'H4');
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
     $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, 'diseases', true, true);
+    $_DATA->viewList(false, 'diseaseids', true, true);
     
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -102,7 +102,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && !preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && !preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /diseases/DMD
     // Try to find a disease by its abbreviation and forward.
     // When we have multiple hits, refer to listView.
@@ -159,6 +159,20 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
+            
+            $qAddedCustomCols = lovd_queryDB('DESCRIBE ' . TABLE_PHENOTYPES);
+            while ($aCol = mysql_fetch_assoc($qAddedCustomCols)) {
+                $aAdded[] = $aCol['Field'];
+            }
+            
+            $qStandardCustomCols = lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "Phenotype/%" AND (standard = 1 OR hgvs = 1)', array());
+            while ($aStandard = mysql_fetch_assoc($qStandardCustomCols)) {
+                if (!in_array($aStandard['id'], $aAdded)) {
+                    $q = lovd_queryDB('ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());
+                    $q = lovd_queryDB('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $_AUTH['id']));
+                }
+                $q = lovd_queryDB('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($nID, $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $_AUTH['id']));
+            }
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');
@@ -235,11 +249,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /diseases/00001?edit
     // Edit a specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseEdit');
 
@@ -264,7 +278,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-            $_DATA->updateEntry($zData['id'], $_POST, $aFields);
+            $_DATA->updateEntry($nID, $_POST, $aFields);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');
@@ -278,7 +292,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             foreach ($aGenes AS $sGene) {
                 if ($sGene && !in_array($sGene, $_POST['active_genes'])) {
                     // User has requested removal...
-                    $q = lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid = ?', array($sGene, $zData['id']));
+                    $q = lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid = ?', array($sGene, $nID));
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be removed from gene ' . $sGene);
@@ -364,11 +378,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /diseases/00001?delete
     // Delete specific entry.
 
-    $nID = $_PATH_ELEMENTS[1];
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseDelete');
 
@@ -397,7 +411,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[0-9]+$/', $_PATH_ELEMENTS[1]) &
             // Query text.
             // This also deletes the entries in gen2dis.
             // FIXME; implement deleteEntry()
-            lovd_queryDB('DELETE FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($zData['id']), true);
+            lovd_queryDB('DELETE FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($nID), true);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted disease information entry ' . $nID . ' - ' . $zData['symbol'] . ' (' . $zData['name'] . ')');

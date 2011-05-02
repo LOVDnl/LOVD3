@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-06
- * Modified    : 2011-03-02
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-04-14
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -49,30 +49,28 @@ class REST2SOAP {
     
     
     
-    function moduleCall ($sModuleName, $aArgs = array(), $bDebug = false)
+    function checkOutput ($sModuleName, $aOutput)
     {
-        // Basic function for calling the SOAP webservice. This function calls all the other functions
-        // sequentially to get the result from SOAP.
-        if (!is_array($aArgs)) {
-            return 'Arguments not an array';
+        // Check for empty return array or SOAP error messages and relay them to the user
+        // and logging them.
+        if (isset($aOutput['Fault'])) {
+            $aError = $aOutput['Fault'][0]['c'];
+            return $aError['faultcode'][0]['v'] . ' - ' . $aError['faultstring'][0]['v'] . ($aError['faultactor'][0]['v'] != ''? ' - ' . $aError['faultactor'][0]['v'] : '');
+        } elseif (isset($aOutput['html'])) {
+            $aError = $aOutput['html'][0]['c']['body'][0]['c'];
+            return $aError['h1'][0]['v'] . ' - ' . $aError['p'][0]['v'];
+        } else {
+            if (isset($aOutput[$sModuleName . 'Result'][0])) {
+                $aOutput = $aOutput[$sModuleName . 'Result'][0];
+                return (empty($aOutput['c'])? $aOutput['v'] : $aOutput['c']);
+            } else {
+                return $aOutput;
+            }
         }
-        // Generate XML
-        $sInputXML = $this->generateInputXML($sModuleName, $aArgs);
-        // Send XML to SOAP
-        $aOutputSOAP = lovd_php_file($this->sSoapURL, false, $sInputXML);
-        // Output debug values
-        if ($bDebug) {
-            // FIXME; moet dit ook niet een implode() worden met \n ?
-            return array('inputXML' => $sInputXML, 'outputXML' => $aOutputSOAP[0] . $aOutputSOAP[1]);
-        }
-        // Parse output
-        $aOutput = $this->parseOutput($sModuleName, implode("\n", $aOutputSOAP));
-        // Check output
-        return $aOutput;
     }
-
-
-
+    
+    
+    
     
     
     function generateInputXML ($sModuleName, $aArgs)
@@ -103,6 +101,32 @@ class REST2SOAP {
 
     
     
+    function moduleCall ($sModuleName, $aArgs = array(), $bDebug = false)
+    {
+        // Basic function for calling the SOAP webservice. This function calls all the other functions
+        // sequentially to get the result from SOAP.
+        if (!is_array($aArgs)) {
+            return 'Arguments not an array';
+        }
+        // Generate XML
+        $sInputXML = $this->generateInputXML($sModuleName, $aArgs);
+        // Send XML to SOAP
+        $aOutputSOAP = lovd_php_file($this->sSoapURL, false, $sInputXML);
+        // Output debug values
+        if ($bDebug) {
+            return array('inputXML' => $sInputXML, 'outputXML' => implode("\n", $aOutputSOAP));
+        }
+        // Parse output
+        $aOutput = $this->parseOutput($sModuleName, implode("\n", $aOutputSOAP));
+        // Check output
+        return $aOutput;
+    }
+    
+    
+    
+    
+    
+    
     function parseOutput ($sModuleName, $sOutputSOAP)
     {
         // Parse the output XML given by the SOAP webservice.
@@ -121,30 +145,6 @@ class REST2SOAP {
         }
 
         return $aOutput;
-    }
-
-
-
-    
-    
-    function checkOutput ($sModuleName, $aOutput)
-    {
-        // Check for empty return array or SOAP error messages and relay them to the user
-        // and logging them.
-        if (isset($aOutput['Fault'])) {
-            $aError = $aOutput['Fault'][0]['c'];
-            return $aError['faultcode'][0]['v'] . ' - ' . $aError['faultstring'][0]['v'] . ($aError['faultactor'][0]['v'] != ''? ' - ' . $aError['faultactor'][0]['v'] : '');
-        } elseif (isset($aOutput['html'])) {
-            $aError = $aOutput['html'][0]['c']['body'][0]['c'];
-            return $aError['h1'][0]['v'] . ' - ' . $aError['p'][0]['v'];
-        } else {
-            if (isset($aOutput[$sModuleName . 'Result'][0])) {
-                $aOutput = $aOutput[$sModuleName . 'Result'][0];
-                return (empty($aOutput['c'])? $aOutput['v'] : $aOutput['c']);
-            } else {
-                return $aOutput;
-            }
-        }
     }
     
     

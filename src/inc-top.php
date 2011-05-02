@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-26
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -57,7 +57,7 @@ $_MENU = array(
                 'submit' => 'Submit new data',
                 'users' => 'LOVD users &amp; submitters',
                 'setup' => 'LOVD system setup',
-                'docs' => 'LOVD documentation',
+//                'docs' => 'LOVD documentation',
               );
 
 // Remove certain menu entries, if the user has no access to them.
@@ -265,7 +265,6 @@ print('    </TD>' . "\n" .
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">
   <TR>
     <TD style="padding-top : 10px;">
-      <?php echo (isset($_PATH_ELEMENTS[1])? '<A href="' . $_PATH_ELEMENTS[0] . '">&lt;- Back</A>' : '' ) ?>
 
 
 

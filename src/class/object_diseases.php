@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-04-13
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-04-29
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -75,6 +75,7 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'd.*, ' .
+                                          'd.id AS diseaseid, ' .
                                           'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
@@ -83,7 +84,6 @@ class LOVD_Disease extends LOVD_Object {
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
                  array(
-                        'id' => 'Disease ID',
                         'symbol' => 'Official abbreviation',
                         'name' => 'Name',
                         'id_omim' => 'OMIM ID',
@@ -105,9 +105,9 @@ class LOVD_Disease extends LOVD_Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
-                        'id' => array(
+                        'diseaseid' => array(
                                     'view' => array('ID', 45),
-                                    'db'   => array('d.id', 'ASC', true)),
+                                    'db'   => array('diseaseid', 'ASC', 'INT_UNSIGNED')),
                         'symbol' => array(
                                     'view' => array('Abbreviation', 110),
                                     'db'   => array('d.symbol', 'ASC', true)),
