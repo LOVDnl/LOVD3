@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2011-03-31
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-05-05
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -140,6 +140,18 @@ class LOVD_Link extends LOVD_Object {
                 lovd_errorAdd('name', 'There is already a custom link with this link name. Please choose another one.');
             }
         }
+        
+        if (!empty($aData['active_columns'])) {
+            // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
+            $sSQL = 'SELECT GROUP_CONCAT(id) FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'';
+            $zColumns = mysql_fetch_row(lovd_queryDB($sSQL, array()));
+            $aColumns = explode(',', $zColumns[0]);
+            foreach($aData['active_columns'] as $sCol) {
+                if (substr_count($sCol, '/') && !in_array($sCol, $aColumns)) {
+                    lovd_errorAdd('active_columns', 'Please select a valid custom column from the \'Active for columns\' selection box.');
+                }
+            }
+        }
 
         // On the pattern text.
         if (!empty($aData['pattern_text'])) {
@@ -156,12 +168,12 @@ class LOVD_Link extends LOVD_Object {
 
             } else {
                 // Check the pattern of the pattern text.
-                if (strlen($aData['pattern_text']) > 20 || !preg_match('/^\{([A-Z0-9 :;,_-]|\[[0-9]{1,2}\])+\}$/i', $aData['pattern_text'])) {
-                    lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. It must start with \'{\', end with \'}\' and can contain letters, numbers, spaces, some special characters (:;,_-) and references ([1] to [99]) and must be 3-20 characters long.');
+                if (!preg_match('/^\{([A-Z0-9 :;,_-]|\[[0-9]\])+\}$/i', $aData['pattern_text'])) {
+                    lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. It must start with \'{\', end with \'}\' and can contain letters, numbers, spaces, some special characters (:;,_-) and references ([1] to [9]) and must be 3-25 characters long.');
                 }
 
                 // References shouldn't follow each other directly, because LOVD wouldn't know the separation character.
-                if (preg_match('/(\[[0-9]{1,2}\]){2,}/', $aData['pattern_text'])) {
+                if (preg_match('/(\[[0-9]\]){2,}/', $aData['pattern_text'])) {
                     lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Two or more references directly after each other must be separated by at least one character to keep the two apart.');
                 }
             }
@@ -217,18 +229,29 @@ class LOVD_Link extends LOVD_Object {
         // Get column list, to connect link to column.
         $aData = array();
         $sLastCategory = '';
-        $qData = lovd_queryDB('SELECT id, CONCAT(id, " (", head_column, ")") FROM ' . TABLE_COLS . ' ORDER BY id');
+        $qData = lovd_queryDB('SELECT id, CONCAT(id, " (", head_column, ")") FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\' ORDER BY id');
         $nData = mysql_num_rows($qData);
         $nFieldSize = ($nData < 20? $nData : 20);
+
+        // Print active columns list ourselves, because we want to apply styling in the selection box.
+        $sSelect = '<SELECT name="active_columns[]" size="' . $nFieldSize . '" multiple>';
         while ($r = mysql_fetch_row($qData)) {
             $sCategory = substr($r[0], 0, strpos($r[0], '/'));
             if ($sCategory != $sLastCategory) {
-                // Weird trick; in a sense this may be regarded as a bug in lovd_viewForm();
+                // Weird trick; we need to work around the safety measures in lovd_viewForm() to do this;
                 $aData[$sCategory . '" style="font-weight : bold; color : #FFFFFF; background : #224488; text-align : center;'] = ucfirst($sCategory) . ' columns';
                 $sLastCategory = $sCategory;
+                $aData[$r[0]] = $r[1];
+            } else {
+                // Implement the safety measures normally present in lovd_viewForm().
+                $aData[htmlspecialchars($r[0])] = htmlspecialchars($r[1]);
             }
-            $aData[$r[0]] = $r[1];
         }
+        foreach ($aData as $key => $val) {
+            $sSelect .= "\n" . 
+                        '              <OPTION value="' . $key . '"' . (!empty($_POST['active_columns']) && in_array($key, $_POST['active_columns'])? ' selected' : '') . '>' . $val . '</OPTION>';
+        }
+        $sSelect .= '</SELECT>';
 
         // Array which will make up the form table.
         $this->aFormData =
@@ -237,13 +260,13 @@ class LOVD_Link extends LOVD_Object {
                         array('', '', 'print', '<B>Link details</B>'),
                         array('Link name', '', 'text', 'name', 30),
                         array('Pattern', '', 'text', 'pattern_text', 30),
-                        array('', '', 'note', 'The pattern is bound to some rules:<UL style="margin : 0px; padding-left : 1.5em;"><LI>It must start with \'{\' and end with \'}\'.</LI><LI>It can contain letters, numbers, spaces, some special characters (:;,_-) and references ([1] to [99]).</LI><LI>It must be 3-20 characters long.</LI><LI>Two or more references directly after each other must be separated by at least one character to keep the two apart.</LI></UL>'),
+                        array('', '', 'note', 'The pattern is bound to some rules:<UL style="margin : 0px; padding-left : 1.5em;"><LI>It must start with \'{\' and end with \'}\'.</LI><LI>It can contain letters, numbers, spaces, some special characters (:;,_-) and references ([1] to [9]).</LI><LI>It must be 3-25 characters long.</LI><LI>Two or more references directly after each other must be separated by at least one character to keep the two apart.</LI></UL>'),
                         array('Replacement text', '', 'textarea', 'replace_text', 40, 3),
                         array('', '', 'note', 'Make sure you use all references from the pattern in the replacement text.'),
                         array('Link description', 'To aid other users in using your custom link, please provide some information on what the link is for and how to use the references.', 'textarea', 'description', 40, 3),
                         'skip',
                         array('', '', 'print', '<B>Link settings</B>'),
-                        array('Active for columns', '', 'select', 'active_columns', $nFieldSize, $aData, false, true, false),
+                        array('Active for columns', '', 'print', $sSelect),
                   );
 
         return parent::getForm();

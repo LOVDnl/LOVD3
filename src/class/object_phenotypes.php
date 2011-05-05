@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-04
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,7 +52,6 @@ class LOVD_Phenotype extends LOVD_Custom {
     function LOVD_Phenotype ($sObjectID = '')
     {
         // Default constructor.
-        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         //$this->sSQLLoadEntry = 'SELECT p.*, ' .
@@ -90,19 +89,14 @@ class LOVD_Phenotype extends LOVD_Custom {
                  array(
                         'owner' => 'Owner name',
                         'status' => 'Individual data status',
-                        'created_by_' => 'Created by',
-                        'created_date_' => 'Date created',
-                        'edited_by_' => 'Last edited by',
-                        'valid_from_' => 'Valid from',
+                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
+                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
+                        'valid_from_' => array('Valid from', LEVEL_COLLABORATOR),
                       ));
 
         // Because the gene information is publicly available, remove some columns for the public.
-        if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
-            unset($this->aColumnsViewEntry['created_by_']);
-            unset($this->aColumnsViewEntry['created_date_']);
-            unset($this->aColumnsViewEntry['edited_by_']);
-            unset($this->aColumnsViewEntry['valid_from_']);
-        }
+        $this->unsetColsByAuthLevel();
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(

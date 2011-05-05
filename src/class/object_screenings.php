@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-04
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,7 +52,6 @@ class LOVD_Screening extends LOVD_Custom {
     function LOVD_Screening ()
     {
         // Default constructor.
-        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT s.*, ' .
@@ -93,20 +92,14 @@ class LOVD_Screening extends LOVD_Custom {
                  $this->buildViewEntry(),
                  array(
                         'owner_' => 'Owner name',
-                        'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
-                        'edited_by_' => 'Last edited by',
-                        'valid_from_' => 'Date edited',
+                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
+                        'created_date' => array('Date created', LEVEL_COLLABORATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
+                        'valid_from_' => array('Date edited', LEVEL_COLLABORATOR),
                       ));
 
         // Because the gene information is publicly available, remove some columns for the public.
-        if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
-            // FIXME; Misschien een functie van maken? $this->unsetCol('created_by_', 'created_date_', 'edited_by_', 'edited_date_') o.i.d?
-            unset($this->aColumnsViewEntry['created_by_']);
-            unset($this->aColumnsViewEntry['created_date_']);
-            unset($this->aColumnsViewEntry['edited_by_']);
-            unset($this->aColumnsViewEntry['valid_from_']);
-        }
+        $this->unsetColsByAuthLevel();
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-04
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,7 +51,6 @@ class LOVD_Disease extends LOVD_Object {
     function LOVD_Disease ()
     {
         // Default constructor.
-        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT d.*, ' .
@@ -88,19 +87,14 @@ class LOVD_Disease extends LOVD_Object {
                         'name' => 'Name',
                         'id_omim' => 'OMIM ID',
                         'genes_' => 'Associated with genes',
-                        'created_by_' => 'Created by',
-                        'created_date_' => 'Date created',
-                        'edited_by_' => 'Last edited by',
-                        'edited_date_' => 'Date last edited',
+                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
+                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
                       );
 
         // Because the disease information is publicly available, remove some columns for the public.
-        if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
-            unset($this->aColumnsViewEntry['created_by_']);
-            unset($this->aColumnsViewEntry['created_date_']);
-            unset($this->aColumnsViewEntry['edited_by_']);
-            unset($this->aColumnsViewEntry['edited_date_']);
-        }
+        $this->unsetColsByAuthLevel();
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
@@ -144,6 +138,21 @@ class LOVD_Disease extends LOVD_Object {
                         'name',
                       );
         parent::checkFields($aData);
+        
+        $qGenes = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS genes FROM ' . TABLE_GENES, array());
+        $aGenes = mysql_fetch_row($qGenes);
+        $aGenes = explode(',', $aGenes[0]);
+        if (isset($aData['active_genes'])) {
+            foreach ($aData['active_genes'] as $sGene) {
+                if (!in_array($sGene, $aGenes)) {
+                    var_dump($sGene);
+                    var_dump($aGenes);
+                    if ($sGene != 'None') {
+                        lovd_errorAdd('active_genes', 'Please select a proper gene in the \'This disease has been linked to these genes\' selection box');
+                    }
+                }
+            }
+        }
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
@@ -158,13 +167,18 @@ class LOVD_Disease extends LOVD_Object {
         // Build the form.
 
         // Get list of genes, to connect disease to gene.
-        $aData = array();
+        $aGenesForm = array();
         $qData = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_GENES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
-        $nFieldSize = ($nData < 20? $nData : 20);
-        while ($r = mysql_fetch_row($qData)) {
-            $aData[$r[0]] = $r[1];
+        if ($nData) {
+            while ($r = mysql_fetch_row($qData)) {
+                $aGenesForm[$r[0]] = $r[1];
+            }
+        } else {
+            $aGenesForm = array('None' => 'No gene entries available');
         }
+        
+        $nFieldSize = (count($aGenesForm) < 20? count($aGenesForm) : 20);
 
         // Array which will make up the form table.
         $this->aFormData =
@@ -176,7 +190,7 @@ class LOVD_Disease extends LOVD_Object {
                         array('OMIM ID', '', 'text', 'id_omim', 10),
                         'skip',
                         array('', '', 'print', '<B>Relation to genes</B>'),
-                        array('This disease has been linked to these genes', '', 'select', 'active_genes', $nFieldSize, $aData, false, true, false),
+                        array('This disease has been linked to these genes', '', 'select', 'active_genes', $nFieldSize, $aGenesForm, false, true, false),
                   );
 
         return parent::getForm();

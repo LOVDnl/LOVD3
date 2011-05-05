@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-05
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -73,7 +73,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual($nID);
     $zData = $_DATA->viewEntry($nID);
-    
+
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
@@ -85,7 +85,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-    
+
     $_GET['search_individualid'] = $nID;
     $_GET['search_diseaseid'] = (!empty($zData['diseaseids'])? str_replace(',', '|', $zData['diseaseids']) : '0');
     print('<BR><BR>' . "\n\n");
@@ -96,20 +96,22 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
         $_DATA->viewList(false, 'diseaseid', true, true);
         print('<BR><BR>' . "\n\n");
         lovd_printHeader('Phenotypes', 'H4');
-        $zData['diseases'] = explode(';;', $zData['diseases']);
-        $zData['diseases'] = array_map('explode', array_fill(0, count($zData['diseases']),';'), $zData['diseases']);
-        if ($zData['phenotypeids']) {
+        if (!empty($zData['phenotypes'])) {
+            $zData['diseases'] = explode(';;', $zData['diseases']);
+            $zData['diseases'] = array_map('explode', array_fill(0, count($zData['diseases']),';'), $zData['diseases']);
             require ROOT_PATH . 'class/object_phenotypes.php';
             foreach($zData['diseases'] as $aDisease) {
-                $_GET['search_diseaseid'] = $aDisease[0];
-                $_DATA = new LOVD_Phenotype($aDisease[0]);
-                $_DATA->setSortDefault('phenotypeid');
-                print('<B>' . $aDisease[2] . ' (<A href="diseases/' . $aDisease[0] . '">' . $aDisease[1] . '</A>)</B>');
-                $_DATA->viewList(false, array('individualid', 'diseaseid'), true, true);
+                if (substr_count($zData['phenotypes'], ';' . $aDisease[0])) {
+                    $_GET['search_diseaseid'] = $aDisease[0];
+                    $_DATA = new LOVD_Phenotype($aDisease[0]);
+                    $_DATA->setSortDefault('phenotypeid');
+                    print('<B>' . $aDisease[2] . ' (<A href="diseases/' . $aDisease[0] . '">' . $aDisease[1] . '</A>)</B>');
+                    $_DATA->viewList(false, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
+                }
             }
         } else {
             print('<BR>' . "\n");
-            lovd_showInfoTable('No phenotype entries found for this disease', 'stop');
+            lovd_showInfoTable('No phenotype entries found for this individual', 'stop');
         }
     } else {
         print('<BR>' . "\n");
@@ -417,13 +419,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
         if (!lovd_error()) {
             // Query text.
             // This also deletes the entries in gen2dis and transcripts.
-            // FIXME; implement deleteEntry()
-            $sSQL = 'DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?';
-            $aSQL = array($nID);
-            $q = lovd_queryDB($sSQL, $aSQL);
-            if (!$q) {
-                lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
-            }
+            $_DATA->deleteEntry($nID);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted individual information entry ' . $nID . ' (Owner: ' . $zData['owner'] . ')');

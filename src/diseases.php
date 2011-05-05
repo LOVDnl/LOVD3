@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-04-26
+ * Modified    : 2011-05-04
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -179,14 +179,19 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             // Add genes.
             $aSuccess = array();
-            foreach ($_POST['active_genes'] as $sGene) {
-                // Add gene to disease.
-                $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
-                if (!$q) {
-                    // Silent error.
-                    lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
-                } else {
-                    $aSuccess[] = $sGene;
+            if (isset($_POST['active_genes'])) {
+                if (!in_array('None', $_POST['active_genes'])) {
+                    $aSuccess = array();
+                    foreach ($_POST['active_genes'] as $sGene) {
+                        // Add gene to disease.
+                        $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
+                        if (!$q) {
+                            // Silent error.
+                            lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
+                        } else {
+                            $aSuccess[] = $sGene;
+                        }
+                    }
                 }
             }
             if (count($aSuccess)) {
@@ -288,39 +293,43 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             $aGenes = explode(';', $zData['active_genes_']);
 
             // Remove genes.
-            $aSuccess = array();
-            foreach ($aGenes AS $sGene) {
+            $aToRemove = array();
+            foreach ($aGenes as $sGene) {
                 if ($sGene && !in_array($sGene, $_POST['active_genes'])) {
                     // User has requested removal...
-                    $q = lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid = ?', array($sGene, $nID));
-                    if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be removed from gene ' . $sGene);
-                    } else {
-                        $aSuccess[] = $sGene;
-                    }
+                    $aToRemove[] = $sGene;
                 }
             }
-            if (count($aSuccess)) {
-                lovd_writeLog('Event', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - successfully removed from gene(s) ' . implode(', ', $aSuccess));
+            if ($aToRemove) {
+                $q = lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
+                if (!$q) {
+                    // Silent error.
+                    lovd_writeLog('Error', LOG_EVENT, 'Gene information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from disease ' . $nID);
+                } else {
+                    lovd_writeLog('Event', LOG_EVENT, 'Gene information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' successfully removed from disease ' . $nID);
+                }
             }
 
             // Add genes.
             $aSuccess = array();
+            $aFailed = array();
             foreach ($_POST['active_genes'] as $sGene) {
-                if (!in_array($sGene, $aGenes)) {
-                    // Add gene to disease.
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
+                if (!in_array($sGene, $aGenes) && $sGene != 'None') {
+                    // Add gene to gene.
+                    $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
                     if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
+                        $aFailed[] = $sGene;
                     } else {
                         $aSuccess[] = $sGene;
                     }
                 }
             }
-            if (count($aSuccess)) {
-                lovd_writeLog('Event', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - successfully added to gene(s) ' . implode(', ', $aSuccess));
+            if ($aFailed) {
+                // Silent error.
+                lovd_writeLog('Error', LOG_EVENT, 'Gene information entr' . (count($aFailed) == 1? 'y' : 'ies') . ' ' . implode(', ', $aFailed) . ' could not be added to disease ' . $nID);
+            }
+            if ($aSuccess) {
+                lovd_writeLog('Event', LOG_EVENT, 'Gene information entr' . (count($aSuccess) == 1? 'y' : 'ies') . ' ' . implode(', ', $aSuccess) . ' successfully added to disease ' . $nID);
             }
 
             // Thank the user...
@@ -410,8 +419,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
         if (!lovd_error()) {
             // Query text.
             // This also deletes the entries in gen2dis.
-            // FIXME; implement deleteEntry()
-            lovd_queryDB('DELETE FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($nID), true);
+            $_DATA->deleteEntry($nID);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted disease information entry ' . $nID . ' - ' . $zData['symbol'] . ' (' . $zData['name'] . ')');

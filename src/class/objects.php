@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-05
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -181,7 +181,11 @@ class LOVD_Object {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::deleteEntry() - Method didn\'t receive ID');
         } else {
             if ($this->getCount($nID)) {
-                lovd_queryDB('DELETE FROM ' . constant($this->sTable) . ' WHERE id = ?', array($nID));
+                $sSQL = 'DELETE FROM ' . constant($this->sTable) . ' WHERE id = ?';
+                $q = lovd_queryDB($sSQL, array($nID));
+                if (!$q) {
+                    lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::deleteEntry()'), $sSQL, mysql_error());
+                }
             }
         }            
     }
@@ -243,6 +247,9 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
+            if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT') {
+                $aData[$sField] = ($aData[$sField] === ''? NULL : $aData[$sField]);
+            }
             $aSQL[] = $aData[$sField];
         }
         $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
@@ -321,7 +328,6 @@ class LOVD_Object {
 
     function prepareData ($zData = '', $sView = 'list')
     {
-        // Stub; this thing is just here to prevent an error message when a child class has not defined this function.
         if (!is_array($zData)) {
             $zData = array();
         }
@@ -377,6 +383,24 @@ class LOVD_Object {
 
 
 
+    function unsetColsByAuthLevel ()
+    {
+        // Unset columns not allowed to be visible for the current user level.
+        global $_AUTH;
+        
+        foreach($this->aColumnsViewEntry as $sCol => $Col) {
+            if (is_array($Col)) {
+                if (!$_AUTH || $_AUTH['level'] < $Col[1]) {
+                    unset($this->aColumnsViewEntry[$sCol]);
+                }
+            }
+        }
+    }
+    
+    
+    
+    
+    
     function updateEntry ($nID, $aData, $aFields = array())
     {
         // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
@@ -394,6 +418,9 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
+            if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT') {
+                $aData[$sField] = ($aData[$sField] === ''? NULL : $aData[$sField]);
+            }
             $aSQL[] = $aData[$sField];
         }
         $sSQL .= ' WHERE id = ?';
@@ -464,7 +491,8 @@ class LOVD_Object {
 
         // Print the data.
         print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
-        foreach ($this->aColumnsViewEntry as $sField => $sHeader) {
+        foreach ($this->aColumnsViewEntry as $sField => $header) {
+            $sHeader = (is_array($header)? $header[0] : $header);
             if (preg_match("/TableStart/", $sField)) {
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
             } elseif (preg_match("/TableHeader/", $sField)) {
@@ -493,6 +521,8 @@ class LOVD_Object {
 
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOnlyRows = false)
     {
+        global $_PATH_ELEMENTS;
+
         // Views list of entries in the database, allowing search.
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
 
@@ -738,69 +768,93 @@ class LOVD_Object {
             }
         }
 
-        // Only print stuff if we're not just loading one entry right now.
-        if (!$bOnlyRows) {
-            if (!$bAjax) {
-                print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
-            }
-
-            if (!$bHideNav) {
-                lovd_pagesplitShowNav($sViewListID, $nTotal);
-            }
-
-            // Table and search headers (if applicable).
-            print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
-                  '        <THEAD>' . "\n" .
-                  '        <TR>');
-
-            foreach ($this->aColumnsViewList as $sField => $aCol) {
-                if (in_array($sField, $aColsToSkip)) {
-                    continue;
-                }
-
-                $bSortable   = !empty($aCol['db'][1]);
-                $bSearchable = !empty($aCol['db'][2]);
-                $sImg = '';
-                $sAlt = '';
-                if ($bSortable && $aOrder[0] == $sField) {
-                    $sImg = ($aOrder[1] == 'DESC'? '_desc' : '_asc');
-                    $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
-                }
-                print("\n" . '          <TH valign="top"' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . '>' . "\n" .
-                             '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
-                        (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
-                             "\n" .
-                             '            <DIV onclick="document.forms[\'viewlistForm_' . $sViewListID . '\'].order.value=\'' . $sField . ',' . ($aOrder[0] == $sField? ($aOrder[1] == 'ASC'? 'DESC' : 'ASC') : $aCol['db'][1]) . '\';lovd_submitList(\'' . $sViewListID . '\');">' . "\n" .
-                             '              <IMG src="gfx/order_arrow' . $sImg . '.png" alt="' . $sAlt . '" title="' . $sAlt . '" width="13" height="12" style="float : right; margin-top : 2px;">' . str_replace(' ', '&nbsp;', $aCol['view'][0]) . '</DIV>') .
-                        (!$bSearchable? '' :
-                             "\n" .
-                             // SetTimeOut() is necessary because if the function gets executed right away, selecting a previously used value from a *browser-generated* list in one of the fields, gets aborted and it just sends whatever is typed in at that moment.
-                             '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain..." style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_submitList(\\\'' . $sViewListID . '\\\')\', 0); }">') .
-                      '</TH>');
-            }
-            print('</TR></THEAD>');
-        }
-
         // If no results are found, quit here.
         if (!$nTotal) {
-            // Searched, but no results. FIXME: link to the proper documentation entry about search expressions
-            $sBadSyntaxColumns = implode(', ', array_unique($aBadSyntaxColumns));
-            // FIXME; use an IF here.
-            $sMessageNormal = 'No results have been found that match your criteria.<BR>Please redefine your search criteria.';
-            $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) >= 2? 's' : '') . ' contain incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';
-            $sMessage = (empty($aBadSyntaxColumns)? $sMessageNormal : $sMessageBadSyntax);
-            if ($bOnlyRows) {
-                die('0'); // Silent error.
+            $bSearched = false;
+            foreach ($_GET as $key => $value) {
+                if (substr($key, 0, 7) == 'search_') {
+                    $sColumn = substr($key, 7);
+                    if (!in_array($sColumn, $aColsToSkip)) {
+                        $bSearched = true;
+                        break;
+                    }
+                }
             }
-            print('</TABLE>' . "\n");
-            if (!$bHideNav) {
-                print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
-                      '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
+        }
+        
+        if ($nTotal || $bSearched) {
+            // Only print stuff if we're not just loading one entry right now.
+            if (!$bOnlyRows) {
+                if (!$bAjax) {
+                    print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
+                }
+
+                if (!$bHideNav) {
+                    lovd_pagesplitShowNav($sViewListID, $nTotal);
+                }
+
+                // Table and search headers (if applicable).
+                print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
+                      '        <THEAD>' . "\n" .
+                      '        <TR>');
+
+                foreach ($this->aColumnsViewList as $sField => $aCol) {
+                    if (in_array($sField, $aColsToSkip)) {
+                        continue;
+                    }
+
+                    $bSortable   = !empty($aCol['db'][1]);
+                    $bSearchable = !empty($aCol['db'][2]);
+                    $sImg = '';
+                    $sAlt = '';
+                    if ($bSortable && $aOrder[0] == $sField) {
+                        $sImg = ($aOrder[1] == 'DESC'? '_desc' : '_asc');
+                        $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
+                    }
+                    print("\n" . '          <TH valign="top"' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . '>' . "\n" .
+                                 '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
+                            (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
+                                 "\n" .
+                                 '            <DIV onclick="document.forms[\'viewlistForm_' . $sViewListID . '\'].order.value=\'' . $sField . ',' . ($aOrder[0] == $sField? ($aOrder[1] == 'ASC'? 'DESC' : 'ASC') : $aCol['db'][1]) . '\';lovd_submitList(\'' . $sViewListID . '\');">' . "\n" .
+                                 '              <IMG src="gfx/order_arrow' . $sImg . '.png" alt="' . $sAlt . '" title="' . $sAlt . '" width="13" height="12" style="float : right; margin-top : 2px;">' . str_replace(' ', '&nbsp;', $aCol['view'][0]) . '</DIV>') .
+                            (!$bSearchable? '' :
+                                 "\n" .
+                                 // SetTimeOut() is necessary because if the function gets executed right away, selecting a previously used value from a *browser-generated* list in one of the fields, gets aborted and it just sends whatever is typed in at that moment.
+                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain..." style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_submitList(\\\'' . $sViewListID . '\\\')\', 0); }">') .
+                          '</TH>');
+                }
+                print('</TR></THEAD>');
             }
-            print('      </DIV></FORM><BR>' . "\n\n");
-            lovd_showInfoTable($sMessage, 'stop');
-            return true;
+        }
+
+        if (!$nTotal) {
+            if ($bSearched) {
+                // Searched, but no results. FIXME: link to the proper documentation entry about search expressions
+                $sBadSyntaxColumns = implode(', ', array_unique($aBadSyntaxColumns));
+                // FIXME; use an IF here.
+                $sMessageNormal = 'No results have been found that match your criteria.<BR>Please redefine your search criteria.';
+                $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) >= 2? 's' : '') . ' contain incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';
+                $sMessage = (empty($aBadSyntaxColumns)? $sMessageNormal : $sMessageBadSyntax);
+                if ($bOnlyRows) {
+                    die('0'); // Silent error.
+                }
+                print('</TABLE>' . "\n");
+                if (!$bHideNav) {
+                    print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
+                          '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
+                          '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
+                }
+                print('      </DIV></FORM><BR>' . "\n\n");
+                lovd_showInfoTable($sMessage, 'stop');
+                return true;
+            } else {
+                $sMessage = 'No entries found for this ' . substr($_PATH_ELEMENTS[0], 0, -1) . '!';
+                if ($bOnlyRows) {
+                    die('0'); // Silent error.
+                }
+                lovd_showInfoTable($sMessage, 'stop');
+                return true;
+            }
         }
 
         while ($zData = mysql_fetch_assoc($q)) {

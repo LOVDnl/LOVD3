@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-02
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -245,9 +245,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_GENES . ' DROP FOREIGN KEY ' . TABLE_GENES . '_ibfk_3',
                                     'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_1',
                                     'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_2',
-                                    'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_3',
-                                    'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_4',
-                                    'ALTER TABLE ' . TABLE_CURATES . ' DROP FOREIGN KEY ' . TABLE_CURATES . '_ibfk_5',
                                     'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_TRANSCRIPTS . '_ibfk_1',
                                     'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_TRANSCRIPTS . '_ibfk_2',
                                     'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_TRANSCRIPTS . '_ibfk_3',

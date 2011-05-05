@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2011-04-26
+ * Modified    : 2011-05-04
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -371,8 +371,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
         if (!lovd_error()) {
             // Query text.
             // This also deletes the entries in cols2links.
-            // FIXME; implement deleteEntry()
-            lovd_queryDB('DELETE FROM ' . TABLE_LINKS . ' WHERE id = ?', array($nID), true);
+            $_DATA->deleteEntry($nID);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted custom link ' . $nID . ' - ' . $zData['name'] . ' (' . $zData['pattern_text'] . ')');

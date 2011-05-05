@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-04-26
+ * Modified    : 2011-05-03
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,7 +51,6 @@ class LOVD_Gene extends LOVD_Object {
     function LOVD_Gene ()
     {
         // Default constructor.
-        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT g.*, ' .
@@ -106,6 +105,7 @@ class LOVD_Gene extends LOVD_Object {
                         'chrom_band' => 'Chromosomal band',
                         'refseq_genomic' => 'Genomic reference',
                         'diseases_' => 'Associated with diseases',
+                        'reference' => 'Citation reference(s)',
                         'url_homepage' => 'Homepage URL',
                         'url_external' => 'External URL',
                         'allow_download_' => 'Allow public to download all variant entries',
@@ -118,12 +118,12 @@ class LOVD_Gene extends LOVD_Object {
                         'disclaimer_text_' => 'Disclaimer Text',
                         'header_' => 'Header',
                         'footer_' => 'Footer',
-                        'created_by_' => 'Created by',
-                        'created_date_' => 'Date created',
-                        'edited_by_' => 'Last edited by',
-                        'edited_date_' => 'Date last edited',
-                        'updated_by_' => 'Last updated by',
-                        'updated_date_' => 'Date last update',
+                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
+                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'updated_by_' => array('Last updated by', LEVEL_COLLABORATOR),
+                        'updated_date_' => array('Date last update', LEVEL_COLLABORATOR),
                         'TableEnd_General' => '',
                         'HR_1' => '',
                         'TableStart_Links' => '',
@@ -138,15 +138,7 @@ class LOVD_Gene extends LOVD_Object {
                       );
 
         // Because the gene information is publicly available, remove some columns for the public.
-        if (!$_AUTH || $_AUTH['level'] < LEVEL_COLLABORATOR) {
-            // FIXME; Misschien een functie van maken? $this->unsetCol('created_by_', 'created_date_', 'edited_by_', 'edited_date_', 'updated_by_', 'updated_date_') o.i.d?
-            unset($this->aColumnsViewEntry['created_by_']);
-            unset($this->aColumnsViewEntry['created_date_']);
-            unset($this->aColumnsViewEntry['edited_by_']);
-            unset($this->aColumnsViewEntry['edited_date_']);
-            unset($this->aColumnsViewEntry['updated_by_']);
-            unset($this->aColumnsViewEntry['updated_date_']);
-        }
+        $this->unsetColsByAuthLevel();
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
@@ -397,8 +389,7 @@ class LOVD_Gene extends LOVD_Object {
                         array('', '', 'note', 'You can use the following fields to customize the gene\'s LOVD gene homepage.'),
                         'hr',
                         array('Citation reference(s)', '', 'textarea', 'reference', 30, 3),
-                        //array('', '', 'note', '(Active custom link : <A href="#" onclick="javascript:lovd_openWindow(\'' . ROOT_PATH . 'links.php?view=1&amp;col=Gene/Reference\', \'LinkView\', \'800\', \'200\'); return false;">PubMed</A>)'),
-                        array('', '', 'note', '(Active custom link : <A href="#" onmouseover="lovd_showToolTip(\'Links to abstracts in the PubMed database.<BR>[1] = The name of the author(s).<BR>[2] = The PubMed ID.\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'{PMID:[1]:[2]}\'); return false">Pubmed</A>)'),
+                        array('', '', 'note', '(Active custom link : <A href="#" onmouseover="lovd_showToolTip(\'Click to insert:<BR>{PMID:[1]:[2]}<BR><BR>Links to abstracts in the PubMed database.<BR>[1] = The name of the author(s).<BR>[2] = The PubMed ID.\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'{PMID:[1]:[2]}\'); return false">Pubmed</A>)'),
                         'hr',
                         array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, false, false, false),
                         array('', '', 'note', 'If you want a disclaimer added to the gene\'s LOVD gene homepage, select your preferred option here.'),
@@ -486,6 +477,10 @@ class LOVD_Gene extends LOVD_Object {
                 }
             }
             
+            if (isset($zData['reference'])) {
+                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="http://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+            }
+            
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID);
@@ -495,7 +490,7 @@ class LOVD_Gene extends LOVD_Object {
                     $zData[$sColID . '_'] = '';
                 }
             }
-        }
+        }        
 
         return $zData;
     }

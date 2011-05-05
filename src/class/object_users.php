@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-04-12
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-05-04
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -51,7 +51,6 @@ class LOVD_User extends LOVD_Object {
     function LOVD_User ()
     {
         // Default constructor.
-        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT *, (login_attempts >= 3) AS locked ' .
@@ -95,9 +94,9 @@ class LOVD_User extends LOVD_Object {
                         'country_' => 'Country',
                         'email' => 'Email address',
                         'reference' => 'Reference',
-                        'username' => 'Username',
-                        'password_force_change_' => 'Force change password',
-                        'phpsessid' => 'Session ID',
+                        'username' => array('Username', LEVEL_COLLABORATOR),
+                        'password_force_change_' => array('Force change password', LEVEL_COLLABORATOR),
+                        'phpsessid' => array('Session ID', LEVEL_COLLABORATOR),
                         'current_db' => 'Current gene',
                         'saved_work_' => 'Saved work',
                         'curates_' => 'Curator for',
@@ -106,23 +105,17 @@ class LOVD_User extends LOVD_Object {
                         'allowed_ip_' => 'Allowed IP address list',
                         'status_' => 'Status',
                         'locked_' => 'Locked',
-                        'last_login' => 'Last login',
-                        'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
-                        'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
+                        'last_login' => array('Last login', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
+                        'created_date' => array('Date created', LEVEL_COLLABORATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
+                        'edited_date' => array('Date last edited', LEVEL_COLLABORATOR),
                       );
 
         // Because the user information is publicly available, remove some columns for the public.
         // FIXME; Dit moet eigenlijk per user anders; curatoren mogen deze info wel van submitters zien.
         // Dus eigenlijk if ($_AUTH['level'] <= $zData['level']) maar we hebben hier geen $zData...
-        if ($_AUTH['level'] < LEVEL_MANAGER) {
-            unset($this->aColumnsViewEntry['username']);
-            unset($this->aColumnsViewEntry['last_login']);
-            unset($this->aColumnsViewEntry['locked_']);
-            unset($this->aColumnsViewEntry['phpsessid']);
-            unset($this->aColumnsViewEntry['password_force_change_']);
-        }
+        $this->unsetColsByAuthLevel();
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =

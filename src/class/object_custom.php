@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-05
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -85,6 +85,17 @@ class LOVD_Custom extends LOVD_Object {
             $z['form_type'] = explode('|', $z['form_type']);
             $this->aColumns[$z['id']] = $z;
         }
+        
+        // Gather the custom link information.
+        $qLinks = lovd_queryDB('SELECT c2l.colid, l.* ' .
+                               'FROM ' . TABLE_COLS2LINKS . ' AS c2l ' .
+                               'LEFT OUTER JOIN ' . TABLE_LINKS . ' AS l ON (c2l.linkid = l.id) ' .
+                               'WHERE c2l.colid LIKE "' . $this->sObject . '/%"', array());
+        while ($z = mysql_fetch_assoc($qLinks)) {
+            if (isset($this->aColumns[$z['colid']])) {
+                $this->aColumns[$z['colid']]['custom_links'][$z['id']] = $z;
+            }
+        }
 
         parent::LOVD_Object();
     }
@@ -125,20 +136,6 @@ class LOVD_Custom extends LOVD_Object {
         global $_PATH_ELEMENTS;
 
         $aFormData = array();
-
-        require_once ROOT_PATH . 'class/object_links.php';
-
-        // Gather the custom link information.
-        $qLinks = lovd_queryDB('SELECT c2l.colid, c2l.linkid, l.name ' .
-                               'FROM ' . TABLE_COLS2LINKS . ' AS c2l ' .
-                               'LEFT OUTER JOIN ' . TABLE_LINKS . ' AS l ON (c2l.linkid = l.id) ' .
-                               'WHERE c2l.colid LIKE "' . $this->sObject . '/%"', array());
-        while ($z = mysql_fetch_assoc($qLinks)) {
-            // 2008-02-29; 2.0-04; Only if column is active, duh!
-            if (isset($this->aColumns[$z['colid']])) {
-                $this->aColumns[$z['colid']]['custom_links'][$z['linkid']] = $z['name'];
-            }
-        }
 
         foreach ($this->aColumns as $sCol => $aCol) {
             // Build what type of form entry?
@@ -220,13 +217,11 @@ class LOVD_Custom extends LOVD_Object {
             }
 
             // Any custom links we want to mention?
-            $_DATA = new LOVD_Link();
             if (!empty($aCol['custom_links'])) {
                 $sLinks = '';
-                foreach ($aCol['custom_links'] as $nLink => $sLink) {
-                    $zData = $_DATA->loadEntry($nLink);
-                    $sToolTip = str_replace(array("\r\n", "'"), array('<BR>', "\'"), $zData['description']);
-                    $sLinks .= ($sLinks? ', ' : '') . '<A href="#" onmouseover="lovd_showToolTip(\'' . $sToolTip . '\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'' . $zData['pattern_text'] . '\'); return false">' . $sLink . '</A>';
+                foreach ($aCol['custom_links'] as $nLink => $aLink) {
+                    $sToolTip = str_replace(array("\r\n", "\r", "\n"), '<BR>', 'Click to insert:<BR>' . $aLink['pattern_text'] . '<BR><BR>' . addslashes(htmlspecialchars($aLink['description'])));
+                    $sLinks .= ($sLinks? ', ' : '') . '<A href="#" onmouseover="lovd_showToolTip(\'' . $sToolTip . '\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'' . $aLink['pattern_text'] . '\'); return false">' . $aLink['name'] . '</A>';
                 }
                 $aFormData[] = array('', '', 'print', '<SPAN class="S11">(Active custom link' . (count($aCol['custom_links']) == 1? '' : 's') . ' : ' . $sLinks . ')</SPAN>');
             }
@@ -266,8 +261,6 @@ class LOVD_Custom extends LOVD_Object {
         // Checks fields before submission of data.
         foreach ($aData as $sCol => $val) {
             if (isset($this->aColumns[$sCol])) {
-                //$this->checkInputType($sCol, $val);
-                //$this->checkInputLength($sCol, $val);
                 $this->checkInputRegExp($sCol, $val);
                 if ($this->aColumns[$sCol]['mandatory']) {
                     $this->aCheckMandatory[] = $sCol;
@@ -282,23 +275,6 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function checkInputLength ($sCol, $val)
-    {
-        // Checks if field input is not too long for the field.
-        $nMaxLength = $this->getFieldLength($sCol);
-        if (is_array($val)) {
-            $val = implode(';', $val);
-        }
-        $nLength = strlen($val);
-        if ($nMaxLength < $nLength) {
-            lovd_errorAdd($sCol, 'The \'' . $this->aColumns[$sCol]['form_type'][0] . '\' field is limited to ' . $nMaxLength . ' characters, you entered ' . $nLength . '.');
-        }
-    }
-
-
-
-
-
     function checkInputRegExp ($sCol, $val)
     {
         // Checks if field input corresponds to the given regexp pattern.
@@ -306,38 +282,6 @@ class LOVD_Custom extends LOVD_Object {
             if (!preg_match($this->aColumns[$sCol]['preg_pattern'], $val)) {
                 lovd_errorAdd($sCol, 'The input in the \'' . $this->aColumns[$sCol]['form_type'][0] . '\' field does not correspond to the required input pattern.');
             }
-        }
-    }
-
-
-
-
-
-    function checkInputType ($sCol, $val)
-    {
-        // Checks if field input is of the correct type.
-        $sType = $this->getFieldType($sCol);
-        switch ($sType) {
-            case 'INT':
-                if (!preg_match('/^\d+$/', $val)) {
-                    lovd_errorAdd($sCol, 'The field \'' . $this->aColumns[$sCol]['form_type'][0] . '\' must contain an integer.');
-                }
-                break;
-            case 'DEC':
-                if (!is_numeric($val)) {
-                    lovd_errorAdd($sCol, 'The field \'' . $this->aColumns[$sCol]['form_type'][0] . '\' must contain a number.');
-                }
-                break;
-            case 'DATETIME':
-                if (!preg_match('/^\d{4}[.\/-]\d{2}[.\/-]\d{2}( \d{2}\:\d{2}\:\d{2})?$/', $val)) {
-                    lovd_errorAdd($sCol, 'The field \'' . $this->aColumns[$sCol]['form_type'][0] . '\' must contain a date, possibly including a time.');
-                }
-                break;
-            case 'DATE':
-                if (!lovd_matchDate($val)) {
-                    lovd_errorAdd($sCol, 'The field \'' . $this->aColumns[$sCol]['form_type'][0] . '\' must contain a date.');
-                }
-                break;
         }
     }
 
@@ -361,61 +305,6 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function getFieldLength ($sCol)
-    {
-        // Returns the maximum number of characters a column can hold, so the input can be checked.
-        $sColType = $this->aColumns[$sCol]['mysql_type'];
-        if (preg_match('/^((TINY|SMALL|MEDIUM|BIG)?INT|(VAR)?CHAR)\((\d+)\)/', $sColType, $aRegs) && is_numeric($aRegs[4])) {
-            return $aRegs[4];
-
-        } elseif (preg_match('/^DEC\((\d+),(\d+)\)/', $sColType, $aRegs) && is_numeric($aRegs[1]) && is_numeric($aRegs[2])) {
-            return ($aRegs[1] + 1);
-
-        } elseif (preg_match('/^(TINY|MEDIUM|LONG)?(TEXT|BLOB)/', $sColType, $aRegs)) {
-            switch ($aRegs[1]) {
-                case 'TINY':
-                    return 256; // 2^8; 1 byte
-                case 'MEDIUM':
-                    return 16777216; // 2^24; 3 bytes
-                case 'LONG':
-                    return 4294967296; // 2^32; 4 bytes
-                default:
-                    return 65536; // 2^16; 2 bytes
-            }
-        } elseif (preg_match('/^DATE(TIME)?/', $sColType, $aRegs)) {
-            // 2009-06-19; 2.0-19; added DATE and DATETIME datatypes.
-            return (10 + (!empty($aRegs[1])? 9 : 0));
-        }
-
-        return 0;
-    }
-
-
-
-
-
-    function getFieldType ($sCol)
-    {
-        // Returns the column type, so the input can be checked.
-        $sColType = $this->aColumns[$sCol]['mysql_type'];
-        if (preg_match('/^((VAR)?CHAR\(\d+\)|(TINY|MEDIUM|LONG)?(TEXT|BLOB))/', $sColType)) {
-            return 'CHAR';
-        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\(\d+\)/', $sColType)) {
-            return 'INT';
-        } elseif (preg_match('/^DEC\(\d+,\d+\)/', $sColType)) {
-            return 'DEC';
-        } elseif (preg_match('/^DATETIME/', $sColType)) {
-            return 'DATETIME';
-        } elseif (preg_match('/^DATE/', $sColType)) {
-            return 'DATE';
-        }
-        return false;
-    }
-
-
-
-
-
     function initDefaultValues ()
     {
         // Initiate default values of fields in $_POST.
@@ -424,6 +313,35 @@ class LOVD_Custom extends LOVD_Object {
             // Fill $_POST with the column's default value.
             $_POST[$sCol] = $this->getDefaultValue($sCol);
         }
+    }
+    
+    
+    
+    
+    
+    function prepareData ($zData = '', $sView = 'list')
+    {
+        $zData = parent::prepareData($zData, $sView);
+        lovd_includeJS('inc-js-tooltip.php');
+        foreach ($this->aColumns as $sCol => $aCol) {
+            $bCustomLink = false;
+            if (!empty($aCol['custom_links'])) {
+                foreach ($aCol['custom_links'] as $nLink => $aLink) {
+                    $sPatternText = preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text']);
+                    $sReplaceText = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
+                    if(preg_match($sPatternText, $zData[$aCol['colid']])) {
+                        $bCustomLink = true;
+                    }
+                    if ($sView == 'list' && $bCustomLink) {
+                        //$sReplaceText = '<A onmouseover="lovd_showToolTip(\'Tooltip\');" onmouseout="lovd_hideToolTip();" onclick="return false;">' . strip_tags($sReplaceText) . '</A>';
+                        $sReplaceText = strip_tags($sReplaceText);
+                    }
+                    $zData[$aCol['colid']] = preg_replace('/' . $sPatternText . '/U', $sReplaceText, $zData[$aCol['colid']]);
+                    //$zData[$aCol['colid']] = ($sView == 'list' && $bCustomLink? '<A onmouseover="lovd_showToolTip(\'Tooltip\');" onmouseout="lovd_hideToolTip();" onclick="return false;">' . strip_tags($zData[$aCol['colid']]) . '</A>' : $zData[$aCol['colid']]);
+                }
+            }
+        }
+        return $zData;
     }
 }
 ?>

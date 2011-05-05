@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-04
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -90,6 +90,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
     $_GET['search_transcriptid'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants', 'H4');
+    print('<BR>' . "\n");
     require ROOT_PATH . 'class/object_variants.php';
     $_DATA = new LOVD_Variant();
     $_DATA->viewList(false, 'transcriptid');
@@ -488,10 +489,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
         if (!lovd_error()) {
             // Query text.
             // This also deletes the entries in variants.
-            // FIXME; implement deleteEntry()
-            $sSQL = 'DELETE FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?';
-            $aSQL = array($nID);
-            $q = lovd_queryDB($sSQL, $aSQL, true);
+            $_DATA->deleteEntry($nID);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted transcript information entry ' . $nID . ' - ' . $zData['geneid'] . ' (' . $zData['name'] . ')');

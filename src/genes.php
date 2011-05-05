@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-04
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -93,6 +93,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && !
     $_GET['search_geneid'] = $sID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Transcripts', 'H4');
+    print('<BR>' . "\n");
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $_DATA->setSortDefault('id');
@@ -561,7 +562,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             $aSuccess = array();
             $aFailed = array();
             foreach ($_POST['active_diseases'] as $nDisease) {
-                if (!in_array($nDisease, $aDiseases)) {
+                if (!in_array($nDisease, $aDiseases) && $nDisease != 'None') {
                     // Add disease to gene.
                     $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
                     if (!$q) {

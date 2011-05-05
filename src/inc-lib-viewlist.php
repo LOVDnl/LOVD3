@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2011-03-28
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-05-03
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -28,7 +29,8 @@
  *
  *************/
 
-function lovd_escapeSearchTerm ($sTerm) {
+function lovd_escapeSearchTerm ($sTerm)
+{
     // Escapes search terms entered by the user.
     // DMD_SPECIFIC; ik vind van wel!
     // FIXME; allow * for % and ? for _?
@@ -51,7 +53,7 @@ function lovd_pagesplitInit ()
     // The Init function returns $sSQLLimit, a string with the limit
     // information you need to include in your query.
     global $_SETT;
-$_SETT['list_sizes'][] = 10;
+    $_SETT['list_sizes'][] = 10;
 
     if (!empty($_GET['page']) && is_numeric($_GET['page'])) {
         $_GET['page'] = (int) $_GET['page'];
