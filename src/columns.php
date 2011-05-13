@@ -875,7 +875,7 @@ die();
                         if ($b) {
                             // Column present in this gene.
                             // 2009-02-16; 2.0-16; Added stripslashes to allow receiving quotes. This variable has been checked using regexps, so can be considered safe.
-                            $aSQL[TABLEPREFIX . '_' . $sSymbol . '_variants'] = 'ALTER TABLE ' . TABLEPREFIX . '_' . $sSymbol . '_variants MODIFY COLUMN `' . $zData['colid'] . '` ' . stripslashes($_POST['mysql_type']) . ' NOT NULL';
+                            $aSQL[TABLEPREFIX . '_' . $sSymbol . '_variants'] = 'ALTER TABLE ' . TABLEPREFIX . '_' . $sSymbol . '_variants MODIFY COLUMN `' . $zData['colid'] . '` ' . stripslashes($_POST['mysql_type']);
                         }
                     }
 
@@ -885,7 +885,7 @@ die();
                     if ($b) {
                         // Column present in patient table.
                         // 2009-02-16; 2.0-16; Added stripslashes to allow receiving quotes. This variable has been checked using regexps, so can be considered safe.
-                        $aSQL[TABLE_PATIENTS] = 'ALTER TABLE ' . TABLE_PATIENTS . ' MODIFY COLUMN `' . $zData['colid'] . '` ' . stripslashes($_POST['mysql_type']) . ' NOT NULL';
+                        $aSQL[TABLE_PATIENTS] = 'ALTER TABLE ' . TABLE_PATIENTS . ' MODIFY COLUMN `' . $zData['colid'] . '` ' . stripslashes($_POST['mysql_type']);
                     }
                 }
 
@@ -1779,7 +1779,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             // Now, start with ALTER TABLE if necessary, since that will take the longest time and ends a transaction anyway.
             // If it fails directly after this, one can always just redo the add. LOVD will detect properly that it needs to be added to the ACTIVE_COLS table, then.
             if (!$zData['active_checked']) {
-                $sSQL = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' ADD COLUMN `' . $zData['id'] . '` ' . $zData['mysql_type'] . ' NOT NULL';
+                $sSQL = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' ADD COLUMN `' . $zData['id'] . '` ' . $zData['mysql_type'];
                 $dStart = time();
                 $q = lovd_queryDB($sSQL);
                 if (!$q) {

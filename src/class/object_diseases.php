@@ -101,7 +101,7 @@ class LOVD_Disease extends LOVD_Object {
                  array(
                         'diseaseid' => array(
                                     'view' => array('ID', 45),
-                                    'db'   => array('diseaseid', 'ASC', 'INT_UNSIGNED')),
+                                    'db'   => array('d.id', 'ASC', true)),
                         'symbol' => array(
                                     'view' => array('Abbreviation', 110),
                                     'db'   => array('d.symbol', 'ASC', true)),
@@ -138,16 +138,23 @@ class LOVD_Disease extends LOVD_Object {
                         'name',
                       );
         parent::checkFields($aData);
-        
-        $qGenes = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS genes FROM ' . TABLE_GENES, array());
+
+        // FIXME; eerst een concat om daarna te exploden???
+        $qGenes = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS genes FROM ' . TABLE_GENES);
         $aGenes = mysql_fetch_row($qGenes);
         $aGenes = explode(',', $aGenes[0]);
+        // FIXME; ik denk dat de query naar binnen deze if moet.
+        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
+        //   De parent checkFields vraagt de getForm() namelijk al op.
         if (isset($aData['active_genes'])) {
+            // FIXME; zou er een check op moeten, of dit wel een array is?
             foreach ($aData['active_genes'] as $sGene) {
                 if (!in_array($sGene, $aGenes)) {
-                    var_dump($sGene);
-                    var_dump($aGenes);
+                    // FIXME; kunnen we van deze None af?
                     if ($sGene != 'None') {
+                        // FIXME; een if binnen een if kan ook in één if.
+                        // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($sGene) . ' does not exist" of zoiets.
+                        // FIXME; probeer de naam van het veld via het formulier te achterhalen.
                         lovd_errorAdd('active_genes', 'Please select a proper gene in the \'This disease has been linked to these genes\' selection box');
                     }
                 }
@@ -170,14 +177,17 @@ class LOVD_Disease extends LOVD_Object {
         $aGenesForm = array();
         $qData = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_GENES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
+        // FIXME; aangezien $aGenesForm leeg zal zijn als $nData 0 is, stel ik voor deze while buiten de if te doen,
+        //   dan de if om te draaien. Dan heb je geen else nodig.
         if ($nData) {
             while ($r = mysql_fetch_row($qData)) {
                 $aGenesForm[$r[0]] = $r[1];
             }
         } else {
+            // FIXME; is het niet makkelijker om hier geen value op te geven ipv "None"? Het is toch geen verplicht veld, dus als ie geselecteerd wordt,
+            // wordt de waarde automatisch genegeerd. Nu moest je een uitzondering plaatsen in checkFields() en genes.php.
             $aGenesForm = array('None' => 'No gene entries available');
         }
-        
         $nFieldSize = (count($aGenesForm) < 20? count($aGenesForm) : 20);
 
         // Array which will make up the form table.

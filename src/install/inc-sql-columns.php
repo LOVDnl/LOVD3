@@ -56,7 +56,7 @@ DMD_SPECIFIC
 */
                 // What to do with this?
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Occurrence",                0, 200, 0, 0, 0, "Occurrence",           "", "Occurrence", "Occurrence", "VARCHAR(8)", "Occurrence||select|1|Unknown|false|false", "Familial\r\nSporadic", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
-                'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Gender",                    0,  70, 0, 0, 0, "Gender",               "", "Individual gender", "Individual gender", "VARCHAR(7) NOT NULL", "Gender||select|1|--Not specified--|false|false", "Female\r\nMale\r\nUnknown", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
+                'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Gender",                    0,  70, 0, 0, 0, "Gender",               "", "Individual gender", "Individual gender", "VARCHAR(7)", "Gender||select|1|--Not specified--|false|false", "Female\r\nMale\r\nUnknown", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
                 // What to do with this? (2)
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Mutation/Origin",           0, 200, 0, 0, 0, "Mut. origin",          "", "Origin of mutation", "Origin of mutation", "VARCHAR(9)", "Origin of mutation||select|1|Unknown|false|false", "De novo\r\nInherited", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Mutation/Origin_De_Novo",   0, 200, 0, 0, 0, "De novo origin",       "", "If de novo, origin of mutation", "If de novo, origin of mutation", "VARCHAR(11)", "If de novo, origin of mutation||select|1|true|false|false", "Individual\r\nFather\r\nMother\r\nGrandfather\r\nGrandmother", "", 1, 1, 1, 1, NOW(), NULL, NULL)',

@@ -64,6 +64,8 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
+// FIXME; \w does not match all allowed characters in a gene symbol. This should change.
+// NOTE that if this is loosened, you may need to clean $_PATH_ELEMENTS[1] before printing it on the screen!!!
 if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /genes/DMD
     // View specific entry.
@@ -224,14 +226,13 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress(66);
                 $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $sRefseqUD, 'geneName' => $sSymbol));
+                // FIXME; deze IF-boom kan net wat simpeler denk ik, waardoor je niet twee keer hoeft te checken of $aOutput leeg is. Scheelt een niveau.
                 if (!is_array($aOutput) && !empty($aOutput)) {
                     $_MutalyzerWS->soapError('getTranscriptsAndInfo', array('genomicReference' => $sRefseqUD, 'geneName' => $sSymbol), $aOutput);
                 } else {
-                    if (empty($aOutput)) {
-                        $aTranscripts = array();
-                    } else {
+                    $aTranscripts = array();
+                    if (!empty($aOutput)) {
                         $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
-                        $aTranscripts = array();
                         $aTranscriptsName = array();
                         $aTranscriptsPositions = array();
                         $aTranscriptsProtein = array();
@@ -273,9 +274,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 print('<SCRIPT type="text/javascript">' . "\n" .
                       '  document.forms[\'createGene\'].submit();' . "\n" .
                       '</SCRIPT>' . "\n\n");
-            
+
                 lovd_checkXSS();
-            
+
                 print('</BODY>' . "\n" .
                   '</HTML>' . "\n");
                 exit;
@@ -313,17 +314,17 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
-    
-    
-    
-    
+
+
+
+
     if ($_SESSION['work'][$_POST['workID']]['step'] == '2') {
         $zData = $_SESSION['work'][$_POST['workID']]['values'];
         if (count($_POST) > 1) {
             lovd_errorClean();
 
             $_DATA->checkFields($_POST);
-            
+
             if (!lovd_error()) {
                 // Fields to be used.
                 $aFields = array(
@@ -345,9 +346,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_POST['id_hgnc'] = $zData['id_hgnc'];
                 $_POST['id_entrez'] = ($zData['id_entrez']? $zData['id_entrez'] : '');
                 $_POST['id_omim'] = ($zData['id_omim']? $zData['id_omim'] : '');
-                
+
                 $_DATA->insertEntry($_POST, $aFields);
-                
+
+                // FIXME; put this block and the next in a function.
                 $qAddedCustomCols = lovd_queryDB('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS);
                 while ($aCol = mysql_fetch_assoc($qAddedCustomCols)) {
                     $aAdded[] = $aCol['Field'];
@@ -371,8 +373,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 // Add diseases.
                 $aSuccessDiseases = array();
                 if (isset($_POST['active_diseases'])) {
+                    // FIXME; een if in een if kun je samen trekken.
+                    // FIXME; probeer van deze "None" af te komen.
+                    // FIXME; zou er nog gecontroleerd moeten worden of 't een array is?
                     if (!in_array('None', $_POST['active_diseases'])) {
-                        $aSuccessDiseases = array();
+                        // FIXME; dit is $nDisease.
                         foreach ($_POST['active_diseases'] as $sDisease) {
                             // Add disease to gene.
                             $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $sDisease));
@@ -387,8 +392,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 }
                 
                 // Add transcripts.
+                // FIXME; deze code is voor mij niet goed interpreteerbaar - ik zie niet goed in detail wat
+                //   er gebeurt dus kan 't niet nakijken; misschien dat meer commentaar zou helpen.
                 $aSuccessTranscripts = array();
                 if (isset($_POST['active_transcripts'])) {
+                    // FIXME; probeer van deze "None" af te komen.
                     if (!in_array('None', $_POST['active_transcripts'])) {
                         foreach($_POST['active_transcripts'] as $sTranscript) {
                             // Add transcript to gene
@@ -440,6 +448,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         // Tooltip JS code.
         lovd_includeJS('inc-js-tooltip.php');
+        // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
         lovd_includeJS('inc-js-insert-custom-links.php');
 
         // Table.
@@ -481,10 +490,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     require ROOT_PATH . 'class/REST2SOAP.php';
     $_DATA = new LOVD_Gene();
     $zData = $_DATA->loadEntry($sID);
-    
+
     if (GET) {
         require ROOT_PATH . 'inc-lib-genes.php';
-        
+
         $aRefseqGenomic = array();
         // Get LRG if it exists
         if ($sLRG = getLrgByGeneSymbol($sID)) {
@@ -496,7 +505,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
         }
         // Get NC from LOVD
         $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
-        
+
         $_POST['workID'] = lovd_generateRandomID();
         $_SESSION['work'][$_POST['workID']] =
                  array(
@@ -513,7 +522,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
-        
+
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array(
@@ -538,6 +547,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 
             // Change linked diseases?
             // Diseases the gene is currently linked to.
+            // FIXME; we moeten afspraken op papier zetten over de naamgeving van velden, ik zou hier namelijk geen _ achter plaatsen.
+            //   Een idee zou namelijk zijn om loadEntry automatisch velden te laten exploden afhankelijk van hun naam. Is dat wat?
             $aDiseases = explode(';', $zData['active_diseases_']);
 
             // Remove diseases.
@@ -562,6 +573,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
             $aSuccess = array();
             $aFailed = array();
             foreach ($_POST['active_diseases'] as $nDisease) {
+                // FIXME; probeer van deze "None" af te komen.
                 if (!in_array($nDisease, $aDiseases) && $nDisease != 'None') {
                     // Add disease to gene.
                     $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
@@ -604,7 +616,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
     lovd_printHeader(PAGE_TITLE);
 
     if (!lovd_error()) {
-        print('      To edit this gene database, please complete the form below and press "Edit" at the bottom of the form..<BR>' . "\n" .
+        print('      To edit this gene database, please complete the form below and press "Edit" at the bottom of the form.<BR>' . "\n" .
               '      <BR>' . "\n\n");
     }
 
@@ -612,6 +624,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
     lovd_includeJS('inc-js-insert-custom-links.php');
 
     // Table.
@@ -668,7 +681,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1]) && A
 
         if (!lovd_error()) {
             // This also deletes the entries in gen2dis and transcripts.
-
             $_DATA->deleteEntry($sID);
 
             // Write to log...

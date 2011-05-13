@@ -140,14 +140,18 @@ class LOVD_Link extends LOVD_Object {
                 lovd_errorAdd('name', 'There is already a custom link with this link name. Please choose another one.');
             }
         }
-        
+
         if (!empty($aData['active_columns'])) {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
             $sSQL = 'SELECT GROUP_CONCAT(id) FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'';
-            $zColumns = mysql_fetch_row(lovd_queryDB($sSQL, array()));
+            // FIXME; volgens de coding standard is dit $rColumns;
+            $zColumns = mysql_fetch_row(lovd_queryDB($sSQL));
+            // FIXME; eerst een group_concat, daarna een explode()?
+            // FIXME; je kunt ook een list() gebruiken, dan heb je $rColumns helemaal niet nodig.
             $aColumns = explode(',', $zColumns[0]);
             foreach($aData['active_columns'] as $sCol) {
                 if (substr_count($sCol, '/') && !in_array($sCol, $aColumns)) {
+                    // FIXME; dus zonder / er in, wordt de column doorgelaten?
                     lovd_errorAdd('active_columns', 'Please select a valid custom column from the \'Active for columns\' selection box.');
                 }
             }

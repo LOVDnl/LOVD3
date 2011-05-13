@@ -82,6 +82,7 @@ class LOVD_Screening extends LOVD_Custom {
         // FIXME; Deze GROUP BY is niet schadelijk, maar wel overbodig.
         $this->aSQLViewList['GROUP_BY'] = 's.id';
 
+        // Run parent constructor to find out about the custom columns.
         parent::LOVD_Custom();
         
         // List of columns and (default?) order for viewing an entry.

@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /diseases/00001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'View disease #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -102,7 +102,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && !preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /diseases/DMD
     // Try to find a disease by its abbreviation and forward.
     // When we have multiple hits, refer to listView.
@@ -159,13 +159,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
-            
+
+            // FIXME; add this and next block to a function.
             $qAddedCustomCols = lovd_queryDB('DESCRIBE ' . TABLE_PHENOTYPES);
             while ($aCol = mysql_fetch_assoc($qAddedCustomCols)) {
                 $aAdded[] = $aCol['Field'];
             }
             
-            $qStandardCustomCols = lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "Phenotype/%" AND (standard = 1 OR hgvs = 1)', array());
+            $qStandardCustomCols = lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "Phenotype/%" AND (standard = 1 OR hgvs = 1)');
             while ($aStandard = mysql_fetch_assoc($qStandardCustomCols)) {
                 if (!in_array($aStandard['id'], $aAdded)) {
                     $q = lovd_queryDB('ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());
@@ -179,11 +180,13 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             // Add genes.
             $aSuccess = array();
+            // FIXME; zorgt checkFields() niet al niet, dat deze var altijd set is?
             if (isset($_POST['active_genes'])) {
+                // FIXME; probeer van None af te komen.
                 if (!in_array('None', $_POST['active_genes'])) {
-                    $aSuccess = array();
                     foreach ($_POST['active_genes'] as $sGene) {
                         // Add gene to disease.
+                        // FIXME; hier doe je ze stuk voor stuk, in edit voeg je ze samen. Ik stel voor ze hier ook samen te voegen.
                         $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
                         if (!$q) {
                             // Silent error.
@@ -254,11 +257,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /diseases/00001?edit
     // Edit a specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseEdit');
 
@@ -304,6 +307,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                 $q = lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
                 if (!$q) {
                     // Silent error.
+                    // FIXME; deze log entries zijn precies andersom dan bij create (wat wordt aan wat toegevoegd/verwijderd). Dat moeten we standaardiseren, maar wellicht even overleggen over LOVD-breed.
                     lovd_writeLog('Error', LOG_EVENT, 'Gene information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from disease ' . $nID);
                 } else {
                     lovd_writeLog('Event', LOG_EVENT, 'Gene information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' successfully removed from disease ' . $nID);
@@ -387,11 +391,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /diseases/00001?delete
     // Delete specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseDelete');
 

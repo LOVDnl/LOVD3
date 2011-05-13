@@ -78,6 +78,7 @@ class LOVD_Variant extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)';
         $this->aSQLViewList['GROUP_BY'] = 'v.id';
 
+        // Run parent constructor to find out about the custom columns.
         parent::LOVD_Custom();
         
         // List of columns and (default?) order for viewing an entry.

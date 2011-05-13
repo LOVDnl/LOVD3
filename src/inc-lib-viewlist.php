@@ -53,7 +53,8 @@ function lovd_pagesplitInit ()
     // The Init function returns $sSQLLimit, a string with the limit
     // information you need to include in your query.
     global $_SETT;
-    $_SETT['list_sizes'][] = 10;
+// FIXME; DMD_SPECIFIC; This is a temporary addition. Should not be in release.
+$_SETT['list_sizes'][] = 10;
 
     if (!empty($_GET['page']) && is_numeric($_GET['page'])) {
         $_GET['page'] = (int) $_GET['page'];

@@ -94,7 +94,7 @@ class LOVD_Gene extends LOVD_Object {
                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS .' AS sc ON (scg.screeningid = sc.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
-        
+
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
                  array(
@@ -182,13 +182,13 @@ class LOVD_Gene extends LOVD_Object {
     {
         // Checks fields before submission of data.
         global $zData; // FIXME; this could be done more elegantly.
-        
+
         // Mandatory fields.
         $this->aCheckMandatory =
                  array(
                         
                       );
-        
+
         if (isset($aData['workID'])) {
             unset($aData['workID']);
         }
@@ -198,41 +198,50 @@ class LOVD_Gene extends LOVD_Object {
         if (!in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
             lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
         }
-        
-        $qDiseases = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES, array());
+
+        // FIXME; eerst een concat om daarna te exploden???
+        $qDiseases = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES);
         $aDiseases = mysql_fetch_row($qDiseases);
         $aDiseases = explode(',', $aDiseases[0]);
+        // FIXME; ik denk dat de query naar binnen deze if moet.
+        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
+        //   De parent checkFields vraagt de getForm() namelijk al op.
         if (isset($aData['active_diseases'])) {
+            // FIXME; zou er een check op moeten, of dit wel een array is?
             foreach ($aData['active_diseases'] as $sDisease) {
                 if (!in_array($sDisease, $aDiseases)) {
+                    // FIXME; kunnen we van deze None af?
                     if ($sDisease != 'None') {
+                        // FIXME; een if binnen een if kan ook in één if.
+                        // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($sDisease) . ' is not a valid disease" of zoiets.
+                        // Overigens is het volgens mij $nDisease.
                         lovd_errorAdd('active_diseases', 'Please select a proper disease in the \'This gene has been linked to these diseases\' selection box');
                     }
                 }
             }
         }
-        
+
         if (!empty($aData['refseq']) && empty($aData['refseq_url'])) {
             lovd_errorAdd('refseq', 'You have selected that there is a human-readable reference sequence. Please fill in the "Human-readable reference sequence location" field. Otherwise, select \'No\' for the "This gene has a human-readable reference sequence" field.');
         }
-        
+
         if ($aData['disclaimer'] == 2 && empty($aData['disclaimer_text'])) {
             lovd_errorAdd('disclaimer_text', 'If you wish to use an own disclaimer, please fill in the "Text for own disclaimer" field. Otherwise, select \'No\' for the "Include disclaimer" field.');
         }
-        
+
         // Numeric values
         $aCheck =
                  array(
                         'header_align' => 'Header aligned to',
                         'footer_align' => 'Footer aligned to',
                       );
-        
+
         foreach ($aCheck as $key => $val) {
             if ($aData[$key] && !is_numeric($aData[$key])) {
                 lovd_errorAdd($key, 'The \'' . $val . '\' field has to contain a numeric value.');
             }
         }
-        
+
         // URL values
         $aCheck =
                  array(
@@ -245,7 +254,7 @@ class LOVD_Gene extends LOVD_Object {
                 lovd_errorAdd($key, 'The \'' . $val . '\' field does not seem to contain a correct URL.');
             }
         }
-        
+
         // List of external links.
         if ($aData['url_external']) {
             $aExternalLinks = explode("\r\n", trim($aData['url_external']));
@@ -255,7 +264,7 @@ class LOVD_Gene extends LOVD_Object {
                 }
             }
         }
-        
+
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
     }
@@ -269,20 +278,24 @@ class LOVD_Gene extends LOVD_Object {
         // Build the form.
         global $_CONF, $zData;
 
-        // Get list of diseases
+        // Get list of diseases.
         $aDiseasesForm = array();
         $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
+        // FIXME; aangezien $aDiseasesForm leeg zal zijn als $nData 0 is, stel ik voor deze while buiten de if te doen,
+        // dan de if om te draaien. Dan heb je geen else nodig.
         if ($nData) {
             while ($r = mysql_fetch_row($qData)) {
                 $aDiseasesForm[$r[0]] = $r[1];
             }
         } else {
+            // FIXME; is het niet makkelijker om hier geen value op te geven ipv "None"? Het is toch geen verplicht veld, dus als ie geselecteerd wordt,
+            // wordt de waarde automatisch genegeerd. Nu moest je een uitzondering plaatsen in checkFields() en genes.php.
             $aDiseasesForm = array('None' => 'No disease entries available');
         }
-        
         $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
-        
+
+        // References sequences (genomic and transcripts).
         $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
         $aTranscriptNames = array();
         $aTranscriptsForm = array();
@@ -426,7 +439,7 @@ class LOVD_Gene extends LOVD_Object {
             unset($this->aFormData['transcripts']);
             $this->aFormData['transcript_info'] = array('Transcriptomic reference sequence(s)', '', 'note', '<B>Transcriptomic references (NM accession numbers) can only be modified in the transcripts page!!!</B>');
         }
-        
+
         return parent::getForm();
     }
 
@@ -476,11 +489,12 @@ class LOVD_Gene extends LOVD_Object {
                     $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . (!empty($nOMIMID)? '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>' : $sName . ' (' . $sSymbol . ')');
                 }
             }
-            
+
             if (isset($zData['reference'])) {
+                // FIXME; is 't niet beter de PubMed custom link data uit de database te halen? Als ie ooit wordt aangepast, gaat dit fout.
                 $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="http://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
             }
-            
+
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID);
@@ -490,7 +504,7 @@ class LOVD_Gene extends LOVD_Object {
                     $zData[$sColID . '_'] = '';
                 }
             }
-        }        
+        }
 
         return $zData;
     }

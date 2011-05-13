@@ -186,6 +186,9 @@ class LOVD_Object {
                 if (!$q) {
                     lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::deleteEntry()'), $sSQL, mysql_error());
                 }
+                return true;
+            } else {
+                return false;
             }
         }            
     }
@@ -247,8 +250,8 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
-            if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT') {
-                $aData[$sField] = ($aData[$sField] === ''? NULL : $aData[$sField]);
+            if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
+                $aData[$sField] = NULL;
             }
             $aSQL[] = $aData[$sField];
         }
@@ -340,14 +343,17 @@ class LOVD_Object {
         $zData = array_map('htmlspecialchars', $zData);
         $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
         foreach($aUserColumns as $sUserColumn) {
+            // FIXME; ik krijg hoofdpijn van deze lange regel... wordt dit wel in een viewList toegepast? Links in een viewList verstoren nu de boel. De code kan simpeler. Ook moet er wat commentaar bij.
             (isset($zData[$sUserColumn])? $zData[$sUserColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . ($sView == 'list'? '' : '_')] . '</A>' : 'N/A') : false);
         }
-        
+
         $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');
         foreach($aDateColumns as $sDateColumn) {
+            // Ook deze code kan m.i. simpeler.
             (isset($zData[$sDateColumn])? $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A') : false);
         }
-        
+
+        // FIXME; hier mist commentaar.
         if (isset($zData['edited_by_']) && $zData['edited_by_'] == 'N/A') {
             $zData['valid_from' . ($sView == 'list'? '' : '_')] = 'N/A';
         }
@@ -389,10 +395,8 @@ class LOVD_Object {
         global $_AUTH;
         
         foreach($this->aColumnsViewEntry as $sCol => $Col) {
-            if (is_array($Col)) {
-                if (!$_AUTH || $_AUTH['level'] < $Col[1]) {
-                    unset($this->aColumnsViewEntry[$sCol]);
-                }
+            if (is_array($Col) && (!$_AUTH || $_AUTH['level'] < $Col[1])) {
+                unset($this->aColumnsViewEntry[$sCol]);
             }
         }
     }
@@ -418,8 +422,8 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
-            if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT') {
-                $aData[$sField] = ($aData[$sField] === ''? NULL : $aData[$sField]);
+            if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
+                $aData[$sField] = NULL;
             }
             $aSQL[] = $aData[$sField];
         }
@@ -848,11 +852,10 @@ class LOVD_Object {
                 lovd_showInfoTable($sMessage, 'stop');
                 return true;
             } else {
-                $sMessage = 'No entries found for this ' . substr($_PATH_ELEMENTS[0], 0, -1) . '!';
                 if ($bOnlyRows) {
                     die('0'); // Silent error.
                 }
-                lovd_showInfoTable($sMessage, 'stop');
+                lovd_showInfoTable('No entries found for this ' . substr($_PATH_ELEMENTS[0], 0, -1) . '!', 'stop');
                 return true;
             }
         }

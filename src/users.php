@@ -68,7 +68,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
     // URL: /users/00001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'View user account #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -208,7 +208,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /users/00001?edit
     // Edit specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit user account #' . $nID);
     define('LOG_EVENT', 'UserEdit');
 
@@ -325,7 +325,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /users/00001?change_password
     // Change a user's password.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Change password for user account #' . $nID);
     define('LOG_EVENT', 'UserResetPassword');
 
@@ -425,7 +425,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /users/00001?delete
     // Delete a specific user.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 
@@ -603,7 +603,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     // URL: /users/00001?delete
     // Remove a user from the system
     
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 

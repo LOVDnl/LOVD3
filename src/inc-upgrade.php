@@ -206,7 +206,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'DROP TABLE ' . TABLE_PATIENTS,
                                   ),
                        '3.0-pre-20' =>
-                             array(           
+                             array( 
                                     'ALTER TABLE ' . TABLE_COLS2LINKS . ' MODIFY COLUMN linkid TINYINT(3) UNSIGNED ZEROFILL NOT NULL',
                                     'UPDATE ' . TABLE_COLS . ' SET form_type="Gender||select|1|--Not specified--|false|false" WHERE id="Individual/Gender"',
                                     'UPDATE ' . TABLE_COLS . ' SET width=70 WHERE id="Individual/Gender"',

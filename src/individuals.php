@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /individuals/00000001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'View individual #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -95,12 +95,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
         $_DATA = new LOVD_Disease();
         $_DATA->viewList(false, 'diseaseid', true, true);
         print('<BR><BR>' . "\n\n");
+
         lovd_printHeader('Phenotypes', 'H4');
         if (!empty($zData['phenotypes'])) {
+            // FIXME; deze code heeft commentaar nodig. Ik snap niet waar de array_map voor is?
             $zData['diseases'] = explode(';;', $zData['diseases']);
             $zData['diseases'] = array_map('explode', array_fill(0, count($zData['diseases']),';'), $zData['diseases']);
             require ROOT_PATH . 'class/object_phenotypes.php';
             foreach($zData['diseases'] as $aDisease) {
+                // FIXME; voeg hier een list(, , , ,) = $aDisease toe, zodat te volgen is wat er in deze array zit.
                 if (substr_count($zData['phenotypes'], ';' . $aDisease[0])) {
                     $_GET['search_diseaseid'] = $aDisease[0];
                     $_DATA = new LOVD_Phenotype($aDisease[0]);
@@ -141,6 +144,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     define('LOG_EVENT', 'IndividualCreate');
 
     // Require manager clearance.
+    // FIXME; adapt level
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_individuals.php';
@@ -160,6 +164,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             // Prepare values.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            // FIXME; gebruik hier geen 4 maar de code die er voor staat: STATUS_...
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : '4');
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
@@ -174,8 +179,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             // Add diseases.
             $aSuccessDiseases = array();
             if (isset($_POST['active_diseases'])) {
+                // FIXME; een if in een if kun je samen trekken.
+                // FIXME; probeer van deze "None" af te komen.
+                // FIXME; zou er nog gecontroleerd moeten worden of 't een array is?
                 if (!in_array('None', $_POST['active_diseases'])) {
-                    $aSuccessDiseases = array();
+                    // FIXME; dit is $nDisease.
                     foreach ($_POST['active_diseases'] as $sDisease) {
                         // Add disease to gene.
                         $q = lovd_queryDB('INSERT INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $sDisease));
@@ -188,7 +196,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     }
                 }
             }
-            
+
             if (count($aSuccessDiseases)) {
                 lovd_writeLog('Event', LOG_EVENT, 'Disease entries successfully added to individual ' . $nID . ' - (Owner: ' . $_POST['ownerid'] . ')');
             }
@@ -202,8 +210,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
-
         }
+
     } else {
         // Default values.
         $_DATA->setDefaultValues();
@@ -223,6 +231,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
     lovd_includeJS('inc-js-insert-custom-links.php');
 
     // Table.
@@ -246,11 +255,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /individuals/00000001?edit
     // Edit an entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit an individual information entry');
     define('LOG_EVENT', 'IndividualEdit');
 
@@ -274,12 +283,14 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
                             $_DATA->buildFields());
 
             // Prepare values.
+            // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            // FIXME; gebruik constants, geen nummers!
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : '4');
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['valid_from'] = date('Y-m-d H:i:s');
             $_POST['valid_to'] = '9999-12-31 00:00:00';
-            
+
             // FIXME: implement versioning in updateEntry!
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
@@ -288,6 +299,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
             // Change linked diseases?
             // Diseases the gene is currently linked to.
+            // FIXME; we moeten afspraken op papier zetten over de naamgeving van velden, ik zou hier namelijk geen _ achter plaatsen.
+            //   Een idee zou namelijk zijn om loadEntry()/viewEntry() automatisch velden te laten exploden afhankelijk van hun naam. Is dat wat?
             $aDiseases = explode(';', $zData['active_diseases_']);
 
             // Remove diseases.
@@ -339,14 +352,14 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
-
         }
+
     } else {
         // Default values.
         foreach ($zData as $key => $val) {
             $_POST[$key] = $val;
         }
-        // Load connectred diseases.
+        // Load connected diseases.
         $_POST['active_diseases'] = explode(';', $_POST['active_diseases_']);
     }
 
@@ -387,11 +400,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /individuals/00000001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete individual information entry ' . $nID);
     define('LOG_EVENT', 'IndividualDelete');
 

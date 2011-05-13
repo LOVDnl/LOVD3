@@ -340,17 +340,19 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     // (7) Activating standard custom columns.
     foreach ($aColSQL as $sCol) {
         $sCol = str_replace('INSERT INTO ' . TABLE_COLS . ' VALUES ', '', $sCol);
+        // FIXME; add some comments here, I can't follow this code.
         preg_match_all("/(\"(?:.*[^\\\\])?\"|\d+|NULL|NOW\(\)),\s+/U", trim($sCol, '()') . ', ', $aCol);
+        // FIXME; misschien een list() hier?
         $aCol = array_map('preg_replace', array_fill(0, count($aCol[1]), '/^"(.*)"$/'), array_fill(0, count($aCol[1]), '$1'), $aCol[1]);
         if ($aCol[3] == '1' || $aCol[4] == '1') {
             $sCategory = preg_replace('/\/.*$/', '', $aCol[0]);
-            if ($sCategory == 'VariantOnGenome') {
-                $sTable = 'TABLE_VARIANTS';
-            } else {
-                $sTable = 'TABLE_' . strtoupper($sCategory) . 'S';
-            }
-
             if (!in_array($sCategory, array('Phenotype', 'VariantOnTranscript'))) {
+                if ($sCategory == 'VariantOnGenome') {
+                    $sTable = 'TABLE_VARIANTS';
+                } else {
+                    $sTable = 'TABLE_' . strtoupper($sCategory) . 'S';
+                }
+
                 $aInstallSQL['Activating LOVD standard custom columns'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
                 $aInstallSQL['Activating LOVD standard custom columns'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aCol[0] . '", "00001", NOW())';
             }

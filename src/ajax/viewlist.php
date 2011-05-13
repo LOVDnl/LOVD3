@@ -32,7 +32,7 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-if (empty($_GET['viewlistid']) || empty($_GET['object']) || !preg_match('/^[A-Z]+$/i', $_GET['object'])) {
+if (empty($_GET['viewlistid']) || empty($_GET['object']) || !preg_match('/^[A-Z_]+$/i', $_GET['object'])) {
     die(AJAX_DATA_ERROR);
 }
 

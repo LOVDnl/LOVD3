@@ -81,6 +81,8 @@ class LOVD_Phenotype extends LOVD_Custom {
         $this->aSQLViewList['GROUP_BY'] = 'p.id';
         
         $this->sObjectID = $sObjectID;
+
+        // Run parent constructor to find out about the custom columns.
         parent::LOVD_Custom();
         
         // List of columns and (default?) order for viewing an entry.
@@ -103,7 +105,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                  array(
                         'phenotypeid' => array(
                                     'view' => array('Phenotype ID', 110),
-                                    'db'   => array('phenotypeid', 'ASC', true)),
+                                    'db'   => array('p.id', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(

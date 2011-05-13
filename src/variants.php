@@ -63,11 +63,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /variants/00000001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'View variant #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -96,11 +96,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /variants/00000001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete variant information entry #' . $nID);
     define('LOG_EVENT', 'VariantDelete');
 

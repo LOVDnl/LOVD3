@@ -63,11 +63,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /transcripts/00001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'View transcript #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -134,11 +134,11 @@ if (ACTION == 'create') {
                                                    );
     }
     define('PAGE_TITLE', 'Add transcript to ' . (isset($_SESSION['work'][$_POST['workID']]['values']['gene'])? 'gene ' . $_SESSION['work'][$_POST['workID']]['values']['gene']['id'] : 'a gene'));
-    
-    
-    
-    
-    
+
+
+
+
+
     if ($_SESSION['work'][$_POST['workID']]['step'] == '1') {
         $zData = $_SESSION['work'][$_POST['workID']]['values'];
         if (POST) {
@@ -148,7 +148,7 @@ if (ACTION == 'create') {
             if (!isset($zData['genes'][$_POST['geneSymbol']])) {
                 lovd_errorAdd('geneSymbol', 'Please select a Gene out of the list below!');
             }
-            
+
             if (!lovd_error()) {
                 require ROOT_PATH . 'inc-top.php';
                 require ROOT_PATH . 'class/progress_bar.php';
@@ -285,23 +285,23 @@ if (ACTION == 'create') {
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     if ($_SESSION['work'][$_POST['workID']]['step'] == '2') {
         $zData = $_SESSION['work'][$_POST['workID']]['values'];
         if (count($_POST) > 1) {
             lovd_errorClean();
-            
+
             $_DATA->checkFields($_POST);
-            
+
             if (!lovd_error()) {
-                
+
                 $_POST['created_by'] = $_AUTH['id'];
                 $_POST['created_date'] = date('Y-m-d H:i:s');
-                
+
                 if (!empty($_POST['active_transcripts']) && $_POST['active_transcripts'][0] != 'None') {
                     foreach($_POST['active_transcripts'] as $sTranscript) {
                         // Add transcript to gene
@@ -371,24 +371,24 @@ if (ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /transcripts/00001?edit
     // Edit a transcript
-    
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit transcript #' . $nID);
     define('LOG_EVENT', 'TranscriptEdit');
-    
+
     require ROOT_PATH . 'class/object_transcripts.php';
     require ROOT_PATH . 'inc-lib-form.php';
     $_DATA = new LOVD_Transcript();
     $zData = $_DATA->loadEntry($nID);
-    
+
     if (count($_POST) > 1) {
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
-        
+
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array(
@@ -398,7 +398,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
             // Prepare values.
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
-            
+
             //var_dump($nID);
             //var_dump($_POST);
             $_DATA->updateEntry($nID, $_POST, $aFields);
@@ -457,11 +457,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /transcripts/00001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
     define('LOG_EVENT', 'TranscriptDelete');
 

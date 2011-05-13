@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /screenings/0000000001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'View screening #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -110,11 +110,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /screenings/0000000001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
     define('LOG_EVENT', 'ScreeningDelete');
 

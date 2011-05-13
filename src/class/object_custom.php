@@ -89,8 +89,8 @@ class LOVD_Custom extends LOVD_Object {
         // Gather the custom link information.
         $qLinks = lovd_queryDB('SELECT c2l.colid, l.* ' .
                                'FROM ' . TABLE_COLS2LINKS . ' AS c2l ' .
-                               'LEFT OUTER JOIN ' . TABLE_LINKS . ' AS l ON (c2l.linkid = l.id) ' .
-                               'WHERE c2l.colid LIKE "' . $this->sObject . '/%"', array());
+                               'INNER JOIN ' . TABLE_LINKS . ' AS l ON (c2l.linkid = l.id) ' .
+                               'WHERE c2l.colid LIKE ?', array($this->sObject . '/%'));
         while ($z = mysql_fetch_assoc($qLinks)) {
             if (isset($this->aColumns[$z['colid']])) {
                 $this->aColumns[$z['colid']]['custom_links'][$z['id']] = $z;
@@ -106,6 +106,7 @@ class LOVD_Custom extends LOVD_Object {
 
     function buildViewEntry ()
     {
+        // FIXME; define function's purpose.
         $aViewEntry = array();
         foreach ($this->aColumns as $sID => $aCol) {
             $aViewEntry[$sID] = $aCol['head_column'];
@@ -119,6 +120,8 @@ class LOVD_Custom extends LOVD_Object {
 
     function buildFields ()
     {
+        // FIXME; define function's purpose. Seems more like a getFields(). 
+        // FIXME; implement using implode().
         $aFields = array();
         foreach($this->aColumns as $sCol => $aCol) {
             $aFields[] = $sCol;
@@ -139,9 +142,9 @@ class LOVD_Custom extends LOVD_Object {
 
         foreach ($this->aColumns as $sCol => $aCol) {
             // Build what type of form entry?
+            $aEntry = array();
             if ($aCol['form_type'][2] != 'select') {
                 // No select entry; add entry name.
-                $aEntry = array();
                 foreach ($aCol['form_type'] as $key => $val) {
                     if (!$key && !$aCol['mandatory']) {
                         // Add '(Optional)'.
@@ -156,7 +159,6 @@ class LOVD_Custom extends LOVD_Object {
 
             } else {
                 // Select entries are modified a little more - need source data.
-                $aEntry = array();
                 foreach ($aCol['form_type'] as $key => $val) {
                     if ($key == 3) { // Size
                         // We need to place the form entry name (e.g. "Individual/Gender") in between.
@@ -241,6 +243,7 @@ class LOVD_Custom extends LOVD_Object {
 
     function buildViewList ()
     {
+        // FIXME; define function's purpose.
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
             $aViewList[$sID] = 
@@ -308,7 +311,6 @@ class LOVD_Custom extends LOVD_Object {
     function initDefaultValues ()
     {
         // Initiate default values of fields in $_POST.
-        // 2009-02-16; 2.0-16; Introducing default values.
         foreach ($this->aColumns as $sCol => $aCol) {
             // Fill $_POST with the column's default value.
             $_POST[$sCol] = $this->getDefaultValue($sCol);
@@ -322,6 +324,7 @@ class LOVD_Custom extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         $zData = parent::prepareData($zData, $sView);
+        // FIXME; ik denk niet dat dit een handige plek is; prepareData() hoort eigenlijk geen output te geven lijkt me; als je deze JS nodig hebt, moet hij automatisch bij viewLists() of viewEntry() erbij worden gedaan.
         lovd_includeJS('inc-js-tooltip.php');
         foreach ($this->aColumns as $sCol => $aCol) {
             $bCustomLink = false;
@@ -329,7 +332,8 @@ class LOVD_Custom extends LOVD_Object {
                 foreach ($aCol['custom_links'] as $nLink => $aLink) {
                     $sPatternText = preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text']);
                     $sReplaceText = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
-                    if(preg_match($sPatternText, $zData[$aCol['colid']])) {
+                    // FIXME; dit moet gefixed worden voor viewLists.
+                    if (preg_match($sPatternText, $zData[$aCol['colid']])) {
                         $bCustomLink = true;
                     }
                     if ($sView == 'list' && $bCustomLink) {

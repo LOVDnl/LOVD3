@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-06-25
- * Modified    : 2010-06-25
- * For LOVD    : 3.0-pre-07
+ * Modified    : 2011-05-13
+ * For LOVD    : 3.0-pre-20
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -36,6 +35,7 @@ header('Content-type: text/javascript; charset=UTF-8');
 var oTT = window.document.createElement('div');
 oTT.setAttribute('id', 'tooltip');
 oTT.className = 'tooltip';
+oTT.style.display = 'none'; // To prevent whitespace at the end of the page.
 window.document.body.appendChild(oTT);
 
 function lovd_showToolTip (sText) {
@@ -55,6 +55,7 @@ function lovd_showToolTip (sText) {
     oTT.style.left = x + 'px';
     oTT.style.top = y + 'px';
     oTT.innerHTML = sText;
+    oTT.style.display = ''; // A new tooltip had display none.
     oTT.style.visibility = 'visible';
 }
 

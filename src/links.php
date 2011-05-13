@@ -64,11 +64,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /links/001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 3, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 3, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'View custom link #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -206,11 +206,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /links/001?edit
     // Edit specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 3, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 3, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit custom link #' . $nID);
     define('LOG_EVENT', 'LinkEdit');
 
@@ -339,11 +339,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /links/001?delete
     // Delete specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 3, "0", STR_PAD_LEFT);
+    $nID = str_pad($_PATH_ELEMENTS[1], 3, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Delete custom link #' . $nID);
     define('LOG_EVENT', 'LinkDelete');
 
