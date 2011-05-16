@@ -31,6 +31,7 @@
  *************/
 
 // DMD_SPECIFIC; FIXME; We need a Gene/Reference entry here, because of the foreign key on the TABLE_COLS2LINKS and we want PubMed active on Gene/Reference.
+// Didn't we fix that some other way?
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {

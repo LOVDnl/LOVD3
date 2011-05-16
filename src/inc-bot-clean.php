@@ -47,16 +47,5 @@ if (!defined('ROOT_PATH')) {
   </TR>
 </TABLE>
 
-<?php
-/*
-DMD_SPECIFIC
-// 2007-12-14; 2.0-02; Fixing feature non-functional in IE.
-// Normally, we would just print it out in submit.php, but that doesn't work in IE. So we're going to dump it here.
-if (!empty($sBotClean)) {
-    echo $sBotClean;
-}
-*/
-?>
-
 </BODY>
 </HTML>

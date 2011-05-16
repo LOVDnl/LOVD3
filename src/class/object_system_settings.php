@@ -170,7 +170,6 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('', '', 'print', '<B>Security settings</B>'),
                         array('', '', 'note', 'Using the following settings you can control some security settings of LOVD.'),
                         'hr',
-/* DMD_SPECIFIC: are these names still ok? */
                         array('Lock users after 3rd failed login?', 'Do you want to lock users (submitters, curators and managers) after three failed attempts to log in using their username?<BR>(This does <I>not</I> affect the database administrator account)', 'checkbox', 'lock_users'),
                         'hr',
                         array('Allow (locked) users to retrieve a new password?', 'Do you want to enable an "I forgot my password" option that allows users who forgot their password to retrieve a new one?', 'checkbox', 'allow_unlock_accounts'),

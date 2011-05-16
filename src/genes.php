@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-05-04
+ * Modified    : 2011-05-16
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -149,7 +149,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 if (mysql_num_rows(lovd_queryDB($sSQL, $aSQL))) {
                     lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation. Please choose another one.');
                 } else {
-                    if (preg_match("/^\d+$/", $_POST['hgnc_id'])) {
+                    if (ctype_digit($_POST['hgnc_id'])) {
                         $sWhere = 'gd_hgnc_id%3D' . $_POST['hgnc_id'];
                     } else {
                         $sWhere = 'gd_app_sym%3D%22' . $_POST['hgnc_id'] . '%22';

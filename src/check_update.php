@@ -1,13 +1,12 @@
 <?php
-// FIXME; recompare to LOVD 2.0 version, because it has changed significantly.
-// DMD_SPECIFIC; finish this file later when website has package_update.php
+// DMD_SPECIFIC; FIXME; recompare to LOVD 2.0 version, because it has changed significantly.
 /*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2011-04-12
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-05-16
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -235,10 +234,9 @@ if ($_STAT['update_version'] == 'Error') {
                 '<B>Latest version</B>: ' . $_STAT['update_version'] . '<BR>' . "\n" .
                 '<B>Release date</B>: ' . $_STAT['update_released_date'] . '<BR>' . "\n" .
                 '<B>Priority level</B>: ' . $_SETT['update_levels'][$_STAT['update_level']] . '<BR>' . "\n" .
-                '<B>Release info</B>: ' . str_replace("\n", '<BR>', $_STAT['update_description']) . '<BR>' . "\n";
-// FIXME; DMD_SPECIFIC.
-//                '<B>Download</B>: <A href="' . dirname($_SETT['update_URL']) . '/download.php?version=' . $_STAT['update_version'] . '&amp;type=tar.gz">GZIPped TARball</A> or <A href="' . dirname($_SETT['update_URL']) . '/download.php?version=' . $_STAT['update_version'] . '&amp;type=zip">ZIP archive</A><BR>' . "\n" .
-//                '<A href="' . $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/changelog.txt" target="_blank">See the changelog</A>' . "\n";
+                '<B>Release info</B>: ' . str_replace("\n", '<BR>', $_STAT['update_description']) . '<BR>' . "\n" .
+                '<B>Download</B>: <A href="' . dirname($_SETT['update_URL']) . '/download.php?version=' . $_STAT['update_version'] . '&amp;type=tar.gz">GZIPped TARball</A> or <A href="' . dirname($_SETT['update_URL']) . '/download.php?version=' . $_STAT['update_version'] . '&amp;type=zip">ZIP archive</A><BR>' . "\n" .
+                '<A href="' . $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/changelog.txt" target="_blank">See the changelog</A>' . "\n";
 
 } else {
     $sType = 'newest';

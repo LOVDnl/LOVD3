@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-04-29
+ * Modified    : 2011-05-16
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -180,7 +180,7 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
     lovd_errorPrint();
 
     // Tooltip JS code.
-    lovd_includeJS('../inc-js-tooltip.php');
+    lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
     print('      <FORM action="install/?step=' . $_GET['step'] . '&amp;sent=true" method="post">' . "\n");
@@ -214,8 +214,6 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
 
     // Start session.
     $sSignature = md5($_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . time());
-// DMD_SPECIFIC: the signature has been changed.
-    $sSignature = 'ifokkema_local_3.0';
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($sSignature);
     session_name('PHPSESSID_' . $_SETT['cookie_id']);
@@ -570,9 +568,9 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE
     lovd_errorPrint();
 
     // Tooltip JS code.
-    lovd_includeJS('../inc-js-tooltip.php');
+    lovd_includeJS('inc-js-tooltip.php');
     // Allow checking the database URL.
-    lovd_includeJS('../inc-js-submit-settings.php');
+    lovd_includeJS('inc-js-submit-settings.php');
 
     // Table.
     print('      <FORM action="install/?step=' . $_GET['step'] . '&amp;sent=true" method="post">' . "\n");

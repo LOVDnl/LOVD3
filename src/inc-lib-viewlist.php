@@ -32,7 +32,6 @@
 function lovd_escapeSearchTerm ($sTerm)
 {
     // Escapes search terms entered by the user.
-    // DMD_SPECIFIC; ik vind van wel!
     // FIXME; allow * for % and ? for _?
     $sTerm = str_replace('%', '\%', $sTerm);
     $sTerm = str_replace('_', '\_', $sTerm);

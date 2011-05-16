@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-04-26
+ * Modified    : 2011-05-16
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -192,7 +192,7 @@ print('    </TD>' . "\n" .
       '  </TR>' . "\n");
 
 // Add curator info to header.
-// DMD_SPECIFIC; Note that users email is now more complex. It can contain more lines. So trim() and explode? Or preg_match until the first whitespace or something?
+// DMD_SPECIFIC; Test if this multiple email thingie works or not.
 if ($sCurrSymbol && $sCurrGene) {
     $sCurators = '';
     $qCurators = lovd_queryDB('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.geneid = ? AND u2g.allow_edit = 1 ORDER BY u.level DESC, u.name', array($sCurrSymbol));
@@ -200,7 +200,7 @@ if ($sCurrSymbol && $sCurrGene) {
     $i = 0;
     while ($z = mysql_fetch_assoc($qCurators)) {
         $i ++;
-        $sCurators .= ($sCurators? ($i == $nCurators? ' and ' : ', ') : '') . '<A href="mailto:' . $z['email'] . '">' . $z['name'] . '</A>';
+        $sCurators .= ($sCurators? ($i == $nCurators? ' and ' : ', ') : '') . '<A href="mailto:' . str_replace(array("\r\n", "\r", "\n"), ', ', trim($z['email'])) . '">' . $z['name'] . '</A>';
     }
 
     if ($sCurators) {

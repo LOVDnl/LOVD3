@@ -18,10 +18,6 @@ Doen voor Alpha-01:
   * En check andere viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
 - (Ivar) TABLE_VARIANTS: INDEX (position_g_start, position_g_end),
   moet zijn:      INDEX (chromosome, position_g_start, position_g_end),
-- (Ivo) IE geeft kolommen niet goed weer als ze te kort worden (de tekst is groter in IE).
-  // Sorteer plaatje uit de flow halen zodat deze over de header tekst ligt, en dan
-    de header tekst onbreekbaar maken met &nbsp; er nog achter aan om ruimte te maken
-    voor het sorteerplaatje?
 - (Ivo)  De volgende stap na het maken van een gen, moet je terecht komen op:
       /genes/GENE?authorize en/of /genes/GENE?sortCurators
       Toont een viewList() van users (indien level >= LEVEL_MANAGER) met alle gebruikers die GEEN curator of collaborators zijn (op basis van user IDs)
@@ -31,13 +27,25 @@ Doen voor Alpha-01:
         De gebruiker verdwijnt dan uit de viewList(), gebruik code voor Logs hier voor?
         De gebruiker verschijnt dan in de lijst waar hij is aan is toegevoegd.
       De entries in de twee lijsten (curators en collaborators) moeten ook weer teruggeplaatst kunnen worden in de viewList.
-- preg_match op \d vervangen door ctype_digit()
-- (Ivo) Encoding wachtwoorden omzetten, (random?) salt gebruiken.
+- (Ivo) Encoding wachtwoorden omzetten, (random?) salt gebruiken. Heeft MySQL wel sha1() functie?
 - loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; array (;) of nested array (;;).
 - (Ivar) Waarom geen wachtwoord nodig bij individual edit?
 - GenomeVariant: add, edit, delete
 - TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
 - Submissie: = alles aan elkaar knopen
+- Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
+- Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
+- Custom columns can't be removed/disabled.
+- Ivar: I included code in lovd_queryDB() that implodes arrays in $aArgs automatically using ;. Agreed? If not, LOVD should implode multiple select custom columns specifically, which it does not currently do.
+- Test in IE of sorting icoontje nu inderdaad netjes naast de header tekst blijft staan.
+- Should we mark in the system settings the features that we did not implement yet?
+- Allele has not been enabled, correct? What to do with it? Rename? Different values? Homozygous as one value in stead of two variants?
+- Do we still need current_db in TABLE_USERS?
+- Link naar reset_password vanaf login.php ; implement reset_password of remove link.
+- http://localhost/other/LOVDv.3.0-dev/users/00002?unlock doet niks, wit scherm. Haal link weg of implement.
+- Individual/Phenotype/Disease column in still there, and active by default. Fix that.
+++++Er zijn cols die geen description voor de legends hebben, maar dat mag niet volgens het formulier...
+- Recheck custom columns. INDIEN ONZEKER, DISABLE VOORLOPIG!!!
 
 
 
@@ -52,6 +60,7 @@ MOET OVERLEGD WORDEN:
 - Submissie LOVD 1.1.0 vergeleken met 2.0, vergeleken met 3.0:
   * Hoe emails? Pas als klaar? Wat nou als niet klaar wordt opgegeven?
   * Wanneer opslaan?
+- Allele => Gametic Phase?
 
 
 
@@ -335,20 +344,8 @@ Needed before release
     Zorg er voor dat je LOVD 2.0 urls kan ontvangen, backward compatible.
         variants.php?select_db=GENE&action=view&view=    of zoeken op DBID links.
     Check alle links nog een keer, of die goed zijn gelegd. Ik ben begonnen zonder dat helder te hebben.
-    Create column?
-        - Information on the individual, not related to disease, not changing over time, such as date of birth (individual kolom)
-        - Information on the individual, related to disease, possibly changing over time, such as blood pressure (phenotype kolom)
-        - Information on the detection of new variants, such as detection technique or laboratory conditions (screening kolom)
-        - Information on the variant(s) found, such as mutation type or predicted effect on protein level (variant kolom)
-        (add something about functional assays)
     Default list_size moet onthouden worden in COOKIE, net zoals de hidden cols.
 ++++Check alle queries 'ns.
-        When joining two tables in a simple join, ..., if no rows in the second table match rows from the first table, no row will be displayed for the unmatched data.
-        OUTER heeft voor zover ik nu kan zien in MySQL geen effect en is optional
-        Met LEFT JOIN laat je deze juist wel zien, maar met WHERE sluit je die weer uit, dus lijkt nogal omslachtige manier om hetzelfde te bereiken.
-        En what the fuck is inner join?
-++++Er zijn cols die geen description voor de legends hebben, maar dat mag niet volgens het formulier...
-    Allele => Gametic Phase?
     Cols - check huidige omschrijvingen in DMD of shared LOVD install, wellicht anders nu.
         DB-ID column heet ID op het formulier.
 +++ Kolommen verkeerd gemapped.
@@ -402,4 +399,5 @@ OTHER:
     If family ID column present, report in unique variant overview how many entries in total AND how many families in total.
     1 import file voor varianten voor meerdere genen?
     Internationalization?
-
+- Boven log entries een paar blokken plaatsen; per log eentje. JS er op, die search_name invult, en formulier submit.
+  * Eventueel met highlight.

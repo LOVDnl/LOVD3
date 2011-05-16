@@ -96,7 +96,7 @@ if (!empty($_POST)) {
                     // Account is locked!
 
                     // Spit out error.
-                    // DMD_SPECIFIC; if we release the data of the admin and the managers online, because of the privacy policy, then we can mention the info (or a link) here, too.
+                    // FIXME; if we release the data of the admin and the managers online, because of the privacy policy, then we can mention the info (or a link) here, too.
                     lovd_errorAdd('', 'Your account is locked, usually because a wrong password was provided three times. ' . ($_CONF['allow_unlock_accounts']? 'Did you <A href="reset_password">forget your password</A>?' : 'Please contact a LOVD manager or the database administrator to unlock your account.'));
                 }
 

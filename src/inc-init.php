@@ -38,7 +38,7 @@ if (!defined('ROOT_PATH')) {
 require ROOT_PATH . 'inc-lib-init.php';
 
 // Define module path.
-// DMD_SPECIFIC; do we still need this?
+// FIXME; do we still need this?
 define('MODULE_PATH', ROOT_PATH . 'modules/');
 
 // Set error_reporting if necessary. We don't want notices to show. This will do
@@ -533,7 +533,7 @@ if (get_magic_quotes_gpc()) {
 }
 
 // Use of SSL required?
-// DMD_SPECIFIC:
+// FIXME:
 //// (SSL not required when exporting data to WikiProfessional because their scripts do not support it)
 //// (The UCSC also has issues with retrieving the BED files through SSL...)
 //if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/export_data.php' && !empty($_GET['format']) && $_GET['format'] == 'wiki') && !(substr(lovd_getProjectFile(), 0, 9) == '/api/rest' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
