@@ -46,6 +46,15 @@ Doen voor Alpha-01:
 - Individual/Phenotype/Disease column in still there, and active by default. Fix that.
 ++++Er zijn cols die geen description voor de legends hebben, maar dat mag niet volgens het formulier...
 - Recheck custom columns. INDIEN ONZEKER, DISABLE VOORLOPIG!!!
+- Ik kan geen gen aanmaken (CAPN3): Collecting all available transcripts...
+    Error: SOAP (Logged)
+    /genes?create returned error in module 'getTranscriptsAndInfo'.
+    Arguments :
+        genomicReference = "UD_130020505898"
+        geneName = "CAPN3"
+    SOAP response :
+        senv:Server - 'IdList'
+- Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD!!!
 
 
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2011-03-31
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-05-17
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -44,7 +44,7 @@ if (!isset($_GET['nohistory'])) {
 ?>
 
 
-function lovd_loadListView ()
+function lovd_AJAX_processViewListHash ()
 {
     // Get the hash, explode it, interpret it.
     if (window.location.hash) {
@@ -52,7 +52,7 @@ function lovd_loadListView ()
             var aGET = window.location.hash.substr(1).split('&');
             var GET = new Array();
 
-            // In case multiple viewList's exist, we choose the first one. In practice, most likely hashing is turned off on pages with multiple viewLists.
+            // In case multiple viewList's exist, we choose the first one. In practice, hashing is turned off on pages with multiple viewLists.
             for (var i in document.forms) {
                 if (document.forms[i].id && document.forms[i].id.substring(0, 13) == 'viewlistForm_') {
                     oForm = document.forms[i];
@@ -77,26 +77,125 @@ function lovd_loadListView ()
                 oForm.page_size.value = decodeURIComponent(GET['page_size']);
                 oForm.page.value = decodeURIComponent(GET['page']);
             }
-            lovd_submitList(sViewListID);
+            lovd_AJAX_viewListSubmit(sViewListID);
             prevHash = window.location.hash;
         }
     }
 }
-
 <?php
 }
 ?>
 
 
-function lovd_navPage (sViewListID, nPage) {
+function lovd_AJAX_viewListAddNextRow (sViewListID)
+{
+    // Load row for next page, because one row got deleted. So basically we're
+    // asking for the row that we *expect* to be the first on the next page,
+    // but we provide coordinates for the last row on this page.
     oForm = document.forms['viewlistForm_' + sViewListID];
-    oForm.page.value = nPage;
-    lovd_submitList(sViewListID);
+
+    // However, make sure we only do this when it's needed!
+    // Check if we're the last page or not...!
+    if (oForm.total.value < (oForm.page.value * oForm.page_size.value)) {
+        return true;
+    }
+
+    // Disable the empty search fields.
+    for (var i in oForm) {
+        if (i.substring(0, 7) == 'search_') {
+            if (!oForm[i].value) {
+                oForm[i].disabled = true;
+            }
+        }
+    }
+
+    // Create HTTP request object.
+    var objHTTP = lovd_createHTTPRequest();
+    if (!objHTTP) {
+        // Ajax not supported. Use fallback non-Ajax navigation.
+        //oForm['object'].disabled = true; // We use this for Ajax capabilities, but don't want it to show in the URL.
+        //oForm.submit(); // Simply refresh the page.
+    } else {
+        // Find the next entry and add it to the table.
+        oTable = document.getElementById('viewlistTable_' + sViewListID);
+
+        objHTTP.onreadystatechange = function ()
+        {
+            if (objHTTP.readyState == 4) {
+                if (objHTTP.status == 200) {
+                    if (objHTTP.responseText.length > 100) {
+                        // Successfully retrieved stuff.
+                        // Now start an amazing detour.
+                        oTFoot = oTable.createTFoot();                 // Create table footer...
+                        oTFoot.style.display = 'none';                 // ...but hide it!
+                        // The following line doesn't work in IE 7. Don't know why. It says "Unknown runtime error". Other versions unknown.
+                        oTFoot.innerHTML = objHTTP.responseText;       // Now, put the row in using innerHTML
+                        oTable.tBodies[0].appendChild(oTFoot.rows[0]); // Then, when that's all parsed, append that to the table.
+                        oTable.deleteTFoot();                          // Then remove the temporary table footer.
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // Build GET query.
+        var sGET = '';
+        aInput = oForm.getElementsByTagName('input');
+        for (var i in aInput) {
+            if (!aInput[i].disabled && aInput[i].value) {
+                sVal = aInput[i].value;
+                if (aInput[i].name == 'page_size')
+                    sVal = 1;
+                if (aInput[i].name == 'page')
+                    sVal = oForm['page_size'].value * oForm['page'].value;
+                sGET = (sGET? sGET + '&' : '') + aInput[i].name + '=' + encodeURIComponent(sVal);
+            }
+        }
+        sGET = (sGET? sGET + '&' : '') + 'only_rows=true';
+        objHTTP.open('GET', '<?php echo lovd_getInstallURL() . 'ajax/viewlist.php?'; ?>' + sGET, true);
+        objHTTP.send(null);
+    }
 }
 
 
 
-function lovd_submitList (sViewListID) {
+function lovd_AJAX_viewListGoToPage (sViewListID, nPage) {
+    oForm = document.forms['viewlistForm_' + sViewListID];
+    oForm.page.value = nPage;
+    lovd_AJAX_viewListSubmit(sViewListID);
+}
+
+
+
+function lovd_AJAX_viewListHideRow (sViewListID, sElementID)
+{
+    // FIXME; not really correct; the entire first part gets repeatedly called. It should only be the last part.
+    oTable = document.getElementById('viewlistTable_' + sViewListID);
+    oElement = document.getElementById(sElementID);
+    // Get current height and set it in the style.
+    nHeight = oElement.offsetHeight;
+    oElement.style.height = nHeight + 'px';
+
+    // Remove all text...
+    aCells = oElement.cells;
+    for (var i = aCells && aCells.length; i--;) {
+        aCells[i].innerHTML = '';
+    }
+
+    // Done, now shrink the row.
+    if (nHeight > 1) {
+        nHeight = parseInt(parseInt(oElement.style.height)/1.8);
+        oElement.style.height = nHeight + 'px';
+        setTimeout('lovd_AJAX_viewListHideRow(\'' + sViewListID + '\', \'' + sElementID + '\');', 50);
+    } else {
+        // Really remove this row now.
+        oTable.tBodies[0].removeChild(oElement);
+    }
+}
+
+
+
+function lovd_AJAX_viewListSubmit (sViewListID) {
     oForm = document.forms['viewlistForm_' + sViewListID];
     // Used to have a simple loop through oForm, but Google Chrome does not like that.
     aInput = oForm.getElementsByTagName('input');
@@ -140,8 +239,8 @@ if (!isset($_GET['nohistory'])) {
                             }
                         }
                         window.location.hash = sHash;
-                        // lovd_loadListView() itself will actually allow that when the back button is pressed, the correct page is loaded.
-                        // The following makes sure this change we just made does not have reload lovd_loadListView().
+                        // lovd_AJAX_processViewListHash() itself will actually allow that when the back button is pressed, the correct page is loaded.
+                        // The following makes sure this change we just made does not have reload lovd_AJAX_processViewListHash().
                         prevHash = window.location.hash;
 <?php
 }
@@ -175,6 +274,27 @@ if (!isset($_GET['nohistory'])) {
         objHTTP.send(null);
     }
 }
+
+
+
+function lovd_AJAX_viewListUpdateEntriesString (sViewListID)
+{
+    // Updates the line above the table that says; "# entries on # pages". Showing entries # - ##."
+    oForm = document.forms['viewlistForm_' + sViewListID];
+    var nPages = Math.ceil(oForm.total.value / oForm.page_size.value);
+    var nFirstEntry = ((oForm.page.value - 1) * oForm.page_size.value + 1);
+    var nLastEntry = oForm.page.value * oForm.page_size.value;
+    if (nLastEntry > oForm.total.value) {
+        nLastEntry = oForm.total.value;
+    }
+    var sMessage = oForm.total.value + ' entr' + (oForm.total.value == 1? 'y' : 'ies') + ' on ' + nPages + ' page' + (nPages == 1? '' : 's') + '.';
+    if (nFirstEntry == nLastEntry) {
+        sMessage += ' Showing entry ' + nFirstEntry + '.';
+    } else if (nFirstEntry <= oForm.total.value) {
+        sMessage += ' Showing entries ' + nFirstEntry + ' - ' + nLastEntry + '.';
+    }
+    document.getElementById('viewlistPageSplitText_' + sViewListID).innerHTML = sMessage;
+}
 <?php
 if (!isset($_GET['nohistory'])) {
 ?>
@@ -185,8 +305,8 @@ if (!isset($_GET['nohistory'])) {
 window.onload = function ()
 {
     prevHash = '';
-    lovd_loadListView();
-    setInterval(lovd_loadListView, 250);
+    lovd_AJAX_processViewListHash();
+    setInterval(lovd_AJAX_processViewListHash, 250);
 }
 <?php
 }

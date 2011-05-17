@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2010-07-01
- * For LOVD    : 3.0-pre-08
+ * Modified    : 2011-05-17
+ * For LOVD    : 3.0-pre-20
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -48,7 +47,7 @@ define('_INC_TOP_CLEAN_INCLUDED_', true);
   <BASE href="<?php echo lovd_getInstallURL(); ?>">
   <LINK rel="stylesheet" type="text/css" href="<?php echo ROOT_PATH; ?>styles.css">
 <?php
-lovd_includeJS(ROOT_PATH . 'inc-js-openwindow.php', 1);
+lovd_includeJS('inc-js-openwindow.php', 1);
 ?>
 </HEAD>
 

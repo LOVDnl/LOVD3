@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-26
- * Modified    : 2011-03-28
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-05-17
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -99,7 +99,7 @@ print('</TABLE>' . "\n" .
       '      <SPAN class="S11">Please note that delete commands affect all entries in the ' . $_GET['log'] . ' log, not only the search results.</SPAN><BR>' . "\n\n");
 */
 
-lovd_includeJS(ROOT_PATH . 'inc-js-ajax-delete_logs.php');
+lovd_includeJS('inc-js-ajax-delete_logs.php');
 
 $_DATA = new LOVD_Log();
 $_DATA->viewList('LOVDLogs'); // Setting known viewListID, such that the log's prepareData() can refer to itself.

@@ -1172,7 +1172,7 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
     lovd_errorPrint();
 
     // 2009-11-11; 2.0-23; We want to try and force people to use a proper reference sequence.
-    lovd_includeJS(ROOT_PATH . 'inc-js-submit_geneform.php');
+    lovd_includeJS('inc-js-submit_geneform.php');
 
     // Table.
     // 2009-11-11; 2.0-23; Added the JS; we want to try and force people to use a proper reference sequence.

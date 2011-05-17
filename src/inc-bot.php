@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2011-02-10
- * For LOVD    : 3.0-pre-16
+ * Modified    : 2011-05-17
+ * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -100,7 +100,7 @@ if (!defined('_NOT_INSTALLED_')) {
 </TD></TR></TABLE>
 
 <?php
-lovd_includeJS(ROOT_PATH . 'inc-js-ajax.php', 0);
+lovd_includeJS('inc-js-ajax.php', 0);
 ?>
 
 <SCRIPT type="text/javascript">

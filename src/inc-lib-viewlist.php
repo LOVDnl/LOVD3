@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2011-05-03
+ * Modified    : 2011-05-17
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -123,7 +123,7 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
     print('      <TABLE border="0" cellpadding="0" cellspacing="3" class="pagesplit_nav">' . "\n" .
           '        <TR>' . "\n" .
           '          <TD style="border : 0px; cursor : default; padding-right : 10px;">' . "\n" .
-          '            <SELECT onchange="document.forms[\'viewlistForm_' . $sViewListID . '\'].page_size.value = this.value; lovd_submitList(\'' . $sViewListID . '\');">');
+          '            <SELECT onchange="document.forms[\'viewlistForm_' . $sViewListID . '\'].page_size.value = this.value; lovd_AJAX_viewListSubmit(\'' . $sViewListID . '\');">');
     foreach ($_SETT['list_sizes'] as $nSize) {
         print("\n" .
               '              <OPTION value="' . $nSize . '"' . ($nSize == $_GET['page_size']? ' selected' : '') . '>' . $nSize . ' per page</OPTION>');
@@ -140,8 +140,8 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
 
         // Provide "First" and "Previous" buttons; even though they may not be active.
         print("\n" .
-              '          <TH ' . ($_GET['page'] > 1? 'onclick="lovd_navPage(\'' . $sViewListID . '\', 1);"' : 'class="inactive"') . '>&laquo; First</TH>' . "\n" .
-              '          <TH ' . ($_GET['page'] > 1? 'onclick="lovd_navPage(\'' . $sViewListID . '\', ' . ($_GET['page'] - 1) . ');"' : 'class="inactive"') . '>&#139; Prev</TH>' . "\n" .
+              '          <TH ' . ($_GET['page'] > 1? 'onclick="lovd_AJAX_viewListGoToPage(\'' . $sViewListID . '\', 1);"' : 'class="inactive"') . '>&laquo; First</TH>' . "\n" .
+              '          <TH ' . ($_GET['page'] > 1? 'onclick="lovd_AJAX_viewListGoToPage(\'' . $sViewListID . '\', ' . ($_GET['page'] - 1) . ');"' : 'class="inactive"') . '>&#139; Prev</TH>' . "\n" .
               '          <TD>&nbsp;&nbsp;&nbsp;</TD>');
 
         // Pages that aren't be printed.
@@ -152,7 +152,7 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
         // Loop through all pages that need to be printed.
         for ($i = $nFirstPage; $i <= $nPages && $i <= ($_GET['page'] + $nShownPages); $i ++) {
             print("\n" .
-                  '          <TD class="' . ($_GET['page'] == $i? 'selected' : 'num" onclick="lovd_navPage(\'' . $sViewListID . '\', ' . $i . ');') . '">' . $i . '</TD>');
+                  '          <TD class="' . ($_GET['page'] == $i? 'selected' : 'num" onclick="lovd_AJAX_viewListGoToPage(\'' . $sViewListID . '\', ' . $i . ');') . '">' . $i . '</TD>');
         }
 
         // Last printed page block.
@@ -166,8 +166,8 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
         // Provide "Next" and "Last" buttons; even though they may not be active.
         print("\n" .
               '          <TD>&nbsp;&nbsp;&nbsp;</TD>' . "\n" .
-              '          <TH ' . (($_GET['page_size'] * $_GET['page']) < $total? 'onclick="lovd_navPage(\'' . $sViewListID . '\', ' . ($_GET['page'] + 1) . ');"' : 'class="inactive"') . '>Next &#155;</TH>' . "\n" .
-              '          <TH ' . ($_GET['page'] != $nPages? 'onclick="lovd_navPage(\'' . $sViewListID . '\', ' . $nPages .');"' : 'class="inactive"') . '>Last &raquo;</TH>');
+              '          <TH ' . (($_GET['page_size'] * $_GET['page']) < $total? 'onclick="lovd_AJAX_viewListGoToPage(\'' . $sViewListID . '\', ' . ($_GET['page'] + 1) . ');"' : 'class="inactive"') . '>Next &#155;</TH>' . "\n" .
+              '          <TH ' . ($_GET['page'] != $nPages? 'onclick="lovd_AJAX_viewListGoToPage(\'' . $sViewListID . '\', ' . $nPages .');"' : 'class="inactive"') . '>Last &raquo;</TH>');
     }
 
     print('</TR></TABLE>' . "\n\n");
