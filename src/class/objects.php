@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-05-17
+ * Modified    : 2011-05-18
  * For LOVD    : 3.0-pre-20
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -66,6 +66,8 @@ class LOVD_Object {
     var $aColumnsViewEntry = array();
     var $aColumnsViewList = array();
     var $sSortDefault = '';
+    var $sRowID = ''; // FIXME; needs getter and setter?
+    var $sRowLink = ''; // FIXME; needs getter and setter?
     var $nCount = 0;
     // FIXME; moet deze niet in LOVD_Custom ?
     var $sObjectID = '';
@@ -87,6 +89,11 @@ class LOVD_Object {
         // Default query.
         if (!$this->aSQLViewList['SELECT']) { $this->aSQLViewList['SELECT'] = '*'; }
         if (!$this->aSQLViewList['FROM']) { $this->aSQLViewList['FROM'] = constant($this->sTable); }
+
+        // Set default row ID and link for viewList().
+//        $this->sRowID = strtolower($this->sObject) . '_{{ID}}';
+        $this->sRowID = '{{ID}}'; // FIXME; having the object in front of it seems better, but then we need to isolate the ID using JS if we need it.
+        $this->sRowLink = strtolower($this->sObject) . 's/{{ID}}';
     }
 
 
@@ -861,10 +868,31 @@ class LOVD_Object {
         }
 
         while ($zData = mysql_fetch_assoc($q)) {
+            if (!isset($zData['row_id'])) {
+                if ($this->sRowID !== '' && isset($zData['id'])) {
+                    $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
+                } else {
+                    $zData['row_id'] = '';
+                }
+            }
+            if (!isset($zData['row_link'])) {
+                if ($this->sRowLink !== '' && isset($zData['id'])) {
+                    $zData['row_link'] = str_replace(array('{{ID}}', '{{ViewListID}}'), array(rawurlencode($zData['id']), $sViewListID), $this->sRowLink);
+                    //$zData['row_link'] = preg_replace('/\{\{zData_(\w)+\}\}/', rawurlencode("$1"), $zData['row_link']);
+                    //$zData['row_link'] = preg_replace_callback('/\{\{zData_(\w+)\}\}/', create_function('$aRegs', 'global $zData; return rawurlencode($zData[$aRegs[1]]);'), $zData['row_link']);
+                    // FIXME; sorry, couldn't figure out how to do this in one line. Suggestions are welcome.
+                    foreach ($zData as $key => $val) {
+                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_link']);
+                    }
+                } else {
+                    $zData['row_link'] = '';
+                }
+            }
             $zData = $this->prepareData($zData);
 
+            // FIXME; rawurldecode() in the line below should have a better solution.
             print("\n" .
-                  '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (empty($zData['row_id'])? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (empty($zData['id'])? '' : ' style="cursor : pointer;"') . (empty($zData['row_link'])? '' : ' onclick="window.location.href = \'' . $zData['row_link'] . '\';"') . '>');
+                  '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . $zData['row_link'] . '\';') . '"') . '>');
             foreach ($this->aColumnsViewList as $sField => $aCol) {
                 if (in_array($sField, $aColsToSkip)) {
                     continue;

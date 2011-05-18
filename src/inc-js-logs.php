@@ -40,11 +40,11 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
 }
 ?>
 
-function lovd_AJAX_deleteLogEntry (sViewListID, nID)
+function lovd_AJAX_deleteLogEntry (sViewListID, sID)
 {
     // Create HTTP request object.
     var objHTTP = lovd_createHTTPRequest();
-    objElement = document.getElementById(nID);
+    objElement = document.getElementById(sID);
     objElement.style.cursor = 'progress';
     if (objHTTP) {
         objHTTP.onreadystatechange = function ()
@@ -54,7 +54,7 @@ function lovd_AJAX_deleteLogEntry (sViewListID, nID)
                 if (objHTTP.status == 200) {
                     if (objHTTP.responseText == '1') {
                         // Object successfully deleted.
-                        lovd_AJAX_viewListHideRow(sViewListID, nID);
+                        lovd_AJAX_viewListHideRow(sViewListID, sID);
                         document.forms['viewlistForm_' + sViewListID].total.value --;
                         lovd_AJAX_viewListUpdateEntriesString(sViewListID);
 // FIXME; disable for IE or try to fix?
@@ -77,7 +77,7 @@ function lovd_AJAX_deleteLogEntry (sViewListID, nID)
                 }
             }
         }
-        objHTTP.open('GET', '<?php echo lovd_getInstallURL() . 'ajax/delete_log.php?id='; ?>' + escape(nID), true);
+        objHTTP.open('GET', '<?php echo lovd_getInstallURL() . 'ajax/delete_log.php?id='; ?>' + escape(sID), true);
         objHTTP.send(null);
     }
 }

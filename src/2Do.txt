@@ -18,15 +18,11 @@ Doen voor Alpha-01:
   * En check andere viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
 - (Ivar) TABLE_VARIANTS: INDEX (position_g_start, position_g_end),
   moet zijn:      INDEX (chromosome, position_g_start, position_g_end),
-- (Ivo)  De volgende stap na het maken van een gen, moet je terecht komen op:
+- (Ivo) De volgende stap na het maken van een gen, moet je terecht komen op:
       /genes/GENE?authorize en/of /genes/GENE?sortCurators
       Toont een viewList() van users (indien level >= LEVEL_MANAGER) met alle gebruikers die GEEN curator of collaborators zijn (op basis van user IDs)
-      Toont sowieso een lijst van de curators (standaard de huidige gebruiker) die sorteerbaar is (copy van LOVD 2.0) met vinkjes om de curatoren onzichtbaar te maken
-      Toont daaronder een lijst (standaard leeg) van collaborators (mensen die hidden data mogen zien, maar niets mogen editen)
-      De viewList(), indien aanwezig, heeft knopjes nodig om een gebruiker als curator of collaborator te kiezen. Dat moet met JS automatisch gebeuren.
-        De gebruiker verdwijnt dan uit de viewList(), gebruik code voor Logs hier voor?
-        De gebruiker verschijnt dan in de lijst waar hij is aan is toegevoegd.
-      De entries in de twee lijsten (curators en collaborators) moeten ook weer teruggeplaatst kunnen worden in de viewList.
+      De entries in de curator lijst moeten ook weer teruggeplaatst kunnen worden in de viewList.
+      Het verschil tussen ?authorize en ?sortCurators moet nog gemaakt worden. De laatste moet beschikbaar zijn voor curators.
 - (Ivo) Encoding wachtwoorden omzetten, (random?) salt gebruiken. Heeft MySQL wel sha1() functie?
 - loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; array (;) of nested array (;;).
 - (Ivar) Waarom geen wachtwoord nodig bij individual edit?
@@ -37,7 +33,7 @@ Doen voor Alpha-01:
 - Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
 - Custom columns can't be removed/disabled.
 - Ivar: I included code in lovd_queryDB() that implodes arrays in $aArgs automatically using ;. Agreed? If not, LOVD should implode multiple select custom columns specifically, which it does not currently do.
-- Test in IE of sorting icoontje nu inderdaad netjes naast de header tekst blijft staan.
+- (Ivar) Test in IE of sorting icoontje nu inderdaad netjes naast de header tekst blijft staan.
 - Should we mark in the system settings the features that we did not implement yet?
 - Allele has not been enabled, correct? What to do with it? Rename? Different values? Homozygous as one value in stead of two variants?
 - Do we still need current_db in TABLE_USERS?
@@ -55,6 +51,12 @@ Doen voor Alpha-01:
     SOAP response :
         senv:Server - 'IdList'
 - Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD!!!
+- INSTALL.txt is niet helemaal correct - er staat nog info in over de .ini die niet meer bestaat. Op zich hoeft de config.ini.php niet beveiligd te worden, toch?
+  * Of misschien toch, problemen te voorkomen als iemand die header weg haalt?
+- Bug: <FORM> van viewList() sluit zich niet, als er geen resultaten zijn.
+- Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
+- Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
+- Leuke bug; /genes/DMD?authorize -> click alle users aan -> resort viewList.
 
 
 

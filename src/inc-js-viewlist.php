@@ -169,6 +169,7 @@ function lovd_AJAX_viewListGoToPage (sViewListID, nPage) {
 
 function lovd_AJAX_viewListHideRow (sViewListID, sElementID)
 {
+    // FIXME; not actually an AJAX function.
     // FIXME; not really correct; the entire first part gets repeatedly called. It should only be the last part.
     oTable = document.getElementById('viewlistTable_' + sViewListID);
     oElement = document.getElementById(sElementID);
@@ -279,6 +280,7 @@ if (!isset($_GET['nohistory'])) {
 
 function lovd_AJAX_viewListUpdateEntriesString (sViewListID)
 {
+    // FIXME; not actually an AJAX function.
     // Updates the line above the table that says; "# entries on # pages". Showing entries # - ##."
     oForm = document.forms['viewlistForm_' + sViewListID];
     var nPages = Math.ceil(oForm.total.value / oForm.page_size.value);
