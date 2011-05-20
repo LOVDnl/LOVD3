@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-05-04
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-17
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -40,45 +40,44 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_Variant extends LOVD_Custom {
+class LOVD_GenomeVariant extends LOVD_Custom {
     // This class extends the basic Object class and it handles the Link object.
-    var $sObject = 'Variant';
+    var $sObject = 'Genome_Variant';
+    var $sCategory = 'VariantOnGenome';
+    var $sTable = 'TABLE_VARIANTS';
     var $bShared = false;
 
 
 
 
 
-    function LOVD_Variant ()
+    function LOVD_GenomeVariant ()
     {
         // Default constructor.
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT v.*, ' .
-                               'FROM ' . TABLE_VARIANTS . ' AS v ' .
-                               'WHERE id=? ' .
-                               'GROUP BY=v.id';
+        $this->sSQLLoadEntry = 'SELECT vog.*, ' .
+                               'FROM ' . TABLE_VARIANTS . ' AS vog ' .
+                               'WHERE vog.id=? ' .
+                               'GROUP BY=vog.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'v.*, ' .
+        $this->aSQLViewEntry['SELECT']   = 'vog.*, ' .
                                            'uc.name AS created_by_, ' .
-                                           'ue.name AS edited_by_, ' .
-                                           'count(vot.transcriptid) AS transcripts';
-        $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS v ' .
-                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (v.created_by = uc.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (v.edited_by = ue.id)';
-        $this->aSQLViewEntry['GROUP_BY'] = 'v.id';
+                                           'ue.name AS edited_by_';
+        $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS vog ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (vog.edited_by = ue.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'vog.id';
 
         // SQL code for viewing the list of variants
         // FIXME: we should implement this in a different way
-        $this->aSQLViewList['SELECT']   = 'v.*, ' .
-                                          'vot.transcriptid';
-        $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS v ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)';
-        $this->aSQLViewList['GROUP_BY'] = 'v.id';
+        $this->aSQLViewList['SELECT']   = 'vog.*, ' .
+                                          'GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids';
+        $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
+                                          'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)';
+        $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
-        // Run parent constructor to find out about the custom columns.
         parent::LOVD_Custom();
         
         // List of columns and (default?) order for viewing an entry.
@@ -95,7 +94,7 @@ class LOVD_Variant extends LOVD_Custom {
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'valid_from_' => array('Date edited', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date edited', LEVEL_COLLABORATOR),
                       ));
 
         // Because the disease information is publicly available, remove some columns for the public.
@@ -103,23 +102,25 @@ class LOVD_Variant extends LOVD_Custom {
         
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
-                 $this->buildViewList(),
                  array(
-                        'transcriptid' => array(
-                                    'view' => array('Transcript ID', 110),
-                                    'db'   => array('vot.transcriptid', 'ASC', true)),
+                        'screeningids' => array(
+                                    'view' => array('Screening ID', 90),
+                                    'db'   => array('screeningids', 'ASC', 'TEXT')),
                         'id' => array(
                                     'view' => array('Variant ID', 90),
-                                    'db'   => array('v.id', 'ASC', true)),
+                                    'db'   => array('vog.id', 'ASC', true))
+                      ),
+                 $this->buildViewList(),
+                 array(
                         'allele' => array(
                                     'view' => array('Allele', 100),
-                                    'db'   => array('v.allele', 'ASC', true)),
+                                    'db'   => array('vog.allele', 'ASC', true)),
                         'pathogenicid' => array(
                                     'view' => array('Pathogenicity', 110),
-                                    'db'   => array('v.pathogenicid', 'ASC', true)),
+                                    'db'   => array('vog.pathogenicid', 'ASC', true)),
                         'type' => array(
                                     'view' => array('Type', 70),
-                                    'db'   => array('v.type', 'ASC', true)),
+                                    'db'   => array('vog.type', 'ASC', true)),
                       ));
         
         $this->sSortDefault = 'id';
@@ -164,6 +165,7 @@ class LOVD_Variant extends LOVD_Custom {
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'variants/' . rawurlencode($zData['id']);
+            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         }
         
         return $zData;

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-05-04
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-20
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -68,17 +68,19 @@ class LOVD_Individual extends LOVD_Custom {
                                            'GROUP_CONCAT(DISTINCT d.id, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
                                            // FIXME; TABLE_PHENOTYPES heeft een individual ID, dus je kunt een gewone count(*) opvragen, je hebt geen lijst phenotype IDs nodig.
                                            'GROUP_CONCAT(DISTINCT p.id, ";", p.diseaseid SEPARATOR ";;") AS phenotypes, ' .
+                                           'GROUP_CONCAT(DISTINCT s.id SEPARATOR "|") AS screeningids, ' .
                                            'uo.id AS owner, ' .
                                            'uo.name AS owner_, ' .
-                                           's.name AS status, ' .
+                                           'ds.name AS status, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.ownerid = uo.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS s ON (i.statusid = s.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (i.statusid = ds.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (i.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'i.id';
@@ -109,7 +111,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'valid_from_' => array('Date edited', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date edited', LEVEL_COLLABORATOR),
                       ));
 
         // Because the gene information is publicly available, remove some columns for the public.
@@ -135,7 +137,7 @@ class LOVD_Individual extends LOVD_Custom {
                                     'db'   => array('uo.name', 'ASC', true)),
                         'status' => array(
                                     'view' => array('Status', 70),
-                                    'db'   => array('s.name', false, true)),
+                                    'db'   => array('ds.name', false, true)),
                       ));
         $this->sSortDefault = 'individualid';
     }
@@ -146,11 +148,17 @@ class LOVD_Individual extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        global $_AUTH;
+        global $_AUTH, $_SETT;
         
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
+            
+            if ($_AUTH['level'] < LEVEL_CURATOR) {
+                if ($zData['statusid'] > $aData['statusid']) {
+                    lovd_errorAdd('statusid' ,'Not allowed to change \'Status of this data\' from ' . $_SETT['var_status'][$zData['statusid']] . ' to ' . $_SETT['var_status'][$aData['statusid']] . '.');
+                }
+            }
         }
 
         // Mandatory fields.
@@ -201,12 +209,9 @@ class LOVD_Individual extends LOVD_Custom {
             }
         }
 
-        // FIXME; nee, haal dit uit $_SETT! Het staat daar niet voor niets gedefinieerd ;)
-        // Of haal het uit de getForm(), zie opmerking hierboven.
-        $aStatus = array('4', '7', '9');
         // FIXME; deze ifs kunnen efficienter.
         if (isset($_POST['statusid'])) {
-            if (!in_array($_POST['statusid'], $aStatus) && $_AUTH['level'] >= LEVEL_CURATOR) {
+            if (!isset($_SETT['var_status'][$_POST['statusid']]) && $_AUTH['level'] >= LEVEL_CURATOR) {
                 lovd_errorAdd('statusid' ,'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
                 // FIXME; Als het een verplicht veld is, hoef je deze if al niet meer te doen.
@@ -229,7 +234,7 @@ class LOVD_Individual extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
         
         // Get list of diseases
         $aDiseasesForm = array();
@@ -246,15 +251,9 @@ class LOVD_Individual extends LOVD_Custom {
             // wordt de waarde automatisch genegeerd. Nu moest je een uitzondering plaatsen in checkFields() en individuals.php.
             $aDiseasesForm = array('None' => 'No disease entries available');
         }
-        $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
 
+        $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
         $aSelectOwner = array();
-        // FIXME; nee, gebruik $_SETT['var_status']!!! (die data_status moet heten ;))
-        $aSelectStatus = array(
-                            '4' => 'Non public',
-                            '7' => 'Marked',
-                            '9' => 'Public',
-                              );
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             // FIXME; sorteren ergens op? Naam? Of land? Kijk naar hoe dit in LOVD 2.0 geregeld is.
@@ -263,7 +262,7 @@ class LOVD_Individual extends LOVD_Custom {
                 $aSelectOwner[$z['id']] = $z['name'];
             }
             $aFormOwner = array('Owner of this individual', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
-            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false);
+            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $_SETT['var_status'], false, false, false);
         } else {
             // FIXME; dit moet dan dus de owner zijn, mag die de status niet aanpassen (niet publiek -> wel publiek) of een publieke entry bewerken?
             // Overigens, in jouw code mogen alleen managers hier komen... Dit moet even goed worden uitgedacht.
@@ -318,27 +317,21 @@ class LOVD_Individual extends LOVD_Custom {
             $zData['row_link'] = 'individuals/' . rawurlencode($zData['id']);
             $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
-            /*$zData['diseases_'] = $zData['disease_omim_'] = '';
-            if (!empty($zData['diseases'])) {
-                $aDiseases = explode(';;', $zData['diseases']);
-                foreach ($aDiseases as $sDisease) {
-                    list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
-                    $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
-                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
-                }
-            }*/
-            
             $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
         }
 
         return $zData;
     }
 
+
+
+
+
     function setDefaultValues ()
     {
         global $_AUTH;
         
-        $_POST['statusid'] = '9';
+        $_POST['statusid'] = STATUS_OK;
         $_POST['ownerid'] = $_AUTH['id'];
         $this->initDefaultValues();
     }

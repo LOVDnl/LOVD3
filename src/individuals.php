@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-05-05
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-20
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -78,6 +78,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
+        $sNavigation .= ' | <A href="screenings?create&target=' . $nID . '">Add screening</A>';
         $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
     }
 
@@ -120,13 +121,16 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         print('<BR>' . "\n");
         lovd_showInfoTable('No disease entries found for this individual', 'stop');
     }
-
+    unset($_GET['search_individualid']);
+    unset($_GET['search_diseaseid']);
+    
+    $_GET['search_screeningids'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants', 'H4');
-    require ROOT_PATH . 'class/object_variants.php';
-    $_DATA = new LOVD_Variant();
+    require ROOT_PATH . 'class/object_genome_variants.php';
+    $_DATA = new LOVD_GenomeVariant();
     $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, 'individualid', true);
+    $_DATA->viewList(false, 'screeningids', true);
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -144,8 +148,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     define('LOG_EVENT', 'IndividualCreate');
 
     // Require manager clearance.
-    // FIXME; adapt level
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_requireAUTH(LEVEL_SUBMITTER);
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
@@ -159,17 +162,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('ownerid', 'statusid', 'created_by', 'created_date', 'valid_from', 'valid_to'),
+                            array('ownerid', 'statusid', 'created_by', 'created_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
-            // FIXME; gebruik hier geen 4 maar de code die er voor staat: STATUS_...
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : '4');
+            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
-            $_POST['valid_from'] = date('Y-m-d H:i:s');
-            $_POST['valid_to'] = '9999-12-31 00:00:00';
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
@@ -279,17 +279,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('ownerid', 'statusid', 'edited_by', 'valid_from', 'valid_to'),
+                            array('ownerid', 'statusid', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
             // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
-            // FIXME; gebruik constants, geen nummers!
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : '4');
+            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['edited_by'] = $_AUTH['id'];
-            $_POST['valid_from'] = date('Y-m-d H:i:s');
-            $_POST['valid_to'] = '9999-12-31 00:00:00';
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
 
             // FIXME: implement versioning in updateEntry!
             $_DATA->updateEntry($nID, $_POST, $aFields);

@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-05-02
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-20
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -352,6 +352,80 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_LOGS . ' ADD CONSTRAINT ' . TABLE_LOGS . '_fk_userid FOREIGN KEY (userid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
                                     'ALTER TABLE ' . TABLE_HITS . ' ADD CONSTRAINT ' . TABLE_HITS . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
                                   ),
+                       '3.0-pre-21' =>
+                             array(           
+                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN chrom_band VARCHAR(20) NOT NULL',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP KEY `position_g_start`',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (chromosome, position_g_start, position_g_end)',
+                                    'DELETE FROM ' . TABLE_COLS . ' WHERE id="Individual/Phenotype/Disease"',
+
+                                    // VARIANTS
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' DROP FOREIGN KEY ' . TABLE_SCR2VAR . '_fk_variantid',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP PRIMARY KEY',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' CHANGE COLUMN valid_from edited_date DATETIME NOT NULL',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD PRIMARY KEY (id, edited_date)',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' ADD CONSTRAINT ' . TABLE_SCR2VAR . '_fk_variantid FOREIGN KEY (variantid) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id FOREIGN KEY (id) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP COLUMN valid_to',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_fk_deleted_by',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP COLUMN deleted_by',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP COLUMN deleted',
+
+                                    // VARIANTS_ON_TRANSCRIPTS
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP PRIMARY KEY',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' CHANGE COLUMN valid_from edited_date DATETIME NOT NULL',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD PRIMARY KEY (id, edited_date, transcriptid)',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id FOREIGN KEY (id) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP COLUMN valid_from',
+
+                                    // INDIVIDUALS
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL',
+                                    'ALTER TABLE ' . TABLE_IND2DIS . ' DROP FOREIGN KEY ' . TABLE_IND2DIS . '_fk_individualid',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_fk_individualid',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_fk_individualid',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP PRIMARY KEY',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' CHANGE COLUMN valid_from edited_date DATETIME NOT NULL',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD PRIMARY KEY (id, edited_date)',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_IND2DIS . ' ADD CONSTRAINT ' . TABLE_IND2DIS . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP COLUMN valid_to',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP FOREIGN KEY ' . TABLE_INDIVIDUALS . '_fk_deleted_by',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP COLUMN deleted_by',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP COLUMN deleted',
+
+                                    // PHENOTYPES
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP PRIMARY KEY',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' CHANGE COLUMN valid_from edited_date DATETIME NOT NULL',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD PRIMARY KEY (id, edited_date)',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP COLUMN valid_to',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_fk_deleted_by',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP COLUMN deleted_by',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP COLUMN deleted',
+
+                                    // SCREENINGS
+                                    'ALTER TABLE ' . TABLE_SCR2GENE . ' DROP FOREIGN KEY ' . TABLE_SCR2GENE . '_fk_screeningid',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' DROP FOREIGN KEY ' . TABLE_SCR2VAR . '_fk_screeningid',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP PRIMARY KEY',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' CHANGE COLUMN valid_from edited_date DATETIME NOT NULL',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD PRIMARY KEY (id, edited_date)',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                                    'ALTER TABLE ' . TABLE_SCR2GENE . ' ADD CONSTRAINT ' . TABLE_SCR2GENE . '_fk_screeningid FOREIGN KEY (screeningid) REFERENCES ' . TABLE_SCREENINGS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCR2VAR . ' ADD CONSTRAINT ' . TABLE_SCR2VAR . '_fk_screeningid FOREIGN KEY (screeningid) REFERENCES ' . TABLE_SCREENINGS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN valid_to',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_fk_deleted_by',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN deleted_by',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN deleted',
+                                  ),
                   );
 
     // Addition for upgrade to LOVD v.3.0-pre-07.
@@ -404,7 +478,16 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         }
     }
 
-
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-pre-21')) {
+        $q = lovd_queryDB('DESCRIBE ' . TABLE_INDIVIDUALS);
+        if ($q) {
+            while($aColumn = mysql_fetch_assoc($q)) {
+                if ($aColumn['Field'] == 'Individual/Phenotype/Disease') {
+                    $aUpdates['3.0-pre-21'][] = 'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP COLUMN `Individual/Phenotype/Disease`';
+                }
+            }
+        }
+    }
 
 
 

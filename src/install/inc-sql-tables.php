@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-04-28
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-19
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -106,7 +106,7 @@ $aTableSQL =
     id VARCHAR(12) NOT NULL,
     name VARCHAR(255) NOT NULL,
     chromosome VARCHAR(2) NOT NULL,
-    chrom_band VARCHAR(20) NULL,
+    chrom_band VARCHAR(20) NOT NULL,
     refseq_genomic VARCHAR(15) NOT NULL,
     refseq_UD VARCHAR(25) NOT NULL,
     reference VARCHAR(255) NOT NULL,
@@ -235,23 +235,39 @@ $aTableSQL =
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
-    valid_from DATETIME NOT NULL,
-    valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
-    deleted BOOLEAN NOT NULL,
-    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
-    PRIMARY KEY (id, valid_from),
-    INDEX (valid_to),
+    edited_date DATETIME NOT NULL,
+    PRIMARY KEY (id, edited_date),
     INDEX (ownerid),
     INDEX (statusid),
     INDEX (created_by),
     INDEX (edited_by),
-    INDEX (deleted_by),
     CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
+
+//          , 'TABLE_INDIVIDUALS_REV' =>
+//   'CREATE TABLE ' . TABLE_INDIVIDUALS_REV . ' (
+//    id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+//    ownerid SMALLINT(5) UNSIGNED ZEROFILL,
+//    statusid TINYINT(1) UNSIGNED,
+//    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
+//    valid_from DATETIME NOT NULL,
+//    valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
+//    deleted BOOLEAN NOT NULL,
+//    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
+//    PRIMARY KEY (id, valid_from),
+//    INDEX (valid_to),
+//    INDEX (ownerid),
+//    INDEX (statusid),
+//    INDEX (edited_by),
+//    INDEX (deleted_by),
+//    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+//    ' . $sSettings
 
          , 'TABLE_IND2DIS' =>
    'CREATE TABLE ' . TABLE_IND2DIS . ' (
@@ -277,27 +293,53 @@ $aTableSQL =
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
-    valid_from DATETIME NOT NULL,
-    valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
-    deleted BOOLEAN NOT NULL,
-    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
-    PRIMARY KEY (id, valid_from),
-    INDEX (valid_to),
+    edited_date DATETIME NOT NULL,
+    PRIMARY KEY (id, edited_date),
     INDEX (allele),
     INDEX (pathogenicid),
-    INDEX (position_g_start, position_g_end),
+    INDEX (chromosome, position_g_start, position_g_end),
     INDEX (ownerid),
     INDEX (statusid),
     INDEX (created_by),
     INDEX (edited_by),
-    INDEX (deleted_by),
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_VARIANTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_VARIANTS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+    CONSTRAINT ' . TABLE_VARIANTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
+
+//         , 'TABLE_VARIANTS_REV' =>
+//   'CREATE TABLE ' . TABLE_VARIANTS_REV . ' (
+//    id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+//    allele TINYINT(2) UNSIGNED NOT NULL,
+//    pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
+//    chromosome VARCHAR(2) NOT NULL,
+//    position_g_start INT UNSIGNED,
+//    position_g_end INT UNSIGNED,
+//    type VARCHAR(10),
+//    ownerid SMALLINT(5) UNSIGNED ZEROFILL,
+//    statusid TINYINT(1) UNSIGNED,
+//    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
+//    valid_from DATETIME NOT NULL,
+//    valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
+//    deleted BOOLEAN NOT NULL,
+//    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
+//    PRIMARY KEY (id, valid_from),
+//    INDEX (valid_to),
+//    INDEX (allele),
+//    INDEX (pathogenicid),
+//    INDEX (chromosome, position_g_start, position_g_end),
+//    INDEX (ownerid),
+//    INDEX (statusid),
+//    INDEX (edited_by),
+//    INDEX (deleted_by),
+//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+//    ' . $sSettings
 
          , 'TABLE_VARIANTS_ON_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (
@@ -308,8 +350,8 @@ $aTableSQL =
     position_c_start_intron INT,
     position_c_end MEDIUMINT,
     position_c_end_intron INT,
-    valid_from DATETIME NOT NULL,
-    PRIMARY KEY (id, valid_from, transcriptid),
+    edited_date DATETIME NOT NULL,
+    PRIMARY KEY (id, edited_date, transcriptid),
     INDEX (transcriptid),
     INDEX (pathogenicid),
     INDEX (position_c_start, position_c_end),
@@ -318,6 +360,26 @@ $aTableSQL =
     CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
+
+//         , 'TABLE_VARIANTS_ON_TRANSCRIPTS_REV' =>
+//   'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS_REV . ' (
+//    id INT(10) UNSIGNED ZEROFILL NOT NULL,
+//    transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+//    pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
+//    position_c_start MEDIUMINT,
+//    position_c_start_intron INT,
+//    position_c_end MEDIUMINT,
+//    position_c_end_intron INT,
+//    valid_from DATETIME NOT NULL,
+//    PRIMARY KEY (id, valid_from, transcriptid),
+//    INDEX (transcriptid),
+//    INDEX (pathogenicid),
+//    INDEX (position_c_start, position_c_end),
+//    INDEX (position_c_start, position_c_start_intron, position_c_end, position_c_end_intron),
+//    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id FOREIGN KEY (id) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+//    ' . $sSettings
 
          , 'TABLE_PHENOTYPES' =>
    'CREATE TABLE ' . TABLE_PHENOTYPES . ' (
@@ -328,25 +390,44 @@ $aTableSQL =
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
-    valid_from DATETIME NOT NULL,
-    valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
-    deleted BOOLEAN NOT NULL,
-    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
-    PRIMARY KEY (id, valid_from),
-    INDEX (valid_to),
+    edited_date DATETIME NOT NULL,
+    PRIMARY KEY (id, edited_date),
     INDEX (diseaseid),
     INDEX (individualid),
     INDEX (ownerid),
     INDEX (created_by),
     INDEX (edited_by),
-    INDEX (deleted_by),
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_diseaseid FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
+
+//         , 'TABLE_PHENOTYPES_REV' =>
+//   'CREATE TABLE ' . TABLE_PHENOTYPES_REV . ' (
+//    id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+//    diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+//    individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+//    ownerid SMALLINT(5) UNSIGNED ZEROFILL,
+//    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
+//    valid_from DATETIME NOT NULL,
+//    valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
+//    deleted BOOLEAN NOT NULL,
+//    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
+//    PRIMARY KEY (id, valid_from),
+//    INDEX (valid_to),
+//    INDEX (diseaseid),
+//    INDEX (individualid),
+//    INDEX (ownerid),
+//    INDEX (edited_by),
+//    INDEX (deleted_by),
+//    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_diseaseid FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+//    ' . $sSettings
 
          , 'TABLE_SCREENINGS' =>
    'CREATE TABLE ' . TABLE_SCREENINGS . ' (
@@ -356,23 +437,39 @@ $aTableSQL =
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
-    valid_from DATETIME NOT NULL,
-    valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
-    deleted BOOLEAN NOT NULL,
-    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
-    PRIMARY KEY (id, valid_from),
-    INDEX (valid_to),
+    edited_date DATETIME NOT NULL,
+    PRIMARY KEY (id, edited_date),
     INDEX (individualid),
     INDEX (ownerid),
     INDEX (created_by),
     INDEX (edited_by),
-    INDEX (deleted_by),
     CONSTRAINT ' . TABLE_SCREENINGS . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_SCREENINGS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_SCREENINGS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_SCREENINGS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_SCREENINGS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+    CONSTRAINT ' . TABLE_SCREENINGS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
+
+//         , 'TABLE_SCREENINGS_REV' =>
+//   'CREATE TABLE ' . TABLE_SCREENINGS_REV . ' (
+//    id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+//    individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+//    ownerid SMALLINT(5) UNSIGNED ZEROFILL,
+//    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
+//    valid_from DATETIME NOT NULL,
+//    valid_to DATETIME NOT NULL DEFAULT "9999-12-31",
+//    deleted BOOLEAN NOT NULL,
+//    deleted_by SMALLINT(5) UNSIGNED ZEROFILL,
+//    PRIMARY KEY (id, valid_from),
+//    INDEX (valid_to),
+//    INDEX (individualid),
+//    INDEX (ownerid),
+//    INDEX (edited_by),
+//    INDEX (deleted_by),
+//    CONSTRAINT ' . TABLE_SCREENINGS . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_SCREENINGS . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_SCREENINGS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_SCREENINGS . '_fk_deleted_by FOREIGN KEY (deleted_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+//    ' . $sSettings
 
          , 'TABLE_SCR2GENE' =>
    'CREATE TABLE ' . TABLE_SCR2GENE . ' (

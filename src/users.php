@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-05-16
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-19
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -814,18 +814,21 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-/*//////////////////////////////////////////////////////////////////////////////
-if ($_GET['action'] == 'boot' && is_numeric($_GET['boot'])) {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'boot') {
+    // users/00001?boot
     // Throw a user out of the system.
 
-// Require manager clearance.
-lovd_requireAUTH(LEVEL_MANAGER);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT t1.phpsessid, t1.level FROM ' . TABLE_USERS . ' AS t1 WHERE t1.id = "' . $_GET['boot'] . '"'));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
+    var_dump($zData);
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_users_manage', 'LOVD Setup - Manage authorized users');
+        lovd_printHeader('Boot user #' . $nID, 'LOVD Setup - Manage authorized users');
 
         print('      No such ID!<BR>' . "\n");
         require ROOT_PATH . 'inc-bot.php';
@@ -839,11 +842,9 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
     // Write to log...
     lovd_writeLog('Event', 'UserBoot', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully booted user ' . $_POST['username'] . ' (' . $_POST['name'] . ')');
-    
+
     // Return the user where they came from.
-    // FIXME; wasn't this for the menu that was never implemented?
-    $sAction = (!empty($_GET['return'])? $_GET['return'] . (isset($_GET[$_GET['return']])? '&' . $_GET['return'] . '=' . $_GET[$_GET['return']] : ''): 'view_all');
-    header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=' . $sAction);
+    header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);
     exit;
 }
 
@@ -851,43 +852,52 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
-if (in_array($_GET['action'], array('lock', 'unlock')) && is_numeric($_GET['lock'])) {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(ACTION, array('lock', 'unlock'))) {
+    // users/00001?lock || users/00001?unlock
     // Lock / unlock a user.
 
-// Require manager clearance.
-lovd_requireAUTH(LEVEL_MANAGER);
+    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    define('PAGE_TITLE', ucfirst(ACTION) . ' user account #' . $nID);
+    define('LOG_EVENT', 'User' . ucfirst(ACTION));
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = "' . $_GET['lock'] . '"'));
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    if (GET) {
+        $_POST['workID'] = lovd_generateRandomID();
+        $_SESSION['work'][$_POST['workID']] = array(
+                                                    'action' => 'users/' . $nID . '?' . strtolower(ACTION),
+                                                    'step' => '1',
+                                                   );
+    }
+
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_users_manage', 'LOVD Setup - Manage authorized users');
+        lovd_printHeader(PAGE_TITLE);
         lovd_showInfoTable('No such ID!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
 
     // What are we doing?
-    $sAction = ($zData['locked']? 'Unl' : 'L') . 'ock';
+    $sAction = ucfirst(ACTION);
 
     // The actual query.
-    $sQ = 'UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = "' . $_GET['lock'] . '"';
-    $q = @mysql_query($sQ);
+    $q = @lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID));
     if (!$q) {
         $sError = mysql_error(); // Save the mysql_error before it disappears.
         require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_users_manage', 'LOVD Setup - Manage authorized users');
-        lovd_dbFout('User' . $sAction, $sQ, $sError);
+        lovd_printHeader(PAGE_TITLE);
+        lovd_displayError('User' . $sAction, $sQ, $sError);
     }
 
     // Write to log...
     lovd_writeLog('Event', 'User' . $sAction, $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully ' . strtolower($sAction) . 'ed user ' . $zData['username'] . ' (' . $zData['name'] . ')');
 
     // Return the user where they came from.
-    // FIXME; wasn't this for the menu that was never implemented?
-    $sAction = (!empty($_GET['return'])? $_GET['return'] . (isset($_GET[$_GET['return']])? '&' . $_GET['return'] . '=' . $_GET[$_GET['return']] : ''): 'view_all');
-    header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=' . $sAction);
+    header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);
     exit;
 }
-*///////////////////////////////////////////////////////////////////////////////
 ?>

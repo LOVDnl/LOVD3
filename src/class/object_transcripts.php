@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-05-04
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-17
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -63,6 +63,7 @@ class LOVD_Transcript extends LOVD_Object {
                                            'g.chromosome, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
+                                           'GROUP_CONCAT(vot.id SEPARATOR "|") AS variantids, ' .
                                            'count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                            'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
@@ -212,6 +213,7 @@ class LOVD_Transcript extends LOVD_Object {
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
+            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['gene_name_'] = '<A href="genes/' . $zData['geneid'] . '">' . $zData['geneid'] . '</A> (' . $zData['gene_name'] . ')';
         }

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-05-04
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-20
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -85,22 +85,223 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-    
-    // FIXME; zoals ook bij diseases -> individuals nu; voeg niet screeningid toe aan de genes viewList, maar haal geneids op bij screenings viewEntry, en zoek daar op.
-    $_GET['search_screeningid'] = $nID;
+
+    $_GET['search_geneid'] = (!empty($zData['geneids'])? str_replace("&quot;", "\"", $zData['geneids']) : 0);
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Genes screened', 'H4');
+    print('<BR>' . "\n");
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
     $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, 'screeningid', true, true, false);
+    $_DATA->viewList(false, 'geneid', true, true, false);
+    unset($_GET['search_geneid']);
     
+    $_GET['search_screeningids'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants found', 'H4');
-    require ROOT_PATH . 'class/object_variants.php';
-    $_DATA = new LOVD_Variant();
+    (!$zData['variantids']? print('<BR>' . "\n") : false);
+    require ROOT_PATH . 'class/object_genome_variants.php';
+    $_DATA = new LOVD_GenomeVariant();
     $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, 'screeningid', false, false, false);
+    $_DATA->viewList(false, 'screeningids', false, false, false);
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+    // URL: /screenings?create
+    // Create a new entry.
+
+    define('LOG_EVENT', 'ScreeningCreate');
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_SUBMITTER);
+    
+    if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
+        $_GET['target'] = str_pad($_GET['target'], 8, "0", STR_PAD_LEFT);
+        if (mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id=?', array($_GET['target'])))) {
+            $_POST['individualid'] = $_GET['target'];
+            define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
+        } else {
+            define('PAGE_TITLE', 'Create a new screening information entry');
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'warning');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+    } else {
+        exit;
+    }
+
+    require ROOT_PATH . 'class/object_screenings.php';
+    $_DATA = new LOVD_Screening();
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (POST) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array_merge(
+                            array('individualid', 'ownerid', 'created_by', 'created_date'),
+                            $_DATA->buildFields());
+
+            // Prepare values.
+            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['created_by'] = $_AUTH['id'];
+            $_POST['created_date'] = date('Y-m-d H:i:s');
+
+            $nID = $_DATA->insertEntry($_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Created screening information entry ' . $nID);
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully created the screening information entry!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        }
+    } else {
+        // Default values.
+        $_DATA->setDefaultValues();
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    if (GET) {
+        print('      To create a new screening information entry, please fill out the form below.<BR>' . "\n" .
+              '      <BR>' . "\n\n");
+    }
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+    lovd_includeJS('inc-js-insert-custom-links.php');
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '&target=' . $_POST['individualid'] . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        array('', '', 'submit', 'Create screening information entry'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+    // URL: /screenings/0000000001?edit
+    // Edit an entry.
+
+    $nID = str_pad($_PATH_ELEMENTS[1], 10, "0", STR_PAD_LEFT);
+    define('PAGE_TITLE', 'Edit an screening information entry');
+    define('LOG_EVENT', 'ScreeningEdit');
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_screenings.php';
+    $_DATA = new LOVD_Screening();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array_merge(
+                            array('ownerid', 'edited_by', 'edited_date'),
+                            $_DATA->buildFields());
+
+            // Prepare values.
+            $_POST['individualid'] = $zData['individualid'];
+            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
+            
+            // FIXME: implement versioning in updateEntry!
+            $_DATA->updateEntry($nID, $_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Edited screening information entry ' . $nID);
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully edited the screening information entry!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        }
+    } else {
+        // Default values.
+        foreach ($zData as $key => $val) {
+            $_POST[$key] = $val;
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    if (GET) {
+        print('      To edit an screening information entry, please fill out the form below.<BR>' . "\n" .
+              '      <BR>' . "\n\n");
+    }
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+    lovd_includeJS('inc-js-insert-custom-links.php');
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        array('', '', 'submit', 'Edit screening information entry'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

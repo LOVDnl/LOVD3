@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-04-29
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-10
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -42,8 +42,6 @@ if (!defined('ROOT_PATH')) {
 $aColSQL =
          array(
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Lab_ID",                    0,  80, 1, 1, 1, "Lab\'s ID",            "", "The ID given to this individual by its reference.", "The ID given to this individual by its reference, such as a hospital, diagnostic laboratory or a paper.", "VARCHAR(15)", "Lab ID||text|10", "", "", 0, 1, 0, 1, NOW(), NULL, NULL)',
-                // Remove?
-                'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Phenotype/Disease",         0, 200, 1, 1, 0, "Disease",              "", "Disease phenotype, as reported in paper/by submitter, unless modified by the curator.", "Disease phenotype of the individual(s).", "VARCHAR(50)", "Disease||select|4|false|true|false", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
                 // There no longer is a submitted: link.
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Reference",                 0, 200, 1, 1, 0, "Reference",            "", "Reference describing the individual, &quot;Submitted:&quot; indicating that the mutation was submitted directly to this database.", "Literature reference with possible link to publication in PubMed or other online resource. &quot;Submitted:&quot; indicates that the mutation was submitted directly to this database by the laboratory indicated.", "VARCHAR(200)", "Reference||text|50", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("Individual/Remarks",                   0, 200, 0, 1, 0, "Remarks",              "", "", "", "TEXT", "Remarks||textarea|50|3", "", "", 1, 1, 1, 1, NOW(), NULL, NULL)',

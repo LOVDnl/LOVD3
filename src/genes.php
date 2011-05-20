@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-05-16
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-19
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -53,8 +53,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
-    // FIXME; waarom screeningid bij genes? (zie ook object_genes.php)
-    $_DATA->viewList(false, 'screeningid');
+    $_DATA->viewList(false, 'geneid');
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

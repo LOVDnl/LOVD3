@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2011-04-15
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-12
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -48,8 +48,8 @@ $aNeededLevel =
                 'Transcript' => 0,
                 'User' => LEVEL_MANAGER,
                 'Variant' => 0, // FIXME; Remove later when object Variant no longer exists.
-                'VariantOnGenome' => 0,
-                'VariantOnTranscript' => 0,
+                'Genome_Variant' => 0,
+                'Transcript_Variant' => 0,
                 'Individual' => 0,
                 'Screening' => 0,
                 'Phenotype' => 0,
@@ -79,11 +79,11 @@ define('_INC_TOP_INCLUDED_', 'ajax');
 
 
 $sID = '';
-if (in_array($_GET['object'], array('Phenotype', 'VariantOnTranscript'))) {
+if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant'))) {
     $sID = $_GET['object_id'];
 }
 require $sFile;
-$_GET['object'] = 'LOVD_' . ucwords($_GET['object']);
+$_GET['object'] = 'LOVD_' . str_replace('_', '', $_GET['object']); // FIXME; test dit op een windows, test case-insensitivity.
 $aColsToSkip = (!empty($_GET['skip'])? $_GET['skip'] : array());
 $_DATA = new $_GET['object']($sID);
 // Set $bHideNav to false always, since this ajax request could only have been sent if there were navigation buttons.

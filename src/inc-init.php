@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-04-15
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-19
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -93,7 +93,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-pre-20',
+                            'version' => '3.0-pre-21',
                           ),
                 'user_levels' =>
                      array(
@@ -432,6 +432,13 @@ $_TABLES =
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
                 'TABLE_HITS' => TABLEPREFIX . '_hits',
+                
+                // VERSIONING TABLES
+                //'TABLE_INDIVIDUALS_REV' => TABLEPREFIX . '_individuals_revisions',
+                //'TABLE_VARIANTS_REV' => TABLEPREFIX . '_variants_revisions',
+                //'TABLE_VARIANTS_ON_TRANSCRIPTS_REV' => TABLEPREFIX . '_variants_on_transcripts_revisions',
+                //'TABLE_PHENOTYPES_REV' => TABLEPREFIX . '_phenotypes_revisions',
+                //'TABLE_SCREENINGS_REV' => TABLEPREFIX . '_screenings_revisions',
 
                 // REMOVED in 3.0-pre-19; delete only if sure that there are no legacy versions still out there!
                 // SEE ALSO uninstall.php !!!

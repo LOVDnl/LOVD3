@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-05-04
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-20
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -56,6 +56,7 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT s.*, ' .
         // FIXME; kijkend hiernaar realiseer ik me, dat ik misschien "ownerid" beter "owned_by" had kunnen noemen... Wat denk jij?
+        // FIXME; helemaal mee eens...
                                'uo.name AS owner ' .
                                'FROM ' . TABLE_SCREENINGS . ' AS s ' .
                                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id) ' .
@@ -64,22 +65,26 @@ class LOVD_Screening extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
-        // FIXME; Waarom deze? Je hebt toch s.ownerid?
-                                           'uo.id AS owner, ' .
-        // FIXME; Note: wat hier "owner_" heet, heet in de loadEntry() en de viewList() nu "owner". Beter om dat consistent te houden.
-                                           'uo.name AS owner_, ' .
-                                           'uc.name AS created_by_';
+                                           'GROUP_CONCAT("=\"", s2g.geneid, "\"" SEPARATOR "|") AS geneids, ' .
+                                           'GROUP_CONCAT(DISTINCT s2v.variantid SEPARATOR "|") AS variantids, ' .
+                                           'uo.name AS owner, ' .
+                                           'uc.name AS created_by_, ' .
+                                           'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_SCREENINGS . ' AS s ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (s.created_by = uc.id)';
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (s.created_by = uc.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (s.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 's.id';
 
         // SQL code for viewing the list of screenings
         $this->aSQLViewList['SELECT']   = 's.*, ' .
+                                          'COUNT(DISTINCT s2v.variantid) AS variants, ' .
                                           'uo.name AS owner';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
+                                          'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id)';
-        // FIXME; Deze GROUP BY is niet schadelijk, maar wel overbodig.
         $this->aSQLViewList['GROUP_BY'] = 's.id';
 
         // Run parent constructor to find out about the custom columns.
@@ -96,7 +101,7 @@ class LOVD_Screening extends LOVD_Custom {
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'valid_from_' => array('Date edited', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date edited', LEVEL_COLLABORATOR),
                       ));
 
         // Because the gene information is publicly available, remove some columns for the public.
@@ -108,21 +113,24 @@ class LOVD_Screening extends LOVD_Custom {
                         'id' => array(
                                     'view' => array('Screening ID', 110),
                                     'db'   => array('s.id', 'ASC', true)),
-                      ),
-                 $this->buildViewList(),
-                 array(
                         'individualid' => array(
                                     'view' => array('Individual ID', 110),
                                     'db'   => array('s.individualid', 'ASC', true)),
+                      ),
+                 $this->buildViewList(),
+                 array(
+                        'variants' => array(
+                                    'view' => array('Variants found', 120),
+                                    'db'   => array('variants', 'ASC', 'INT_UNSIGNED')),
                         'owner' => array(
                                     'view' => array('Owner', 200),
                                     'db'   => array('uo.name', 'ASC', true)),
                         'created_date' => array(
                                     'view' => array('Date created', 130),
                                     'db'   => array('s.created_date', 'ASC', true)),
-                        'valid_from' => array(
+                        'edited_date' => array(
                                     'view' => array('Date edited', 130),
-                                    'db'   => array('s.valid_from', 'ASC', true)),
+                                    'db'   => array('s.edited_date', 'ASC', true)),
                       ));
         $this->sSortDefault = 'id';
         parent::LOVD_Object();
@@ -135,7 +143,35 @@ class LOVD_Screening extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        // STUB
+        global $_AUTH;
+        
+        // Checks fields before submission of data.
+        if (ACTION == 'edit') {
+            global $zData; // FIXME; this could be done more elegantly.
+        }
+        
+        // Mandatory fields.
+        $this->aCheckMandatory =
+                 array(
+
+                      );
+        parent::checkFields($aData);
+
+        if (isset($_POST['ownerid'])) {
+            if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+                $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id=?', array($_POST['ownerid']));
+                if (!$q) {
+                    lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
+                }
+            } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+                lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
+            }
+        } else {
+            if (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
+                lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
+            }
+        }
+        
         lovd_checkXSS();
     }
 
@@ -145,8 +181,40 @@ class LOVD_Screening extends LOVD_Custom {
 
     function getForm ()
     {
-        // STUB
-        parent::getForm();
+        // Build the form.
+        global $_AUTH;
+        
+        $aSelectOwner = array();
+
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS, array());
+            while ($z = mysql_fetch_assoc($q)) {
+                $aSelectOwner[$z['id']] = $z['name'];
+            }
+            $aFormOwner = array('Owner of this individual', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
+        } else {
+            $aFormOwner = array('Owner of this individual', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
+        }
+
+        // Array which will make up the form table.
+        $this->aFormData = array_merge(
+                 array(
+                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('', '', 'print', '<B>Screening information</B>'),
+                        'hr',
+                      ),
+                 $this->buildViewForm(),
+                 array(
+                        'hr',
+                        'skip',
+                        array('', '', 'print', '<B>General information</B>'),
+                        'hr',
+                        $aFormOwner,
+                        'hr',
+                        'skip',
+                      ));
+
+        return parent::getForm();
     }
 
 
@@ -169,28 +237,24 @@ class LOVD_Screening extends LOVD_Custom {
             $zData['row_link'] = 'screenings/' . rawurlencode($zData['id']);
             $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
-            /*$zData['diseases_'] = $zData['disease_omim_'] = '';
-            if (!empty($zData['diseases'])) {
-                $aDiseases = explode(';;', $zData['diseases']);
-                foreach ($aDiseases as $sDisease) {
-                    list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
-                    $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
-                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
-                }
-            }*/
-            
             // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
-            $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
+            $zData['owner_'] = '<A href="users/' . $zData['ownerid'] . '">' . $zData['owner'] . '</A>';
         }
 
         return $zData;
     }
 
+
+
+
+
     function setDefaultValues ()
     {
-        // STUB
-        return false;
+        global $_AUTH;
+
+        $_POST['ownerid'] = $_AUTH['id'];
+        $this->initDefaultValues();
     }
 }
 ?>

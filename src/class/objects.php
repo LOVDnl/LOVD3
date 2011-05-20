@@ -5,7 +5,7 @@
  *
  * Created     : 2009-10-21
  * Modified    : 2011-05-18
- * For LOVD    : 3.0-pre-20
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -116,7 +116,7 @@ class LOVD_Object {
             @list($sHeader, $sHelp, $sType, $sName) = $aField;
 
             // Mandatory fields, as defined by child object.
-            if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
+            if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || empty($aData[$sName]))) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
             }
 
@@ -259,6 +259,8 @@ class LOVD_Object {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
             if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
                 $aData[$sField] = NULL;
+            } else if (is_array($aData[$sField])) {
+                $aData[$sField] = implode(';', $aData[$sField]);
             }
             $aSQL[] = $aData[$sField];
         }
@@ -362,7 +364,7 @@ class LOVD_Object {
 
         // FIXME; hier mist commentaar.
         if (isset($zData['edited_by_']) && $zData['edited_by_'] == 'N/A') {
-            $zData['valid_from' . ($sView == 'list'? '' : '_')] = 'N/A';
+            $zData['edited_date' . ($sView == 'list'? '' : '_')] = 'N/A';
         }
 
         return $zData;
@@ -431,6 +433,8 @@ class LOVD_Object {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
             if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
                 $aData[$sField] = NULL;
+            } else if (is_array($aData[$sField])) {
+                $aData[$sField] = implode(';', $aData[$sField]);
             }
             $aSQL[] = $aData[$sField];
         }
@@ -862,7 +866,10 @@ class LOVD_Object {
                 if ($bOnlyRows) {
                     die('0'); // Silent error.
                 }
+
+                print('      </FORM>' . "\n\n");
                 lovd_showInfoTable('No entries found for this ' . substr($_PATH_ELEMENTS[0], 0, -1) . '!', 'stop');
+
                 return true;
             }
         }

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-05-05
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-17
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -68,13 +68,13 @@ class LOVD_Custom extends LOVD_Object {
             $sSQL = 'SELECT c.*, ac.* ' .
                     'FROM ' . TABLE_ACTIVE_COLS . ' AS ac ' .
                     'LEFT OUTER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) ' .
-                    'WHERE c.id LIKE "' . $this->sObject . '/%" ' .
+                    'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
                     'ORDER BY c.col_order';
         } else {
             $sSQL = 'SELECT c.*, sc.* ' .
                     'FROM ' . TABLE_COLS . ' AS c ' .
                     'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
-                    'WHERE c.id LIKE "' . $this->sObject . '/%" ' .
+                    'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
                     'AND ' . ($this->sObject == 'Phenotype'? 'sc.diseaseid=' : 'sc.geneid=') . '? ' .
                     'ORDER BY sc.col_order';
             $aArgs[] = $this->sObjectID;
@@ -83,6 +83,7 @@ class LOVD_Custom extends LOVD_Object {
         while ($z = mysql_fetch_assoc($q)) {
             $z['custom_links'] = array();
             $z['form_type'] = explode('|', $z['form_type']);
+            $z['select_options'] = explode("\r\n", $z['select_options']);
             $this->aColumns[$z['id']] = $z;
         }
         
@@ -165,9 +166,8 @@ class LOVD_Custom extends LOVD_Object {
                         $aEntry[] = $sCol;
                     } elseif ($key == 4) { // Select: true|false|--select--
                         // We need to place the form entry data in between.
-                        $a = explode("\r\n", $aCol['select_options']);
                         $aData = array();
-                        foreach ($a as $sLine) {
+                        foreach ($aCol['select_options'] as $sLine) {
                             if (substr_count($sLine, '=')) {
                                 list($sKey, $sVal) = explode('=', $sLine, 2);
                                 $sVal = lovd_shortenString(trim($sVal), 75);
@@ -262,15 +262,15 @@ class LOVD_Custom extends LOVD_Object {
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
-        foreach ($aData as $sCol => $val) {
-            if (isset($this->aColumns[$sCol])) {
-                $this->checkInputRegExp($sCol, $val);
-                if ($this->aColumns[$sCol]['mandatory']) {
-                    $this->aCheckMandatory[] = $sCol;
-                }
+        foreach ($this->aColumns as $sCol => $aCol) {
+            if ($aCol['mandatory']) {
+                $this->aCheckMandatory[] = $sCol;
+            }
+            if (isset($aData[$sCol])) {
+                $this->checkInputRegExp($sCol, $aData[$sCol]);
+                $this->checkSelectedInput($sCol, $aData[$sCol]);
             }
         }
-
         parent::checkFields($aData);
     }
 
@@ -292,10 +292,30 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
+    function checkSelectedInput ($sCol, $val)
+    {
+        // Checks if the selected values are indeed from the selection list.
+        if ($this->aColumns[$sCol]['form_type'][2] == 'select' && $this->aColumns[$sCol]['form_type'][3] >= 1) {
+            if (!empty($val)) {
+                $aOptions = preg_replace('/ =.*$/', '', $this->aColumns[$sCol]['select_options']);
+                (!is_array($val)? $val = array($val) : false);
+                foreach ($val as $sValue) {
+                    if (!in_array($sValue, $aOptions)) {
+                        lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sCol]['form_type'][0] . '\' selection box.');
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    
+    
+    
     function getDefaultValue ($sCol)
     {
         // Returns the column type, so the input can be checked.
-        // 2009-02-16; 2.0-16; Introducing default values.
         if (preg_match('/ DEFAULT (\d+|"[^"]+")/', $this->aColumns[$sCol]['mysql_type'], $aRegs)) {
             // Process default values.
             return trim($aRegs[1], '"');
@@ -315,6 +335,24 @@ class LOVD_Custom extends LOVD_Object {
             // Fill $_POST with the column's default value.
             $_POST[$sCol] = $this->getDefaultValue($sCol);
         }
+    }
+    
+    
+    
+    
+    
+    function loadEntry ($nID = false)
+    {
+        // Loads and returns an entry from the database.
+        $zData = parent::loadEntry($nID);
+
+        foreach ($this->aColumns as $sCol => $aCol) {
+            if ($aCol['form_type'][2] == 'select' && $aCol['form_type'][3] >= 1) {
+                $zData[$sCol] = explode(';', $zData[$sCol]);
+            }
+        }
+
+        return $zData;
     }
     
     

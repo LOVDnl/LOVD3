@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-05-03
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-15
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -62,7 +62,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id, ";", d.id_omim, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
                                            'COUNT(t.id) AS transcripts,' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
@@ -80,18 +80,14 @@ class LOVD_Gene extends LOVD_Object {
 
         // SQL code for viewing the list of genes
         $this->aSQLViewList['SELECT']   = 'g.*, ' .
+                                          'g.id AS geneid, ' .
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
-                                          'COUNT(DISTINCT vot.id) AS variants, ' .
-        // FIXME; waarom screeningid bij genes? Bedoel je misschien count(sc.id)?
-                                          'sc.id AS screeningid';
+                                          'COUNT(DISTINCT vot.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' . 
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-        // FIXME; (idem) waarom screeningid bij genes? Bedoel je misschien count(sc.id)? Niet heel erg informatief denk ik... toch?
-                                          'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS scg ON (g.id = scg.geneid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_SCREENINGS .' AS sc ON (scg.screeningid = sc.id)';
+                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
 
@@ -103,7 +99,7 @@ class LOVD_Gene extends LOVD_Object {
                         'name' => 'Gene name',
                         'chromosome' => 'Chromosome',
                         'chrom_band' => 'Chromosomal band',
-                        'refseq_genomic' => 'Genomic reference',
+                        'refseq_genomic_' => 'Genomic reference',
                         'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
                         'url_homepage' => 'Homepage URL',
@@ -143,6 +139,9 @@ class LOVD_Gene extends LOVD_Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
+                        'geneid' => array(
+                                    'view' => array('Symbol', 70),
+                                    'db'   => array('geneid', 'ASC', 'TEXT')),
                         'id' => array(
                                     'view' => array('Symbol', 70),
                                     'db'   => array('g.id', 'ASC', true)),
@@ -164,10 +163,6 @@ class LOVD_Gene extends LOVD_Object {
                         'diseases_' => array(
                                     'view' => array('Associated with diseases', 200),
                                     'db'   => array('diseases_', false, 'TEXT')),
-        // FIXME; dit kan anders; zie screenings.php.
-                        'screeningid' => array(
-                                    'view' => array('Screening ID', 100),
-                                    'db'   => array('screeningid', 'ASC', 'INT_UNSIGNED')),
                       );
         $this->sSortDefault = 'id';
 
@@ -467,6 +462,8 @@ class LOVD_Gene extends LOVD_Object {
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
             $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
             
+            $zData['refseq_genomic_'] = (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? '<A href="ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml">' : '<A href="http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic'] . '">')  . $zData['refseq_genomic'] . '</A>';
+            
             // FIXME; Er is nog geen default disclaimer geschreven!!!!.            
             $aDisclaimer = array(0 => 'No', 1 => 'Standard LOVD disclaimer', 2 => 'Own disclaimer');
             $zData['disclaimer_']       = $aDisclaimer[$zData['disclaimer']];
@@ -486,7 +483,7 @@ class LOVD_Gene extends LOVD_Object {
                 foreach ($aDiseases as $sDisease) {
                     list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
                     $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
-                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . (!empty($nOMIMID)? '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>' : $sName . ' (' . $sSymbol . ')');
+                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . ($nOMIMID != ' '? '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>' : $sName . ' (' . $sSymbol . ')');
                 }
             }
 

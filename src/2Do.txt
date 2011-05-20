@@ -1,47 +1,44 @@
 Doen voor Alpha-01:
 ===================
-- (Ivar) Testen wat public / curator wel en niet mag.
+- (BELANGRIJK) Testen wat public / curator wel en niet mag.
   * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - "Individual has been screened, no variants have been found"
   - That means we need an additional column!!!!!!!!
 - Menu inbouwen, zodat "create" pagina's beschikbaar komen!
   * Of tijdelijke andere oplossing.
 - (Ivo) Check column breedte; wordt dat berekend of moet er iets worden ingevuld? Minimale waarden?
-- Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
+- (Later) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
   * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
   * Probleem: als wij de created_* data in de niet-versioned tabel hebben, MOETEN WE DIE ENTRY BEWAREN BIJ DELETION!!!
-- Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
+- (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
   * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
 - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
-- (Ivo) Review DMD_SPECIFIC calls!
-- (Ivar) <A href=""> toevoegen in individuals viewList()
-  * En check andere viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
-- (Ivar) TABLE_VARIANTS: INDEX (position_g_start, position_g_end),
-  moet zijn:      INDEX (chromosome, position_g_start, position_g_end),
+- (BELANGRIJK: Ivo) Review DMD_SPECIFIC calls!
 - (Ivo) De volgende stap na het maken van een gen, moet je terecht komen op:
       /genes/GENE?authorize en/of /genes/GENE?sortCurators
       Toont een viewList() van users (indien level >= LEVEL_MANAGER) met alle gebruikers die GEEN curator of collaborators zijn (op basis van user IDs)
       De entries in de curator lijst moeten ook weer teruggeplaatst kunnen worden in de viewList.
       Het verschil tussen ?authorize en ?sortCurators moet nog gemaakt worden. De laatste moet beschikbaar zijn voor curators.
 - (Ivo) Encoding wachtwoorden omzetten, (random?) salt gebruiken. Heeft MySQL wel sha1() functie?
-- loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; array (;) of nested array (;;).
-- (Ivar) Waarom geen wachtwoord nodig bij individual edit?
-- GenomeVariant: add, edit, delete
+- loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; gc_NAME = array (;) of gc2_NAME = nested array (;;).
+- (BELANGRIJK) Waarom geen wachtwoord nodig bij individual edit?
+- (BELANGRIJK) GenomeVariant: add, edit, delete
 - TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
-- Submissie: = alles aan elkaar knopen
+- (BELANGRIJK) Submissie: = alles aan elkaar knopen
+- Use uniqid ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
 - Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
-- Custom columns can't be removed/disabled.
-- Ivar: I included code in lovd_queryDB() that implodes arrays in $aArgs automatically using ;. Agreed? If not, LOVD should implode multiple select custom columns specifically, which it does not currently do.
-- (Ivar) Test in IE of sorting icoontje nu inderdaad netjes naast de header tekst blijft staan.
-- Should we mark in the system settings the features that we did not implement yet?
-- Allele has not been enabled, correct? What to do with it? Rename? Different values? Homozygous as one value in stead of two variants?
+- (BELANGRIJK) Custom columns can't be removed/disabled.
+- Ivar: I included code in lovd_queryDB() that implodes arrays in $aArgs automatically using ;. Agreed.
+  (BELANGRIJK) * Oude implodes weg halen uit code.
+  (BELANGRIJK) * Voor formulieren moeten de custom columns die multiple selection lists zijn, automatisch geexplode() worden.
+- (BELANGRIJK) Should we mark in the system settings the features that we did not implement yet?
+- (BELANGRIJK) Allele has not been enabled, correct? What to do with it? Rename? Different values?
+  (BELANGRIJK) * Homozygous as one value!
 - Do we still need current_db in TABLE_USERS?
-- Link naar reset_password vanaf login.php ; implement reset_password of remove link.
-- http://localhost/other/LOVDv.3.0-dev/users/00002?unlock doet niks, wit scherm. Haal link weg of implement.
-- Individual/Phenotype/Disease column in still there, and active by default. Fix that.
-++++Er zijn cols die geen description voor de legends hebben, maar dat mag niet volgens het formulier...
-- Recheck custom columns. INDIEN ONZEKER, DISABLE VOORLOPIG!!!
+- (BELANGRIJK) Link naar reset_password vanaf login.php ; implement reset_password of remove link.
+- (BELANGRIJK) Er zijn cols die geen description voor de legends hebben, maar dat mag niet volgens het formulier...
+- (BELANGRIJK) Recheck custom columns. INDIEN ONZEKER, DISABLE VOORLOPIG!!!
 - Ik kan geen gen aanmaken (CAPN3): Collecting all available transcripts...
     Error: SOAP (Logged)
     /genes?create returned error in module 'getTranscriptsAndInfo'.
@@ -50,13 +47,15 @@ Doen voor Alpha-01:
         geneName = "CAPN3"
     SOAP response :
         senv:Server - 'IdList'
-- Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD!!!
-- INSTALL.txt is niet helemaal correct - er staat nog info in over de .ini die niet meer bestaat. Op zich hoeft de config.ini.php niet beveiligd te worden, toch?
+- (BELANGRIJK (soort van)) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD!!!
+- (BELANGRIJK) INSTALL.txt is niet helemaal correct - er staat nog info in over de .ini die niet meer bestaat. Op zich hoeft de config.ini.php niet beveiligd te worden, toch?
   * Of misschien toch, problemen te voorkomen als iemand die header weg haalt?
-- Bug: <FORM> van viewList() sluit zich niet, als er geen resultaten zijn.
+- (BELANGRIJK) Bug: <FORM> van viewList() sluit zich niet, als er geen resultaten zijn.
 - Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
 - Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
 - Leuke bug; /genes/DMD?authorize -> click alle users aan -> resort viewList.
+- (BELANGRIJK) Icoontjes voor setup???
+- Phenotypes (add, edit, delete)
 
 
 
@@ -71,7 +70,7 @@ MOET OVERLEGD WORDEN:
 - Submissie LOVD 1.1.0 vergeleken met 2.0, vergeleken met 3.0:
   * Hoe emails? Pas als klaar? Wat nou als niet klaar wordt opgegeven?
   * Wanneer opslaan?
-- Allele => Gametic Phase?
+- (BELANGRIJK) Allele => Gametic Phase? Check alle waardes in de groep.
 
 
 
