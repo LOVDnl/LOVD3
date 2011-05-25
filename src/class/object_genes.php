@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-05-15
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-25
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -64,6 +64,7 @@ class LOVD_Gene extends LOVD_Object {
         $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
                                            'COUNT(t.id) AS transcripts,' .
+                                           'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS curators, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
@@ -71,6 +72,8 @@ class LOVD_Gene extends LOVD_Object {
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ua ON (u2g.userid = ua.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) ' .
@@ -114,6 +117,8 @@ class LOVD_Gene extends LOVD_Object {
                         'disclaimer_text_' => 'Disclaimer Text',
                         'header_' => 'Header',
                         'footer_' => 'Footer',
+                        'curators_' => 'Curators',
+                        'collaborators_' => 'Collaborators',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -501,6 +506,40 @@ class LOVD_Gene extends LOVD_Object {
                     $zData[$sColID . '_'] = '';
                 }
             }
+
+            // Curators and collaborators.
+            $zData['curators_'] = $zData['collaborators_'] = '';
+            $aCurators = $aCollaborators = array();
+            $aAuthorizedUsers = explode(';;', $zData['curators']);
+            foreach ($aAuthorizedUsers as $sVal) {
+                list($nUserID, $sName, $bAllowEdit, $nOrder) = explode(';', $sVal);
+                if ($bAllowEdit) {
+                    $aCurators[$nUserID] = array($sName, $nOrder);
+                } else {
+                    $aCollaborators[$nUserID] = $sName;
+                }
+            }
+            //sort($aCollaborators); // Sort collaborators by name.
+
+            $nCurators = count($aCurators);
+            $nCollaborators = count($aCollaborators);
+
+            // Curator string.
+            $i = 0;
+            foreach ($aCurators as $nUserID => $aUser) {
+                $i ++;
+                list($sName, $nOrder) = $aUser;
+                $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ' and ' : ', ')) . ($nOrder? '<B><A href="users/' . $nUserID . '">' . $sName . '</A></B>' : '<I><A href="users/' . $nUserID . '">' . $sName . '</A> (hidden)</I>');
+            }
+            $this->aColumnsViewEntry['curators_'] .= ' (' . $nCurators . ')';
+
+            // Collaborator string.
+            $i = 0;
+            foreach ($aCollaborators as $nUserID => $sName) {
+                $i ++;
+                $zData['collaborators_'] .= ($i == 1? '' : ($i == $nCollaborators? ' and ' : ', ')) . '<A href="users/' . $nUserID . '">' . $sName . '</A>';
+            }
+            $this->aColumnsViewEntry['collaborators_'] .= ' (' . $nCollaborators . ')';
         }
 
         return $zData;

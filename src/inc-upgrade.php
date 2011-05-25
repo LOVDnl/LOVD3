@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-05-20
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-25
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -353,7 +353,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_HITS . ' ADD CONSTRAINT ' . TABLE_HITS . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
                                   ),
                        '3.0-pre-21' =>
-                             array(           
+                             array(
                                     'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN chrom_band VARCHAR(20) NOT NULL',
                                     'ALTER TABLE ' . TABLE_VARIANTS . ' DROP KEY `position_g_start`',
                                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (chromosome, position_g_start, position_g_end)',
@@ -382,7 +382,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD PRIMARY KEY (id, edited_date, transcriptid)',
                                     'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id FOREIGN KEY (id) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
                                     'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
-                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP COLUMN valid_from',
 
                                     // INDIVIDUALS
                                     'ALTER TABLE ' . TABLE_INDIVIDUALS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL',
@@ -415,9 +414,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     // SCREENINGS
                                     'ALTER TABLE ' . TABLE_SCR2GENE . ' DROP FOREIGN KEY ' . TABLE_SCR2GENE . '_fk_screeningid',
                                     'ALTER TABLE ' . TABLE_SCR2VAR . ' DROP FOREIGN KEY ' . TABLE_SCR2VAR . '_fk_screeningid',
-                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP PRIMARY KEY',
-                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' CHANGE COLUMN valid_from edited_date DATETIME NOT NULL',
-                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD PRIMARY KEY (id, edited_date)',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN valid_from',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD COLUMN edited_date DATETIME NOT NULL AFTER edited_by',
                                     'ALTER TABLE ' . TABLE_SCREENINGS . ' MODIFY COLUMN id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
                                     'ALTER TABLE ' . TABLE_SCR2GENE . ' ADD CONSTRAINT ' . TABLE_SCR2GENE . '_fk_screeningid FOREIGN KEY (screeningid) REFERENCES ' . TABLE_SCREENINGS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
                                     'ALTER TABLE ' . TABLE_SCR2VAR . ' ADD CONSTRAINT ' . TABLE_SCR2VAR . '_fk_screeningid FOREIGN KEY (screeningid) REFERENCES ' . TABLE_SCREENINGS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',

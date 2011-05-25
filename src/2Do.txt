@@ -1,7 +1,30 @@
 Doen voor Alpha-01:
 ===================
+- (BELANGRIJK: Ivar) Check of alle primary keys nu wel goed zijn! Niet meer met edited_date erbij.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
   * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
+- (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
+  * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
+- (BELANGRIJK: Ivo) Review DMD_SPECIFIC calls!
+- (BELANGRIJK: Ivar) TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
+- (BELANGRIJK: Ivar) Create phenotypes
+- (BELANGRIJK) Custom columns can't be removed/disabled.
+- (BELANGRIJK) Should we mark in the system settings the features that we did not implement yet?
+- (~BELANGRIJK) Allele has not been enabled, correct? What to do with it? Rename? Different values?
+- (BELANGRIJK) Recheck custom columns. INDIEN ONZEKER, DISABLE VOORLOPIG!!!
+- (BELANGRIJK- TESTEN: Ivar) Link naar reset_password vanaf login.php ; implement reset_password of remove link.
+- (BELANGRIJK) INSTALL.txt is niet helemaal correct - er staat nog info in over de .ini die niet meer bestaat. Op zich hoeft de config.ini.php niet beveiligd te worden, toch?
+  * Of misschien toch, problemen te voorkomen als iemand die header weg haalt?
+- (BELANGRIJK) Alle links nalopen, of ze werken.
+- (BELANGRIJK: Ivo) Verwijder pathogenicity.
+- (~BELANGRIJK: Ivo) REK GENE SYMBOL OP NAAR 20
+- (~BELANGRIJK) Submissie: = alles aan elkaar knopen
+- (~BELANGRIJK) Er zijn cols die geen description voor de legends hebben, maar dat mag niet volgens het formulier...
+- (~BELANGRIJK: Ivo) Icoontjes voor setup???
+- (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
+- (BELANGRIJK) Zet de standaard LOVD disclaimer er in.
+- (BELANGRIJK) Waar moet de index.php je heen sturen? Afhankelijk van niveau?
+
 - "Individual has been screened, no variants have been found"
   - That means we need an additional column!!!!!!!!
 - Menu inbouwen, zodat "create" pagina's beschikbaar komen!
@@ -10,10 +33,7 @@ Doen voor Alpha-01:
 - (Later) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
   * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
   * Probleem: als wij de created_* data in de niet-versioned tabel hebben, MOETEN WE DIE ENTRY BEWAREN BIJ DELETION!!!
-- (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
-  * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
 - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
-- (BELANGRIJK: Ivo) Review DMD_SPECIFIC calls!
 - (Ivo) De volgende stap na het maken van een gen, moet je terecht komen op:
       /genes/GENE?authorize en/of /genes/GENE?sortCurators
       Toont een viewList() van users (indien level >= LEVEL_MANAGER) met alle gebruikers die GEEN curator of collaborators zijn (op basis van user IDs)
@@ -21,24 +41,12 @@ Doen voor Alpha-01:
       Het verschil tussen ?authorize en ?sortCurators moet nog gemaakt worden. De laatste moet beschikbaar zijn voor curators.
 - (Ivo) Encoding wachtwoorden omzetten, (random?) salt gebruiken. Heeft MySQL wel sha1() functie?
 - loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; gc_NAME = array (;) of gc2_NAME = nested array (;;).
-- (BELANGRIJK) Waarom geen wachtwoord nodig bij individual edit?
-- (BELANGRIJK) GenomeVariant: add, edit, delete
-- TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
-- (BELANGRIJK) Submissie: = alles aan elkaar knopen
 - Use uniqid ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
 - Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
-- (BELANGRIJK) Custom columns can't be removed/disabled.
 - Ivar: I included code in lovd_queryDB() that implodes arrays in $aArgs automatically using ;. Agreed.
-  (BELANGRIJK) * Oude implodes weg halen uit code.
-  (BELANGRIJK) * Voor formulieren moeten de custom columns die multiple selection lists zijn, automatisch geexplode() worden.
-- (BELANGRIJK) Should we mark in the system settings the features that we did not implement yet?
-- (BELANGRIJK) Allele has not been enabled, correct? What to do with it? Rename? Different values?
-  (BELANGRIJK) * Homozygous as one value!
+  * Oude implodes weg halen uit code.
 - Do we still need current_db in TABLE_USERS?
-- (BELANGRIJK) Link naar reset_password vanaf login.php ; implement reset_password of remove link.
-- (BELANGRIJK) Er zijn cols die geen description voor de legends hebben, maar dat mag niet volgens het formulier...
-- (BELANGRIJK) Recheck custom columns. INDIEN ONZEKER, DISABLE VOORLOPIG!!!
 - Ik kan geen gen aanmaken (CAPN3): Collecting all available transcripts...
     Error: SOAP (Logged)
     /genes?create returned error in module 'getTranscriptsAndInfo'.
@@ -47,25 +55,48 @@ Doen voor Alpha-01:
         geneName = "CAPN3"
     SOAP response :
         senv:Server - 'IdList'
-- (BELANGRIJK (soort van)) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD!!!
-- (BELANGRIJK) INSTALL.txt is niet helemaal correct - er staat nog info in over de .ini die niet meer bestaat. Op zich hoeft de config.ini.php niet beveiligd te worden, toch?
-  * Of misschien toch, problemen te voorkomen als iemand die header weg haalt?
-- (BELANGRIJK) Bug: <FORM> van viewList() sluit zich niet, als er geen resultaten zijn.
 - Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
 - Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
 - Leuke bug; /genes/DMD?authorize -> click alle users aan -> resort viewList.
-- (BELANGRIJK) Icoontjes voor setup???
 - Phenotypes (add, edit, delete)
+- Er zitten nog \r in sommige files (o.a. config.ini)
+- BUG; locatie check op settings werkt niet (zegt dat 't een andere LOVD is)
+- BUG;
+    /check_update?icon returned error in code block Unknown.
+    Query : SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM lovd_v3_genes AS g LEFT OUTER JOIN lovd_v3_users2genes AS u2g ON (g.id = u2g.geneid) LEFT OUTER JOIN lovd_v3_genes2diseases AS g2d ON (g.id = g2d.geneid) INNER JOIN lovd_v3_diseases AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 ORDER BY g.id
+    Error : Mixing of GROUP columns (MIN(),MAX(),COUNT(),...) with no GROUP columns is illegal if there is no GROUP BY clause
+- Links to other resources op gene viewEntry() moet opgeruimd worden; niet-actieve velden weg.
+- Transcript create mag niet zonder genomic ref, want:
+    Error: SOAP (Logged)
+    /transcripts?create returned error in module 'getTranscriptsAndInfo'.
+    Arguments :
+            genomicReference = ""
+            geneName = "DMD"
+    SOAP response :
+            senv:Server - string index out of range
+    (met genomic ref hebben we dezelfde foutmelding)
+- lovd_queryDB("SQL", true) fail for some reason (should be lovd_queryDB("SQL", array(), true) of course.
+- Transcript aanmaken totaal onmogelijk op shared installatie (traag, server (apache?) loopt vast)
+- Gen selecteren met transcript aanmaken niet mogelijk; niet logisch gesorteerd
+  * ViewList als oplossing? Page size klein houden?
+- Geheugengebruik op shared install is absurd hoog (2 GB per Apache thread)
+  * Memory leak in transcripts?create indien create niet wordt afgemaakt. Sowieso moet 't geheugengebruik van dit deel van 't script omlaag. Niet per se in alpha-01.
+- Status page er uit of geheel anders (alleen totalen???)
+- Ik heb het idee dat $bHalt in lovd_queryDB() veel vaker true dan false zou moeten zijn. Default op true zetten?
+- Curator lijst op gene viewEntry() mogen de hidden personen niet zien, als ze niet zijn ingelogd!!!
+- BUG: genes?authorize heeft twee bugs:
+  * IE laadt de hele viewList (vergeet ignored cols) bij deleten curator.
+  * Bij submit van de viewList() wordt de row_link vergeten!!!
+
+
 
 
 
 MOET OVERLEGD WORDEN:
 =====================
-- Is it simplest to have "homozygous" as an allele value?
 - Zwakkere koppeling tussen individu en disease?
   * Link IND2DIS: "proven"/"presumed" flag?
 - Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.
-- Waar moet de index.php je heen sturen? Afhankelijk van niveau?
 - Als een viewList() gesorteerd wordt, moet de page terug naar 1?
 - Submissie LOVD 1.1.0 vergeleken met 2.0, vergeleken met 3.0:
   * Hoe emails? Pas als klaar? Wat nou als niet klaar wordt opgegeven?
