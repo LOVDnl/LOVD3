@@ -203,6 +203,8 @@ class LOVD_Transcript extends LOVD_Object {
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
 
+        global $_PATH_ELEMENTS;
+
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
         }
@@ -211,9 +213,18 @@ class LOVD_Transcript extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
-            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            if ($_PATH_ELEMENTS[0] == 'variants' && ACTION == 'create') {
+                //$zData['row_id'] = $zData['id'];
+                //$zData['row_link'] = 'variants?create&reference=Transcript&transcriptid=' . rawurlencode($zData['id']);
+                //$zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+                $zData['row_id'] = '';
+                $zData['row_link'] = '';
+                $zData['id'] = '';
+            } else {    
+                $zData['row_id'] = $zData['id'];
+                $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
+                $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            }
         } else {
             $zData['gene_name_'] = '<A href="genes/' . $zData['geneid'] . '">' . $zData['geneid'] . '</A> (' . $zData['gene_name'] . ')';
         }

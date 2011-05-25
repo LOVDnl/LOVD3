@@ -88,13 +88,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    $_GET['search_transcriptHiddenId'] = $nID;
+    $_GET['search_transcriptid'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants', 'H4');
     (!$zData['variants']? print('<BR>' . "\n") : false);
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
-    $_DATA->viewList(false, 'transcriptHiddenId');
+    $_DATA->viewList(false, array('id', 'transcriptid'));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-05-20
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-23
+ * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -101,7 +101,7 @@ class LOVD_Screening extends LOVD_Custom {
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date edited', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
                       ));
 
         // Because the gene information is publicly available, remove some columns for the public.

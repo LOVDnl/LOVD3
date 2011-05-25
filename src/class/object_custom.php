@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-05-17
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-24
+ * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -45,7 +45,7 @@ class LOVD_Custom extends LOVD_Object {
     var $sObject = 'Custom';
     var $bShared = false;
     var $aColumns = array();
-
+    var $sObjectID = '';
 
 
 
@@ -53,14 +53,7 @@ class LOVD_Custom extends LOVD_Object {
     function LOVD_Custom ()
     {
         // Default constructor.
-        global $_AUTH, $_SETT;
-
-        if (empty($this->sObjectID) && $this->bShared) {
-            // FIXME; Fix this text a bit and let displayError() add the sentence about the BTS.
-            lovd_displayError('BadObjectCall', 'LOVD_Custom::' . "\n\t" . 'Bad call for shared column using empty gene and disease variables.' . "\n\n" .
-                                               'Please go to our <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">bug tracking system</A> ' .
-                                               'and report this error to help improve LOVD3.');
-        }
+        global $_AUTH, $_SETT, $nID;
 
         $aArgs = array();	
 
@@ -71,13 +64,24 @@ class LOVD_Custom extends LOVD_Object {
                     'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
                     'ORDER BY c.col_order';
         } else {
-            $sSQL = 'SELECT c.*, sc.* ' .
-                    'FROM ' . TABLE_COLS . ' AS c ' .
-                    'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
-                    'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
-                    'AND ' . ($this->sObject == 'Phenotype'? 'sc.diseaseid=' : 'sc.geneid=') . '? ' .
-                    'ORDER BY sc.col_order';
-            $aArgs[] = $this->sObjectID;
+            if ($this->sObjectID != '') {
+                $sSQL = 'SELECT c.*, sc.* ' .
+                        'FROM ' . TABLE_COLS . ' AS c ' .
+                        'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
+                        'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
+                        'AND ' . ($this->sObject == 'Phenotype'? 'sc.diseaseid=' : 'sc.geneid=') . '? ' .
+                        'ORDER BY sc.col_order';
+                $aArgs[] = $this->sObjectID;
+            } else {
+                $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
+                        'FROM ' . TABLE_COLS . ' AS c ' .
+                        'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
+                        'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (sc.diseaseid = p.diseaseid) ' .
+                        'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
+                        'AND p.id=? ' .
+                        'ORDER BY sc.col_order';
+                $aArgs[] = $nID;
+            }
         }
         $q = lovd_queryDB($sSQL, $aArgs);
         while ($z = mysql_fetch_assoc($q)) {
@@ -86,7 +90,7 @@ class LOVD_Custom extends LOVD_Object {
             $z['select_options'] = explode("\r\n", $z['select_options']);
             $this->aColumns[$z['id']] = $z;
         }
-        
+
         // Gather the custom link information.
         $qLinks = lovd_queryDB('SELECT c2l.colid, l.* ' .
                                'FROM ' . TABLE_COLS2LINKS . ' AS c2l ' .

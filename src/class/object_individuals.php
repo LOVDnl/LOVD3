@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-05-20
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-23
+ * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -91,12 +91,12 @@ class LOVD_Individual extends LOVD_Custom {
                                           'GROUP_CONCAT(DISTINCT d.id) AS diseaseids, ' .
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY d.symbol SEPARATOR ", ") AS diseases_, ' .
                                           'uo.name AS owner, ' .
-                                          's.name AS status';
+                                          'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.ownerid = uo.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS s ON (i.statusid = s.id)';
+                                          'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (i.statusid = ds.id)';
         $this->aSQLViewList['GROUP_BY'] = 'i.id';
 
         // Run parent constructor to find out about the custom columns.
@@ -111,7 +111,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date edited', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
                       ));
 
         // Because the gene information is publicly available, remove some columns for the public.
@@ -163,10 +163,10 @@ class LOVD_Individual extends LOVD_Custom {
 
         // Mandatory fields.
         // FIXME; if empty, just define as an empty array in the class header?
-        $this->aCheckMandatory =
-                 array(
+        if (ACTION == 'edit') {
+            $this->aCheckMandatory[] = 'password';
+        }
 
-                      );
         parent::checkFields($aData);
 
         // FIXME; this set of if's can be made more efficient.
@@ -222,6 +222,10 @@ class LOVD_Individual extends LOVD_Custom {
             if (!empty($_POST['statusid']) && $_AUTH['level'] < LEVEL_CURATOR) {
                 lovd_errorAdd('statusid' ,'Not allowed to change \'Status of this data\'.');
             }
+        }
+        
+        if (ACTION == 'edit' && (!isset($aData['password']) || md5($aData['password']) != $_AUTH['password'])) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
         
         lovd_checkXSS();
@@ -291,8 +295,16 @@ class LOVD_Individual extends LOVD_Custom {
                         $aFormOwner,
                         $aFormStatus,
                         'hr',
+'authorization_skip' => 'skip',
+ 'authorization_hr1' => 'hr',
+     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
+ 'authorization_hr2' => 'hr',
                         'skip',
                       ));
+                      
+        if (ACTION != 'edit') {
+            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+        }
 
         return parent::getForm();
     }

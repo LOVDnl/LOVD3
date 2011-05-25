@@ -424,6 +424,17 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN deleted_by',
                                     'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN deleted',
                                   ),
+                    '3.0-alpha-01' =>
+                             array(           
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP COLUMN edited_date',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' DROP COLUMN edited_date',
+                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP COLUMN edited_date',
+                                    'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN edited_date',
+                                    'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
+                                  ),
                   );
 
     // Addition for upgrade to LOVD v.3.0-pre-07.

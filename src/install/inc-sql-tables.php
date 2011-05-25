@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-05-19
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-25
+ * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -235,8 +235,8 @@ $aTableSQL =
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
-    edited_date DATETIME NOT NULL,
-    PRIMARY KEY (id, edited_date),
+    edited_date DATETIME,
+    PRIMARY KEY (id),
     INDEX (ownerid),
     INDEX (statusid),
     INDEX (created_by),
@@ -293,8 +293,8 @@ $aTableSQL =
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
-    edited_date DATETIME NOT NULL,
-    PRIMARY KEY (id, edited_date),
+    edited_date DATETIME,
+    PRIMARY KEY (id),
     INDEX (allele),
     INDEX (pathogenicid),
     INDEX (chromosome, position_g_start, position_g_end),
@@ -350,8 +350,8 @@ $aTableSQL =
     position_c_start_intron INT,
     position_c_end MEDIUMINT,
     position_c_end_intron INT,
-    edited_date DATETIME NOT NULL,
-    PRIMARY KEY (id, edited_date, transcriptid),
+    edited_date DATETIME,
+    PRIMARY KEY (id, transcriptid),
     INDEX (transcriptid),
     INDEX (pathogenicid),
     INDEX (position_c_start, position_c_end),
@@ -390,8 +390,8 @@ $aTableSQL =
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
-    edited_date DATETIME NOT NULL,
-    PRIMARY KEY (id, edited_date),
+    edited_date DATETIME,
+    PRIMARY KEY (id),
     INDEX (diseaseid),
     INDEX (individualid),
     INDEX (ownerid),
@@ -437,8 +437,8 @@ $aTableSQL =
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
-    edited_date DATETIME NOT NULL,
-    PRIMARY KEY (id, edited_date),
+    edited_date DATETIME,
+    PRIMARY KEY (id),
     INDEX (individualid),
     INDEX (ownerid),
     INDEX (created_by),

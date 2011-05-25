@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-05-20
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-23
+ * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -78,6 +78,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
+        $sNavigation .= ' | <A href="variants?create&target=' . $nID . '">Add variant to screening</A>';
         $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
     }
 
@@ -103,7 +104,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, 'screeningids', false, false, false);
+    $_DATA->viewList(false, array('id', 'screeningids'), false, false, false);
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -119,7 +120,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     define('LOG_EVENT', 'ScreeningCreate');
 
-    // Require manager clearance.
     lovd_requireAUTH(LEVEL_SUBMITTER);
     
     if (isset($_GET['target']) && ctype_digit($_GET['target'])) {

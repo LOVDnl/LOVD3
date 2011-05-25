@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-05-19
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-23
+ * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -69,9 +69,9 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
     define('PROTOCOL', 'http://');
 }
 
-define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorisation is depending on assignments, not user levels anymore.
-define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorisation. You can change these numbers, but keep the order!
-define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorisation. You can change these numbers, but keep the order!
+define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorization is depending on assignments, not user levels anymore.
+define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
+define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
 define('LEVEL_MANAGER', 7);
 define('LEVEL_ADMIN', 9);
 
@@ -103,8 +103,7 @@ $_SETT = array(
                             LEVEL_COLLABORATOR => 'Collaborator',
                             LEVEL_SUBMITTER    => 'Submitter',
                           ),
-/*
-DMD_SPECIFIC
+
                 'var_allele' =>
                      array(
                             0 => 'Unknown',
@@ -116,7 +115,7 @@ DMD_SPECIFIC
                             2 => 'Parent #2',
                             3 => 'Both (homozygous)',
                           ),
-*/
+
                 'var_pathogenic' =>
                      array(
                             5 => 'Unknown',

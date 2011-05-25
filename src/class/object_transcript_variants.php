@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-05-20
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-25
+ * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -72,8 +72,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
         // SQL code for viewing the list of variants
         // FIXME: we should implement this in a different way
-        $this->aSQLViewList['SELECT']   = 'vot.*, ' .
-                                          'vot.transcriptid AS transcriptHiddenId';
+        $this->aSQLViewList['SELECT']   = 'vot.*';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 
         $this->sObjectID = $sObjectID;
@@ -83,7 +82,6 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         $this->aColumnsViewEntry = array_merge(
                  array(
                         'transcriptid' => 'Transcript ID',
-                        'pathogenicid' => 'Pathogenicity',
                         'position_c_start' => 'c.start',
                         'position_c_start_intron' => 'c.start_intron',
                         'position_c_end' => 'c.end',
@@ -103,18 +101,15 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
-                        'transcriptHiddenId' => array(
-                                    'view' => array('Transcript ID', 90),
-                                    'db'   => array('transcriptHiddenId', 'ASC', 'TEXT')),
-                        'id' => array(
-                                    'view' => array('Variant ID', 90),
-                                    'db'   => array('vot.id', 'ASC', true)),
                         'transcriptid' => array(
                                     'view' => array('Transcript ID', 90),
                                     'db'   => array('vot.transcriptid', 'ASC', true)),
-                        'pathogenicid' => array(
-                                    'view' => array('Pathogenicity', 90),
-                                    'db'   => array('vot.pathogenicid', 'ASC', true)),
+                        'id' => array(
+                                    'view' => array('Variant ID', 90),
+                                    'db'   => array('vot.id', 'ASC', true)),
+                      ),
+                 $this->buildViewList(),
+                 array(
                         'position_c_start' => array(
                                     'view' => array('c.start', 90),
                                     'db'   => array('vot.position_c_start', 'ASC', true)),
@@ -127,10 +122,6 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'position_c_end_intron' => array(
                                     'view' => array('c.end_intron', 90),
                                     'db'   => array('vot.position_c_end_intron', 'ASC', true)),
-                      ),
-                 $this->buildViewList(),
-                 array(
-
                       ));
         
         $this->sSortDefault = 'id';
@@ -154,7 +145,26 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
     function getForm ()
     {
-        // STUB
+        $this->aFormData = array_merge(
+                 array(
+                        array('', '', 'print', '<B>Variant information (regarding the selected transcript)</B>'),
+                        'hr',
+                        array('', '', 'note', 'TEMPORARILY UNAVAILABLE.'),
+                      ),
+                 $this->buildViewForm(),
+                 array(
+                        'hr',
+'authorization_skip' => 'skip',
+ 'authorization_hr1' => 'hr',
+     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
+ 'authorization_hr2' => 'hr',
+                        'skip',
+                      ));
+                      
+        if (ACTION != 'edit') {
+            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+        }
+        
         return parent::getForm();
     }
 

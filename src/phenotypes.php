@@ -3,13 +3,13 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2011-02-16
+ * Created     : 2011-05-23
  * Modified    : 2011-05-23
  * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *
  *
  *
  * This file is part of LOVD.
@@ -42,16 +42,28 @@ if ($_AUTH) {
 
 
 if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
-    // URL: /individuals
+    // URL: /phenotypes
     // View all entries.
 
-    define('PAGE_TITLE', 'View individuals');
+    define('PAGE_TITLE', 'View phenotypes');
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    require ROOT_PATH . 'class/object_individuals.php';
-    $_DATA = new LOVD_Individual();
-    $_DATA->viewList(false, 'diseaseids');
+    require ROOT_PATH . 'class/object_phenotypes.php';
+
+    $q = lovd_queryDB('SELECT * FROM ' . TABLE_DISEASES);
+    if ($q) {
+        while($aDisease = mysql_fetch_assoc($q)) {
+            $_GET['search_diseaseid'] = $aDisease['id'];
+            $_DATA = new LOVD_Phenotype($aDisease['id']);
+            $_DATA->setSortDefault('phenotypeid');
+            print('<B>' . $aDisease['name'] . ' (<A href="diseases/' . $aDisease['id'] . '">' . $aDisease['symbol'] . '</A>)</B>');
+            $_DATA->viewList(false, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
+        }
+    } else {
+        print('<BR>' . "\n");
+        lovd_showInfoTable('No disease entries found.', 'stop');
+    }
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -62,75 +74,29 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
-    // URL: /individuals/00000001
+    // URL: /phenotypes/0000000001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
-    define('PAGE_TITLE', 'View individual #' . $nID);
+    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    define('PAGE_TITLE', 'View phenotype #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    require ROOT_PATH . 'class/object_individuals.php';
-    $_DATA = new LOVD_Individual($nID);
+    require ROOT_PATH . 'class/object_phenotypes.php';
+    $_DATA = new LOVD_Phenotype();
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
-        $sNavigation .= ' | <A href="screenings?create&target=' . $nID . '">Add screening</A>';
-        $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
+        $sNavigation = '<A href="phenotypes/' . $nID . '?edit">Edit phenotype information</A>';
+        $sNavigation .= ' | <A href="phenotypes/' . $nID . '?delete">Delete phenotype entry</A>';
     }
 
     if ($sNavigation) {
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-
-    $_GET['search_individualid'] = $nID;
-    $_GET['search_diseaseid'] = (!empty($zData['diseaseids'])? str_replace(',', '|', $zData['diseaseids']) : '0');
-    print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Diseases', 'H4');
-    if (!empty($zData['diseases'])) {
-        require ROOT_PATH . 'class/object_diseases.php';
-        $_DATA = new LOVD_Disease();
-        $_DATA->viewList(false, 'diseaseid', true, true);
-        print('<BR><BR>' . "\n\n");
-
-        lovd_printHeader('Phenotypes', 'H4');
-        if (!empty($zData['phenotypes'])) {
-            // FIXME; deze code heeft commentaar nodig. Ik snap niet waar de array_map voor is?
-            $zData['diseases'] = explode(';;', $zData['diseases']);
-            $zData['diseases'] = array_map('explode', array_fill(0, count($zData['diseases']),';'), $zData['diseases']);
-            require ROOT_PATH . 'class/object_phenotypes.php';
-            foreach($zData['diseases'] as $aDisease) {
-                // FIXME; voeg hier een list(, , , ,) = $aDisease toe, zodat te volgen is wat er in deze array zit.
-                if (substr_count($zData['phenotypes'], ';' . $aDisease[0])) {
-                    $_GET['search_diseaseid'] = $aDisease[0];
-                    $_DATA = new LOVD_Phenotype($aDisease[0]);
-                    $_DATA->setSortDefault('phenotypeid');
-                    print('<B>' . $aDisease[2] . ' (<A href="diseases/' . $aDisease[0] . '">' . $aDisease[1] . '</A>)</B>');
-                    $_DATA->viewList(false, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
-                }
-            }
-        } else {
-            print('<BR>' . "\n");
-            lovd_showInfoTable('No phenotype entries found for this individual', 'stop');
-        }
-    } else {
-        print('<BR>' . "\n");
-        lovd_showInfoTable('No disease entries found for this individual', 'stop');
-    }
-    unset($_GET['search_individualid']);
-    unset($_GET['search_diseaseid']);
-    
-    $_GET['search_screeningids'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
-    print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Variants', 'H4');
-    require ROOT_PATH . 'class/object_genome_variants.php';
-    $_DATA = new LOVD_GenomeVariant();
-    $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, 'screeningids', true);
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -140,7 +106,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+/*if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // URL: /individuals?create
     // Create a new entry.
 
@@ -478,5 +444,5 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
-}
+}*/
 ?>

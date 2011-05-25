@@ -54,21 +54,21 @@ class LOVD_Phenotype extends LOVD_Custom {
         // Default constructor.
 
         // SQL code for loading an entry for an edit form.
-        //$this->sSQLLoadEntry = 'SELECT p.*, ' .
-        //                       'uo.name AS owner ' .
-        //                       'FROM ' . TABLE_PHENOTYPES . ' AS p ' .
-        //                       'LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) ' .
-        //                       'WHERE p.id = ? ' .
-        //                       'GROUP BY p.id';
+        $this->sSQLLoadEntry = 'SELECT p.*, ' .
+                               'uo.name AS owner ' .
+                               'FROM ' . TABLE_PHENOTYPES . ' AS p ' .
+                               'LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) ' .
+                               'WHERE p.id = ?';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
-                                           'uo.name AS owner, ' .
-                                           'uc.name AS created_by_' .
+                                           'uo.id AS owner, ' .
+                                           'uo.name AS owner_, ' .
+                                           'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (p.created_by = uc.id)';
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (p.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (p.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'p.id';
 
@@ -78,8 +78,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                                           'uo.name AS owner';
         $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id)';
-        $this->aSQLViewList['GROUP_BY'] = 'p.id';
-        
+
         $this->sObjectID = $sObjectID;
 
         // Run parent constructor to find out about the custom columns.
@@ -89,12 +88,11 @@ class LOVD_Phenotype extends LOVD_Custom {
         $this->aColumnsViewEntry = array_merge(
                  $this->buildViewEntry(),
                  array(
-                        'owner' => 'Owner name',
-                        'status' => 'Individual data status',
+                        'owner_' => 'Owner name',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'valid_from_' => array('Valid from', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
                       ));
 
         // Because the gene information is publicly available, remove some columns for the public.
@@ -104,6 +102,9 @@ class LOVD_Phenotype extends LOVD_Custom {
         $this->aColumnsViewList = array_merge(
                  array(
                         'phenotypeid' => array(
+                                    'view' => array('Phenotype ID', 110),
+                                    'db'   => array('phenotypeid', 'ASC', 'INT_UNSIGNED')),
+                        'id' => array(
                                     'view' => array('Phenotype ID', 110),
                                     'db'   => array('p.id', 'ASC', true)),
                       ),
@@ -119,6 +120,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                                     'view' => array('Disease ID', 70),
                                     'db'   => array('p.diseaseid', 'ASC', true)),
                       ));
+
         $this->sSortDefault = 'id';
     }
 
@@ -158,19 +160,11 @@ class LOVD_Phenotype extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            //$zData['row_id'] = $zData['id'];
-            //$zData['row_link'] = 'phenotypes/' . rawurlencode($zData['id']);
-            //$zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            $zData['row_id'] = $zData['id'];
+            $zData['row_link'] = 'phenotypes/' . rawurlencode($zData['id']);
+            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
-            /*$zData['diseases_'] = $zData['disease_omim_'] = '';
-            if (!empty($zData['diseases'])) {
-                $aDiseases = explode(';;', $zData['diseases']);
-                foreach ($aDiseases as $sDisease) {
-                    list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
-                    $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
-                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>';
-                }
-            }*/
+            $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
         }
 
         return $zData;

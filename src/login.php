@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2011-02-03
- * For LOVD    : 3.0-pre-16
+ * Modified    : 2011-05-20
+ * For LOVD    : 3.0-pre-21
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -148,7 +148,7 @@ if (!empty($_POST)) {
 
                 // This may not actually update (user misspelled his username) but we can call the query anyway.
                 if ($_CONF['lock_users']) {
-                    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET login_attempts = login_attempts + 1 WHERE username = ? AND level < 9', array($_POST['username']));
+                    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET login_attempts = login_attempts + 1 WHERE username = ? AND level < ' . LEVEL_ADMIN, array($_POST['username']));
                 }
 
                 // Check if the user is locked, now.

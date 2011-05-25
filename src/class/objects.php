@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-05-18
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-24
+ * For LOVD    : 3.0-pre-22
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -69,8 +69,6 @@ class LOVD_Object {
     var $sRowID = ''; // FIXME; needs getter and setter?
     var $sRowLink = ''; // FIXME; needs getter and setter?
     var $nCount = 0;
-    // FIXME; moet deze niet in LOVD_Custom ?
-    var $sObjectID = '';
 
 
 
@@ -702,7 +700,7 @@ class LOVD_Object {
             print('      <FORM action="' . CURRENT_PATH . '" method="get" id="viewlistForm_' . $sViewListID . '" style="margin : 0px;" onsubmit="return false;">' . "\n" .
                   '        <INPUT type="hidden" name="viewlistid" value="' . $sViewListID . '">' . "\n" .
                   '        <INPUT type="hidden" name="object" value="' . $this->sObject . '">' . "\n" .
-                  '        <INPUT type="hidden" name="object_id" value="' . $this->sObjectID . '">' . "\n" .
+                  '        <INPUT type="hidden" name="object_id" value="' . (isset($this->sObjectID)? $this->sObjectID : '') . '">' . "\n" .
 // FIXME; do we ever use ACTION in a ViewList? Wait until we've made variants.php to know for sure.
 // FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
                   (!ACTION? '' :
