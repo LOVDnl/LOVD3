@@ -1796,6 +1796,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             if (!$zData['active']) {
                 $sSQL = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES (?, ?, NOW())';
                 $q = lovd_queryDB($sSQL, array($zData['id'], $_AUTH['id']));
+                // FIXME; 2011-05-26; I don't think we still need this code here, if we'd use the $bHalt in lovd_queryDB().
                 if (!$q) {
                     $sError = mysql_error(); // Save the mysql_error before it disappears...
                     lovd_queryDB('ROLLBACK'); // ... because we need to end the transaction.

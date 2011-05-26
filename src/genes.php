@@ -357,7 +357,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     $aAdded[] = $aCol['Field'];
                 }
                 
-                $qStandardCustomCols = lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)', array());
+                $qStandardCustomCols = lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)');
                 while ($aStandard = mysql_fetch_assoc($qStandardCustomCols)) {
                     if (!in_array($aStandard['id'], $aAdded)) {
                         $q = lovd_queryDB('ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());

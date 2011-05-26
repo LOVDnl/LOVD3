@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-05-16
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-26
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -54,7 +54,7 @@ $_MENU = array(
                         'create' => 'Create a new disease information entry',
                       ),
                 'screenings' => 'View screenings',
-                'submit' => 'Submit new data',
+//                'submit' => 'Submit new data', // Temp disabled.
                 'users' => 'LOVD users &amp; submitters',
                 'setup' => 'LOVD system setup',
 //                'docs' => 'LOVD documentation',

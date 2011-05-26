@@ -1,29 +1,21 @@
 Doen voor Alpha-01:
 ===================
-- (BELANGRIJK: Ivar) Check of alle primary keys nu wel goed zijn! Niet meer met edited_date erbij.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
   * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
   * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
 - (BELANGRIJK: Ivo) Review DMD_SPECIFIC calls!
-- (BELANGRIJK: Ivar) TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
-- (BELANGRIJK: Ivar) Create phenotypes
-- (BELANGRIJK) Custom columns can't be removed/disabled.
-- (BELANGRIJK) Should we mark in the system settings the features that we did not implement yet?
+- (~~~~~~BELANGRIJK: Ivar) TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
+- (~~~~BELANGRIJK: Ivar) Create, edit, delete phenotypes
+- (~BELANGRIJK) Custom columns can't be removed/disabled.
+- (BELANGRIJK: Ivar) Should we mark in the system settings the features that we did not implement yet?
 - (~BELANGRIJK) Allele has not been enabled, correct? What to do with it? Rename? Different values?
-- (BELANGRIJK) Recheck custom columns. INDIEN ONZEKER, DISABLE VOORLOPIG!!!
-- (BELANGRIJK- TESTEN: Ivar) Link naar reset_password vanaf login.php ; implement reset_password of remove link.
-- (BELANGRIJK) INSTALL.txt is niet helemaal correct - er staat nog info in over de .ini die niet meer bestaat. Op zich hoeft de config.ini.php niet beveiligd te worden, toch?
-  * Of misschien toch, problemen te voorkomen als iemand die header weg haalt?
 - (BELANGRIJK) Alle links nalopen, of ze werken.
-- (BELANGRIJK: Ivo) Verwijder pathogenicity.
-- (~BELANGRIJK: Ivo) REK GENE SYMBOL OP NAAR 20
+- (~~~~~BELANGRIJK: Ivo) Verwijder pathogenicity. Niet voor Alpha-01.
 - (~BELANGRIJK) Submissie: = alles aan elkaar knopen
-- (~BELANGRIJK) Er zijn cols die geen description voor de legends hebben, maar dat mag niet volgens het formulier...
 - (~BELANGRIJK: Ivo) Icoontjes voor setup???
 - (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
-- (BELANGRIJK) Zet de standaard LOVD disclaimer er in.
-- (BELANGRIJK) Waar moet de index.php je heen sturen? Afhankelijk van niveau?
+- (BELANGRIJK: Ivar) Stomme dingen uit genes form halen!!!
 
 - "Individual has been screened, no variants have been found"
   - That means we need an additional column!!!!!!!!

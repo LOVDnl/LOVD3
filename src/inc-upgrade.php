@@ -434,6 +434,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
                                     'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN edited_date',
                                     'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
+/////////////////// DMD_SPECIFIC: I would expect these to fail if I don't remove the FKs first. But they don't.
+                                    'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN id VARCHAR(20) NOT NULL',
+                                    'ALTER TABLE ' . TABLE_CURATES . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
+                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
+                                    'ALTER TABLE ' . TABLE_GEN2DIS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
+                                    'ALTER TABLE ' . TABLE_SCR2GENE . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
+                                    'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(20)',
+                                    'ALTER TABLE ' . TABLE_HITS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                                   ),
                   );
 

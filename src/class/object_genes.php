@@ -468,11 +468,13 @@ class LOVD_Gene extends LOVD_Object {
             $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
             
             $zData['refseq_genomic_'] = (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? '<A href="ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml">' : '<A href="http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic'] . '">')  . $zData['refseq_genomic'] . '</A>';
-            
-            // FIXME; Er is nog geen default disclaimer geschreven!!!!.            
+
+            // FIXME; ugly coding :S
+            $sYear = ((int) substr($zData['created_date'], 0, 4)? substr($zData['created_date'], 0, 4) . (substr($zData['created_date'], 0, 4) == date('Y')? '' : '-' . date('Y')) : date('Y'));
             $aDisclaimer = array(0 => 'No', 1 => 'Standard LOVD disclaimer', 2 => 'Own disclaimer');
             $zData['disclaimer_']       = $aDisclaimer[$zData['disclaimer']];
-            $zData['disclaimer_text_']   = ($zData['disclaimer'] > 0 ? ($zData['disclaimer'] == 1? "#\n#\n#\nOfficial LOVD disclaimer\n#\n#\n#" : $zData['disclaimer_text']) : '');
+            $zData['disclaimer_text_']  = (!$zData['disclaimer']? '' : ($zData['disclaimer'] == 2? $zData['disclaimer_text'] :
+                'The contents of this LOVD database are the intellectual property of the respective curator(s). Any unauthorised use, copying, storage or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising out of any inaccuracies or omissions. Individuals, organisations and companies which use this database do so on the understanding that no liability whatsoever either direct or indirect shall rest upon the curator(s) or any of their employees or agents for the effects of any product, process or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
             
             // FIXME; Voor zover ik weet doen de header en de footer nog niks.    
             $aAlign = array(-1 => 'left', 0 => 'center', 1 => 'right');
@@ -512,11 +514,13 @@ class LOVD_Gene extends LOVD_Object {
             $aCurators = $aCollaborators = array();
             $aAuthorizedUsers = explode(';;', $zData['curators']);
             foreach ($aAuthorizedUsers as $sVal) {
-                list($nUserID, $sName, $bAllowEdit, $nOrder) = explode(';', $sVal);
-                if ($bAllowEdit) {
-                    $aCurators[$nUserID] = array($sName, $nOrder);
-                } else {
-                    $aCollaborators[$nUserID] = $sName;
+                if ($sVal) { // Should always be true, since genes should always have a curator!
+                    list($nUserID, $sName, $bAllowEdit, $nOrder) = explode(';', $sVal);
+                    if ($bAllowEdit) {
+                        $aCurators[$nUserID] = array($sName, $nOrder);
+                    } else {
+                        $aCollaborators[$nUserID] = $sName;
+                    }
                 }
             }
             //sort($aCollaborators); // Sort collaborators by name.

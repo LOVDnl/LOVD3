@@ -32,6 +32,7 @@
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
 
+// FIXME; send to index.php?
 // Already logged in to the system.
 if ($_AUTH) {
     // Send manager and database administrator to setup, the rest to the gene page.

@@ -5,7 +5,7 @@
  *
  * Created     : 2009-10-22
  * Modified    : 2011-05-25
- * For LOVD    : 3.0-pre-22
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -103,7 +103,7 @@ $aTableSQL =
 
          , 'TABLE_GENES' =>
    'CREATE TABLE ' . TABLE_GENES . ' (
-    id VARCHAR(12) NOT NULL,
+    id VARCHAR(20) NOT NULL,
     name VARCHAR(255) NOT NULL,
     chromosome VARCHAR(2) NOT NULL,
     chrom_band VARCHAR(20) NOT NULL,
@@ -148,7 +148,7 @@ $aTableSQL =
          , 'TABLE_CURATES' =>
    'CREATE TABLE ' . TABLE_CURATES . ' (
     userid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    geneid VARCHAR(12) NOT NULL,
+    geneid VARCHAR(20) NOT NULL,
     allow_edit BOOLEAN NOT NULL,
     show_order TINYINT(2) UNSIGNED NOT NULL DEFAULT 1,
     PRIMARY KEY (userid, geneid),
@@ -160,7 +160,7 @@ $aTableSQL =
          , 'TABLE_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_TRANSCRIPTS . ' (
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
-    geneid VARCHAR(12) NOT NULL,
+    geneid VARCHAR(20) NOT NULL,
     name VARCHAR(255) NOT NULL,
     id_ncbi VARCHAR(255) NOT NULL,
     id_ensembl VARCHAR(255) NOT NULL,
@@ -205,7 +205,7 @@ $aTableSQL =
 
          , 'TABLE_GEN2DIS' =>
    'CREATE TABLE ' . TABLE_GEN2DIS . ' (
-    geneid VARCHAR(12) NOT NULL,
+    geneid VARCHAR(20) NOT NULL,
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
     PRIMARY KEY (geneid, diseaseid),
     INDEX (diseaseid),
@@ -474,7 +474,7 @@ $aTableSQL =
          , 'TABLE_SCR2GENE' =>
    'CREATE TABLE ' . TABLE_SCR2GENE . ' (
     screeningid INT(10) UNSIGNED ZEROFILL NOT NULL,
-    geneid VARCHAR(12) NOT NULL,
+    geneid VARCHAR(20) NOT NULL,
     PRIMARY KEY (screeningid, geneid),
     INDEX (screeningid),
     INDEX (geneid),
@@ -536,7 +536,7 @@ $aTableSQL =
 
          , 'TABLE_SHARED_COLS' =>
    'CREATE TABLE ' . TABLE_SHARED_COLS . ' (
-    geneid VARCHAR(12),
+    geneid VARCHAR(20),
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL,
     colid VARCHAR(100) NOT NULL,
     col_order TINYINT(3) UNSIGNED NOT NULL,
@@ -665,7 +665,7 @@ $aTableSQL =
 
          , 'TABLE_HITS' =>
    'CREATE TABLE ' . TABLE_HITS . ' (
-    geneid VARCHAR(12) NOT NULL,
+    geneid VARCHAR(20) NOT NULL,
     type VARCHAR(10) NOT NULL,
     year SMALLINT(4) UNSIGNED NOT NULL,
     month TINYINT(2) UNSIGNED NOT NULL,
