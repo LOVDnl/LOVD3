@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-05-23
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-05-26
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -441,6 +441,7 @@ $_TABLES =
 
                 // REMOVED in 3.0-pre-19; delete only if sure that there are no legacy versions still out there!
                 // SEE ALSO uninstall.php !!!
+                // REMOVE THIS ONLY IF line 503 IS ALSO ADAPTED!!!
                 'TABLE_PATIENTS' => TABLEPREFIX . '_patients',
                 'TABLE_PAT2DIS' => TABLEPREFIX . '_patients2diseases',
               );
@@ -488,9 +489,8 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
     // We couldn't get the installation's configuration or status. Are we properly installed, then?
 
     // Copying information that is required for the includes, but can't be read from the database.
-    $_CONF['system_title'] = 'LOVD 3.0 - Leiden Open Variation Database';
-    $_STAT['tree'] = $_SETT['system']['tree'];
-    $_STAT['build'] = $_SETT['system']['build'];
+    $_CONF = array('system_title' => 'LOVD 3.0 - Leiden Open Variation Database');
+    $_STAT = array('tree' => $_SETT['system']['tree'], 'build' => $_SETT['system']['build']);
 
     // Are we installed properly?
     $aTables = array();
@@ -500,7 +500,7 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
             $aTables[] = $r[0];
         }
     }
-    if (count($aTables) < count($_TABLES)) {
+    if (count($aTables) < (count($_TABLES) - 2)) {
         // We're not completely installed.
         define('_NOT_INSTALLED_', true);
     }

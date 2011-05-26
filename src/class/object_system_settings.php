@@ -108,11 +108,11 @@ class LOVD_SystemSetting extends LOVD_Object {
             lovd_errorAdd('use_ssl', 'You\'ve selected to force the use of SSL, but SSL is not currently activated for this session. To force SSL, I must be sure it\'s possible to approach LOVD through an SSL connection (use <A href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . ($_SERVER['QUERY_STRING']? '?' . str_replace('&sent=true', '', $_SERVER['QUERY_STRING']) : '') . '" target="_blank">https://</A> instead of http://).');
         }
         
-        $_POST['send_admin_submissions'] = NULL;
-        $_POST['api_feed_history'] = NULL;
-        $_POST['allow_submitter_mods'] = NULL;
-        $_POST['allow_count_hidden_entries'] = NULL;
-        $_POST['use_versioning'] = NULL;
+        $_POST['send_admin_submissions'] = 0;
+        $_POST['api_feed_history'] = 0;
+        $_POST['allow_submitter_mods'] = 0;
+        $_POST['allow_count_hidden_entries'] = 0;
+        $_POST['use_versioning'] = 0;
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();

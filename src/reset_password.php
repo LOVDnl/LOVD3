@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2011-05-20
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-05-26
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  *
@@ -45,6 +46,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
         $zData = mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username'])));
         if (!$zData) {
             lovd_errorAdd('This username does not exist.');
+            // FIXME, change to 3.0 way of doing this.
             lovd_writeLog('MySQL:Auth', 'ResetPasswdError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for inexistent/denied account ' . $_POST['username']);
         }
 
@@ -70,6 +72,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
                 require ROOT_PATH . 'inc-top.php';
+                // FIXME, change to 3.0 way of doing this.
                 lovd_printHeader('User - Reset password', 'User - Reset password');
                 lovd_dbFout('ResetPasswd', $sQ, $sError);
             }
@@ -84,14 +87,13 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
                      'Your password from your LOVD account has been reset, as requested. Your new, randomly generated, password can be found below. Please log in to LOVD and choose a new password.' . "\n\n" .
                      'Below is a copy of your updated account information.' . "\n\n" .
                      'If you did not request a new password, you can disregard this message. Your old password will continue to function normally. However, you may then want to report this email to the LOVD manager, who can investigate possible misuse of the system.' . "\n\n";
-            // 2009-04-06; 2.0-17; Add the location of the database, so that the user can just click the link.
+            // Add the location of the database, so that the user can just click the link.
             if ($_CONF['location_url']) {
                 $sBody .= 'To log in to LOVD, click this link:' . "\n" .
                           $_CONF['location_url'] . 'login.php' . "\n\n";
             }
             $sBody .= str_repeat('-', 80) . "\n";
 
-            // 2010-03-11; 2.0-25; Move this up, because users didn't see this.
             // Array met data.
             $aMail = array(
                             'password_autogen' => 'New password / unlocking code',
@@ -121,13 +123,14 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             }
 
             // Send mail.
-            // 2009-02-27; 2.0-16; Sending emails on Windows requires removal of names from the email addresses.
+            // Sending emails on Windows requires removal of names from the email addresses.
             $bMail = @mail($zData['name'] . ' <' . $zData['email'] . '>',
                            $sSubject,
                            lovd_wrapText($sBody));
 
             // Thank the user...
             require ROOT_PATH . 'inc-top.php';
+            // FIXME, change to 3.0 way of doing this.
             lovd_printHeader('User - Reset password', 'User - Reset password');
 
             if ($bMail) {
@@ -150,6 +153,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
 
     require ROOT_PATH . 'inc-top.php';
+    // FIXME, change to 3.0 way of doing this.
     lovd_printHeader('User - Reset password', 'User - Reset password');
 
     print('      If you forgot your password, please fill in your username here. A new random password will be generated and emailed to the known email address. You need this new password to unlock your account and choose a new password.<BR>' . "\n" .
@@ -168,7 +172,6 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
                     'skip',
                     array('', '', 'submit', 'Reset password'),
                   );
-    //$_MODULES->processForm('AccountPasswordReset', $aForm);
     lovd_viewForm($aForm);
     print('</TABLE></FORM>' . "\n\n");
 

@@ -18,6 +18,10 @@ Doen voor Alpha-01:
 - Nu genes gewoon openbaar is, is status.php niet meer echt nodig - maar hij is wel enorm traag op een grote installatie.
   * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
   * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
+- De email die reset_password.php uitstuurt, werkt niet op Windows zo.
+  * De email headers zoals in LOVD 2.0 gebruikt moeten geïmplementeerd worden. Staan in inc-init.php klaar voor gebruik.
+  * Bij de mail() call staat een LOVD 2.0 opmerking (ik heb de datum en 2.0 versie al verwijderd). Die opmerking moet nageleefd worden (zie originele 2.0 code!!!), en er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
+  * Die hele file zit trouwens vol met dingen die in 3.0 anders gedaan worden (lovd_writeLog() calls naar de verkeerde log file, lovd_printHeader() op de oude manier).
 
 - "Individual has been screened, no variants have been found"
   - That means we need an additional column!!!!!!!!
@@ -81,6 +85,7 @@ Doen voor Alpha-01:
 - BUG: genes?authorize heeft twee bugs:
   * IE laadt de hele viewList (vergeet ignored cols) bij deleten curator.
   * Bij submit van de viewList() wordt de row_link vergeten!!!
+- Vanaf beta moeten bij bugfixes de datum en versie gezet worden.
 
 
 
