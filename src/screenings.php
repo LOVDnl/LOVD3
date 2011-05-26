@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-05-23
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-05-26
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -80,6 +80,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
         $sNavigation .= ' | <A href="variants?create&target=' . $nID . '">Add variant to screening</A>';
         $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
+    } elseif ($_AUTH && $_AUTH['level'] >= LEVEL_SUBMITTER) {
+        $sNavigation = '<A href="variants?create&target=' . $nID . '">Add variant to screening</A>';
     }
 
     if ($sNavigation) {

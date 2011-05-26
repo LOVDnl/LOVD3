@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-05-23
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-05-26
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -191,9 +191,9 @@ class LOVD_Screening extends LOVD_Custom {
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }
-            $aFormOwner = array('Owner of this individual', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
+            $aFormOwner = array('Owner of this screening', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
         } else {
-            $aFormOwner = array('Owner of this individual', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
+            $aFormOwner = array('Owner of this screening', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
         }
 
         // Array which will make up the form table.

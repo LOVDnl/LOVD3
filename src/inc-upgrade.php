@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-05-25
+ * Modified    : 2011-05-26
  * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -504,6 +504,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                 }
             }
         }
+    }
+    
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
+        // Simply reload all custom columns.
+        require ROOT_PATH . 'install/inc-sql-columns.php';
+        $aUpdates['3.0-alpha-01'][] = 'DELETE FROM ' . TABLE_COLS . ' WHERE col_order < 255';
+        $aUpdates['3.0-alpha-01'] = array_merge($aUpdates['3.0-alpha-01'], $aColSQL);
     }
 
 

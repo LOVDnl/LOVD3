@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-05-25
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-05-26
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -37,8 +37,6 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-// Require manager clearance.
-//lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
@@ -103,7 +101,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         // URL: /variants?create&reference='Genome'
         // Create a variant on the genome.
         define('LOG_EVENT', 'GenomeVariantCreate');
-        
+
+        // Require manager clearance.
         lovd_requireAUTH(LEVEL_SUBMITTER);
 
         if (isset($_GET['target'])) {
@@ -216,6 +215,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         // Create a variant on a transcript.
         define('LOG_EVENT', 'TranscriptVariantCreate');
         
+        // Require manager clearance.
         lovd_requireAUTH(LEVEL_SUBMITTER);
 
         if (isset($_GET['transcriptid'])) {
@@ -356,25 +356,36 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         
     } else {
         // URL: /variants?create
+        header('Location: ' . lovd_getInstallURL() . 'variants?create&reference=Genome');
+        exit;
         // Select wether the you want to create a variant on the genome or on a transcript.
         define('LOG_EVENT', 'VariantCreate');
         define('PAGE_TITLE', 'Create a new variant information entry');
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
 
-        print('<table class="data" border="0" cellpadding="0" cellspacing="2" width="950">' . "\n" .
-              '  <tbody>' . "\n" .
-              '    <tr class="" style="cursor: pointer;" onmouseover="this.className = \'hover\';" onmouseout="this.className = \'\';" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? $_GET['target'] : '') . '\'">' . "\n" .
-              '      <th><h5>Create a genomic variant »»</h5></th>' . "\n" .
-              '    </tr>' . "\n" .
-              '  </tbody>' . "\n" .
-              '</table>' . "\n\n");
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_SUBMITTER);
 
-        print ('<BR><BR>' . "\n\n");
+        print('<TABLE class="data" border="0" cellpadding="0" cellspacing="2" width="950">' . "\n" .
+              '  <TBODY>' . "\n" .
+              '    <TR class="" style="cursor: pointer;" onmouseover="this.className = \'hover\';" onmouseout="this.className = \'\';" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? $_GET['target'] : '') . '\'">' . "\n" .
+              '      <TH><H5>Create a genomic variant »»</H5></TH>' . "\n" .
+              '    </TR>' . "\n" .
+              '    <TR class="" style="cursor: pointer;" onmouseover="this.className = \'hover\';" onmouseout="this.className = \'\';" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? $_GET['target'] : '') . '\'">' . "\n" .
+              '      <TH><H5>Create a genomic variant »»</H5></TH>' . "\n" .
+              '    </TR>' . "\n" .
+              '  </TBODY>' . "\n" .
+              '</TABLE>' . "\n\n");
+
+        print ('<BR>' . "\n");
 
         require ROOT_PATH . 'class/object_transcripts.php';
+        $_GET['page_size'] = 10;
         $_DATA = new LOVD_Transcript();
+        print('<DIV id="TranscriptViewList" style="display:none;">');
         $_DATA->viewList(false, array('id', 'variants'), false, false, false);
+        print('</DIV>');
 
         require ROOT_PATH . 'inc-bot.php';
         exit;
@@ -394,7 +405,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('LOG_EVENT', 'VariantEdit');
 
     // Require manager clearance.
-    lovd_requireAUTH(LEVEL_CURATOR);
+    lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
