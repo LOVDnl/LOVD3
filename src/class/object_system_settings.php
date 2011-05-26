@@ -149,12 +149,12 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('LOVD email address', 'This email address will be used to send emails from LOVD to users. We need this address to make sure that emails from LOVD arrive. Please note that although strictly spoken this email address does not need to exist, we recommend that you use a valid address.', 'text', 'email_address', 40),
                         'hr',
                         //array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'checkbox', 'send_admin_submissions'),
-                        array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'note', '&nbsp;NOT YET IMPLEMENTED'),
+                        array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         'hr',
       'refseq_build' => array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
                         'hr',
                         //array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'select', 'api_feed_history', 1, $aFeedHistory, false, false, false),
-                        array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'note', '&nbsp;NOT YET IMPLEMENTED'),
+                        array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         'hr',
                         'skip',
                         'skip',
@@ -183,15 +183,15 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('Allow (locked) users to retrieve a new password?', 'Do you want to enable an "I forgot my password" option that allows users who forgot their password to retrieve a new one?', 'checkbox', 'allow_unlock_accounts'),
                         'hr',
                         //array('Enable submitters to change data?', 'Enabling this setting allows submitters to make changes to data previously submitted by them or assigned to them.', 'checkbox', 'allow_submitter_mods'),
-                        array('Enable submitters to change data?', 'Enabling this setting allows submitters to make changes to data previously submitted by them or assigned to them.', 'note', '&nbsp;NOT YET IMPLEMENTED'),
+                        array('Enable submitters to change data?', 'Enabling this setting allows submitters to make changes to data previously submitted by them or assigned to them.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         'hr',
                         //array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'checkbox', 'allow_count_hidden_entries'),
-                        array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'note', '&nbsp;NOT YET IMPLEMENTED'),
+                        array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         'hr',
                         array('Force SSL-only access to LOVD?', 'SSL is a secure protocol allowing for encryption of data sent between you and LOVD. When you will record sensitive individual information in LOVD, you <B>should</B> enable this setting, as the individual information can otherwise be \'sniffed\' off the network. If you do not record sensitive information, enabling SSL is <I>recommended</I>.', 'checkbox', 'use_ssl'),
                         'hr',
                         //array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'checkbox', 'use_versioning'),
-                        array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'note', '&nbsp;NOT YET IMPLEMENTED'),
+                        array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         'hr',
          'uninstall' => array('Disable LOVD uninstall?', 'Select this to disable the "Uninstall LOVD" option in the Setup area. Please note that this uninstall lock can only be removed by directly accessing the MySQL database.', 'checkbox', 'lock_uninstall'),
       'uninstall_hr' => 'hr',
@@ -199,7 +199,7 @@ class LOVD_SystemSetting extends LOVD_Object {
         if (lovd_getProjectFile() != '/install/index.php') {
             unset($this->aFormData['uninstall'], $this->aFormData['uninstall_hr']);
             global $_CONF;
-            $this->aFormData['refseq_build'] = array('Human Build to map to (UCSC/NCBI)', '', 'print', '&nbsp;<B>' . $_CONF['refseq_build'] . '</B>');
+            $this->aFormData['refseq_build'] = array('Human Build to map to (UCSC/NCBI)', '', 'print', '&nbsp;' . $_CONF['refseq_build']);
         }
 
         return parent::getForm();

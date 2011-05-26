@@ -15,7 +15,9 @@ Doen voor Alpha-01:
 - (~BELANGRIJK) Submissie: = alles aan elkaar knopen
 - (~BELANGRIJK: Ivo) Icoontjes voor setup???
 - (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
-- (BELANGRIJK: Ivar) Stomme dingen uit genes form halen!!!
+- Nu genes gewoon openbaar is, is status.php niet meer echt nodig - maar hij is wel enorm traag op een grote installatie.
+  * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
+  * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
 
 - "Individual has been screened, no variants have been found"
   - That means we need an additional column!!!!!!!!

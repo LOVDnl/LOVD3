@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-05-25
+ * Modified    : 2011-05-26
  * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -352,19 +352,13 @@ class LOVD_Gene extends LOVD_Object {
                         'hr',
                         'skip',
                         'skip',
-                        array('', '', 'print', '<B>Reference sequences</B>'),
-                        array('', '', 'note', 'Collecting variants requires a proper reference sequence.'),
-                        'hr',
-                        array('', '', 'note', '<B>Find a proper place for this text here!!!</B><BR>Without a (genomic) reference sequence the variants in this LOVD database cannot be interpreted properly. A valid genomic reference sequence can be used to map your variants to a genomic location, as well as creating a human-readable reference sequence format and linking to the mutation check Mutalyzer module.'),
-                        array('', '', 'note', 'If you wish to use a NCBI GenBank record, fill in the GenBank accession number. If you have uploaded your GenBank file to Mutalyzer and have received a Mutalyzer UD identifier, fill in this identifier.'),
-                        'hr',
-                        'skip',
-                        array('', '', 'note', '<B>The following three fields are for the mapping of the variants to the genomic reference sequence. They are mandatory, as variants without properly configured reference sequences, cannot be interpreted properly.</B>'),
+                        array('', '', 'print', '<B>Reference sequences (mandatory)</B>'),
+                        array('', '', 'note', 'Collecting variants requires a proper reference sequence. Without a genomic and a transcript reference sequence the variants in this LOVD database cannot be interpreted properly or mapped to the genome.'),
                         'hr',
                         array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false),
                         array('', '', 'note', 'Select the genomic reference sequence (NG, NC, LRG accession number). Only the references that are available to LOVD are shown'),
                         'hr',
-    'transcripts' =>    array('Transcriptomic reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
+    'transcripts' =>    array('Transcript reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
 'transcript_info' =>    array('', '', 'note', 'Select transcript references (NM accession numbers). You can select multiple transcripts by holding "CTRL or CMD" and clicking all transcripts desired.'),
                         'hr',
                         'skip',

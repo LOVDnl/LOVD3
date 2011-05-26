@@ -529,6 +529,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE
 
         if (!lovd_error()) {
             // Store information and go to next page.
+            // FIXME; use object::insertEntry()
             $q = lovd_queryDB('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']));
             if (!$q) {
                 // Error when running query.

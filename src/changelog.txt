@@ -1,0 +1,13 @@
+/*******************************************************************************
+ *
+ * Leiden Open source Variation Database (LOVD) 3.0 Changelog
+ *
+ *************/
+
+// DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
+
+/*******************
+ * 3.0 Alpha 01
+ * 2011-05-26
+ *********/
+ * Initial release to general public.
