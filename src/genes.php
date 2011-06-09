@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-05-25
+ * Modified    : 2011-06-09
  * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -128,6 +128,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     
     if (GET) {
         $_POST['workID'] = lovd_generateRandomID();
+        // Temporary fix for mem leak.
+        $_SESSION['work'] = array();
         $_SESSION['work'][$_POST['workID']] = array(
                                                     'action' => '/genes?create',
                                                     'step' => '1',
