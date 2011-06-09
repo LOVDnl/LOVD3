@@ -128,7 +128,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     
     if (GET) {
         $_POST['workID'] = lovd_generateRandomID();
-        // Temporary fix for mem leak.
+        // FIXME; Temporary fix for mem leak; empty entire work array.
         $_SESSION['work'] = array();
         $_SESSION['work'][$_POST['workID']] = array(
                                                     'action' => '/genes?create',

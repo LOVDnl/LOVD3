@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-05-26
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -77,7 +77,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="variants/' . $nID . '?edit">Edit variant information</A>';
+        $sNavigation = '<A href="variants/' . $nID . '?edit">Edit variant entry</A>';
         $sNavigation .= ' | <A href="variants/' . $nID . '?delete">Delete variant entry</A>';
     }
 
@@ -96,23 +96,22 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // Create a new entry.
-    
+
+    lovd_requireAUTH(LEVEL_SUBMITTER);
+
     if (isset($_GET['reference']) && $_GET['reference'] == 'Genome') {
         // URL: /variants?create&reference='Genome'
         // Create a variant on the genome.
         define('LOG_EVENT', 'GenomeVariantCreate');
 
-        // Require manager clearance.
-        lovd_requireAUTH(LEVEL_SUBMITTER);
-
         if (isset($_GET['target'])) {
             if (ctype_digit($_GET['target'])) {
-                $_GET['target'] = str_pad($_GET['target'], 10, "0", STR_PAD_LEFT);
-                if (mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE_SCREENINGS . ' WHERE id=?', array($_GET['target'])))) {
+                $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
+                if (mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
                     $_POST['screeningid'] = $_GET['target'];
-                    define('PAGE_TITLE', 'Create a new variant information entry for screening #' . $_GET['target']);
+                    define('PAGE_TITLE', 'Create a new variant entry for screening #' . $_GET['target']);
                 } else {
-                    define('PAGE_TITLE', 'Create a new variant information entry');
+                    define('PAGE_TITLE', 'Create a new variant entry');
                     require ROOT_PATH . 'inc-top.php';
                     lovd_printHeader(PAGE_TITLE);
                     lovd_showInfoTable('The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.', 'warning');
@@ -123,7 +122,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 exit;
             }
         } else {
-            define('PAGE_TITLE', 'Create a new variant information entry');
+            define('PAGE_TITLE', 'Create a new variant entry');
         }
 
         require ROOT_PATH . 'class/object_genome_variants.php';
@@ -150,14 +149,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $nID = $_DATA->insertEntry($_POST, $aFields);
 
                 // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, 'Created variant information entry ' . $nID);
+                lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
 
-                // Add variant to screening
+                // Add variant to screening.
                 if (isset($_POST['screeningid'])) {
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES(?,?)', array($_POST['screeningid'], $nID));
+                    $q = lovd_queryDB('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
                     if (!$q) {
                         // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Variant information entry could not be added to screening #' . $_POST['screeningid']);
+                        lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
                     }
                 }
 
@@ -166,7 +165,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
-                lovd_showInfoTable('Successfully created the variant information entry!', 'success');
+                lovd_showInfoTable('Successfully created the variant entry!', 'success');
 
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
@@ -183,7 +182,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_printHeader(PAGE_TITLE);
 
         if (GET) {
-            print('      To create a new variant information entry, please fill out the form below.<BR>' . "\n" .
+            print('      To create a new variant entry, please fill out the form below.<BR>' . "\n" .
                   '      <BR>' . "\n\n");
         }
 
@@ -195,13 +194,13 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_includeJS('inc-js-insert-custom-links.php');
 
         // Table.
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&reference=Genome' . (isset($_POST['screeningid'])? '&target=' . $_POST['screeningid'] : '') .'" method="post">' . "\n");
+        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&amp;reference=Genome' . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') .'" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array_merge(
                      $_DATA->getForm(),
                      array(
-                            array('', '', 'submit', 'Create variant information entry'),
+                            array('', '', 'submit', 'Create variant entry'),
                           ));
         lovd_viewForm($aForm);
 
@@ -209,22 +208,24 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         require ROOT_PATH . 'inc-bot.php';
         exit;
-        
+
+
+
+
+
     } elseif (isset($_GET['reference']) && $_GET['reference'] == 'Transcript') {
         // URL: /variants?create&reference='Transcript&transcriptid=00001'
         // Create a variant on a transcript.
         define('LOG_EVENT', 'TranscriptVariantCreate');
-        
-        // Require manager clearance.
-        lovd_requireAUTH(LEVEL_SUBMITTER);
 
+        // FIXME; merge deze twee IFs.
         if (isset($_GET['transcriptid'])) {
             if (ctype_digit($_GET['transcriptid'])) {
-                $_GET['transcriptid'] = str_pad($_GET['transcriptid'], 5, "0", STR_PAD_LEFT);
-                if (mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE_TRANSCRIPTS . ' WHERE id=?', array($_GET['transcriptid'])))) {
-                    define('PAGE_TITLE', 'Create a new variant information entry for transcript #' . $_GET['transcriptid']);
+                $_GET['transcriptid'] = str_pad($_GET['transcriptid'], 5, '0', STR_PAD_LEFT);
+                if (mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($_GET['transcriptid'])))) {
+                    define('PAGE_TITLE', 'Create a new variant entry for transcript #' . $_GET['transcriptid']);
                 } else {
-                    define('PAGE_TITLE', 'Create a new variant information entry');
+                    define('PAGE_TITLE', 'Create a new variant entry');
                     require ROOT_PATH . 'inc-top.php';
                     lovd_printHeader(PAGE_TITLE);
                     lovd_showInfoTable('The transcript ID given is not valid, please go to the create variant page and select the desired transcript entry.', 'warning');
@@ -248,6 +249,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         if (POST) {
             lovd_errorClean();
+            // FIXME; ik raak je hier kwijt; waar is dit allemaal voor? Waarom niet gewoon de checkFields() aanroepen?
             // Fields to be used.
             $aFieldsGenome = array_merge(
                                 array('allele', 'chromosome', 'ownerid', 'statusid', 'created_by', 'created_date'),
@@ -292,23 +294,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_DATA['Transcript']->insertEntry($_POST, $aFieldsTranscript);
 
                 // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, 'Created variant information entry ' . $nID);
-
-                /*// Add variant to screening
-                if (isset($_POST['screeningid'])) {
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES(?,?)', array($_POST['screeningid'], $nID));
-                    if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Variant information entry could not be added to screening #' . $_POST['screeningid']);
-                    }
-                }*/
+                lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
 
                 // Thank the user...
+                // FIXME; stuur de gebruiker door naar de zojuist aangemaakte entry (of de genomic variant)!
                 header('Refresh: 3; url=' . lovd_getInstallURL() . 'transcripts/' . $_GET['transcriptid']);
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
-                lovd_showInfoTable('Successfully created the variant information entry!', 'success');
+                lovd_showInfoTable('Successfully created the variant entry!', 'success');
 
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
@@ -326,7 +320,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_printHeader(PAGE_TITLE);
 
         if (GET) {
-            print('      To create a new variant information entry, please fill out the form below.<BR>' . "\n" .
+            print('      To create a new variant entry, please fill out the form below.<BR>' . "\n" .
                   '      <BR>' . "\n\n");
         }
 
@@ -338,14 +332,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_includeJS('inc-js-insert-custom-links.php');
 
         // Table.
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&reference=Transcript&transcriptid=' . $_GET['transcriptid'] .'" method="post">' . "\n");
+        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&amp;reference=Transcript&amp;transcriptid=' . $_GET['transcriptid'] .'" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array_merge(
                      $_DATA['Genome']->getForm(),
                      $_DATA['Transcript']->getForm(),
                      array(
-                            array('', '', 'submit', 'Create variant information entry'),
+                            array('', '', 'submit', 'Create variant entry'),
                           ));
         lovd_viewForm($aForm);
 
@@ -353,27 +347,29 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         require ROOT_PATH . 'inc-bot.php';
         exit;
-        
+
+
+
+
+
     } else {
         // URL: /variants?create
         header('Location: ' . lovd_getInstallURL() . 'variants?create&reference=Genome');
         exit;
         // Select wether the you want to create a variant on the genome or on a transcript.
         define('LOG_EVENT', 'VariantCreate');
-        define('PAGE_TITLE', 'Create a new variant information entry');
+        define('PAGE_TITLE', 'Create a new variant entry');
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
 
-        // Require manager clearance.
-        lovd_requireAUTH(LEVEL_SUBMITTER);
-
+        // FIXME; je kunt de targets er niet zomaar aanplakken ;)
         print('<TABLE class="data" border="0" cellpadding="0" cellspacing="2" width="950">' . "\n" .
               '  <TBODY>' . "\n" .
               '    <TR class="" style="cursor: pointer;" onmouseover="this.className = \'hover\';" onmouseout="this.className = \'\';" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? $_GET['target'] : '') . '\'">' . "\n" .
-              '      <TH><H5>Create a genomic variant »»</H5></TH>' . "\n" .
+              '      <TH><H5>Create a genomic variant &raquo;&raquo;</H5></TH>' . "\n" .
               '    </TR>' . "\n" .
               '    <TR class="" style="cursor: pointer;" onmouseover="this.className = \'hover\';" onmouseout="this.className = \'\';" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? $_GET['target'] : '') . '\'">' . "\n" .
-              '      <TH><H5>Create a genomic variant »»</H5></TH>' . "\n" .
+              '      <TH><H5>Create a genomic variant &raquo;&raquo;</H5></TH>' . "\n" .
               '    </TR>' . "\n" .
               '  </TBODY>' . "\n" .
               '</TABLE>' . "\n\n");
@@ -383,6 +379,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         require ROOT_PATH . 'class/object_transcripts.php';
         $_GET['page_size'] = 10;
         $_DATA = new LOVD_Transcript();
+        // FIXME; waar zijn deze voor???
         print('<DIV id="TranscriptViewList" style="display:none;">');
         $_DATA->viewList(false, array('id', 'variants'), false, false, false);
         print('</DIV>');
@@ -401,7 +398,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Edit an entry.
 
     $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
-    define('PAGE_TITLE', 'Edit an variant information entry');
+    define('PAGE_TITLE', 'Edit a variant entry');
     define('LOG_EVENT', 'VariantEdit');
 
     // Require manager clearance.
@@ -412,7 +409,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (!empty($_POST)) {
+    if (POST) {
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
@@ -434,18 +431,20 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Edited variant information entry ' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Edited variant entry ' . $nID);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Successfully edited the variant information entry!', 'success');
+            lovd_showInfoTable('Successfully edited the variant entry!', 'success');
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
+
         } else {
+            // FIXME; wat doet dit?
             unset($zData['password']);
         }
 
@@ -462,7 +461,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_printHeader(PAGE_TITLE);
 
     if (GET) {
-        print('      To edit an variant information entry, please fill out the form below.<BR>' . "\n" .
+        print('      To edit a variant entry, please fill out the form below.<BR>' . "\n" .
               '      <BR>' . "\n\n");
     }
 
@@ -479,7 +478,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
-                        array('', '', 'submit', 'Edit variant information entry'),
+                        array('', '', 'submit', 'Edit variant entry'),
                       ));
     lovd_viewForm($aForm);
 
@@ -498,7 +497,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Drop specific entry.
 
     $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
-    define('PAGE_TITLE', 'Delete variant information entry #' . $nID);
+    define('PAGE_TITLE', 'Delete variant entry #' . $nID);
     define('LOG_EVENT', 'VariantDelete');
 
     // Require manager clearance.
@@ -506,6 +505,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
+    // FIXME; $zData is not being used at all...
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -528,14 +528,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $_DATA->deleteEntry($nID);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant information entry ' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry ' . $nID);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants');
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Successfully deleted the variant information entry!', 'success');
+            lovd_showInfoTable('Successfully deleted the variant entry!', 'success');
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
@@ -559,10 +559,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Deleting variant information entry', '', 'print', $nID),
+                        array('Deleting variant entry', '', 'print', $nID),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
-                        array('', '', 'submit', 'Delete variant information entry'),
+                        array('', '', 'submit', 'Delete variant entry'),
                       ));
     lovd_viewForm($aForm);
 

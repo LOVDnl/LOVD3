@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-05-24
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -114,7 +114,7 @@ class LOVD_Object {
             @list($sHeader, $sHelp, $sType, $sName) = $aField;
 
             // Mandatory fields, as defined by child object.
-            if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || empty($aData[$sName]))) {
+            if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
             }
 
@@ -257,8 +257,6 @@ class LOVD_Object {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
             if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
                 $aData[$sField] = NULL;
-            } else if (is_array($aData[$sField])) {
-                $aData[$sField] = implode(';', $aData[$sField]);
             }
             $aSQL[] = $aData[$sField];
         }
@@ -431,8 +429,6 @@ class LOVD_Object {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
             if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
                 $aData[$sField] = NULL;
-            } else if (is_array($aData[$sField])) {
-                $aData[$sField] = implode(';', $aData[$sField]);
             }
             $aSQL[] = $aData[$sField];
         }

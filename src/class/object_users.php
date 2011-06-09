@@ -64,6 +64,8 @@ class LOVD_User extends LOVD_Object {
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
+                                           // FIXME: gebruik $_SETT['user_levels'] !!! (Zowel de cijfers, als de namen)
+                                           // FIXME; hoe zie je nu of iemand curator en/of collaborator is?
                                            'CASE u.level WHEN "9" THEN "Database administrator" WHEN "7" THEN "LOVD Manager" WHEN "1" THEN "Submitter" END AS level_';
         $this->aSQLViewEntry['FROM']     = TABLE_USERS . ' AS u ' .
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
@@ -76,6 +78,8 @@ class LOVD_User extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
                                           'COUNT(u2g.geneid) AS curates, ' .
                                           'c.name AS country_, ' .
+                                           // FIXME: gebruik $_SETT['user_levels'] !!! (Zowel de cijfers, als de namen)
+                                           // FIXME; hoe zie je nu of iemand curator en/of collaborator is?
                                           'CASE level WHEN "9" THEN "Database administrator" WHEN "7" THEN "LOVD Manager" WHEN "1" THEN "Submitter" END AS level_';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
@@ -155,6 +159,7 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('u.created_date', 'ASC', true)),
                         'level_' => array(
                                     'view' => array('Level', 150),
+                                    // FIXME; sorteren gaat niet goed zo!!!
                                     'db'   => array('level_', 'ASC', true)),
                       );
         $this->sSortDefault = 'level_';

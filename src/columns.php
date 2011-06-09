@@ -5,7 +5,7 @@
  *
  * Created     : 2010-03-04
  * Modified    : 2011-06-09
- * For LOVD    : 3.0-alpha-01
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1826,6 +1826,9 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 $nTargets = count($aTargets);
                 $i = 1;
                 foreach ($aTargets as $sID) {
+                    // FIXME; get this data from $zData.
+                    // FIXME; this query will now be run for every disease/gene this column is added to.
+                    // FIXME; remarks for developers (decisions that need to be taken) need to be marked with FIXME so we can find them again.
                     // Er zit niet voor niets een col_order in TABLE_COLS, ik stel voor deze als default te gebruiken
                     list($zData['col_order']) = mysql_fetch_row(lovd_queryDB('SELECT col_order FROM ' . TABLE_COLS . ' WHERE id = ?', array($zData['colid'])));
                     $zData[$aTableInfo['unit'] . 'id'] = $sID;
@@ -1933,7 +1936,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
     if (count($aForm) == 1) {
         // I messed up somewhere.
-        // Beetje een non-informatieve foutmelding lijkt me.
+        // FIXME; Find better error message? Can this actually happen?
         lovd_showInfoTable('Nothing to do???', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
@@ -1959,11 +1962,10 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
+if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
+    // URL: /columns/Variant/DNA?remove
     // Drop specific custom column.
     
-    global $_AUTH;
-
     $aCol = $_PATH_ELEMENTS;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
@@ -1983,7 +1985,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
         $bShared = false;
     }
 
+    // FIXME; not true, see code at adding columns.
     lovd_requireAUTH(LEVEL_MANAGER);
+    // FIXME; do this just like when adding columns (and put above the requireAuth()).
     define('PAGE_TITLE', 'LOVD Setup - Manage selected columns');
     define('LOG_EVENT', 'ColRemove');
 
@@ -2010,6 +2014,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
         // This is a hack-attempt.
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
+        // FIXME: this is LOVD 2.0 code.
         lovd_writeLog('MySQL:Error', 'HackAttempt', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') tried to remove ' . $zData['id'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
         lovd_showInfoTable('Hack Attempt!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
@@ -2022,6 +2027,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
     if (POST) {
         lovd_errorClean();
 
+        // FIXME; if there is only one mandatory field, do this more efficiently. See how it's done in the add column code!!!!!
         // Mandatory fields.
         $aCheck =
                  array(
@@ -2052,15 +2058,18 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
                 $q = lovd_queryDB($sQ, array($zData['id']), true);
 
                 // Write to log...
+                // FIXME; this is LOVD 2.0 code... See how it's done at add column!!!
                 lovd_writeLog('Event', LOG_EVENT, $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
 
             } elseif ($bShared) {
                 // Query text; remove column registration first.
                 $sObject = ($sCategory == 'Phenotype'? 'diseaseid' : 'geneid');
                 lovd_queryDB('START TRANSACTION');
+                // FIXME; array_fill is not needed here, do it like it's done elsewhere! Don't reinvent the wheel, make sure you base your code on existing LOVD 3.0 as much as possible!!!
                 $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (' . implode(', ', array_fill(0, count($_POST['target']), '?')) . ') AND colid = ?';
                 $aQ = array_merge($_POST['target'], array($zData['id']));
                 $q = lovd_queryDB($sQ, $aQ, true);
+                // FIXME; you're never going to get into this if!!!
                 if (!$q) {
                     $sError = mysql_error(); // Save the mysql_error before it disappears...
                     lovd_queryDB('ROLLBACK'); // ... because we need to end the transaction.
@@ -2069,6 +2078,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
                 lovd_queryDB('COMMIT');
 
                 // Check if the column is inactive in all diseases/genes. If so, DROP column from phenotypes/variants_on_transcripts table.
+                // FIXME; a select COUNT(*) or select id would suffice here.
+                // FIXME; use proper variable name.
                 $check = mysql_fetch_row(lovd_queryDB('SELECT * FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
                 if (empty($check)) {
                     // Deactivate the column.
@@ -2078,8 +2089,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
                     // Alter data table.
                     $sQ = 'ALTER TABLE ' . $sTable . ' DROP COLUMN `' . $zData['id'] . '`';
                     $q = lovd_queryDB($sQ);
+                    // FIXME; Use standardized LOVD 3.0 log messages, not LOVD 2.0 messages.
                     $sMessage = $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')';
                 } else {
+                    // FIXME; Use standardized LOVD 3.0 log messages, not LOVD 2.0 messages.
                     $sMessage = $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $_POST['target']);
                 }
 
@@ -2112,7 +2125,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
     lovd_errorPrint();
 
     if ($sCategory == 'VariantOnTranscript') {
-        // Add column to a certain gene.
+        // Remove column to a certain gene.
 
         // Retrieve list of genes which DO HAVE this column.
         $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (g.id = c.geneid AND c.colid = ?) WHERE c.colid IS NOT NULL';
@@ -2140,8 +2153,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
             exit;
         }
 
+
+
     } elseif ($sCategory == 'Phenotype') {
-        // Add column to a certain disease.
+        // Remove column to a certain disease.
 
         // Retrieve list of diseases which DO HAVE this column.
         $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NOT NULL';

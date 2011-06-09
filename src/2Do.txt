@@ -12,9 +12,36 @@ Doen voor Alpha-01:
 - (~BELANGRIJK) Submissie: = alles aan elkaar knopen
 - (~BELANGRIJK: Ivo) Icoontjes voor setup???
 - (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
+- Nu genes gewoon openbaar is, is status.php niet meer echt nodig - maar hij is wel enorm traag op een grote installatie.
+  * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
+  * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
 - reset_password.php:
   * Bij de mail() call staat een LOVD 2.0 opmerking (ik heb de datum en 2.0 versie al verwijderd). Die opmerking moet nageleefd worden (zie originele 2.0 code!!!), en er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
   * Die hele file zit trouwens vol met dingen die in 3.0 anders gedaan worden (lovd_writeLog() calls naar de verkeerde log file, lovd_printHeader() op de oude manier).
+- BUG: Disease kan niet met gen gelinked worden, gen wel met disease.
+- Column viewList() heeft geen <A href></A>.
+  * En check andere viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
+- Gene selection lists zijn veel te groot als je een database hebt met lange gen namen. LOVD 2.0-dev had daar een techniek voor, om dat in te korten.
+- BUG: Ik maak screening aan, gekoppeld aan individu. Mag niet eens selecteren welk gen ik gescreend heb, maar als ik de screening bekijk, zie ik 21.000 genen in een viewList zonder navigatie :S
+  * Ik heb in de database een gen in SCR2GENE gestopt, en dan zie ik wel het juiste gen.
+- BUG: Kan een variant niet aan een screening koppelen, ook al gebruik ik de juiste link er voor.
+- BUG: Er staat een edited_date in variants_on_transcripts, maar verder helemaal niks.
+  * Deze kolom staat ook raadselachtig in de primary key, en kan ik NIET leeg laten (NULL).
+- BUG: variants_on_transcript kolommen position_c_start, position_c_start_intron, position_c_end, position_c_end_intron horen *niet* in viewLists of viewEntries!
+- Kijk 'ns naar https://grenada.lumc.nl/LOVD3/shared, er zit een individu in met een aantal mutaties. Kun je makkelijk naar al zijn data navigeren?
+  * We missen veel links tussen data in. Onder variants on genome zou een variants_on_transcript viewList moeten, en ik moet naar de screening en individu kunnen vanuit daar. Dat soort dingen.
+- Was 't nou geregeld, dat inc-upgrade.php een curator koos voor genen zonder curator?
+- Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
+- (Ivar) Er is in #57 code verwijderd uit objects_custom die checkt dat shared objects een objectID moeten hebben ontvangen. Die check is toch nog steeds nodig?
+- Adding phenotype button should not appear if individual does not have a disease associated.
+- If only one disease: auto select that disease for phenotype add?
+- Adding phenotype: diseaseid in GET, zodat we er direct naar zouden kunnen linken. Scheelt ook gedoe in getForm() van phenotype.
+- Adding phenotype should not be possible if no columns have been enabled yet.
+  * When disease is created, forward user to select columns for this disease.
+- BUG: Non-shared columns can't be removed.
+- BUG: Maak phenotype aan, selecteer geen disease, submit form. Kijk nog eens goed naar transcripts?create en zorg er voor dat alle controles goed staan!!!
+
+
 
 - "Individual has been screened, no variants have been found"
   - That means we need an additional column!!!!!!!!
@@ -93,6 +120,7 @@ MOET OVERLEGD WORDEN:
   * Hoe emails? Pas als klaar? Wat nou als niet klaar wordt opgegeven?
   * Wanneer opslaan?
 - (BELANGRIJK) Allele => Gametic Phase? Check alle waardes in de groep.
+- Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
 
 
 

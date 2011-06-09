@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-06-06
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -655,7 +655,6 @@ if (!defined('_NOT_INSTALLED_')) {
         // Just often used...
         define('GENE_COUNT', count(lovd_getGeneList()));
 
-}
         // Simply so that we can build somewhat correct email headers.
         if (empty($_CONF['institute'])) {
             $_CONF['institute'] = $_SERVER['HTTP_HOST'];
@@ -683,6 +682,7 @@ if (!defined('_NOT_INSTALLED_')) {
                             'X-MSMail-Priority: Normal' . $sEol .
                             'X-Mailer: PHP/' . phpversion() . $sEol .
                             'From: ' . (ON_WINDOWS? '' : '"LOVDv.' . $_SETT['system']['version'] . ' (' . $_CONF['institute'] . ')" ') . '<' . $_CONF['email_address'] . '>';
+    }
 
 /*
     // Load LOVD modules!

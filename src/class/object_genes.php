@@ -5,7 +5,7 @@
  *
  * Created     : 2010-12-15
  * Modified    : 2011-06-09
- * For LOVD    : 3.0-alpha-01
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -164,6 +164,9 @@ class LOVD_Gene extends LOVD_Object {
                         'variants' => array(
                                     'view' => array('Variants', 70),
                                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
+                        'updated_date_' => array( 
+                                    'view' => array('Last updated', 110), 
+                                    'db'   => array('g.updated_date', 'DESC', true)),
                         //'uniq_variants' => array(
                         //            'view' => array('Unique variants', 100),
                         //            'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
@@ -462,7 +465,8 @@ class LOVD_Gene extends LOVD_Object {
         } else {
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
             $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
-            
+
+            // FIXME; zou dit een external source moeten zijn?
             $zData['refseq_genomic_'] = (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? '<A href="ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml">' : '<A href="http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic'] . '">')  . $zData['refseq_genomic'] . '</A>';
 
             // FIXME; ugly coding :S

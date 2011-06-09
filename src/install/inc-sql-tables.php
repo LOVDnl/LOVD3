@@ -39,6 +39,7 @@
 // Allow download staat nu per gen, en de losse varianten dan?
 // Human readable refseq velden staan nu bij gen, moeten naar transcript???
 // Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
+// FIXME; phenotype entries moeten ook status id hebben!!!
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {

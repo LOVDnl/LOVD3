@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-05-19
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -628,7 +628,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
                 lovd_writeLog('Error', 'HackAttempt', 'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$nLevel] . ')');
-                lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+                lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
             }
@@ -824,13 +824,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_requireAUTH(LEVEL_MANAGER);
 
     $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
-    var_dump($zData);
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('Boot user #' . $nID, 'LOVD Setup - Manage authorized users');
+        lovd_printHeader('Boot user #' . $nID);
 
-        print('      No such ID!<BR>' . "\n");
+        lovd_showInfoTable('No such ID!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
@@ -841,6 +840,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     }
 
     // Write to log...
+    // FIXME; LOVD 3.0 standard, please.
     lovd_writeLog('Event', 'UserBoot', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully booted user ' . $_POST['username'] . ' (' . $_POST['name'] . ')');
 
     // Return the user where they came from.
@@ -863,14 +863,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    if (GET) {
-        $_POST['workID'] = lovd_generateRandomID();
-        $_SESSION['work'][$_POST['workID']] = array(
-                                                    'action' => 'users/' . $nID . '?' . strtolower(ACTION),
-                                                    'step' => '1',
-                                                   );
-    }
-
     $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
@@ -882,18 +874,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     }
 
     // What are we doing?
+    // FIXME; the original code was better (before commit #55). Do you see why?
     $sAction = ucfirst(ACTION);
 
     // The actual query.
-    $q = @lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID));
-    if (!$q) {
-        $sError = mysql_error(); // Save the mysql_error before it disappears.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
-        lovd_displayError('User' . $sAction, $sQ, $sError);
-    }
+    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID), true);
 
     // Write to log...
+    // FIXME; LOVD 3.0 standard please!
     lovd_writeLog('Event', 'User' . $sAction, $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully ' . strtolower($sAction) . 'ed user ' . $zData['username'] . ' (' . $zData['name'] . ')');
 
     // Return the user where they came from.

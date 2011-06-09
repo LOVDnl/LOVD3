@@ -556,8 +556,8 @@ function lovd_queryDB ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = fals
 
     // Explode so we can glue the pieces back together. A simple replace will mess up with more than one argument and one of the replaced values itself contains questionmarks.
     $aQuery = explode('?', $sQuery);
-    $aArgs = array_values($aArgs); // Make sure there are continuous numeric keys only.
     $sQuery = $aQuery[0]; // So queries without arguments work, too :)
+    $aArgs = array_values($aArgs); // Make sure there are continuous numeric keys only.
 
     // A mismatch between the number of ? in the query and the number of items
     // in $aArgs indicates a bug in LOVD.

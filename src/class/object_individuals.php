@@ -68,6 +68,7 @@ class LOVD_Individual extends LOVD_Custom {
                                            'GROUP_CONCAT(DISTINCT d.id, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
                                            // FIXME; TABLE_PHENOTYPES heeft een individual ID, dus je kunt een gewone count(*) opvragen, je hebt geen lijst phenotype IDs nodig.
                                            'GROUP_CONCAT(DISTINCT p.id, ";", p.diseaseid SEPARATOR ";;") AS phenotypes, ' .
+                                           // FIXME; een niet-standaard separator is misschien niet zo handig voor de standaardisatie.
                                            'GROUP_CONCAT(DISTINCT s.id SEPARATOR "|") AS screeningids, ' .
                                            'uo.id AS owner, ' .
                                            'uo.name AS owner_, ' .
@@ -155,6 +156,7 @@ class LOVD_Individual extends LOVD_Custom {
             global $zData; // FIXME; this could be done more elegantly.
             
             if ($_AUTH['level'] < LEVEL_CURATOR) {
+                // FIXME; deze moet denk ik andersom? Er mist commentaar maar ik denk dat je wilt voorkomen dat submitters hun data publiek maken zonder toestemming?
                 if ($zData['statusid'] > $aData['statusid']) {
                     lovd_errorAdd('statusid' ,'Not allowed to change \'Status of this data\' from ' . $_SETT['var_status'][$zData['statusid']] . ' to ' . $_SETT['var_status'][$aData['statusid']] . '.');
                 }
@@ -163,6 +165,7 @@ class LOVD_Individual extends LOVD_Custom {
 
         // Mandatory fields.
         // FIXME; if empty, just define as an empty array in the class header?
+        // IVO: Already done, see objects.php.
         if (ACTION == 'edit') {
             $this->aCheckMandatory[] = 'password';
         }
@@ -327,6 +330,7 @@ class LOVD_Individual extends LOVD_Custom {
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'individuals/' . rawurlencode($zData['id']);
+            // FIXME; er is geen id column, dus deze regel werkt niet. Overigens is het beter hier een _ achter de naam te zetten, zodat we altijd nog de echte ID terug kunnen vinden.
             $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';

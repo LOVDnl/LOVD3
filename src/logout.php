@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-19
- * Modified    : 2011-05-25
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-02-20
+ * For LOVD    : 3.0-pre-17
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -53,7 +52,7 @@ $_AUTH = false;
 session_start(); // Reinitiate... Otherwise the next line will do nothing.
 // DMD_SPECIFIC; FIXME; we still need to decide how to store this information.
 $_SESSION['currdb'] = $sCurrDB; // Put it back.
-header('Refresh: 5; url=' . lovd_getInstallURL() . 'login.php');
+header('Refresh: 5; url=' . lovd_getInstallURL());
 define('PAGE_TITLE', 'Log out');
 require ROOT_PATH . 'inc-top.php';
 lovd_printHeader(PAGE_TITLE);

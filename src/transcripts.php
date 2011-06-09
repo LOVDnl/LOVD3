@@ -37,8 +37,6 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-// Require manager clearance.
-//lovd_requireAUTH(LEVEL_MANAGER);
 
 
 

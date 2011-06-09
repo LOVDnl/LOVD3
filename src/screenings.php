@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-05-26
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -78,10 +78,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
-        $sNavigation .= ' | <A href="variants?create&target=' . $nID . '">Add variant to screening</A>';
+        $sNavigation .= ' | <A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
         $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
     } elseif ($_AUTH && $_AUTH['level'] >= LEVEL_SUBMITTER) {
-        $sNavigation = '<A href="variants?create&target=' . $nID . '">Add variant to screening</A>';
+        $sNavigation = '<A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
     }
 
     if ($sNavigation) {
@@ -89,6 +89,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
+    // FIXME; wellicht is html_entity_decode() makkelijker? Heb je deze IF wel nodig?
     $_GET['search_geneid'] = (!empty($zData['geneids'])? str_replace("&quot;", "\"", $zData['geneids']) : 0);
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Genes screened', 'H4');
@@ -126,14 +127,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     
     if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
         $_GET['target'] = str_pad($_GET['target'], 8, "0", STR_PAD_LEFT);
-        if (mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id=?', array($_GET['target'])))) {
+        if (mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
             $_POST['individualid'] = $_GET['target'];
             define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
         } else {
             define('PAGE_TITLE', 'Create a new screening information entry');
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'warning');
+            lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'stop');
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }
@@ -175,8 +176,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
-
         }
+
     } else {
         // Default values.
         $_DATA->setDefaultValues();
@@ -199,7 +200,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_includeJS('inc-js-insert-custom-links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '&target=' . $_POST['individualid'] . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '&amp;target=' . $_GET['target'] . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -219,7 +220,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /screenings/0000000001?edit
     // Edit an entry.
 
@@ -235,7 +236,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^\d+$/', $_PATH_ELEMENTS[1]) && A
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (!empty($_POST)) {
+    if (POST) {
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);

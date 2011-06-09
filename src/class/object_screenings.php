@@ -10,7 +10,7 @@
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
- *     
+ *
  *
  * This file is part of LOVD.
  *
@@ -65,6 +65,7 @@ class LOVD_Screening extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
+                                            // FIXME; ik moest even zoeken waar deze voor waren; misschien kunnen we ze beter hernoemen naar "search_geneid" ofzo?
                                            'GROUP_CONCAT("=\"", s2g.geneid, "\"" SEPARATOR "|") AS geneids, ' .
                                            'GROUP_CONCAT(DISTINCT s2v.variantid SEPARATOR "|") AS variantids, ' .
                                            'uo.name AS owner, ' .
@@ -89,7 +90,7 @@ class LOVD_Screening extends LOVD_Custom {
 
         // Run parent constructor to find out about the custom columns.
         parent::LOVD_Custom();
-        
+
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
                  array(
@@ -134,7 +135,6 @@ class LOVD_Screening extends LOVD_Custom {
                       ));
         $this->sSortDefault = 'id';
         parent::LOVD_Object();
-        
     }
 
 
@@ -144,12 +144,13 @@ class LOVD_Screening extends LOVD_Custom {
     function checkFields ($aData)
     {
         global $_AUTH;
-        
+
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
         }
-        
+
+        // FIXME; if empty, should be removed perhaps?
         // Mandatory fields.
         $this->aCheckMandatory =
                  array(
@@ -157,6 +158,7 @@ class LOVD_Screening extends LOVD_Custom {
                       );
         parent::checkFields($aData);
 
+        // FIXME; Ik stel voor om de ownerid/owned_by checks in object_custom.php te doen, scheelt het herhalen van de code in iedere checkFields().
         if (isset($_POST['ownerid'])) {
             if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
                 $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id=?', array($_POST['ownerid']));
@@ -171,7 +173,7 @@ class LOVD_Screening extends LOVD_Custom {
                 lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
             }
         }
-        
+
         lovd_checkXSS();
     }
 
@@ -187,7 +189,8 @@ class LOVD_Screening extends LOVD_Custom {
         $aSelectOwner = array();
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS, array());
+            // FIXME; select * is overkill, en hier moet een ORDER BY komen. Level ook laten zien?
+            $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS);
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }

@@ -63,6 +63,7 @@ class LOVD_Transcript extends LOVD_Object {
                                            'g.chromosome, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
+                                           // FIXME; ik zie niet waar je dit gebruikt, en dit kan heeeel groot worden!!!
                                            'GROUP_CONCAT(vot.id SEPARATOR "|") AS variantids, ' .
                                            'count(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
@@ -213,6 +214,7 @@ class LOVD_Transcript extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
+            // FIXME; ik vind dit niet zo mooi, kan dit anders? Wellicht de links uitzetten vanaf de viewList() call?
             if ($_PATH_ELEMENTS[0] == 'variants' && ACTION == 'create') {
                 //$zData['row_id'] = $zData['id'];
                 //$zData['row_link'] = 'variants?create&reference=Transcript&transcriptid=' . rawurlencode($zData['id']);
@@ -223,6 +225,7 @@ class LOVD_Transcript extends LOVD_Object {
             } else {    
                 $zData['row_id'] = $zData['id'];
                 $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
+                // FIXME; het is beter hier een _ achter de naam te zetten, zodat we altijd nog de echte ID terug kunnen vinden.
                 $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
             }
         } else {

@@ -50,6 +50,7 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
+
     function LOVD_Custom ()
     {
         // Default constructor.
@@ -73,6 +74,7 @@ class LOVD_Custom extends LOVD_Object {
                         'ORDER BY sc.col_order';
                 $aArgs[] = $this->sObjectID;
             } else {
+                // FIXME! Waarom wordt er gekoppeld aan TABLE_PHENOTYPES???
                 $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
                         'FROM ' . TABLE_COLS . ' AS c ' .
                         'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
@@ -301,6 +303,7 @@ class LOVD_Custom extends LOVD_Object {
         // Checks if the selected values are indeed from the selection list.
         if ($this->aColumns[$sCol]['form_type'][2] == 'select' && $this->aColumns[$sCol]['form_type'][3] >= 1) {
             if (!empty($val)) {
+                // FIXME; check wat er gebeurt, als er in de definitie van de select options er meer spaties voor de = worden gezet. Hoe wordt die waarde opgeslagen in de database? Komt die waarde deze check wel door?
                 $aOptions = preg_replace('/ =.*$/', '', $this->aColumns[$sCol]['select_options']);
                 (!is_array($val)? $val = array($val) : false);
                 foreach ($val as $sValue) {

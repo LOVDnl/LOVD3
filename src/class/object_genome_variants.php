@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-05-23
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -56,13 +56,13 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // Default constructor.
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT vog.* ' .
-                               'FROM ' . TABLE_VARIANTS . ' AS vog ' .
-                               'WHERE vog.id=?';
+        $this->sSQLLoadEntry = 'SELECT * ' .
+                               'FROM ' . TABLE_VARIANTS . ' ' .
+                               'WHERE id = ?';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vog.*, ' .
-                                           'uo.id AS owner, ' .
+                                           'uo.id AS owner, ' . // FIXME; lijkt me niet zinvol; je hebt vog.ownerid al!
                                            'uo.name AS owner_, ' .
                                            'ds.name AS status, ' .
                                            'uc.name AS created_by_, ' .
@@ -77,6 +77,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // SQL code for viewing the list of variants
         // FIXME: we should implement this in a different way
         $this->aSQLViewList['SELECT']   = 'vog.*, ' .
+                                          // FIXME; de , is niet de standaard. We moeten hier standaarden voor zetten en forcen.
                                           'GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
                                           'uo.name AS owner, ' .
                                           'ds.name AS status';
@@ -154,6 +155,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             global $zData; // FIXME; this could be done more elegantly.
             
             if ($_AUTH['level'] < LEVEL_CURATOR) {
+                // FIXME; ik denk dat je dit andersom bedoeld hebt.
+                // FIXME; zullen we deze code in objects_custom doen?
                 if ($zData['statusid'] > $aData['statusid']) {
                     lovd_errorAdd('statusid' ,'Not allowed to change \'Status of this data\' from ' . $_SETT['var_status'][$zData['statusid']] . ' to ' . $_SETT['var_status'][$aData['statusid']] . '.');
                 }
@@ -162,39 +165,50 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         // Mandatory fields.
         // FIXME; if empty, just define as an empty array in the class header?
+        // IVO: Is al gedaan! Zie objects.php.
         if (ACTION == 'edit') {
             $this->aCheckMandatory[] = 'password';
         }
 
         parent::checkFields($aData);
 
+        // FIXME; persoonlijk vind ik een in_array sneller herkenbaar dan een isset() in deze situatie.
         if (!isset($_POST['allele']) || !isset($_SETT['var_allele'][$_POST['allele']])) {
             lovd_errorAdd('allele', 'Please select a proper allele from the \'Allele\' selection box.');
         }
 
+        // FIXME; er is een php functie voor in_array(..., array_keys()).
         if (!isset($_POST['chromosome']) || !in_array($_POST['chromosome'], array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']))) {
             lovd_errorAdd('chromosome', 'Please select a proper chromosome from the \'Chromosome\' selection box.');
         }
 
         if (isset($_POST['ownerid'])) {
             if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id=?', array($_POST['ownerid']));
+                // FIXME; volgens mij werkt deze truc niet; $q is volgens mij niet false als de user niet gevonden wordt.
+                //  Daarnaast is een select * een beetje overkill als je alleen maar weten wilt of deze user bestaat.
+                $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
                 if (!$q) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
+                    // IVO: Ben ik met je eens. Overigens is dat wellicht met de checks hierboven ook zo (behalve dan lege waardes).
+                    //   Misschien beter deze cols aan mandatory toe te voegen, en dan de checks hierboven alleen te doen als
+                    //   er een waarde is ingevuld, zoals dit stukje dat ook heeft.
+                    lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this individual\' selection box.');
                 }
             } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+                // FIXME; vanwaar deze gescheiden IF? En wat gebeurt er met users < LEVEL_CURATOR?
                 lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
             }
         } else {
             if (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
+                // IVO: I'm pretty sure we are ignoring this value.
                 lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
             }
         }
 
         // FIXME; deze ifs kunnen efficienter.
         if (isset($_POST['statusid'])) {
+            // FIXME; vanwaar al deze checks op de user level? Waarom zijn deze foutmeldingen afhankelijk van de user level?
             if (!isset($_SETT['var_status'][$_POST['statusid']]) && $_AUTH['level'] >= LEVEL_CURATOR) {
                 lovd_errorAdd('statusid' ,'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {

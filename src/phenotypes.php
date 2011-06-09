@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-06-06
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -112,7 +112,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     define('LOG_EVENT', 'PhenotypeCreate');
 
-    // Require manager clearance.
     lovd_requireAUTH(LEVEL_SUBMITTER);
     
     if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
@@ -148,6 +147,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
+            // FIXME; phenotype entries moeten ook statusid hebben.
                             array('diseaseid', 'individualid', 'ownerid', 'created_by', 'created_date'),
                             $_DATA->buildFields());
 
@@ -160,6 +160,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
             // Write to log...
+            // FIXME; meer info?
             lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID);
 
             // Thank the user...
@@ -178,11 +179,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $_DATA->setDefaultValues();
     }
 
+
+
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
-    
+
+    // FIXME; volgens mij staat dit op de verkeerde plek. Moet dit niet bovenaan staan, nog voor de controle op $_POST??? Zo gebeurt het overal voor formulieren die een eerste stap nodig hebben.
     if (!isset($_POST['diseaseid'])) {
-        $sSQL = 'SELECT * FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON(d.id = i2d.diseaseid) WHERE i2d.individualid=?';
+        // FIXME; select * is overdreven.
+        $sSQL = 'SELECT * FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) WHERE i2d.individualid = ?';
         $q = lovd_queryDB($sSQL, array($_GET['target']));
         $aSelectDiseases = array();
         if ($q) {
@@ -190,23 +195,25 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $aSelectDiseases[$aDisease['id']] = $aDisease['name'] . ' (' . $aDisease['symbol'] . ')';
             }
         } else {
+            // FIXME; dit is raar voor de gebruiker, een halve pagina zonder foutmelding???
+            //  Gebruik hier de mogelijkheden van lovd_queryDB() meer.
             exit;
         }
 
-        print('First select a disease to which the phenotype information is related');
+        // FIXME; ik heb aan dit stuk wat dingen zitten wijzigen, gebaseerd op hoe 't gedaan is in transcript?create. Probeer dingen standaard te houden!!! Anders moeten we straks weer alles gelijk gaan trekken.
+        if (GET) {
+            print('      Please select the disease to which the phenotype information is related.<BR>' . "\n" .
+                  '      <BR>' . "\n\n");
+        }
 
         // Table.
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&target=' . $_GET['target'] . '" method="post">' . "\n");
+        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&amp;target=' . $_GET['target'] . '" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        'skip',
-                        'hr',
-                        array('Choose a related disease', '', 'select', 'diseaseid', 1, $aSelectDiseases, '--Select--', false, false),
-                        'hr',
-                        'skip',
-                        array('', '', 'submit', 'Submit selected disease'),
+                        array('Select the disease', '', 'select', 'diseaseid', 1, $aSelectDiseases, '--Select--', false, false),
+                        array('', '', 'submit', 'Continue &raquo;'),
                       );
         lovd_viewForm($aForm);
 
@@ -229,7 +236,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_includeJS('inc-js-insert-custom-links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&target=' . $_GET['target'] . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&amp;target=' . $_GET['target'] . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -238,6 +245,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                         array('', '', 'submit', 'Create phenotype information entry'),
                       ));
     lovd_viewForm($aForm);
+    // FIXME; dit ziet er in de broncode heel raar uit. Ik ben nog steeds voorstander van hidden inputs bovenaan plaatsen.
     print('<INPUT type="hidden" name="diseaseid" value="' . $_POST['diseaseid'] . '">' . "\n" .
           '</FORM>' . "\n\n");
 
@@ -257,6 +265,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Edit an phenotype information entry');
     define('LOG_EVENT', 'PhenotypeEdit');
 
+    // FIXME; hier moet een goede controle komen, wanneer lager is toegestaan.
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
@@ -273,6 +282,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
+            // FIXME; statusid toevoegen.
                             array('ownerid', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
@@ -353,6 +363,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Delete phenotype information entry ' . $nID);
     define('LOG_EVENT', 'PhenotypeDelete');
 
+    // FIXME; hier moet een goede controle komen, wanneer lager is toegestaan.
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
@@ -375,7 +386,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         }
 
         if (!lovd_error()) {
-            // Query text.
             $_DATA->deleteEntry($nID);
 
             // Write to log...

@@ -62,7 +62,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
-                                           'uo.id AS owner, ' .
+                                           'uo.id AS owner, ' . // FIXME; onnodig, je hebt p.ownerid toch al?
                                            'uo.name AS owner_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -89,6 +89,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                  $this->buildViewEntry(),
                  array(
                         'owner_' => 'Owner name',
+                        // FIXME; statusid weer toevoegen.
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -134,17 +135,19 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         // Mandatory fields.
         // FIXME; if empty, just define as an empty array in the class header?
+        // IVO: Already done, see objects.php.
         if (ACTION == 'edit') {
             $this->aCheckMandatory[] = 'password';
         }
 
         parent::checkFields($aData);
 
+        // FIXME; move to object_custom.php. Zie ook opmerkingen over deze code in andere files.
         // FIXME; this set of if's can be made more efficient.
         // Dit moet ingewikkelder; wie wat kan aanpassen is ook afhankelijk van wie de owner is, denk ik.
         if (isset($_POST['ownerid'])) {
             if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id=?', array($_POST['ownerid']));
+                $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
                 if (!$q) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
@@ -158,11 +161,11 @@ class LOVD_Phenotype extends LOVD_Custom {
                 lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
             }
         }
-        
+
         if (ACTION == 'edit' && (!isset($aData['password']) || md5($aData['password']) != $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
-        
+
         lovd_checkXSS();
     }
 
@@ -242,8 +245,10 @@ class LOVD_Phenotype extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
+            // FIXME; welke van deze zijn nog nodig, nu objects.php zelf al waardes gaat voorspellen?
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'phenotypes/' . rawurlencode($zData['id']);
+            // FIXME; het is beter id niet te overschrijven, misschien id_ of een ander veld gebruiken?
             $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
