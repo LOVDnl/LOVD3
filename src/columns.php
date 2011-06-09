@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-04-29
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -114,12 +114,12 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
         } else {
             $sNavigation = '<A style="color : #999999;">Enable column</A>';
         }
-//        // Remove column.
-//        if ($zData['active']) {
-//            $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?remove">Disable column</A>';
-//        } else {
-//            $sNavigation .= ' | <A style="color : #999999;">Disable column</A>';
-//        }
+        // Remove column.
+        if ($zData['active'] && !$zData['hgvs']) {
+            $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?remove">Remove column</A>';
+        } else {
+            $sNavigation .= ' | <A style="color : #999999;">Remove column</A>';
+        }
         $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?edit">Edit custom data column settings</A>';
 /*
 
@@ -1542,7 +1542,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
     require ROOT_PATH . 'inc-lib-columns.php';
 
     // Required clearance depending on which type of column is being added.
-    $sCategory = substr($sColumnID, 0, strpos($sColumnID, '/')); // Temporarely because we don't have $zData['category'] yet.
+    $sCategory = $aCol[1]; // Temporarely because we don't have $zData['category'] yet.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
         lovd_requireAUTH(LEVEL_CURATOR);
@@ -1826,9 +1826,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 $nTargets = count($aTargets);
                 $i = 1;
                 foreach ($aTargets as $sID) {
-                    // We'll add the column to the end of the list. Max order number?
-                    list($zData['col_order']) = mysql_fetch_row(lovd_queryDB('SELECT MAX(col_order) FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ?', array($zData['category'] . '%')));
-                    $zData['col_order'] ++;
+                    // Er zit niet voor niets een col_order in TABLE_COLS, ik stel voor deze als default te gebruiken
+                    list($zData['col_order']) = mysql_fetch_row(lovd_queryDB('SELECT col_order FROM ' . TABLE_COLS . ' WHERE id = ?', array($zData['colid'])));
                     $zData[$aTableInfo['unit'] . 'id'] = $sID;
 
                     // Query text.
@@ -1934,6 +1933,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
     if (count($aForm) == 1) {
         // I messed up somewhere.
+        // Beetje een non-informatieve foutmelding lijkt me.
         lovd_showInfoTable('Nothing to do???', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
@@ -1958,28 +1958,60 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
 
 
-/*
-if ($_GET['action'] == 'remove' && !empty($_GET['remove'])) {
-    // Drop specific patient column.
 
-authorization
+if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'remove') {
+    // Drop specific custom column.
+    
+    global $_AUTH;
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT c1.hgvs, c1.head_column, c2.* FROM ' . TABLE_COLS . ' AS c1 LEFT JOIN ' . TABLE_PATIENTS_COLS . ' AS c2 USING (colid) WHERE c1.colid = "' . $_GET['drop'] . '" AND c1.colid = c2.colid'));
+    $aCol = $_PATH_ELEMENTS;
+    unset($aCol[0]); // 'columns';
+    $sColumnID = implode('/', $aCol);
+    $sCategory = $aCol[1];
+
+    if ($sCategory == 'VariantOnGenome') {
+        $sTable = constant('TABLE_VARIANTS');
+    } elseif ($sCategory == 'VariantOnTranscript') {
+        $sTable = constant('TABLE_VARIANTS_ON_TRANSCRIPTS');
+    } else {
+        $sTable = constant('TABLE_' . strtoupper($sCategory) . 'S');
+    }
+
+    if (in_array($sCategory, array('Phenotype', 'VariantOnTranscript'))) {
+        $bShared = true;
+    } elseif (in_array($sCategory, array('Individual', 'Screening', 'VariantOnGenome'))) {
+        $bShared = false;
+    }
+
+    lovd_requireAUTH(LEVEL_MANAGER);
+    define('PAGE_TITLE', 'LOVD Setup - Manage selected columns');
+    define('LOG_EVENT', 'ColRemove');
+
+    if ($bShared) {
+        $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.*, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE ac.colid = ?', array($sColumnID)));
+    } else {
+        $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.* FROM ' . TABLE_COLS . ' WHERE c.id = ?', array($sColumnID)));
+    }
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_columns_manage_selected', 'LOVD Setup - Manage selected columns');
+        lovd_printHeader(PAGE_TITLE);
         lovd_showInfoTable('No such ID!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
-    }
-
-    if ($zData['hgvs']) {
+    } elseif (!$zData['colid']) {
+        // Inactive column.
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('Column is already removed!', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    } elseif ($zData['hgvs']) {
         // This is a hack-attempt.
         require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_columns_manage_selected', 'LOVD Setup - Manage selected columns');
-        lovd_writeLog('MySQL:Error', 'HackAttempt', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') tried to remove ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
-        print('      Hack Attempt.<BR>' . "\n");
+        lovd_printHeader(PAGE_TITLE);
+        lovd_writeLog('MySQL:Error', 'HackAttempt', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') tried to remove ' . $zData['id'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
+        lovd_showInfoTable('Hack Attempt!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
@@ -1987,7 +2019,7 @@ authorization
     // Require form functions.
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (isset($_GET['sent'])) {
+    if (POST) {
         lovd_errorClean();
 
         // Mandatory fields.
@@ -1998,55 +2030,75 @@ authorization
 
         foreach ($aCheck as $key => $val) {
             if (empty($_POST[$key])) {
-                lovd_errorAdd('Please fill in the \'' . $val . '\' field.');
+                lovd_errorAdd('password', 'Please fill in the \'' . $val . '\' field.');
             }
         }
 
         // User had to enter his/her password for authorization.
         if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
-            lovd_errorAdd('Please enter your correct password for authorization.');
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
         if (!lovd_error()) {
-            // Query text; remove column registration first.
-            $sQ = 'DELETE FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"';
-            $q = mysql_query($sQ);
-            if (!$q) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_columns_manage_selected', 'LOVD Setup - Manage selected columns');
-                lovd_dbFout('ColRemoveA', $sQ, $sError);
+            if (!$bShared) {
+                // Query text; remove column registration first.
+                $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
+                $q = lovd_queryDB($sQ, array($zData['id']), true);
+
+                // The whole transaction stuff is useless here; alter table will commit and there's just one query before that.
+
+                // Alter data table.
+                $sQ = 'ALTER TABLE ' . $sTable . ' DROP COLUMN `?`';
+                $q = lovd_queryDB($sQ, array($zData['id']), true);
+
+                // Write to log...
+                lovd_writeLog('Event', LOG_EVENT, $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
+
+            } elseif ($bShared) {
+                // Query text; remove column registration first.
+                $sObject = ($sCategory == 'Phenotype'? 'diseaseid' : 'geneid');
+                lovd_queryDB('START TRANSACTION');
+                $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (' . implode(', ', array_fill(0, count($_POST['target']), '?')) . ') AND colid = ?';
+                $aQ = array_merge($_POST['target'], array($zData['id']));
+                $q = lovd_queryDB($sQ, $aQ, true);
+                if (!$q) {
+                    $sError = mysql_error(); // Save the mysql_error before it disappears...
+                    lovd_queryDB('ROLLBACK'); // ... because we need to end the transaction.
+                    lovd_queryError(LOG_EVENT, $sSQL, $sError);
+                }
+                lovd_queryDB('COMMIT');
+
+                // Check if the column is inactive in all diseases/genes. If so, DROP column from phenotypes/variants_on_transcripts table.
+                $check = mysql_fetch_row(lovd_queryDB('SELECT * FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
+                if (empty($check)) {
+                    // Deactivate the column.
+                    $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
+                    $q = lovd_queryDB($sQ, array($zData['id']), true);
+
+                    // Alter data table.
+                    $sQ = 'ALTER TABLE ' . $sTable . ' DROP COLUMN `' . $zData['id'] . '`';
+                    $q = lovd_queryDB($sQ);
+                    $sMessage = $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')';
+                } else {
+                    $sMessage = $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $_POST['target']);
+                }
+
+                // Write to log...
+                lovd_writeLog('Event', LOG_EVENT, $sMessage);
+
             }
-
-            // The whole transaction stuff is useless here; alter table will commit and there's just one query before that.
-
-            // Alter patient table.
-            $sQ = 'ALTER TABLE ' . TABLE_PATIENTS . ' DROP COLUMN `' . $zData['colid'] . '`';
-            $q = mysql_query($sQ);
-            if (!$q) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_columns_manage_selected', 'LOVD Setup - Manage selected columns');
-                lovd_dbFout('ColRemoveB', $sQ, $sError);
-            }
-
-            // Write to log...
-            lovd_writeLog('MySQL:Event', 'ColRemove', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
 
             // Thank the user...
-            header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true));
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $sCategory);
 
             require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader('setup_columns_manage_selected', 'LOVD Setup - Manage selected columns');
-            print('      Successfully removed column "' . $zData['head_column'] . '"!<BR><BR>' . "\n\n");
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully removed column "' . $zData['head_column'] . '"!', 'success');
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
 
         } else {
-            // Errors, so the whole lot returns to the form.
-            lovd_magicUnquoteAll();
-
             // Because we're sending the data back to the form, I need to unset the password fields!
             unset($_POST['password']);
         }
@@ -2055,22 +2107,89 @@ authorization
 
 
     require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader('setup_columns_manage_selected', 'LOVD Setup - Manage selected columns');
+    lovd_printHeader(PAGE_TITLE);
 
     lovd_errorPrint();
 
+    if ($sCategory == 'VariantOnTranscript') {
+        // Add column to a certain gene.
+
+        // Retrieve list of genes which DO HAVE this column.
+        $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (g.id = c.geneid AND c.colid = ?) WHERE c.colid IS NOT NULL';
+        $aSQL = array($zData['id']);
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
+            // Maybe a JOIN would be simpler?
+            $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+        }
+        $sSQL .= ' ORDER BY g.id';
+        $qTargets = lovd_queryDB($sSQL, $aSQL);
+        $nTargets = mysql_num_rows($qTargets);
+        if ($nTargets) {
+            print('      Please select the gene(s) for which you want to remove the ' . $zData['colid'] . ' column from.<BR><BR>' . "\n");
+            $aSelectObject = array(
+                                    'skip',
+                                    'hr',
+                                    array('Remove this column from', '', 'select', 'target', $nTargets, $qTargets, false, true, true),
+                                    'hr',
+                                    'skip',
+                                  );
+        } else {
+            lovd_showInfoTable('There are no genes available that you can remove this column from. Possibly all configured genes already have this column removed, or you do not have the rights to edit the gene you wish to remove this column from.', 'stop');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+
+    } elseif ($sCategory == 'Phenotype') {
+        // Add column to a certain disease.
+
+        // Retrieve list of diseases which DO HAVE this column.
+        $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NOT NULL';
+        $aSQL = array($zData['id']);
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
+            // Maybe a JOIN would be simpler?
+            $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+        }
+        $sSQL .= ' ORDER BY d.symbol';
+        $qTargets = lovd_queryDB($sSQL, $aSQL);
+        $nTargets = mysql_num_rows($qTargets);
+        if ($nTargets) {
+            print('      Please select the disease(s) for which you want to remove the ' . $zData['colid'] . ' column from.<BR><BR>' . "\n");
+            $aSelectObject = array(
+                                    'skip',
+                                    'hr',
+                                    array('Remove this column from', '', 'select', 'target', $nTargets, $qTargets, false, true, true),
+                                    'hr',
+                                    'skip',
+                                  );
+        } else {
+            lovd_showInfoTable('There are no diseases available that you can remove this column from. Possibly all configured diseases already have this column removed, or you do not have the rights to edit the disease you wish to remove this column from; make sure it\'s connected to a gene you are a curator of.', 'stop');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+
+    } else {
+        $aSelectObject = array(
+                                'skip',
+                              );
+    }
+
     // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . rawurlencode($zData['colid']) . '&amp;sent=true" method="post">' . "\n");
+    print('      <FORM action="' . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
-    $aForm = array(
-                    array('POST', '', '', '50%', '50%'),
-                    array('Deleting column from patient table', 'print', $zData['colid'] . ' (' . $zData['head_column'] . ')'),
-                    'skip',
-                    array('Enter your password for authorization', 'password', 'password', 20),
-                    array('', 'submit', 'Delete column from patient table'),
-                  );
-    $_MODULES->processForm('SetupColumnsRemove', $aForm);
+    $aForm = array_merge(
+             array(
+                    array('POST', '', '', '', '50%', 14, '50%'),
+                    array('Remove custom column', '', 'print', $zData['id'] . ' (' . $zData['head_column'] . ')'),
+                  ),
+             $aSelectObject,
+             array(
+                    array('Enter your password for authorization', '', 'password', 'password', 20),
+                    array('', '', 'submit', 'Remove custom column'),
+                  )
+                       );
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
@@ -2078,5 +2197,4 @@ authorization
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
-*///////////////////////////////////////////////////////////////////////////////
 ?>

@@ -6,20 +6,13 @@ Doen voor Alpha-01:
   * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
 - (BELANGRIJK: Ivo) Review DMD_SPECIFIC calls!
 - (~~~~~~BELANGRIJK: Ivar) TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
-- (~~~~BELANGRIJK: Ivar) Create, edit, delete phenotypes
-- (~BELANGRIJK) Custom columns can't be removed/disabled.
-- (BELANGRIJK: Ivar) Should we mark in the system settings the features that we did not implement yet?
 - (~BELANGRIJK) Allele has not been enabled, correct? What to do with it? Rename? Different values?
 - (BELANGRIJK) Alle links nalopen, of ze werken.
 - (~~~~~BELANGRIJK: Ivo) Verwijder pathogenicity. Niet voor Alpha-01.
 - (~BELANGRIJK) Submissie: = alles aan elkaar knopen
 - (~BELANGRIJK: Ivo) Icoontjes voor setup???
 - (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
-- Nu genes gewoon openbaar is, is status.php niet meer echt nodig - maar hij is wel enorm traag op een grote installatie.
-  * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
-  * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
-- De email die reset_password.php uitstuurt, werkt niet op Windows zo.
-  * De email headers zoals in LOVD 2.0 gebruikt moeten geïmplementeerd worden. Staan in inc-init.php klaar voor gebruik.
+- reset_password.php:
   * Bij de mail() call staat een LOVD 2.0 opmerking (ik heb de datum en 2.0 versie al verwijderd). Die opmerking moet nageleefd worden (zie originele 2.0 code!!!), en er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
   * Die hele file zit trouwens vol met dingen die in 3.0 anders gedaan worden (lovd_writeLog() calls naar de verkeerde log file, lovd_printHeader() op de oude manier).
 
@@ -56,7 +49,6 @@ Doen voor Alpha-01:
 - Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
 - Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
 - Leuke bug; /genes/DMD?authorize -> click alle users aan -> resort viewList.
-- Phenotypes (add, edit, delete)
 - Er zitten nog \r in sommige files (o.a. config.ini)
 - BUG; locatie check op settings werkt niet (zegt dat 't een andere LOVD is)
 - BUG;

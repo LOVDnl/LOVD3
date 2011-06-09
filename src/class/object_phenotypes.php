@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-05-04
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-05-31
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -130,7 +130,39 @@ class LOVD_Phenotype extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        // STUB
+        global $_AUTH;
+
+        // Mandatory fields.
+        // FIXME; if empty, just define as an empty array in the class header?
+        if (ACTION == 'edit') {
+            $this->aCheckMandatory[] = 'password';
+        }
+
+        parent::checkFields($aData);
+
+        // FIXME; this set of if's can be made more efficient.
+        // Dit moet ingewikkelder; wie wat kan aanpassen is ook afhankelijk van wie de owner is, denk ik.
+        if (isset($_POST['ownerid'])) {
+            if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+                $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id=?', array($_POST['ownerid']));
+                if (!$q) {
+                    // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
+                    lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
+                }
+            } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+                lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
+            }
+        } else {
+            if (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
+                // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
+                lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
+            }
+        }
+        
+        if (ACTION == 'edit' && (!isset($aData['password']) || md5($aData['password']) != $_AUTH['password'])) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+        
         lovd_checkXSS();
     }
 
@@ -140,8 +172,58 @@ class LOVD_Phenotype extends LOVD_Custom {
 
     function getForm ()
     {
-        // STUB
-        parent::getForm();
+        // Build the form.
+        global $_AUTH, $_SETT;
+
+        if (ACTION == 'edit') {
+            global $zData;
+            $_POST['diseaseid'] = $zData['diseaseid'];
+        }
+
+        list($sDisease) = mysql_fetch_row(lovd_queryDB('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id=?', array($_POST['diseaseid'])));
+
+        $aSelectOwner = array();
+
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            // FIXME; sorteren ergens op? Naam? Of land? Kijk naar hoe dit in LOVD 2.0 geregeld is.
+            $q = lovd_queryDB('SELECT id, name FROM ' . TABLE_USERS);
+            while ($z = mysql_fetch_assoc($q)) {
+                $aSelectOwner[$z['id']] = $z['name'];
+            }
+            $aFormOwner = array('Owner of this individual', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
+        } else {
+            // FIXME; dit moet dan dus de owner zijn, mag die de status niet aanpassen (niet publiek -> wel publiek) of een publieke entry bewerken?
+            // Overigens, in jouw code mogen alleen managers hier komen... Dit moet even goed worden uitgedacht.
+            $aFormOwner = array('Owner of this individual', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
+        }
+
+        // Array which will make up the form table.
+        $this->aFormData = array_merge(
+                 array(
+                        array('POST', '', '', '', '40%', '14', '60%'),
+                        array('', '', 'print', '<B>Phenotype information related to ' . $sDisease . '</B>'),
+                        'hr',
+                      ),
+                 $this->buildViewForm(),
+                 array(
+                        'hr',
+                        'skip',
+                        array('', '', 'print', '<B>General information</B>'),
+                        'hr',
+                        $aFormOwner,
+                        'hr',
+'authorization_skip' => 'skip',
+ 'authorization_hr1' => 'hr',
+     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
+ 'authorization_hr2' => 'hr',
+                        'skip',
+                      ));
+                      
+        if (ACTION != 'edit') {
+            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+        }
+
+        return parent::getForm();
     }
 
 
@@ -170,10 +252,16 @@ class LOVD_Phenotype extends LOVD_Custom {
         return $zData;
     }
 
+
+
+
+
     function setDefaultValues ()
     {
-        // STUB
-        return false;
+        global $_AUTH;
+        
+        $_POST['ownerid'] = $_AUTH['id'];
+        $this->initDefaultValues();
     }
 }
 ?>

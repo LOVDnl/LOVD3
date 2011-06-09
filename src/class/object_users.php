@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-05-18
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,7 +63,8 @@ class LOVD_User extends LOVD_Object {
                                            'GROUP_CONCAT(u2g.geneid ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, ' .
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
-                                           'ue.name AS edited_by_';
+                                           'ue.name AS edited_by_, ' .
+                                           'CASE u.level WHEN "9" THEN "Database administrator" WHEN "7" THEN "LOVD Manager" WHEN "1" THEN "Submitter" END AS level_';
         $this->aSQLViewEntry['FROM']     = TABLE_USERS . ' AS u ' .
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) ' .
@@ -74,7 +75,8 @@ class LOVD_User extends LOVD_Object {
         // SQL code for viewing a list of users.
         $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
                                           'COUNT(u2g.geneid) AS curates, ' .
-                                          'c.name AS country_';
+                                          'c.name AS country_, ' .
+                                          'CASE level WHEN "9" THEN "Database administrator" WHEN "7" THEN "LOVD Manager" WHEN "1" THEN "Submitter" END AS level_';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
@@ -151,11 +153,11 @@ class LOVD_User extends LOVD_Object {
                         'created_date' => array(
                                     'view' => array('Started', 80),
                                     'db'   => array('u.created_date', 'ASC', true)),
-                        'level' => array(
+                        'level_' => array(
                                     'view' => array('Level', 150),
-                                    'db'   => array('u.level', 'DESC')),
+                                    'db'   => array('level_', 'ASC', true)),
                       );
-        $this->sSortDefault = 'level';
+        $this->sSortDefault = 'level_';
 
         parent::LOVD_Object();
     }
@@ -404,7 +406,6 @@ class LOVD_User extends LOVD_Object {
             $zData['status_'] = ($zData['locked'] || $zData['active']? '<IMG src="gfx/' . ($zData['locked']? 'status_locked' : 'status_online') . '.png" alt="' . $sAlt . '" title="' . $sAlt . '" width="14" height="14">' : '');
             $zData['last_login'] = substr($zData['last_login'], 0, 10);
             $zData['created_date'] = substr($zData['created_date'], 0, 10);
-            $zData['level'] = str_replace(' ', '&nbsp;', $_SETT['user_levels'][$zData['level']]);
 
         } else {
             $zData['password_force_change_'] = ($zData['password_force_change']? '<IMG src="gfx/mark_1.png" alt="" width="11" height="11"> Yes' : 'No');
@@ -413,7 +414,6 @@ class LOVD_User extends LOVD_Object {
             } else {
                 $zData['saved_work_'] = 'N/A';
             }
-            $zData['level_'] = $_SETT['user_levels'][$zData['level']];
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');
             $zData['locked_'] = ($zData['locked']? '<IMG src="gfx/status_locked.png" alt="Locked" title="Locked" width="14" height="14" align="top"> Locked' : 'No');

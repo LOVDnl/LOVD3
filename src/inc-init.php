@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-05-26
+ * Modified    : 2011-06-06
  * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -655,10 +655,10 @@ if (!defined('_NOT_INSTALLED_')) {
         // Just often used...
         define('GENE_COUNT', count(lovd_getGeneList()));
 
-}/*
+}
         // Simply so that we can build somewhat correct email headers.
-        if (empty($_CONF['location_name'])) {
-            $_CONF['location_name'] = $_SERVER['HTTP_HOST'];
+        if (empty($_CONF['institute'])) {
+            $_CONF['institute'] = $_SERVER['HTTP_HOST'];
         }
         if (empty($_CONF['email_address'])) {
             $_CONF['email_address'] = 'noreply@' . (substr($_SERVER['HTTP_HOST'], 0, 4) == 'www.'? substr($_SERVER['HTTP_HOST'], 4) : $_SERVER['HTTP_HOST']);
@@ -682,9 +682,9 @@ if (!defined('_NOT_INSTALLED_')) {
                             'X-Priority: 3' . $sEol .
                             'X-MSMail-Priority: Normal' . $sEol .
                             'X-Mailer: PHP/' . phpversion() . $sEol .
-                            'From: ' . (ON_WINDOWS? '' : '"LOVDv.' . $_SETT['system']['tree'] . ' (' . $_CONF['location_name'] . ')" ') . '<' . $_CONF['email_address'] . '>';
-    }
+                            'From: ' . (ON_WINDOWS? '' : '"LOVDv.' . $_SETT['system']['version'] . ' (' . $_CONF['institute'] . ')" ') . '<' . $_CONF['email_address'] . '>';
 
+/*
     // Load LOVD modules!
     require ROOT_PATH . 'class/modules.php';
     $_MODULES = new Modules;

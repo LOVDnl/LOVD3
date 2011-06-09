@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-05-23
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-06-06
+ * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -106,21 +106,41 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-/*if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
-    // URL: /individuals?create
+if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+    // URL: /phenotypes?create
     // Create a new entry.
 
-    define('PAGE_TITLE', 'Create a new individual information entry');
-    define('LOG_EVENT', 'IndividualCreate');
+    define('LOG_EVENT', 'PhenotypeCreate');
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_SUBMITTER);
+    
+    if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
+        $_GET['target'] = str_pad($_GET['target'], 8, "0", STR_PAD_LEFT);
+        if (mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id=?', array($_GET['target'])))) {
+            $_POST['individualid'] = $_GET['target'];
+            define('PAGE_TITLE', 'Create a new phenotype information entry for individual #' . $_GET['target']);
+        } else {
+            define('PAGE_TITLE', 'Create a new phenotype information entry');
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add phenotype" button.', 'warning');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+    } else {
+        exit;
+    }
 
-    require ROOT_PATH . 'class/object_individuals.php';
-    $_DATA = new LOVD_Individual();
+    require ROOT_PATH . 'class/object_phenotypes.php';
+    if (isset($_POST['diseaseid'])) {
+        $_DATA = new LOVD_Phenotype($_POST['diseaseid']);
+    } else {
+        $_DATA = new LOVD_Phenotype();
+    }
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (!empty($_POST)) {
+    if (count($_POST) > 2) {
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
@@ -128,51 +148,26 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('ownerid', 'statusid', 'created_by', 'created_date'),
+                            array('diseaseid', 'individualid', 'ownerid', 'created_by', 'created_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
+            $_POST['individualid'] = $_GET['target'];
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Created individual information entry ' . $nID);
-
-            // Add diseases.
-            $aSuccessDiseases = array();
-            if (isset($_POST['active_diseases'])) {
-                // FIXME; een if in een if kun je samen trekken.
-                // FIXME; probeer van deze "None" af te komen.
-                // FIXME; zou er nog gecontroleerd moeten worden of 't een array is?
-                if (!in_array('None', $_POST['active_diseases'])) {
-                    // FIXME; dit is $nDisease.
-                    foreach ($_POST['active_diseases'] as $sDisease) {
-                        // Add disease to gene.
-                        $q = lovd_queryDB('INSERT INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $sDisease));
-                        if (!$q) {
-                            // Silent error.
-                            lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $sDisease . ' - could not be added to individual ' . $nID);
-                        } else {
-                            $aSuccessDiseases[] = $sDisease;
-                        }
-                    }
-                }
-            }
-
-            if (count($aSuccessDiseases)) {
-                lovd_writeLog('Event', LOG_EVENT, 'Disease entries successfully added to individual ' . $nID . ' - (Owner: ' . $_POST['ownerid'] . ')');
-            }
+            lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Successfully created the individual information entry!', 'success');
+            lovd_showInfoTable('Successfully created the phenotype information entry!', 'success');
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
@@ -183,13 +178,46 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         $_DATA->setDefaultValues();
     }
 
-
-
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
+    
+    if (!isset($_POST['diseaseid'])) {
+        $sSQL = 'SELECT * FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON(d.id = i2d.diseaseid) WHERE i2d.individualid=?';
+        $q = lovd_queryDB($sSQL, array($_GET['target']));
+        $aSelectDiseases = array();
+        if ($q) {
+            while ($aDisease = mysql_fetch_assoc($q)) {
+                $aSelectDiseases[$aDisease['id']] = $aDisease['name'] . ' (' . $aDisease['symbol'] . ')';
+            }
+        } else {
+            exit;
+        }
+
+        print('First select a disease to which the phenotype information is related');
+
+        // Table.
+        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&target=' . $_GET['target'] . '" method="post">' . "\n");
+
+        // Array which will make up the form table.
+        $aForm = array(
+                        array('POST', '', '', '', '50%', '14', '50%'),
+                        'skip',
+                        'hr',
+                        array('Choose a related disease', '', 'select', 'diseaseid', 1, $aSelectDiseases, '--Select--', false, false),
+                        'hr',
+                        'skip',
+                        array('', '', 'submit', 'Submit selected disease'),
+                      );
+        lovd_viewForm($aForm);
+
+        print('</FORM>' . "\n\n");
+
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
 
     if (GET) {
-        print('      To create a new individual information entry, please fill out the form below.<BR>' . "\n" .
+        print('      To create a new phenotype information entry, please fill out the form below.<BR>' . "\n" .
               '      <BR>' . "\n\n");
     }
 
@@ -201,17 +229,17 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_includeJS('inc-js-insert-custom-links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&target=' . $_GET['target'] . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
-                        array('', '', 'submit', 'Create individual information entry'),
+                        array('', '', 'submit', 'Create phenotype information entry'),
                       ));
     lovd_viewForm($aForm);
-
-    print('</FORM>' . "\n\n");
+    print('<INPUT type="hidden" name="diseaseid" value="' . $_POST['diseaseid'] . '">' . "\n" .
+          '</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -222,18 +250,18 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
-    // URL: /individuals/00000001?edit
+    // URL: /phenotypes/0000000001?edit
     // Edit an entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
-    define('PAGE_TITLE', 'Edit an individual information entry');
-    define('LOG_EVENT', 'IndividualEdit');
+    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    define('PAGE_TITLE', 'Edit an phenotype information entry');
+    define('LOG_EVENT', 'PhenotypeEdit');
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    require ROOT_PATH . 'class/object_individuals.php';
-    $_DATA = new LOVD_Individual();
+    require ROOT_PATH . 'class/object_phenotypes.php';
+    $_DATA = new LOVD_Phenotype();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -245,13 +273,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('ownerid', 'statusid', 'edited_by', 'edited_date'),
+                            array('ownerid', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
             // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
@@ -259,60 +286,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Edited individual information entry ' . $nID);
-
-            // Change linked diseases?
-            // Diseases the gene is currently linked to.
-            // FIXME; we moeten afspraken op papier zetten over de naamgeving van velden, ik zou hier namelijk geen _ achter plaatsen.
-            //   Een idee zou namelijk zijn om loadEntry()/viewEntry() automatisch velden te laten exploden afhankelijk van hun naam. Is dat wat?
-            $aDiseases = explode(';', $zData['active_diseases_']);
-
-            // Remove diseases.
-            $aToRemove = array();
-            foreach ($aDiseases as $nDisease) {
-                if ($nDisease && !in_array($nDisease, $_POST['active_diseases'])) {
-                    // User has requested removal...
-                    $aToRemove[] = $nDisease;
-                }
-            }
-            if ($aToRemove) {
-                $q = lovd_queryDB('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
-                if (!$q) {
-                    // Silent error.
-                    lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from individual ' . $nID);
-                } else {
-                    lovd_writeLog('Event', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' successfully removed from individual ' . $nID);
-                }
-            }
-
-            // Add diseases.
-            $aSuccess = array();
-            $aFailed = array();
-            foreach ($_POST['active_diseases'] as $nDisease) {
-                if (!in_array($nDisease, $aDiseases)) {
-                    // Add disease to gene.
-                    $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease));
-                    if (!$q) {
-                        $aFailed[] = $nDisease;
-                    } else {
-                        $aSuccess[] = $nDisease;
-                    }
-                }
-            }
-            if ($aFailed) {
-                // Silent error.
-                lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aFailed) == 1? 'y' : 'ies') . ' ' . implode(', ', $aFailed) . ' could not be added to individual ' . $nID);
-            }
-            if ($aSuccess) {
-                lovd_writeLog('Event', LOG_EVENT, 'Disease information entr' . (count($aSuccess) == 1? 'y' : 'ies') . ' ' . implode(', ', $aSuccess) . ' successfully added to individual ' . $nID);
-            }
+            lovd_writeLog('Event', LOG_EVENT, 'Edited phenotype information entry ' . $nID);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Successfully edited the individual information entry!', 'success');
+            lovd_showInfoTable('Successfully edited the phenotype information entry!', 'success');
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
@@ -325,8 +306,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         foreach ($zData as $key => $val) {
             $_POST[$key] = $val;
         }
-        // Load connected diseases.
-        $_POST['active_diseases'] = explode(';', $_POST['active_diseases_']);
     }
 
 
@@ -335,7 +314,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_printHeader(PAGE_TITLE);
 
     if (GET) {
-        print('      To edit an individual information entry, please fill out the form below.<BR>' . "\n" .
+        print('      To edit an phenotype information entry, please fill out the form below.<BR>' . "\n" .
               '      <BR>' . "\n\n");
     }
 
@@ -352,7 +331,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
-                        array('', '', 'submit', 'Edit individual information entry'),
+                        array('', '', 'submit', 'Edit phenotype information entry'),
                       ));
     lovd_viewForm($aForm);
 
@@ -367,18 +346,18 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
-    // URL: /individuals/00000001?delete
+    // URL: /phenotypes/0000000001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
-    define('PAGE_TITLE', 'Delete individual information entry ' . $nID);
-    define('LOG_EVENT', 'IndividualDelete');
+    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    define('PAGE_TITLE', 'Delete phenotype information entry ' . $nID);
+    define('LOG_EVENT', 'PhenotypeDelete');
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    require ROOT_PATH . 'class/object_individuals.php';
-    $_DATA = new LOVD_Individual();
+    require ROOT_PATH . 'class/object_phenotypes.php';
+    $_DATA = new LOVD_Phenotype();
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -397,18 +376,17 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
         if (!lovd_error()) {
             // Query text.
-            // This also deletes the entries in gen2dis and transcripts.
             $_DATA->deleteEntry($nID);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted individual information entry ' . $nID . ' (Owner: ' . $zData['owner'] . ')');
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted phenotype information entry ' . $nID . ' (Owner: ' . $zData['owner'] . ')');
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'individuals');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'phenotypes');
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Successfully deleted the individual information entry!', 'success');
+            lovd_showInfoTable('Successfully deleted the phenotype information entry!', 'success');
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
@@ -433,10 +411,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting individual information entry', '', 'print', $nID . ' (Owner: ' . $zData['owner'] . ')'),
+                        array('Deleting phenotype information entry', '', 'print', $nID . ' (Owner: ' . $zData['owner'] . ')'),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
-                        array('', '', 'submit', 'Delete individual information entry'),
+                        array('', '', 'submit', 'Delete phenotype information entry'),
                       ));
     lovd_viewForm($aForm);
 
@@ -444,5 +422,5 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
-}*/
+}
 ?>

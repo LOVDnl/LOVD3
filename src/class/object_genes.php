@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-05-26
+ * Modified    : 2011-06-09
  * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -85,7 +85,9 @@ class LOVD_Gene extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'g.*, ' .
                                           'g.id AS geneid, ' .
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
-                                          'COUNT(DISTINCT vot.id) AS variants';
+                                          'COUNT(vot.id) AS variants';
+                                          // Something like this, maybe???
+                                          //'COUNT(DISTINCT vot.id) AS uniq_variants';
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' . 
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
@@ -162,9 +164,9 @@ class LOVD_Gene extends LOVD_Object {
                         'variants' => array(
                                     'view' => array('Variants', 70),
                                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
-                        'updated_date_' => array(
-                                    'view' => array('Last updated', 110),
-                                    'db'   => array('g.updated_date', 'DESC', true)),
+                        //'uniq_variants' => array(
+                        //            'view' => array('Unique variants', 100),
+                        //            'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
                         'diseases_' => array(
                                     'view' => array('Associated with diseases', 200),
                                     'db'   => array('diseases_', false, 'TEXT')),

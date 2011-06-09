@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2011-05-26
+ * Modified    : 2011-06-09
  * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -35,11 +35,14 @@ require ROOT_PATH . 'inc-init.php';
  
 if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     // User forgot password - replace.
+    
+    define('PAGE_TITLE', 'User - Reset password');
+    define('LOG_EVENT', 'ResetPasswdError')
 
     // Require form functions.
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (isset($_GET['sent']) && !empty($_POST['username'])) {
+    if (POST && !empty($_POST['username'])) {
         lovd_errorClean();
 
         // Find account.
@@ -47,7 +50,8 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
         if (!$zData) {
             lovd_errorAdd('This username does not exist.');
             // FIXME, change to 3.0 way of doing this.
-            lovd_writeLog('MySQL:Auth', 'ResetPasswdError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for inexistent/denied account ' . $_POST['username']);
+            // Wat bedoel je hier exact mee?
+            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for inexistent/denied account ' . $_POST['username']);
         }
 
         if (!lovd_error()) {
@@ -68,16 +72,9 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             }
 
             // Update database.
-            $q = @lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password_autogen = MD5(?) WHERE username = ?', array($sPasswd, $_POST['username']));
-            if (!$q) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
-                require ROOT_PATH . 'inc-top.php';
-                // FIXME, change to 3.0 way of doing this.
-                lovd_printHeader('User - Reset password', 'User - Reset password');
-                lovd_dbFout('ResetPasswd', $sQ, $sError);
-            }
+            $q = @lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password_autogen = MD5(?) WHERE username = ?', array($sPasswd, $_POST['username']), true);
 
-            lovd_writeLog('MySQL:Auth', 'ResetPasswd', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' . $_POST['username']);
+            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' . $_POST['username']);
 
             // Send email confirmation.
             $_POST['password_autogen'] = $sPasswd;
@@ -124,21 +121,21 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
             // Send mail.
             // Sending emails on Windows requires removal of names from the email addresses.
-            $bMail = @mail($zData['name'] . ' <' . $zData['email'] . '>',
+            $bMail = @mail((ON_WINDOWS? '' : '"' . $zData['name'] . '" ') . '<' . str_replace(array("\r\n", "\r", "\n"), '>, <', trim($zData['email'])) . '>',
                            $sSubject,
-                           lovd_wrapText($sBody));
+                           lovd_wrapText($sBody),
+                           $_SETT['email_headers']);
 
             // Thank the user...
             require ROOT_PATH . 'inc-top.php';
-            // FIXME, change to 3.0 way of doing this.
-            lovd_printHeader('User - Reset password', 'User - Reset password');
+            lovd_printHeader(PAGE_TITLE);
 
             if ($bMail) {
                 print('      Successfully reset your password.<BR>' . "\n" .
                       '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login.php">unlock your account</A> and choose a new password.<BR><BR>' . "\n\n");
             } else {
-                // Couldn't sent confirmation...
-                lovd_writeLog('MySQL:Error', 'EmailNotify', $_SERVER['PHP_SELF'] . ' returned ResetPasswdErrorNotify error for account ' . $_AUTH['username'] . ' (' . mysql_real_escape_string($zData['name']) . ')');
+                // Couldn't send confirmation...
+                lovd_writeLog('Error', LOG_EVENT, $_SERVER['PHP_SELF'] . ' returned ResetPasswdErrorNotify error for account ' . $_AUTH['username'] . ' (' . mysql_real_escape_string($zData['name']) . ')');
                 print('      Due to an error, we couldn\'t send you an email containing your new password. Our apologies for the inconvenience.<BR><BR>' . "\n\n");
             }
 
@@ -146,15 +143,14 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             exit;
 
         } else {
-            lovd_writeLog('MySQL:Auth', 'ResetPasswd', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for denied account ' . $_POST['username']);
+            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for denied account ' . $_POST['username']);
         }
     }
 
 
 
     require ROOT_PATH . 'inc-top.php';
-    // FIXME, change to 3.0 way of doing this.
-    lovd_printHeader('User - Reset password', 'User - Reset password');
+    lovd_printHeader(PAGE_TITLE);
 
     print('      If you forgot your password, please fill in your username here. A new random password will be generated and emailed to the known email address. You need this new password to unlock your account and choose a new password.<BR>' . "\n" .
           '      <BR>' . "\n\n");
@@ -162,8 +158,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?sent=true" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="300">');
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -173,7 +168,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
                     array('', '', 'submit', 'Reset password'),
                   );
     lovd_viewForm($aForm);
-    print('</TABLE></FORM>' . "\n\n");
+    print('</FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

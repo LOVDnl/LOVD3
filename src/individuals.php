@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-05-26
+ * Modified    : 2011-06-06
  * For LOVD    : 3.0-alpha-01
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -79,9 +79,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
         $sNavigation .= ' | <A href="screenings?create&target=' . $nID . '">Add screening to individual</A>';
+        $sNavigation .= ' | <A href="phenotypes?create&target=' . $nID . '">Add phenotype to individual</A>';
         $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
     } elseif ($_AUTH && $_AUTH['level'] >= LEVEL_SUBMITTER) {
         $sNavigation = '<A href="screenings?create&target=' . $nID . '">Add screening to individual</A>';
+        $sNavigation = '<A href="phenotypes?create&target=' . $nID . '">Add phenotype to individual</A>';
     }
 
     if ($sNavigation) {
