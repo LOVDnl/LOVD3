@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-05-25
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-06-09
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  *
@@ -82,10 +83,6 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         $this->aColumnsViewEntry = array_merge(
                  array(
                         'transcriptid' => 'Transcript ID',
-                        'position_c_start' => 'c.start',
-                        'position_c_start_intron' => 'c.start_intron',
-                        'position_c_end' => 'c.end',
-                        'position_c_end_intron' => 'c.end_intron',
                       ),
                  $this->buildViewEntry(),
                  array(
@@ -110,18 +107,6 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                       ),
                  $this->buildViewList(),
                  array(
-                        'position_c_start' => array(
-                                    'view' => array('c.start', 90),
-                                    'db'   => array('vot.position_c_start', 'ASC', true)),
-                        'position_c_start_intron' => array(
-                                    'view' => array('c.start_intron', 90),
-                                    'db'   => array('vot.position_c_start_intron', 'ASC', true)),
-                        'position_c_end' => array(
-                                    'view' => array('c.end', 90),
-                                    'db'   => array('vot.position_c_end', 'ASC', true)),
-                        'position_c_end_intron' => array(
-                                    'view' => array('c.end_intron', 90),
-                                    'db'   => array('vot.position_c_end_intron', 'ASC', true)),
                       ));
         
         $this->sSortDefault = 'id';

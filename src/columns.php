@@ -1991,11 +1991,11 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
     define('PAGE_TITLE', 'LOVD Setup - Manage selected columns');
     define('LOG_EVENT', 'ColRemove');
 
-    if ($bShared) {
+//    if ($bShared) {
         $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.*, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE ac.colid = ?', array($sColumnID)));
-    } else {
-        $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.* FROM ' . TABLE_COLS . ' WHERE c.id = ?', array($sColumnID)));
-    }
+//    } else {
+//        $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE id = ?', array($sColumnID)));
+//    }
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -2054,8 +2054,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
                 // The whole transaction stuff is useless here; alter table will commit and there's just one query before that.
 
                 // Alter data table.
-                $sQ = 'ALTER TABLE ' . $sTable . ' DROP COLUMN `?`';
-                $q = lovd_queryDB($sQ, array($zData['id']), true);
+                $sQ = 'ALTER TABLE ' . $sTable . ' DROP COLUMN `' . $zData['id'] . '`';
+                $q = lovd_queryDB($sQ, array(), true);
 
                 // Write to log...
                 // FIXME; this is LOVD 2.0 code... See how it's done at add column!!!

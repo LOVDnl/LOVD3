@@ -187,8 +187,8 @@ $aItems =
     array(
             'Gene databases' =>
                  array(
-                        array('genes?create', 'lovd_database_create.png', 'Create new gene database', 'Create a new gene database.'),
-                        array('genes', 'lovd_database_edit.png', 'View all gene databases', 'Manage configured gene databases.'),
+                        array('genes?create', 'lovd_genes_create.png', 'Create new gene database', 'Create a new gene database.'),
+                        array('genes', 'lovd_genes_edit.png', 'View all gene databases', 'Manage configured gene databases.'),
                       ),
 /*
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .

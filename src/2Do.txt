@@ -1,10 +1,9 @@
-Doen voor Alpha-01:
-===================
+Prioritize:
+===========
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
   * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
   * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
-- (BELANGRIJK: Ivo) Review DMD_SPECIFIC calls!
 - (~~~~~~BELANGRIJK: Ivar) TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
 - (~BELANGRIJK) Allele has not been enabled, correct? What to do with it? Rename? Different values?
 - (BELANGRIJK) Alle links nalopen, of ze werken.
@@ -15,31 +14,30 @@ Doen voor Alpha-01:
 - Nu genes gewoon openbaar is, is status.php niet meer echt nodig - maar hij is wel enorm traag op een grote installatie.
   * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
   * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
-- reset_password.php:
-  * Bij de mail() call staat een LOVD 2.0 opmerking (ik heb de datum en 2.0 versie al verwijderd). Die opmerking moet nageleefd worden (zie originele 2.0 code!!!), en er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
-  * Die hele file zit trouwens vol met dingen die in 3.0 anders gedaan worden (lovd_writeLog() calls naar de verkeerde log file, lovd_printHeader() op de oude manier).
+- Er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
 - BUG: Disease kan niet met gen gelinked worden, gen wel met disease.
 - Column viewList() heeft geen <A href></A>.
   * En check andere viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
-- Gene selection lists zijn veel te groot als je een database hebt met lange gen namen. LOVD 2.0-dev had daar een techniek voor, om dat in te korten.
+- Gene selection lists zijn veel te groot als je een database hebt met lange gen namen. LOVD 2.0 had daar een techniek voor, om dat in te korten.
 - BUG: Ik maak screening aan, gekoppeld aan individu. Mag niet eens selecteren welk gen ik gescreend heb, maar als ik de screening bekijk, zie ik 21.000 genen in een viewList zonder navigatie :S
   * Ik heb in de database een gen in SCR2GENE gestopt, en dan zie ik wel het juiste gen.
 - BUG: Kan een variant niet aan een screening koppelen, ook al gebruik ik de juiste link er voor.
-- BUG: Er staat een edited_date in variants_on_transcripts, maar verder helemaal niks.
-  * Deze kolom staat ook raadselachtig in de primary key, en kan ik NIET leeg laten (NULL).
-- BUG: variants_on_transcript kolommen position_c_start, position_c_start_intron, position_c_end, position_c_end_intron horen *niet* in viewLists of viewEntries!
+- (@Ivar) BUG: Er staat een edited_date in variants_on_transcripts, maar verder helemaal niks.
+  * Deze kolom kan ik NIET leeg laten (NULL).
 - Kijk 'ns naar https://grenada.lumc.nl/LOVD3/shared, er zit een individu in met een aantal mutaties. Kun je makkelijk naar al zijn data navigeren?
   * We missen veel links tussen data in. Onder variants on genome zou een variants_on_transcript viewList moeten, en ik moet naar de screening en individu kunnen vanuit daar. Dat soort dingen.
 - Was 't nou geregeld, dat inc-upgrade.php een curator koos voor genen zonder curator?
 - Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
-- (Ivar) Er is in #57 code verwijderd uit objects_custom die checkt dat shared objects een objectID moeten hebben ontvangen. Die check is toch nog steeds nodig?
+- (@Ivar) Er is in #57 code verwijderd uit objects_custom die checkt dat shared objects een objectID moeten hebben ontvangen. Die check is toch nog steeds nodig?
 - Adding phenotype button should not appear if individual does not have a disease associated.
 - If only one disease: auto select that disease for phenotype add?
 - Adding phenotype: diseaseid in GET, zodat we er direct naar zouden kunnen linken. Scheelt ook gedoe in getForm() van phenotype.
 - Adding phenotype should not be possible if no columns have been enabled yet.
   * When disease is created, forward user to select columns for this disease.
-- BUG: Non-shared columns can't be removed.
-- BUG: Maak phenotype aan, selecteer geen disease, submit form. Kijk nog eens goed naar transcripts?create en zorg er voor dat alle controles goed staan!!!
+- (@Ivar) BUG: Non-shared columns can't be removed.
+  * Ivar, ik heb deze bug volgens mij opgelost, maar kijk er voor de zekerheid nog even naar (Ivo).
+- (@Ivar) BUG: Maak phenotype aan, selecteer geen disease, submit form. Kijk nog eens goed naar transcripts?create en zorg er voor dat alle controles goed staan!!!
+- (@Ivo) Use CURRENT_PATH where possible.
 
 
 
@@ -52,18 +50,17 @@ Doen voor Alpha-01:
   * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
   * Probleem: als wij de created_* data in de niet-versioned tabel hebben, MOETEN WE DIE ENTRY BEWAREN BIJ DELETION!!!
 - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
-- (Ivo) De volgende stap na het maken van een gen, moet je terecht komen op:
-      /genes/GENE?authorize en/of /genes/GENE?sortCurators
-      Toont een viewList() van users (indien level >= LEVEL_MANAGER) met alle gebruikers die GEEN curator of collaborators zijn (op basis van user IDs)
-      De entries in de curator lijst moeten ook weer teruggeplaatst kunnen worden in de viewList.
+- (Ivo) /genes/GENE?authorize en/of /genes/GENE?sortCurators
       Het verschil tussen ?authorize en ?sortCurators moet nog gemaakt worden. De laatste moet beschikbaar zijn voor curators.
+- Leuke bug; /genes/DMD?authorize -> click alle users aan -> resort viewList.
+- BUG: genes?authorize heeft twee bugs:
+  * IE laadt de hele viewList (vergeet ignored cols) bij deleten curator.
+  * Bij submit van de viewList() wordt de row_link vergeten!!!
 - (Ivo) Encoding wachtwoorden omzetten, (random?) salt gebruiken. Heeft MySQL wel sha1() functie?
 - loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; gc_NAME = array (;) of gc2_NAME = nested array (;;).
 - Use uniqid ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
 - Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
-- Ivar: I included code in lovd_queryDB() that implodes arrays in $aArgs automatically using ;. Agreed.
-  * Oude implodes weg halen uit code.
 - Do we still need current_db in TABLE_USERS?
 - Ik kan geen gen aanmaken (CAPN3): Collecting all available transcripts...
     Error: SOAP (Logged)
@@ -75,8 +72,6 @@ Doen voor Alpha-01:
         senv:Server - 'IdList'
 - Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
 - Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
-- Leuke bug; /genes/DMD?authorize -> click alle users aan -> resort viewList.
-- Er zitten nog \r in sommige files (o.a. config.ini)
 - BUG; locatie check op settings werkt niet (zegt dat 't een andere LOVD is)
 - BUG;
     /check_update?icon returned error in code block Unknown.
@@ -101,9 +96,6 @@ Doen voor Alpha-01:
 - Status page er uit of geheel anders (alleen totalen???)
 - Ik heb het idee dat $bHalt in lovd_queryDB() veel vaker true dan false zou moeten zijn. Default op true zetten?
 - Curator lijst op gene viewEntry() mogen de hidden personen niet zien, als ze niet zijn ingelogd!!!
-- BUG: genes?authorize heeft twee bugs:
-  * IE laadt de hele viewList (vergeet ignored cols) bij deleten curator.
-  * Bij submit van de viewList() wordt de row_link vergeten!!!
 - Vanaf beta moeten bij bugfixes de datum en versie gezet worden.
 
 

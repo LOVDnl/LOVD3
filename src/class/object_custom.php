@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-05-24
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-06-10
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -128,12 +128,7 @@ class LOVD_Custom extends LOVD_Object {
     function buildFields ()
     {
         // FIXME; define function's purpose. Seems more like a getFields(). 
-        // FIXME; implement using implode().
-        $aFields = array();
-        foreach($this->aColumns as $sCol => $aCol) {
-            $aFields[] = $sCol;
-        }
-        return $aFields;
+        return array_keys($this->aColumns);
     }
 
 
