@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-06-09
+ * Modified    : 2011-07-05
  * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -194,7 +194,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_includeJS('inc-js-insert-custom-links.php');
 
         // Table.
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&amp;reference=Genome' . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') .'" method="post">' . "\n");
+        print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Genome' . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') .'" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array_merge(
@@ -332,7 +332,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_includeJS('inc-js-insert-custom-links.php');
 
         // Table.
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?create&amp;reference=Transcript&amp;transcriptid=' . $_GET['transcriptid'] .'" method="post">' . "\n");
+        print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Transcript&amp;transcriptid=' . $_GET['transcriptid'] .'" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array_merge(
@@ -518,7 +518,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         }
 
         // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 

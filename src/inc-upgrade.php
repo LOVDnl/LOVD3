@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-05-26
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -425,7 +425,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN deleted',
                                   ),
                     '3.0-alpha-01' =>
-                             array(           
+                             array(
                                     'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP COLUMN edited_date',
                                     'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
                                     'ALTER TABLE ' . TABLE_VARIANTS . ' DROP COLUMN edited_date',
@@ -442,6 +442,20 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_SCR2GENE . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                                     'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(20)',
                                     'ALTER TABLE ' . TABLE_HITS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
+                                  ),
+                    '3.0-alpha-02' =>
+                             array(
+                                    'UPDATE ' . TABLE_COLS . ' SET select_options = "Unknown\r\nBESS = Base Excision Sequence Scanning\r\nCMC = Chemical Mismatch Cleavage\r\nCSCE = Conformation sensitive capillary electrophoresis\r\nDGGE = Denaturing-Gradient Gel-Electrophoresis\r\nDHPLC = Denaturing High-Performance Liquid Chromatography\r\nDOVAM = Detection Of Virtually All Mutations (SSCA variant)\r\nDSCA = Double-Strand DNA Conformation Analysis\r\nHD = HeteroDuplex analysis\r\nIHC = Immuno-Histo-Chemistry\r\nmPCR = multiplex PCR\r\nMAPH = Multiplex Amplifiable Probe Hybridisation\r\nMLPA = Multiplex Ligation-dependent Probe Amplification\r\nNGS = Next Generation Sequencing\r\nPAGE = Poly-Acrylamide Gel-Electrophoresis\r\nPCR = Polymerase Chain Reaction\r\nPTT = Protein Truncation Test\r\nRT-PCR = Reverse Transcription and PCR\r\nSEQ = SEQuencing\r\nSouthern = Southern Blotting\r\nSSCA = Single-Strand DNA Conformation Analysis (SSCP)\r\nWestern = Western Blotting" WHERE id = "Screening/Technique"',
+                                    'UPDATE ' . TABLE_COLS . ' SET mandatory = 1 WHERE id IN ("VariantOnTranscript/RNA", "VariantOnTranscript/Protein")',
+                                    'UPDATE ' . TABLE_SHARED_COLS . ' SET mandatory = 1 WHERE colid IN ("VariantOnTranscript/RNA", "VariantOnTranscript/Protein")',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN panelid MEDIUMINT(8) UNSIGNED ZEROFILL AFTER id',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_panelid FOREIGN KEY (panelid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                    'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN panel_size MEDIUMINT UNSIGNED NOT NULL DEFAULT 1 AFTER panelid',
+                                    'DELETE FROM ' . TABLE_COLS . ' WHERE id = "VariantOnTranscript/DBID"',
+                                    'UPDATE ' . TABLE_COLS . ' SET description_form = "This ID is used to group multiple instances of the same variant together. The ID starts with the gene symbol of the transcript most influenced by the variant or otherwise the closest gene, followed by an underscore (_) and the ID code, usually six digits.", preg_pattern = "/^[A-Z][A-Z0-9]+_[0-9]{6}\\\\b/" WHERE id = "VariantOnGenome/DBID"',
+                                    'ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN password CHAR(50) NOT NULL',
+                                    'ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN password_autogen CHAR(50)',
+                                    'ALTER TABLE ' . TABLE_USERS . ' DROP COLUMN current_db',
                                   ),
                   );
 

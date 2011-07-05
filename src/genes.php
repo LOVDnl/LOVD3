@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-06-09
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -137,9 +137,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     }
     
     if ($_SESSION['work'][$_POST['workID']]['step'] == '1') {
-
         if (POST) {
-
             lovd_errorClean();
 
             if ($_POST['hgnc_id'] == '') {
@@ -180,7 +178,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 require ROOT_PATH . 'class/progress_bar.php';
                 require ROOT_PATH . 'inc-lib-genes.php';
                 
-                $sFormNextPage = '<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id="createGene" method="post">' . "\n" .
+                $sFormNextPage = '<FORM action="' . CURRENT_PATH . '?' . ACTION . '" id="createGene" method="post">' . "\n" .
                                  '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
                                  '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
                                  '        </FORM>';
@@ -297,7 +295,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         lovd_errorPrint();
 
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
+        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
               '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
 
         // Array which will make up the form table.
@@ -459,7 +457,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_includeJS('inc-js-insert-custom-links.php');
 
         // Table.
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array_merge(
@@ -683,7 +681,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
         }
 
         // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
@@ -741,7 +739,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) && (ACTION == 'authorize' || ACTION == 'sortCurators')) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) && in_array(ACTION, array('authorize', 'sortCurators'))) {
     // URL: /genes/DMD?authorize or /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
@@ -784,7 +782,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 //        }
 
 //        // User had to enter his/her password for authorization.
-//        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+//        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
 //            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
 //        }
 
@@ -917,7 +915,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
     // Form & table.
     // FIXME; needs password protection if not just resorting!!!
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1] . '?' . ACTION . '" method="post">' . "\n" .
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
           '        <UL id="curator_list" class="sortable">' . "\n" .
           '          <TABLE width="100%" class="head"><TR><TH width="10">&nbsp;</TH><TH>Name</TH><TH width="100" align="right">Allow edit</TH><TH width="75" align="right">Shown</TH><TH width="30" align="right">&nbsp;</TH></TR></TABLE>' . "\n");
     // Now loop the items in the order given.
@@ -1465,7 +1463,6 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
             header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/config.php?select_db=' . $_POST['symbol'] . lovd_showSID(true));
 
             // Set currdb.
-            @mysql_query('UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_POST['symbol'] . '" WHERE id = "' . $_AUTH['id'] . '"');
             $_SESSION['currdb'] = $_POST['symbol'];
             // These just to have inc-top.php what it needs.
             $_SETT['currdb'] = array(
@@ -1692,7 +1689,7 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
             }
 
             // User had to enter his/her password for authorization.
-            if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+            if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
                 lovd_errorAdd('Please enter your correct password for authorization.');
             }
         }
@@ -1716,13 +1713,13 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
                 }
 
                 // User had to enter his/her password for authorization.
-                if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+                if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
                     lovd_errorAdd('Please enter your correct password for authorization.');
                 }
 
                 if (!lovd_error()) {
                     // It's useless to use transactions here. We have to drop tables, and these COMMIT on MySQL, as far as 5.1.
-                    // Drop Columns & Variants, Remove from TABLE_DBS & TABLE_CURATES & current_db in TABLE_USERS, Remove orphaned patients from TABLE_PATIENTS.
+                    // Drop Columns & Variants, Remove from TABLE_DBS & TABLE_CURATES, Remove orphaned patients from TABLE_PATIENTS.
 
                     require ROOT_PATH . 'inc-top.php';
                     lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
@@ -1777,20 +1774,6 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
                         lovd_dbFout('GeneDropE', $sQ, mysql_error());
                     }
                     print('OK<BR>' . "\n");
-
-                    // CURRDB settings.
-                    print('      Updating user settings ... ');
-                    flush();
-                    $sQ = 'UPDATE ' . TABLE_USERS . ' SET current_db = "" WHERE current_db = "' . $zData['symbol'] . '"';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        lovd_dbFout('GeneDropF', $sQ, mysql_error());
-                    }
-                    print('OK<BR>' . "\n");
-                    // 2008-07-08; 2.0-09; Unset $_SESSION['currdb'] only if it's the currently selected gene.
-                    if ($_SESSION['currdb'] == $zData['symbol']) {
-                        $_SESSION['currdb'] = false;
-                    }
 
                     // Orphaned patients.
                     print('      Removing obsolete patients ... ');

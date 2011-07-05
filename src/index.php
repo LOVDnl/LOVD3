@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-25
- * Modified    : 2011-05-25
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -34,7 +34,8 @@ require ROOT_PATH . 'inc-init.php';
 // Already logged in to the system.
 if ($_AUTH) {
     // Send manager and database administrator to setup, the rest to the gene page.
-    header('Location: ' . lovd_getInstallURL() . ($_AUTH['level'] >= LEVEL_MANAGER? 'setup' : 'genes' . ($_AUTH['current_db']? '/' . $_AUTH['current_db'] : '')));
+    // FIXME; Read current gene database from cookie! (but check value, gene may have been deleted by now)
+    header('Location: ' . lovd_getInstallURL() . ($_AUTH['level'] >= LEVEL_MANAGER? 'setup' : 'genes'));
     exit;
 } else {
     // Gene listing.

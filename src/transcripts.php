@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-05-26
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -141,7 +141,6 @@ if (ACTION == 'create') {
     if ($_SESSION['work'][$_POST['workID']]['step'] == '1') {
         $zData = $_SESSION['work'][$_POST['workID']]['values'];
         if (POST) {
-
             lovd_errorClean();
 
             if (!isset($zData['genes'][$_POST['geneSymbol']])) {
@@ -152,12 +151,12 @@ if (ACTION == 'create') {
                 require ROOT_PATH . 'inc-top.php';
                 require ROOT_PATH . 'class/progress_bar.php';
                 require ROOT_PATH . 'inc-lib-genes.php';
-                
+
                 $sFormNextPage = '<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id="createTranscript" method="post">' . "\n" .
                                  '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
                                  '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
                                  '        </FORM>';
-                
+
                 $_BAR = new ProgressBar('', 'Collecting transcript information...', $sFormNextPage);
 
                 define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
@@ -219,17 +218,17 @@ if (ACTION == 'create') {
                 print('<SCRIPT type="text/javascript">' . "\n" .
                       '  document.forms[\'createTranscript\'].submit();' . "\n" .
                       '</SCRIPT>' . "\n\n");
-            
+
                 lovd_checkXSS();
-            
+
                 print('</BODY>' . "\n" .
                   '</HTML>' . "\n");
                 exit;
             }
         }
-        
-        
-        
+
+
+
         if (isset($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1])) {
             // URL: /transcripts/DMD?create
             // Add a new transcript to the specified gene symbol
@@ -484,7 +483,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         }
 
         // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-06-09
+ * Modified    : 2011-07-05
  * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -271,7 +271,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of loosing data!', 'warning');
         }
 
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
         // If we've been here before, select last used option.
         if (!empty($_SESSION['data_wizard']['form_type'])) {
@@ -568,7 +568,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
 
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
           '        <INPUT type="hidden" name="form_type" value="' . $_POST['form_type'] . '">' . "\n");
 
     // Array which will make up the form table.
@@ -657,7 +657,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_printHeader(PAGE_TITLE);
         print('      You\'re about to create a new custom data column. This will allow you to define what kind of information you would like to store in the database. Please note that <I>defining</I> this type of information, does not automatically make LOVD store this information. You will need to <I>enable</I> it after defining it, so it actually gets added to the data entry form.<BR><BR>' . "\n" .
               '      Firstly, please choose what kind of category the new type of data belongs:<BR><BR>' . "\n\n" .
-              '      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
+              '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
               '        <TABLE border="0" cellpadding="10" cellspacing="1" width="950" class="data" style="font-size : 15px;">' . "\n" .
               '          <TR>' . "\n" .
               '            <TD width="30"><INPUT type="radio" name="category" value="Individual"></TD>' . "\n" .
@@ -774,7 +774,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
 
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
           '        <INPUT type="hidden" name="category" value="' . $_POST['category'] . '">' . "\n" .
           '        <INPUT type="hidden" name="description_form" value="' . $_POST['description_form'] . '">' . "\n" .
           '        <INPUT type="hidden" name="select_options" value="' . $_POST['select_options'] . '">' . "\n" .
@@ -856,7 +856,7 @@ die();
         }
 
         // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
@@ -1284,7 +1284,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
         }
 
         // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
@@ -1435,7 +1435,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
         }
 
         // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
@@ -1564,7 +1564,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 // I don't seem to be able to find a better way of doing this.
                 // I need this data in GET, but I have it in POST (and can't use a
                 // GET form with the current URL setup for ACTION in LOVD 3.0).
-                header('Location: ' . lovd_getInstallURL() . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . '&target=' . rawurlencode(implode(',', $_POST['target'])));
+                header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '&target=' . rawurlencode(implode(',', $_POST['target'])));
                 exit;
             }
 
@@ -1616,7 +1616,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 }
             }
 
-            print('      <FORM action="' . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . '" method="post">' . "\n");
+            print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
             $nTargets = ($nTargets > 10? 10 : $nTargets);
 
@@ -1745,7 +1745,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
         }
 
         // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
@@ -1919,7 +1919,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
 
-    print('      <FORM action="' . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . (empty($_GET['target'])? '' : '&target=' . htmlspecialchars($_GET['target'])) . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (empty($_GET['target'])? '' : '&target=' . htmlspecialchars($_GET['target'])) . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -2041,7 +2041,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         }
 
         // User had to enter his/her password for authorization.
-        if ($_POST['password'] && md5($_POST['password']) != $_AUTH['password']) {
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
@@ -2191,7 +2191,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
     }
 
     // Table.
-    print('      <FORM action="' . implode('/', $_PATH_ELEMENTS) . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

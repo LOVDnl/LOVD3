@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-06-09
+ * Modified    : 2011-06-13
  * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,6 +51,7 @@ class LOVD_Gene extends LOVD_Object {
     function LOVD_Gene ()
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT g.*, ' .
@@ -73,7 +74,7 @@ class LOVD_Gene extends LOVD_Object {
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ua ON (u2g.userid = ua.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ua ON (u2g.userid = ua.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND u2g.show_order > 0') . ')' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) ' .
@@ -120,7 +121,7 @@ class LOVD_Gene extends LOVD_Object {
                         'header_' => 'Header',
                         'footer_' => 'Footer',
                         'curators_' => 'Curators',
-                        'collaborators_' => 'Collaborators',
+                        'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -449,6 +450,7 @@ class LOVD_Gene extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        global $_AUTH;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -537,13 +539,15 @@ class LOVD_Gene extends LOVD_Object {
             }
             $this->aColumnsViewEntry['curators_'] .= ' (' . $nCurators . ')';
 
-            // Collaborator string.
-            $i = 0;
-            foreach ($aCollaborators as $nUserID => $sName) {
-                $i ++;
-                $zData['collaborators_'] .= ($i == 1? '' : ($i == $nCollaborators? ' and ' : ', ')) . '<A href="users/' . $nUserID . '">' . $sName . '</A>';
+            if ($_AUTH['level'] >= LEVEL_COLLABORATOR) {
+                // Collaborator string.
+                $i = 0;
+                foreach ($aCollaborators as $nUserID => $sName) {
+                    $i ++;
+                    $zData['collaborators_'] .= ($i == 1? '' : ($i == $nCollaborators? ' and ' : ', ')) . '<A href="users/' . $nUserID . '">' . $sName . '</A>';
+                }
+                $this->aColumnsViewEntry['collaborators_'] .= ' (' . $nCollaborators . ')';
             }
-            $this->aColumnsViewEntry['collaborators_'] .= ' (' . $nCollaborators . ')';
         }
 
         return $zData;

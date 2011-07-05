@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-01-21
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -40,9 +40,6 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
     $_SESSION['auth'] = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ? AND login_attempts < 3', array($_SESSION['auth']['username'], $_SESSION['auth']['password'])));
     if (is_array($_SESSION['auth'])) {
         $_AUTH = & $_SESSION['auth'];
-        if (empty($_SESSION['currdb'])) {
-            $_SESSION['currdb'] = $_AUTH['current_db'];
-        }
 
         // Load curated DBs.
         $_AUTH['curates']      = array();

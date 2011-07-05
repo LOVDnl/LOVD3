@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-06-09
+ * Modified    : 2011-07-05
  * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -93,7 +93,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-alpha-01',
+                            'version' => '3.0-alpha-02',
                           ),
                 'user_levels' =>
                      array(
@@ -576,7 +576,7 @@ if (!defined('_NOT_INSTALLED_')) {
 
     // Define $_PATH_ELEMENTS and CURRENT_PATH.
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName($_SERVER['REQUEST_URI'])); // 'login' or 'genes?create' or 'users/00001?edit'
-    $aPath = explode('?', $sPath); // Cut ff the Query string, that will be handled later.
+    $aPath = explode('?', $sPath); // Cut off the Query string, that will be handled later.
     $_PATH_ELEMENTS = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')
     // XSS check on the elements.
     foreach ($_PATH_ELEMENTS as $key => $val) {
@@ -624,18 +624,8 @@ if (!defined('_NOT_INSTALLED_')) {
 // DMD_SPECIFIC - Don't think we need this anymore.
 /*
         // Switch gene.
-        if (isset($_GET['select_db']) && !(isset($_SESSION['currdb']) && $_SESSION['currdb'] == $_GET['select_db'])) {
-            if (in_array($_GET['select_db'], lovd_getGeneList())) {
-                // Change this in de database if user is logged in.
-                if ($_AUTH && $_AUTH['current_db'] != $_GET['select_db']) {
-                    $sQ = 'UPDATE ' . TABLE_USERS . ' SET current_db = "' . $_GET['select_db'] . '" WHERE id = "' . $_AUTH['id'] . '"';
-                    $q = @mysql_query($sQ);
-                    if (!$q) {
-                        lovd_dbFout('UpdateCurrDB', $sQ, mysql_error(), false);
-                    }
-                }
-                $_SESSION['currdb'] = $_GET['select_db'];
-            } else {
+        if (isset($_GET['select_db'])) {
+            if (!in_array($_GET['select_db'], lovd_getGeneList())) {
                 lovd_displayError('Init', 'You provided a non-existing gene database name');
             }
         }

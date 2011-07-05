@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2011-05-20
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -32,11 +32,10 @@
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
 
-// FIXME; send to index.php?
 // Already logged in to the system.
 if ($_AUTH) {
-    // Send manager and database administrator to setup, the rest to the gene page.
-    header('Location: ' . lovd_getInstallURL() . ($_AUTH['level'] >= LEVEL_MANAGER? 'setup' : 'genes' . ($_AUTH['current_db']? '/' . $_AUTH['current_db'] : '')));
+    // Send everybody to the index, that file will figure out where to go from there.
+    header('Location: ' . lovd_getInstallURL());
     exit;
 }
 
@@ -66,7 +65,7 @@ if (!empty($_POST)) {
 
 
                 // Second, check if the user is unlocking an account (forgot password).
-                elseif ($zUser['password_autogen'] && $zUser['password_autogen'] == md5($_POST['password']) && $_CONF['allow_unlock_accounts']) {
+                elseif ($zUser['password_autogen'] && lovd_verifyPassword($_POST['password'], $zUser['password_autogen']) && $_CONF['allow_unlock_accounts']) {
                     // Successfully unlocking an account! Log user in.
                     $_SESSION['auth'] = $zUser;
                     $_AUTH = & $_SESSION['auth'];
@@ -80,7 +79,7 @@ if (!empty($_POST)) {
                         setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
                     }
                     // Also update the password field, it needs to be used by the update password form.
-                    $_AUTH['password'] = md5($_POST['password']);
+                    $_AUTH['password'] = $zUser['password_autogen'];
                     lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
 
                     // Since this is the unlocking code, the user should be forced to change his/her password.
@@ -104,7 +103,7 @@ if (!empty($_POST)) {
 
 
                 // Finally, log in user if the correct password has been given.
-                elseif ($zUser['password'] == md5($_POST['password'])) {
+                elseif (lovd_verifyPassword($_POST['password'], $zUser['password'])) {
                     // Successfully logging in!
                     $_SESSION['auth'] = $zUser;
                     $_AUTH = & $_SESSION['auth'];
@@ -119,7 +118,17 @@ if (!empty($_POST)) {
                         // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
                         setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
                     }
-                    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array(session_id(), $_AUTH['id']));
+
+                    // FIXME; This is temporary code; can be removed once the old authentication method has died out.
+                    // Regenerate the new password hash, *but only if the user has upgraded the database already*!!!
+                    if (strlen($zUser['password']) == 32 && $_STAT['version'] >= '3.0-alpha-02') {
+                        // User has logged in, so we have his password. Create salt and regenerate password hash for him.
+                        $_SESSION['auth']['password'] = lovd_createPasswordHash($_POST['password']);
+                        lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password = ?, password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_SESSION['auth']['password'], session_id(), $_AUTH['id']));
+                    } else {
+                        // FIXME; if this block is removed, keep this query.
+                        lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array(session_id(), $_AUTH['id']));
+                    }
 
                     // Check if the user should be forced to change his/her password.
                     if (!empty($_AUTH['password_force_change'])) {
@@ -143,7 +152,7 @@ if (!empty($_POST)) {
 
 
             // The bad logins end up here!
-            if (!$zUser || (!lovd_error() && $zUser['password'] != md5($_POST['password']))) {
+            if (!$zUser || (!lovd_error() && !lovd_verifyPassword($_POST['password'], $zUser['password']))) {
                 lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried logging in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
                 lovd_errorAdd('', 'Invalid Username/Password combination.');
 

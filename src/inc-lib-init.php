@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-05-16
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -188,6 +188,26 @@ function lovd_cleanDirName ($s)
     }
 
     return $s;
+}
+
+
+
+
+
+function lovd_createPasswordHash ($sPassword, $sSalt = '')
+{
+    // Creates a password hash like how it's stored in the database. If no salt
+    // is given, it will generate a new salt. If a salt has been given, it's not
+    // checked if it is an appropiate salt.
+
+    if (!$sPassword) {
+        return false;
+    }
+    if (!$sSalt) {
+        $sSalt = substr(sha1(time() . mt_rand()), 0, 8);
+    }
+    $sPasswordHash = sha1($sPassword . ':' . $sSalt);
+    return substr($sPasswordHash, 0, 32) . ':' . $sSalt . ':' . substr($sPasswordHash, -8);
 }
 
 
@@ -875,6 +895,29 @@ function lovd_variantToPosition ($sVariant)
     return $sPosition;
 }
 */
+
+
+
+
+
+function lovd_verifyPassword ($sPassword, $sOriHash)
+{
+    // Verifies a password given a certain hash. This hash is usually taken from
+    // the database and can be generated using both the "old" LOVD 1.1.0/2.0 md5
+    // method and the new LOVD 3.0 sha1 method with salt.
+
+    if (strlen($sOriHash) == 50) {
+        // New (3.0-alpha-02) method of storing the password.
+        list($sOriPassHash1, $sSalt, $sOriPassHash2) = preg_split('/:/', $sOriHash);
+        $sOriHash = $sOriPassHash1 . $sOriPassHash2;
+        $sPasswordHash = sha1($sPassword . ':' . $sSalt);
+    } else {
+        // Simple, older (LOVD 1.1.0/2.0) method of storing the password.
+        $sPasswordHash = md5($sPassword);
+    }
+
+    return ($sPasswordHash == $sOriHash);
+}
 
 
 

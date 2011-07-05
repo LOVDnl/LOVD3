@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,7 +63,7 @@ if (!empty($_POST)) {
 
     if (!isset($_GET['confirm'])) {
         // Check password.
-        if (md5($_POST['password']) != $_AUTH['password']) {
+        if (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
     }
@@ -71,7 +71,7 @@ if (!empty($_POST)) {
     if (!lovd_error()) {
         if (isset($_GET['confirm'])) {
             // Check password.
-            if (md5($_POST['password']) != $_AUTH['password']) {
+            if (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
                 lovd_errorAdd('password', 'Please enter your correct password for authorization.');
             }
 

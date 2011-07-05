@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-06-09
+ * Modified    : 2011-06-22
  * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -171,6 +171,8 @@ class LOVD_Object {
                     $GLOBALS['_' . $aFormInfo[0]][$sName] = 0;
                 }
             }
+
+            // FIXME; check password field here; if password is a mandatory field, verify password (!lovd_verifyPassword($aData['password'], $_AUTH['password']))
         }
     }
 
@@ -573,7 +575,7 @@ class LOVD_Object {
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
                 $CLAUSE = (strpos($aCol['db'][0], '.') === false? 'HAVING' : 'WHERE');
-                $sColType = lovd_getColumnType(constant($this->sTable), $sColumn);
+                $sColType = lovd_getColumnType(constant($this->sTable), rtrim($sColumn, '_'));
                 if (!$sColType && $aCol['db'][2] !== true) {
                     // Column type of an alias may be given by LOVD.
                     $sColType = $aCol['db'][2];
@@ -609,15 +611,15 @@ class LOVD_Object {
                                 case 'DATE':
                                 case 'DATETIME':
                                     if (preg_match('/^([><]=?|!)?(\d{4})(-\d{2})?(-\d{2})?$/', $sTerm, $aMatches)) {
-                                        if (!checkdate(($aMatches[3]? substr($aMatches[3], 1) : '01'), ($aMatches[4]? substr($aMatches[4], 1) : '01'), $aMatches[2])) {
+                                        if (!checkdate((isset($aMatches[3])? substr($aMatches[3], 1) : '01'), (isset($aMatches[4])? substr($aMatches[4], 1) : '01'), $aMatches[2])) {
                                             $aBadSyntaxColumns[] = $aCol['view'][0];
                                         }
                                         $sOperator = $aMatches[1];
-                                        $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '-01') . ($aMatches[4]? $aMatches[4] : '-01');
+                                        $sTerm = $aMatches[2] . (isset($aMatches[3])? $aMatches[3] : '-01') . (isset($aMatches[4])? $aMatches[4] : '-01');
                                         switch ($sOperator) {
                                             case '>':
                                             case '<=':
-                                                $sTerm = $aMatches[2] . ($aMatches[3]? $aMatches[3] : '-12') . ($aMatches[4]? $aMatches[4] : '-31') . ' 23:59:59';
+                                                $sTerm = $aMatches[2] . (isset($aMatches[3])? $aMatches[3] : '-12') . (isset($aMatches[4])? $aMatches[4] : '-31') . ' 23:59:59';
                                                 break;
                                             case '<':
                                             case '>=':
@@ -626,7 +628,7 @@ class LOVD_Object {
                                             case '!':
                                             default:
                                                 $sOperator = ($sOperator == '!'? 'NOT ' : '') . 'LIKE';
-                                                $sTerm = $aMatches[2] . $aMatches[3] . $aMatches[4];
+                                                $sTerm = $aMatches[2] . (!isset($aMatches[3])? '' : $aMatches[3] . (!isset($aMatches[4])? '' : $aMatches[4]));
                                                 break;
                                         }
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';

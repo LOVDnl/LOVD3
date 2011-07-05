@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-06-09
+ * Modified    : 2011-07-05
  * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -222,7 +222,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
         }
 
-        if (ACTION == 'edit' && (!isset($aData['password']) || md5($aData['password']) != $_AUTH['password'])) {
+        if (ACTION == 'edit' && (!isset($aData['password']) || !lovd_verifyPassword($aData['password'], $_AUTH['password']))) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 

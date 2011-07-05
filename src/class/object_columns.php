@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -97,7 +97,7 @@ class LOVD_Column extends LOVD_Object {
                         'category' => array(
                                     'view' => array('Category', 120),
                                     'db'   => array('SUBSTRING_INDEX(c.id, "/", 1)', 'ASC', true)),
-                        'colid' => array(
+                        'colid_' => array(
                                     'view' => array('ID', 175),
                                     'db'   => array('SUBSTRING(c.id, LOCATE("/", c.id)+1)', 'ASC', true)),
                         'head_column' => array(
@@ -170,7 +170,7 @@ class LOVD_Column extends LOVD_Object {
         // FIXME; are we just assuming that form_format is OK?
 
         // User had to enter his/her password for authorization.
-        if ($aData['password'] && md5($aData['password']) != $_AUTH['password']) {
+        if ($aData['password'] && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
@@ -297,6 +297,7 @@ class LOVD_Column extends LOVD_Object {
         if ($sView == 'list') {
             $zData['row_id']      = $zData['id'];
             $zData['row_link']    = 'columns/' . $zData['id']; // Note: I chose not to use rawurlencode() here!
+            $zData['colid_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['colid'] . '</A>';
             $zData['form_type_']  = lovd_describeFormType($zData);
         } else {
             // Remove unnecessary columns.

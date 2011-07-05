@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-05-16
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -151,7 +151,7 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
             // Gather information and go to next page.
 
             // Prepare password...
-            $_POST['password'] = md5($_POST['password_1']);
+            $_POST['password'] = lovd_createPasswordHash($_POST['password_1']);
             unset($_POST['password_1'], $_POST['password_2']);
 
             print('      Account details OK. Ready to proceed to the next step.<BR>' . "\n" .
@@ -307,7 +307,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     // (3) Creating administrator.
     $aInstallSQL['Creating LOVD database administrator account...'] =
              array(
-                    'INSERT INTO ' . TABLE_USERS . ' VALUES (NULL, "' . mysql_real_escape_string($_POST['name']) . '", "' . mysql_real_escape_string($_POST['institute']) . '", "' . mysql_real_escape_string($_POST['department']) . '", "' . mysql_real_escape_string($_POST['telephone']) . '", "' . mysql_real_escape_string($_POST['address']) . '", "' . mysql_real_escape_string($_POST['city']) . '", "' . mysql_real_escape_string($_POST['countryid']) . '", "' . mysql_real_escape_string($_POST['email']) . '", "' . mysql_real_escape_string($_POST['reference']) . '", "' . mysql_real_escape_string($_POST['username']) . '", "' . mysql_real_escape_string($_POST['password']) . '", "", 0, "' . session_id() . '", "", "", ' . LEVEL_ADMIN . ', "' . mysql_real_escape_string($_POST['allowed_ip']) . '", 0, NOW(), 1, NOW(), NULL, NULL)',
+                    'INSERT INTO ' . TABLE_USERS . ' VALUES (NULL, "' . mysql_real_escape_string($_POST['name']) . '", "' . mysql_real_escape_string($_POST['institute']) . '", "' . mysql_real_escape_string($_POST['department']) . '", "' . mysql_real_escape_string($_POST['telephone']) . '", "' . mysql_real_escape_string($_POST['address']) . '", "' . mysql_real_escape_string($_POST['city']) . '", "' . mysql_real_escape_string($_POST['countryid']) . '", "' . mysql_real_escape_string($_POST['email']) . '", "' . mysql_real_escape_string($_POST['reference']) . '", "' . mysql_real_escape_string($_POST['username']) . '", "' . mysql_real_escape_string($_POST['password']) . '", "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', "' . mysql_real_escape_string($_POST['allowed_ip']) . '", 0, NOW(), 1, NOW(), NULL, NULL)',
                   );
     $nInstallSQL ++;
 

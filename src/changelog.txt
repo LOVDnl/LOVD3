@@ -7,6 +7,56 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Alpha 02
+ * 2011-07-05
+ *********/
+ * Fixed bug; Windows systems will now be able to send mails to the users when
+   using reset password.
+ * Fixed bug; Appropriate email headers are now added to the LOVD system mail
+   function.
+ * Fixed bug; Temporary fix for the memory leak in /genes?create.
+ * Fixed bug; Order of custom columns is now set correctly when enabled.
+ * Create, edit & delete phenotype are now implemented and working properly.
+ * User authorization level is now searchable in viewlists.
+ * Custom columns can now be removed.
+ * Adapted the page for phenotype create a bit.
+ * Changed & to W3C compliant &amp; in HTML output.
+ * Some LOVD 2.0 -> LOVD 3.0 code standardizations.
+ * Some code optimizations.
+ * insertEntry() and updateEntry() don't need to implode array values,
+   lovd_queryDB() does that for them already.
+ * Changed "variant information entry" to "variant entry".
+ * Added new logos for gene database create and edit.
+ * Removed remaining carriage returns in all files except the
+   config.ini.php-lovd.
+ * Removed internal LOVD columns from the VariantsOnTranscripts' viewList and
+   viewEntry.
+ * Fixed bug; Non-shared custom columns couldn't be removed.
+ * Used CURRENT_PATH in stead of (possibly contatinated) $_PATH_ELEMENTS calls.
+ * Added new screening techniques to the "Screening/Technique" column.
+ * Fixed bug; The "VariantOnTranscript/RNA" and "VariantOnTranscript/Protein"
+   columns were non-mandatory by mistake.
+ * Fixed bug; The "updated" column in the genes viewList did not allow for date
+   type searching because lovd_getColumnType() did not recognize it.
+ * Fixed bug; Notices were thrown when searching in date columns using
+   incomplete date ranges.
+ * Cleaned out the 2Do.txt file; bugs that had been fixed already were removed.
+ * Added anchor in columns viewList.
+ * The "Last login" and "Started" columns in the users viewList have been
+   shortened to just the dates.
+ * Fixed bug; A gene's hidden curators and collaborators should only be viewable
+   on that gene's viewEntry page by collaborators or higher.
+ * Added panelid and panel_size to the Individuals table, to distinguish between
+   individuals and panels.
+ * The VariantOnTranscript/DBID field has been removed in favor of the
+   VariantOnGenome/DBID field.
+ * A new authentication method is introduced, storing the user's passwords even
+   more safely as before. The user account password stores are only updated one
+   by one, whenever a user logs in.
+
+
+
+/*******************
  * 3.0 Alpha 01
  * 2011-05-26
  *********/

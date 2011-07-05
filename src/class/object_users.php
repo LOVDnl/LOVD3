@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-06-09
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-07-05
+ * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -103,7 +103,6 @@ class LOVD_User extends LOVD_Object {
                         'username' => array('Username', LEVEL_COLLABORATOR),
                         'password_force_change_' => array('Force change password', LEVEL_COLLABORATOR),
                         'phpsessid' => array('Session ID', LEVEL_COLLABORATOR),
-                        'current_db' => 'Current gene',
                         'saved_work_' => 'Saved work',
                         'curates_' => 'Curator for',
 //                        'submits' => 'Submits',
@@ -151,10 +150,10 @@ class LOVD_User extends LOVD_Object {
 */
                         'status_' => array(
                                     'view' => array('Status', 50, 'align="center"')),
-                        'last_login' => array(
+                        'last_login_' => array(
                                     'view' => array('Last login', 80),
                                     'db'   => array('u.last_login', 'DESC', true)),
-                        'created_date' => array(
+                        'created_date_' => array(
                                     'view' => array('Started', 80),
                                     'db'   => array('u.created_date', 'ASC', true)),
                         'level_' => array(
@@ -280,7 +279,7 @@ class LOVD_User extends LOVD_Object {
 
         if (lovd_getProjectFile() != '/install/index.php') {
             // User had to enter his/her password for authorization.
-            if ($aData['password'] && md5($aData['password']) != $_AUTH['password']) {
+            if ($aData['password'] && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
                 lovd_errorAdd('password', 'Please enter your correct password for authorization.');
             }
         }
@@ -409,8 +408,8 @@ class LOVD_User extends LOVD_Object {
             $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['name'] . '</A>';
             $sAlt = ($zData['active']? 'Online' : ($zData['locked']? 'Locked' : 'Offline'));
             $zData['status_'] = ($zData['locked'] || $zData['active']? '<IMG src="gfx/' . ($zData['locked']? 'status_locked' : 'status_online') . '.png" alt="' . $sAlt . '" title="' . $sAlt . '" width="14" height="14">' : '');
-            $zData['last_login'] = substr($zData['last_login'], 0, 10);
-            $zData['created_date'] = substr($zData['created_date'], 0, 10);
+            $zData['last_login_'] = substr($zData['last_login'], 0, 10);
+            $zData['created_date_'] = substr($zData['created_date'], 0, 10);
 
         } else {
             $zData['password_force_change_'] = ($zData['password_force_change']? '<IMG src="gfx/mark_1.png" alt="" width="11" height="11"> Yes' : 'No');

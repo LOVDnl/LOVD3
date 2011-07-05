@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-06-09
+ * Modified    : 2011-07-05
  * For LOVD    : 3.0-alpha-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -138,7 +138,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'reference', 'username', 'password', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'created_by', 'created_date');
 
             // Prepare values.
-            $_POST['password'] = md5($_POST['password_1']);
+            $_POST['password'] = lovd_createPasswordHash($_POST['password_1']);
             $_POST['login_attempts'] = ($_POST['locked']? 3 : 0);
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
@@ -184,7 +184,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -245,7 +245,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Prepare values.
             // In case the password is getting changed...
             if ($_POST['password_1']) {
-                $_POST['password'] = md5($_POST['password_1']);
+                $_POST['password'] = lovd_createPasswordHash($_POST['password_1']);
                 $aFields[] = 'password';
             }
             $_POST['login_attempts'] = (!empty($_POST['locked'])? 3 : 0);
@@ -270,7 +270,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
             // Change password, if requested.
             if ($nID == $_AUTH['id'] && !empty($_POST['password_1'])) {
-                // Was already md5'ed!
+                // Was already hashed!
                 $_SESSION['auth']['password'] = $_POST['password'];
             }
 
@@ -360,7 +360,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $aFields = array('password', 'password_autogen', 'password_force_change', 'edited_by', 'edited_date');
 
             // Prepare values.
-            $_POST['password'] = md5($_POST['password_1']);
+            $_POST['password'] = lovd_createPasswordHash($_POST['password_1']);
             $_POST['password_autogen'] = '';
             $_POST['password_force_change'] = 0;
             $_POST['edited_by'] = $_AUTH['id'];
@@ -380,7 +380,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
             // Change password, if requested.
             if ($nID == $_AUTH['id']) {
-                // Was already md5'ed!
+                // Was already hashed!
                 $_SESSION['auth']['password'] = $_POST['password'];
             }
 
@@ -479,7 +479,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         // Mandatory fields.
         if (!isset($_GET['confirm'])) {
             // User had to enter his/her password for authorization.
-            if (md5($_POST['password']) != $_AUTH['password']) {
+            if (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
                 lovd_errorAdd('password', 'Please enter your correct password for authorization.');
             }
         }
@@ -487,7 +487,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             if (isset($_GET['confirm'])) {
                 // User had to enter his/her password for authorization.
-                if (md5($_POST['password']) != $_AUTH['password']) {
+                if (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
                     lovd_errorAdd('password', 'Please enter your correct password for authorization.');
                 }
 
@@ -609,7 +609,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     // Require valid user.
     lovd_requireAUTH();
-    
+
     if (GET) {
         $_POST['workID'] = lovd_generateRandomID();
         $_SESSION['work'][$_POST['workID']] = array(
@@ -617,7 +617,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                                                     'step' => '1',
                                                    );
     }
-    
+
     if ($_SESSION['work'][$_POST['workID']]['step'] == '1') {
         if ($nID != $_AUTH['id']) {
             // Neccessary level depends on level of user. Special case.
@@ -632,15 +632,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
             }
-        }
-        else {
+
+        } else {
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
             lovd_showInfoTable('Not allowed to delete yourself.', 'stop');
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }
-    
+
         require ROOT_PATH . 'inc-lib-form.php';
 
         if (count($_POST) > 1) {
@@ -649,11 +649,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             if (empty($_POST['password_1'])) {
                 lovd_errorAdd('password_1', 'Please fill in the \'Enter your password for authorization\' field.');
             }
-            
-            if ($_POST['password_1'] && md5($_POST['password_1']) != $_AUTH['password']) {
+
+            if ($_POST['password_1'] && !lovd_verifyPassword($_POST['password_1'], $_AUTH['password'])) {
                 lovd_errorAdd('password_1', 'Please enter your correct password for authorization.');
             }
-            
+
             if (!lovd_error()) {
                 $_SESSION['work'][$_POST['workID']]['step'] = '2';
                 
@@ -673,38 +673,38 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             }
         }
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     if ($_SESSION['work'][$_POST['workID']]['step'] == '2') {
         require ROOT_PATH . 'inc-lib-form.php';
-        
+
         if (count($_POST) > 1) {
             lovd_errorClean();
-            
+
             if (empty($_POST['password_2']) || empty($_POST['password_3'])) {
                 lovd_errorAdd('password_2', 'Please fill in both the \'Enter your password for authorization\' and \'Password (confirm)\' fields.');
                 lovd_errorAdd('password_3', '');
             }
-            
+
             if ($_POST['password_2'] != $_POST['password_3']) {
                 lovd_errorAdd('password_2', 'The entered passwords did not match!');
                 lovd_errorAdd('password_3', '');
             }
 
             // User had to enter his/her password for authorization.
-            if ($_POST['password_2'] && md5($_POST['password_2']) != $_AUTH['password']) {
+            if ($_POST['password_2'] && !lovd_verifyPassword($_POST['password_2'], $_AUTH['password'])) {
                 lovd_errorAdd('password_2', 'Please enter your correct password for authorization in both fields.');
                 lovd_errorAdd('password_3', '');
             }
-            
+
             if (!lovd_error()) {
                 require ROOT_PATH . 'class/object_users.php';
                 $_DATA = new LOVD_User();
                 $zData = $_DATA->loadEntry($nID);
-                
+
                 // Query text.
                 // This also deletes the entries in variants??????.
                 // FIXME; implement deleteEntry()
@@ -731,21 +731,21 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 unset($_POST['password_2'], $_POST['password_3']);
             }
         }
-            
+
         require ROOT_PATH . 'inc-top.php';
         require ROOT_PATH . 'class/object_users.php';
         $_DATA = new LOVD_User();
         $zData = $_DATA->loadEntry($nID);
-        
+
         lovd_printHeader(PAGE_TITLE);
 
         lovd_errorPrint();
-        
+
         list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE ownerid=?', array($nID)));
         list($nScreenings) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE ownerid=?', array($nID)));
         list($nVars) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE ownerid=?', array($nID)));
         list($nGenes) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE edited_by=?', array($nID)));
-        
+
         print('      <PRE>' . "\n" .
               '  <b>The user you are about to delete has the following references to data in this installation:</b>' . "\n" .
               '  Found ' . $nIndividuals . ' individual' . ($nIndividuals == 1? '' : 's') . '.' . "\n" .
@@ -753,14 +753,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
               '  Found ' . $nVars . ' variant' . ($nVars == 1? '' : 's') . '.' . "\n" .
               '  Found ' . $nGenes . ' gene' . ($nGenes == 1? '' : 's') . '.' . "\n" .
               '      </PRE>' . "\n");
-              
+
         if ($nGenes || $nIndividuals || $nVars) {
             lovd_showInfoTable('FINAL WARNING! If you delete this user, you will lose all the references to this person in the data!', 'warning');
         }
-        
+
         // Table.
         print('<FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
-        
+
         // Array which will make up the form table.
         $aForm = array_merge(
                      array(
@@ -772,11 +772,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                             array('', '', 'submit', 'Delete user entry'),
                           ));
         lovd_viewForm($aForm);
-        
+
         print('        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
               '    </TABLE>' . "\n" .
               '</FORM>' . "\n\n");
-        
+
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
@@ -802,7 +802,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                      array('', '', 'submit', 'Delete user entry'),
                    ));
         lovd_viewForm($aForm);
-    
+
     print('    <INPUT name="workID" type="hidden" value="' . $_POST['workID'] . '">');
     print('</FORM>' . "\n\n");
 
@@ -819,7 +819,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Throw a user out of the system.
 
     $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
-    
+
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 

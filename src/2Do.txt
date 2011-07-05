@@ -15,12 +15,9 @@ Prioritize:
   * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
   * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
 - Er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
-- BUG: Disease kan niet met gen gelinked worden, gen wel met disease.
-- Column viewList() heeft geen <A href></A>.
-  * En check andere viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
+- Check alle viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
 - Gene selection lists zijn veel te groot als je een database hebt met lange gen namen. LOVD 2.0 had daar een techniek voor, om dat in te korten.
-- BUG: Ik maak screening aan, gekoppeld aan individu. Mag niet eens selecteren welk gen ik gescreend heb, maar als ik de screening bekijk, zie ik 21.000 genen in een viewList zonder navigatie :S
-  * Ik heb in de database een gen in SCR2GENE gestopt, en dan zie ik wel het juiste gen.
+- BUG: Ik maak screening aan, gekoppeld aan individu. Mag niet selecteren welk gen ik gescreend heb.
 - BUG: Kan een variant niet aan een screening koppelen, ook al gebruik ik de juiste link er voor.
 - (@Ivar) BUG: Er staat een edited_date in variants_on_transcripts, maar verder helemaal niks.
   * Deze kolom kan ik NIET leeg laten (NULL).
@@ -37,7 +34,12 @@ Prioritize:
 - (@Ivar) BUG: Non-shared columns can't be removed.
   * Ivar, ik heb deze bug volgens mij opgelost, maar kijk er voor de zekerheid nog even naar (Ivo).
 - (@Ivar) BUG: Maak phenotype aan, selecteer geen disease, submit form. Kijk nog eens goed naar transcripts?create en zorg er voor dat alle controles goed staan!!!
-- (@Ivo) Use CURRENT_PATH where possible.
+- Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
+- Veranderingen zoals besloten 2011-06-28
+  * Variant/Times_reported / chromosomes_found o.i.d.?
+- Veranderingen zoals voorgesteld 2011-06-28?
+  * Allele, genetic_origin, Phenotype/Inheritance
+    - Probleem: recombination? inherited from mother (moeder heeft 't) maar recombined to allele from father - hoe opslaan?
 
 
 
@@ -52,28 +54,19 @@ Prioritize:
 - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
 - (Ivo) /genes/GENE?authorize en/of /genes/GENE?sortCurators
       Het verschil tussen ?authorize en ?sortCurators moet nog gemaakt worden. De laatste moet beschikbaar zijn voor curators.
+      Users mogen geen gebruikers van gelijk niveau of hoger VERWIJDEREN. WEL toevoegen.
 - Leuke bug; /genes/DMD?authorize -> click alle users aan -> resort viewList.
 - BUG: genes?authorize heeft twee bugs:
   * IE laadt de hele viewList (vergeet ignored cols) bij deleten curator.
   * Bij submit van de viewList() wordt de row_link vergeten!!!
-- (Ivo) Encoding wachtwoorden omzetten, (random?) salt gebruiken. Heeft MySQL wel sha1() functie?
 - loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; gc_NAME = array (;) of gc2_NAME = nested array (;;).
 - Use uniqid ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
 - Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
-- Do we still need current_db in TABLE_USERS?
-- Ik kan geen gen aanmaken (CAPN3): Collecting all available transcripts...
-    Error: SOAP (Logged)
-    /genes?create returned error in module 'getTranscriptsAndInfo'.
-    Arguments :
-        genomicReference = "UD_130020505898"
-        geneName = "CAPN3"
-    SOAP response :
-        senv:Server - 'IdList'
 - Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
 - Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
-- BUG; locatie check op settings werkt niet (zegt dat 't een andere LOVD is)
-- BUG;
+- (@Ivo) BUG; locatie check op settings werkt niet (zegt dat 't een andere LOVD is)
+- (@Ivo) BUG;
     /check_update?icon returned error in code block Unknown.
     Query : SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM lovd_v3_genes AS g LEFT OUTER JOIN lovd_v3_users2genes AS u2g ON (g.id = u2g.geneid) LEFT OUTER JOIN lovd_v3_genes2diseases AS g2d ON (g.id = g2d.geneid) INNER JOIN lovd_v3_diseases AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 ORDER BY g.id
     Error : Mixing of GROUP columns (MIN(),MAX(),COUNT(),...) with no GROUP columns is illegal if there is no GROUP BY clause
@@ -95,7 +88,6 @@ Prioritize:
   * Memory leak in transcripts?create indien create niet wordt afgemaakt. Sowieso moet 't geheugengebruik van dit deel van 't script omlaag. Niet per se in alpha-01.
 - Status page er uit of geheel anders (alleen totalen???)
 - Ik heb het idee dat $bHalt in lovd_queryDB() veel vaker true dan false zou moeten zijn. Default op true zetten?
-- Curator lijst op gene viewEntry() mogen de hidden personen niet zien, als ze niet zijn ingelogd!!!
 - Vanaf beta moeten bij bugfixes de datum en versie gezet worden.
 
 
@@ -147,6 +139,12 @@ Ook belangrijk, maar iets minder:
 - Implement timeouts for Mutalyzer and other external sources? Try to reconnect to mirror? Ajax?
   * default_socket_timeout
   * but also: mysql.connect_timeout ?
+- Security modes:
+  * Passwords expire
+  * Enter password in every page deactivated for some time?
+  * Lock users after how many failed attempts?
+  * Sessions last for how long?
+  ...
 
 Lifestyle columns? Smoker yes/no? Where/how to store?
 
@@ -218,7 +216,7 @@ LOVD 3.0
         Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
     Data license? Mummi schreef er over (Science Commons) 8 november 2009
         == Creative Commons, right? License chooser inbouwen per gen. Maar wat doen met de genomic variants?
-    Implement tokens for forms that do not ask passwords? Tokens valid for 5 minutes only? Not to prevent abuse of computers left logged in, becase the token will be regenerated, but against CSRF.
+    Implement tokens for forms that do not ask passwords? Tokens valid for 5 minutes only? Not to prevent abuse of computers left logged in, because the token will be regenerated, but against CSRF.
     Create disease: probeer te standaardiseren door data op te halen van OMIM of iets anders, zoals create gene ook basis data ophaalt.
     De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
     Mouseover (hover) over kolom namen op viewList() ? Waar stellen we dat in? Alleen met custom columns of ook met andere views? Idem in viewEntry?
