@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-06-22
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-07-12
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -91,6 +91,7 @@ class LOVD_Object {
         // Set default row ID and link for viewList().
 //        $this->sRowID = strtolower($this->sObject) . '_{{ID}}';
         $this->sRowID = '{{ID}}'; // FIXME; having the object in front of it seems better, but then we need to isolate the ID using JS if we need it.
+        // Default link example: users/00001.
         $this->sRowLink = strtolower($this->sObject) . 's/{{ID}}';
     }
 
@@ -707,7 +708,9 @@ class LOVD_Object {
             // Skipping (permanently hiding) columns.
             foreach ($aColsToSkip as $sCol) {
                 if (array_key_exists($sCol, $this->aColumnsViewList)) {
-                    print('        <INPUT type="hidden" name="skip[]" value="' . $sCol . '">' . "\n");
+                    // Internet Explorer refuses to submit input with equal names. If names are different, everything works fine.
+                    // Somebody please tell me it's a bug and nobody's logical thinking. Had to include $sCol to make it work.
+                    print('        <INPUT type="hidden" name="skip[' . $sCol . ']" value="' . $sCol . '">' . "\n");
                     // Check if we're skipping columns, that do have a search value. If so, it needs to be sent on like this.
                     if (!empty($_GET['search_' . $sCol])) {
                         print('        <INPUT type="hidden" name="search_' . $sCol . '" value="' . htmlspecialchars($_GET['search_' . $sCol]) . '">' . "\n");
@@ -868,6 +871,16 @@ class LOVD_Object {
 
                 return true;
             }
+        }
+
+        // To make row links persist when the viewList is refreshed, we must store the row link in $_SESSION.
+        if (!empty($_SESSION['viewlists'][$sViewListID]['row_link'])) {
+            // FIXME; code can no longer overwrite the viewList, the first used value always overrides. Create setter!
+            $this->sRowLink = $_SESSION['viewlists'][$sViewListID]['row_link'];
+        } else {
+            // FIXME; incorporate garbage collection?
+            $_SESSION['viewlists'][$sViewListID]['row_link'] = $this->sRowLink; // Implies array creation.
+            //$_SESSION['viewlists'][$sViewListID]['last_used'] = time(); // For garbage collection (not yet implemented).
         }
 
         while ($zData = mysql_fetch_assoc($q)) {

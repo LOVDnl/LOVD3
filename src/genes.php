@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-07-12
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -808,7 +808,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             }
 
             // Now everybody should be updated. Remove whoever should no longer be in there.
-            lovd_queryDB('DELETE FROM ' . TABLE_CURATES . ' WHERE geneid = ? AND userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ')', array_merge(array($sID), $_POST['curators']), true);
+            lovd_queryDB('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])), true);
 
             // If we get here, it all succeeded.
             lovd_queryDB('COMMIT', array(), true);
@@ -876,7 +876,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
         // Retrieve current curators and collaborators.
         // Special ORDER BY statement makes sure show_order value of 0 is sent to the bottom of the list.
-        $qCurators = lovd_queryDB('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
+        $qCurators = lovd_queryDB('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
         while ($z = mysql_fetch_assoc($qCurators)) {
             $zCurators[$z['id']] = $z;
         }
@@ -900,9 +900,9 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
         // We must have something non-empty here, otherwise the JS fails when selecting users.
         $_GET['search_id'] = '!0';
     }
-    $_DATA->sRowLink = 'javascript:lovd_authorizeUser(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_name}}\');';
+    $_DATA->sRowLink = 'javascript:lovd_authorizeUser(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_name}}\'); return false;';
     // FIXME; if all users have been selected, you get the message "No entries found for this gene!" which is a bit weird, but also I can't reload the viewList because I don't have a DIV.
-    $_DATA->viewList('LOVDGeneAuthorizeUser', array('status_', 'last_login', 'created_date'), true); // Create known viewListID for lovd_unauthorizeUser().
+    $_DATA->viewList('LOVDGeneAuthorizeUser', array('id', 'status_', 'last_login_', 'created_date_'), true); // Create known viewListID for lovd_unauthorizeUser().
 
 
 
@@ -921,7 +921,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     // Now loop the items in the order given.
     foreach ($aCurators as $nID => $aVal) {
         list($bAllowEdit, $bShown) = $aVal;
-        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . $zCurators[$nID]['name'] . '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($bAllowEdit? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($bAllowEdit? ($bShown? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE></LI>' . "\n");
+        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . $zCurators[$nID]['name'] . '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($bAllowEdit? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($bAllowEdit? ($bShown? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right">' . ($zCurators[$nID]['level'] >= $_AUTH['level'] && $nID != $_AUTH['id']? '&nbsp;' : '<A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A>') . '</TD></TR></TABLE></LI>' . "\n");
     }
     print('        </UL>' . "\n" .
           '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $sID . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" .
@@ -962,6 +962,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
         function lovd_authorizeUser (sViewListID, nID, sName)
         {
             // Moves the user to the Authorized Users block and removes the row from the viewList.
+            objViewListF = document.getElementById('viewlistForm_' + sViewListID);
             objViewListT = document.getElementById('viewlistTable_' + sViewListID);
             objElement = document.getElementById(nID);
             objElement.style.cursor = 'progress';
@@ -978,14 +979,16 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             // Then, remove this row from the table.
             objElement.style.cursor = '';
             lovd_AJAX_viewListHideRow(sViewListID, nID);
-            document.forms['viewlistForm_' + sViewListID].total.value --;
+            objViewListF.total.value --;
             lovd_AJAX_viewListUpdateEntriesString(sViewListID);
 // FIXME; disable for IE or try to fix?
             // This one doesn't really work in IE 7. Other versions not known.
             lovd_AJAX_viewListAddNextRow(sViewListID);
 
             // Also change the search terms in the viewList such that submitting it will not reshow this item.
-            document.getElementById('viewlistForm_' + sViewListID).search_id.value += ' !' + nID;
+            objViewListF.search_id.value += ' !' + nID;
+            // Does an ltrim, too. But trim() doesn't work in IE < 9.
+            objViewListF.search_id.value = objViewListF.search_id.value.replace(/^\s*/, '');
             return true;
         }
 
@@ -1000,7 +1003,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             objLI.parentNode.removeChild(objLI);
 
             // Reset the viewList.
-            objViewListF.search_id.value = objViewListF.search_id.value.replace('!' + nID, '');
+            // Does an ltrim, too. But trim() doesn't work in IE < 9.
+            objViewListF.search_id.value = objViewListF.search_id.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
             lovd_AJAX_viewListSubmit(sViewListID);
 
             return true;

@@ -29,11 +29,10 @@
  *
  *************/
 
-// STILL TODO: genomic DNA field is standard and not custom???
-// transcripts echt altijd aan genen vast??? Of misschien niet??? microRNA's??
+// STILL TODO:
+// Transcripts misschien niet altijd aan genen vast? microRNA's?
 // PATHOGENICITY.....
 // All those IDs for the genes!!! Store differently?
-// Change allele to diploid_count structure??? How will we then create per-allele descriptions for mutalyzer? Usually homozygous entries are the same anyway. Allele=homozygous then?
 // "Parental_origin and Origin attributes have been merged into one attribute called as genetic_source."
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
 // Allow download staat nu per gen, en de losse varianten dan?

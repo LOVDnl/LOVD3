@@ -7,6 +7,24 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Alpha 03
+ * 2011-08-01
+ *********/
+ * Fixed bug; The verification of the LOVD database URL did not work, actually
+   because of a problem in the script on the LOVD website.
+ * Fixed bug; When selecting curators for a gene, if the viewList with available
+   users was sorted or searched, the users could no longer be selected.
+ * Fixed bug; When selecting curators for a gene, clicking on the user's name
+   led to execution of javascript outside the scope of the page, resulting in a
+   blank page with only "true" on it.
+ * Fixed bug; Users can no longer remove a user as curator for a gene, when this
+   user has an equal or higher level than themselves.
+ * Fixed bug; Internet Explorer "forgot" which columns where hidden from view in
+   viewLists when searching or sorting them.
+
+
+
+/*******************
  * 3.0 Alpha 02
  * 2011-07-05
  *********/
@@ -32,7 +50,7 @@
  * Removed internal LOVD columns from the VariantsOnTranscripts' viewList and
    viewEntry.
  * Fixed bug; Non-shared custom columns couldn't be removed.
- * Used CURRENT_PATH in stead of (possibly contatinated) $_PATH_ELEMENTS calls.
+ * Used CURRENT_PATH instead of (possibly concatenated) $_PATH_ELEMENTS calls.
  * Added new screening techniques to the "Screening/Technique" column.
  * Fixed bug; The "VariantOnTranscript/RNA" and "VariantOnTranscript/Protein"
    columns were non-mandatory by mistake.
