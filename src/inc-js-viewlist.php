@@ -128,7 +128,7 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
                         // Now start an amazing detour.
                         oTFoot = oTable.createTFoot();                 // Create table footer...
                         oTFoot.style.display = 'none';                 // ...but hide it!
-                        // The following line doesn't work in IE 7. Don't know why. It says "Unknown runtime error". Other versions unknown.
+                        // The following line doesn't work in IE 7 and IE 8. Don't know why. It says "Unknown runtime error". Other versions unknown.
                         oTFoot.innerHTML = objHTTP.responseText;       // Now, put the row in using innerHTML
                         oTable.tBodies[0].appendChild(oTFoot.rows[0]); // Then, when that's all parsed, append that to the table.
                         oTable.deleteTFoot();                          // Then remove the temporary table footer.

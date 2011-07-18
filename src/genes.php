@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-07-12
+ * Modified    : 2011-07-15
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -80,6 +80,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     $zData = $_DATA->viewEntry($sID);
     
     $sNavigation = '';
+    // FIXME; allow curators to edit, add transcripts and sort the Curator list!
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="genes/' . $sID . '?edit">Edit gene information</A>';
@@ -143,7 +144,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if ($_POST['hgnc_id'] == '') {
                 lovd_errorAdd('hgnc_id', 'No HGNC ID or Gene symbol was specified');
             } else {
-                // Gene Symbol must be unique
+                // Gene Symbol must be unique.
                 // Enforced in the table, but we want to handle this gracefully.
                 $sSQL = 'SELECT id FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?';
                 $aSQL = array($_POST['hgnc_id'], $_POST['hgnc_id']);
@@ -743,78 +744,108 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     // URL: /genes/DMD?authorize or /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
+    if (ACTION == 'authorize' && $_AUTH['level'] < LEVEL_MANAGER) {
+        header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?sortCurators');
+        exit;
+    }
+
     $sID = $_PATH_ELEMENTS[1];
-    define('PAGE_TITLE', 'Authorize curators for the ' . $sID . ' gene');
-    define('LOG_EVENT', 'GeneAuthorize');
+    if (ACTION == 'authorize') {
+        define('PAGE_TITLE', 'Authorize curators for the ' . $sID . ' gene');
+        define('LOG_EVENT', 'CuratorAuthorize');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_MANAGER);
+    } else {
+        define('PAGE_TITLE', 'Sort curators for the ' . $sID . ' gene');
+        define('LOG_EVENT', 'CuratorSort');
 
-//    require ROOT_PATH . 'class/object_genes.php';
-//    $_DATA = new LOVD_Gene();
-//    $zData = $_DATA->loadEntry($sID);
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_CURATOR);
+    }
+
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (POST) {
         lovd_errorClean();
 
-        // MUST select at least one curator!
-        if (empty($_POST['curators']) || !is_array($_POST['curators']) || empty($_POST['allow_edit']) || !is_array($_POST['allow_edit']) || empty($_POST['shown']) || !is_array($_POST['shown'])) {
-            lovd_errorAdd('', 'Please select at least one curator that is allowed to edit <I>and</I> is shown on the gene home page!');
-        } else {
-            // Of the selected persons, at least one should be shown AND able to edit!
-            $bCurator = false;
-            foreach($_POST['curators'] as $nUserID) {
-                if (in_array($nUserID, $_POST['allow_edit']) && in_array($nUserID, $_POST['shown'])) {
-                    $bCurator = true;
-                    break;
+        // Preventing notices...
+        // $_POST['curators'] stores the IDs of the users that are supposed to go in TABLE_CURATES.
+        if (empty($_POST['curators']) || !is_array($_POST['curators'])) {
+            $_POST['curators'] = array();
+        }
+        // $_POST['allow_edit'] stores the IDs of the users that are allowed to edit variants in this gene (the curators).
+        if (empty($_POST['allow_edit']) || !is_array($_POST['allow_edit'])) {
+            $_POST['allow_edit'] = array();
+        }
+        // $_POST['shown'] stores whether or not the curator is shown on the screen.
+        if (empty($_POST['shown']) || !is_array($_POST['shown'])) {
+            $_POST['shown'] = array();
+        }
+
+        if (ACTION == 'authorize') {
+            // MUST select at least one curator!
+            if (empty($_POST['curators']) || empty($_POST['allow_edit']) || empty($_POST['shown'])) {
+                lovd_errorAdd('', 'Please select at least one curator that is allowed to edit <I>and</I> is shown on the gene home page!');
+            } else {
+                // Of the selected persons, at least one should be shown AND able to edit!
+                $bCurator = false;
+                foreach($_POST['curators'] as $nUserID) {
+                    if (in_array($nUserID, $_POST['allow_edit']) && in_array($nUserID, $_POST['shown'])) {
+                        $bCurator = true;
+                        break;
+                    }
+                }
+                if (!$bCurator) {
+                    lovd_errorAdd('', 'Please select at least one curator that is allowed to edit <I>and</I> is shown on the gene home page!');
                 }
             }
-            if (!$bCurator) {
-                lovd_errorAdd('', 'Please select at least one curator that is allowed to edit <I>and</I> is shown on the gene home page!');
+
+            // Mandatory fields.
+            if (empty($_POST['password'])) {
+                lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+            }
+
+            // User had to enter his/her password for authorization.
+            if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+                lovd_errorAdd('password', 'Please enter your correct password for authorization.');
             }
         }
 
-        // FIXME; should require password!!!
-//        // Mandatory fields.
-//        if (empty($_POST['password'])) {
-//            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-//        }
-
-//        // User had to enter his/her password for authorization.
-//        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
-//            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-//        }
-
         if (!lovd_error()) {
-            /*
-            // FIXME; Now we've got three places in this piece of code in which we query the DB for user info... Must be made more efficient.
-            $zCurator = array();
-            $qCurators = lovd_queryDB('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
-            while ($z = mysql_fetch_assoc($qCurators)) {
-                $zCurators[$z['id']] = $z;
-            }
-            */
-
             // What's by far the most efficient code-wise is just insert/update all we've got and delete everything else.
             lovd_queryDB('START TRANSACTION', array(), true);
 
             foreach ($_POST['curators'] as $nOrder => $nUserID) {
                 $nOrder ++; // Since 0 is the first key in the array.
-                // Kind of stupid that just putting ON DUPLICATE KEY UPDATE doesn't do the trick.
-                lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = ?, show_order = ?', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0), (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)), true);
-                // FIXME; Without detailed user info we can't include elaborate logging. Would we want that anyway?
-                //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
+                // FIXME; users are authorized to add users of same level or higher, but can't restrict their editing rights. Not allowed to remove any of those, either. Implement.
+                //   Cannot implement this properly unless I have the correct level of the user (gene-specific). Curators should be able to assign submitters as collaborators and remove them later (internal user level is the same!)
+                if (ACTION == 'authorize') {
+                    // Kind of stupid that just putting ON DUPLICATE KEY UPDATE doesn't do the trick.
+                    lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = ?, show_order = ?', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0), (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)), true);
+                    // FIXME; Without detailed user info we can't include elaborate logging. Would we want that anyway?
+                    //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
+                } else {
+                    // Just sort!
+                    lovd_queryDB('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE userid = ?', array($nOrder, $nUserID), true);
+                }
             }
 
-            // Now everybody should be updated. Remove whoever should no longer be in there.
-            lovd_queryDB('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])), true);
+            if (ACTION == 'authorize') {
+                // Now everybody should be updated. Remove whoever should no longer be in there.
+                lovd_queryDB('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])), true);
+            }
 
             // If we get here, it all succeeded.
             lovd_queryDB('COMMIT', array(), true);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Updated curator list for the ' . $sID . ' gene');
+            if (ACTION == 'authorize') {
+                $sMessage = 'Updated curator list for the ' . $sID . ' gene';
+            } else {
+                $sMessage = 'Resorted curator list for the ' . $sID . ' gene';
+            }
+            lovd_writeLog('Event', LOG_EVENT, $sMessage);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $sID);
@@ -837,97 +868,103 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    // Now, build $aCurators, which will represent the state that the user *wants* the curators to be.
-    $zCurators = array();
+    // Now, build $aCurators, which contains info about the curators currently selected (from DB or, if available, POST!).
     $aCurators = array();
     if (POST) {
         // Form has already been sent. We're here because of errors. Use $_POST.
-        // $_POST['curators'] stores the IDs of the users that are supposed to go in TABLE_CURATES.
-        // FIXME; this can also be done above in the code for checking the fields.
-        if (empty($_POST['curators']) || !is_array($_POST['curators'])) {
-            $_POST['curators'] = array();
-
-        } else {
-            // Retrieve data for selected curators and collaborators.
-            $qCurators = lovd_queryDB('SELECT u.id, u.name FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
-            while ($z = mysql_fetch_assoc($qCurators)) {
-                $zCurators[$z['id']] = $z;
-            }
+        // Retrieve data for selected curators and collaborators.
+        $qCurators = lovd_queryDB('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
+        $zCurators = array();
+        while ($z = mysql_fetch_assoc($qCurators)) {
+            // FIXME; Do we need to change all IDs to integers because of possibly loosing the prepended zero's? Cross-browser check to verify?
+            $zCurators[$z['id']] = $z;
         }
-
-        // $_POST['allow_edit'] stores the IDs of the users that are allowed to edit variants in this gene (the curators).
-        // FIXME; this can also be done above in the code for checking the fields.
-        if (empty($_POST['allow_edit']) || !is_array($_POST['allow_edit'])) {
-            $_POST['allow_edit'] = array();
-        }
-        // $_POST['show_order'] stores whether or not the curator is shown on the screen.
-        // FIXME; this can also be done above in the code for checking the fields.
-        if (empty($_POST['shown']) || !is_array($_POST['shown'])) {
-            $_POST['shown'] = array();
-        }
-        // Build $aCurators.
-        // FIXME; Do we need to change all IDs to integers because of possibly loosing the prepended zero's? Cross-browser check to verify?
+        // Get the order right and add more information.
         foreach ($_POST['curators'] as $nID) {
-            $aCurators[$nID] = array((int) in_array($nID, $_POST['allow_edit']), (int) in_array($nID, $_POST['shown']));
+            $aCurators[$nID] =
+                     array(
+                            'name' => $zCurators[$nID]['name'],
+                            'level' => $zCurators[$nID]['level'],
+                            'allow_edit' => (int) in_array($nID, $_POST['allow_edit']),
+                            'shown' => (int) in_array($nID, $_POST['shown']));
         }
 
     } else {
         // First time on form. Use current database contents.
 
-        // Retrieve current curators and collaborators.
+        // Retrieve current curators and collaborators, order by current order.
         // Special ORDER BY statement makes sure show_order value of 0 is sent to the bottom of the list.
         $qCurators = lovd_queryDB('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
         while ($z = mysql_fetch_assoc($qCurators)) {
-            $zCurators[$z['id']] = $z;
-        }
-
-        // Build $aCurators from $zCurators.
-        foreach ($zCurators as $nID => $z) {
-            $aCurators[$nID] = array((int) $z['allow_edit'], (int) $z['shown']);
+            $aCurators[$z['id']] = $z;
         }
     }
 
 
 
-    // Show viewList() of users that are NO curator or collaborator at this moment.
-    require ROOT_PATH . 'class/object_users.php';
-    $_DATA = new LOVD_User();
-    lovd_showInfoTable('The following users are currently not a curator for this gene. Click on a user to select him as curator or collaborator.', 'information');
-    if ($aCurators) {
-        // Create search string that hides the users currently selected to be curator or collaborator.
-        $_GET['search_id'] = '!' . implode(' !', array_keys($aCurators));
+    if (ACTION == 'authorize') {
+        lovd_errorPrint();
+
+        // Show viewList() of users that are NO curator or collaborator at this moment.
+        require ROOT_PATH . 'class/object_users.php';
+        $_DATA = new LOVD_User();
+        lovd_showInfoTable('The following users are currently not a curator for this gene. Click on a user to select him as Curator or Collaborator.', 'information');
+        if ($aCurators) {
+            // Create search string that hides the users currently selected to be curator or collaborator.
+            $_GET['search_id'] = '!' . implode(' !', array_keys($aCurators));
+        } else {
+            // We must have something non-empty here, otherwise the JS fails when selecting users.
+            $_GET['search_id'] = '!0';
+        }
+        $_DATA->sRowLink = 'javascript:lovd_authorizeUser(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_name}}\', \'{{zData_level}}\'); return false;';
+        // FIXME; if all users have been selected, you get the message "No entries found for this gene!" which is a bit weird, but also I can't reload the viewList because I don't have a DIV.
+        $_DATA->viewList('LOVDGeneAuthorizeUser', array('id', 'status_', 'last_login_', 'created_date_'), true); // Create known viewListID for lovd_unauthorizeUser().
+
+
+
+        // Show curators, to sort and to select whether or not they can edit.
+        print('      <BR><BR>' . "\n\n");
+
+        lovd_showInfoTable('All users below have access to all data (public and non-public) of the ' . $sID . ' gene database. If you don\'t want to give the user access to <I>edit</I> any of the data that is not their own, deselect the "Allow edit" checkbox. Please note that users with level Manager or higher, cannot be restricted in their right to edit all information in the database.<BR>Users without edit rights are called Collaborators. Users having edit rights are called Curators; they receive email notifications of new submission and are shown on the gene\'s home page by default. You can disable that below by deselecting the "Shown" checkbox next to their name. To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location.', 'information');
     } else {
-        // We must have something non-empty here, otherwise the JS fails when selecting users.
-        $_GET['search_id'] = '!0';
+        lovd_showInfoTable('To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location.', 'information');
     }
-    $_DATA->sRowLink = 'javascript:lovd_authorizeUser(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_name}}\'); return false;';
-    // FIXME; if all users have been selected, you get the message "No entries found for this gene!" which is a bit weird, but also I can't reload the viewList because I don't have a DIV.
-    $_DATA->viewList('LOVDGeneAuthorizeUser', array('id', 'status_', 'last_login_', 'created_date_'), true); // Create known viewListID for lovd_unauthorizeUser().
-
-
-
-    // Show curators, to sort and to select whether or not they can edit.
-    print('      <BR><BR>' . "\n\n");
-
-    lovd_showInfoTable('All users below have access to all data (public and non-public) of the ' . $sID . ' gene database. If you don\'t want to give the user access to <I>edit</I> any of the data that is not their own, deselect the "Allow edit" checkbox.<BR>Users having edit rights are called Curators and are shown on the gene\'s home page by default, but you can disable this below. To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location. If you do not want a curator to be shown on the list of curators on the gene homepage and on the top of the screen, deselect the checkbox under "Shown".', 'information');
-
-    lovd_errorPrint();
 
     // Form & table.
-    // FIXME; needs password protection if not just resorting!!!
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
           '        <UL id="curator_list" class="sortable">' . "\n" .
-          '          <TABLE width="100%" class="head"><TR><TH width="10">&nbsp;</TH><TH>Name</TH><TH width="100" align="right">Allow edit</TH><TH width="75" align="right">Shown</TH><TH width="30" align="right">&nbsp;</TH></TR></TABLE>' . "\n");
+          '          <TABLE width="100%" class="head"><TR><TH width="10">&nbsp;</TH><TH>Name</TH>');
+    if (ACTION == 'authorize') {
+        print('<TH width="100" align="right">Allow edit</TH><TH width="75" align="right">Shown</TH><TH width="30" align="right">&nbsp;</TH>');
+    }
+    print('</TR></TABLE>' . "\n");
     // Now loop the items in the order given.
     foreach ($aCurators as $nID => $aVal) {
-        list($bAllowEdit, $bShown) = $aVal;
-        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . $zCurators[$nID]['name'] . '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($bAllowEdit? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($bAllowEdit? ($bShown? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right">' . ($zCurators[$nID]['level'] >= $_AUTH['level'] && $nID != $_AUTH['id']? '&nbsp;' : '<A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A>') . '</TD></TR></TABLE></LI>' . "\n");
+        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . $aVal['name'] . '</TD>');
+        if (ACTION == 'authorize') {
+            print('<TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' . $aVal['level'] . ' >= ' . LEVEL_MANAGER . ') { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($aVal['allow_edit'] || $aVal['level'] >= LEVEL_MANAGER? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['allow_edit']? ($aVal['shown']? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right">' . ($aVal['level'] >= $_AUTH['level'] && $nID != $_AUTH['id']? '&nbsp;' : '<A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A>') . '</TD>');
+        }
+        print('</TR></TABLE></LI>' . "\n");
     }
-    print('        </UL>' . "\n" .
-          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $sID . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" .
+    print('        </UL>' . "\n");
+
+    if (ACTION == 'authorize') {
+        // Array which will make up the form table.
+        $aForm = array(
+                        array('POST', '', '', '', '0%', '0', '100%'),
+                        array('', '', 'print', 'Enter your password for authorization'),
+                        array('', '', 'password', 'password', 20),
+                        array('', '', 'print', '<INPUT type="submit" value="Save curator list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $sID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                      );
+        lovd_viewForm($aForm);
+    } else {
+        print('        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $sID . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n");
+    }
+    print("\n" .
           '      </FORM>' . "\n\n");
 
       // FIXME; Can't we merge these files into one? We only use them together anyway...
+      // FIXME; disable JS functions authorize and unauthorize if not authorizing?
 ?>
       <!-- Tim Taylor's ToolMan DHTML Library, see http://tool-man.org/examples/ -->
       <SCRIPT type="text/javascript" src="lib/tool-man/core.js"></SCRIPT>
@@ -959,7 +996,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
         }
 
 
-        function lovd_authorizeUser (sViewListID, nID, sName)
+        function lovd_authorizeUser (sViewListID, nID, sName, nLevel)
         {
             // Moves the user to the Authorized Users block and removes the row from the viewList.
             objViewListF = document.getElementById('viewlistForm_' + sViewListID);
@@ -970,8 +1007,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             objUsers = document.getElementById('curator_list');
             oLI = document.createElement('LI');
             oLI.id = 'li_' + nID;
-            // FIXME; check if this works in IE; DeleteLog says: // The following line doesn't work in IE 7. Don't know why. It says "Unknown runtime error". Other versions unknown.
-            oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + nID + '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' + sName + '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + nID + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + nID + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' + nID + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
+            oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + nID + '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' + sName + '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + nID + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' + nLevel + ' >= <?php echo LEVEL_MANAGER; ?>) { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + nID + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' + nID + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
             objUsers.appendChild(oLI);
             // Make new entry sortable also.
             dragsort.makeListSortable(document.getElementById("curator_list"), setHandle);
@@ -982,7 +1018,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             objViewListF.total.value --;
             lovd_AJAX_viewListUpdateEntriesString(sViewListID);
 // FIXME; disable for IE or try to fix?
-            // This one doesn't really work in IE 7. Other versions not known.
+            // This one doesn't really work in IE 7 and IE 8. Other versions not known.
             lovd_AJAX_viewListAddNextRow(sViewListID);
 
             // Also change the search terms in the viewList such that submitting it will not reshow this item.
@@ -1012,58 +1048,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
         //-->
       </SCRIPT>
 <?php
-
-
-//       De entries in de twee lijsten (curators en collaborators) moeten ook weer teruggeplaatst kunnen worden in de viewList.
-/*//////////////////////////////////////////////////////////////////////////////
-// LOVD 3.0 code voor deleten van een gen.
-    // Array which will make up the form table.
-    $aForm = array_merge(
-                 array(
-                        array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting gene information entry', '', 'print', $zData['id'] . ' (' . $zData['name'] . ')'),
-                        'skip',
-                        array('Enter your password for authorization', '', 'password', 'password', 20),
-                        array('', '', 'submit', 'Delete gene information entry'),
-                      ));
-    lovd_viewForm($aForm);
-*///////////////////////////////////////////////////////////////////////////////
-/*//////////////////////////////////////////////////////////////////////////////
-// LOVD 2.0 code voor toewijzen curatoren
-    if (isset($_GET['sent'])) {
-        lovd_errorClean();
-
-        // Mandatory fields.
-        // (...)
-
-        if (!lovd_error()) {
-        }
-    }
-
-
-
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader('setup_curators_manage', 'LOVD Setup - Manage gene curators');
-
-    lovd_showInfoTable('Users selected as curators will receive notification emails after new submissions to this gene. Also, they will be mentioned on the gene homepage. If their user level is also "Curator", they will get write access to the gene\'s data - higher user levels already have write access regardless of whether or not they are configured as gene curators. Changes you make to other users with the same or a higher level than you, will be ignored.<BR>Whether or not a user\'s name appears on the gene homepage and how the names of multiple curators are sorted will be configured in the next screen.', 'warning');
-
-    lovd_errorPrint();
-
-    // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;edit=' . $_GET['edit'] . '&amp;sent=true" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
-
-    // Array which will make up the form table.
-    $aForm = array(
-                    array('POST', '', '', '50%', '50%'),
-                    array('', 'print', '<B>Gene curators</B>'),
-                    array('Select which users are this gene\'s curators', 'select', 'curators', $nUsersSize, $aUsers, false, true, true),
-                    'skip',
-                    array('Enter your password for authorization', 'password', 'password', 20),
-                    array('', 'print', '<INPUT type="submit" value="Edit curator list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Skip &raquo;" onclick="window.location.href=\'' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=sort&amp;sort=' . $_GET['edit'] . lovd_showSID(true, true) . '\'; return false;">'),
-                  );
-    lovd_viewForm($aForm);
-*///////////////////////////////////////////////////////////////////////////////
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

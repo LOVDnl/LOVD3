@@ -58,7 +58,7 @@ function lovd_AJAX_deleteLogEntry (sViewListID, sID)
                         document.forms['viewlistForm_' + sViewListID].total.value --;
                         lovd_AJAX_viewListUpdateEntriesString(sViewListID);
 // FIXME; disable for IE or try to fix?
-                        // This one doesn't really work in IE 7. Other versions not known.
+                        // This one doesn't really work in IE 7 and IE 8. Other versions not known.
                         lovd_AJAX_viewListAddNextRow(sViewListID);
                         return true;
                     } else if (objHTTP.responseText == '8') {

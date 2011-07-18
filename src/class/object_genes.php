@@ -546,7 +546,7 @@ class LOVD_Gene extends LOVD_Object {
                     $i ++;
                     $zData['collaborators_'] .= ($i == 1? '' : ($i == $nCollaborators? ' and ' : ', ')) . '<A href="users/' . $nUserID . '">' . $sName . '</A>';
                 }
-                $this->aColumnsViewEntry['collaborators_'] .= ' (' . $nCollaborators . ')';
+                $this->aColumnsViewEntry['collaborators_'][0] .= ' (' . $nCollaborators . ')';
             }
         }
 

@@ -118,6 +118,7 @@ if (ACTION == 'create') {
 
 
     if (GET) {
+        // FIXME; If you're here for a specific gene, don't request info of all genes!
         $qGenes = 'SELECT id, name, refseq_UD FROM ' . TABLE_GENES;
         $zGenes = lovd_queryDB($qGenes);
         while ($aGene = mysql_fetch_row($zGenes)) {
@@ -143,6 +144,7 @@ if (ACTION == 'create') {
         if (POST) {
             lovd_errorClean();
 
+            // FIXME; use lovd_getGeneList();
             if (!isset($zData['genes'][$_POST['geneSymbol']])) {
                 lovd_errorAdd('geneSymbol', 'Please select a Gene out of the list below!');
             }

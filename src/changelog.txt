@@ -19,6 +19,11 @@
    blank page with only "true" on it.
  * Fixed bug; Users can no longer remove a user as curator for a gene, when this
    user has an equal or higher level than themselves.
+ * Fixed bug; Fixed notices when not properly selecting a curator for a gene.
+ * Added the "Order" column in the custom columns viewList.
+ * Simplified the check on the regular expression syntax of a custom column.
+ * Fixed bug; On the gene viewEntry pages one of the headers was malformed.
+ * Implemented option for curators to sort the list of curators for their genes.
  * Fixed bug; Internet Explorer "forgot" which columns where hidden from view in
    viewLists when searching or sorting them.
 
@@ -35,7 +40,7 @@
  * Fixed bug; Temporary fix for the memory leak in /genes?create.
  * Fixed bug; Order of custom columns is now set correctly when enabled.
  * Create, edit & delete phenotype are now implemented and working properly.
- * User authorization level is now searchable in viewlists.
+ * User authorization level is now searchable in viewLists.
  * Custom columns can now be removed.
  * Adapted the page for phenotype create a bit.
  * Changed & to W3C compliant &amp; in HTML output.

@@ -5,7 +5,7 @@
  *
  * Created     : 2009-10-19
  * Modified    : 2011-07-07
- * For LOVD    : 3.0-alpha-02
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -168,7 +168,7 @@ $_SETT = array(
                             9 => '<SPAN style="color:red;"><B>Critical</B></SPAN>',
                           ),
                 'upstream_URL' => 'http://www.LOVD.nl/',
-                'upstream_BTS_URL' => 'https://eu.liacs.nl/projects/LOVD3/',
+                'upstream_BTS_URL' => 'https://eu.liacs.nl/projects/LOVD3/report/1',
                 'upstream_BTS_URL_new_ticket' => 'https://eu.liacs.nl/projects/LOVD3/newticket',
                 'wikiprofessional_iprange' => '131.174.88.0-255',
                 'list_sizes' =>
