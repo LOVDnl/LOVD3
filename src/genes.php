@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-07-15
+ * Modified    : 2011-07-18
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -75,19 +75,23 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    // Load appropiate user level for this gene.
+    lovd_isAuthorized('gene', $sID);
+
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
     $zData = $_DATA->viewEntry($sID);
     
     $sNavigation = '';
-    // FIXME; allow curators to edit, add transcripts and sort the Curator list!
-    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="genes/' . $sID . '?edit">Edit gene information</A>';
-        $sNavigation .= ' | <A href="transcripts/' . $sID . '?create">Add transcript(s) to gene</A>';
-        $sNavigation .= ' | <A href="genes/' . $sID . '?delete">Delete gene entry</A>' .
-            ' | <A href="genes/' . $sID . '?authorize">Add/remove curators/collaborators</A>';
-        // FIXME add: | Sort/hide curator names
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
+        // Authorized user is logged in. Provide tools.
+        $sNavigation = '<A href="genes/' . $sID . '?edit">Edit gene information</A>' .
+                       ' | <A href="transcripts/' . $sID . '?create">Add transcript(s) to gene</A>';
+        if ($_AUTH['level'] >= LEVEL_MANAGER) {
+            $sNavigation .= ' | <A href="genes/' . $sID . '?delete">Delete gene entry</A>' .
+                            ' | <A href="genes/' . $sID . '?authorize">Add/remove curators/collaborators</A>';
+        }
+        $sNavigation .= ' | <A href="genes/' . $sID . '?sortCurators">Sort/hide curators/collaborators names</A>';
     }
 
     if ($sNavigation) {
@@ -488,8 +492,9 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     define('PAGE_TITLE', 'Edit gene information entry');
     define('LOG_EVENT', 'GeneEdit');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Load appropiate user level for this gene.
+    lovd_isAuthorized('gene', $sID);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_genes.php';
     require ROOT_PATH . 'inc-lib-form.php';
@@ -744,12 +749,16 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     // URL: /genes/DMD?authorize or /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
+    $sID = $_PATH_ELEMENTS[1];
+
+    // Load appropiate user level for this gene.
+    lovd_isAuthorized('gene', $sID);
+
     if (ACTION == 'authorize' && $_AUTH['level'] < LEVEL_MANAGER) {
         header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?sortCurators');
         exit;
     }
 
-    $sID = $_PATH_ELEMENTS[1];
     if (ACTION == 'authorize') {
         define('PAGE_TITLE', 'Authorize curators for the ' . $sID . ' gene');
         define('LOG_EVENT', 'CuratorAuthorize');
@@ -810,7 +819,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
                 lovd_errorAdd('password', 'Please enter your correct password for authorization.');
             }
+
+        } else {
+            // MUST select at least one visible curator!
+            if (empty($_POST['curators']) || empty($_POST['shown'])) {
+                lovd_errorAdd('', 'Please select at least one curator to be shown on the gene home page!');
+            }
         }
+
+
 
         if (!lovd_error()) {
             // What's by far the most efficient code-wise is just insert/update all we've got and delete everything else.
@@ -818,16 +835,17 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
             foreach ($_POST['curators'] as $nOrder => $nUserID) {
                 $nOrder ++; // Since 0 is the first key in the array.
-                // FIXME; users are authorized to add users of same level or higher, but can't restrict their editing rights. Not allowed to remove any of those, either. Implement.
-                //   Cannot implement this properly unless I have the correct level of the user (gene-specific). Curators should be able to assign submitters as collaborators and remove them later (internal user level is the same!)
+                // FIXME; Managers are authorized to add other managers or higher as curators, but should not be able to restrict other manager's editing rights, or hide these users as curators.
+                //   Implementing this check on this level means we need to query the database to get all user levels again, defeating this optimalisation below.
+                //   Taking away the editing rights/visibility of managers or the admin by a manager is restricted in the interface, so it's not critical to solve now.
+                //   I'm being lazy, I'm not implementing the check here now. However, it *is* a bug and should be fixed later.
                 if (ACTION == 'authorize') {
-                    // Kind of stupid that just putting ON DUPLICATE KEY UPDATE doesn't do the trick.
-                    lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = ?, show_order = ?', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0), (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)), true);
+                    lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)), true);
                     // FIXME; Without detailed user info we can't include elaborate logging. Would we want that anyway?
                     //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
                 } else {
-                    // Just sort!
-                    lovd_queryDB('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE userid = ?', array($nOrder, $nUserID), true);
+                    // Just sort and update visibility!
+                    lovd_queryDB('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $nUserID), true);
                 }
             }
 
@@ -927,7 +945,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
         lovd_showInfoTable('All users below have access to all data (public and non-public) of the ' . $sID . ' gene database. If you don\'t want to give the user access to <I>edit</I> any of the data that is not their own, deselect the "Allow edit" checkbox. Please note that users with level Manager or higher, cannot be restricted in their right to edit all information in the database.<BR>Users without edit rights are called Collaborators. Users having edit rights are called Curators; they receive email notifications of new submission and are shown on the gene\'s home page by default. You can disable that below by deselecting the "Shown" checkbox next to their name. To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location.', 'information');
     } else {
-        lovd_showInfoTable('To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location.', 'information');
+        lovd_showInfoTable('To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location. If you do not want a user to be shown on the list of curators on the gene homepage and on the top of the screen, deselect the checkbox on the right side of his name.', 'information');
     }
 
     // Form & table.
@@ -936,6 +954,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
           '          <TABLE width="100%" class="head"><TR><TH width="10">&nbsp;</TH><TH>Name</TH>');
     if (ACTION == 'authorize') {
         print('<TH width="100" align="right">Allow edit</TH><TH width="75" align="right">Shown</TH><TH width="30" align="right">&nbsp;</TH>');
+    } else {
+        print('<TH width="75" align="right">Shown</TH>');
     }
     print('</TR></TABLE>' . "\n");
     // Now loop the items in the order given.
@@ -943,6 +963,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
         print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . $aVal['name'] . '</TD>');
         if (ACTION == 'authorize') {
             print('<TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' . $aVal['level'] . ' >= ' . LEVEL_MANAGER . ') { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($aVal['allow_edit'] || $aVal['level'] >= LEVEL_MANAGER? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['allow_edit']? ($aVal['shown']? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right">' . ($aVal['level'] >= $_AUTH['level'] && $nID != $_AUTH['id']? '&nbsp;' : '<A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A>') . '</TD>');
+        } else {
+            print('<TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['allow_edit']? ($aVal['shown']? ' checked' : '') : ' disabled') . '></TD>');
         }
         print('</TR></TABLE></LI>' . "\n");
     }
@@ -1059,109 +1081,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
 /*
 LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality is included in LOVD 3.0 as well.
-
-} elseif ($_GET['action'] == 'view' && isset($_GET['view'])) {
-    // View specific gene.
-
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
-
-    // GROUP BY only necessary because of the COUNT(*) in the query.
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT d.*, COUNT(p2v.variantid) AS variants, u_c.name AS created_by, u_e.name AS edited_by, u_u.name AS updated_by FROM ' . TABLE_DBS . ' AS d LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (symbol) LEFT JOIN ' . TABLE_USERS . ' AS u_c ON (d.created_by = u_c.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_e ON (d.edited_by = u_e.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u_u ON (d.updated_by = u_u.id) WHERE d.symbol = "' . $_GET['view'] . '" GROUP BY d.symbol'));
-    if (!$zData) {
-        // Wrong ID, apparently.
-        print('      No such ID!<BR>' . "\n");
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
-    // Array which will make up the data table.
-    $aTable =
-             array(
-                    'symbol' => 'Gene symbol',
-                    'gene' => 'Gene name',
-                    'chrom_location' => 'Chromosome location',
-                    'genbank' => 'Has a GenBank file',
-                    'refseq_genomic' => 'Genomic accession number',
-                    'refseq_mrna' => 'Transcript accession number',
-                    'Gene/Reference' => 'Reference',
-                    'url_homepage' => 'Homepage URL',
-                    'allow_download' => 'Allow public to download all variant entries',
-                    'allow_index_wiki' => 'Allow data to be indexed by WikiProfessional',
-                    'header' => 'Page header (aligned to the ' . $_SETT['notes_align'][$zData['header_align']] . ')',
-                    'footer' => 'Page footer (aligned to the ' . $_SETT['notes_align'][$zData['footer_align']] . ')',
-                    'note_index' => 'Notes for the LOVD gene homepage',
-                    'note_listing' => 'Notes for the variant listings',
-                    'disclaimer' => 'Has a disclaimer',
-                    'refseq' => 'Has a human-readable reference sequence',
-                    'variants' => 'Total number of variants',
-                    'curators_' => 'Curators',
-                    'created_by' => 'Created by',
-                    'created_date' => 'Date created',
-                    'edited_by' => 'Last edited by',
-                    'edited_date' => 'Date last edited',
-                    'updated_by' => 'Last updated by',
-                    'updated_date' => 'Date last updated',
-                  );
-
-    // Remove unnecessary columns.
-    if ($zData['edited_by'] == NULL) {
-        // Never been edited.
-        unset($aTable['edited_by'], $aTable['edited_date']);
-    }
-
-    // Table.
-    print('      <TABLE border="0" cellpadding="0" cellspacing="1" width="600" class="data">');
-
-    $zData['genbank']        = '<IMG src="gfx/mark_' . ($zData['genbank']? 1 : 0) . '.png" alt="' . $zData['genbank'] . '" width="11" height="11">';
-    $zData['Gene/Reference'] = $zData['reference'];
-    if ($zData['url_homepage']) {
-        $zData['url_homepage']   = '<A href="' . $zData['url_homepage'] . '" target="_blank">' . $zData['url_homepage'] . '</A>';
-    }
-    $zData['allow_download']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="' . $zData['allow_download'] . '" width="11" height="11">';
-    $zData['allow_index_wiki'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="' . $zData['allow_index_wiki'] . '" width="11" height="11">';
-    $zData['disclaimer']       = '<IMG src="gfx/mark_' . ($zData['disclaimer']? 1 : 0) . '.png" alt="' . $zData['disclaimer'] . '" width="11" height="11">';
-    $zData['refseq']           = '<IMG src="gfx/mark_' . ($zData['refseq'] != ''? 1 : 0) . '.png" alt="' . ($zData['refseq'] != ''? 1 : 0) . '" width="11" height="11">';
-    list($nUnique) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(DISTINCT `Variant/DNA`) FROM ' . TABLEPREFIX . '_' . $zData['symbol'] . '_variants'));
-    $zData['variants'] .= ' (' . $nUnique . ' unique entr' . ($nUnique == 1? 'y' : 'ies') . ')';
-    $zData['curators_'] = '';
-    $qCurators = mysql_query('SELECT u.name, u2g.show_order FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g USING (userid) WHERE u2g.symbol = "' . $zData['symbol'] . '" ORDER BY (u2g.show_order > 0) DESC, u2g.show_order, u.level DESC, u.name');
-    $nCurators = mysql_num_rows($qCurators);
-    $i = 0;
-    while ($r = mysql_fetch_row($qCurators)) {
-        $i ++;
-        $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ' and ' : ', ')) . ($r[1]? '<B>' . $r[0] . '</B>' : '<I>' . $r[0] . ' (hidden)</I>');
-    }
-    $aTable['curators_'] .= ' (' . $nCurators . ')';
-
-    // Parse and build Custom Links.
-    // Just for Gene/Reference.
-    lovd_buildLinks($zData);
-
-    foreach ($aTable as $sField => $sHeader) {
-        print("\n" .
-              '        <TR>' . "\n" .
-              '          <TH valign="top">' . str_replace(' ', '&nbsp;', $sHeader) . '</TH>' . "\n" .
-              '          <TD>' . (!$zData[$sField]? '-' : $zData[$sField]) . '</TD></TR>');
-    }
-    print('</TABLE>' . "\n\n");
-
-    $sNavigation = '';
-    // 2010-06-23; 2.0-27; Security code here was useless, as this page cannot be accessed by curators but only by managers and higher.
-    $sNavigation = '<A href="' . ROOT_PATH . 'config_genes.php?action=edit&amp;edit=' . $zData['symbol'] . '">Edit gene</A>  | <A href="' . $_SERVER['PHP_SELF'] . '?action=drop&amp;drop=' . $zData['symbol'] . '">Delete gene</A>';
-    $sNavigation .= ' | <A href="setup_curators.php?action=edit&amp;edit=' . $zData['symbol'] . '">Add/remove curators</A> | <A href="setup_curators.php?action=sort&amp;sort=' . $zData['symbol'] . '">Sort/hide curator names</A>';
-
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_viewNavigation($sNavigation);
-    }
-
-    require ROOT_PATH . 'inc-bot.php';
-    exit;
-
-
-
-
 
 } elseif ($_GET['action'] == 'create') {
     // Create new gene.
@@ -1633,249 +1552,6 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
                     array('', 'submit', 'Create'),
                   );
     $_MODULES->processForm('SetupGenesCreate', $aForm);
-    lovd_viewForm($aForm);
-
-    print('</TABLE></FORM>' . "\n\n");
-
-    require ROOT_PATH . 'inc-bot.php';
-    exit;
-
-
-
-
-
-} elseif ($_GET['action'] == 'drop' && !empty($_GET['drop'])) {
-    // Drop specific gene.
-
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_GET['drop'] . '"'));
-    if (!$zData) {
-        // Wrong ID, apparently.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
-        lovd_showInfoTable('No such ID!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
-    // Require form functions.
-    require ROOT_PATH . 'inc-lib-form.php';
-
-    if (isset($_GET['sent'])) {
-        lovd_errorClean();
-
-        if (!isset($_GET['confirm'])) {
-            // Mandatory fields.
-            $aCheck =
-                     array(
-                            'password' => 'Enter your password for authorization',
-                          );
-
-            foreach ($aCheck as $key => $val) {
-                if (empty($_POST[$key])) {
-                    lovd_errorAdd('Please fill in the \'' . $val . '\' field.');
-                }
-            }
-
-            // User had to enter his/her password for authorization.
-            if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
-                lovd_errorAdd('Please enter your correct password for authorization.');
-            }
-        }
-
-        if (!lovd_error()) {
-            // Show second form, last confirmation.
-
-            if (isset($_GET['confirm'])) {
-                lovd_errorClean();
-
-                // Mandatory fields.
-                $aCheck =
-                         array(
-                                'password' => 'Enter your password for authorization',
-                              );
-
-                foreach ($aCheck as $key => $val) {
-                    if (empty($_POST[$key])) {
-                        lovd_errorAdd('Please fill in the \'' . $val . '\' field.');
-                    }
-                }
-
-                // User had to enter his/her password for authorization.
-                if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
-                    lovd_errorAdd('Please enter your correct password for authorization.');
-                }
-
-                if (!lovd_error()) {
-                    // It's useless to use transactions here. We have to drop tables, and these COMMIT on MySQL, as far as 5.1.
-                    // Drop Columns & Variants, Remove from TABLE_DBS & TABLE_CURATES, Remove orphaned patients from TABLE_PATIENTS.
-
-                    require ROOT_PATH . 'inc-top.php';
-                    lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
-
-                    // Start out with the column information.
-                    print('      Removing ' . $zData['symbol'] . ' gene from LOVD...<BR>' . "\n" .
-                          '      Removing columns ... ');
-                    flush();
-                    $sQ = 'DROP TABLE IF EXISTS ' . TABLEPREFIX . '_' . $zData['symbol'] . '_columns';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        lovd_dbFout('GeneDropA', $sQ, mysql_error());
-                    }
-                    print('OK<BR>' . "\n");
-
-                    // Variants.
-                    print('      Removing variants ... ');
-                    flush();
-                    $sQ = 'DROP TABLE IF EXISTS ' . TABLEPREFIX . '_' . $zData['symbol'] . '_variants';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        lovd_dbFout('GeneDropB', $sQ, mysql_error());
-                    }
-                    print('OK<BR>' . "\n");
-
-                    // Variants connections.
-                    print('      Removing variants <-> patients links ... ');
-                    flush();
-                    $sQ = 'DELETE FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        lovd_dbFout('GeneDropC', $sQ, mysql_error());
-                    }
-                    print('OK<BR>' . "\n");
-
-                    // DBS gene entry.
-                    print('      Removing gene entry ... ');
-                    flush();
-                    $sQ = 'DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        lovd_dbFout('GeneDropD', $sQ, mysql_error());
-                    }
-                    print('OK<BR>' . "\n");
-
-                    // CURATES entries.
-                    print('      Removing curator permissions ... ');
-                    flush();
-                    $sQ = 'DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $zData['symbol'] . '"';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        lovd_dbFout('GeneDropE', $sQ, mysql_error());
-                    }
-                    print('OK<BR>' . "\n");
-
-                    // Orphaned patients.
-                    print('      Removing obsolete patients ... ');
-                    flush();
-                    // Backwards compatible with MySQL 4.0 and earlier. These versions do not support subqueries, which would really come in handy now.
-                    // First, determine the ID's of the orphaned patients. Then construct the DELETE query.
-                    $aOrphaned = array();
-                    $qOrphaned = lovd_queryDB('SELECT p.patientid FROM ' . TABLE_PATIENTS . ' AS p LEFT OUTER JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (patientid) WHERE p2v.symbol IS NULL');
-                    while ($rOrphaned = mysql_fetch_row($qOrphaned)) {
-                        $aOrphaned[] = $rOrphaned[0];
-                    }
-                    if (count($aOrphaned)) {
-                        // Construct DELETE query.
-                        $sQ = 'DELETE FROM ' . TABLE_PATIENTS . ' WHERE patientid IN (' . implode(', ', $aOrphaned) . ')';
-                        $q = mysql_query($sQ);
-                        if (!$q) {
-                            lovd_dbFout('GeneDropG', $sQ, mysql_error());
-                        }
-                        print('OK<BR><BR>' . "\n\n");
-                    } else {
-                        print('N/A<BR><BR>' . "\n\n");
-                    }
-
-                    // Write to log...
-                    lovd_writeLog('MySQL:Event', 'GeneDrop', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully deleted gene ' . $zData['symbol'] . ' (' . $zData['gene'] . ')');
-
-                    // Thank the user...
-                    print('      Successfully deleted gene ' . $zData['symbol'] . ' and all related information!<BR><BR>' . "\n\n");
-                    if (GENE_COUNT == 1) {
-                        print('      Do you wish to <A href="' . $_SERVER['PHP_SELF'] . '?action=find_hgnc">create a new database</A>?<BR><BR>' . "\n\n");
-                    }
-
-                    // Alternate refresh; since we can't send a HTTP header...
-                    print('      <SCRIPT type="text/javascript">' . "\n" .
-                          '      <!--' . "\n" .
-                          '        setTimeout(\'window.location.href = "' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true, true) . '"\', 5000);' . "\n" .
-                          '      // -->' . "\n" .
-                          '      </SCRIPT>' . "\n\n");
-
-                    require ROOT_PATH . 'inc-bot.php';
-                    exit;
-                }
-            }
-
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
-
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
-
-            // Total number of variants found in this gene (incl. non curated).
-            // 2008-07-08; 2.0-09; Check number of variants using $zData['symbol'], not $_SESSION['currdb'] of course...
-            list($nTotalVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $zData['symbol'] . '"'));
-
-            lovd_showInfoTable('<B>FINAL WARNING! Removing the ' . $zData['symbol'] . ' gene will imply the loss of ' . $nTotalVariants . ' variant entr' . ($nTotalVariants == 1? 'y' : 'ies') . '. If you didn\'t download the varation data stored for the ' . $zData['symbol'] . ' gene in the LOVD system, everything will be lost.</B>', 'warning');
-
-            if (!isset($_GET['confirm'])) {
-                print('      Please note the message above and fill in your password one more time to remove the ' . $zData['symbol'] . ' gene.<BR>' . "\n" .
-                      '      <BR>' . "\n\n");
-            }
-
-            lovd_errorPrint();
-
-            // Table.
-            print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . $zData['symbol'] . '&amp;sent=true&amp;confirm=true" method="post">' . "\n" .
-                  '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
-
-            // Array which will make up the form table.
-            $aForm = array(
-                            array('POST', '', '', '50%', '50%'),
-                            array('Deleting gene', 'print', $zData['symbol'] . ' (' . $zData['gene'] . ')'),
-                            'skip',
-                            array('Enter your password for authorization', 'password', 'password', 20),
-                            array('', 'submit', 'Delete ' . $zData['symbol'] . ' gene'),
-                          );
-            $_MODULES->processForm('SetupGenesDeleteConfirm', $aForm);
-            lovd_viewForm($aForm);
-
-            print('</TABLE></FORM>' . "\n\n");
-
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-
-        } else {
-            // Errors, so the whole lot returns to the form.
-            lovd_magicUnquoteAll();
-
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
-        }
-    }
-
-
-
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader('setup_genes_manage', 'LOVD Setup - Manage configured genes');
-
-    lovd_showInfoTable('WARNING! If you did not download your variations, you will loose all of your data!', 'warning');
-
-    lovd_errorPrint();
-
-    // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;drop=' . $zData['symbol'] . '&amp;sent=true" method="post">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
-
-    // Array which will make up the form table.
-    $aForm = array(
-                    array('POST', '', '', '50%', '50%'),
-                    array('Deleting gene', 'print', $zData['symbol'] . ' (' . $zData['gene'] . ')'),
-                    'skip',
-                    array('Enter your password for authorization', 'password', 'password', 20),
-                    array('', 'submit', 'Delete ' . $zData['symbol'] . ' gene'),
-                  );
-    $_MODULES->processForm('SetupGenesDelete', $aForm);
     lovd_viewForm($aForm);
 
     print('</TABLE></FORM>' . "\n\n");

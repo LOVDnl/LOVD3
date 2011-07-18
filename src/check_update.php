@@ -35,6 +35,7 @@ require ROOT_PATH . 'inc-init.php';
 
 if (!isset($_GET['icon'])) {
     // Only authorized people...
+    lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAuth(LEVEL_CURATOR);
 }
 

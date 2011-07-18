@@ -1,7 +1,6 @@
 Prioritize:
 ===========
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
-  * Ik moet eerst het probleem van de berekening van de user levels oplossen.
 - (@Ivo) Ga naar viewlist, hersorteer, zoek, hersorteer. Terug kun je wel door sort, maar niet de undo van het zoeken.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
   * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
@@ -151,13 +150,15 @@ MOET OVERLEGD WORDEN:
   * Wanneer opslaan?
 - (BELANGRIJK) Allele => Gametic Phase? Check alle waardes in de groep.
 - Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
+- Hoe kunnen we toch toestaan, dat users voor een grote groep genen tegelijk curator kunnen worden gemaakt?
+  * Probleem vergeleken met LOVD 2.0 is dat je allow_edit en shown ook moet kunnen bewerken... Of kunnen we daar omheen werken?
 
 
 
 
 Doen voordat LOVD 3.0 online gebruikt kan worden:
 =================================================
-- (Ivo)  Stress test??? Als het datamodel écht moet worden aangepast, kan dat wellicht niet goed via inc-upgrade.php.
+- (Ivo) Stress test??? Als het datamodel écht moet worden aangepast, kan dat wellicht niet goed via inc-upgrade.php.
 - (Ivo) Zie ik nu in het getekende model, dat variant toch niet zonder patient kan, omdat hij een screening moet hebben die een patient moet hebben???
 
 

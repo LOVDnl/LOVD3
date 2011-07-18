@@ -87,7 +87,7 @@ define('AJAX_DATA_ERROR', '9');
 $aRequired =
          array(
                 'PHP'   => '4.3.0',
-                'MySQL' => '4.1',
+                'MySQL' => '4.1.1',
               );
 
 $_SETT = array(

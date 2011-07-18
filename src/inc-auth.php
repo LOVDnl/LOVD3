@@ -44,20 +44,14 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
         // Load curated DBs.
         $_AUTH['curates']      = array();
         $_AUTH['collaborates'] = array();
-        $q = lovd_queryDB('SELECT geneid, allow_edit FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($_AUTH['id']));
-        while ($r = mysql_fetch_row($q)) {
-            if ($r[1]) {
-                $_AUTH['curates'][] = $r[0];
-            } else {
-                $_AUTH['collaborates'][] = $r[0];
-            }
-        }
         if ($_AUTH['level'] < LEVEL_MANAGER) {
-            // Collaborator or Curator, depending on 'allow_edit'.
-            if (count($_AUTH['curates'])) {
-                $_AUTH['level'] = LEVEL_CURATOR;
-            } else {
-                $_AUTH['level'] = LEVEL_COLLABORATOR;
+            $q = lovd_queryDB('SELECT geneid, allow_edit FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($_AUTH['id']));
+            while ($r = mysql_fetch_row($q)) {
+                if ($r[1]) {
+                    $_AUTH['curates'][] = $r[0];
+                } else {
+                    $_AUTH['collaborates'][] = $r[0];
+                }
             }
         }
     }

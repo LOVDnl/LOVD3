@@ -24,6 +24,15 @@
  * Simplified the check on the regular expression syntax of a custom column.
  * Fixed bug; On the gene viewEntry pages one of the headers was malformed.
  * Implemented option for curators to sort the list of curators for their genes.
+ * Implemented lovd_isAuthorized() for checking a user's authorization for dif-
+   ferent data types. Currently, only genes are implemented. The user's level,
+   if lower than LEVEL_MANAGER, will no longer be defined in inc-auth.php.
+ * Curators of any gene can now also check LOVD's update status. The link to
+   this page is now only active for Curators and up.
+ * Added navigation for Curators from the gene viewEntry page to forms to edit a
+   gene, add a transcript to a gene, and sort the list of curators. Those pages
+   are now also opened up to Curators.
+ * Minimum MySQL version needed to run LOVD 3.0 is now 4.1.1.
  * Fixed bug; Internet Explorer "forgot" which columns where hidden from view in
    viewLists when searching or sorting them.
 

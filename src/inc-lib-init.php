@@ -404,30 +404,60 @@ function lovd_includeJS ($sFile, $nPrefix = 3)
 
 
 
-/*
-DMD_SPECIFIC
-// FIXME; needs additional argument for whether or not the gene should be editable for the user.
-function lovd_isCurator ($sGene = '')
+function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
 {
-    // Returns true if current user is allowed to act as a curator for the given
-    // gene. Returns true by default for any user higher than LEVEL_CURATOR.
+    // Checks whether a user is allowed to view or edit a certain data type.
+    // $Data may be a (list of) IDs or a $zData.
+    // If $bSetUserLevel is true, the $_AUTH['level'] field will be edited
+    // according to the result of this function.
+    // Returns false, 0 or 1, depending on the authorization level of the user.
+    // False: not allowed to view hidden data, not allowed to edit.
+    // 0    : allowed to view hidden data, not allowed to edit (LEVEL_COLLABORATOR).
+    // 1    : allowed to view hidden data, allowed to edit (LEVEL_CURATOR).
+    // Returns 1 by default for any user with level LEVEL_MANAGER or higher.
     global $_AUTH;
 
-    if (!HAS_AUTH) {
+    if (!$_AUTH) {
+        return false;
+    } elseif ($_AUTH['level'] >= LEVEL_MANAGER) {
+        return 1;
+    }
+
+    // Check data type.
+    // FIXME; enable variants, screenings, patients, phenotypes.
+    if (!$Data || !in_array($sType, array('gene'))) {
         return false;
     }
 
-    if (!$sGene || !is_string($sGene)) {
-        return ($_AUTH['level'] >= LEVEL_MANAGER);
-    }
 
-    if ($_AUTH['level'] >= LEVEL_MANAGER || in_array($sGene, $_AUTH['curates'])) {
-        return true;
-    } else {
-        return false;
+
+    // FIXME; Use a switch() here if more data types have been defined?
+    if ($sType == 'gene') {
+        // Base authorization on (max of) $_AUTH['curates'] and/or $_AUTH['collaborates'].
+        if (is_array($Data)) {
+            // Gets authorization if one gene matches.
+            $AuthMax = false;
+            foreach ($Data as $sID) {
+                $Auth = lovd_isAuthorized('gene', $sID, $bSetUserLevel);
+                if ($Auth !== false) {
+                    $AuthMax = $Auth;
+                    if ($AuthMax == 1) {
+                        return 1; // Level, if needed, has been set by the resursive call.
+                    }
+                }
+            }
+            return $AuthMax; // Level, if needed, has been set by the resursive call.
+
+        } else {
+            // These arrays are built up in inc-auth.php for users with level < LEVEL_MANAGER.
+            $Auth = (in_array($Data, $_AUTH['curates'])? 1 : (in_array($Data, $_AUTH['collaborates'])? 0 : false));
+            if ($Auth !== false && $bSetUserLevel) {
+                $_AUTH['level'] = ($Auth? LEVEL_CURATOR : LEVEL_COLLABORATOR);
+            }
+            return $Auth;
+        }
     }
 }
-*/
 
 
 
