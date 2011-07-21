@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-07-18
+ * Modified    : 2011-07-21
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,14 +63,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-// FIXME; \w does not match all allowed characters in a gene symbol. This should change.
-// NOTE that if this is loosened, you may need to clean $_PATH_ELEMENTS[1] before printing it on the screen!!!
-// FIXME; tmp fix.
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) && !ACTION) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])) && !ACTION) {
     // URL: /genes/DMD
     // View specific entry.
 
-    $sID = $_PATH_ELEMENTS[1];
+    $sID = rawurldecode($_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View gene ' . $sID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -85,13 +82,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         // Authorized user is logged in. Provide tools.
-        $sNavigation = '<A href="genes/' . $sID . '?edit">Edit gene information</A>' .
-                       ' | <A href="transcripts/' . $sID . '?create">Add transcript(s) to gene</A>';
+        $sNavigation = '<A href="genes/' . rawurlencode($sID) . '?edit">Edit gene information</A>' .
+                       ' | <A href="transcripts/' . rawurlencode($sID) . '?create">Add transcript(s) to gene</A>';
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $sNavigation .= ' | <A href="genes/' . $sID . '?delete">Delete gene entry</A>' .
-                            ' | <A href="genes/' . $sID . '?authorize">Add/remove curators/collaborators</A>';
+            $sNavigation .= ' | <A href="genes/' . rawurlencode($sID) . '?delete">Delete gene entry</A>' .
+                            ' | <A href="genes/' . rawurlencode($sID) . '?authorize">Add/remove curators/collaborators</A>';
+        } else {
+            $sNavigation .= ' | <A href="genes/' . rawurlencode($sID) . '?sortCurators">Sort/hide curators/collaborators names</A>';
         }
-        $sNavigation .= ' | <A href="genes/' . $sID . '?sortCurators">Sort/hide curators/collaborators names</A>';
+        $sNavigation .= ' | <A href="columns/VariantOnTranscript/' . rawurlencode($sID) . '?order">Re-order all ' . $sID . ' variant columns';
     }
 
     if ($sNavigation) {
@@ -379,20 +378,16 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 // Add diseases.
                 $aSuccessDiseases = array();
-                if (isset($_POST['active_diseases'])) {
-                    // FIXME; een if in een if kun je samen trekken.
-                    // FIXME; probeer van deze "None" af te komen.
-                    // FIXME; zou er nog gecontroleerd moeten worden of 't een array is?
-                    if (!in_array('None', $_POST['active_diseases'])) {
-                        // FIXME; dit is $nDisease.
-                        foreach ($_POST['active_diseases'] as $sDisease) {
-                            // Add disease to gene.
-                            $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $sDisease));
+                if (!empty($_POST['active_diseases']) && is_array($_POST['active_diseases'])) {
+                    foreach ($_POST['active_diseases'] as $nDisease) {
+                        // Add disease to gene.
+                        if ($nDisease) {
+                            $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $nDisease));
                             if (!$q) {
                                 // Silent error.
-                                lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $sDisease . ' - could not be added to gene ' . $_POST['id']);
+                                lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nDisease . ' - could not be added to gene ' . $_POST['id']);
                             } else {
-                                $aSuccessDiseases[] = $sDisease;
+                                $aSuccessDiseases[] = $nDisease;
                             }
                         }
                     }
@@ -484,11 +479,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])) && ACTION == 'edit') {
     // URL: /genes/DMD?edit
     // Edit an entry.
 
-    $sID = $_PATH_ELEMENTS[1];
+    $sID = rawurldecode($_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Edit gene information entry');
     define('LOG_EVENT', 'GeneEdit');
 
@@ -517,6 +512,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
         // Get NC from LOVD
         $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
 
+        // Temporary fix for mem leak; empty work array
+        $_SESSION['work'] = array();
         $_POST['workID'] = lovd_generateRandomID();
         $_SESSION['work'][$_POST['workID']] =
                  array(
@@ -543,6 +540,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
                             'edited_by', 'edited_date', 
                             );
 
+            if (empty($zData['refseq_UD'])) {
+                $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+                $sRefseqUD = $_MutalyzerWS->moduleCall('sliceChromosomeByGene', array('geneSymbol' => $sID, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'));
+                if (is_string($sRefseqUD) && substr($sRefseqUD, 0, 3) == 'UD_') {
+                    $aFields[] = 'refseq_UD';
+                    $_POST['refseq_UD'] = $sRefseqUD;
+                }
+            }
+
             // Prepare values.
             if (empty($_POST['created_date'])) {
                 $_POST['created_date'] = date('Y-m-d H:i:s');
@@ -558,13 +564,10 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
             // Change linked diseases?
             // Diseases the gene is currently linked to.
-            // FIXME; we moeten afspraken op papier zetten over de naamgeving van velden, ik zou hier namelijk geen _ achter plaatsen.
-            //   Een idee zou namelijk zijn om loadEntry automatisch velden te laten exploden afhankelijk van hun naam. Is dat wat?
-            $aDiseases = explode(';', $zData['active_diseases_']);
 
             // Remove diseases.
             $aToRemove = array();
-            foreach ($aDiseases as $nDisease) {
+            foreach ($zData['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $_POST['active_diseases'])) {
                     // User has requested removal...
                     $aToRemove[] = $nDisease;
@@ -604,7 +607,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $sID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . rawurlencode($sID));
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
@@ -620,7 +623,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             $_POST[$key] = $val;
         }
         // Load connected diseases.
-        $_POST['active_diseases'] = explode(';', $_POST['active_diseases_']);
         $_POST['created_date'] = substr($_POST['created_date'], 0, 10);
     }
 
@@ -640,7 +642,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     lovd_includeJS('inc-js-insert-custom-links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . rawurlencode($sID) . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -662,11 +664,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])) && ACTION == 'delete') {
     // URL: /genes/DMD?delete
     // Drop specific entry.
 
-    $sID = $_PATH_ELEMENTS[1];
+    $sID = rawurldecode($_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete gene information entry ' . $sID);
     define('LOG_EVENT', 'GeneDelete');
 
@@ -722,7 +724,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . rawurlencode($sID) . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -745,11 +747,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) && in_array(ACTION, array('authorize', 'sortCurators'))) {
+if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])) && in_array(ACTION, array('authorize', 'sortCurators'))) {
     // URL: /genes/DMD?authorize or /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
-    $sID = $_PATH_ELEMENTS[1];
+    $sID = rawurldecode($_PATH_ELEMENTS[1]);
 
     // Load appropiate user level for this gene.
     lovd_isAuthorized('gene', $sID);
@@ -866,7 +868,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             lovd_writeLog('Event', LOG_EVENT, $sMessage);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $sID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . rawurlencode($sID));
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
@@ -976,47 +978,20 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
                         array('POST', '', '', '', '0%', '0', '100%'),
                         array('', '', 'print', 'Enter your password for authorization'),
                         array('', '', 'password', 'password', 20),
-                        array('', '', 'print', '<INPUT type="submit" value="Save curator list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $sID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                        array('', '', 'print', '<INPUT type="submit" value="Save curator list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . rawurlencode($sID) . '\'; return false;" style="border : 1px solid #FF4422;">'),
                       );
         lovd_viewForm($aForm);
     } else {
-        print('        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $sID . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n");
+        print('        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . rawurlencode($sID) . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n");
     }
     print("\n" .
           '      </FORM>' . "\n\n");
 
-      // FIXME; Can't we merge these files into one? We only use them together anyway...
       // FIXME; disable JS functions authorize and unauthorize if not authorizing?
 ?>
       <!-- Tim Taylor's ToolMan DHTML Library, see http://tool-man.org/examples/ -->
-      <SCRIPT type="text/javascript" src="lib/tool-man/core.js"></SCRIPT>
-      <SCRIPT type="text/javascript" src="lib/tool-man/events.js"></SCRIPT>
-      <SCRIPT type="text/javascript" src="lib/tool-man/css.js"></SCRIPT>
-      <SCRIPT type="text/javascript" src="lib/tool-man/coordinates.js"></SCRIPT>
-      <SCRIPT type="text/javascript" src="lib/tool-man/drag.js"></SCRIPT>
-      <SCRIPT type="text/javascript" src="lib/tool-man/dragsort.js"></SCRIPT>
-      <SCRIPT type="text/javascript">
-        <!--
-        var dragsort = ToolMan.dragsort()
-        dragsort.makeListSortable(document.getElementById("curator_list"), setHandle)
-
-        function setHandle(item) {
-            item.toolManDragGroup.setHandle(findHandle(item))
-        }
-
-        function findHandle(item) {
-            var children = item.getElementsByTagName("img")
-            for (var i = 0; i < children.length; i++) {
-                var child = children[i]
-
-                if (child.getAttribute("class") == null) continue
-
-                if (child.getAttribute("class").indexOf("handle") >= 0)
-                    return child
-            }
-            return item
-        }
-
+      <SCRIPT type="text/javascript" src="lib/tool-man/drag_vertical.js"></SCRIPT>
+      <SCRIPT type="text/javascript">dragsort.makeListSortable(document.getElementById('curator_list'), setHandle)
 
         function lovd_authorizeUser (sViewListID, nID, sName, nLevel)
         {
@@ -1032,7 +1007,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
             oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + nID + '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' + sName + '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + nID + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' + nLevel + ' >= <?php echo LEVEL_MANAGER; ?>) { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + nID + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' + nID + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
             objUsers.appendChild(oLI);
             // Make new entry sortable also.
-            dragsort.makeListSortable(document.getElementById("curator_list"), setHandle);
+            dragsort.makeListSortable(document.getElementById('curator_list'), setHandle);
 
             // Then, remove this row from the table.
             objElement.style.cursor = '';
@@ -1067,10 +1042,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[\w-]+$/', $_PATH_ELEMENTS[1]) &
 
             return true;
         }
-        //-->
       </SCRIPT>
 <?php
-
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }

@@ -5,7 +5,7 @@
  *
  * Created     : 2010-03-04
  * Modified    : 2011-07-15
- * For LOVD    : 3.0-alpha-02
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -121,6 +121,7 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
             $sNavigation .= ' | <A style="color : #999999;">Remove column</A>';
         }
         $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?edit">Edit custom data column settings</A>';
+        $sNavigation .= ' | <A href="columns/' . $zData['category'] . '?order">Re-order all ' . $zData['category'] . ' columns';
 /*
 
         // Drop global column.
@@ -163,93 +164,136 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
 
 
 
-/*******************************************************************************
-// take from new LOVD 2.0 curator sort???
-if ($_GET['action'] == 'order') {
-    // 2009-07-10; 2.0-20; Change the default order of the Variant columns for new genes.
-    // Change column order.
+if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
+    // URL: /columns/Individual?order
+    // Change in what order the columns will be shown in a viewList/viewEntry.
 
-// Require manager clearance.
-lovd_requireAUTH(LEVEL_MANAGER);
+    $aCol = $_PATH_ELEMENTS;
+    unset($aCol[0]); // 'columns';
+    $sCategory = $aCol[1]; // FIXME; check if it is a valid category
 
-    $qData = mysql_query('SELECT colid, CONCAT(colid, " (", head_column, ")") AS name FROM ' . TABLE_COLS . ' WHERE LEFT(colid, 8) = "Variant/" AND (hgvs = 1 OR standard = 1) ORDER BY col_order');
-    $nData = mysql_num_rows($qData);
+    switch ($sCategory) {
+        case 'Individual':
+            $bShared = false;
+            break;
+        case 'Screening':
+            $bShared = false;
+            break;
+        case 'VariantOnGenome':
+            $bShared = false;
+            break;
+        case 'Phenotype':
+            $bShared = true;
+            $sObjectType = 'disease';
+            break;
+        case 'VariantOnTranscript':
+            $bShared = true;
+            $sObjectType = 'gene';
+            break;
+        case 'default':
+            exit;
+            break;
+    }
 
-    if (!$nData) {
-        // Can this actually happen?
-        require ROOT_PATH . 'inc-top-clean.php';
-        lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
-        lovd_showInfoTable('There are no custom columns!', 'information');
-        require ROOT_PATH . 'inc-bot-clean.php';
+    if (($bShared && empty($_PATH_ELEMENTS[2])) || (!$bShared && empty($_PATH_ELEMENTS[2]))) {
+        $sObject = '';
+    } elseif ($bShared && !empty($_PATH_ELEMENTS[2])) {
+        $sObject = rawurldecode(($sObjectType == 'disease'? str_pad($_PATH_ELEMENTS[2], 5, '0', STR_PAD_LEFT) : $_PATH_ELEMENTS[2]));
+        if (!mysql_num_rows(lovd_queryDB('SELECT id FROM ' . constant('TABLE_' . strtoupper($sObjectType) . 'S') . ' WHERE id = ?', array($sObject)))) {
+            exit;
+        }
+    } else {
         exit;
     }
 
-    if (isset($_GET['sent']) && count($_POST['columns']) == $nData) {
-        foreach ($_POST['columns'] as $nOrderID => $sColID) {
-            // Query text.
-            $sQ = 'UPDATE ' . TABLE_COLS . ' SET col_order = ' . $nOrderID . ' WHERE colid = "' . $sColID . '"';
+    define('PAGE_TITLE', 'Re-order ' . $sCategory . ' columns ' . (!empty($sObject)? ' for ' . $sObjectType . ' ' . $sObject : ''));
+    define('LOG_EVENT', 'ColumnOrder');
 
-            $q = mysql_query($sQ);
-            if (!$q) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
-                require ROOT_PATH . 'inc-top-clean.php';
-                lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
-                lovd_dbFout('ColOrderDefault' . str_pad($nOrderID + 1, 2, '0', STR_PAD_LEFT), $sQ, $sError);
-                require 'inc-bot-clean.php';
-                exit;
-            }
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_CURATOR);
+
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (POST) {
+        lovd_errorClean();
+
+        lovd_queryDB('START TRANSACTION', array(), true);
+
+        foreach ($_POST['columns'] as $nOrder => $sID) {
+            $nOrder ++; // Since 0 is the first key in the array.
+            $sSQL = (empty($sObject)? 'UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ? AND id LIKE ?' : 'UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sObjectType . 'id = ? AND colid = ? AND colid LIKE ?');
+            $aSQL = (empty($sObject)? array($nOrder, $sID, $sCategory . '/%') : array($nOrder, $sObject, $sID, $sCategory . '/%'));
+            lovd_queryDB($sSQL, $aSQL, true);
+            //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
         }
 
-        // Thank the user...
-        require ROOT_PATH . 'inc-top-clean.php';
-        lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
-        print('      Default column order has successfully been set!<BR><BR>' . "\n\n");
-        print('      <SCRIPT type="text/javascript">' . "\n" .
-              '        <!--' . "\n" .
-              '        setTimeout("self.close()", 1000);' . "\n" .
-              '        // --> ' . "\n" .
-              '      </SCRIPT>' . "\n");
+        // If we get here, it all succeeded.
+        lovd_queryDB('COMMIT', array(), true);
 
-        require ROOT_PATH . 'inc-bot-clean.php';
+        // Write to log...
+        lovd_writeLog('Event', LOG_EVENT, 'Updated column order');
+
+        // Thank the user...
+        header('Refresh: 3; url=' . lovd_getInstallURL() . 'columns');
+
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('Successfully updated the column order!', 'success');
+
+        require ROOT_PATH . 'inc-bot.php';
         exit;
     }
 
+    require ROOT_PATH . 'inc-top.php';
 
+    lovd_printHeader(PAGE_TITLE);
 
-    require ROOT_PATH . 'inc-top-clean.php';
-    lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
-    lovd_showInfoTable('These are all default Variant columns, which will be added to new genes. You can control this by setting or unsetting the "Standard for new genes" checkbox on the "Edit column default settings" form.', 'information');
+    // First time on form. Retrieve current column order.
 
-    $nData = ($nData > 15? 15 : ($nData < 6? 6 : $nData));
-
-    print('      <SCRIPT type="text/javascript" src="inc-js-columnsort.js"></SCRIPT>' . "\n\n");
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;sent=true" method="post" onsubmit="javascript:lovd_orderSubmit()">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="0">' . "\n" .
-          '          <TR>' . "\n" .
-          '            <TD valign="top" rowspan="2">' . "\n" .
-          '              <SELECT name="columns[]" multiple size="' . $nData . '" id="select_order">' . "\n");
-
-    while ($zData = mysql_fetch_array($qData)) {
-        print('            <OPTION value="' . $zData['colid'] . '">' . $zData['name'] . '</OPTION>' . "\n");
+    // Special ORDER BY statement makes sure show_order value of 0 is sent to the bottom of the list.
+    // FIXME; also necessary for column sorting?
+    $aColumns = array();
+    $sSQL = (empty($sObject)? 'SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC' : 'SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $sObjectType . 'id = ? ORDER BY col_order ASC');
+    $aSQL = (empty($sObject)? array($sCategory . '/%') : array($sCategory . '/%', $sObject));
+    $qColumns = lovd_queryDB($sSQL, $aSQL);
+    while ($z = mysql_fetch_assoc($qColumns)) {
+        $aColumns[] = $z['id'];
     }
 
-    print('              </SELECT></TD>' . "\n" .
-          '            <TD valign="top"><A href="#" onclick="lovd_orderHome(); return false;"><IMG src="gfx/order_button_home.png" alt="Top" width="24" height="24" id="butHome" onmouseover="lovd_imageSwitch(\'butHome\', \'H\');" onmouseout="lovd_imageSwitch(\'butHome\', \'B\');"></A><BR><A href="#" onclick="lovd_orderUp(); return false;"><IMG src="gfx/order_button_up.png" alt="Up" width="24" height="24" id="butUp" onmouseover="lovd_imageSwitch(\'butUp\', \'H\');" onmouseout="lovd_imageSwitch(\'butUp\', \'B\');"></A></TD></TR>' . "\n" .
-          '          <TR>' . "\n" .
-          '            <TD valign="bottom"><A href="#" onclick="lovd_orderDown(); return false;"><IMG src="gfx/order_button_down.png" alt="Down" width="24" height="24" id="butDown" onmouseover="lovd_imageSwitch(\'butDown\', \'H\');" onmouseout="lovd_imageSwitch(\'butDown\', \'B\');"></A><BR><A href="#" onclick="lovd_orderEnd(); return false;"><IMG src="gfx/order_button_end.png" alt="Bottom" width="24" height="24" id="butEnd" onmouseover="lovd_imageSwitch(\'butEnd\', \'H\');" onmouseout="lovd_imageSwitch(\'butEnd\', \'B\');"></A></TD></TR></TABLE>' . "\n" .
-          '        <INPUT TYPE="submit" value="Change column order"><BR>' . "\n" .
-          '      </FORM>' . "\n");
+    lovd_showInfoTable('Below is a sorting list of all ' . ($sObject != ''? 'active columns' : 'available columns (active & inactive)') . '. By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect viewLists/viewEntries in the same way.', 'information');
 
-    require ROOT_PATH . 'inc-bot-clean.php';
+    lovd_errorPrint();
+
+    // Form & table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+          '        <UL id="column_list" class="sortable" style="width : 300px;">' . "\n" .
+          '          <TABLE width="100%" class="head"><TR><TH width="10">&nbsp;</TH><TH>Column ID ("' . $sCategory . '")</TH></TR></TABLE>' . "\n");
+
+    // Now loop the items in the order given.
+    foreach ($aColumns as $sID) {
+        print('          <LI id="li_' . $sID . '"><INPUT type="hidden" name="columns[]" value="' . $sID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . str_replace($sCategory . '/', '', $sID) . '</TD></TR></TABLE></LI>' . "\n");
+    }
+
+    print('        </UL>' . "\n" .
+          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" .
+          '      </FORM>' . "\n\n");
+
+?>
+      <!-- Tim Taylor's ToolMan DHTML Library, see http://tool-man.org/examples/ -->
+      <SCRIPT type="text/javascript" src="lib/tool-man/drag_vertical.js"></SCRIPT>
+      <SCRIPT type="text/javascript">dragsort.makeListSortable(document.getElementById('column_list'), setHandle)</SCRIPT>
+<?php
+
+    require ROOT_PATH . 'inc-bot.php';
     exit;
 }
-*///////////////////////////////////////////////////////////////////////////////
 
 
 
 
 
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
+    // URL: /columns?data_type_wizard
     // Show form type forms and send info back.
 
     define('PAGE_TITLE', 'Data type wizard');
@@ -1984,17 +2028,22 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         $bShared = false;
     }
 
-    // FIXME; not true, see code at adding columns.
-    lovd_requireAUTH(LEVEL_MANAGER);
-    // FIXME; do this just like when adding columns (and put above the requireAuth()).
-    define('PAGE_TITLE', 'LOVD Setup - Manage selected columns');
+    define('PAGE_TITLE', 'Drop/remove custom data column ' . $sColumnID);
     define('LOG_EVENT', 'ColRemove');
 
-//    if ($bShared) {
-        $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.*, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE ac.colid = ?', array($sColumnID)));
-//    } else {
-//        $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE id = ?', array($sColumnID)));
-//    }
+    // Require form & column functions.
+    require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'inc-lib-columns.php';
+
+    $aTableInfo = lovd_getTableInfoByCategory($sCategory);
+    if ($aTableInfo['shared']) {
+        lovd_requireAUTH(LEVEL_CURATOR);
+    } else {
+        lovd_requireAUTH(LEVEL_MANAGER);
+    }
+
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.*, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE ac.colid = ?', array($sColumnID)));
+
     if (!$zData) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -2014,29 +2063,23 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
         // FIXME: this is LOVD 2.0 code.
-        lovd_writeLog('MySQL:Error', 'HackAttempt', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') tried to remove ' . $zData['id'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
+        lovd_writeLog('Error', 'HackAttempt', 'Tried to remove ' . $zData['id'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
         lovd_showInfoTable('Hack Attempt!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
 
-    // Require form functions.
-    require ROOT_PATH . 'inc-lib-form.php';
-
     if (POST) {
         lovd_errorClean();
 
-        // FIXME; if there is only one mandatory field, do this more efficiently. See how it's done in the add column code!!!!!
         // Mandatory fields.
-        $aCheck =
-                 array(
-                        'password' => 'Enter your password for authorization',
-                      );
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        }
 
-        foreach ($aCheck as $key => $val) {
-            if (empty($_POST[$key])) {
-                lovd_errorAdd('password', 'Please fill in the \'' . $val . '\' field.');
-            }
+        // User had to enter his/her password for authorization.
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
         // User had to enter his/her password for authorization.
@@ -2057,10 +2100,9 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
                 $q = lovd_queryDB($sQ, array(), true);
 
                 // Write to log...
-                // FIXME; this is LOVD 2.0 code... See how it's done at add column!!!
-                lovd_writeLog('Event', LOG_EVENT, $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
+                lovd_writeLog('Event', LOG_EVENT, 'Removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
 
-            } elseif ($bShared) {
+            } else {
                 // Query text; remove column registration first.
                 $sObject = ($sCategory == 'Phenotype'? 'diseaseid' : 'geneid');
                 lovd_queryDB('START TRANSACTION');
@@ -2072,15 +2114,13 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
                 if (!$q) {
                     $sError = mysql_error(); // Save the mysql_error before it disappears...
                     lovd_queryDB('ROLLBACK'); // ... because we need to end the transaction.
-                    lovd_queryError(LOG_EVENT, $sSQL, $sError);
+                    lovd_queryError(LOG_EVENT, $sQ, $sError);
                 }
                 lovd_queryDB('COMMIT');
 
                 // Check if the column is inactive in all diseases/genes. If so, DROP column from phenotypes/variants_on_transcripts table.
-                // FIXME; a select COUNT(*) or select id would suffice here.
-                // FIXME; use proper variable name.
-                $check = mysql_fetch_row(lovd_queryDB('SELECT * FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
-                if (empty($check)) {
+                $nTargets = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
+                if (empty($nTargets)) {
                     // Deactivate the column.
                     $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
                     $q = lovd_queryDB($sQ, array($zData['id']), true);
@@ -2088,11 +2128,9 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
                     // Alter data table.
                     $sQ = 'ALTER TABLE ' . $sTable . ' DROP COLUMN `' . $zData['id'] . '`';
                     $q = lovd_queryDB($sQ);
-                    // FIXME; Use standardized LOVD 3.0 log messages, not LOVD 2.0 messages.
-                    $sMessage = $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')';
+                    $sMessage = 'Removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')';
                 } else {
-                    // FIXME; Use standardized LOVD 3.0 log messages, not LOVD 2.0 messages.
-                    $sMessage = $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $_POST['target']);
+                    $sMessage = 'Removed column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $_POST['target']);
                 }
 
                 // Write to log...

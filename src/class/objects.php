@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-07-12
+ * Modified    : 2011-07-20
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -330,6 +330,34 @@ class LOVD_Object {
             }
             exit;
         }
+
+        foreach ($zData as $key => $val) {
+            if (substr($key, 0, 2) == '__') {
+                // Explode nested GROUP_CONCAT array
+                $keyOld = $key;
+                $key = substr($key, 2);
+                $aValues = explode(';;', $val);
+                $zData[$key] = array();
+                foreach ($aValues as $sConcatValues) {
+                    $zData[$key][] = explode(';', $sConcatValues);
+                }
+                unset($zData[$keyOld]);
+            } elseif (substr($key, 0, 1) == '_') {
+                // Explode GROUP_CONCAT array
+                $keyOld = $key;
+                $key = substr($key, 1);
+                $zData[$key] = explode(';', $val);
+                unset($zData[$keyOld]);
+            } elseif (substr($key, 0, 1) == '_' && empty($val)) {
+                // If no data is retrieved from the database, make an empty array to avoid notices
+                $keyOld = $key;
+                $nUnderscores = (substr($key, 0, 2) == '__'? 2 : 1);
+                $key = substr($key, $nUnderscores);
+                $zData[$key] = array();
+                unset($zData[$keyOld]);
+            }
+        }
+
         return $zData;
     }
 
@@ -348,7 +376,7 @@ class LOVD_Object {
         }
 
         // Quote special characters, disallowing HTML and other tricks.
-        $zData = array_map('htmlspecialchars', $zData);
+        $zData = lovd_php_htmlspecialchars($zData);
         $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
         foreach($aUserColumns as $sUserColumn) {
             // FIXME; ik krijg hoofdpijn van deze lange regel... wordt dit wel in een viewList toegepast? Links in een viewList verstoren nu de boel. De code kan simpeler. Ook moet er wat commentaar bij.
@@ -497,6 +525,33 @@ class LOVD_Object {
         $zData = mysql_fetch_assoc(lovd_queryDB($sSQL, array($nID)));
         if (!$zData) {
             lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewEntry()'), $sSQL, mysql_error());
+        }
+
+        foreach ($zData as $key => $val) {
+            if (substr($key, 0, 2) == '__' && !empty($val)) {
+                // Explode nested GROUP_CONCAT array
+                $keyOld = $key;
+                $key = substr($key, 2);
+                $aValues = explode(';;', $val);
+                $zData[$key] = array();
+                foreach ($aValues as $sConcatValues) {
+                    $zData[$key][] = explode(';', $sConcatValues);
+                }
+                unset($zData[$keyOld]);
+            } elseif (substr($key, 0, 1) == '_' && !empty($val)) {
+                // Explode GROUP_CONCAT array
+                $keyOld = $key;
+                $key = substr($key, 1);
+                $zData[$key] = explode(';', $val);
+                unset($zData[$keyOld]);
+            } elseif (substr($key, 0, 1) == '_' && empty($val)) {
+                // If no data is retrieved from the database, make an empty array to avoid notices
+                $keyOld = $key;
+                $nUnderscores = (substr($key, 0, 2) == '__'? 2 : 1);
+                $key = substr($key, $nUnderscores);
+                $zData[$key] = array();
+                unset($zData[$keyOld]);
+            }
         }
 
         $zData = $this->prepareData($zData, 'entry');

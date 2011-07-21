@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-07-21
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -75,10 +75,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
-    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="diseases/' . $nID . '?edit">Edit disease information</A>';
-        $sNavigation .= ' | <A href="diseases/' . $nID . '?delete">Delete disease entry</A>';
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
+        $sNavigation .= '<A href="columns/Phenotype/' . $nID . '?order">Re-order all ' . $zData['symbol'] . ' phenotype columns';
+        if ($_AUTH['level'] >= LEVEL_MANAGER) {
+            // Authorized user (admin or manager) is logged in. Provide tools.
+            $sNavigation .= ' | <A href="diseases/' . $nID . '?edit">Edit disease information</A>';
+            $sNavigation .= ' | <A href="diseases/' . $nID . '?delete">Delete disease entry</A>';
+        }
     }
 
     if ($sNavigation) {
@@ -107,7 +110,7 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // Try to find a disease by its abbreviation and forward.
     // When we have multiple hits, refer to listView.
 
-    $sID = $_PATH_ELEMENTS[1];
+    $sID = rawurldecode($_PATH_ELEMENTS[1]);
     $q = lovd_queryDB('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($sID), true);
     $n = mysql_num_rows($q);
     @list($nID) = mysql_fetch_row($q);

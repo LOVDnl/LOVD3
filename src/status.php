@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-03
- * Modified    : 2011-03-11
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-07-21
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -36,15 +36,15 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-define('PAGE_TITLE', 'LOVD - Current system status');
+define('PAGE_TITLE', 'Current system status');
 require ROOT_PATH . 'inc-top.php';
 lovd_printHeader(PAGE_TITLE);
 
 print('      ' . date('Y/m/d H:i:s T \- l, F jS Y') . '<BR><BR>' . "\n\n");
 
-print('<B>THESE VALUES ARE NOT YET ACTUAL DATA!</B><BR><BR>' . "\n\n");
+print('<B>DISABLED FOR REVISION!</B>');
 
-print('<TABLE border="0" cellpadding="0" cellspacing="1" width="950" class="data" id="viewlist_table">' . "\n" .
+/*print('<TABLE border="0" cellpadding="0" cellspacing="1" width="950" class="data" id="viewlist_table">' . "\n" .
       '  <THEAD>' . "\n" .
       '    <TR>' . "\n" .
       '      <TH valign="top" class="ordered">' . "\n" .
@@ -62,37 +62,41 @@ print('<TABLE border="0" cellpadding="0" cellspacing="1" width="950" class="data
       '      <TH align="right" valign="top">' . "\n" .
       '        <IMG src="gfx/trans.png" alt="" width="70" height="1" id="viewlist_table_colwidth_id"><BR>' . "\n" .
       '        <DIV>' . "\n" .
-      '          Total Variants' . "\n" .
+      '          Collaborators' . "\n" .
       '        </DIV>' . "\n" .
       '      </TH>' . "\n" .
       '      <TH align="right" valign="top">' . "\n" .
       '        <IMG src="gfx/trans.png" alt="" width="70" height="1" id="viewlist_table_colwidth_id"><BR>' . "\n" .
       '        <DIV>' . "\n" .
-      '          Unique Variants' . "\n" .
+      '          Curators' . "\n" .
+      '        </DIV>' . "\n" .
+      '      </TH>' . "\n" .
+      '      <TH align="right" valign="top">' . "\n" .
+      '        <IMG src="gfx/trans.png" alt="" width="70" height="1" id="viewlist_table_colwidth_id"><BR>' . "\n" .
+      '        <DIV>' . "\n" .
+      '          Date last updated' . "\n" .
       '        </DIV>' . "\n" .
       '      </TH>' . "\n" .
       '    </TR>' . "\n" .
       '  </THEAD>' . "\n" .
       '  <TR>' . "\n");
 
-//$_DATA = new LOVD_Status();
-//$_DATA->viewList();
-$nVariantsTotal = 0;
-$nVariantsUnique = 0;
-$qGenes = 'SELECT g.id, g.name FROM ' . TABLE_GENES . ' AS g ORDER BY g.id ASC';
+$nTotalCurators = 0;
+$nTotalCollaborators = 0;
+$qGenes = 'SELECT g.id, g.name, g.updated_date, COUNT(u2g.userid) AS collaborators, SUM(u2g.allow_edit) AS curators FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) GROUP BY g.id ORDER BY g.id ASC';
 $rGenes = lovd_queryDB($qGenes);
 $nGenes = mysql_num_rows($rGenes);
 while($aGene = mysql_fetch_assoc($rGenes)) {
-    $aGene[2] = 12;
-    $aGene[3] = 6;
-    print('  <TR class="data" id="' . $aGene['id'] . '" valign="top" style="cursor : pointer;" onclick="window.location.href = \'genes/' . $aGene['id'] . '\';">' . "\n" .
-          '    <TD class="ordered"><A href="genes/' . $aGene['id'] . '" class="hide"><B>' . $aGene['id'] . '</B></A></TD>' . "\n" .
+    $nCollaborators = ($aGene['collaborators'] - $aGene['curators']);
+    print('  <TR class="data" id="' . $aGene['id'] . '" valign="top" style="cursor : pointer;" onclick="window.location.href = \'genes/' . rawurlencode($aGene['id']) . '\';">' . "\n" .
+          '    <TD class="ordered"><A href="genes/' . rawurlencode($aGene['id']) . '" class="hide"><B>' . $aGene['id'] . '</B></A></TD>' . "\n" .
           '    <TD>' . $aGene['name'] . '</TD>' . "\n" .
-          '    <TD align="right">' . $aGene[2] . '</TD>' . "\n" .
-          '    <TD align="right">' . $aGene[3] . '</TD>' . "\n" .
+          '    <TD align="right">' . ($nCollaborators? $nCollaborators : NULL) . '</TD>' . "\n" .
+          '    <TD align="right">' . ($aGene['curators']? $aGene['curators'] : NULL) . '</TD>' . "\n" .
+          '    <TD align="right">' . ($aGene['updated_date']? $aGene['updated_date'] : 'N/A') . '</TD>' . "\n" .
           '  </TR>' . "\n");
-    $nVariantsTotal += $aGene[2];
-    $nVariantsUnique += $aGene[3];
+    $nTotalCollaborators += ($aGene['collaborators'] - $aGene['curators']);
+    $nTotalCurators += $aGene['curators'];
 }
 
 print('  <THEAD>' . "\n" .
@@ -112,19 +116,25 @@ print('  <THEAD>' . "\n" .
       '      <TH align="right" valign="top">' . "\n" .
       '        <IMG src="gfx/trans.png" alt="" width="70" height="1" id="viewlist_table_colwidth_id"><BR>' . "\n" .
       '        <DIV>' . "\n" .
-      '          ' . $nVariantsTotal . "\n" .
+      '          ' . $nTotalCollaborators . "\n" .
       '        </DIV>' . "\n" .
       '      </TH>' . "\n" .
       '      <TH align="right" valign="top">' . "\n" .
       '        <IMG src="gfx/trans.png" alt="" width="70" height="1" id="viewlist_table_colwidth_id"><BR>' . "\n" .
       '        <DIV>' . "\n" .
-      '          ' . $nVariantsUnique . "\n" .
+      '          ' . $nTotalCurators . "\n" .
+      '        </DIV>' . "\n" .
+      '      </TH>' . "\n" .
+      '      <TH align="right" valign="top">' . "\n" .
+      '        <IMG src="gfx/trans.png" alt="" width="70" height="1" id="viewlist_table_colwidth_id"><BR>' . "\n" .
+      '        <DIV>' . "\n" .
+      '          ' . "\n" .
       '        </DIV>' . "\n" .
       '      </TH>' . "\n" .
       '    </TR>' . "\n" .
       '  </THEAD>' . "\n" .
       '</TABLE>' . "\n");
-          
+*/
 
 
 require ROOT_PATH . 'inc-bot.php';
