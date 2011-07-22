@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-12
- * Modified    : 2011-02-22
- * For LOVD    : 3.0-pre-17
+ * Modified    : 2011-07-20
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -97,10 +97,8 @@ if (ACTION == 'edit') {
         }
 
     } else {
-        // Default values.
-        foreach ($zData as $key => $val) {
-            $_POST[$key] = $val;
-        }
+        // Load current values.
+        $_POST = array_merge($_POST, $zData);
     }
 
 

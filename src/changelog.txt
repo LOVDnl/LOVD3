@@ -33,6 +33,13 @@
    gene, add a transcript to a gene, and sort the list of curators. Those pages
    are now also opened up to Curators.
  * Minimum MySQL version needed to run LOVD 3.0 is now 4.1.1.
+ * Added lovd_php_htmlspecialchars() function that also works recursively.
+ * Added array_merge() optimization where possible.
+ * Fixed bug; Values of custom columns configured as simple drop down lists were
+   lost during edit of the data entry.
+ * Fixed bug; On the genomic variant data entry form, "Owner of individual"
+   should be "Owner of variant".
+   (thanks to Raymond Dalgleish, University of Leicester, UK, for reporting)
  * Fixed bug; Internet Explorer "forgot" which columns where hidden from view in
    viewLists when searching or sorting them.
 

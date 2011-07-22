@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-07-21
+ * Modified    : 2011-07-22
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -76,6 +76,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
+        // FIXME; check if curator actually has rights on this disease (lovd_isAuthorized()).
         $sNavigation .= '<A href="columns/Phenotype/' . $nID . '?order">Re-order all ' . $zData['symbol'] . ' phenotype columns';
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
             // Authorized user (admin or manager) is logged in. Provide tools.
@@ -355,10 +356,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         }
 
     } else {
-        // Default values.
-        foreach ($zData as $key => $val) {
-            $_POST[$key] = $val;
-        }
+        // Load current values.
+        $_POST = array_merge($_POST, $zData);
         // Load connected genes.
         $_POST['active_genes'] = explode(';', $_POST['active_genes_']);
     }

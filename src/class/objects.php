@@ -331,12 +331,18 @@ class LOVD_Object {
             exit;
         }
 
+        // FIXME; this code has been added twice to this file, but I need it at viewList() also.
+        //   This needs to be put in a member function, such that the code is not repeated three times.
+        //   (member function == function within this class)
         foreach ($zData as $key => $val) {
             if (substr($key, 0, 2) == '__') {
                 // Explode nested GROUP_CONCAT array
+                // FIXME; als je de unset() eerst doet, heb je $keyOld niet nodig.
                 $keyOld = $key;
                 $key = substr($key, 2);
                 $aValues = explode(';;', $val);
+                // FIXME; ik stel deze voor:
+                // $aValues = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
                 $zData[$key] = array();
                 foreach ($aValues as $sConcatValues) {
                     $zData[$key][] = explode(';', $sConcatValues);
@@ -344,13 +350,18 @@ class LOVD_Object {
                 unset($zData[$keyOld]);
             } elseif (substr($key, 0, 1) == '_') {
                 // Explode GROUP_CONCAT array
+                // FIXME; idem, probeer onder $keyOld uit te komen.
                 $keyOld = $key;
                 $key = substr($key, 1);
                 $zData[$key] = explode(';', $val);
                 unset($zData[$keyOld]);
+                // FIXME; de elseif hieronder kan nooit TRUE zijn.
             } elseif (substr($key, 0, 1) == '_' && empty($val)) {
+                // FIXME; dit zou een losse if binnen de vorige elseif moeten zijn denk ik, niet weer een elseif met deels dezelfde controle.
+                //   Zorg er voor dat de check voor een lege $val en de fix daarvoor, maar 1x in de code voorkomt.
                 // If no data is retrieved from the database, make an empty array to avoid notices
                 $keyOld = $key;
+                // FIXME; deze if kan nooit true zijn (je gebruikt elseif's hierboven).
                 $nUnderscores = (substr($key, 0, 2) == '__'? 2 : 1);
                 $key = substr($key, $nUnderscores);
                 $zData[$key] = array();

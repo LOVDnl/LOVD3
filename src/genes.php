@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-07-21
+ * Modified    : 2011-07-22
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,15 +82,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         // Authorized user is logged in. Provide tools.
-        $sNavigation = '<A href="genes/' . rawurlencode($sID) . '?edit">Edit gene information</A>' .
-                       ' | <A href="transcripts/' . rawurlencode($sID) . '?create">Add transcript(s) to gene</A>';
+        $sNavigation = '<A href="genes/' . $_PATH_ELEMENTS[1] . '?edit">Edit gene information</A>' .
+                       ' | <A href="transcripts/' . $_PATH_ELEMENTS[1] . '?create">Add transcript(s) to gene</A>';
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $sNavigation .= ' | <A href="genes/' . rawurlencode($sID) . '?delete">Delete gene entry</A>' .
-                            ' | <A href="genes/' . rawurlencode($sID) . '?authorize">Add/remove curators/collaborators</A>';
+            $sNavigation .= ' | <A href="genes/' . $_PATH_ELEMENTS[1] . '?delete">Delete gene entry</A>' .
+                            ' | <A href="genes/' . $_PATH_ELEMENTS[1] . '?authorize">Add/remove curators/collaborators</A>';
         } else {
-            $sNavigation .= ' | <A href="genes/' . rawurlencode($sID) . '?sortCurators">Sort/hide curators/collaborators names</A>';
+            $sNavigation .= ' | <A href="genes/' . $_PATH_ELEMENTS[1] . '?sortCurators">Sort/hide curators/collaborators names</A>';
         }
-        $sNavigation .= ' | <A href="columns/VariantOnTranscript/' . rawurlencode($sID) . '?order">Re-order all ' . $sID . ' variant columns';
+        $sNavigation .= ' | <A href="columns/VariantOnTranscript/' . $_PATH_ELEMENTS[1] . '?order">Re-order all ' . $sID . ' variant columns';
     }
 
     if ($sNavigation) {
@@ -567,6 +567,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
             // Remove diseases.
             $aToRemove = array();
+            // FIXME; dit werkt niet, key bestaat niet.
             foreach ($zData['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $_POST['active_diseases'])) {
                     // User has requested removal...
@@ -588,7 +589,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             $aFailed = array();
             foreach ($_POST['active_diseases'] as $nDisease) {
                 // FIXME; probeer van deze "None" af te komen.
-                if (!in_array($nDisease, $aDiseases) && $nDisease != 'None') {
+                if (!in_array($nDisease, $zData['active_diseases']) && $nDisease != 'None') {
                     // Add disease to gene.
                     $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
                     if (!$q) {
@@ -607,7 +608,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . rawurlencode($sID));
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1]);
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
@@ -642,7 +643,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     lovd_includeJS('inc-js-insert-custom-links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . rawurlencode($sID) . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1] . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -724,7 +725,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . rawurlencode($sID) . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1] . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -842,6 +843,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                 //   Taking away the editing rights/visibility of managers or the admin by a manager is restricted in the interface, so it's not critical to solve now.
                 //   I'm being lazy, I'm not implementing the check here now. However, it *is* a bug and should be fixed later.
                 if (ACTION == 'authorize') {
+                    // FIXME; Is using REPLACE not a lot easier?
                     lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)), true);
                     // FIXME; Without detailed user info we can't include elaborate logging. Would we want that anyway?
                     //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
@@ -868,7 +870,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             lovd_writeLog('Event', LOG_EVENT, $sMessage);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . rawurlencode($sID));
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $_PATH_ELEMENTS[1]);
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
@@ -978,11 +980,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                         array('POST', '', '', '', '0%', '0', '100%'),
                         array('', '', 'print', 'Enter your password for authorization'),
                         array('', '', 'password', 'password', 20),
-                        array('', '', 'print', '<INPUT type="submit" value="Save curator list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . rawurlencode($sID) . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                        array('', '', 'print', '<INPUT type="submit" value="Save curator list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $_PATH_ELEMENTS[1] . '\'; return false;" style="border : 1px solid #FF4422;">'),
                       );
         lovd_viewForm($aForm);
     } else {
-        print('        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . rawurlencode($sID) . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n");
+        print('        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $_PATH_ELEMENTS[1] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n");
     }
     print("\n" .
           '      </FORM>' . "\n\n");

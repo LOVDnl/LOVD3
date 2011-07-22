@@ -192,17 +192,17 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                     // IVO: Ben ik met je eens. Overigens is dat wellicht met de checks hierboven ook zo (behalve dan lege waardes).
                     //   Misschien beter deze cols aan mandatory toe te voegen, en dan de checks hierboven alleen te doen als
                     //   er een waarde is ingevuld, zoals dit stukje dat ook heeft.
-                    lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this individual\' selection box.');
+                    lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this variant\' selection box.');
                 }
             } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
                 // FIXME; vanwaar deze gescheiden IF? En wat gebeurt er met users < LEVEL_CURATOR?
-                lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
+                lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this variant\' selection box.');
             }
         } else {
             if (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
                 // IVO: I'm pretty sure we are ignoring this value.
-                lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
+                lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this variant\'.');
             }
         }
 
@@ -247,12 +247,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }
-            $aFormOwner = array('Owner of this individual', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
+            $aFormOwner = array('Owner of this variant', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
             $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $_SETT['var_status'], false, false, false);
         } else {
             // FIXME; dit moet dan dus de owner zijn, mag die de status niet aanpassen (niet publiek -> wel publiek) of een publieke entry bewerken?
             // Overigens, in jouw code mogen alleen managers hier komen... Dit moet even goed worden uitgedacht.
-            $aFormOwner = array('Owner of this individual', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
+            $aFormOwner = array('Owner of this variant', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
             $aFormStatus = array('Status of this data', '', 'print', '<B>Non public</B>');
         }
 
