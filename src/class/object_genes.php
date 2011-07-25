@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-06-13
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-07-19
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -55,7 +55,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT g.*, ' .
-                               'GROUP_CONCAT(DISTINCT g2d.diseaseid ORDER BY g2d.diseaseid SEPARATOR ";") AS active_diseases_ ' .
+                               'GROUP_CONCAT(DISTINCT g2d.diseaseid ORDER BY g2d.diseaseid SEPARATOR ";") AS _active_diseases ' .
                                'FROM ' . TABLE_GENES . ' AS g ' .
                                'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                'WHERE g.id = ? ' .
@@ -63,9 +63,9 @@ class LOVD_Gene extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS __active_diseases, ' .
                                            'COUNT(t.id) AS transcripts,' .
-                                           'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS curators, ' .
+                                           'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS __curators, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
@@ -86,14 +86,10 @@ class LOVD_Gene extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'g.*, ' .
                                           'g.id AS geneid, ' .
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
-                                          'COUNT(vot.id) AS variants';
-                                          // Something like this, maybe???
-                                          //'COUNT(DISTINCT vot.id) AS uniq_variants';
+                                          '(SELECT COUNT(*) FROM lovd_v3_variants_on_transcripts AS vot LEFT JOIN lovd_v3_transcripts AS t ON (t.id = vot.transcriptid) WHERE t.geneid = g.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' . 
-                                          'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
+                                          'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
 
@@ -106,7 +102,7 @@ class LOVD_Gene extends LOVD_Object {
                         'chromosome' => 'Chromosome',
                         'chrom_band' => 'Chromosomal band',
                         'refseq_genomic_' => 'Genomic reference',
-                        'diseases_' => 'Associated with diseases',
+                        'diseases' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
                         'url_homepage' => 'Homepage URL',
                         'url_external' => 'External URL',
@@ -135,7 +131,7 @@ class LOVD_Gene extends LOVD_Object {
                         'id_hgnc_' => 'HGNC',
                         'id_entrez_' => 'Entrez Gene',
                         'id_omim_' => 'OMIM - Gene',
-                        'disease_omim_' => 'OMIM - Diseases',
+                        'disease_omim' => 'OMIM - Diseases',
                         'show_hgmd_' => 'HGMD',
                         'show_genecards_' => 'GeneCards',
                         'show_genetests_' => 'GeneTests',
@@ -150,7 +146,7 @@ class LOVD_Gene extends LOVD_Object {
                         'geneid' => array(
                                     'view' => array('Symbol', 70),
                                     'db'   => array('geneid', 'ASC', 'TEXT')),
-                        'id' => array(
+                        'id_' => array(
                                     'view' => array('Symbol', 70),
                                     'db'   => array('g.id', 'ASC', true)),
                         'name' => array(
@@ -175,7 +171,7 @@ class LOVD_Gene extends LOVD_Object {
                                     'view' => array('Associated with diseases', 200),
                                     'db'   => array('diseases_', false, 'TEXT')),
                       );
-        $this->sSortDefault = 'id';
+        $this->sSortDefault = 'id_';
 
         parent::LOVD_Object();
     }
@@ -205,24 +201,13 @@ class LOVD_Gene extends LOVD_Object {
             lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
         }
 
-        // FIXME; eerst een concat om daarna te exploden???
-        $qDiseases = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES);
-        $aDiseases = mysql_fetch_row($qDiseases);
-        $aDiseases = explode(',', $aDiseases[0]);
-        // FIXME; ik denk dat de query naar binnen deze if moet.
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
-        if (isset($aData['active_diseases'])) {
-            // FIXME; zou er een check op moeten, of dit wel een array is?
-            foreach ($aData['active_diseases'] as $sDisease) {
-                if (!in_array($sDisease, $aDiseases)) {
-                    // FIXME; kunnen we van deze None af?
-                    if ($sDisease != 'None') {
-                        // FIXME; een if binnen een if kan ook in één if.
-                        // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($sDisease) . ' is not a valid disease" of zoiets.
-                        // Overigens is het volgens mij $nDisease.
-                        lovd_errorAdd('active_diseases', 'Please select a proper disease in the \'This gene has been linked to these diseases\' selection box');
-                    }
+        if (isset($aData['active_diseases']) && is_array($aData['active_diseases'])) {
+            foreach ($aData['active_diseases'] as $nDisease) {
+                if ($nDisease && !mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($nDisease)))) {
+                    // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($nDisease) . ' is not a valid disease" of zoiets.
+                    lovd_errorAdd('active_diseases', 'Please select a proper disease in the \'This gene has been linked to these diseases\' selection box');
                 }
             }
         }
@@ -288,17 +273,16 @@ class LOVD_Gene extends LOVD_Object {
         $aDiseasesForm = array();
         $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
-        // FIXME; aangezien $aDiseasesForm leeg zal zijn als $nData 0 is, stel ik voor deze while buiten de if te doen,
-        // dan de if om te draaien. Dan heb je geen else nodig.
-        if ($nData) {
-            while ($r = mysql_fetch_row($qData)) {
-                $aDiseasesForm[$r[0]] = $r[1];
-            }
-        } else {
-            // FIXME; is het niet makkelijker om hier geen value op te geven ipv "None"? Het is toch geen verplicht veld, dus als ie geselecteerd wordt,
-            // wordt de waarde automatisch genegeerd. Nu moest je een uitzondering plaatsen in checkFields() en genes.php.
-            $aDiseasesForm = array('None' => 'No disease entries available');
+
+        while ($r = mysql_fetch_row($qData)) {
+            $aDiseasesForm[$r[0]] = $r[1];
+            
         }
+
+        if (!$nData) {
+            $aDiseasesForm = array('' => 'No disease entries available');
+        }
+
         $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
 
         // References sequences (genomic and transcripts).
@@ -314,7 +298,7 @@ class LOVD_Gene extends LOVD_Object {
             }
             asort($aTranscriptsForm);
         } else {
-            $aTranscriptsForm = array('None' => 'No transcripts available');
+            $aTranscriptsForm = array('' => 'No transcripts available');
         }
         
         $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
@@ -462,7 +446,7 @@ class LOVD_Gene extends LOVD_Object {
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'genes/' . rawurlencode($zData['id']);
-            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
             $zData['updated_date_'] = substr($zData['updated_date'], 0, 10);
         } else {
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
@@ -485,15 +469,14 @@ class LOVD_Gene extends LOVD_Object {
             $zData['header_']          = $zData['header'];
             $zData['footer_']          = $zData['footer'];
 
-            // FIXME; Hier moet nog 'ns een keer naar gekeken worden. We hebben nu 'diseases', 'diseases_' en 'disease_omim_' en ik volg niet meer waar wat in zit...
-            $zData['diseases_'] = $zData['disease_omim_'] = '';
-            if (!empty($zData['diseases'])) {
-                $aDiseases = explode(';;', $zData['diseases']);
-                foreach ($aDiseases as $sDisease) {
-                    list($nID, $nOMIMID, $sSymbol, $sName) = explode(';', $sDisease);
-                    $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
-                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . ($nOMIMID != ' '? '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>' : $sName . ' (' . $sSymbol . ')');
-                }
+            $zData['diseases'] = '';
+            $zData['disease_omim'] = '';
+            foreach($zData['active_diseases'] as $aDisease) {
+                list($nID, $nOMIMID, $sSymbol, $sName) = $aDisease;
+                // Link to disease entry in LOVD
+                $zData['diseases'] .= (!$zData['diseases']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
+                // Link to external source disease entry
+                $zData['disease_omim'] .= (!$zData['disease_omim']? '' : '<BR>') . ($nOMIMID != ' '? '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>' : $sName . ' (' . $sSymbol . ')');
             }
 
             if (isset($zData['reference'])) {
@@ -514,10 +497,9 @@ class LOVD_Gene extends LOVD_Object {
             // Curators and collaborators.
             $zData['curators_'] = $zData['collaborators_'] = '';
             $aCurators = $aCollaborators = array();
-            $aAuthorizedUsers = explode(';;', $zData['curators']);
-            foreach ($aAuthorizedUsers as $sVal) {
-                if ($sVal) { // Should always be true, since genes should always have a curator!
-                    list($nUserID, $sName, $bAllowEdit, $nOrder) = explode(';', $sVal);
+            foreach ($zData['curators'] as $aVal) {
+                if ($aVal) { // Should always be true, since genes should always have a curator!
+                    list($nUserID, $sName, $bAllowEdit, $nOrder) = $aVal;
                     if ($bAllowEdit) {
                         $aCurators[$nUserID] = array($sName, $nOrder);
                     } else {
@@ -526,6 +508,7 @@ class LOVD_Gene extends LOVD_Object {
                 }
             }
             //sort($aCollaborators); // Sort collaborators by name.
+            // FIXME; is dit nog ergens voor nodig
 
             $nCurators = count($aCurators);
             $nCollaborators = count($aCollaborators);

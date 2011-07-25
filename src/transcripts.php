@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-07-20
+ * Modified    : 2011-07-21
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -125,6 +125,8 @@ if (ACTION == 'create') {
             $aGenes[$aGene[0]] = array('id' => $aGene[0], 'name' => $aGene[1], 'refseq_UD' => $aGene[2]);
         }
         $_POST['workID'] = lovd_generateRandomID();
+        // FIXME; Temporary fix for mem leak; empty entire work array.
+        $_SESSION['work'] = array();
         $_SESSION['work'][$_POST['workID']] = array(
                                                     'action' => '/transcripts' . (isset($_PATH_ELEMENTS[1])? '/' . $_PATH_ELEMENTS[1] : '') . '?create',
                                                     'step' => '1',
@@ -146,7 +148,7 @@ if (ACTION == 'create') {
 
             // FIXME; use lovd_getGeneList();
             if (!isset($zData['genes'][$_POST['geneSymbol']])) {
-                lovd_errorAdd('geneSymbol', 'Please select a Gene out of the list below!');
+                lovd_errorAdd('geneSymbol', 'Please select a gene out of the list below!');
             }
 
             if (!lovd_error()) {
@@ -231,12 +233,12 @@ if (ACTION == 'create') {
 
 
 
-        if (isset($_PATH_ELEMENTS[1]) && preg_match('/^\w+$/', $_PATH_ELEMENTS[1])) {
+        if (isset($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1]))) {
             // URL: /transcripts/DMD?create
             // Add a new transcript to the specified gene symbol
 
             require ROOT_PATH . 'inc-top.php';
-            $sGeneID = $_PATH_ELEMENTS[1];
+            $sGeneID = rawurldecode($_PATH_ELEMENTS[1]);
 
             lovd_printHeader(PAGE_TITLE);
 
@@ -322,7 +324,7 @@ if (ACTION == 'create') {
                 }
 
                 // Thank the user...
-                header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $zData['gene']['id']);
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . rawurlencode($zData['gene']['id']));
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-07-25
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -62,7 +62,6 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
-                                           'uo.id AS owner, ' . // FIXME; onnodig, je hebt p.ownerid toch al?
                                            'uo.name AS owner_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -90,6 +89,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                  array(
                         'owner_' => 'Owner name',
                         // FIXME; statusid weer toevoegen.
+                        // FIXME; Ivar: Is nu toegevoegd aan inc-upgrade.php, pas hier toevoegen bij volgende release(3.0-alpha-03)
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -105,7 +105,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                         'phenotypeid' => array(
                                     'view' => array('Phenotype ID', 110),
                                     'db'   => array('phenotypeid', 'ASC', 'INT_UNSIGNED')),
-                        'id' => array(
+                        'id_' => array(
                                     'view' => array('Phenotype ID', 110),
                                     'db'   => array('p.id', 'ASC', true)),
                       ),
@@ -134,8 +134,6 @@ class LOVD_Phenotype extends LOVD_Custom {
         global $_AUTH;
 
         // Mandatory fields.
-        // FIXME; if empty, just define as an empty array in the class header?
-        // IVO: Already done, see objects.php.
         if (ACTION == 'edit') {
             $this->aCheckMandatory[] = 'password';
         }
@@ -147,17 +145,14 @@ class LOVD_Phenotype extends LOVD_Custom {
         // Dit moet ingewikkelder; wie wat kan aanpassen is ook afhankelijk van wie de owner is, denk ik.
         if (isset($_POST['ownerid'])) {
             if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
-                if (!$q) {
+                $q = lovd_queryDB('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
+                if (!mysql_num_rows($q)) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
                 }
             } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
                 lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
-            }
-        } else {
-            if (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
-                // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
+            } elseif (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
                 lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
             }
         }
@@ -248,10 +243,9 @@ class LOVD_Phenotype extends LOVD_Custom {
             // FIXME; welke van deze zijn nog nodig, nu objects.php zelf al waardes gaat voorspellen?
             $zData['row_id'] = $zData['id'];
             $zData['row_link'] = 'phenotypes/' . rawurlencode($zData['id']);
-            // FIXME; het is beter id niet te overschrijven, misschien id_ of een ander veld gebruiken?
-            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
-            $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
+            $zData['owner_'] = '<A href="users/' . $zData['ownerid'] . '">' . $zData['owner_'] . '</A>';
         }
 
         return $zData;

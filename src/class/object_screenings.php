@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-05-26
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-07-22
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -65,9 +65,8 @@ class LOVD_Screening extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
-                                            // FIXME; ik moest even zoeken waar deze voor waren; misschien kunnen we ze beter hernoemen naar "search_geneid" ofzo?
-                                           'GROUP_CONCAT("=\"", s2g.geneid, "\"" SEPARATOR "|") AS geneids, ' .
-                                           'GROUP_CONCAT(DISTINCT s2v.variantid SEPARATOR "|") AS variantids, ' .
+                                           'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
+                                           'COUNT(DISTINCT s2v.variantid) AS variants, ' .
                                            'uo.name AS owner, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -189,8 +188,7 @@ class LOVD_Screening extends LOVD_Custom {
         $aSelectOwner = array();
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            // FIXME; select * is overkill, en hier moet een ORDER BY komen. Level ook laten zien?
-            $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS);
+            $q = lovd_queryDB('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name');
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }

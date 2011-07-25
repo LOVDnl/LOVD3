@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-05-04
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-07-21
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -235,7 +235,7 @@ class LOVD_Disease extends LOVD_Object {
                 $aGenes = explode(';;', $zData['genes']);
                 foreach ($aGenes as $sGene) {
                     list($sID, $nOMIMID, $sName) = explode(';', $sGene);
-                    $zData['genes_'] .= (!$zData['genes_']? '' : ', ') . '<A href="genes/' . $sID . '">' . $sID . '</A>';
+                    $zData['genes_'] .= (!$zData['genes_']? '' : ', ') . '<A href="genes/' . rawurlencode($sID) . '">' . $sID . '</A>';
                     $zData['genes_omim_'] .= (!$zData['genes_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sID . ')</A>';
                 }
             }

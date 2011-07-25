@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-07-22
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -78,7 +78,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
-        $sNavigation .= ' | <A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
+        $sNavigation .= ' | <A href="variants?create&amp;reference=Genome&amp;target=' . $nID . '">Add variant to screening</A>';
         $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
     } elseif ($_AUTH && $_AUTH['level'] >= LEVEL_SUBMITTER) {
         $sNavigation = '<A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
@@ -89,8 +89,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    // FIXME; wellicht is html_entity_decode() makkelijker? Heb je deze IF wel nodig?
-    $_GET['search_geneid'] = (!empty($zData['geneids'])? str_replace("&quot;", "\"", $zData['geneids']) : 0);
+    $_GET['search_geneid'] = (!empty($zData['search_geneid'])? html_entity_decode(rawurldecode($zData['search_geneid'])) : 0);
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Genes screened', 'H4');
     print('<BR>' . "\n");
@@ -103,7 +102,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_GET['search_screeningids'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants found', 'H4');
-    (!$zData['variantids']? print('<BR>' . "\n") : false);
+    (!$zData['variants']? print('<BR>' . "\n") : false);
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $_DATA->setSortDefault('id');

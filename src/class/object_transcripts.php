@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-05-17
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-07-22
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -63,9 +63,7 @@ class LOVD_Transcript extends LOVD_Object {
                                            'g.chromosome, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
-                                           // FIXME; ik zie niet waar je dit gebruikt, en dit kan heeeel groot worden!!!
-                                           'GROUP_CONCAT(vot.id SEPARATOR "|") AS variantids, ' .
-                                           'count(DISTINCT vot.id) AS variants';
+                                           'COUNT(DISTINCT vot.id) AS variants';
         $this->aSQLViewEntry['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                            'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
@@ -75,7 +73,7 @@ class LOVD_Transcript extends LOVD_Object {
 
         // SQL code for viewing the list of transcripts
         $this->aSQLViewList['SELECT']   = 't.*, ' .
-                                          'count(DISTINCT vot.id) AS variants';
+                                          'COUNT(DISTINCT vot.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
         $this->aSQLViewList['GROUP_BY'] = 't.id';
@@ -103,7 +101,7 @@ class LOVD_Transcript extends LOVD_Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
-                        'id' => array(
+                        'id_' => array(
                                     'view' => array('ID', 70),
                                     'db'   => array('t.id', 'ASC', true)),
                         'geneid' => array(
@@ -225,11 +223,10 @@ class LOVD_Transcript extends LOVD_Object {
             } else {    
                 $zData['row_id'] = $zData['id'];
                 $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
-                // FIXME; het is beter hier een _ achter de naam te zetten, zodat we altijd nog de echte ID terug kunnen vinden.
-                $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+                $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
             }
         } else {
-            $zData['gene_name_'] = '<A href="genes/' . $zData['geneid'] . '">' . $zData['geneid'] . '</A> (' . $zData['gene_name'] . ')';
+            $zData['gene_name_'] = '<A href="genes/' . rawurlencode($zData['geneid']) . '">' . $zData['geneid'] . '</A> (' . $zData['gene_name'] . ')';
         }
 
         return $zData;
