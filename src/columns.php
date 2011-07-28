@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-07-22
+ * Modified    : 2011-07-25
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -220,12 +220,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
         lovd_queryDB('START TRANSACTION', array(), true);
 
         foreach ($_POST['columns'] as $nOrder => $sID) {
+            if (strpos($sID, $sCategory . '/') !== 0) {
+                continue; // Column not in category we're working in (hack attempt, however quite innocent)
+            }
             $nOrder ++; // Since 0 is the first key in the array.
-            // FIXME; dit moet in een nette if... dit is niet goed leesbaar.
-            // FIXME; dit zijn wel hele rare queries... id = .. AND id LIKE ... ???
-            $sSQL = (empty($sObject)? 'UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ? AND id LIKE ?' : 'UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sObjectType . 'id = ? AND colid = ? AND colid LIKE ?');
-            $aSQL = (empty($sObject)? array($nOrder, $sID, $sCategory . '/%') : array($nOrder, $sObject, $sID, $sCategory . '/%'));
-            lovd_queryDB($sSQL, $aSQL, true);
+            if (empty($sObject)) {
+                lovd_queryDB('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID), true);
+            } else {
+                lovd_queryDB('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sObjectType . 'id = ? AND colid = ?', array($nOrder, $sObject, $sID), true);
+            }
         }
 
         // If we get here, it all succeeded.

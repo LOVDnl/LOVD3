@@ -38,8 +38,17 @@
  * Fixed bug; Values of custom columns configured as simple drop down lists were
    lost during edit of the data entry.
  * Fixed bug; On the genomic variant data entry form, "Owner of individual"
-   should be "Owner of variant".
+   should be "Owner of variant". Also other forms had this error.
    (thanks to Raymond Dalgleish, University of Leicester, UK, for reporting)
+ * Links to OMIM are now to OMIM.org and not to the NCBI site anymore.
+ * Fixed bug; The user's viewList and viewEntry reported collaborators as being
+   curators for the genes they are collaborators for.
+ * Implemented lovd_isAuthorized() checks for diseases and transcripts, so that
+   curators can correctly be recognized as authorized users.
+ * Added virtual user level LEVEL_OWNER, assigned by lovd_isAuthorized() to sub-
+   mitters who are owner or creator of a certain data entry.
+ * Fixed too big Variant/DBID size on the data entry form.
+ * Fixed bug and standardized code for checks on ownerid and statusid.
  * Fixed bug; Internet Explorer "forgot" which columns where hidden from view in
    viewLists when searching or sorting them.
 

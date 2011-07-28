@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-07-21
+ * Modified    : 2011-07-25
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -54,7 +54,7 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT d.*, ' .
-                               'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS active_genes_ ' .
+                               'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes ' .
                                'FROM ' . TABLE_DISEASES . ' AS d ' .
                                'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ' .
                                'WHERE d.id = ? ' .
@@ -62,7 +62,7 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'd.*, ' .
-                                           'GROUP_CONCAT(DISTINCT g.id, ";", g.id_omim, ";", g.name ORDER BY g.id SEPARATOR ";;") AS genes, ' .
+                                           'GROUP_CONCAT(DISTINCT g.id, ";", g.id_omim, ";", g.name ORDER BY g.id SEPARATOR ";;") AS __genes, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d ' .
@@ -140,22 +140,23 @@ class LOVD_Disease extends LOVD_Object {
         parent::checkFields($aData);
 
         // FIXME; eerst een concat om daarna te exploden???
+        // FIXME; gebruik lovd_getGeneList().
         $qGenes = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS genes FROM ' . TABLE_GENES);
         $aGenes = mysql_fetch_row($qGenes);
         $aGenes = explode(',', $aGenes[0]);
         // FIXME; ik denk dat de query naar binnen deze if moet.
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
-        if (isset($aData['active_genes'])) {
+        if (isset($aData['genes'])) {
             // FIXME; zou er een check op moeten, of dit wel een array is?
-            foreach ($aData['active_genes'] as $sGene) {
+            foreach ($aData['genes'] as $sGene) {
                 if (!in_array($sGene, $aGenes)) {
                     // FIXME; kunnen we van deze None af?
                     if ($sGene != 'None') {
                         // FIXME; een if binnen een if kan ook in één if.
                         // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($sGene) . ' does not exist" of zoiets.
                         // FIXME; probeer de naam van het veld via het formulier te achterhalen.
-                        lovd_errorAdd('active_genes', 'Please select a proper gene in the \'This disease has been linked to these genes\' selection box');
+                        lovd_errorAdd('genes', 'Please select a proper gene in the \'This disease has been linked to these genes\' selection box');
                     }
                 }
             }
@@ -200,7 +201,7 @@ class LOVD_Disease extends LOVD_Object {
                         array('OMIM ID', '', 'text', 'id_omim', 10),
                         'skip',
                         array('', '', 'print', '<B>Relation to genes</B>'),
-                        array('This disease has been linked to these genes', '', 'select', 'active_genes', $nFieldSize, $aGenesForm, false, true, false),
+                        array('This disease has been linked to these genes', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
                   );
 
         return parent::getForm();
@@ -232,9 +233,8 @@ class LOVD_Disease extends LOVD_Object {
             $zData['genes_'] = '';
             $zData['genes_omim_'] = '';
             if (!empty($zData['genes'])) {
-                $aGenes = explode(';;', $zData['genes']);
-                foreach ($aGenes as $sGene) {
-                    list($sID, $nOMIMID, $sName) = explode(';', $sGene);
+                foreach ($zData['genes'] as $aGene) {
+                    list($sID, $nOMIMID, $sName) = $aGene;
                     $zData['genes_'] .= (!$zData['genes_']? '' : ', ') . '<A href="genes/' . rawurlencode($sID) . '">' . $sID . '</A>';
                     $zData['genes_omim_'] .= (!$zData['genes_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sID . ')</A>';
                 }

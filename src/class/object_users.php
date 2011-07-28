@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-07-27
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -68,7 +68,7 @@ class LOVD_User extends LOVD_Object {
                                            // FIXME; hoe zie je nu of iemand curator en/of collaborator is?
                                            'CASE u.level WHEN "9" THEN "Database administrator" WHEN "7" THEN "LOVD Manager" WHEN "1" THEN "Submitter" END AS level_';
         $this->aSQLViewEntry['FROM']     = TABLE_USERS . ' AS u ' .
-                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid AND u2g.allow_edit = 1) ' .
                                            'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (u.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id)';
@@ -80,9 +80,10 @@ class LOVD_User extends LOVD_Object {
                                           'c.name AS country_, ' .
                                            // FIXME: gebruik $_SETT['user_levels'] !!! (Zowel de cijfers, als de namen)
                                            // FIXME; hoe zie je nu of iemand curator en/of collaborator is?
+                                           //    Perhaps using subqueries that determine "level" column?
                                           'CASE level WHEN "9" THEN "Database administrator" WHEN "7" THEN "LOVD Manager" WHEN "1" THEN "Submitter" END AS level_';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
-                                          'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid AND u2g.allow_edit = 1) ' .
                                           'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
         $this->aSQLViewList['GROUP_BY'] = 'u.id';
         $this->aSQLViewList['ORDER_BY'] = 'u.level DESC, u.name ASC';
@@ -313,7 +314,7 @@ class LOVD_User extends LOVD_Object {
             $qCountryList = lovd_queryDB('SELECT id, name FROM ' . TABLE_COUNTRIES . ' ORDER BY name');
 
             // Remove user levels that are higher than or equal to the current user's level.
-            unset($aUserLevels[3], $aUserLevels[5]); // Aren't real user levels.
+            unset($aUserLevels[2], $aUserLevels[3], $aUserLevels[5]); // Aren't real user levels.
             for ($i = 9; $i >= $_AUTH['level']; $i --) {
                 if (isset($aUserLevels[$i])) {
                     unset($aUserLevels[$i]);

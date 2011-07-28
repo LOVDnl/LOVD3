@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-07-22
+ * Modified    : 2011-07-27
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -149,27 +149,24 @@ class LOVD_Screening extends LOVD_Custom {
             global $zData; // FIXME; this could be done more elegantly.
         }
 
-        // FIXME; if empty, should be removed perhaps?
-        // Mandatory fields.
-        $this->aCheckMandatory =
-                 array(
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            // Mandatory fields.
+            $this->aCheckMandatory[] = 'ownerid';
+        }
 
-                      );
         parent::checkFields($aData);
 
-        // FIXME; Ik stel voor om de ownerid/owned_by checks in object_custom.php te doen, scheelt het herhalen van de code in iedere checkFields().
-        if (isset($_POST['ownerid'])) {
-            if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE id=?', array($_POST['ownerid']));
-                if (!$q) {
-                    lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
+        // FIXME; move to object_custom.php.
+        if (!empty($_POST['ownerid'])) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                $q = lovd_queryDB('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
+                if (!mysql_num_rows($q)) {
+                    // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
+                    lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this screening entry\' selection box.');
                 }
-            } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
-            }
-        } else {
-            if (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
-                lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
+            } else {
+                // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
+                lovd_errorAdd('ownerid', 'Not allowed to change \'Owner of this screening entry\'.');
             }
         }
 

@@ -5,15 +5,15 @@ Prioritize:
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
   * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
   * Eerst moet er code geschreven worden die de authorisatie van de gebruiker goed detecteert!
-    - Users < LEVEL_MANAGER moeten LEVEL_CURATOR hebben voor genen die ze mogen editen, LEVEL_COLLABORATOR voor andere genen die ze in TABLE_CURATES hebben, LEVEL_SUBMITTER voor de rest.
-    - Curators mogen een patient en aangehangen info pas bekijken als hij een screening aan hun gen heeft. Ook varianten in hun gen mogen ze zien.
+    - Mist nog voor patients, phenotypes, screenings. Check variants code nog.
+    - Curators mogen een patient en aangehangen info pas bekijken als hij een screening aan hun gen heeft.
     - Curatoren mogen in principe alleen de varianten aanpassen, geen patient data of phenotype data. Tenzij ze de owner of created_by zijn, natuurlijk.
       * Over dit laatste een stemronde houden binnen de gebruikers?
 - (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
   * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
 - (~~~~~~BELANGRIJK: Ivar) TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
 - (BELANGRIJK) Alle links nalopen, of ze werken.
-- (~~~~~BELANGRIJK: Ivo) Verwijder pathogenicity. Niet voor Alpha-01.
+- (BELANGRIJK: Ivo) Pathogenicity?
 - (~BELANGRIJK) Submissie: = alles aan elkaar knopen
 - (~BELANGRIJK: Ivo) Icoontjes voor setup???
 - (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
@@ -25,8 +25,6 @@ Prioritize:
 - Gene selection lists zijn veel te groot als je een database hebt met lange gen namen. LOVD 2.0 had daar een techniek voor, om dat in te korten.
 - BUG: Ik maak screening aan, gekoppeld aan individu. Mag niet selecteren welk gen ik gescreend heb.
 - BUG: Kan een variant niet aan een screening koppelen, ook al gebruik ik de juiste link er voor.
-- (@Ivar) BUG: Er staat een edited_date in variants_on_transcripts, maar verder helemaal niks.
-  * Deze kolom kan ik NIET leeg laten (NULL).
 - Kijk 'ns naar https://grenada.lumc.nl/LOVD3/shared, er zit een individu in met een aantal mutaties. Kun je makkelijk naar al zijn data navigeren?
   * We missen veel links tussen data in. Onder variants on genome zou een variants_on_transcript viewList moeten, en ik moet naar de screening en individu kunnen vanuit daar. Dat soort dingen.
 - Was 't nou geregeld, dat inc-upgrade.php een curator koos voor genen zonder curator?

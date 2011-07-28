@@ -421,7 +421,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                             $_DATA->buildFields());
 
             // Prepare values.
-            // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
+            // FIXME; deze checks kloppen niet; een submitter's edit zal nu een variant per definitie verbergen en de owner wordt mogelijk ook gereset.
+            //   De "else" in deze checks zou eigenlijk de $zData waardes moeten zijn, of beter nog, pas in de $aFields zetten bij level >= LEVEL_CURATOR.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['edited_by'] = $_AUTH['id'];

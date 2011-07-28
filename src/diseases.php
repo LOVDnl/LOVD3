@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-07-22
+ * Modified    : 2011-07-26
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -70,13 +70,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    // Load appropiate user level for this disease.
+    lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
+
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
-        // FIXME; check if curator actually has rights on this disease (lovd_isAuthorized()).
         $sNavigation .= '<A href="columns/Phenotype/' . $nID . '?order">Re-order all ' . $zData['symbol'] . ' phenotype columns';
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
             // Authorized user (admin or manager) is logged in. Provide tools.
@@ -143,6 +145,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     define('LOG_EVENT', 'DiseaseCreate');
 
     // Require manager clearance.
+    // FIXME; allow curator to create disease entries linked to own genes?
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_diseases.php';
@@ -185,10 +188,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             // Add genes.
             $aSuccess = array();
             // FIXME; zorgt checkFields() niet al niet, dat deze var altijd set is?
-            if (isset($_POST['active_genes'])) {
+            if (isset($_POST['genes'])) {
                 // FIXME; probeer van None af te komen.
-                if (!in_array('None', $_POST['active_genes'])) {
-                    foreach ($_POST['active_genes'] as $sGene) {
+                if (!in_array('None', $_POST['genes'])) {
+                    foreach ($_POST['genes'] as $sGene) {
                         // Add gene to disease.
                         // FIXME; hier doe je ze stuk voor stuk, in edit voeg je ze samen. Ik stel voor ze hier ook samen te voegen.
                         $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
@@ -269,8 +272,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Edit disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseEdit');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Load appropiate user level for this disease.
+    lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
@@ -296,13 +300,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Edited disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');
 
             // Change linked genes?
-            // Genes the disease is currently linked to.
-            $aGenes = explode(';', $zData['active_genes_']);
-
             // Remove genes.
             $aToRemove = array();
-            foreach ($aGenes as $sGene) {
-                if ($sGene && !in_array($sGene, $_POST['active_genes'])) {
+            foreach ($zData['genes'] as $sGene) {
+                if ($sGene && !in_array($sGene, $_POST['genes'])) {
                     // User has requested removal...
                     $aToRemove[] = $sGene;
                 }
@@ -321,8 +322,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Add genes.
             $aSuccess = array();
             $aFailed = array();
-            foreach ($_POST['active_genes'] as $sGene) {
-                if (!in_array($sGene, $aGenes) && $sGene != 'None') {
+            foreach ($_POST['genes'] as $sGene) {
+                if (!in_array($sGene, $zData['genes']) && $sGene != 'None') {
                     // Add gene to gene.
                     $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
                     if (!$q) {
@@ -358,8 +359,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     } else {
         // Load current values.
         $_POST = array_merge($_POST, $zData);
-        // Load connected genes.
-        $_POST['active_genes'] = explode(';', $_POST['active_genes_']);
     }
 
 
@@ -402,6 +401,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('LOG_EVENT', 'DiseaseDelete');
 
     // Require manager clearance.
+    // FIXME; allow curators to delete diseases that point to no other genes besides their own?
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_diseases.php';

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-07-18
+ * Modified    : 2011-07-27
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -70,8 +70,9 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
 }
 
 define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorization is depending on assignments, not user levels anymore.
-define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
-define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
+define('LEVEL_OWNER', 2);        // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers (verify objects_users.php), but keep the order!
+define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers (verify objects_users.php), but keep the order!
+define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers (verify objects_users.php), but keep the order!
 define('LEVEL_MANAGER', 7);
 define('LEVEL_ADMIN', 9);
 
@@ -101,6 +102,7 @@ $_SETT = array(
                             LEVEL_MANAGER      => 'LOVD manager',
                             LEVEL_CURATOR      => 'Curator',
                             LEVEL_COLLABORATOR => 'Collaborator',
+                            LEVEL_OWNER        => 'Submitter (data owner)',
                             LEVEL_SUBMITTER    => 'Submitter',
                           ),
 

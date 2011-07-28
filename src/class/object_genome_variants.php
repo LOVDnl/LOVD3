@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-07-25
+ * Modified    : 2011-07-27
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -76,6 +76,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // SQL code for viewing the list of variants
         // FIXME: we should implement this in a different way
         $this->aSQLViewList['SELECT']   = 'vog.*, ' .
+                                          // FIXME; de , is niet de standaard.
                                           'GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
                                           'uo.name AS owner, ' .
                                           'ds.name AS status';
@@ -148,24 +149,26 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     {
         global $_AUTH, $_SETT, $_CONF;
 
+        // Mandatory fields.
+        $this->aCheckMandatory = array('chromosome');
+
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
             
             if ($_AUTH['level'] < LEVEL_CURATOR) {
                 if ($aData['statusid'] > $zData['statusid']) {
+                    // FIXME; zullen we deze code in objects_custom doen? 
                     lovd_errorAdd('statusid' ,'Not allowed to change \'Status of this data\' from ' . $_SETT['var_status'][$zData['statusid']] . ' to ' . $_SETT['var_status'][$aData['statusid']] . '.');
                 }
             }
+
+            $this->aCheckMandatory[] = 'password';
         }
 
-        // Mandatory fields.
-        if (ACTION == 'edit') {
-            $this->aCheckMandatory = 
-                        array( 
-                                'password',
-                                'chromosome',
-                             );
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            $this->aCheckMandatory[] = 'ownerid';
+            $this->aCheckMandatory[] = 'statusid';
         }
 
         parent::checkFields($aData);
@@ -174,34 +177,27 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             lovd_errorAdd('allele', 'Please select a proper allele from the \'Allele\' selection box.');
         }
 
-        if (!array_key_exists($_POST['chromosome'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'])) {
+        if (!empty($_POST['chromosome']) && !array_key_exists($_POST['chromosome'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'])) {
             lovd_errorAdd('chromosome', 'Please select a proper chromosome from the \'Chromosome\' selection box.');
         }
 
-        if (isset($_POST['ownerid'])) {
-            if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+        if (!empty($_POST['ownerid'])) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $q = lovd_queryDB('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
                 if (!mysql_num_rows($q)) {
                     lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this variant\' selection box.');
                 }
-            } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this variant\' selection box.');
-            } elseif (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
-                lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this variant\'.');
+            } else {
+                lovd_errorAdd('ownerid', 'Not allowed to change \'Owner of this variant\'.');
             }
         }
 
-        // FIXME; deze ifs kunnen efficienter.
-        if (isset($_POST['statusid'])) {
-            // FIXME; vanwaar al deze checks op de user level? Waarom zijn deze foutmeldingen afhankelijk van de user level?
-            // FIXME; Ivar: Omdat je als submitter bijvoorbeeld de data niet op public mag zetten.
-            if (!array_key_exists($_POST['statusid'], $_SETT['var_status']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                lovd_errorAdd('statusid' ,'Please select a proper status from the \'Status of this data\' selection box.');
-            } elseif (empty($_POST['statusid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                // FIXME; Als het een verplicht veld is, hoef je deze if al niet meer te doen.
-                lovd_errorAdd('statusid' ,'Please select a proper status from the \'Status of this data\' selection box.');
-            } elseif (!empty($_POST['statusid']) && $_AUTH['level'] < LEVEL_CURATOR) {
-                lovd_errorAdd('statusid' ,'Not allowed to change \'Status of this data\'.');
+        if (!empty($_POST['statusid'])) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $_SETT['var_status'])) {
+                lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
+            } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
+                // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
+                lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
             }
         }
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-07-21
+ * Modified    : 2011-07-26
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -70,13 +70,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    // Load appropiate user level for this transcript.
+    lovd_isAuthorized('transcript', $nID); // This call will make database queries if necessary.
+
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $zData = $_DATA->viewEntry($nID);
     
     $sNavigation = '';
-    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         $sNavigation = '<A href="transcripts/' . $nID . '?edit">Edit transcript information</A>';
         $sNavigation .= ' | <A href="transcripts/' . $nID . '?delete">Delete transcript entry</A>';
     }
@@ -108,8 +110,9 @@ if (ACTION == 'create') {
 
     define('LOG_EVENT', 'TranscriptCreate');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Is user authorized in any gene?
+    lovd_isAuthorized('gene', $_AUTH['curates']);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'class/REST2SOAP.php';
@@ -380,9 +383,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit transcript #' . $nID);
     define('LOG_EVENT', 'TranscriptEdit');
-    
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+
+    // Load appropiate user level for this transcript.
+    lovd_isAuthorized('transcript', $nID); // This call will make database queries if necessary.
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_transcripts.php';
     require ROOT_PATH . 'inc-lib-form.php';
@@ -468,8 +472,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
     define('LOG_EVENT', 'TranscriptDelete');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Load appropiate user level for this transcript.
+    lovd_isAuthorized('transcript', $nID); // This call will make database queries if necessary.
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();

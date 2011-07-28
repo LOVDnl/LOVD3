@@ -40,15 +40,18 @@ require_once ROOT_PATH . 'inc-lib-xml.php';
 class REST2SOAP {
     // This class provides basic functionality for the communication between REST and SOAP webservices.
     var $sSoapURL = '';
-    
-    function REST2SOAP($sURL) {
+
+
+
+    function REST2SOAP ($sURL)
+    {
         $this->sSoapURL = $sURL;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function checkOutput ($sModuleName, $aOutput)
     {
         // Check for empty return array or SOAP error messages and relay them to the user
@@ -68,11 +71,11 @@ class REST2SOAP {
             }
         }
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function generateInputXML ($sModuleName, $aArgs)
     {
         // Generate a XML file to send to the SOAP webservice 
@@ -99,8 +102,8 @@ class REST2SOAP {
 
 
 
-    
-    
+
+
     function moduleCall ($sModuleName, $aArgs = array(), $bDebug = false)
     {
         // Basic function for calling the SOAP webservice. This function calls all the other functions
@@ -121,12 +124,11 @@ class REST2SOAP {
         // Check output
         return $aOutput;
     }
-    
-    
-    
-    
-    
-    
+
+
+
+
+
     function parseOutput ($sModuleName, $sOutputSOAP)
     {
         // Parse the output XML given by the SOAP webservice.
@@ -146,11 +148,11 @@ class REST2SOAP {
 
         return $aOutput;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function soapError ($sModuleName, $aArgs, $sSOAPError, $bHalt = true)
     {
         // Provides a wrapper for the error message that is returned by SOAP

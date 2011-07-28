@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-07-25
+ * Modified    : 2011-07-27
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
- *     
  *
  * This file is part of LOVD.
  *
@@ -89,7 +89,8 @@ class LOVD_Phenotype extends LOVD_Custom {
                  array(
                         'owner_' => 'Owner name',
                         // FIXME; statusid weer toevoegen.
-                        // FIXME; Ivar: Is nu toegevoegd aan inc-upgrade.php, pas hier toevoegen bij volgende release(3.0-alpha-03)
+                        // DMD_SPECIFIC; Ivar: Is nu toegevoegd aan inc-upgrade.php, pas hier toevoegen bij volgende release(3.0-alpha-03)
+                        //'status' => 'Phenotype data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -138,22 +139,34 @@ class LOVD_Phenotype extends LOVD_Custom {
             $this->aCheckMandatory[] = 'password';
         }
 
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            // Mandatory fields.
+            $this->aCheckMandatory[] = 'ownerid';
+            $this->aCheckMandatory[] = 'statusid';
+        }
+
         parent::checkFields($aData);
 
-        // FIXME; move to object_custom.php. Zie ook opmerkingen over deze code in andere files.
-        // FIXME; this set of if's can be made more efficient.
-        // Dit moet ingewikkelder; wie wat kan aanpassen is ook afhankelijk van wie de owner is, denk ik.
-        if (isset($_POST['ownerid'])) {
-            if (!empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+        // FIXME; move to object_custom.php.
+        if (!empty($_POST['ownerid'])) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $q = lovd_queryDB('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
                 if (!mysql_num_rows($q)) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
+                    lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this phenotype entry\' selection box.');
                 }
-            } elseif (empty($_POST['ownerid']) && $_AUTH['level'] >= LEVEL_CURATOR) {
-                lovd_errorAdd('ownerid' ,'Please select a proper owner from the \'Owner of this individual\' selection box.');
-            } elseif (!empty($_POST['ownerid']) && $_AUTH['level'] < LEVEL_CURATOR) {
-                lovd_errorAdd('ownerid' ,'Not allowed to change \'Owner of this individual\'.');
+            } else {
+                // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
+                lovd_errorAdd('ownerid', 'Not allowed to change \'Owner of this phenotype entry\'.');
+            }
+        }
+
+        if (!empty($_POST['statusid'])) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $_SETT['var_status'])) {
+                lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
+            } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
+                // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
+                lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
             }
         }
 
@@ -188,11 +201,11 @@ class LOVD_Phenotype extends LOVD_Custom {
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }
-            $aFormOwner = array('Owner of this individual', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
+            $aFormOwner = array('Owner of this phenotype entry', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
         } else {
             // FIXME; dit moet dan dus de owner zijn, mag die de status niet aanpassen (niet publiek -> wel publiek) of een publieke entry bewerken?
             // Overigens, in jouw code mogen alleen managers hier komen... Dit moet even goed worden uitgedacht.
-            $aFormOwner = array('Owner of this individual', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
+            $aFormOwner = array('Owner of this phenotype entry', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
         }
 
         // Array which will make up the form table.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-07-19
+ * Modified    : 2011-07-27
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,7 +63,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS __active_diseases, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS __diseases, ' .
                                            'COUNT(t.id) AS transcripts,' .
                                            'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS __curators, ' .
                                            'uc.name AS created_by_, ' .
@@ -102,7 +102,7 @@ class LOVD_Gene extends LOVD_Object {
                         'chromosome' => 'Chromosome',
                         'chrom_band' => 'Chromosomal band',
                         'refseq_genomic_' => 'Genomic reference',
-                        'diseases' => 'Associated with diseases',
+                        'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
                         'url_homepage' => 'Homepage URL',
                         'url_external' => 'External URL',
@@ -131,7 +131,7 @@ class LOVD_Gene extends LOVD_Object {
                         'id_hgnc_' => 'HGNC',
                         'id_entrez_' => 'Entrez Gene',
                         'id_omim_' => 'OMIM - Gene',
-                        'disease_omim' => 'OMIM - Diseases',
+                        'disease_omim_' => 'OMIM - Diseases',
                         'show_hgmd_' => 'HGMD',
                         'show_genecards_' => 'GeneCards',
                         'show_genetests_' => 'GeneTests',
@@ -143,6 +143,7 @@ class LOVD_Gene extends LOVD_Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
+                        // Copy of the gene's ID for the search terms in the screening's viewEntry.
                         'geneid' => array(
                                     'view' => array('Symbol', 70),
                                     'db'   => array('geneid', 'ASC', 'TEXT')),
@@ -185,11 +186,7 @@ class LOVD_Gene extends LOVD_Object {
         // Checks fields before submission of data.
         global $zData; // FIXME; this could be done more elegantly.
 
-        // Mandatory fields.
-        $this->aCheckMandatory =
-                 array(
-                        
-                      );
+        // No mandatory fields, since all the gene data is in $_SESSION.
 
         if (isset($aData['workID'])) {
             unset($aData['workID']);
@@ -205,6 +202,8 @@ class LOVD_Gene extends LOVD_Object {
         //   De parent checkFields vraagt de getForm() namelijk al op.
         if (isset($aData['active_diseases']) && is_array($aData['active_diseases'])) {
             foreach ($aData['active_diseases'] as $nDisease) {
+                // FIXME; deze code had 1 query nodig, nu is het 1 query per geselecteerde disease. Probeer helemaal van de query af te komen (zie FIXME hierboven),
+                //   als je dat niet gaat lukken binnen 5 minuten dan moet je deze code in ieder geval zo omzetten, dat deze query maar 1 keer gerund wordt.
                 if ($nDisease && !mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($nDisease)))) {
                     // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($nDisease) . ' is not a valid disease" of zoiets.
                     lovd_errorAdd('active_diseases', 'Please select a proper disease in the \'This gene has been linked to these diseases\' selection box');
@@ -273,16 +272,12 @@ class LOVD_Gene extends LOVD_Object {
         $aDiseasesForm = array();
         $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
-
-        while ($r = mysql_fetch_row($qData)) {
-            $aDiseasesForm[$r[0]] = $r[1];
-            
-        }
-
         if (!$nData) {
             $aDiseasesForm = array('' => 'No disease entries available');
         }
-
+        while ($r = mysql_fetch_row($qData)) {
+            $aDiseasesForm[$r[0]] = $r[1];
+        }
         $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
 
         // References sequences (genomic and transcripts).
@@ -469,14 +464,14 @@ class LOVD_Gene extends LOVD_Object {
             $zData['header_']          = $zData['header'];
             $zData['footer_']          = $zData['footer'];
 
-            $zData['diseases'] = '';
-            $zData['disease_omim'] = '';
-            foreach($zData['active_diseases'] as $aDisease) {
+            $zData['diseases_'] = '';
+            $zData['disease_omim_'] = '';
+            foreach($zData['diseases'] as $aDisease) {
                 list($nID, $nOMIMID, $sSymbol, $sName) = $aDisease;
                 // Link to disease entry in LOVD
-                $zData['diseases'] .= (!$zData['diseases']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
+                $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
                 // Link to external source disease entry
-                $zData['disease_omim'] .= (!$zData['disease_omim']? '' : '<BR>') . ($nOMIMID != ' '? '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>' : $sName . ' (' . $sSymbol . ')');
+                $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . ($nOMIMID != ' '? '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sSymbol . ')</A>' : $sName . ' (' . $sSymbol . ')');
             }
 
             if (isset($zData['reference'])) {
@@ -507,8 +502,7 @@ class LOVD_Gene extends LOVD_Object {
                     }
                 }
             }
-            //sort($aCollaborators); // Sort collaborators by name.
-            // FIXME; is dit nog ergens voor nodig
+            sort($aCollaborators); // Sort collaborators by name.
 
             $nCurators = count($aCurators);
             $nCollaborators = count($aCollaborators);
