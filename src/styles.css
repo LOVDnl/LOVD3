@@ -3,11 +3,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2011-05-18
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-07-29
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -125,10 +126,12 @@ input.err:hover, input.err:focus, textarea.err:hover, textarea.err:focus, button
 
 
 /* Lines and notes on the forms */
-img.form_hr    {background : #CCCCCC;}
-img.help       {margin-top : 4px; cursor : help;}
-span.form_note {font-size : 11px; color : #666666;}
-div.tooltip    {background : #F0F3FF; border : 1px solid #224488; padding : 2px; font-size : 11px; width : 300px; position : absolute; visibility : hidden;}
+img.form_hr      {background : #CCCCCC;}
+img.help         {margin-top : 4px; cursor : help;}
+span.form_note   {font-size : 11px; color : #666666;}
+div.tooltip      {background : #F0F3FF;	border : 1px solid #224488;	padding : 2px; font-size : 11px; width : 300px;	position : absolute; display : none;}
+img.tooltip-hide {position : absolute; right : 0px; top : 0px; cursor : pointer;}
+span.custom_link {text-decoration : none; border-bottom : 1px dashed black;}
 
 
 

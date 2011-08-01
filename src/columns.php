@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-07-25
+ * Modified    : 2011-07-29
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -168,53 +168,43 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
     // URL: /columns/Individual?order
     // Change in what order the columns will be shown in a viewList/viewEntry.
 
-    $sCategory = $_PATH_ELEMENTS[1]; // FIXME; check if it is a valid category
+    $sCategory = $_PATH_ELEMENTS[1];
 
-    // FIXME; gebruik lovd_getTableInfoByCategory() (zie de code voor 'add').
-    switch ($sCategory) {
-        case 'Individual':
-            $bShared = false;
-            break;
-        case 'Screening':
-            $bShared = false;
-            break;
-        case 'VariantOnGenome':
-            $bShared = false;
-            break;
-        case 'Phenotype':
-            $bShared = true;
-            $sObjectType = 'disease';
-            break;
-        case 'VariantOnTranscript':
-            $bShared = true;
-            $sObjectType = 'gene';
-            break;
-        case 'default':
-            exit; // FIXME; moet hier geen nette foutmelding zijn???
-            break;
-    }
+    // Require form & column functions.
+    require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'inc-lib-columns.php';
 
-    // FIXME; deze IF is niet logisch...
-    if (($bShared && empty($_PATH_ELEMENTS[2])) || (!$bShared && empty($_PATH_ELEMENTS[2]))) {
-        $sObject = '';
-    // FIXME; ... en dan (dus) deze elseif ook niet.
-    } elseif ($bShared && !empty($_PATH_ELEMENTS[2])) {
-        $sObject = rawurldecode(($sObjectType == 'disease'? str_pad($_PATH_ELEMENTS[2], 5, '0', STR_PAD_LEFT) : $_PATH_ELEMENTS[2]));
-        if (!mysql_num_rows(lovd_queryDB('SELECT id FROM ' . constant('TABLE_' . strtoupper($sObjectType) . 'S') . ' WHERE id = ?', array($sObject)))) {
-            exit;
-        }
-    } else {
+    // Required clearance depending on which type of column is being added.
+    $aTableInfo = lovd_getTableInfoByCategory($sCategory);
+
+    if (!$aTableInfo) {
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader('Re-order columns');
+        lovd_showInfoTable('The specified category does not exist!', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
         exit;
     }
 
-    define('PAGE_TITLE', 'Re-order ' . $sCategory . ' columns ' . (!empty($sObject)? ' for ' . $sObjectType . ' ' . $sObject : ''));
+    if (empty($_PATH_ELEMENTS[2]) || !$aTableInfo['shared']) {
+        $sObject = '';
+    } else {
+        $sObject = rawurldecode(($aTableInfo['unit'] == 'disease'? str_pad($_PATH_ELEMENTS[2], 5, '0', STR_PAD_LEFT) : $_PATH_ELEMENTS[2]));
+        if (!mysql_num_rows(lovd_queryDB('SELECT id FROM ' . constant('TABLE_' . strtoupper($aTableInfo['unit']) . 'S') . ' WHERE id = ?', array($sObject)))) {
+            exit;
+        }
+    }
+
+    define('PAGE_TITLE', 'Re-order ' . $aTableInfo['table_name'] . ' columns' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : ''));
     define('LOG_EVENT', 'ColumnOrder');
 
-    // Require manager clearance.
-    // FIXME; curators zouden geen individual kolommen mogen hersorteren...
-    lovd_requireAUTH(LEVEL_CURATOR);
+    if ($sObject != '') {
+        lovd_isAuthorized($aTableInfo['unit'], $sObject, true);
+        lovd_requireAUTH(LEVEL_CURATOR);
+    } else {
+        lovd_requireAUTH(LEVEL_MANAGER);
+    }
 
-    require ROOT_PATH . 'inc-lib-form.php';
+    $lCategory = strlen($sCategory);
 
     if (POST) {
         lovd_queryDB('START TRANSACTION', array(), true);
@@ -224,10 +214,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
                 continue; // Column not in category we're working in (hack attempt, however quite innocent)
             }
             $nOrder ++; // Since 0 is the first key in the array.
-            if (empty($sObject)) {
-                lovd_queryDB('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID), true);
-            } else {
-                lovd_queryDB('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sObjectType . 'id = ? AND colid = ?', array($nOrder, $sObject, $sID), true);
+            if (substr($sID, 0, $lCategory) == $sCategory) {
+                if ($sObject == '') {
+                    $sSQL = 'UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?';
+                    $aSQL = array($nOrder, $sID);
+                } else {
+                    $sSQL = 'UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $aTableInfo['unit'] . 'id = ? AND colid = ?';
+                    $aSQL = array($nOrder, $sObject, $sID);
+                }
+                lovd_queryDB($sSQL, $aSQL, true);
             }
         }
 
@@ -235,14 +230,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
         lovd_queryDB('COMMIT', array(), true);
 
         // Write to log...
-        lovd_writeLog('Event', LOG_EVENT, 'Updated column order'); // FIXME; bevat dit genoeg info, denk je?
+        lovd_writeLog('Event', LOG_EVENT, 'Updated the ' . $aTableInfo['table_name'] . ' column order' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : ''));
 
         // Thank the user...
-        header('Refresh: 3; url=' . lovd_getInstallURL() . 'columns');
+        header('Refresh: 3; url=' . lovd_getInstallURL() . ($sObject != ''? $aTableInfo['unit'] . 's/' . $sObject : 'columns/' . $sCategory));
 
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
-        lovd_showInfoTable('Successfully updated the column order!', 'success');
+        lovd_showInfoTable('Successfully updated the ' . $aTableInfo['table_name'] . ' column order' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : '') . '!', 'success');
 
         require ROOT_PATH . 'inc-bot.php';
         exit;
@@ -254,9 +249,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
 
     // Retrieve column IDs in current order.
     $aColumns = array();
-    // FIXME; dit moet in een nette if... dit is niet goed leesbaar.
-    $sSQL = (empty($sObject)? 'SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC' : 'SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $sObjectType . 'id = ? ORDER BY col_order ASC');
-    $aSQL = (empty($sObject)? array($sCategory . '/%') : array($sCategory . '/%', $sObject));
+    if ($sObject == '') {
+        $sSQL = 'SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC';
+        $aSQL = array($sCategory . '/%');
+    } else {
+        $sSQL = 'SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $aTableInfo['unit'] . 'id = ? ORDER BY col_order ASC';
+        $aSQL = array($sCategory . '/%', $sObject);
+    }
     $qColumns = lovd_queryDB($sSQL, $aSQL);
     while ($z = mysql_fetch_assoc($qColumns)) {
         $aColumns[] = $z['id'];
@@ -271,11 +270,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
 
     // Now loop the items in the order given.
     foreach ($aColumns as $sID) {
-        print('          <LI><INPUT type="hidden" name="columns[]" value="' . $sID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . substr($sID, strlen($sCategory)+1) . '</TD></TR></TABLE></LI>' . "\n");
+        print('          <LI><INPUT type="hidden" name="columns[]" value="' . $sID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . substr($sID, $lCategory+1) . '</TD></TR></TABLE></LI>' . "\n");
     }
 
     print('        </UL>' . "\n" .
-          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" .
+          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . ($sObject != ''? $aTableInfo['unit'] . 's/' . $sObject : 'columns/' . $sCategory) . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" .
           '      </FORM>' . "\n\n");
 
 ?>
@@ -1838,13 +1837,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             lovd_queryDB('START TRANSACTION');
             if (!$zData['active']) {
                 $sSQL = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES (?, ?, NOW())';
-                $q = lovd_queryDB($sSQL, array($zData['id'], $_AUTH['id']));
-                // FIXME; 2011-05-26; I don't think we still need this code here, if we'd use the $bHalt in lovd_queryDB().
-                if (!$q) {
-                    $sError = mysql_error(); // Save the mysql_error before it disappears...
-                    lovd_queryDB('ROLLBACK'); // ... because we need to end the transaction.
-                    lovd_queryError(LOG_EVENT, $sSQL, $sError);
-                }
+                $q = lovd_queryDB($sSQL, array($zData['id'], $_AUTH['id']), true);
             }
 
             // Write to log...
@@ -1868,12 +1861,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 $aTargets = explode(',', $_GET['target']);
                 $nTargets = count($aTargets);
                 $i = 1;
+
                 foreach ($aTargets as $sID) {
-                    // FIXME; get this data from $zData.
-                    // FIXME; this query will now be run for every disease/gene this column is added to.
-                    // FIXME; remarks for developers (decisions that need to be taken) need to be marked with FIXME so we can find them again.
-                    // Er zit niet voor niets een col_order in TABLE_COLS, ik stel voor deze als default te gebruiken
-                    list($zData['col_order']) = mysql_fetch_row(lovd_queryDB('SELECT col_order FROM ' . TABLE_COLS . ' WHERE id = ?', array($zData['colid'])));
                     $zData[$aTableInfo['unit'] . 'id'] = $sID;
 
                     // Query text.
@@ -1885,12 +1874,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                     }
                     $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
 
-                    $q = lovd_queryDB($sSQL, $aSQL);
-                    if (!$q) {
-                        $sError = mysql_error(); // Save the mysql_error before it disappears...
-                        lovd_queryDB('ROLLBACK'); // ... because we need to end the transaction.
-                        lovd_queryError(LOG_EVENT, $sSQL, $sError);
-                    }
+                    $q = lovd_queryDB($sSQL, $aSQL, true);
                     // FIXME; individual messages?
                     $_BAR->setProgress(90 + round(($i/$nTargets)*10));
                     $i ++;
@@ -1979,8 +1963,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
     if (count($aForm) == 1) {
         // I messed up somewhere.
-        // FIXME; Find better error message? Can this actually happen?
-        lovd_showInfoTable('Nothing to do???', 'stop');
+        lovd_showInfoTable('<I>/columns/' . $sColumnID . '?add</I><BR><BR>Form is empty(which should not be possible).<BR><I><SMALL>Please report this bug by copying the above text and send it to us by opening a new ticket in our <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">bug tracking system</A>.</SMALL></I>', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
@@ -2037,16 +2020,20 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
 
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
-        // FIXME; er staat nergens een controle of de genen die gesubmit zijn ook door de curator mogen worden bewerkt.
-        //   Er mist nog veel meer code die wel in 'add' aanwezig is; een voortgangs balk en berekening hoeveel tijd de ALTER TABLE nodig heeft.
+        // FIXME; Er mist nog veel meer code die wel in 'add' aanwezig is; een voortgangs balk en berekening hoeveel tijd de ALTER TABLE nodig heeft.
         //   Pak de VOLLEDIGE code van 'add' er bij, en ga regel voor regel checken of alle functionaliteit die in 'add' zit, hier ook in zit.
         //   Controles, manier van loggen, manier van data ophalen, voortgangsbalk, etc.
-        lovd_requireAUTH(LEVEL_CURATOR);
+        if (POST) {
+            foreach ($_POST['target'] as $sColumn) {
+                lovd_isAuthorized($aTableInfo['unit'], $sColumn, true);
+                lovd_requireAUTH(LEVEL_CURATOR);
+            }
+        }
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
     }
 
-    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.*, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE ac.colid = ?', array($sColumnID)));
+    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.id, c.hgvs, c.head_column, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID)));
 
     if (!$zData) {
         // Wrong ID, apparently.
@@ -2056,7 +2043,6 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         require ROOT_PATH . 'inc-bot.php';
         exit;
     } elseif (!$zData['colid']) {
-        // FIXME; This doesn't work. You can't see the difference. Do you see how to fix it?
         // Inactive column.
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
@@ -2105,16 +2091,13 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
                 // Query text; remove column registration first.
                 $sObject = ($sCategory == 'Phenotype'? 'diseaseid' : 'geneid');
                 lovd_queryDB('START TRANSACTION');
-                // FIXME; array_fill is not needed here, do it like it's done elsewhere! Don't reinvent the wheel, make sure you base your code on existing LOVD 3.0 as much as possible!!!
-                $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (' . implode(', ', array_fill(0, count($_POST['target']), '?')) . ') AND colid = ?';
+                $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (?' . str_repeat(', ?', count($_POST['target'])-1) . ') AND colid = ?';
                 $aQ = array_merge($_POST['target'], array($zData['id']));
                 $q = lovd_queryDB($sQ, $aQ, true);
                 lovd_queryDB('COMMIT');
 
                 // Check if the column is inactive in all diseases/genes. If so, DROP column from phenotypes/variants_on_transcripts table.
-                // FIXME; $nTargets is not a number.
-                $nTargets = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
-                // FIXME; This never returns TRUE.
+                list($nTargets) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
                 if (empty($nTargets)) {
                     // Deactivate the column.
                     $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
@@ -2228,8 +2211,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
     // Array which will make up the form table.
     $aForm = array_merge(
              array(
-                    array('POST', '', '', '', '50%', 14, '50%'),
-                    array('Remove custom column', '', 'print', $zData['id'] . ' (' . $zData['head_column'] . ')'),
+                    array('POST', '', '', '', '35%', 14, '65%'),
+                    array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from the ' . $aTableInfo['table_name'] . ' data table</B>'),
                   ),
              $aSelectObject,
              array(

@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-06-25
- * Modified    : 2011-05-13
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-07-29
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -38,30 +39,83 @@ oTT.className = 'tooltip';
 oTT.style.display = 'none'; // To prevent whitespace at the end of the page.
 window.document.body.appendChild(oTT);
 
-function lovd_showToolTip (sText) {
-    var oEvent = window.windowevent;
-    if (!oEvent) {
-        // IE
-        // These vars on oEvent would actually also work on FF.
-        var x = event.clientX + document.documentElement.scrollLeft;
-        var y = event.clientY + document.documentElement.scrollTop;
+var imgHide = window.document.createElement('img');
+imgHide.className = 'tooltip-hide';
+imgHide.setAttribute('src', 'gfx/mark_0.png');
+imgHide.setAttribute('onclick', 'lovd_hideToolTip(this); return false;');
+oTT.appendChild(imgHide);
+
+var timer;
+var timer_is_on = 0;
+
+function lovd_showToolTip (sText, handle)
+{
+    if (typeof(handle) == 'undefined') {
+        var oEvent = window.windowevent;
+        if (!oEvent) {
+            // IE
+            // These vars on oEvent would actually also work on FF.
+            var x = event.clientX + document.documentElement.scrollLeft;
+            var y = event.clientY + document.documentElement.scrollTop;
+        } else {
+            var x = oEvent.pageX;
+            var y = oEvent.pageY;
+        }
+        
+        x = eval(x + 20); // Move it a little bit to the right.
+        oTT.style.left = x + 'px';
+        oTT.style.top = y + 'px';
+        oTT.innerHTML = sText;
+        oTT.style.display = 'block';
     } else {
-        var x = oEvent.pageX;
-        var y = oEvent.pageY;
+        var aPosition = lovd_getPosition(handle);
+        oTT.style.left = aPosition[0]+'px';
+        oTT.style.top = aPosition[1]+13+'px';
+        oTT.style.display = 'block';
+        oTT.innerHTML = sText;
+        oTT.appendChild(imgHide);
+
+        if (timer_is_on) {
+            clearTimeout(timer);
+            timer_is_on = 0;
+        }
+
+        oTT.onmouseover = function () {
+            handle.isMouseOver = true;
+            if (timer_is_on) {
+                clearTimeout(timer);
+                timer_is_on = 0;
+            }
+        }
+
+        handle.onmouseout = function () {
+            timer = setTimeout('lovd_hideToolTip()', 100);
+            timer_is_on = 1;
+        }
+
+        oTT.onmouseout = function () {
+            handle.isMouseOver = false;
+            timer = setTimeout('lovd_hideToolTip()', 100);
+            timer_is_on = 1;
+        }
     }
-    var oTT = document.getElementById('tooltip');
-    
-    x = eval(x + 20); // Move it a little bit to the right.
-    oTT.style.left = x + 'px';
-    oTT.style.top = y + 'px';
-    oTT.innerHTML = sText;
-    oTT.style.display = ''; // A new tooltip had display none.
-    oTT.style.visibility = 'visible';
+}
+
+function lovd_getPosition (oElement)
+{
+    var aReturnArray = new Array(0, 0);
+    while (oElement != null) {
+        aReturnArray[0] += oElement.offsetLeft;
+        aReturnArray[1] += oElement.offsetTop;
+        oElement = oElement.offsetParent;
+    }
+    return aReturnArray;
 }
 
 function lovd_hideToolTip () {
-    var oTT = document.getElementById("tooltip");
-    oTT.style.visibility = 'hidden';
+    clearTimeout(timer);
+    timer_is_on = 0;
+    oTT.style.display = 'none';
 }
 
 function recordEvent (oEvent) {

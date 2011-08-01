@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-07-20
+ * Modified    : 2011-07-28
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,6 +99,33 @@ class LOVD_Object {
 
 
 
+    function autoExplode ($zData)
+    {
+        // Automatically explode GROUP_CONCAT values based on their name.
+        foreach ($zData as $key => $val) {
+            if ($key{0} == '_') {
+                unset($zData[$key]);
+                if (!empty($val)) {
+                    if ($key{1} == '_') {
+                        // Explode GROUP_CONCAT nested array
+                        $aValues = explode(';;', $val);
+                        $zData[ltrim($key, '_')] = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
+                    } else {
+                        // Explode GROUP_CONCAT array
+                        $zData[ltrim($key, '_')] = explode(';', $val);
+                    }
+                } else {
+                    $zData[ltrim($key, '_')] = array();
+                }
+            }
+        }
+        return $zData;
+    }
+    
+    
+    
+    
+    
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
@@ -331,43 +358,8 @@ class LOVD_Object {
             exit;
         }
 
-        // FIXME; this code has been added twice to this file, but I need it at viewList() also.
-        //   This needs to be put in a member function, such that the code is not repeated three times.
-        //   (member function == function within this class)
-        foreach ($zData as $key => $val) {
-            if (substr($key, 0, 2) == '__') {
-                // Explode nested GROUP_CONCAT array
-                // FIXME; als je de unset() eerst doet, heb je $keyOld niet nodig.
-                $keyOld = $key;
-                $key = substr($key, 2);
-                $aValues = explode(';;', $val);
-                // FIXME; ik stel deze voor:
-                // $aValues = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
-                $zData[$key] = array();
-                foreach ($aValues as $sConcatValues) {
-                    $zData[$key][] = explode(';', $sConcatValues);
-                }
-                unset($zData[$keyOld]);
-            } elseif (substr($key, 0, 1) == '_') {
-                // Explode GROUP_CONCAT array
-                // FIXME; idem, probeer onder $keyOld uit te komen.
-                $keyOld = $key;
-                $key = substr($key, 1);
-                $zData[$key] = explode(';', $val);
-                unset($zData[$keyOld]);
-                // FIXME; de elseif hieronder kan nooit TRUE zijn.
-            } elseif (substr($key, 0, 1) == '_' && empty($val)) {
-                // FIXME; dit zou een losse if binnen de vorige elseif moeten zijn denk ik, niet weer een elseif met deels dezelfde controle.
-                //   Zorg er voor dat de check voor een lege $val en de fix daarvoor, maar 1x in de code voorkomt.
-                // If no data is retrieved from the database, make an empty array to avoid notices
-                $keyOld = $key;
-                // FIXME; deze if kan nooit true zijn (je gebruikt elseif's hierboven).
-                $nUnderscores = (substr($key, 0, 2) == '__'? 2 : 1);
-                $key = substr($key, $nUnderscores);
-                $zData[$key] = array();
-                unset($zData[$keyOld]);
-            }
-        }
+        $zData = $this->autoExplode($zData);
+        
 
         return $zData;
     }
@@ -492,7 +484,7 @@ class LOVD_Object {
     function viewEntry ($nID = false)
     {
         // Views just one entry from the database.
-
+        
         if (empty($nID)) {
             // We were called, but the class wasn't initiated with an ID. Fail.
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::viewEntry() - Method didn\'t receive ID');
@@ -538,32 +530,7 @@ class LOVD_Object {
             lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewEntry()'), $sSQL, mysql_error());
         }
 
-        foreach ($zData as $key => $val) {
-            if (substr($key, 0, 2) == '__' && !empty($val)) {
-                // Explode nested GROUP_CONCAT array
-                $keyOld = $key;
-                $key = substr($key, 2);
-                $aValues = explode(';;', $val);
-                $zData[$key] = array();
-                foreach ($aValues as $sConcatValues) {
-                    $zData[$key][] = explode(';', $sConcatValues);
-                }
-                unset($zData[$keyOld]);
-            } elseif (substr($key, 0, 1) == '_' && !empty($val)) {
-                // Explode GROUP_CONCAT array
-                $keyOld = $key;
-                $key = substr($key, 1);
-                $zData[$key] = explode(';', $val);
-                unset($zData[$keyOld]);
-            } elseif (substr($key, 0, 1) == '_' && empty($val)) {
-                // If no data is retrieved from the database, make an empty array to avoid notices
-                $keyOld = $key;
-                $nUnderscores = (substr($key, 0, 2) == '__'? 2 : 1);
-                $key = substr($key, $nUnderscores);
-                $zData[$key] = array();
-                unset($zData[$keyOld]);
-            }
-        }
+        $zData = $this->autoExplode($zData);
 
         $zData = $this->prepareData($zData, 'entry');
 
@@ -618,6 +585,7 @@ class LOVD_Object {
         // FIXME; the needed function should then be in a different library because inc-lib-form.php is for forms, not for viewLists!
         require_once ROOT_PATH . 'inc-lib-form.php'; // For checking column type.
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
+        lovd_includeJS('inc-js-tooltip.php');
 
         // First, check if entries are in the database at all.
         $nTotal = $this->getCount();
@@ -970,6 +938,9 @@ class LOVD_Object {
                     $zData['row_link'] = '';
                 }
             }
+
+            $zData = $this->autoExplode($zData);
+
             $zData = $this->prepareData($zData);
 
             // FIXME; rawurldecode() in the line below should have a better solution.

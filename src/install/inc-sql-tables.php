@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-05-25
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-08-01
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -352,7 +352,6 @@ $aTableSQL =
     position_c_start_intron INT,
     position_c_end MEDIUMINT,
     position_c_end_intron INT,
-    edited_date DATETIME,
     PRIMARY KEY (id, transcriptid),
     INDEX (transcriptid),
     INDEX (pathogenicid),
@@ -389,6 +388,7 @@ $aTableSQL =
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
     individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
     ownerid SMALLINT(5) UNSIGNED ZEROFILL,
+    statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -397,11 +397,13 @@ $aTableSQL =
     INDEX (diseaseid),
     INDEX (individualid),
     INDEX (ownerid),
+    INDEX (statusid),
     INDEX (created_by),
     INDEX (edited_by),
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_diseaseid FOREIGN KEY (diseaseid) REFERENCES ' . TABLE_DISEASES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_individualid FOREIGN KEY (individualid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_ownerid FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings

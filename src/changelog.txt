@@ -53,6 +53,24 @@
    viewLists when searching or sorting them.
 
 
+ * Fixed bug; All custom columns can now be removed properly.
+ * Fixed bug; When a user edits a gene, LOVD checks if there is a known UD number
+   in the database. If not, then it generates one through mutalyzer.
+ * Implemented a re-ordering functionality of custom columns.
+ * Changed the regular expression for gene symbol validity so that it can also
+   contain @ and #.
+ * Implemented a urldecode and urlencode in genes.php to allow special chars(@/#)
+   to be in the gene symbol and thus in the URL.
+ * Implemented automatic exploding of GROUP_CONCAT data based on their name. 
+   So '_genes' = array (;) or '__active_diseases' = nested array(;;).
+ * Added the temporary memory leak fix from genes?create also to genes?edit & transcripts?create.
+ * Fixed bug; Variants can be added to a screening again. Still this is only possible
+   from the screenings page when you select "Add variant to screening".
+ * The proper columns are now loaded also for transcript variants in object_custom.php.
+ * Implemented tooltips for custom links in viewLists, inside the tooltip is the actual link
+   so that they are now clickable without going to the viewEntry.
+ * User levels are now properly displayed in user viewLists & viewEntries and sortable(not searchable)
+
 
 /*******************
  * 3.0 Alpha 02

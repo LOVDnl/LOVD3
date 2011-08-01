@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-07-22
+ * Modified    : 2011-07-28
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -45,6 +45,7 @@ class LOVD_Custom extends LOVD_Object {
     var $sObject = 'Custom';
     var $bShared = false;
     var $aColumns = array();
+    var $aCustomLinks = array();
     var $sObjectID = '';
 
 
@@ -74,14 +75,23 @@ class LOVD_Custom extends LOVD_Object {
                         'ORDER BY sc.col_order';
                 $aArgs[] = $this->sObjectID;
             } else {
-                // FIXME! Waarom wordt er gekoppeld aan TABLE_PHENOTYPES???
-                $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
-                        'FROM ' . TABLE_COLS . ' AS c ' .
-                        'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
-                        'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (sc.diseaseid = p.diseaseid) ' .
-                        'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
-                        'AND p.id=? ' .
-                        'ORDER BY sc.col_order';
+                if ($this->sObject == 'Phenotype') {
+                    $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
+                            'FROM ' . TABLE_COLS . ' AS c ' .
+                            'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
+                            'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (sc.diseaseid = p.diseaseid) ' .
+                            'WHERE c.id LIKE "' . $this->sObject . '/%" ' .
+                            'AND p.id=? ' .
+                            'ORDER BY sc.col_order';
+                } elseif ($this->sObject == 'Transcript_Variant') {
+                    $sSQL = 'SELECT c.*, sc.*, vot.id AS variantid ' .
+                            'FROM ' . TABLE_COLS . ' AS c ' .
+                            'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
+                            'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (sc.geneid = vot.geneid) ' .
+                            'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
+                            'AND vot.id=? ' .
+                            'ORDER BY sc.col_order';
+                }
                 $aArgs[] = $nID;
             }
         }
@@ -94,13 +104,20 @@ class LOVD_Custom extends LOVD_Object {
         }
 
         // Gather the custom link information.
-        $qLinks = lovd_queryDB('SELECT c2l.colid, l.* ' .
-                               'FROM ' . TABLE_COLS2LINKS . ' AS c2l ' .
-                               'INNER JOIN ' . TABLE_LINKS . ' AS l ON (c2l.linkid = l.id) ' .
-                               'WHERE c2l.colid LIKE ?', array($this->sObject . '/%'));
-        while ($z = mysql_fetch_assoc($qLinks)) {
-            if (isset($this->aColumns[$z['colid']])) {
-                $this->aColumns[$z['colid']]['custom_links'][$z['id']] = $z;
+        $qLinks = lovd_queryDB('SELECT * FROM ' . TABLE_LINKS);
+        while ($zLink = mysql_fetch_assoc($qLinks)) {
+            $zLink['pattern_text'] = preg_replace('/\[\d\]/', '(.*)', $zLink['pattern_text']);
+            $zLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $zLink['replace_text']);
+            $this->aCustomLinks[$zLink['id']] = $zLink;
+        }
+
+        // Add the custom links to the columns that use them.
+        $qCols2Links = lovd_queryDB('SELECT * ' .
+                                    'FROM ' . TABLE_COLS2LINKS . ' ' .
+                                    'WHERE colid LIKE ?', array((isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%'));
+        while ($zCols2Links = mysql_fetch_assoc($qCols2Links)) {
+            if (isset($this->aColumns[$zCols2Links['colid']])) {
+                $this->aColumns[$zCols2Links['colid']]['custom_links'][] = $zCols2Links['linkid'];
             }
         }
 
@@ -113,7 +130,7 @@ class LOVD_Custom extends LOVD_Object {
 
     function buildViewEntry ()
     {
-        // FIXME; define function's purpose.
+        // Gathers the columns which are active for the current data type and returns them in a viewEntry format
         $aViewEntry = array();
         foreach ($this->aColumns as $sID => $aCol) {
             $aViewEntry[$sID] = $aCol['head_column'];
@@ -127,8 +144,16 @@ class LOVD_Custom extends LOVD_Object {
 
     function buildFields ()
     {
-        // FIXME; define function's purpose. Seems more like a getFields(). 
-        return array_keys($this->aColumns);
+        // Gathers the columns to be used for lovd_(insert/update)Entry and returns them
+
+        global $_AUTH, $_PATH_ELEMENTS;
+
+        $aFields = array();
+        foreach($this->aColumns as $sCol => $aCol) {
+            // FIXME; implement a check for authorization to create/edit each columns.
+            $aFields[] = $sCol;
+        }
+        return $aFields;
     }
 
 
@@ -222,7 +247,8 @@ class LOVD_Custom extends LOVD_Object {
             // Any custom links we want to mention?
             if (!empty($aCol['custom_links'])) {
                 $sLinks = '';
-                foreach ($aCol['custom_links'] as $nLink => $aLink) {
+                foreach ($aCol['custom_links'] as $nLink) {
+                    $aLink = $this->aCustomLinks[$nLink];
                     $sToolTip = str_replace(array("\r\n", "\r", "\n"), '<BR>', 'Click to insert:<BR>' . $aLink['pattern_text'] . '<BR><BR>' . addslashes(htmlspecialchars($aLink['description'])));
                     $sLinks .= ($sLinks? ', ' : '') . '<A href="#" onmouseover="lovd_showToolTip(\'' . $sToolTip . '\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'' . $aLink['pattern_text'] . '\'); return false">' . $aLink['name'] . '</A>';
                 }
@@ -244,7 +270,7 @@ class LOVD_Custom extends LOVD_Object {
 
     function buildViewList ()
     {
-        // FIXME; define function's purpose.
+        // Gathers the columns which are active for the current data type and returns them in a viewList format
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
             $aViewList[$sID] = 
@@ -298,8 +324,7 @@ class LOVD_Custom extends LOVD_Object {
         // Checks if the selected values are indeed from the selection list.
         if ($this->aColumns[$sCol]['form_type'][2] == 'select' && $this->aColumns[$sCol]['form_type'][3] >= 1) {
             if (!empty($val)) {
-                // FIXME; check wat er gebeurt, als er in de definitie van de select options er meer spaties voor de = worden gezet. Hoe wordt die waarde opgeslagen in de database? Komt die waarde deze check wel door?
-                $aOptions = preg_replace('/ =.*$/', '', $this->aColumns[$sCol]['select_options']);
+                $aOptions = preg_replace('/(\s+)?=.*$/', '', $this->aColumns[$sCol]['select_options']);
                 (!is_array($val)? $val = array($val) : false);
                 foreach ($val as $sValue) {
                     if (!in_array($sValue, $aOptions)) {
@@ -364,24 +389,20 @@ class LOVD_Custom extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         $zData = parent::prepareData($zData, $sView);
-        // FIXME; ik denk niet dat dit een handige plek is; prepareData() hoort eigenlijk geen output te geven lijkt me; als je deze JS nodig hebt, moet hij automatisch bij viewLists() of viewEntry() erbij worden gedaan.
-        lovd_includeJS('inc-js-tooltip.php');
         foreach ($this->aColumns as $sCol => $aCol) {
             $bCustomLink = false;
             if (!empty($aCol['custom_links'])) {
-                foreach ($aCol['custom_links'] as $nLink => $aLink) {
-                    $sPatternText = preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text']);
-                    $sReplaceText = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
+                foreach ($aCol['custom_links'] as $nLink) {
                     // FIXME; dit moet gefixed worden voor viewLists.
+                    $sPatternText = $this->aCustomLinks[$nLink]['pattern_text'];
+                    $sReplaceText = $this->aCustomLinks[$nLink]['replace_text'];
                     if (preg_match($sPatternText, $zData[$aCol['colid']])) {
                         $bCustomLink = true;
                     }
                     if ($sView == 'list' && $bCustomLink) {
-                        //$sReplaceText = '<A onmouseover="lovd_showToolTip(\'Tooltip\');" onmouseout="lovd_hideToolTip();" onclick="return false;">' . strip_tags($sReplaceText) . '</A>';
-                        $sReplaceText = strip_tags($sReplaceText);
+                        $sReplaceText = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'Click ' . str_replace('"', '\\\'', preg_replace('/>(.*)</', ' target="_blank">here<', $sReplaceText)) . ' to follow the link.\', this);">' . strip_tags($sReplaceText) . '</SPAN>';
                     }
                     $zData[$aCol['colid']] = preg_replace('/' . $sPatternText . '/U', $sReplaceText, $zData[$aCol['colid']]);
-                    //$zData[$aCol['colid']] = ($sView == 'list' && $bCustomLink? '<A onmouseover="lovd_showToolTip(\'Tooltip\');" onmouseout="lovd_hideToolTip();" onclick="return false;">' . strip_tags($zData[$aCol['colid']]) . '</A>' : $zData[$aCol['colid']]);
                 }
             }
         }

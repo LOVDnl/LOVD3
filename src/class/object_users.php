@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-07-27
+ * Modified    : 2011-07-29
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,24 +51,28 @@ class LOVD_User extends LOVD_Object {
     function LOVD_User ()
     {
         // Default constructor.
-
+        global $_SETT;
+        
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT *, (login_attempts >= 3) AS locked ' .
                                'FROM ' . TABLE_USERS . ' ' .
                                'WHERE id = ?';
 
         // SQL code for viewing an entry.
+        $sLevelQuery = '';
+        foreach ($_SETT['user_levels'] as $nLevel => $sLevel) {
+            $sLevelQuery .= ' WHEN "' . $nLevel . '" THEN "' . $sLevel . '"';
+        }
+
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
                                            '(u.login_attempts >= 3) AS locked, ' .
-                                           'GROUP_CONCAT(u2g.geneid ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, ' .
+                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, ' .
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
-                                           // FIXME: gebruik $_SETT['user_levels'] !!! (Zowel de cijfers, als de namen)
-                                           // FIXME; hoe zie je nu of iemand curator en/of collaborator is?
-                                           'CASE u.level WHEN "9" THEN "Database administrator" WHEN "7" THEN "LOVD Manager" WHEN "1" THEN "Submitter" END AS level_';
+                                           'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN 5 WHEN 0 THEN 3 END, 1)) AS level';
         $this->aSQLViewEntry['FROM']     = TABLE_USERS . ' AS u ' .
-                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid AND u2g.allow_edit = 1) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (u.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id)';
@@ -76,17 +80,14 @@ class LOVD_User extends LOVD_Object {
 
         // SQL code for viewing a list of users.
         $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
-                                          'COUNT(u2g.geneid) AS curates, ' .
+                                          'COUNT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END) AS curates, ' .
                                           'c.name AS country_, ' .
-                                           // FIXME: gebruik $_SETT['user_levels'] !!! (Zowel de cijfers, als de namen)
-                                           // FIXME; hoe zie je nu of iemand curator en/of collaborator is?
-                                           //    Perhaps using subqueries that determine "level" column?
-                                          'CASE level WHEN "9" THEN "Database administrator" WHEN "7" THEN "LOVD Manager" WHEN "1" THEN "Submitter" END AS level_';
+                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN 5 WHEN 0 THEN 3 END, 1)) AS level';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
-                                          'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid AND u2g.allow_edit = 1) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
         $this->aSQLViewList['GROUP_BY'] = 'u.id';
-        $this->aSQLViewList['ORDER_BY'] = 'u.level DESC, u.name ASC';
+        $this->aSQLViewList['ORDER_BY'] = 'level DESC, u.name ASC';
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
@@ -159,8 +160,8 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('u.created_date', 'ASC', true)),
                         'level_' => array(
                                     'view' => array('Level', 150),
-                                    // FIXME; sorteren gaat niet goed zo!!!
-                                    'db'   => array('level_', 'ASC', true)),
+                                    // FIXME; zoeken op de level naam moet een oplossing voor gevonden worden!!!
+                                    'db'   => array('level', 'DESC', false)),
                       );
         $this->sSortDefault = 'level_';
 
@@ -405,6 +406,7 @@ class LOVD_User extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         $zData['active'] = file_exists(session_save_path() . '/sess_' . $zData['phpsessid']);
+        $zData['level_'] = $_SETT['user_levels'][$zData['level']];
         if ($sView == 'list') {
             $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['name'] . '</A>';
             $sAlt = ($zData['active']? 'Online' : ($zData['locked']? 'Locked' : 'Offline'));
