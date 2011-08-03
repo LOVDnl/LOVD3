@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-07-29
+ * Modified    : 2011-08-03
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -194,7 +194,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
         }
     }
 
-    define('PAGE_TITLE', 'Re-order ' . $aTableInfo['table_name'] . ' columns' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : ''));
+    define('PAGE_TITLE', 'Re-order ' . $aTableInfo['table_name'] . ' columns' . ($sObject? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : ''));
     define('LOG_EVENT', 'ColumnOrder');
 
     if ($sObject != '') {
@@ -214,15 +214,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
                 continue; // Column not in category we're working in (hack attempt, however quite innocent)
             }
             $nOrder ++; // Since 0 is the first key in the array.
-            if (substr($sID, 0, $lCategory) == $sCategory) {
-                if ($sObject == '') {
-                    $sSQL = 'UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?';
-                    $aSQL = array($nOrder, $sID);
-                } else {
-                    $sSQL = 'UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $aTableInfo['unit'] . 'id = ? AND colid = ?';
-                    $aSQL = array($nOrder, $sObject, $sID);
-                }
-                lovd_queryDB($sSQL, $aSQL, true);
+            if (!$sObject) {
+                lovd_queryDB('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID), true);
+            } else {
+                lovd_queryDB('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $aTableInfo['unit'] . 'id = ? AND colid = ?', array($nOrder, $sObject, $sID), true);
             }
         }
 
@@ -249,19 +244,16 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
 
     // Retrieve column IDs in current order.
     $aColumns = array();
-    if ($sObject == '') {
-        $sSQL = 'SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC';
-        $aSQL = array($sCategory . '/%');
+    if (!$sObject) {
+        $qColumns = lovd_queryDB('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'));
     } else {
-        $sSQL = 'SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $aTableInfo['unit'] . 'id = ? ORDER BY col_order ASC';
-        $aSQL = array($sCategory . '/%', $sObject);
+        $qColumns = lovd_queryDB('SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $aTableInfo['unit'] . 'id = ? ORDER BY col_order ASC', array($sCategory . '/%', $sObject));
     }
-    $qColumns = lovd_queryDB($sSQL, $aSQL);
     while ($z = mysql_fetch_assoc($qColumns)) {
         $aColumns[] = $z['id'];
     }
 
-    lovd_showInfoTable('Below is a sorting list of all ' . ($sObject != ''? 'active columns' : 'available columns (active & inactive)') . '. By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect viewLists/viewEntries in the same way.', 'information');
+    lovd_showInfoTable('Below is a sorting list of all ' . ($sObject? 'active columns' : 'available columns (active & inactive)') . '. By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect viewLists/viewEntries in the same way.', 'information');
 
     // Form & table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
@@ -1963,7 +1955,17 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
     if (count($aForm) == 1) {
         // I messed up somewhere.
-        lovd_showInfoTable('<I>/columns/' . $sColumnID . '?add</I><BR><BR>Form is empty(which should not be possible).<BR><I><SMALL>Please report this bug by copying the above text and send it to us by opening a new ticket in our <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">bug tracking system</A>.</SMALL></I>', 'stop');
+        lovd_showInfoTable('<B>Nothing to do???</B><BR><I>' . 
+                           '&nbsp;&nbsp;ColID=' . $zData['id'] . '<BR>' .
+                           '&nbsp;&nbsp;Target=' . (empty($_GET['target'])? '' : htmlspecialchars($_GET['target'])) . '<BR>' . // Target actually already should have been cleaned.
+                           '&nbsp;&nbsp;Active=' . (int) $zData['active'] . '<BR>' .
+                           '&nbsp;&nbsp;ActiveChecked=' . (int) $zData['active_checked'] . '<BR>' .
+                           '&nbsp;&nbsp;TableSQL=' . $aTableInfo['table_sql'] . '<BR>' .
+                           '&nbsp;&nbsp;TableName=' . $aTableInfo['table_name'] . '<BR>' .
+                           '&nbsp;&nbsp;Shared=' . (int) $aTableInfo['shared'] . '<BR>' .
+                           '&nbsp;&nbsp;Unit=' . $aTableInfo['unit'] . '</I><BR>' .                          
+                           'Such failure is most likely caused by a bug in LOVD.<BR>' .
+                           'Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">file a bug</A> and include the above messages to help us solve the problem.', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
@@ -2019,15 +2021,13 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
     require ROOT_PATH . 'inc-lib-columns.php';
 
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
-    if ($aTableInfo['shared']) {
+    if ($aTableInfo['shared'] && POST) {
         // FIXME; Er mist nog veel meer code die wel in 'add' aanwezig is; een voortgangs balk en berekening hoeveel tijd de ALTER TABLE nodig heeft.
         //   Pak de VOLLEDIGE code van 'add' er bij, en ga regel voor regel checken of alle functionaliteit die in 'add' zit, hier ook in zit.
         //   Controles, manier van loggen, manier van data ophalen, voortgangsbalk, etc.
-        if (POST) {
-            foreach ($_POST['target'] as $sColumn) {
-                lovd_isAuthorized($aTableInfo['unit'], $sColumn, true);
-                lovd_requireAUTH(LEVEL_CURATOR);
-            }
+        foreach ($_POST['target'] as $sColumn) {
+            lovd_isAuthorized($aTableInfo['unit'], $sColumn, true);
+            lovd_requireAUTH(LEVEL_CURATOR);
         }
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -2098,7 +2098,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
 
                 // Check if the column is inactive in all diseases/genes. If so, DROP column from phenotypes/variants_on_transcripts table.
                 list($nTargets) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
-                if (empty($nTargets)) {
+                if (!$nTargets) {
                     // Deactivate the column.
                     $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
                     $q = lovd_queryDB($sQ, array($zData['id']), true);

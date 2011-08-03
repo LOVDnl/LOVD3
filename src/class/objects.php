@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-07-28
+ * Modified    : 2011-08-03
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -121,14 +121,15 @@ class LOVD_Object {
         }
         return $zData;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
+        global $_AUTH;
         $aForm = $this->getForm();
         $aFormInfo = $aForm[0];
         unset($aForm[0]);
@@ -199,8 +200,13 @@ class LOVD_Object {
                     $GLOBALS['_' . $aFormInfo[0]][$sName] = 0;
                 }
             }
+        }
 
-            // FIXME; check password field here; if password is a mandatory field, verify password (!lovd_verifyPassword($aData['password'], $_AUTH['password']))
+        if ($sName == 'password') {
+            // Password is in the form, it must be checked. Assuming here that it is also considered mandatory.
+            if (!empty($aData['password']) && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
+                lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+            }
         }
     }
 
@@ -432,7 +438,7 @@ class LOVD_Object {
     {
         // Unset columns not allowed to be visible for the current user level.
         global $_AUTH;
-        
+
         foreach($this->aColumnsViewEntry as $sCol => $Col) {
             if (is_array($Col) && (!$_AUTH || $_AUTH['level'] < $Col[1])) {
                 unset($this->aColumnsViewEntry[$sCol]);
@@ -484,7 +490,7 @@ class LOVD_Object {
     function viewEntry ($nID = false)
     {
         // Views just one entry from the database.
-        
+
         if (empty($nID)) {
             // We were called, but the class wasn't initiated with an ID. Fail.
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::viewEntry() - Method didn\'t receive ID');
@@ -585,7 +591,6 @@ class LOVD_Object {
         // FIXME; the needed function should then be in a different library because inc-lib-form.php is for forms, not for viewLists!
         require_once ROOT_PATH . 'inc-lib-form.php'; // For checking column type.
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
-        lovd_includeJS('inc-js-tooltip.php');
 
         // First, check if entries are in the database at all.
         $nTotal = $this->getCount();
@@ -727,7 +732,8 @@ class LOVD_Object {
         if (!$bAjax) {
             // Keep the URL clean; disable any fields that are not used.
             lovd_includeJS('inc-js-viewlist.php' . (!$bNoHistory? '' : '?nohistory'));
-        
+            lovd_includeJS('inc-js-tooltip.php');
+
             // Print form; required for sorting and searching.
             // Because we don't want the form to submit itself while we are waiting for the Ajax response, we need to kill the native submit() functionality.
             print('      <FORM action="' . CURRENT_PATH . '" method="get" id="viewlistForm_' . $sViewListID . '" style="margin : 0px;" onsubmit="return false;">' . "\n" .
@@ -829,7 +835,16 @@ class LOVD_Object {
                 }
             }
         }
-        
+
+        // FIXME; this is a temporary hack just to get the genes?authorize working when all users have been selected.
+        //   There is no longer a viewList when all users have been selected, but we need one for the JS execution.
+        //   Possibly, this code can be standardized a bit and, if necessary for other viewLists as well, can be kept here.
+        if (!$nTotal && $this->sObject == 'User' && !$bSearched && !empty($_GET['search_id'])) {
+            // FIXME; Maybe check for JS contents of the rowlink?
+            // There has been searched, but apparently the ID column is forced hidden. This must be the authorize page.
+            $bSearched = true; // This will trigger the creation of the viewList table.
+        }
+
         if ($nTotal || $bSearched) {
             // Only print stuff if we're not just loading one entry right now.
             if (!$bOnlyRows) {
@@ -969,9 +984,6 @@ class LOVD_Object {
                 print('      </DIV></FORM><BR>' . "\n"); // These contents will be replaced by Ajax.
             }
         }
-
-
-
 
         return true;
     }

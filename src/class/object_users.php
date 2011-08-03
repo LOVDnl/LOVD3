@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-07-29
+ * Modified    : 2011-08-03
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,12 +58,15 @@ class LOVD_User extends LOVD_Object {
                                'FROM ' . TABLE_USERS . ' ' .
                                'WHERE id = ?';
 
-        // SQL code for viewing an entry.
-        $sLevelQuery = '';
+        // SQL code to insert the level names into the database output, so it can be searched on.
+        //   Problem is however, that the sorting than fails (alphabet and not level integer).
+        //   This can only be fixed, if we can get the field to sort on u.level but show and search on 'level'.
+        $sLevelQuery = ''; // FIXME; currently unused.
         foreach ($_SETT['user_levels'] as $nLevel => $sLevel) {
             $sLevelQuery .= ' WHEN "' . $nLevel . '" THEN "' . $sLevel . '"';
         }
 
+        // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
                                            '(u.login_attempts >= 3) AS locked, ' .
                                            'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, ' .
@@ -277,13 +280,6 @@ class LOVD_User extends LOVD_Object {
         if (!empty($aData['level']) && $aData['level'] >= $_AUTH['level']) {
             lovd_writeLog('Error', 'HackAttempt', 'Tried to upgrade user ID ' . $_PATH_ELEMENTS[1] . ' to level ' . $_SETT['user_levels'][$aData['level']] . ')');
             lovd_errorAdd('level', 'User level is not permitted. Hack attempt.');
-        }
-
-        if (lovd_getProjectFile() != '/install/index.php') {
-            // User had to enter his/her password for authorization.
-            if ($aData['password'] && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
-                lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-            }
         }
 
         // XSS attack prevention. Deny input of HTML.

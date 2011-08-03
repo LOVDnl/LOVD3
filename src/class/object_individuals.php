@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-07-27
+ * Modified    : 2011-08-03
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -134,7 +134,7 @@ class LOVD_Individual extends LOVD_Custom {
                                     'view' => array('Disease', 200),
                                     'db'   => array('diseases_', false, true)),
                         'owner' => array(
-                                    'view' => array('Owner', 300),
+                                    'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
                         'status' => array(
                                     'view' => array('Status', 70),
@@ -215,10 +215,6 @@ class LOVD_Individual extends LOVD_Custom {
             }
         }
        
-        if (ACTION == 'edit' && (!isset($aData['password']) || !lovd_verifyPassword($aData['password'], $_AUTH['password']))) {
-            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
-        
         lovd_checkXSS();
     }
 

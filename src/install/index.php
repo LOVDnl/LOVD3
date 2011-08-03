@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-08-03
+ * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -462,7 +462,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
                 // Error when running query. We will use the Div for the form now.
                 $sMessage = 'Error during install while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', mysql_error()) . '</DIV><BR>' .
                             'A failed installation is most likely caused by a bug in LOVD.<BR>' .
-                            'Please <A href="' . $_SETT['upstream_URL'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
+                            'Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
                 $_BAR->setMessage($sMessage, 'done');
                 $_BAR->setMessageVisibility('done', true);
                 // LOVD 2.0's lovd_rollback() has been replaced by a two-line piece of code...
@@ -536,7 +536,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE
                 print('      Error during install while storing the settings.<BR>' . "\n" .
                       '      I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', mysql_error()) . '</DIV><BR><BR>' . "\n" .
                       '      A failed installation is most likely caused by a bug in LOVD.<BR>' . "\n" .
-                      '      Please <A href="' . $_SETT['upstream_URL'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.<BR>' . "\n\n");
+                      '      Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.<BR>' . "\n\n");
                 require 'inc-bot.php';
                 exit;
             }

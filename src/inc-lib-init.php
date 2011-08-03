@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-07-27
+ * Modified    : 2011-08-02
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -588,7 +588,18 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
 
     if (substr($sURL, 0, 4) != 'http' || (ini_get('allow_url_fopen') && !$sPOST)) {
         // Normal file() is fine.
-        return @file($sURL, FILE_IGNORE_NEW_LINES);
+        // Unfortunately, FILE_IGNORE_NEW_LINES does not work PHP < 5.0.0.
+        if (substr(phpversion(), 0, 1) == '4') {
+            $aFile = @file($sURL);
+            if (is_array($aFile)) {
+                foreach ($aFile as $key => $val) {
+                    $aFile[$key] = rtrim($val, "\r\n");
+                }
+            }
+            return $aFile;
+        } else {
+            return @file($sURL, FILE_IGNORE_NEW_LINES);
+        }
     }
 
     $aHeaders = array();

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-07-28
+ * Modified    : 2011-08-03
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -59,14 +59,22 @@ class LOVD_Custom extends LOVD_Object {
 
         $aArgs = array();	
 
+        // FIXME; Is het misschien een idee $this->sCategory altijd in te vullen hier? Dus
+        //   if (!$this->sCategory) { $this->sCategory = $this->sObject; }
+        //   dat scheelt een hoop IF()'s.
+
+        // Note: $sCategory is only defined by the variant types, because of the difference in their $sObject and the custom column category they use.
         if (!$this->bShared) {
+            // "Simple", non-shared, data types (individuals, genomic variants, screenings).
             $sSQL = 'SELECT c.*, ac.* ' .
                     'FROM ' . TABLE_ACTIVE_COLS . ' AS ac ' .
                     'LEFT OUTER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) ' .
                     'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
                     'ORDER BY c.col_order';
         } else {
-            if ($this->sObjectID != '') {
+            // Shared data type (variants on transcripts, phenotypes).
+            if ($this->sObjectID) {
+                // Parent object given (a gene for variants, a disease for phenotypes).
                 $sSQL = 'SELECT c.*, sc.* ' .
                         'FROM ' . TABLE_COLS . ' AS c ' .
                         'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
@@ -75,6 +83,9 @@ class LOVD_Custom extends LOVD_Object {
                         'ORDER BY sc.col_order';
                 $aArgs[] = $this->sObjectID;
             } else {
+                // FIXME; kan er niet wat specifieke info in de objects (e.g. object_phenotypes) worden opgehaald, zodat dit stukje hier niet nodig is?
+                // FIXME; $nID op global zetten voelt wat "breekbaar". Verander je daar ooit eens naar een andere variabele naam, failed dit stukje hier.
+                //    Is er een andere oplossing voor te vinden? Argument meegeven in constructor misschien?
                 if ($this->sObject == 'Phenotype') {
                     $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
                             'FROM ' . TABLE_COLS . ' AS c ' .
@@ -103,10 +114,11 @@ class LOVD_Custom extends LOVD_Object {
             $this->aColumns[$z['id']] = $z;
         }
 
+        // FIXME; beter weer in 1 query... hoe zorg je er voor, dat de custom links niet steeds opnieuw geparsed worden?
         // Gather the custom link information.
         $qLinks = lovd_queryDB('SELECT * FROM ' . TABLE_LINKS);
         while ($zLink = mysql_fetch_assoc($qLinks)) {
-            $zLink['pattern_text'] = preg_replace('/\[\d\]/', '(.*)', $zLink['pattern_text']);
+            $zLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $zLink['pattern_text'])) . '/';
             $zLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $zLink['replace_text']);
             $this->aCustomLinks[$zLink['id']] = $zLink;
         }
@@ -145,12 +157,12 @@ class LOVD_Custom extends LOVD_Object {
     function buildFields ()
     {
         // Gathers the columns to be used for lovd_(insert/update)Entry and returns them
-
+        // FIXME; Neither are used.
         global $_AUTH, $_PATH_ELEMENTS;
 
         $aFields = array();
         foreach($this->aColumns as $sCol => $aCol) {
-            // FIXME; implement a check for authorization to create/edit each columns.
+            // FIXME; implement a check for authorization to create/edit each columns using lovd_isAuthorized(), public_view && public_add.
             $aFields[] = $sCol;
         }
         return $aFields;
@@ -319,16 +331,17 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function checkSelectedInput ($sCol, $val)
+    function checkSelectedInput ($sCol, $Val)
     {
         // Checks if the selected values are indeed from the selection list.
         if ($this->aColumns[$sCol]['form_type'][2] == 'select' && $this->aColumns[$sCol]['form_type'][3] >= 1) {
-            if (!empty($val)) {
-                $aOptions = preg_replace('/(\s+)?=.*$/', '', $this->aColumns[$sCol]['select_options']);
-                (!is_array($val)? $val = array($val) : false);
-                foreach ($val as $sValue) {
+            if (!empty($Val)) {
+                $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sCol]['select_options']); // Trim whitespace from the options.
+                (!is_array($Val)? $Val = array($Val) : false);
+                foreach ($Val as $sValue) {
+                    $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
                     if (!in_array($sValue, $aOptions)) {
-                        lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sCol]['form_type'][0] . '\' selection box.');
+                        lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sCol]['form_type'][0] . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
                         break;
                     }
                 }
@@ -390,19 +403,14 @@ class LOVD_Custom extends LOVD_Object {
     {
         $zData = parent::prepareData($zData, $sView);
         foreach ($this->aColumns as $sCol => $aCol) {
-            $bCustomLink = false;
             if (!empty($aCol['custom_links'])) {
                 foreach ($aCol['custom_links'] as $nLink) {
-                    // FIXME; dit moet gefixed worden voor viewLists.
-                    $sPatternText = $this->aCustomLinks[$nLink]['pattern_text'];
+                    $sRegexpPattern = $this->aCustomLinks[$nLink]['regexp_pattern'];
                     $sReplaceText = $this->aCustomLinks[$nLink]['replace_text'];
-                    if (preg_match($sPatternText, $zData[$aCol['colid']])) {
-                        $bCustomLink = true;
+                    if ($sView == 'list') {
+                        $sReplaceText = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . str_replace('"', '\\\'', $sReplaceText) . '\', this);">' . strip_tags($sReplaceText) . '</SPAN>';
                     }
-                    if ($sView == 'list' && $bCustomLink) {
-                        $sReplaceText = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'Click ' . str_replace('"', '\\\'', preg_replace('/>(.*)</', ' target="_blank">here<', $sReplaceText)) . ' to follow the link.\', this);">' . strip_tags($sReplaceText) . '</SPAN>';
-                    }
-                    $zData[$aCol['colid']] = preg_replace('/' . $sPatternText . '/U', $sReplaceText, $zData[$aCol['colid']]);
+                    $zData[$aCol['colid']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['colid']]);
                 }
             }
         }

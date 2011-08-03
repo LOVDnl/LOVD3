@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-07-29
+ * Modified    : 2011-08-03
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -171,11 +171,6 @@ class LOVD_Column extends LOVD_Object {
         }
 
         // FIXME; are we just assuming that form_format is OK?
-
-        // User had to enter his/her password for authorization.
-        if ($aData['password'] && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
-            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();

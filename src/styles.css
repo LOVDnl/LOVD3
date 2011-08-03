@@ -3,7 +3,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2011-07-29
+ * Modified    : 2011-08-03
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -34,7 +34,7 @@ table                           {font-family : Verdana, Helvetica, Arial, sans-s
 input, textarea, button, select {font-family : Verdana, Helvetica, Arial, sans-serif; font-size : 13px; color : #000000; background : #FFFFFF; border : 1px solid #224488; margin-top : 1px; margin-bottom : 1px; padding-left : 2px; padding-right : 2px;}
 select                          {padding-left : 0px; padding-right : 0px;}
 input:hover, input:focus, textarea:hover, textarea:focus, button:hover, select:hover, select:focus
-								{background : #F0F3FF; border : 1px solid #112244;}
+                                {background : #F0F3FF; border : 1px solid #112244;}
 
 
 
@@ -117,9 +117,9 @@ table.navigation td             {padding-left : 5px; padding-right : 5px;}
 /* Error messages on forms, required by lovd_errorPrint() */
 div.err                         {font-size : 11px; border : 1px solid #FF0000; background : #F3F3F3; padding : 5px;}
 input.err, textarea.err, button.err, select.err
-								{border : 1px solid #EE0000;}
+                                {border : 1px solid #EE0000;}
 input.err:hover, input.err:focus, textarea.err:hover, textarea.err:focus, button.err:hover, select.err:hover, select.err:focus
-								{background : #FFF3F0; border : 1px solid #CC0000;}
+                                {background : #FFF3F0; border : 1px solid #CC0000;}
 
 
 
@@ -129,7 +129,7 @@ input.err:hover, input.err:focus, textarea.err:hover, textarea.err:focus, button
 img.form_hr      {background : #CCCCCC;}
 img.help         {margin-top : 4px; cursor : help;}
 span.form_note   {font-size : 11px; color : #666666;}
-div.tooltip      {background : #F0F3FF;	border : 1px solid #224488;	padding : 2px; font-size : 11px; width : 300px;	position : absolute; display : none;}
+div.tooltip      {background : #F0F3FF; border : 1px solid #224488; padding : 2px; font-size : 11px; width : 300px; position : absolute; display : none;}
 img.tooltip-hide {position : absolute; right : 0px; top : 0px; cursor : pointer;}
 span.custom_link {text-decoration : none; border-bottom : 1px dashed black;}
 

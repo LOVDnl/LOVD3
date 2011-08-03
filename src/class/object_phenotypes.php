@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-07-27
+ * Modified    : 2011-08-03
  * For LOVD    : 3.0-alpha-03
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -168,10 +168,6 @@ class LOVD_Phenotype extends LOVD_Custom {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
                 lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
             }
-        }
-
-        if (ACTION == 'edit' && (!isset($aData['password']) || !lovd_verifyPassword($aData['password'], $_AUTH['password']))) {
-            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
         lovd_checkXSS();

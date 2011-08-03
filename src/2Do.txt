@@ -1,5 +1,7 @@
 Prioritize:
 ===========
+- LOVD_OWNER moet hoger zijn dan LEVEL_COLLABORATOR, omdat owners mogen editen en collaborator niet.
+  * Dit nivea moet worden veranderd in inc-init.php en alle requireAuth() calls en isAuthorized() calls moeten even bekeken worden, of ze nog wel goed gaan.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
 - (@Ivo) Ga naar viewlist, hersorteer, zoek, hersorteer. Terug kun je wel door sort, maar niet de undo van het zoeken.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
@@ -33,7 +35,8 @@ Prioritize:
 - Adding phenotype: diseaseid in GET, zodat we er direct naar zouden kunnen linken. Scheelt ook gedoe in getForm() van phenotype.
 - Adding phenotype should not be possible if no columns have been enabled yet.
   * When disease is created, forward user to select columns for this disease.
-  * (@Ivo) Schoon deze code op, nadat Ivar gecommit heeft.
+- Non-shared columns could not be removed. 
+  * (@Ivo) Schoon deze code op.
 - (@Ivar) BUG: Maak phenotype aan, selecteer geen disease, submit form. Kijk nog eens goed naar transcripts?create en zorg er voor dat alle controles goed staan!!!
 - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
 - Veranderingen zoals besloten 2011-06-28
@@ -93,7 +96,8 @@ Prioritize:
 - (Ivo) /genes/GENE?authorize en/of /genes/GENE?sortCurators
       Het verschil tussen ?authorize en ?sortCurators moet nog gemaakt worden. De laatste moet beschikbaar zijn voor curators.
 - Raar: /genes/DMD?authorize -> click alle users aan -> resort viewList.
-  * Ivar: ik zie het probleem niet :S
+  Nog raarder: probeer dan nog maar eens iemand uit de lijst te verwijderen.
+- loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; gc_NAME = array (;) of gc2_NAME = nested array (;;).
 - Use uniqid ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
 - Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
@@ -114,14 +118,12 @@ Prioritize:
             senv:Server - string index out of range
     (met genomic ref hebben we dezelfde foutmelding)
     * Ivar: het gaat hier specifiek om de UD die mist. Mutalyzer zil deze hebben voor het binnen halen van de transcript gegevens.
-- lovd_queryDB("SQL", true) fail for some reason (should be lovd_queryDB("SQL", array(), true) of course.
-  * Ivar: Wat moet hier nu precies mee gebeuren dan? Waar zit het?
+- lovd_queryDB("SQL", true) geeft een query error for some reason (should be lovd_queryDB("SQL", array(), true) of course.
 - Transcript aanmaken totaal onmogelijk op shared installatie (traag, server (apache?) loopt vast)
   * Ivar: Dit zou door de tijdelijke mem leak fix sneller moeten gaan. Zorg er overigens wel voor dat je alle genes een keer edit ofzo.
           Dit geeft Mutalyzer de mogelijkheid om een UD nummer erbij te zoeken. Anders moeten we hier een script voor schrijven.
-- (@Ivar) BUG: Gen selecteren met transcript aanmaken niet mogelijk; niet logisch gesorteerd
+- (@Ivar) BUG: Gen selecteren met transcript aanmaken niet handig; gesorteerd op symbol maar die staat niet vooraan.
   * ViewList als oplossing? Page size klein houden?
-  * Ivar: Wat bedoel je met 'niet logisch' gesorteerd?
 - Geheugengebruik op shared install is absurd hoog (2 GB per Apache thread)
   * Memory leak in transcripts?create indien create niet wordt afgemaakt. Sowieso moet 't geheugengebruik van dit deel van 't script omlaag. Niet per se in alpha-01.
   * genes?create idem dito

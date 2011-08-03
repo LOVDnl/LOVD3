@@ -42,16 +42,28 @@ define('_INC_TOP_INCLUDED_', true);
 $_MENU = array(
                 'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'Home'),
                  array(
-                        '' => 'View all gene entries',
-                        'create' => 'Create a new gene entry',
+                        '' => array('View all genes', 0),
+                        'create' => array('Create a new gene entry', LEVEL_MANAGER),
                       ),
                 'transcripts' => 'View transcripts',
+                 array(
+                        '' => array('View all transcripts', 0),
+                        'create' => array('Create a new transcript information entry', LEVEL_CURATOR),
+                      ),
                 'variants' => 'View variants',
+                 array(
+                        '' => array('View all genomic variants', 0),
+                        '/submit' => array('Create a new data submission', LEVEL_SUBMITTER),
+                      ),
                 'individuals' => 'View individuals',
+                 array(
+                        '' => array('View all individuals', 0),
+                        '/submit' => array('Create a new data submission', LEVEL_SUBMITTER),
+                      ),
                 'diseases' => 'View diseases',
                  array(
-                        '' => 'View all disease entries',
-                        'create' => 'Create a new disease information entry',
+                        '' => array('View all diseases', 0),
+                        'create' => array('Create a new disease information entry', LEVEL_MANAGER), // FIXME; level_curator?
                       ),
                 'screenings' => 'View screenings',
 //                'submit' => 'Submit new data', // Temp disabled.
