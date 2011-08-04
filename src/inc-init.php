@@ -5,7 +5,7 @@
  *
  * Created     : 2009-10-19
  * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -154,7 +154,7 @@ $_SETT = array(
                             '97' => '+/+?',
                             '99' => '+/+',
                           ),
-                'var_status' =>
+                'data_status' =>
                      array(
                             STATUS_HIDDEN => 'Non public',
                             STATUS_MARKED => 'Marked',
@@ -658,6 +658,7 @@ if (!defined('_NOT_INSTALLED_')) {
 
         // Determine email header line endings.
         // Define constant to quickly check if we're on Windows, since sending emails on Windows requires yet one more adaptation.
+        // FIXME; can we maybe use PHP_EOL? Available since PHP 4.3.10 and PHP 5.0.2.
         if (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')) {
                 $sEol = "\r\n";
                 define('ON_WINDOWS', true);

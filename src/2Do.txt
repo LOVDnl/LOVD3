@@ -1,5 +1,8 @@
 Prioritize:
 ===========
+- DMD_SPECIFIC calls moeten omlaag
+  * check_update.php
+  * inc-lib-init.php: buildLinks(), vast niet meer nodig?
 - LOVD_OWNER moet hoger zijn dan LEVEL_COLLABORATOR, omdat owners mogen editen en collaborator niet.
   * Dit nivea moet worden veranderd in inc-init.php en alle requireAuth() calls en isAuthorized() calls moeten even bekeken worden, of ze nog wel goed gaan.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
@@ -135,6 +138,7 @@ Prioritize:
   * Zelfde nodig met viewList data? Blijft ook hangen.
 - Ik heb het idee dat $bHalt in lovd_queryDB() veel vaker true dan false zou moeten zijn. Default op true zetten?
 - Vanaf beta moeten bij bugfixes de datum en versie gezet worden.
+- Bij installatie controleren of er een mailserver is? Poort 25 check?
 
 
 

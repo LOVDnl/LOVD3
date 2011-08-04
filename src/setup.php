@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2011-08-03
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -88,7 +88,7 @@ print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . 
       '                  Total : ' . $nTotalVars);
 foreach ($aTotalVars as $nStatus => $nVars) {
     print('<BR>' . "\n" .
-          '                  ' . $_SETT['var_status'][$nStatus] . ' : ' . $nVars);
+          '                  ' . $_SETT['data_status'][$nStatus] . ' : ' . $nVars);
 }
 print('</TD></TR></TABLE><BR>' . "\n\n");
 

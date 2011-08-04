@@ -6,7 +6,7 @@
  *
  * Created     : 2009-10-19
  * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -313,8 +313,8 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
 
 
     // (4) Registering LOVD variant statuses.
-    $nStatuses = count($_SETT['var_status']);
-    foreach ($_SETT['var_status'] as $nStatus => $sStatus) {
+    $nStatuses = count($_SETT['data_status']);
+    foreach ($_SETT['data_status'] as $nStatus => $sStatus) {
         $aInstallSQL['Registering LOVD variant statuses...'][] = 'INSERT INTO ' . TABLE_DATA_STATUS . ' VALUES (' . $nStatus . ', "' . $sStatus . '")';
     }
     $nInstallSQL += $nStatuses;

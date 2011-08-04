@@ -159,7 +159,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             if ($_AUTH['level'] < LEVEL_CURATOR) {
                 if ($aData['statusid'] > $zData['statusid']) {
                     // FIXME; zullen we deze code in objects_custom doen? 
-                    lovd_errorAdd('statusid' ,'Not allowed to change \'Status of this data\' from ' . $_SETT['var_status'][$zData['statusid']] . ' to ' . $_SETT['var_status'][$aData['statusid']] . '.');
+                    lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
                 }
             }
 
@@ -193,7 +193,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         if (!empty($_POST['statusid'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $_SETT['var_status'])) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $_SETT['data_status'])) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
@@ -223,7 +223,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 $aSelectOwner[$z['id']] = $z['name'];
             }
             $aFormOwner = array('Owner of this variant', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
-            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $_SETT['var_status'], false, false, false);
+            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $_SETT['data_status'], false, false, false);
         } else {
             // FIXME; dit moet dan dus de owner zijn, mag die de status niet aanpassen (niet publiek -> wel publiek) of een publieke entry bewerken?
             // Overigens, in jouw code mogen alleen managers hier komen... Dit moet even goed worden uitgedacht.

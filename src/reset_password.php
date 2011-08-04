@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2011-06-09
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-08-04
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -32,12 +32,19 @@
  
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
- 
+
+// Already logged in to the system.
+if ($_AUTH) {
+    // Send user to the index, that file will figure out where to go from there.
+    header('Location: ' . lovd_getInstallURL());
+    exit;
+}
+
 if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     // User forgot password - replace.
     
     define('PAGE_TITLE', 'User - Reset password');
-    define('LOG_EVENT', 'ResetPassword')
+    define('LOG_EVENT', 'ResetPassword');
 
     // Require form functions.
     require ROOT_PATH . 'inc-lib-form.php';

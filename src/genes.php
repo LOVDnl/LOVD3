@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-07-22
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-04
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -78,7 +78,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
     $zData = $_DATA->viewEntry($sID);
-    
+
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         // Authorized user is logged in. Provide tools.
@@ -97,7 +97,17 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
-    
+
+    // Disclaimer.
+    if ($zData['disclaimer']) {
+        print('<BR>' . "\n\n" .
+              '      <TABLE border="0" cellpadding="0" cellspacing="1" width="950" class="data">' . "\n" .
+              '        <TR>' . "\n" .
+              '          <TH class="S15">Copyright &amp; disclaimer</TH></TR>' . "\n" .
+              '        <TR class="S11">' . "\n" .
+              '          <TD>' . $zData['disclaimer_text_'] . '</TD></TR></TABLE><BR>' . "\n\n");
+    }
+
     $_GET['search_geneid'] = $sID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Transcripts', 'H4');
@@ -342,7 +352,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 // Prepare values.
                 $_POST['created_by'] = $_AUTH['id'];
-                if (empty($_POST['created_date'])) {
+                if (empty($_POST['created_date']) || @strtotime($_POST['created_date']) > time()) {
                     $_POST['created_date'] = date('Y-m-d H:i:s');
                 }
                 $_POST['id'] = $zData['id'];

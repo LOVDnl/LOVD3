@@ -7,8 +7,25 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Alpha 04
+ * 2011-09-05
+ *********/
+ * For phenotype data entries, the status can now also be set.
+ * Fixed bug; The reset password functionality was non functional.
+ * The gene's disclaimer will now be shown underneath the viewEntry table.
+ * Fixed bug; A gene database's date of creation can no longer be in the future.
+ * Curators can now also view custom column information.
+ * Added link for changing the columns' order underneath a category's viewList.
+ * Added "Genes screened" and "Variants" columns to the individual viewList.
+
+
+
+
+
+
+/*******************
  * 3.0 Alpha 03
- * 2011-08-01
+ * 2011-08-03
  *********/
  * Fixed bug; The verification of the LOVD database URL did not work, actually
    because of a problem in the script on the LOVD website.

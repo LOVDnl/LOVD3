@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-07-27
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-04
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -112,8 +112,7 @@ class LOVD_Gene extends LOVD_Object {
                         'note_listing' => 'Notes for the variant listings',
                         'refseq' => 'Refseq',
                         'refseq_url' => 'Refseq URL',
-                        'disclaimer_' => 'Disclaimer',
-                        'disclaimer_text_' => 'Disclaimer Text',
+                        'disclaimer_' => array('Disclaimer', LEVEL_COLLABORATOR),
                         'header_' => 'Header',
                         'footer_' => 'Footer',
                         'curators_' => 'Curators',
@@ -191,7 +190,7 @@ class LOVD_Gene extends LOVD_Object {
         if (isset($aData['workID'])) {
             unset($aData['workID']);
         }
-        
+
         parent::checkFields($aData);
 
         if (!in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
@@ -450,19 +449,19 @@ class LOVD_Gene extends LOVD_Object {
             // FIXME; zou dit een external source moeten zijn?
             $zData['refseq_genomic_'] = (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? '<A href="ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml">' : '<A href="http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic'] . '">')  . $zData['refseq_genomic'] . '</A>';
 
-            // FIXME; ugly coding :S
-            $sYear = ((int) substr($zData['created_date'], 0, 4)? substr($zData['created_date'], 0, 4) . (substr($zData['created_date'], 0, 4) == date('Y')? '' : '-' . date('Y')) : date('Y'));
+            $sYear = substr($zData['created_date'], 0, 4);
+            $sYear = ((int) $sYear && $sYear < date('Y')? $sYear . '-' . date('Y') : date('Y'));
             $aDisclaimer = array(0 => 'No', 1 => 'Standard LOVD disclaimer', 2 => 'Own disclaimer');
-            $zData['disclaimer_']       = $aDisclaimer[$zData['disclaimer']];
-            $zData['disclaimer_text_']  = (!$zData['disclaimer']? '' : ($zData['disclaimer'] == 2? $zData['disclaimer_text'] :
+            $zData['disclaimer_']      = $aDisclaimer[$zData['disclaimer']];
+            $zData['disclaimer_text_'] = (!$zData['disclaimer']? '' : ($zData['disclaimer'] == 2? $zData['disclaimer_text'] :
                 'The contents of this LOVD database are the intellectual property of the respective curator(s). Any unauthorised use, copying, storage or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising out of any inaccuracies or omissions. Individuals, organisations and companies which use this database do so on the understanding that no liability whatsoever either direct or indirect shall rest upon the curator(s) or any of their employees or agents for the effects of any product, process or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
             
             // FIXME; Voor zover ik weet doen de header en de footer nog niks.    
             $aAlign = array(-1 => 'left', 0 => 'center', 1 => 'right');
             $this->aColumnsViewEntry['header_'] = 'Header (aligned to the ' . $aAlign[$zData['header_align']] . ')';
             $this->aColumnsViewEntry['footer_'] = 'Footer (aligned to the ' . $aAlign[$zData['footer_align']] . ')';
-            $zData['header_']          = $zData['header'];
-            $zData['footer_']          = $zData['footer'];
+            $zData['header_'] = $zData['header'];
+            $zData['footer_'] = $zData['footer'];
 
             $zData['diseases_'] = '';
             $zData['disease_omim_'] = '';

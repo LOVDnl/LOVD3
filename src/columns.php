@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-04
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -48,19 +48,15 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
 
     if (!empty($_PATH_ELEMENTS[1])) {
         // Category given.
-        $aCol = explode('/', $_PATH_ELEMENTS[1], 2);
-        $_GET['search_category'] = $aCol[0];
-        if (!empty($aCol[1])) { // This is possible, when the / was URL encoded and therefore not recognized as a separator for $_PATH_ELEMENTS.
-            $_GET['search_colid'] = $aCol[1]; // FIXME; this doesn't work. Such calls generate an 404 for some reason.
-        }
+        $_GET['search_category'] = $_PATH_ELEMENTS[1];
     }
 
     define('PAGE_TITLE', 'Browse custom data columns');
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    // Require curator clearance.
-    lovd_requireAUTH(LEVEL_CURATOR);
+    lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
+    lovd_requireAuth(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
@@ -69,12 +65,11 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     }
     $_DATA->viewList();
 
-/*
-// DMD_SPECIFIC
-// TEST $AUTH level
-    // 2009-07-10; 2.0-20; Change the default order of the Variant columns for new genes.
-    print('      <BUTTON onclick="javascript:lovd_openWindow(\'' . $_SERVER['PHP_SELF'] . '?action=order\', \'ColOrderDefault\', 550, 375);"' . ($nTotal > 1? '' : ' style="color : #999999;" disabled') . '>Change default column order (for new genes)</BUTTON><BR>' . "\n");
-*/
+    // FIXME; Is there a better way checking if it's a valid category?
+    if (!empty($_PATH_ELEMENTS[1]) && $_AUTH['level'] >= LEVEL_MANAGER && in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
+        // Add link to change default sorting order.
+        lovd_showNavigation('<A href="columns/' . $_PATH_ELEMENTS[1] . '?order">Re-order all ' . $_PATH_ELEMENTS[1] . ' columns</A>');
+    }
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -121,7 +116,7 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
             $sNavigation .= ' | <A style="color : #999999;">Remove column</A>';
         }
         $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?edit">Edit custom data column settings</A>';
-        $sNavigation .= ' | <A href="columns/' . $zData['category'] . '?order">Re-order all ' . $zData['category'] . ' columns';
+        $sNavigation .= ' | <A href="columns/' . $zData['category'] . '?order">Re-order all ' . $zData['category'] . ' columns</A>';
 /*
 
         // Drop global column.
@@ -813,7 +808,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
           '        <INPUT type="hidden" name="description_form" value="' . $_POST['description_form'] . '">' . "\n" .
           '        <INPUT type="hidden" name="select_options" value="' . $_POST['select_options'] . '">' . "\n" .
           '        <INPUT type="hidden" name="preg_pattern" value="' . $_POST['preg_pattern'] . '">' . "\n" .
-// DMD_SPECIFIC; remove this when implemented properly.
+// FIXME; remove this when implemented properly.
           '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n");
 
     // Array which will make up the form table.
@@ -1195,7 +1190,7 @@ die();
           '        <INPUT type="hidden" name="description_form" value="' . $_POST['description_form'] . '">' . "\n" .
           '        <INPUT type="hidden" name="select_options" value="' . $_POST['select_options'] . '">' . "\n" .
           '        <INPUT type="hidden" name="preg_pattern" value="' . $_POST['preg_pattern'] . '">' . "\n" .
-// DMD_SPECIFIC; remove this when implemented properly.
+// FIXME; remove this when implemented properly.
           '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n");
 /*
 

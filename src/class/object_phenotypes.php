@@ -88,9 +88,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                  $this->buildViewEntry(),
                  array(
                         'owner_' => 'Owner name',
-                        // FIXME; statusid weer toevoegen.
-                        // DMD_SPECIFIC; Ivar: Is nu toegevoegd aan inc-upgrade.php, pas hier toevoegen bij volgende release(3.0-alpha-03)
-                        //'status' => 'Phenotype data status',
+                        'status_' => 'Phenotype data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -132,7 +130,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         // Mandatory fields.
         if (ACTION == 'edit') {
@@ -162,7 +160,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         }
 
         if (!empty($_POST['statusid'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $_SETT['var_status'])) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $_SETT['data_status'])) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
@@ -198,10 +196,12 @@ class LOVD_Phenotype extends LOVD_Custom {
                 $aSelectOwner[$z['id']] = $z['name'];
             }
             $aFormOwner = array('Owner of this phenotype entry', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
+            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $_SETT['data_status'], false, false, false);
         } else {
             // FIXME; dit moet dan dus de owner zijn, mag die de status niet aanpassen (niet publiek -> wel publiek) of een publieke entry bewerken?
             // Overigens, in jouw code mogen alleen managers hier komen... Dit moet even goed worden uitgedacht.
             $aFormOwner = array('Owner of this phenotype entry', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
+            $aFormStatus = array('Status of this data', '', 'print', '<B>Non public</B>');
         }
 
         // Array which will make up the form table.
@@ -218,6 +218,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                         array('', '', 'print', '<B>General information</B>'),
                         'hr',
                         $aFormOwner,
+                        $aFormStatus,
                         'hr',
 'authorization_skip' => 'skip',
  'authorization_hr1' => 'hr',
@@ -240,6 +241,7 @@ class LOVD_Phenotype extends LOVD_Custom {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        global $_SETT;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -255,6 +257,7 @@ class LOVD_Phenotype extends LOVD_Custom {
             $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['owner_'] = '<A href="users/' . $zData['ownerid'] . '">' . $zData['owner_'] . '</A>';
+            $zData['status_'] = $_SETT['data_status'][$zData['statusid']];
         }
 
         return $zData;

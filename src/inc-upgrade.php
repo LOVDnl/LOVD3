@@ -61,41 +61,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     // Array of changes.
     $aUpdates =
              array(
-                    '3.0-pre-10' =>
-                             array(
-                                    'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/omim/[1]#[1]Variants[2]\" target=\"_blank\">(OMIM [2])</A>" WHERE id = 4',
-                                    'DELETE FROM ' . TABLE_SOURCES . ' WHERE name = "omim_disease"',
-                                    'UPDATE ' . TABLE_SOURCES . ' SET name = "omim", url = "http://www.ncbi.nlm.nih.gov/omim/{{ ID }}" WHERE name = "omim_gene"',
-                                    'INSERT INTO ' . TABLE_PATHOGENIC . ' (SELECT * FROM ' . TABLE_DATA_STATUS . ' WHERE id > 9)',
-                                    'DELETE FROM ' . TABLE_DATA_STATUS . ' WHERE id > 9',
-                                    'UPDATE ' . TABLE_SOURCES . ' SET url = "http://www.ncbi.nlm.nih.gov/nuccore/{{ ID }}" WHERE name = "genbank"',
-                                  ),
-                    '3.0-pre-11' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN id_uniprot',
-                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN id_protein_uniprot VARCHAR(8) NOT NULL AFTER id_protein_ensembl',
-                                    'INSERT INTO ' . TABLE_SOURCES . ' VALUES("hgnc", "http://www.genenames.org/data/hgnc_data.php?hgnc_id={{ ID }}")',
-                                  ),
-                    '3.0-pre-12' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN genbank',
-                                    'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN genbank_uri',
-                                    'ALTER TABLE ' . TABLE_SOURCES . ' CHANGE COLUMN name id VARCHAR(15) NOT NULL',
-                                  ),
-                    '3.0-pre-13' =>
-                             array(
-                                    'ALTER TABLE ' . TABLE_GENES . ' ADD COLUMN chromosome VARCHAR(2) NOT NULL AFTER name',
-                                    'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' DROP COLUMN chromosome',
-                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN chromosome VARCHAR(2) NOT NULL AFTER pathogenicid',
-                                    'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP COLUMN chromosome',
-                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN ownerid SMALLINT(5) UNSIGNED ZEROFILL AFTER type',
-                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (ownerid)',
-                                    'ALTER TABLE ' . TABLE_VARIANTS . ' ADD FOREIGN KEY (ownerid) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL',
-                                  ),
-                    '3.0-pre-14' =>
-                             array(
-                                    'UPGRADING TO 3.0-pre-14 IS NOT SUPPORTED. UNINSTALL LOVD 3.0 AND REINSTALL TO GET THE LATEST.',
-                                  ),
                     '3.0-pre-15' =>
                              array(
                                     'UPGRADING TO 3.0-pre-15 IS NOT SUPPORTED. UNINSTALL LOVD 3.0 AND REINSTALL TO GET THE LATEST.',

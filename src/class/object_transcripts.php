@@ -133,6 +133,8 @@ class LOVD_Transcript extends LOVD_Object {
 
         parent::checkFields($aData);
 
+        // FIXME; move to transcripts.php, only meant for selecting transcripts for a gene.
+        // FIXME; get rid of "None".
         // Check if transcripts are in the list, so no data manipulation from user!
         foreach ($aData['active_transcripts'] as $sTranscript) {
             if (!in_array($sTranscript, $zData['transcripts']) || in_array($sTranscript, $zData['transcriptsAdded'])) {

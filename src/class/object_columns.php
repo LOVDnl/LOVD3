@@ -221,7 +221,7 @@ class LOVD_Column extends LOVD_Object {
          'mandatory' => array('Mandatory field', '', 'checkbox', 'mandatory'),
        'public_view' => array('Show contents to public', '', 'checkbox', 'public_view'),
         'public_add' => array('Show field on submission form', '', 'checkbox', 'public_add'),
-// DMD_SPECIFIC; implement this later.
+// FIXME; implement this later.
 //                        array('Include in "hidden entries" search form', '', 'checkbox', 'allow_count_all'),
 //                        array('', '', 'print', '<SPAN class="form_note">Selecting this checkbox allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on this column.</SPAN>'),
                         'skip',
