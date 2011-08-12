@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-08-02
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -28,82 +28,6 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
-
-/*
-// DMD_SPECIFIC
-if (!function_exists('array_combine')) {
-    // array_combine is available from PHP 5.0.0. Redefine if necessary.
-    function array_combine ($a1, $a2)
-    {
-        // Creates an array by using one array for keys and another for its values.
-        if (!is_array($a1) || !is_array($a2) || !count($a1) || !count($a2) || count($a1) != count($a2)) {
-            return false;
-        }
-        
-        $aReturn = array();
-        foreach ($a1 as $key => $val) {
-            $aReturn[$val] = $a2[$key];
-        }
-        
-        return $aReturn;
-    }
-}
-*/
-
-
-
-
-
-/*
-// DMD_SPECIFIC
-function lovd_buildLinks (& $zData)
-{
-    // Builds the custom links in the $zData array.
-    static $aLinks = array();
-
-    if (!count($aLinks)) {
-        // Retrieve Custom Link information from the database.
-        // Backwards compatible with MySQL 4.0 and earlier; GROUP_CONCAT is available since MySQL 4.1.
-        $qLinks = lovd_queryDB('SELECT l.pattern_text, l.replace_text, c2l.colid FROM ' . TABLE_LINKS . ' AS l LEFT JOIN ' . TABLE_COLS2LINKS . ' AS c2l USING (linkid) WHERE l.active = 1 AND c2l.colid IS NOT NULL');
-
-        // Loop through and build array.
-        while ($r = mysql_fetch_row($qLinks)) {
-            list($sPattern, $sReplace, $sColID) = $r;
-
-            if (!isset($aLinks[$sColID])) {
-                $aLinks[$sColID] = array();
-            }
-
-            // LOVD v.1.1.0 code:
-            // $a_link[$val][]['patt'] = "/" . preg_replace("/\[[0-9]+\]/", "([A-Za-zÀ-ÖØ-öø-ÿ0-9 :;,._-]*)", $z_link['patt']) . "/";
-            // $a_link[$val][count($a_link[$val])-1]['repl'] = ereg_replace("\[([0-9]+)\]","\\\\1",$z_link['repl']);
-            // Replace [1] and others to the patterns to match these references.
-            // 2007-04-04; 2.0-alpha-10
-            // Added 'U' modifier to the pattern to prevent multiple patterns to collide.
-            $sPattern = '/' . preg_replace('/\\\[[0-9]+\\\]/', '(.*)', preg_quote($sPattern, '/')) . '/U';
-            $sReplace = preg_replace('/\[([0-9]+)\]/', "\$$1", $sReplace);
-
-            $aLinks[$sColID][$sPattern] = $sReplace;
-        }
-    }
-
-
-
-    // Actually replace the Custom Link patterns.
-    $aCols = array_keys($zData);
-    foreach ($aCols as $sCol) {
-        if (isset($aLinks[$sCol])) {
-            foreach ($aLinks[$sCol] as $sPattern => $sReplace) {
-                $zData[$sCol] = preg_replace($sPattern, $sReplace, $zData[$sCol]);
-            }
-        }
-    }
-}
-*/
-
-
-
-
 
 function lovd_calculateVersion ($sVersion)
 {
@@ -305,7 +229,7 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
     // Retrieves URL for external source and returns it, including the ID.
     static $aSources = array();
     if (!count($aSources)) {
-        $q = lovd_queryDB('SELECT * FROM ' . TABLE_SOURCES);
+        $q = lovd_queryDB_Old('SELECT * FROM ' . TABLE_SOURCES);
         while ($z = mysql_fetch_assoc($q)) {
             $aSources[$z['id']] = $z['url'];
         }
@@ -335,7 +259,7 @@ function lovd_getGeneList ()
     // Gets the list of genes (ids only), to prevent repeated queries.
     static $aGenes = array();
     if (!count($aGenes)) {
-        $q = lovd_queryDB('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id');
+        $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id');
         while ($r = mysql_fetch_row($q)) {
             $aGenes[] = $r[0];
         }
@@ -424,7 +348,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     }
 
     // Check data type.
-    // FIXME; enable variants, screenings, patients, phenotypes.
+    // FIXME; enable screenings, patients, phenotypes.
     if (!$Data || !in_array($sType, array('gene', 'disease', 'transcript', 'variant'))) {
         return false;
     }
@@ -462,34 +386,34 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
             }
             return $Auth;
         }
+    }
 
 
 
-    } elseif ($sType == 'transcript') {
+    // Makes it easier to check the data.
+    if (!is_array($Data)) {
+        $Data = array($Data);
+    }
+
+
+
+    if ($sType == 'transcript') {
         // Base authorization on geneid or otherwise try and find the gene this entry belongs to.
-        if (!is_array($Data)) {
-            $Data = array($Data);
-        }
-
-        // Array can be $zData or list of variant IDs.
+        // Check if Data is a $zData or a (list of) IDs.
         if (array_key_exists('id', $Data) && array_key_exists('geneid', $Data)) {
             // Transcript's $zData is being sent.
             return lovd_isAuthorized('gene', $Data['geneid'], $bSetUserLevel);
         }
 
         // Retrieve list of genes this/these transcript(s) belong to.
-        list($sGenes) = mysql_fetch_row(lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
+        list($sGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
         return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
 
 
 
     } elseif ($sType == 'disease') {
         // Base authorization on geneid or otherwise try and find the gene this entry belongs to.
-        if (!is_array($Data)) {
-            $Data = array($Data);
-        }
-
-        // Array can be $zData or list of variant IDs.
+        // Check if Data is a $zData or a (list of) IDs.
         // FIXME; allow for geneids array in $zData type of argument? First check how we're actually using this function.
         // FIXME; $zData zal eigenlijk nooit een lovd_isAuthorized bij elkaar roepen, want dan ben je al te laat ($zData is output van viewEntry()).
         if (array_key_exists('id', $Data)) {
@@ -499,26 +423,32 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         }
 
         // Retrieve list of genes this/these disease(s) belong to.
-        list($sGenes) = mysql_fetch_row(lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
+        list($sGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
         return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+    }
 
 
 
-    } elseif ($sType == 'variant') {
-        // Base authorization on ownerid (LEVEL_OWNER), created_by (LEVEL_OWNER) or otherwise try and find the gene this entry belongs to (LEVEL_CURATOR).
-        if (!is_array($Data)) {
-            $Data = array($Data);
+    // A data type that can be owned by somebody. First try and prove the ownership.
+    // Check if Data is a $zData or a (list of) IDs.
+    if (array_key_exists('id', $Data) && array_key_exists('ownerid', $Data) && array_key_exists('created_by', $Data)) {
+        // $zData is being sent.
+        if ($Data['ownerid'] == $_AUTH['id'] || $Data['created_by'] == $_AUTH['id']) {
+            if ($bSetUserLevel) {
+                $_AUTH['level'] = LEVEL_OWNER;
+            }
+            return 1;
         }
+    }
 
+
+
+    if ($sType == 'variant') {
+        // Base authorization on ownerid (LEVEL_OWNER), created_by (LEVEL_OWNER) or otherwise try and find the gene this entry belongs to (LEVEL_CURATOR).
         // Array can be $zData or list of variant IDs.
-        if (array_key_exists('id', $Data) && array_key_exists('ownerid', $Data) && array_key_exists('created_by', $Data)) {
+        if (array_key_exists('id', $Data)) {
             // Variant's $zData is being sent.
-            if ($Data['ownerid'] == $_AUTH['id'] || $Data['created_by'] == $_AUTH['id']) {
-                if ($bSetUserLevel) {
-                    $_AUTH['level'] = LEVEL_OWNER;
-                }
-                return 1;
-            } elseif (array_key_exists('geneid', $Data)) {
+            if (array_key_exists('geneid', $Data)) {
                 return lovd_isAuthorized('gene', $Data['geneid'], $bSetUserLevel);
             } elseif (array_key_exists('transcriptid', $Data)) {
                 return lovd_isAuthorized('transcript', $Data['transcriptid'], $bSetUserLevel);
@@ -527,7 +457,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         }
 
         // First: try to prove ownership/created_by.
-        list($bOwner) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (ownerid = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])), true));
+        list($bOwner) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (ownerid = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])), true));
         if ($bOwner) {
             if ($bSetUserLevel) {
                 $_AUTH['level'] = LEVEL_OWNER;
@@ -536,7 +466,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         }
 
         // Last: try to get to a curated gene. Shortest connection is to the transcripts, but continuing to genes will save the system an additional query from transcripts to genes.
-        list($sGenes) = mysql_fetch_row(lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
+        list($sGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
         return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
     }
 
@@ -704,19 +634,19 @@ function lovd_printHeader ($sTitle, $sStyle = 'H2')
 
 
 
-function lovd_queryDB ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = false)
+function lovd_queryDB_Old ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = false)
 {
     // Queries the database and protects against SQL injection with
     // mysql_real_escape_string. No code in LOVD should query the database
     // directly!
 
     if (!is_array($aArgs)) {
-        lovd_displayError('LOVD-Lib', 'lovd_queryDB() - Received a wrong type of $aArgs argument from ' . $_SERVER['REQUEST_URI'] . "\n" . 'Query: ' . $sQuery);
+        lovd_displayError('LOVD-Lib', 'lovd_queryDB_Old() - Received a wrong type of $aArgs argument from ' . $_SERVER['REQUEST_URI'] . "\n" . 'Query: ' . $sQuery);
     }
 
     // Explode so we can glue the pieces back together. A simple replace will mess up with more than one argument and one of the replaced values itself contains questionmarks.
     $aQuery = explode('?', $sQuery);
-    $sQuery = $aQuery[0]; // So queries without arguments work, too :)
+    $sSQL = $aQuery[0]; // So queries without arguments work, too :)
     $aArgs = array_values($aArgs); // Make sure there are continuous numeric keys only.
 
     // A mismatch between the number of ? in the query and the number of items
@@ -724,30 +654,30 @@ function lovd_queryDB ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = fals
     $nSlots = count($aQuery) - 1;
     $nArgs = count($aArgs);
     if ($nSlots != $nArgs) {
-        lovd_displayError('LOVD-Lib', 'lovd_queryDB() - ' . $nArgs . ' argument' . ($nArgs == 1? ' does' : 's do') . ' not fit in ' . $nSlots . ' slot' . ($nSlots == 1? '' : 's') . ' from ' . $_SERVER['REQUEST_URI'] . "\n" . 'Query: ' . $sQuery);
+        lovd_displayError('LOVD-Lib', 'lovd_queryDB_Old() - ' . $nArgs . ' argument' . ($nArgs == 1? ' does' : 's do') . ' not fit in ' . $nSlots . ' slot' . ($nSlots == 1? '' : 's') . ' from ' . $_SERVER['REQUEST_URI'] . "\n" . 'Query: ' . $sQuery);
     }
 
     // If they're arguments, go through them and put them into the query.
     foreach ($aArgs as $nKey => $sArg) {
         if ($sArg === NULL) {
-            $sQuery .= 'NULL';
+            $sSQL .= 'NULL';
         } elseif (is_array($sArg)) {
             // We handle arrays gracefully.
-            $sQuery .= '\'' . mysql_real_escape_string(implode(';', $sArg)) . '\'';
+            $sSQL .= '\'' . mysql_real_escape_string(implode(';', $sArg)) . '\'';
         } else {
-            $sQuery .= (preg_match('/^\-?[0-9]+(.[0-9]+)?$/', $sArg)? $sArg : '\'' . mysql_real_escape_string($sArg) . '\'');
+            $sSQL .= (preg_match('/^\-?[0-9]+(.[0-9]+)?$/', $sArg)? $sArg : '\'' . mysql_real_escape_string($sArg) . '\'');
         }
-        $sQuery .= $aQuery[$nKey + 1];
+        $sSQL .= $aQuery[$nKey + 1];
     }
     if ($bDebug) {
-        echo htmlspecialchars($sQuery);
+        echo htmlspecialchars($sSQL);
     }
-    $q = mysql_query($sQuery);
+    $q = mysql_query($sSQL);
     if (!$q && $bHalt) {
         $sError = mysql_error(); // Save the mysql_error before it disappears.
-        lovd_queryDB('ROLLBACK'); // In case we were in a transaction.
+        lovd_queryDB_Old('ROLLBACK'); // In case we were in a transaction.
         // lovd_queryError() will call lovd_displayError() which will halt the system.
-        lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sQuery, $sError);
+        lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sSQL, $sError);
     }
     return $q;
 }
@@ -904,7 +834,7 @@ function lovd_switchDB ()
     // and bottom includes.
     global $_AUTH, $_SETT, $_CONF, $_STAT;
 
-    $qGenes = lovd_queryDB('SELECT id, name FROM ' . TABLE_DBS . ' ORDER BY id');
+    $qGenes = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_DBS . ' ORDER BY id');
     $nGenes = mysql_num_rows($qGenes);
 
     if (!defined('_INC_TOP_INCLUDED_') && $nGenes == 1) {
@@ -1074,7 +1004,7 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage)
     $sTime = substr($aTime[0], 2, -2);
 
     // Insert new line in logs table.
-    $q = lovd_queryDB('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage));
+    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage));
     return (bool) $q;
 }
 ?>

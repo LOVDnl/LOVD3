@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-05-26
- * For LOVD    : 3.0-alpha-01
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -88,7 +88,7 @@ if (!defined('PAGE_TITLE')) {
 }
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
-        "http://www.w3.org/TR/html4/strict.dtd">
+        "http://www.w3.org/TR/html4/loose.dtd">
 <HTML lang="en_US">
 <HEAD>
   <TITLE><?php echo (!PAGE_TITLE? '' : PAGE_TITLE . ' - ') . $_CONF['system_title']; ?></TITLE>
@@ -114,7 +114,7 @@ if (!defined('PAGE_TITLE')) {
 print('    function lovd_switchGeneInline () {' . "\n" .
 // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
       '      varForm = \'<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDBInline" method="get" style="margin : 0px;"><SELECT name="select_db" onchange="document.getElementById(\\\'SelectGeneDBInline\\\').submit();">');
-$q = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_DBS . ' ORDER BY id');
+$q = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_DBS . ' ORDER BY id');
 while ($z = mysql_fetch_assoc($q)) {
     // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
     $z['gene'] = lovd_shortenString($z['gene'], 75);
@@ -179,7 +179,7 @@ $sCurrSymbol = $sCurrGene = '';
 // During submission, show the gene we're submitting to instead of the currently selected gene.
 if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
     // Fetch gene's info from db... we don't have it anywhere yet.
-    list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(lovd_queryDB('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene'])));
+    list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(lovd_queryDB_Old('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene'])));
 } elseif (!empty($_SESSION['currdb'])) {
     // Just use currently selected database.
     $sCurrSymbol = $_SESSION['currdb'];
@@ -207,7 +207,7 @@ print('    </TD>' . "\n" .
 // DMD_SPECIFIC; Test if this multiple email thingie works or not.
 if ($sCurrSymbol && $sCurrGene) {
     $sCurators = '';
-    $qCurators = lovd_queryDB('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.geneid = ? AND u2g.allow_edit = 1 ORDER BY u.level DESC, u.name', array($sCurrSymbol));
+    $qCurators = lovd_queryDB_Old('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.geneid = ? AND u2g.allow_edit = 1 ORDER BY u.level DESC, u.name', array($sCurrSymbol));
     $nCurators = mysql_num_rows($qCurators);
     $i = 0;
     while ($z = mysql_fetch_assoc($qCurators)) {

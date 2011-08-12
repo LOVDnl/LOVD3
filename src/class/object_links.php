@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2011-05-05
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -136,7 +136,7 @@ class LOVD_Link extends LOVD_Object {
                 $sSQL .= ' AND id != ?';
                 $aSQL[] = $zData['id'];
             }
-            if (mysql_num_rows(lovd_queryDB($sSQL, $aSQL))) {
+            if (mysql_num_rows(lovd_queryDB_Old($sSQL, $aSQL))) {
                 lovd_errorAdd('name', 'There is already a custom link with this link name. Please choose another one.');
             }
         }
@@ -145,7 +145,7 @@ class LOVD_Link extends LOVD_Object {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
             $sSQL = 'SELECT GROUP_CONCAT(id) FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'';
             // FIXME; volgens de coding standard is dit $rColumns;
-            $zColumns = mysql_fetch_row(lovd_queryDB($sSQL));
+            $zColumns = mysql_fetch_row(lovd_queryDB_Old($sSQL));
             // FIXME; eerst een group_concat, daarna een explode()?
             // FIXME; je kunt ook een list() gebruiken, dan heb je $rColumns helemaal niet nodig.
             $aColumns = explode(',', $zColumns[0]);
@@ -167,7 +167,7 @@ class LOVD_Link extends LOVD_Object {
                 $sSQL .= ' AND id != ?';
                 $aSQL[] = $zData['id'];
             }
-            if (mysql_num_rows(lovd_queryDB($sSQL, $aSQL))) {
+            if (mysql_num_rows(lovd_queryDB_Old($sSQL, $aSQL))) {
                 lovd_errorAdd('pattern_text', 'There is already a custom link with this pattern. Please choose another one.');
 
             } else {
@@ -233,7 +233,7 @@ class LOVD_Link extends LOVD_Object {
         // Get column list, to connect link to column.
         $aData = array();
         $sLastCategory = '';
-        $qData = lovd_queryDB('SELECT id, CONCAT(id, " (", head_column, ")") FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\' ORDER BY id');
+        $qData = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", head_column, ")") FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\' ORDER BY id');
         $nData = mysql_num_rows($qData);
         $nFieldSize = ($nData < 20? $nData : 20);
 

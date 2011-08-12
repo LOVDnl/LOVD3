@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-08-04
+ * Modified    : 2011-08-12
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,8 +37,6 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-// Require manager clearance.
-//lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
@@ -154,15 +152,16 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (POST) {
             lovd_errorClean();
 
-            if ($_POST['hgnc_id'] == '') {
+            if (empty($_POST['hgnc_id'])) {
                 lovd_errorAdd('hgnc_id', 'No HGNC ID or Gene symbol was specified');
+
             } else {
                 // Gene Symbol must be unique.
                 // Enforced in the table, but we want to handle this gracefully.
                 $sSQL = 'SELECT id FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?';
                 $aSQL = array($_POST['hgnc_id'], $_POST['hgnc_id']);
                 
-                if (mysql_num_rows(lovd_queryDB($sSQL, $aSQL))) {
+                if (mysql_num_rows(lovd_queryDB_Old($sSQL, $aSQL))) {
                     lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation. Please choose another one.');
                 } else {
                     if (ctype_digit($_POST['hgnc_id'])) {
@@ -366,25 +365,25 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_DATA->insertEntry($_POST, $aFields);
 
                 // FIXME; put this block and the next in a function.
-                $qAddedCustomCols = lovd_queryDB('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS);
+                $qAddedCustomCols = lovd_queryDB_Old('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS);
                 while ($aCol = mysql_fetch_assoc($qAddedCustomCols)) {
                     $aAdded[] = $aCol['Field'];
                 }
                 
-                $qStandardCustomCols = lovd_queryDB('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)');
+                $qStandardCustomCols = lovd_queryDB_Old('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)');
                 while ($aStandard = mysql_fetch_assoc($qStandardCustomCols)) {
                     if (!in_array($aStandard['id'], $aAdded)) {
-                        $q = lovd_queryDB('ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());
-                        $q = lovd_queryDB('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $_AUTH['id']));
+                        $q = lovd_queryDB_Old('ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());
+                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $_AUTH['id']));
                     }
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($_POST['id'], $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $_AUTH['id']));
+                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($_POST['id'], $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $_AUTH['id']));
                 }
 
                 // Write to log...
                 lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');
 
                 // Make current user curator of this gene.
-                lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1), true);
+                lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1), true);
 
                 // Add diseases.
                 $aSuccessDiseases = array();
@@ -392,7 +391,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     foreach ($_POST['active_diseases'] as $nDisease) {
                         // Add disease to gene.
                         if ($nDisease) {
-                            $q = lovd_queryDB('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $nDisease));
+                            $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $nDisease));
                             if (!$q) {
                                 // Silent error.
                                 lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nDisease . ' - could not be added to gene ' . $_POST['id']);
@@ -415,7 +414,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                             $sTranscriptProtein = $zData['transcriptsProtein'][$sTranscript];
                             $sTranscriptName = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)];
                             $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
-                            $q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($_POST['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['gTransStart'], $aTranscriptPositions['gTransEnd'], $_POST['created_by']));
+                            $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($_POST['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['gTransStart'], $aTranscriptPositions['gTransEnd'], $_POST['created_by']));
                             if (!$q) {
                                 // Silent error.
                                 lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
@@ -434,7 +433,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 }
 
                 // Add current user as the curator. This should also be in the transaction.
-                @lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
+                @lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
 
                 // Thank the user...
                 header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_POST['id'] . '?authorize');
@@ -585,7 +584,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                 }
             }
             if ($aToRemove) {
-                $q = lovd_queryDB('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove));
+                $q = lovd_queryDB_Old('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove));
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from gene ' . $sID);
@@ -601,7 +600,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                 // FIXME; probeer van deze "None" af te komen.
                 if (!in_array($nDisease, $zData['active_diseases']) && $nDisease != 'None') {
                     // Add disease to gene.
-                    $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
+                    $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
                     if (!$q) {
                         $aFailed[] = $nDisease;
                     } else {
@@ -844,7 +843,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
         if (!lovd_error()) {
             // What's by far the most efficient code-wise is just insert/update all we've got and delete everything else.
-            lovd_queryDB('START TRANSACTION', array(), true);
+            lovd_queryDB_Old('START TRANSACTION', array(), true);
 
             foreach ($_POST['curators'] as $nOrder => $nUserID) {
                 $nOrder ++; // Since 0 is the first key in the array.
@@ -854,22 +853,22 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                 //   I'm being lazy, I'm not implementing the check here now. However, it *is* a bug and should be fixed later.
                 if (ACTION == 'authorize') {
                     // FIXME; Is using REPLACE not a lot easier?
-                    lovd_queryDB('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)), true);
+                    lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)), true);
                     // FIXME; Without detailed user info we can't include elaborate logging. Would we want that anyway?
                     //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
                 } else {
                     // Just sort and update visibility!
-                    lovd_queryDB('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $nUserID), true);
+                    lovd_queryDB_Old('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $nUserID), true);
                 }
             }
 
             if (ACTION == 'authorize') {
                 // Now everybody should be updated. Remove whoever should no longer be in there.
-                lovd_queryDB('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])), true);
+                lovd_queryDB_Old('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])), true);
             }
 
             // If we get here, it all succeeded.
-            lovd_queryDB('COMMIT', array(), true);
+            lovd_queryDB_Old('COMMIT', array(), true);
 
             // Write to log...
             if (ACTION == 'authorize') {
@@ -905,7 +904,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     if (POST) {
         // Form has already been sent. We're here because of errors. Use $_POST.
         // Retrieve data for selected curators and collaborators.
-        $qCurators = lovd_queryDB('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
+        $qCurators = lovd_queryDB_Old('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
         $zCurators = array();
         while ($z = mysql_fetch_assoc($qCurators)) {
             // FIXME; Do we need to change all IDs to integers because of possibly loosing the prepended zero's? Cross-browser check to verify?
@@ -926,7 +925,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
         // Retrieve current curators and collaborators, order by current order.
         // Special ORDER BY statement makes sure show_order value of 0 is sent to the bottom of the list.
-        $qCurators = lovd_queryDB('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
+        $qCurators = lovd_queryDB_Old('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
         while ($z = mysql_fetch_assoc($qCurators)) {
             $aCurators[$z['id']] = $z;
         }
@@ -1179,7 +1178,7 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
             if ($_INI['database']['engine'] == 'InnoDB') {
                 // FIXME; It's better to use 'START TRANSACTION', but that's only available from 4.0.11.
                 //   This works from the introduction of InnoDB in 3.23
-                @lovd_queryDB('BEGIN WORK');
+                @lovd_queryDB_Old('BEGIN WORK');
             }
 
             // Run query to create entry in DBS table.
@@ -1199,7 +1198,7 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
                 $sError = mysql_error();
 
                 if ($_INI['database']['engine'] == 'InnoDB') {
-                    @lovd_queryDB('ROLLBACK');
+                    @lovd_queryDB_Old('ROLLBACK');
                 } else {
                     @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
                 }
@@ -1210,7 +1209,7 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
 
             // Commit, since a CREATE TABLE will commit either way (MySQL 5.0, too?).
             if ($_INI['database']['engine'] == 'InnoDB') {
-                @lovd_queryDB('COMMIT');
+                @lovd_queryDB_Old('COMMIT');
             }
 
 

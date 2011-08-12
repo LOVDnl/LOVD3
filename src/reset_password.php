@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2011-08-04
+ * Modified    : 2011-08-12
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -53,7 +53,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
         lovd_errorClean();
 
         // Find account.
-        $zData = mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username'])));
+        $zData = mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username'])));
         if (!$zData) {
             lovd_errorAdd('This username does not exist.');
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for inexistent/denied account ' . $_POST['username']);
@@ -77,7 +77,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             }
 
             // Update database.
-            $q = lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password_autogen = MD5(?) WHERE username = ?', array($sPasswd, $_POST['username']), true);
+            $q = lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET password_autogen = MD5(?) WHERE username = ?', array($sPasswd, $_POST['username']), true);
 
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' . $_POST['username']);
 

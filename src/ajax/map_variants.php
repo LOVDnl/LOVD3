@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2011-03-10
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -62,14 +62,14 @@ ignore_user_abort(true);
 // Now, we'll traverse this array, pick max 10 variants and start processing...
 foreach ($_SESSION['mapping']['genes'] as $key => $sGene) {
     // Which human build, reference sequence?
-    list($sRefSeq, $sBuild) = mysql_fetch_row(lovd_queryDB('SELECT refseq_mrna, refseq_build FROM ' . TABLE_DBS . ' WHERE id = ?', array($sGene)));
+    list($sRefSeq, $sBuild) = mysql_fetch_row(lovd_queryDB_Old('SELECT refseq_mrna, refseq_build FROM ' . TABLE_DBS . ' WHERE id = ?', array($sGene)));
     if (!$sRefSeq || !$sBuild) {
         unset($_SESSION['mapping']['genes'][$key]);
         continue;
     }
 
     // How many variants are there that we'll need to index? `Variant/DNA` also checks (crude way) if the DNA column is there.
-    list($nToDo) = @mysql_fetch_row(lovd_queryDB('SELECT COUNT(DISTINCT `Variant/DNA`) FROM ' . TABLEPREFIX . '_?_variants WHERE c_position_start IS NULL', array($sGene)));
+    list($nToDo) = @mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(DISTINCT `Variant/DNA`) FROM ' . TABLEPREFIX . '_?_variants WHERE c_position_start IS NULL', array($sGene)));
 
     if (!$nToDo) {
         unset($_SESSION['mapping']['current'], $_SESSION['mapping']['genes'][$key]);
@@ -84,7 +84,7 @@ foreach ($_SESSION['mapping']['genes'] as $key => $sGene) {
     $i = 0;
     while ($nDone < $nMaxVariants) {
         // Pick $nMaxVariants variants max.
-        $qVars = @lovd_queryDB('SELECT DISTINCT `Variant/DNA` FROM ' . TABLEPREFIX . '_?_variants WHERE c_position_start IS NULL LIMIT ?', array($sGene, $nMaxVariants));
+        $qVars = @lovd_queryDB_Old('SELECT DISTINCT `Variant/DNA` FROM ' . TABLEPREFIX . '_?_variants WHERE c_position_start IS NULL LIMIT ?', array($sGene, $nMaxVariants));
         $nVars = mysql_num_rows($qVars);
 
         // Per variant, request the positions from Mutalyzer.
@@ -112,14 +112,14 @@ foreach ($_SESSION['mapping']['genes'] as $key => $sGene) {
                 } elseif (count($aOutput) == 1 && preg_match('/^Error (Variant_info): Reference sequence (version )?not found\./', $aOutput[0])) {
                     // Save ourselves a lot of time mapping something that cannot work.
                     // Reference Sequence not found. Don't map these variants.
-                    @lovd_queryDB('UPDATE ' . TABLEPREFIX . '_?_variants SET c_position_start = "0", c_position_start_intron = "0", c_position_end = "0", c_position_end_intron = "0", g_position_start = "0", g_position_end = "0", type = "" WHERE c_position_start IS NULL', array($sGene));
+                    @lovd_queryDB_Old('UPDATE ' . TABLEPREFIX . '_?_variants SET c_position_start = "0", c_position_start_intron = "0", c_position_end = "0", c_position_end_intron = "0", g_position_start = "0", g_position_end = "0", type = "" WHERE c_position_start IS NULL', array($sGene));
                     continue; // Will be enough for now.
                 } else {
                     $aOutput = array(0, 0, 0, 0, 0, 0, '');
                 }
 
                 // 2010-01-12; 2.0-24; Update mapping for clean variant and full variant name like it was in the database.
-                @lovd_queryDB('UPDATE ' . TABLEPREFIX . '_?_variants SET c_position_start = ?, c_position_start_intron = ?, c_position_end = ?, c_position_end_intron = ?, g_position_start = ?, g_position_end = ?, type = ? WHERE `Variant/DNA` = ? OR `Variant/DNA` = ?', array($sGene, $aOutput[0], $aOutput[1], $aOutput[2], $aOutput[3], $aOutput[4], $aOutput[5], $aOutput[6], $sVariant, $sVariantClean));
+                @lovd_queryDB_Old('UPDATE ' . TABLEPREFIX . '_?_variants SET c_position_start = ?, c_position_start_intron = ?, c_position_end = ?, c_position_end_intron = ?, g_position_start = ?, g_position_end = ?, type = ? WHERE `Variant/DNA` = ? OR `Variant/DNA` = ?', array($sGene, $aOutput[0], $aOutput[1], $aOutput[2], $aOutput[3], $aOutput[4], $aOutput[5], $aOutput[6], $sVariant, $sVariantClean));
 
                 $nDone ++;
                 $i ++;

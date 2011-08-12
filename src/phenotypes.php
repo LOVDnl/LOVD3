@@ -4,13 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *
  *
  *
  * This file is part of LOVD.
@@ -52,7 +51,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_phenotypes.php';
 
-    $q = lovd_queryDB('SELECT * FROM ' . TABLE_DISEASES);
+    $q = lovd_queryDB_Old('SELECT * FROM ' . TABLE_DISEASES);
     if ($q) {
         while($aDisease = mysql_fetch_assoc($q)) {
             $_GET['search_diseaseid'] = $aDisease['id'];
@@ -83,13 +82,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    // Load appropiate user level for this phenotype entry.
+    lovd_isAuthorized('phenotype', $nID);
+
     require ROOT_PATH . 'class/object_phenotypes.php';
     $_DATA = new LOVD_Phenotype();
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
-    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
         $sNavigation = '<A href="phenotypes/' . $nID . '?edit">Edit phenotype information</A>';
         $sNavigation .= ' | <A href="phenotypes/' . $nID . '?delete">Delete phenotype entry</A>';
     }
@@ -113,11 +114,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     define('LOG_EVENT', 'PhenotypeCreate');
 
-    lovd_requireAUTH(LEVEL_SUBMITTER);
+    lovd_requireAUTH();
     
     if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
         $_GET['target'] = str_pad($_GET['target'], 8, "0", STR_PAD_LEFT);
-        if (mysql_num_rows(lovd_queryDB('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id=?', array($_GET['target'])))) {
+        if (mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id=?', array($_GET['target'])))) {
             $_POST['individualid'] = $_GET['target'];
             define('PAGE_TITLE', 'Create a new phenotype information entry for individual #' . $_GET['target']);
         } else {
@@ -189,7 +190,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     if (!isset($_POST['diseaseid'])) {
         // FIXME; select * is overdreven.
         $sSQL = 'SELECT * FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) WHERE i2d.individualid = ?';
-        $q = lovd_queryDB($sSQL, array($_GET['target']));
+        $q = lovd_queryDB_Old($sSQL, array($_GET['target']));
         $aSelectDiseases = array();
         if ($q) {
             while ($aDisease = mysql_fetch_assoc($q)) {
@@ -197,7 +198,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
         } else {
             // FIXME; dit is raar voor de gebruiker, een halve pagina zonder foutmelding???
-            //  Gebruik hier de mogelijkheden van lovd_queryDB() meer.
+            //  Gebruik hier de mogelijkheden van lovd_queryDB_Old() meer.
             exit;
         }
 
@@ -266,9 +267,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Edit an phenotype information entry');
     define('LOG_EVENT', 'PhenotypeEdit');
 
-    // FIXME; hier moet een goede controle komen, wanneer lager is toegestaan.
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Load appropiate user level for this phenotype entry.
+    lovd_isAuthorized('phenotype', $nID);
+    lovd_requireAUTH(LEVEL_OWNER);
 
     require ROOT_PATH . 'class/object_phenotypes.php';
     $_DATA = new LOVD_Phenotype();

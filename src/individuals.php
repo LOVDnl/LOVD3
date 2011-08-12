@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -70,20 +70,27 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    // Load appropiate user level for this individual.
+    lovd_isAuthorized('individual', $nID);
+
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual($nID);
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
-    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
-        $sNavigation .= ' | <A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
-        $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype to individual</A>';
-        $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
-    } elseif ($_AUTH && $_AUTH['level'] >= LEVEL_SUBMITTER) {
-        $sNavigation = '<A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
-        $sNavigation = '<A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype to individual</A>';
+    if ($_AUTH) {
+        if ($_AUTH['level'] >= LEVEL_OWNER) {
+            $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
+            $sNavigation .= ' | <A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
+            $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype to individual</A>';
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
+            }
+        } elseif ($_AUTH['level'] >= LEVEL_SUBMITTER) {
+            // FIXME; maybe remove these links? Decourage submitters to add info to whatever individual? Or maybe an alert (This is not a record submitted by you, are you sure?)
+            $sNavigation = '<A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
+            $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype to individual</A>';
+        }
     }
 
     if ($sNavigation) {
@@ -152,7 +159,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     define('LOG_EVENT', 'IndividualCreate');
 
     // Require manager clearance.
-    lovd_requireAUTH(LEVEL_SUBMITTER);
+    lovd_requireAUTH();
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
@@ -190,7 +197,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     // FIXME; dit is $nDisease.
                     foreach ($_POST['active_diseases'] as $sDisease) {
                         // Add disease to gene.
-                        $q = lovd_queryDB('INSERT INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $sDisease));
+                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $sDisease));
                         if (!$q) {
                             // Silent error.
                             lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $sDisease . ' - could not be added to individual ' . $nID);
@@ -267,8 +274,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Edit an individual information entry');
     define('LOG_EVENT', 'IndividualEdit');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Load appropiate user level for this individual.
+    lovd_isAuthorized('individual', $nID);
+    lovd_requireAUTH(LEVEL_OWNER);
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
@@ -314,7 +322,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 }
             }
             if ($aToRemove) {
-                $q = lovd_queryDB('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
+                $q = lovd_queryDB_Old('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from individual ' . $nID);
@@ -329,7 +337,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             foreach ($_POST['active_diseases'] as $nDisease) {
                 if (!in_array($nDisease, $aDiseases)) {
                     // Add disease to gene.
-                    $q = lovd_queryDB('INSERT IGNORE INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease));
+                    $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease));
                     if (!$q) {
                         $aFailed[] = $nDisease;
                     } else {

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -97,7 +97,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // Create a new entry.
 
-    lovd_requireAUTH(LEVEL_SUBMITTER);
+    lovd_requireAUTH();
 
     if (isset($_GET['reference']) && $_GET['reference'] == 'Genome') {
         // URL: /variants?create&reference='Genome'
@@ -107,7 +107,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (isset($_GET['target'])) {
             if (ctype_digit($_GET['target'])) {
                 $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
-                if (mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
+                if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
                     $_POST['screeningid'] = $_GET['target'];
                     define('PAGE_TITLE', 'Create a new variant entry for screening #' . $_GET['target']);
                 } else {
@@ -153,7 +153,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 // Add variant to screening.
                 if (isset($_POST['screeningid'])) {
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
+                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
@@ -222,7 +222,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (isset($_GET['transcriptid'])) {
             if (ctype_digit($_GET['transcriptid'])) {
                 $_GET['transcriptid'] = str_pad($_GET['transcriptid'], 5, '0', STR_PAD_LEFT);
-                if (mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($_GET['transcriptid'])))) {
+                if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($_GET['transcriptid'])))) {
                     define('PAGE_TITLE', 'Create a new variant entry for transcript #' . $_GET['transcriptid']);
                 } else {
                     define('PAGE_TITLE', 'Create a new variant entry');

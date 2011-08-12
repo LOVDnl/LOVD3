@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2011-08-03
+ * Modified    : 2011-08-12
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,12 +49,12 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 // Some info & statistics.
-list($nUsers)    = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS));
-list($nLogs)     = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_LOGS));
-list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
+list($nUsers)    = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_USERS));
+list($nLogs)     = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_LOGS));
+list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
 $aTotalVars      = array();
 $nTotalVars      = 0;
-$q = lovd_queryDB('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
+$q = lovd_queryDB_Old('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
 while ($r = mysql_fetch_row($q)) {
     $aTotalVars[$r[1]] = $r[0];
     $nTotalVars += $r[0];
@@ -139,7 +139,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                       ),
 /*
 // Modules.
-list($nModules) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_MODULES));
+list($nModules) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_MODULES));
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="2"><B>Modules</B></TD></TR>' . "\n" .

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-07-25
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -141,7 +141,7 @@ class LOVD_Disease extends LOVD_Object {
 
         // FIXME; eerst een concat om daarna te exploden???
         // FIXME; gebruik lovd_getGeneList().
-        $qGenes = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS genes FROM ' . TABLE_GENES);
+        $qGenes = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id) AS genes FROM ' . TABLE_GENES);
         $aGenes = mysql_fetch_row($qGenes);
         $aGenes = explode(',', $aGenes[0]);
         // FIXME; ik denk dat de query naar binnen deze if moet.
@@ -176,7 +176,7 @@ class LOVD_Disease extends LOVD_Object {
 
         // Get list of genes, to connect disease to gene.
         $aGenesForm = array();
-        $qData = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_GENES . ' ORDER BY id');
+        $qData = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_GENES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
         // FIXME; aangezien $aGenesForm leeg zal zijn als $nData 0 is, stel ik voor deze while buiten de if te doen,
         //   dan de if om te draaien. Dan heb je geen else nodig.

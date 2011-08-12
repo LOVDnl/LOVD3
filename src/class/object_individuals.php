@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-08-04
+ * Modified    : 2011-08-12
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -182,7 +182,7 @@ class LOVD_Individual extends LOVD_Custom {
         parent::checkFields($aData);
 
         // FIXME; eerst een concat om daarna te exploden???
-        $qDiseases = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES, array());
+        $qDiseases = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES, array());
         $aDiseases = mysql_fetch_row($qDiseases);
         $aDiseases = explode(',', $aDiseases[0]);
         // FIXME; ik denk dat de query naar binnen deze if moet.
@@ -205,7 +205,7 @@ class LOVD_Individual extends LOVD_Custom {
         // FIXME; move to object_custom.php.
         if (!empty($_POST['ownerid'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
+                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
                 if (!mysql_num_rows($q)) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this individual\' selection box.');
@@ -239,7 +239,7 @@ class LOVD_Individual extends LOVD_Custom {
         
         // Get list of diseases
         $aDiseasesForm = array();
-        $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
+        $qData = lovd_queryDB_Old('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
         // FIXME; aangezien $aDiseasesForm leeg zal zijn als $nData 0 is, stel ik voor deze while buiten de if te doen,
         // dan de if om te draaien. Dan heb je geen else nodig.
@@ -258,7 +258,7 @@ class LOVD_Individual extends LOVD_Custom {
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             // FIXME; sorteren ergens op? Naam? Of land? Kijk naar hoe dit in LOVD 2.0 geregeld is.
-            $q = lovd_queryDB('SELECT id, name FROM ' . TABLE_USERS);
+            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS);
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }

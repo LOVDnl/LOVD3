@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -138,7 +138,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     continue;
                 }
                 // Add custom link to column.
-                $q = lovd_queryDB('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID));
+                $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID));
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Custom link ' . $nID . ' - ' . $_POST['name'] . ' - could not be added to column ' . $sCol);
@@ -249,7 +249,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             foreach ($aCols AS $sCol) {
                 if ($sCol && !in_array($sCol, $_POST['active_columns'])) {
                     // User has requested removal...
-                    $q = lovd_queryDB('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid = ?', array($sCol, $nID));
+                    $q = lovd_queryDB_Old('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid = ?', array($sCol, $nID));
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Custom link ' . $nID . ' - ' . $_POST['name'] . ' - could not be removed from column ' . $sCol);
@@ -271,7 +271,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 }
                 if (!in_array($sCol, $aCols)) {
                     // Add custom link to column.
-                    $q = lovd_queryDB('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID));
+                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID));
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Custom link ' . $nID . ' - ' . $_POST['name'] . ' - could not be added to column ' . $sCol);

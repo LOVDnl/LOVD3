@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -148,7 +148,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         // FIXME; move to object_custom.php.
         if (!empty($_POST['ownerid'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
+                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
                 if (!mysql_num_rows($q)) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this phenotype entry\' selection box.');
@@ -185,13 +185,13 @@ class LOVD_Phenotype extends LOVD_Custom {
             $_POST['diseaseid'] = $zData['diseaseid'];
         }
 
-        list($sDisease) = mysql_fetch_row(lovd_queryDB('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id=?', array($_POST['diseaseid'])));
+        list($sDisease) = mysql_fetch_row(lovd_queryDB_Old('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id=?', array($_POST['diseaseid'])));
 
         $aSelectOwner = array();
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             // FIXME; sorteren ergens op? Naam? Of land? Kijk naar hoe dit in LOVD 2.0 geregeld is.
-            $q = lovd_queryDB('SELECT id, name FROM ' . TABLE_USERS);
+            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS);
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }

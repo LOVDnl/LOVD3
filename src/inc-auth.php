@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -37,7 +37,7 @@ if (!defined('ROOT_PATH')) {
 $_AUTH = false;
 
 if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
-    $_SESSION['auth'] = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ? AND login_attempts < 3', array($_SESSION['auth']['username'], $_SESSION['auth']['password'])));
+    $_SESSION['auth'] = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ? AND login_attempts < 3', array($_SESSION['auth']['username'], $_SESSION['auth']['password'])));
     if (is_array($_SESSION['auth'])) {
         $_AUTH = & $_SESSION['auth'];
 
@@ -45,7 +45,7 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
         $_AUTH['curates']      = array();
         $_AUTH['collaborates'] = array();
         if ($_AUTH['level'] < LEVEL_MANAGER) {
-            $q = lovd_queryDB('SELECT geneid, allow_edit FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($_AUTH['id']));
+            $q = lovd_queryDB_Old('SELECT geneid, allow_edit FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($_AUTH['id']));
             while ($r = mysql_fetch_row($q)) {
                 if ($r[1]) {
                     $_AUTH['curates'][] = $r[0];

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-03
- * Modified    : 2011-07-21
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -84,7 +84,7 @@ print('<B>DISABLED FOR REVISION!</B>');
 $nTotalCurators = 0;
 $nTotalCollaborators = 0;
 $qGenes = 'SELECT g.id, g.name, g.updated_date, COUNT(u2g.userid) AS collaborators, SUM(u2g.allow_edit) AS curators FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) GROUP BY g.id ORDER BY g.id ASC';
-$rGenes = lovd_queryDB($qGenes);
+$rGenes = lovd_queryDB_Old($qGenes);
 $nGenes = mysql_num_rows($rGenes);
 while($aGene = mysql_fetch_assoc($rGenes)) {
     $nCollaborators = ($aGene['collaborators'] - $aGene['curators']);

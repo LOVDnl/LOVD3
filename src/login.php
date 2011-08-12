@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -51,7 +51,7 @@ if (!empty($_POST)) {
         // We're now also accepting unlocking accounts.
         if (!empty($_POST['username']) && !empty($_POST['password'])) {
             // First, retrieve account information.
-            $zUser = mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username'])));
+            $zUser = mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username'])));
 
             if ($zUser) {
                 // The user exists, now check account unlocking, locked accounts, successful and unsuccessful logins.
@@ -80,7 +80,7 @@ if (!empty($_POST)) {
                     }
                     // Also update the password field, it needs to be used by the update password form.
                     $_AUTH['password'] = $zUser['password_autogen'];
-                    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
+                    lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
 
                     // Since this is the unlocking code, the user should be forced to change his/her password.
                     $_SESSION['password_force_change'] = true;
@@ -124,10 +124,10 @@ if (!empty($_POST)) {
                     if (strlen($zUser['password']) == 32 && $_STAT['version'] >= '3.0-alpha-02') {
                         // User has logged in, so we have his password. Create salt and regenerate password hash for him.
                         $_SESSION['auth']['password'] = lovd_createPasswordHash($_POST['password']);
-                        lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password = ?, password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_SESSION['auth']['password'], session_id(), $_AUTH['id']));
+                        lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET password = ?, password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_SESSION['auth']['password'], session_id(), $_AUTH['id']));
                     } else {
                         // FIXME; if this block is removed, keep this query.
-                        lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array(session_id(), $_AUTH['id']));
+                        lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array(session_id(), $_AUTH['id']));
                     }
 
                     // Check if the user should be forced to change his/her password.
@@ -158,7 +158,7 @@ if (!empty($_POST)) {
 
                 // This may not actually update (user misspelled his username) but we can call the query anyway.
                 if ($_CONF['lock_users']) {
-                    lovd_queryDB('UPDATE ' . TABLE_USERS . ' SET login_attempts = login_attempts + 1 WHERE username = ? AND level < ' . LEVEL_ADMIN, array($_POST['username']));
+                    lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET login_attempts = login_attempts + 1 WHERE username = ? AND level < ' . LEVEL_ADMIN, array($_POST['username']));
                 }
 
                 // Check if the user is locked, now.

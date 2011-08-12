@@ -1,10 +1,13 @@
 Prioritize:
 ===========
-- DMD_SPECIFIC calls moeten omlaag
-  * check_update.php
-  * inc-lib-init.php: buildLinks(), vast niet meer nodig?
-- LOVD_OWNER moet hoger zijn dan LEVEL_COLLABORATOR, omdat owners mogen editen en collaborator niet.
-  * Dit nivea moet worden veranderd in inc-init.php en alle requireAuth() calls en isAuthorized() calls moeten even bekeken worden, of ze nog wel goed gaan.
+- CUSTOM VIEWLIST:
+  * Add object_custom_viewlist.php
+    - inherit objects.php directly.
+    - Bevat *vooraf ingestelde* queries, aColumnsViewList.
+    - Data voor custom columns die er ook tussen moeten, komt uit join van TABLE_ACTIVE_COLS met TABLE_COLS.
+    - sObject = "Custom"
+    - (later) doet ook custom links.
+- INCORPORATE PDO.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
 - (@Ivo) Ga naar viewlist, hersorteer, zoek, hersorteer. Terug kun je wel door sort, maar niet de undo van het zoeken.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
@@ -104,7 +107,7 @@ Prioritize:
 - Use uniqid ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
 - Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
-- (Ivo:??) Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
+- (@Ivo?) Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
 - Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
 - (@Ivo) BUG;
     /check_update?icon returned error in code block Unknown.
@@ -125,11 +128,12 @@ Prioritize:
 - Transcript aanmaken totaal onmogelijk op shared installatie (traag, server (apache?) loopt vast)
   * Ivar: Dit zou door de tijdelijke mem leak fix sneller moeten gaan. Zorg er overigens wel voor dat je alle genes een keer edit ofzo.
           Dit geeft Mutalyzer de mogelijkheid om een UD nummer erbij te zoeken. Anders moeten we hier een script voor schrijven.
-- (@Ivar) BUG: Gen selecteren met transcript aanmaken niet handig; gesorteerd op symbol maar die staat niet vooraan.
+- (@Ivar) Gen selecteren met transcript aanmaken niet handig; symbol staat niet vooraan (Johan wil 't zo?).
   * ViewList als oplossing? Page size klein houden?
 - Geheugengebruik op shared install is absurd hoog (2 GB per Apache thread)
   * Memory leak in transcripts?create indien create niet wordt afgemaakt. Sowieso moet 't geheugengebruik van dit deel van 't script omlaag. Niet per se in alpha-01.
   * genes?create idem dito
+  * genes?edit idem dito
   * transcripts/DMD?create moet blijven op transcripts/DMD?create (nu verliest hij de DMD in de URL)
   * Solution to mem_leak: max 5 work IDs van dezelfde action?
     - Datum als key binnen action's work array.

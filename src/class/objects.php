@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -223,7 +223,7 @@ class LOVD_Object {
         } else {
             if ($this->getCount($nID)) {
                 $sSQL = 'DELETE FROM ' . constant($this->sTable) . ' WHERE id = ?';
-                $q = lovd_queryDB($sSQL, array($nID));
+                $q = lovd_queryDB_Old($sSQL, array($nID));
                 if (!$q) {
                     lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::deleteEntry()'), $sSQL, mysql_error());
                 }
@@ -242,12 +242,12 @@ class LOVD_Object {
     {
         // Returns the number of entries in the database table.
         if ($nID) {
-            list($nCount) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE id = ?', array($nID)));
+            list($nCount) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE id = ?', array($nID)));
         } else {
             if ($this->nCount) {
                 return $this->nCount;
             }
-            list($nCount) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . constant($this->sTable)));
+            list($nCount) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . constant($this->sTable)));
             $this->nCount = $nCount;
         }
         return $nCount;
@@ -298,7 +298,7 @@ class LOVD_Object {
         }
         $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
 
-        $q = lovd_queryDB($sSQL, $aSQL);
+        $q = lovd_queryDB_Old($sSQL, $aSQL);
         if (!$q) {
             lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::insertEntry()'), $sSQL, mysql_error());
         }
@@ -331,7 +331,7 @@ class LOVD_Object {
         } else {
             $sSQL = 'SELECT * FROM ' . constant($this->sTable) . ' WHERE id = ?';
         }
-        $zData = @mysql_fetch_assoc(lovd_queryDB($sSQL, array($nID)));
+        $zData = @mysql_fetch_assoc(lovd_queryDB_Old($sSQL, array($nID)));
         if (!$zData) {
             global $_CONF, $_SETT, $_STAT, $_AUTH;
 
@@ -475,7 +475,7 @@ class LOVD_Object {
         $sSQL .= ' WHERE id = ?';
         $aSQL[] = $nID;
 
-        $q = lovd_queryDB($sSQL, $aSQL);
+        $q = lovd_queryDB_Old($sSQL, $aSQL);
         if (!$q) {
             lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::updateEntry()'), $sSQL, mysql_error());
         }
@@ -531,7 +531,7 @@ class LOVD_Object {
                ' GROUP BY ' . $this->aSQLViewEntry['GROUP_BY']);
 
         // Run the actual query.
-        $zData = mysql_fetch_assoc(lovd_queryDB($sSQL, array($nID)));
+        $zData = mysql_fetch_assoc(lovd_queryDB_Old($sSQL, array($nID)));
         if (!$zData) {
             lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewEntry()'), $sSQL, mysql_error());
         }
@@ -790,8 +790,8 @@ class LOVD_Object {
             // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
             // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
             // Last checked 2010-01-25, by Ivo Fokkema.
-            lovd_queryDB('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
-            lovd_queryDB('START TRANSACTION');
+            lovd_queryDB_Old('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+            lovd_queryDB_Old('START TRANSACTION');
 
             // Run the actual query.
             $aArgs = array();
@@ -802,15 +802,15 @@ class LOVD_Object {
                 $aArgs[] = $aArg;
             }
 
-            $q = lovd_queryDB($sSQL, $aArgs);
+            $q = lovd_queryDB_Old($sSQL, $aArgs);
             if (!$q) {
 // FIXME; what if using AJAX? Probably we should generate a number here, indicating the system to try once more. If that fails also, the JS should throw a general error, maybe.
                 lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewList()'), $sSQL, mysql_error());
             }
 
             // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
-            list($nTotal) = mysql_fetch_row(lovd_queryDB('SELECT FOUND_ROWS()'));
-            lovd_queryDB('COMMIT'); // To end the transaction and the locks that come with it.
+            list($nTotal) = mysql_fetch_row(lovd_queryDB_Old('SELECT FOUND_ROWS()'));
+            lovd_queryDB_Old('COMMIT'); // To end the transaction and the locks that come with it.
 
             // It is possible, when increasing the page size from a page > 1, that you're ending up in an invalid page with no results.
             // Catching this error, by redirecting from here. Only Ajax handles this correctly, because in normal requests inc-top.php already executed.

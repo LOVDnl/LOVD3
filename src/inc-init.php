@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-08-03
+ * Modified    : 2011-08-12
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -70,9 +70,9 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
 }
 
 define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorization is depending on assignments, not user levels anymore.
-define('LEVEL_OWNER', 2);        // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers (verify objects_users.php), but keep the order!
-define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers (verify objects_users.php), but keep the order!
-define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers (verify objects_users.php), but keep the order!
+define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
+define('LEVEL_OWNER', 4);        // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
+define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
 define('LEVEL_MANAGER', 7);
 define('LEVEL_ADMIN', 9);
 
@@ -87,7 +87,7 @@ define('AJAX_DATA_ERROR', '9');
 
 $aRequired =
          array(
-                'PHP'   => '4.3.0',
+                'PHP'   => '5.1.0',
                 'MySQL' => '4.1.1',
               );
 
@@ -101,8 +101,8 @@ $_SETT = array(
                             LEVEL_ADMIN        => 'Database administrator',
                             LEVEL_MANAGER      => 'LOVD manager',
                             LEVEL_CURATOR      => 'Curator',
-                            LEVEL_COLLABORATOR => 'Collaborator',
                             LEVEL_OWNER        => 'Submitter (data owner)',
+                            LEVEL_COLLABORATOR => 'Collaborator',
                             LEVEL_SUBMITTER    => 'Submitter',
                           ),
 
@@ -456,6 +456,23 @@ if (!function_exists('mysql_connect')) {
     lovd_displayError('Init', 'This PHP installation does not have MySQL support installed. Without it, LOVD will not function. Please install MySQL support for PHP.');
 }
 
+// Check PDO existence.
+if (!class_exists('PDO')) {
+    $sError = 'This PHP installation does not have PDO support installed, available from PHP 5. Without it, LOVD will not function.';
+    if (substr(phpversion(), 0, 1) < 5) {
+        $sError .= ' Please upgrade your PHP version to at least PHP 5.0.0 and install PDO support (built in from 5.1.0).';
+    } else {
+        $sError .= ' Please install PDO support (built in from 5.1.0).';
+    }
+    lovd_displayError('Init', $sError);
+
+} else {
+    // PDO available, check if we have MySQL.
+    if (!in_array('mysql', PDO::getAvailableDrivers())) {
+        lovd_displayError('Init', 'This PHP installation does not have MySQL support for PDO installed. Without it, LOVD will not function. Please install MySQL support for PHP PDO.');
+    }
+}
+
 // Initiate Database Connection.
 $_DB = @mysql_connect($_INI['database']['hostname'], $_INI['database']['username'], $_INI['database']['password']);
 if (!$_DB) {
@@ -472,7 +489,7 @@ if (!$bSelected) {
 // Get the character set right.
 if (($sCharSet = mysql_client_encoding()) && $sCharSet != 'utf8') {
     // mysql_set_charset() is available only with PHP 5.2.3 and MySQL 5.0.7.
-    @lovd_queryDB('SET NAMES utf8');
+    @lovd_queryDB_Old('SET NAMES utf8');
 }
 
 ini_set('default_charset','UTF-8');
@@ -482,10 +499,12 @@ ini_set('default_charset','UTF-8');
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
 // Read system-wide configuration from the database.
-$_CONF = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_CONFIG));
+$_CONF = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_CONFIG));
 
 // Read LOVD status from the database.
-$_STAT = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_STATUS));
+$_STAT = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_STATUS));
+
+
 
 if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) || !isset($_STAT['version']) || !preg_match('/^([1-9]\.[0-9](\.[0-9])?)\-([0-9a-z-]{2,11})$/', $_STAT['version'], $aRegsVersion)) {
     // We couldn't get the installation's configuration or status. Are we properly installed, then?
@@ -496,7 +515,7 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
 
     // Are we installed properly?
     $aTables = array();
-    $q = lovd_queryDB('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
+    $q = lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
     while ($r = mysql_fetch_row($q)) {
         if (in_array($r[0], $_TABLES)) {
             $aTables[] = $r[0];
@@ -568,7 +587,7 @@ if (!empty($_STAT['signature'])) {
     // Start sessions - use cookies.
     session_start();
 }
-header('X-LOVD-version: ' . $_SETT['system']['version'] . ($_STAT['version'] == $_SETT['system']['version']? '' : ' (DB @ ' . $_STAT['version'] . ')'));
+header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version']) || $_STAT['version'] == $_SETT['system']['version']? '' : ' (DB @ ' . $_STAT['version'] . ')'));
 
 
 
@@ -621,7 +640,7 @@ if (!defined('_NOT_INSTALLED_')) {
             $_SETT['admin'] = array('name' => $_AUTH['name'], 'email' => $_AUTH['email']);
         } else {
             $_SETT['admin'] = array();
-            list($_SETT['admin']['name'], $_SETT['admin']['email']) = mysql_fetch_row(lovd_queryDB('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN)));
+            list($_SETT['admin']['name'], $_SETT['admin']['email']) = mysql_fetch_row(lovd_queryDB_Old('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN)));
         }
 
 // DMD_SPECIFIC - Don't think we need this anymore.
@@ -637,7 +656,7 @@ if (!defined('_NOT_INSTALLED_')) {
 // DMD_SPECIFIC; how are we going to handle this?
         // Load gene data.
         if (!empty($_SESSION['currdb'])) {
-            $_SETT['currdb'] = @mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb'])));
+            $_SETT['currdb'] = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb'])));
             if (!$_SETT['currdb']) {
                 $_SESSION['currdb'] = false;
             }

@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-08-01
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -442,14 +442,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     }
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-pre-19')) {
-        $q = lovd_queryDB('DESCRIBE ' . TABLE_PAT2DIS);
+        $q = lovd_queryDB_Old('DESCRIBE ' . TABLE_PAT2DIS);
         if ($q) {
             // User has installed his LOVD *before* 3.0-pre-19 officially came out, but *after* some files had already been put in the SVN repository.
             $aUpdates['3.0-pre-19'][] = 'INSERT INTO ' . TABLE_IND2DIS . '(individualid, diseaseid) SELECT * FROM ' . TABLE_PAT2DIS;
             $aUpdates['3.0-pre-19'][] = 'DROP TABLE ' . TABLE_PAT2DIS;
         }
         $aUpdates['3.0-pre-19'][] = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid LIKE "Patient/%"';
-        $q = lovd_queryDB('DESCRIBE ' . TABLE_INDIVIDUALS);
+        $q = lovd_queryDB_Old('DESCRIBE ' . TABLE_INDIVIDUALS);
         if ($q) {
             // FIXME; this can never be true???
             while($aColumn = mysql_fetch_assoc($q)) {
@@ -462,7 +462,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                 }
             }
         }
-        $q = lovd_queryDB('DESCRIBE ' . TABLE_SCREENINGS);
+        $q = lovd_queryDB_Old('DESCRIBE ' . TABLE_SCREENINGS);
         if ($q) {
             // FIXME; this should never be false???
             while($aColumn = mysql_fetch_assoc($q)) {
@@ -474,7 +474,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     }
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-pre-20')) {
-        $q = lovd_queryDB('DESCRIBE ' . TABLE_INDIVIDUALS);
+        $q = lovd_queryDB_Old('DESCRIBE ' . TABLE_INDIVIDUALS);
         if ($q) {
             while($aColumn = mysql_fetch_assoc($q)) {
                 if ($aColumn['Field'] == 'Individual/Gender') {
@@ -485,7 +485,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     }
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-pre-21')) {
-        $q = lovd_queryDB('DESCRIBE ' . TABLE_INDIVIDUALS);
+        $q = lovd_queryDB_Old('DESCRIBE ' . TABLE_INDIVIDUALS);
         if ($q) {
             while($aColumn = mysql_fetch_assoc($q)) {
                 if ($aColumn['Field'] == 'Individual/Phenotype/Disease') {
@@ -540,7 +540,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     $sQ = 'UPDATE ' . TABLE_STATUS . ' SET lock_update = 1 WHERE lock_update = 0';
     $nMax = 3; // FIXME; Should be higher, this value is for dev only
     for ($i = 0; $i < $nMax; $i ++) {
-        lovd_queryDB($sQ);
+        lovd_queryDB_Old($sQ);
         $bLocked = !mysql_affected_rows();
         if (!$bLocked) {
             break;
@@ -594,7 +594,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
             foreach ($aSQL as $i => $sSQL) {
                 $i ++;
                 if (!$nSQLFailed) {
-                    $q = mysql_query($sSQL); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB(). It complains because there are ?s in the queries.
+                    $q = mysql_query($sSQL); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB_Old(). It complains because there are ?s in the queries.
                     if (!$q) {
                         $nSQLFailed ++;
                         // Error when running query.
@@ -649,7 +649,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         }
 
         // Remove update lock.
-        $q = lovd_queryDB('UPDATE ' . TABLE_STATUS . ' SET lock_update = 0');
+        $q = lovd_queryDB_Old('UPDATE ' . TABLE_STATUS . ' SET lock_update = 0');
     }
 
     // Now that this is over, let the user proceed to whereever they were going!

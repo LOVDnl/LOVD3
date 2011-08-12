@@ -1,12 +1,12 @@
 <?php
-// DMD_SPECIFIC; FIXME; recompare to LOVD 2.0 version, because it has changed significantly.
+// FIXME; recompare to LOVD 2.0 version, because it has changed significantly.
 /*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2011-07-18
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -36,7 +36,7 @@ require ROOT_PATH . 'inc-init.php';
 if (!isset($_GET['icon'])) {
     // Only authorized people...
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
-    lovd_requireAuth(LEVEL_CURATOR);
+    lovd_requireAUTH(LEVEL_CURATOR);
 }
 
 // For the first time, or forced check.
@@ -70,7 +70,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
     if ($_CONF['send_stats']) {
         // Collect stats...
         // Number of submitters.
-        list($nSubs) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE level <= ?', array(LEVEL_CURATOR)));
+        list($nSubs) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_USERS . ' AS u WHERE u.id NOT IN (SELECT c.userid FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id)'));
         $sPOSTVars .= '&submitter_count=' . $nSubs;
 
         // Number of genes.
@@ -80,24 +80,21 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $sPOSTVars .= '&gene_count=' . $nGenes;
 
         // Individual count.
-//        list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE valid_to = ?', array('9999-12-31')));
-        list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
+//        list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE valid_to = ?', array('9999-12-31')));
+        list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
         $sPOSTVars .= '&patient_count=' . $nIndividuals;
 
         // Number of unique variants.
-// FIXME, DMD_SPECIFIC, I disabled this.
-//        list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(DISTINCT geneid, REPLACE(REPLACE(REPLACE(`Variant/DNA`, "(", ""), ")", ""), "?", "")) FROM ' . TABLE_VARIANTS));
-list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
+        list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(DISTINCT `VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS));
         $sPOSTVars .= '&uniquevariant_count=' . $nUniqueVariants;
 
-// DMD_SPECIFIC, FIXME, I disabled this part. Fix it. Re-enable CurrDB.
+        // FIXME, I disabled this part. Fix it. Take Times_Reported et al in consideration.
         // Number of variants.
-        // $_CURRDB does not necessarily exists, if there is no gene this will return an error.
         if (false && isset($_CURRDB) && $_CURRDB->colExists('Individual/Times_Reported')) {
-            list($nVariants) = mysql_fetch_row(lovd_queryDB('SELECT SUM(p.`Individual/Times_Reported`) FROM ' . TABLE_INDIVIDUALS . ' AS p LEFT JOIN ' . TABLE_VARIANTS . ' AS v ON (p.id = v.individualid)'));
+            list($nVariants) = mysql_fetch_row(lovd_queryDB_Old('SELECT SUM(p.`Individual/Times_Reported`) FROM ' . TABLE_INDIVIDUALS . ' AS p LEFT JOIN ' . TABLE_VARIANTS . ' AS v ON (p.id = v.individualid)'));
             settype($nVariants, 'int'); // Convert NULL to 0.
         } else {
-            list($nVariants) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
+            list($nVariants) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
         }
         $sPOSTVars .= '&variant_count=' . $nVariants;
 /****** LOVD 2.0 code: *********************************************************
@@ -147,8 +144,8 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
         $aDiseaseIDs = array(); // Temporary array for query purposes only.
         // First, get the gene info (we store name, diseases, date last updated and curator ids).
         // FIXME; I'm pretty sure this INNER JOIN messes the join up...
-//        $q = lovd_queryDB('SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) INNER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 GROUP BY g.id ORDER BY g.id', array(), true);
-        $q = lovd_queryDB('SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 GROUP BY g.id ORDER BY g.id', array(), true);
+//        $q = lovd_queryDB_Old('SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) INNER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 GROUP BY g.id ORDER BY g.id', array(), true);
+        $q = lovd_queryDB_Old('SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 GROUP BY g.id ORDER BY g.id', array(), true);
         while ($z = mysql_fetch_assoc($q)) {
             $aData['genes'][$z['id']] =
                      array(
@@ -161,13 +158,13 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
         }
 
         // Then, get the actual curator data (name, email, institute).
-        $q = @lovd_queryDB('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' WHERE id IN (' . implode(',', array_unique($aUserIDs)) . ') ORDER BY id');
+        $q = @lovd_queryDB_Old('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' WHERE id IN (' . implode(',', array_unique($aUserIDs)) . ') ORDER BY id');
         while ($z = @mysql_fetch_assoc($q)) {
             $aData['users'][$z['id']] = array('name' => $z['name'], 'email' => $z['email'], 'institute' => $z['institute']);
         }
 
         // Finally, get the actual disease data (ID, symbol, name).
-        $q = @lovd_queryDB('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (' . implode(',', array_unique($aDiseaseIDs)) . ') ORDER BY id');
+        $q = @lovd_queryDB_Old('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (' . implode(',', array_unique($aDiseaseIDs)) . ') ORDER BY id');
         while ($z = @mysql_fetch_assoc($q)) {
             $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
         }
@@ -175,7 +172,7 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
         $sPOSTVars .= '&data=' . rawurlencode($sData);
 
         // Send setting for wiki indexing.
-        list($bAllowIndex) = mysql_fetch_row(lovd_queryDB('SELECT MAX(allow_index_wiki) FROM ' . TABLE_GENES));
+        list($bAllowIndex) = mysql_fetch_row(lovd_queryDB_Old('SELECT MAX(allow_index_wiki) FROM ' . TABLE_GENES));
         $sPOSTVars .= '&allow_index_wiki=' . (int) $bAllowIndex;
     }
 
@@ -187,7 +184,7 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
     $sNow = date('Y-m-d H:i:s');
     if (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*' . $_SETT['system']['version'] . '(\nReleased\s*:\s*[0-9]{4}\-[0-9]{2}\-[0-9]{2})?$/', $sUpdates)) {
         // No update available.
-        lovd_queryDB('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = 0, update_description = "", update_released_date = NULL', array($sNow, $_SETT['system']['version']));
+        lovd_queryDB_Old('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = 0, update_description = "", update_released_date = NULL', array($sNow, $_SETT['system']['version']));
         $_STAT['update_checked_date'] = $sNow;
         $_STAT['update_version'] = $_SETT['system']['version'];
         $_STAT['update_released_date'] = '';
@@ -197,7 +194,7 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
     } elseif (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*([1-9]\.[0-9](\.[0-9])?(\-[0-9a-z-]{2,11})?)(\nReleased\s*:\s*[0-9]{4}\-[0-9]{2}\-[0-9]{2})?$/', $sUpdates, $aUpdates) && is_array($aUpdates)) {
         // Weird version conflict?
         lovd_writeLog('Error', 'CheckUpdate', 'Version conflict while parsing upstream server output: current version (' . $_SETT['system']['version'] . ') > ' . $aUpdates[1]);
-        lovd_queryDB('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
+        lovd_queryDB_Old('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
         $_STAT['update_checked_date'] = $sNow;
         $_STAT['update_version'] = 'Error';
         $_STAT['update_released_date'] = '';
@@ -206,7 +203,7 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
 
     } elseif (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*([1-9]\.[0-9](\.[0-9])?\-([0-9a-z-]{2,11}))(\nReleased\s*:\s*([0-9]{4}\-[0-9]{2}\-[0-9]{2}))?\nPriority\s*:\s*([0-9])\nDescription\s*:\s*(.+)$/s', $sUpdates, $aUpdates) && is_array($aUpdates)) {
         // Now update the database - new version detected.
-        lovd_queryDB('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = ?, update_description = ?, update_released_date = ?', array($sNow, $aUpdates[1], $aUpdates[6], $aUpdates[7], $aUpdates[5]));
+        lovd_queryDB_Old('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = ?, update_description = ?, update_released_date = ?', array($sNow, $aUpdates[1], $aUpdates[6], $aUpdates[7], $aUpdates[5]));
         $_STAT['update_checked_date'] = $sNow;
         $_STAT['update_version'] = $aUpdates[1];
         $_STAT['update_released_date'] = $aUpdates[5];
@@ -216,7 +213,7 @@ list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . T
     } else {
         // Error during update check.
         lovd_writeLog('Error', 'CheckUpdate', 'Could not parse upstream server output:' . "\n" . $sUpdates);
-        lovd_queryDB('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
+        lovd_queryDB_Old('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
         $_STAT['update_checked_date'] = $sNow;
         $_STAT['update_version'] = 'Error';
         $_STAT['update_released_date'] = '';

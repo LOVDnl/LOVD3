@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-07-25
- * Modified    : 2011-07-26
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -52,7 +52,7 @@ require ROOT_PATH . 'inc-init.php';
 
 
 // Assertions for DATABASE ADMINISTRATOR.
-$_AUTH = mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN), true));
+$_AUTH = mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN), true));
 assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('transcript', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('variant', 'ASDFASDFASDF', false)");
@@ -63,7 +63,7 @@ assert("lovd_isAuthorized('asdfasdf', 'ASDFASDFASDF', false)");
 
 
 // Assertions for MANAGER.
-$_AUTH = mysql_fetch_assoc(lovd_queryDB('SELECT * FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_MANAGER), true));
+$_AUTH = mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_MANAGER), true));
 assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('transcript', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('variant', 'ASDFASDFASDF', false)");
@@ -74,7 +74,7 @@ assert("lovd_isAuthorized('asdfasdf', 'ASDFASDFASDF', false)");
 
 
 // Assertions for CURATORS.
-$_AUTH = mysql_fetch_assoc(lovd_queryDB('SELECT u.*,
+$_AUTH = mysql_fetch_assoc(lovd_queryDB_Old('SELECT u.*,
                                            (SELECT GROUP_CONCAT(c.geneid SEPARATOR ";") FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id AND c.allow_edit = 1) AS _curates,
                                            (SELECT GROUP_CONCAT(c.geneid SEPARATOR ";") FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id AND c.allow_edit = 0) AS _collaborates,
                                            (SELECT GROUP_CONCAT(id SEPARATOR ";") FROM ' . TABLE_GENES . ' WHERE id NOT IN (SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = u.id)) AS _submits
@@ -97,18 +97,18 @@ assert("lovd_isAuthorized('gene', '" . $_AUTH['submits'][0] . "', false) === fal
 
 // TRANSCRIPTS.
 assert("lovd_isAuthorized('transcript', 'ASDFASDFASDF', false) === false");
-list($nIDCurator)      = mysql_fetch_row(lovd_queryDB('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['curates'][0]), false));
-list($nIDCollaborator) = mysql_fetch_row(lovd_queryDB('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['collaborates'][0]), false));
-list($nIDSubmitter)    = mysql_fetch_row(lovd_queryDB('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['submits'][0]), false));
+list($nIDCurator)      = mysql_fetch_row(lovd_queryDB_Old('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['curates'][0]), false));
+list($nIDCollaborator) = mysql_fetch_row(lovd_queryDB_Old('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['collaborates'][0]), false));
+list($nIDSubmitter)    = mysql_fetch_row(lovd_queryDB_Old('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['submits'][0]), false));
 assert("lovd_isAuthorized('transcript', '" . $nIDCurator . "', false) === 1");
 assert("lovd_isAuthorized('transcript', '" . $nIDCollaborator . "', false) === 0");
 assert("lovd_isAuthorized('transcript', '" . $nIDSubmitter . "', false) === false");
 
 // DISEASES.
 assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false) === false");
-list($nIDCurator)      = mysql_fetch_row(lovd_queryDB('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') LIMIT 1', array($_AUTH['curates']), false));
-list($nIDCollaborator) = mysql_fetch_row(lovd_queryDB('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['collaborates'])-1) . ') LIMIT 1', array($_AUTH['collaborates']), false));
-list($nIDSubmitter)    = mysql_fetch_row(lovd_queryDB('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['submits'])-1) . ') LIMIT 1', array($_AUTH['submits']), false));
+list($nIDCurator)      = mysql_fetch_row(lovd_queryDB_Old('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') LIMIT 1', $_AUTH['curates'], false));
+list($nIDCollaborator) = mysql_fetch_row(lovd_queryDB_Old('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['collaborates'])-1) . ') LIMIT 1', $_AUTH['collaborates'], false));
+list($nIDSubmitter)    = mysql_fetch_row(lovd_queryDB_Old('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['submits'])-1) . ') LIMIT 1', $_AUTH['submits'], false));
 assert("lovd_isAuthorized('disease', '" . $nIDCurator . "', false) === 1");
 assert("lovd_isAuthorized('disease', '" . $nIDCollaborator . "', false) === 0");
 assert("lovd_isAuthorized('disease', '" . $nIDSubmitter . "', false) === false");

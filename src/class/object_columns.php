@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -159,7 +159,7 @@ class LOVD_Column extends LOVD_Object {
 
         // ColID must not exist in the database.
         if (!empty($aData['category']) && !empty($aData['colid'])) {
-            list($n) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid'])));
+            list($n) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid'])));
             if ($n) {
                 lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
             }
@@ -188,7 +188,7 @@ class LOVD_Column extends LOVD_Object {
 
         // Get links list, to connect column to link.
         $aLinks = array();
-        $qLinks = lovd_queryDB('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name');
+        $qLinks = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name');
         $nLinks = mysql_num_rows($qLinks);
         $nLinkSize = ($nLinks < 10? $nLinks : 10);
         while ($r = mysql_fetch_row($qLinks)) {

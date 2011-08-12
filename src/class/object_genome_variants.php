@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -183,7 +183,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         if (!empty($_POST['ownerid'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
+                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
                 if (!mysql_num_rows($q)) {
                     lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this variant\' selection box.');
                 }
@@ -218,7 +218,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $aSelectOwner = array();
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             // FIXME; sorteren ergens op? Naam? Of land? Kijk naar hoe dit in LOVD 2.0 geregeld is.
-            $q = lovd_queryDB('SELECT id, name FROM ' . TABLE_USERS);
+            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS);
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }

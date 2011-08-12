@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-05-20
- * For LOVD    : 3.0-pre-21
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -241,7 +241,7 @@ function lovd_getColumnData ($sTable)
     }
 
     if (empty($aTableCols[$sTable])) {
-        $q = lovd_queryDB('SHOW COLUMNS FROM ' . mysql_real_escape_string($sTable));
+        $q = lovd_queryDB_Old('SHOW COLUMNS FROM ' . mysql_real_escape_string($sTable));
         if (!$q) {
             // Should never happen!
             return false;

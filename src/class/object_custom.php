@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -106,7 +106,7 @@ class LOVD_Custom extends LOVD_Object {
                 $aArgs[] = $nID;
             }
         }
-        $q = lovd_queryDB($sSQL, $aArgs);
+        $q = lovd_queryDB_Old($sSQL, $aArgs);
         while ($z = mysql_fetch_assoc($q)) {
             $z['custom_links'] = array();
             $z['form_type'] = explode('|', $z['form_type']);
@@ -116,7 +116,7 @@ class LOVD_Custom extends LOVD_Object {
 
         // FIXME; beter weer in 1 query... hoe zorg je er voor, dat de custom links niet steeds opnieuw geparsed worden?
         // Gather the custom link information.
-        $qLinks = lovd_queryDB('SELECT * FROM ' . TABLE_LINKS);
+        $qLinks = lovd_queryDB_Old('SELECT * FROM ' . TABLE_LINKS);
         while ($zLink = mysql_fetch_assoc($qLinks)) {
             $zLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $zLink['pattern_text'])) . '/';
             $zLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $zLink['replace_text']);
@@ -124,7 +124,7 @@ class LOVD_Custom extends LOVD_Object {
         }
 
         // Add the custom links to the columns that use them.
-        $qCols2Links = lovd_queryDB('SELECT * ' .
+        $qCols2Links = lovd_queryDB_Old('SELECT * ' .
                                     'FROM ' . TABLE_COLS2LINKS . ' ' .
                                     'WHERE colid LIKE ?', array((isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%'));
         while ($zCols2Links = mysql_fetch_assoc($qCols2Links)) {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-08-04
+ * Modified    : 2011-08-12
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -203,7 +203,7 @@ class LOVD_Gene extends LOVD_Object {
             foreach ($aData['active_diseases'] as $nDisease) {
                 // FIXME; deze code had 1 query nodig, nu is het 1 query per geselecteerde disease. Probeer helemaal van de query af te komen (zie FIXME hierboven),
                 //   als je dat niet gaat lukken binnen 5 minuten dan moet je deze code in ieder geval zo omzetten, dat deze query maar 1 keer gerund wordt.
-                if ($nDisease && !mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($nDisease)))) {
+                if ($nDisease && !mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($nDisease)))) {
                     // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($nDisease) . ' is not a valid disease" of zoiets.
                     lovd_errorAdd('active_diseases', 'Please select a proper disease in the \'This gene has been linked to these diseases\' selection box');
                 }
@@ -269,7 +269,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // Get list of diseases.
         $aDiseasesForm = array();
-        $qData = lovd_queryDB('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
+        $qData = lovd_queryDB_Old('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
         if (!$nData) {
             $aDiseasesForm = array('' => 'No disease entries available');

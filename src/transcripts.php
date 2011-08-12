@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-07-26
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -123,7 +123,7 @@ if (ACTION == 'create') {
     if (GET) {
         // FIXME; If you're here for a specific gene, don't request info of all genes!
         $qGenes = 'SELECT id, name, refseq_UD FROM ' . TABLE_GENES;
-        $zGenes = lovd_queryDB($qGenes);
+        $zGenes = lovd_queryDB_Old($qGenes);
         while ($aGene = mysql_fetch_row($zGenes)) {
             $aGenes[$aGene[0]] = array('id' => $aGene[0], 'name' => $aGene[1], 'refseq_UD' => $aGene[2]);
         }
@@ -188,7 +188,7 @@ if (ACTION == 'create') {
                         $aTranscriptsName = array();
                         $aTranscriptsPositions = array();
                         $aTranscriptsProtein = array();
-                        $qTranscriptsAdded = lovd_queryDB('SELECT GROUP_CONCAT(DISTINCT id_ncbi ORDER BY id_ncbi SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid="' . $_POST['geneSymbol'] . '"');
+                        $qTranscriptsAdded = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id_ncbi ORDER BY id_ncbi SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid="' . $_POST['geneSymbol'] . '"');
                         $aResultTranscriptsAdded = mysql_fetch_row($qTranscriptsAdded);
                         $aTranscriptsAdded = explode(';', $aResultTranscriptsAdded[0]);
                         $nTranscripts = count($aTranscriptsInfo) - count($aTranscriptsAdded);
@@ -313,7 +313,7 @@ if (ACTION == 'create') {
                         $sTranscriptProtein = (isset($zData['transcriptsProtein'][$sTranscript])? $zData['transcriptsProtein'][$sTranscript] : '');
                         $sTranscriptName = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)];
                         $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
-                        $q = lovd_queryDB('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($zData['gene']['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['gTransStart'], $aTranscriptPositions['gTransEnd'], $_POST['created_by']));
+                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($zData['gene']['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['gTransStart'], $aTranscriptPositions['gTransEnd'], $_POST['created_by']));
                         if (!$q) {
                             // Silent error.
                             lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - could not be added to gene ' . $zData['gene']['id']);

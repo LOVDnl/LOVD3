@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-07-22
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -70,18 +70,25 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    // Load appropiate user level for this screening entry.
+    lovd_isAuthorized('screening', $nID);
+
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening($nID);
     $zData = $_DATA->viewEntry($nID);
     
     $sNavigation = '';
-    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
-        $sNavigation .= ' | <A href="variants?create&amp;reference=Genome&amp;target=' . $nID . '">Add variant to screening</A>';
-        $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
-    } elseif ($_AUTH && $_AUTH['level'] >= LEVEL_SUBMITTER) {
-        $sNavigation = '<A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
+    if ($_AUTH) {
+        if ($_AUTH['level'] >= LEVEL_OWNER) {
+            $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
+            $sNavigation .= ' | <A href="variants?create&amp;reference=Genome&amp;target=' . $nID . '">Add variant to screening</A>';
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
+            }
+        } elseif ($_AUTH['level'] >= LEVEL_SUBMITTER) {
+            // FIXME; maybe remove these links? Decourage submitters to add info to whatever individual? Or maybe an alert (This is not a record submitted by you, are you sure?)
+            $sNavigation = '<A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
+        }
     }
 
     if ($sNavigation) {
@@ -122,11 +129,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     define('LOG_EVENT', 'ScreeningCreate');
 
-    lovd_requireAUTH(LEVEL_SUBMITTER);
+    lovd_requireAUTH();
     
     if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
         $_GET['target'] = str_pad($_GET['target'], 8, "0", STR_PAD_LEFT);
-        if (mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
+        if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
             $_POST['individualid'] = $_GET['target'];
             define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
         } else {
@@ -227,8 +234,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Edit an screening information entry');
     define('LOG_EVENT', 'ScreeningEdit');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Load appropiate user level for this screening entry.
+    lovd_isAuthorized('screening', $nID);
+    lovd_requireAUTH(LEVEL_OWNER);
 
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();

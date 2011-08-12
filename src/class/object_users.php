@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -73,7 +73,7 @@ class LOVD_User extends LOVD_Object {
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
-                                           'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN 5 WHEN 0 THEN 3 END, 1)) AS level';
+                                           'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level';
         $this->aSQLViewEntry['FROM']     = TABLE_USERS . ' AS u ' .
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) ' .
@@ -83,9 +83,9 @@ class LOVD_User extends LOVD_Object {
 
         // SQL code for viewing a list of users.
         $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
-                                          'COUNT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END) AS curates, ' .
+                                          'COUNT(CASE u2g.allow_edit WHEN 1 THEN u2g.geneid END) AS curates, ' .
                                           'c.name AS country_, ' .
-                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN 5 WHEN 0 THEN 3 END, 1)) AS level';
+                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
@@ -231,7 +231,7 @@ class LOVD_User extends LOVD_Object {
         if (ACTION == 'create') {
             // Does the username exist already?
             if ($aData['username']) {
-                if (mysql_num_rows(lovd_queryDB('SELECT id FROM ' . TABLE_USERS . ' WHERE username = ?', array($aData['username'])))) {
+                if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE username = ?', array($aData['username'])))) {
                     lovd_errorAdd('username', 'There is already a user with this username. Please choose another one.');
                 }
             }
@@ -308,18 +308,18 @@ class LOVD_User extends LOVD_Object {
 
         } else {
             // "Normal" user form; create user, edit user.
-            $qCountryList = lovd_queryDB('SELECT id, name FROM ' . TABLE_COUNTRIES . ' ORDER BY name');
+            $qCountryList = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_COUNTRIES . ' ORDER BY name');
 
             // Remove user levels that are higher than or equal to the current user's level.
-            unset($aUserLevels[2], $aUserLevels[3], $aUserLevels[5]); // Aren't real user levels.
-            for ($i = 9; $i >= $_AUTH['level']; $i --) {
+            unset($aUserLevels[LEVEL_COLLABORATOR], $aUserLevels[LEVEL_OWNER], $aUserLevels[LEVEL_CURATOR]); // Aren't real user levels.
+            for ($i = LEVEL_ADMINISTRATOR; $i >= $_AUTH['level']; $i --) {
                 if (isset($aUserLevels[$i])) {
                     unset($aUserLevels[$i]);
                 }
             }
 
             // Get gene list, to select user as curator.
-            $qGenes = lovd_queryDB('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
+            $qGenes = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
             $nGenes = mysql_num_rows($qGenes);
             $nGeneSize = ($nGenes < 5? $nGenes : 5);
         }

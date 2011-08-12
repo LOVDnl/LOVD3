@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-08-04
+ * Modified    : 2011-08-12
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,7 +56,7 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     lovd_printHeader(PAGE_TITLE);
 
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
-    lovd_requireAuth(LEVEL_CURATOR);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
@@ -91,7 +91,7 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    // Require curator clearance.
+    lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_columns.php';
@@ -184,7 +184,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
         $sObject = '';
     } else {
         $sObject = rawurldecode(($aTableInfo['unit'] == 'disease'? str_pad($_PATH_ELEMENTS[2], 5, '0', STR_PAD_LEFT) : $_PATH_ELEMENTS[2]));
-        if (!mysql_num_rows(lovd_queryDB('SELECT id FROM ' . constant('TABLE_' . strtoupper($aTableInfo['unit']) . 'S') . ' WHERE id = ?', array($sObject)))) {
+        if (!mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . constant('TABLE_' . strtoupper($aTableInfo['unit']) . 'S') . ' WHERE id = ?', array($sObject)))) {
             exit;
         }
     }
@@ -193,7 +193,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
     define('LOG_EVENT', 'ColumnOrder');
 
     if ($sObject != '') {
-        lovd_isAuthorized($aTableInfo['unit'], $sObject, true);
+        lovd_isAuthorized($aTableInfo['unit'], $sObject);
         lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -202,7 +202,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
     $lCategory = strlen($sCategory);
 
     if (POST) {
-        lovd_queryDB('START TRANSACTION', array(), true);
+        lovd_queryDB_Old('START TRANSACTION', array(), true);
 
         foreach ($_POST['columns'] as $nOrder => $sID) {
             if (strpos($sID, $sCategory . '/') !== 0) {
@@ -210,14 +210,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
             }
             $nOrder ++; // Since 0 is the first key in the array.
             if (!$sObject) {
-                lovd_queryDB('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID), true);
+                lovd_queryDB_Old('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID), true);
             } else {
-                lovd_queryDB('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $aTableInfo['unit'] . 'id = ? AND colid = ?', array($nOrder, $sObject, $sID), true);
+                lovd_queryDB_Old('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $aTableInfo['unit'] . 'id = ? AND colid = ?', array($nOrder, $sObject, $sID), true);
             }
         }
 
         // If we get here, it all succeeded.
-        lovd_queryDB('COMMIT', array(), true);
+        lovd_queryDB_Old('COMMIT', array(), true);
 
         // Write to log...
         lovd_writeLog('Event', LOG_EVENT, 'Updated the ' . $aTableInfo['table_name'] . ' column order' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : ''));
@@ -240,9 +240,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
     // Retrieve column IDs in current order.
     $aColumns = array();
     if (!$sObject) {
-        $qColumns = lovd_queryDB('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'));
+        $qColumns = lovd_queryDB_Old('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'));
     } else {
-        $qColumns = lovd_queryDB('SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $aTableInfo['unit'] . 'id = ? ORDER BY col_order ASC', array($sCategory . '/%', $sObject));
+        $qColumns = lovd_queryDB_Old('SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $aTableInfo['unit'] . 'id = ? ORDER BY col_order ASC', array($sCategory . '/%', $sObject));
     }
     while ($z = mysql_fetch_assoc($qColumns)) {
         $aColumns[] = $z['id'];
@@ -251,9 +251,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
     lovd_showInfoTable('Below is a sorting list of all ' . ($sObject? 'active columns' : 'available columns (active & inactive)') . '. By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect viewLists/viewEntries in the same way.', 'information');
 
     // Form & table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
-          '        <UL id="column_list" class="sortable" style="width : 300px;">' . "\n" .
-          '          <TABLE width="100%" class="head"><TR><TH width="10">&nbsp;</TH><TH>Column ID ("' . $sCategory . '")</TH></TR></TABLE>' . "\n");
+    print('      <TABLE cellpadding="0" cellspacing="0" class="sortable_head" style="width : 302px;"><TR><TH width="20">&nbsp;</TH><TH>Column ID ("' . $sCategory . '")</TH></TR></TABLE>' . "\n" .
+          '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+          '        <UL id="column_list" class="sortable" style="width : 300px; margin-top : 0px;">' . "\n");
 
     // Now loop the items in the order given.
     foreach ($aColumns as $sID) {
@@ -675,13 +675,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // URL: /columns?create
     // Create a new column.
 
+    define('PAGE_TITLE', 'Create new custom ' . (!empty($_POST['category'])? strtolower($_POST['category']) : '') . ' data column');
+    define('LOG_EVENT', 'ColCreate');
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
     // Let user pick column type first.
     if (empty($_POST['category'])) {
-        define('PAGE_TITLE', 'Create new custom data column');
-
-        // Require manager clearance.
-        lovd_requireAUTH(LEVEL_MANAGER);
-
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
         print('      You\'re about to create a new custom data column. This will allow you to define what kind of information you would like to store in the database. Please note that <I>defining</I> this type of information, does not automatically make LOVD store this information. You will need to <I>enable</I> it after defining it, so it actually gets added to the data entry form.<BR><BR>' . "\n" .
@@ -708,12 +709,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
-
-    define('PAGE_TITLE', 'Create new custom ' . strtolower($_POST['category']) . ' data column');
-    define('LOG_EVENT', 'ColCreate');
-
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
@@ -745,7 +740,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             // Store custom link connections.
             $aLinks = array();
             if ($_POST['active_links']) {
-                $q = lovd_queryDB('SELECT id, name FROM ' . TABLE_LINKS . ' WHERE id IN (?' . str_repeat(', ?', count($_POST['active_links']) - 1) . ')', $_POST['active_links']);
+                $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_LINKS . ' WHERE id IN (?' . str_repeat(', ?', count($_POST['active_links']) - 1) . ')', $_POST['active_links']);
                 while ($r = mysql_fetch_row($q)) {
                     $aLinks[$r[0]] = $r[1];
                 }
@@ -753,7 +748,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             $bFailedLinks = false;
             foreach ($aLinks AS $nID => $sName) {
-                $q = @lovd_queryDB('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($_POST['id'], $nID));
+                $q = @lovd_queryDB_Old('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($_POST['id'], $nID));
                 if (!$q) {
                     $bFailedLinks = true;
                     lovd_writeLog('Error', 'LinkAdd', 'Custom link ' . $nID . ' (' . $sName . ') could not be added to ' . $_POST['colid'] . "\n" . mysql_error());
@@ -1259,7 +1254,7 @@ if ($_GET['action'] == 'drop' && !empty($_GET['drop'])) {
     // Deleting self-created columns.
 
 // Require manager clearance.
-lovd_requireAUTH(LEVEL_CURATOR);
+lovd_requireAUTH(LEVEL_MANAGER);
 
     $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['drop'] . '"'));
     if (!$zData) {
@@ -1394,7 +1389,7 @@ lovd_requireAUTH(LEVEL_CURATOR);
     // Edit specific custom colid.
 
 // Require manager clearance.
-lovd_requireAUTH(LEVEL_CURATOR);
+lovd_requireAUTH(LEVEL_MANAGER);
 
     $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"'));
     if (!$zData) {
@@ -1574,6 +1569,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
     $sCategory = $aCol[1]; // Temporarely because we don't have $zData['category'] yet.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
+        // FIXME; there is some code missing here, to gather info to run lovd_isAuthorized() first (see code for sorting columns).
         lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -1612,7 +1608,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                     $aSQL = array_merge($aSQL, $_AUTH['curates']);
                 }
                 $sSQL .= ' ORDER BY g.id';
-                $qTargets = lovd_queryDB($sSQL, $aSQL);
+                $qTargets = lovd_queryDB_Old($sSQL, $aSQL);
                 $nTargets = mysql_num_rows($qTargets);
                 if ($nTargets) {
                     print('      Please select the gene(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
@@ -1634,7 +1630,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                     $aSQL = array_merge($aSQL, $_AUTH['curates']);
                 }
                 $sSQL .= ' ORDER BY d.symbol';
-                $qTargets = lovd_queryDB($sSQL, $aSQL);
+                $qTargets = lovd_queryDB_Old($sSQL, $aSQL);
                 $nTargets = mysql_num_rows($qTargets);
                 if ($nTargets) {
                     print('      Please select the disease(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
@@ -1695,7 +1691,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                     $sSQL .= ' WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
                     $aSQL = $_AUTH['curates'];
                 }
-                $qDiseases = lovd_queryDB($sSQL, $aSQL);
+                $qDiseases = lovd_queryDB_Old($sSQL, $aSQL);
                 $nDiseases = mysql_num_rows($qDiseases);
                 $aDiseases = array();
                 while ($r = mysql_fetch_row($qDiseases)) {
@@ -1719,7 +1715,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
 
     // Verify in the data table if column is already active or not.
     $zData['active_checked'] = false;
-    $q = lovd_queryDB('DESCRIBE ' . $aTableInfo['table_sql']);
+    $q = lovd_queryDB_Old('DESCRIBE ' . $aTableInfo['table_sql']);
     while (list($sCol) = mysql_fetch_row($q)) {
         if ($sCol == $zData['id']) {
             $zData['active_checked'] = true;
@@ -1736,7 +1732,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             require ROOT_PATH . 'inc-bot.php';
             exit;
         } else {
-            list($nError) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ? AND ' . ($sCategory == 'VariantOnTranscript'? 'geneid' : 'diseaseid') . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ')', array_merge(array($zData['id']), $aTargets)));
+            list($nError) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ? AND ' . ($sCategory == 'VariantOnTranscript'? 'geneid' : 'diseaseid') . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ')', array_merge(array($zData['id']), $aTargets)));
             if ($nError) {
                 // Target already has this column enabled!
                 require ROOT_PATH . 'inc-top.php';
@@ -1753,7 +1749,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
     if ($zData['active_checked']) {
         $tAlter = 0;
     } else {
-        $zStatus = mysql_fetch_assoc(lovd_queryDB('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"'));
+        $zStatus = mysql_fetch_assoc(lovd_queryDB_Old('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"'));
         $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
         $nSizeIndexes = $zStatus['Index_length'];
         // Calculating time it could take to rebuild the table. This is just an estimate and it depends
@@ -1810,7 +1806,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             if (!$zData['active_checked']) {
                 $sSQL = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' ADD COLUMN `' . $zData['id'] . '` ' . $zData['mysql_type'];
                 $dStart = time();
-                $q = lovd_queryDB($sSQL);
+                $q = lovd_queryDB_Old($sSQL);
                 if (!$q) {
                     $tPassed = time() - $dStart;
                     $sMessage = ($tPassed < 2? '' : ' (fail after ' . $tPassed . ' seconds - disk full maybe?)');
@@ -1821,10 +1817,10 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             $_BAR->setProgress(80);
             $_BAR->setMessage('Enabling column...');
 
-            lovd_queryDB('START TRANSACTION');
+            lovd_queryDB_Old('START TRANSACTION');
             if (!$zData['active']) {
                 $sSQL = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES (?, ?, NOW())';
-                $q = lovd_queryDB($sSQL, array($zData['id'], $_AUTH['id']), true);
+                $q = lovd_queryDB_Old($sSQL, array($zData['id'], $_AUTH['id']), true);
             }
 
             // Write to log...
@@ -1861,14 +1857,14 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                     }
                     $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
 
-                    $q = lovd_queryDB($sSQL, $aSQL, true);
+                    $q = lovd_queryDB_Old($sSQL, $aSQL, true);
                     // FIXME; individual messages?
                     $_BAR->setProgress(90 + round(($i/$nTargets)*10));
                     $i ++;
                 }
             }
 
-            lovd_queryDB('COMMIT');
+            lovd_queryDB_Old('COMMIT');
             $_BAR->setProgress(100);
             $_BAR->setMessage('Done!');
 
@@ -2028,7 +2024,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         lovd_requireAUTH(LEVEL_MANAGER);
     }
 
-    $zData = @mysql_fetch_assoc(lovd_queryDB('SELECT c.id, c.hgvs, c.head_column, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID)));
+    $zData = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT c.id, c.hgvs, c.head_column, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID)));
 
     if (!$zData) {
         // Wrong ID, apparently.
@@ -2071,13 +2067,13 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
             if (!$bShared) {
                 // Query text; remove column registration first.
                 $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
-                $q = lovd_queryDB($sQ, array($zData['id']), true);
+                $q = lovd_queryDB_Old($sQ, array($zData['id']), true);
 
                 // The whole transaction stuff is useless here; alter table will commit and there's just one query before that.
 
                 // Alter data table.
                 $sQ = 'ALTER TABLE ' . $sTable . ' DROP COLUMN `' . $zData['id'] . '`';
-                $q = lovd_queryDB($sQ, array(), true);
+                $q = lovd_queryDB_Old($sQ, array(), true);
 
                 // Write to log...
                 lovd_writeLog('Event', LOG_EVENT, 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')');
@@ -2085,22 +2081,22 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
             } else {
                 // Query text; remove column registration first.
                 $sObject = ($sCategory == 'Phenotype'? 'diseaseid' : 'geneid');
-                lovd_queryDB('START TRANSACTION');
+                lovd_queryDB_Old('START TRANSACTION');
                 $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (?' . str_repeat(', ?', count($_POST['target'])-1) . ') AND colid = ?';
                 $aQ = array_merge($_POST['target'], array($zData['id']));
-                $q = lovd_queryDB($sQ, $aQ, true);
-                lovd_queryDB('COMMIT');
+                $q = lovd_queryDB_Old($sQ, $aQ, true);
+                lovd_queryDB_Old('COMMIT');
 
                 // Check if the column is inactive in all diseases/genes. If so, DROP column from phenotypes/variants_on_transcripts table.
-                list($nTargets) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
+                list($nTargets) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id'])));
                 if (!$nTargets) {
                     // Deactivate the column.
                     $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
-                    $q = lovd_queryDB($sQ, array($zData['id']), true);
+                    $q = lovd_queryDB_Old($sQ, array($zData['id']), true);
 
                     // Alter data table.
                     $sQ = 'ALTER TABLE ' . $sTable . ' DROP COLUMN `' . $zData['id'] . '`';
-                    $q = lovd_queryDB($sQ);
+                    $q = lovd_queryDB_Old($sQ);
                     $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')';
                 } else {
                     $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $_POST['target']);
@@ -2146,7 +2142,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
             $aSQL = array_merge($aSQL, $_AUTH['curates']);
         }
         $sSQL .= ' ORDER BY g.id';
-        $qTargets = lovd_queryDB($sSQL, $aSQL);
+        $qTargets = lovd_queryDB_Old($sSQL, $aSQL);
         $nTargets = mysql_num_rows($qTargets);
         if ($nTargets) {
             print('      Please select the gene(s) for which you want to remove the ' . $zData['colid'] . ' column from.<BR><BR>' . "\n");
@@ -2177,7 +2173,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
             $aSQL = array_merge($aSQL, $_AUTH['curates']);
         }
         $sSQL .= ' ORDER BY d.symbol';
-        $qTargets = lovd_queryDB($sSQL, $aSQL);
+        $qTargets = lovd_queryDB_Old($sSQL, $aSQL);
         $nTargets = mysql_num_rows($qTargets);
         if ($nTargets) {
             print('      Please select the disease(s) for which you want to remove the ' . $zData['colid'] . ' column from.<BR><BR>' . "\n");

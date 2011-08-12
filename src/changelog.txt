@@ -17,6 +17,17 @@
  * Curators can now also view custom column information.
  * Added link for changing the columns' order underneath a category's viewList.
  * Added "Genes screened" and "Variants" columns to the individual viewList.
+ * Fixed bug; The submitter count and unique variants count were not calculated
+   properly by check_update.php.
+ * Fixed some numical references to user levels (should be constants).
+ * Minimum required PHP version is now 5.1.0, due to the requirement of PDO.
+ * LOVD now checks the existence of PDO support and the MySQL driver for PDO.
+   The actual implementation of PDO will be done later.
+ * Fixed bug; LOVDs that were not installed yet, were throwing notices.
+ * Added code for proper authorization of data owners to individuals.php, screenings.php and phenotypes.php. The correct user level is not yet assigned by lovd_isAuthorized().
+ * Fixed some issues with HTML 4.01 compatibility.
+ * Fixed bug; lovd_queryDB() did not show the entire query if it was throwing an
+   error message about the number of arguments used in the query.
 
 
 

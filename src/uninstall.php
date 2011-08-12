@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-08-12
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -103,7 +103,7 @@ if (!empty($_POST)) {
 
                 foreach ($aTables as $sTable) {
                     $sSQL = 'DROP TABLE IF EXISTS ' . $sTable;
-                    $q = lovd_queryDB($sSQL);
+                    $q = lovd_queryDB_Old($sSQL);
                     if (!$q) {
                         // Error when running query. We will use the Div for the form now.
                         $sMessage = 'Error during uninstallation while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', mysql_error()) . '</DIV><BR><BR>' .
@@ -111,7 +111,7 @@ if (!empty($_POST)) {
                                     'Please <A href="' . $_SETT['upstream_URL'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
                         $_BAR->setMessage($sMessage, 'done');
                         $_BAR->setMessageVisibility('done', true);
-                        lovd_queryDB('DROP TABLE IF EXISTS ' . implode(', ', $aTables)); // Try again to remove everything.
+                        lovd_queryDB_Old('DROP TABLE IF EXISTS ' . implode(', ', $aTables)); // Try again to remove everything.
                         print('</BODY>' . "\n" .
                               '</HTML>' . "\n");
                         exit;
@@ -147,7 +147,7 @@ if (!empty($_POST)) {
             // Does any of these tables exist yet?
             print('Checking LOVD installation...' . "\n");
             $aTables = array();
-            $q = lovd_queryDB('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
+            $q = lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
             while ($r = mysql_fetch_row($q)) {
                 if (in_array($r[0], $_TABLES)) {
                     $aTables[] = $r[0];
@@ -163,10 +163,10 @@ if (!empty($_POST)) {
             // FIXME; add more later.
             // General statistics...
             print("\n");
-            list($nUsers) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_USERS));
-            list($nIndividuals) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
-            list($nScreenings) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS));
-            list($nVars) = mysql_fetch_row(lovd_queryDB('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
+            list($nUsers) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_USERS));
+            list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
+            list($nScreenings) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS));
+            list($nVars) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS));
             $nGenes = GENE_COUNT;
             print('  Found ' . $nUsers . ' user' . ($nUsers == 1? '' : 's') . '.' . "\n" .
                   '  Found ' . $nIndividuals . ' individual' . ($nIndividuals == 1? '' : 's') . '.' . "\n" .
