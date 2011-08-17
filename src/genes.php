@@ -137,18 +137,25 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'class/REST2SOAP.php';
     $_DATA = new LOVD_Gene();
-    
+
     if (GET) {
-        $_POST['workID'] = lovd_generateRandomID();
-        // FIXME; Temporary fix for mem leak; empty entire work array.
-        $_SESSION['work'] = array();
-        $_SESSION['work'][$_POST['workID']] = array(
-                                                    'action' => '/genes?create',
-                                                    'step' => '1',
-                                                   );
+        if (!isset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
+            $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION] = array();
+        } 
+        
+        while (count($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]) >= 5) {
+            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][min(array_keys($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]))]);
+        }
+
+        // Generate a random workID
+        $nTime = gettimeofday();
+        $_POST['workID'] = $nTime['sec'] . $nTime['usec'];
+        // FIXME; use $_POST['workID'] = date("U"); in case gettimeofday doesn't work on some systems and we need a quick fix.
+        
+        $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['step'] = '1';
     }
     
-    if ($_SESSION['work'][$_POST['workID']]['step'] == '1') {
+    if ($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['step'] == '1') {
         if (POST) {
             lovd_errorClean();
 
@@ -173,8 +180,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     
                     if (isset($aHgncFile['1'])) {
                         list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = explode("\t", $aHgncFile['1']);
-                        // FIXME; why array_values()???
-                        list($sEntrez, $sOmim) = array_values(array_map('trim', array($sEntrez, $sOmim)));
+                        list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
                         if ($sGeneName == 'entry withdrawn') {
                             lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' no longer exists in the HGNC database.');
                         } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $sGeneName, $aRegs)) {
@@ -269,8 +275,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_BAR->setProgress(100);
                 $_BAR->setMessage('Information collected, now building form...');
                 $_BAR->setMessageVisibility('done', true);
-                $_SESSION['work'][$_POST['workID']]['step'] = '2';
-                $_SESSION['work'][$_POST['workID']]['values'] = array(
+                $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['step'] = '2';
+                $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values'] = array(
                                                                   'id' => $sSymbol,
                                                                   'name' => $sGeneName,
                                                                   'chromosome' => $sChromosome,
@@ -288,12 +294,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 print('<SCRIPT type="text/javascript">' . "\n" .
                       '  document.forms[\'createGene\'].submit();' . "\n" .
-                      '</SCRIPT>' . "\n\n");
-
-                lovd_checkXSS();
-
-                print('</BODY>' . "\n" .
-                  '</HTML>' . "\n");
+                      '</SCRIPT>' . "\n\n" .
+                      '</BODY>' . "\n" .
+                      '</HTML>' . "\n");
                 exit;
             }
         }
@@ -333,8 +336,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-    if ($_SESSION['work'][$_POST['workID']]['step'] == '2') {
-        $zData = $_SESSION['work'][$_POST['workID']]['values'];
+    if ($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['step'] == '2') {
+        $zData = $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values'];
         if (count($_POST) > 1) {
             lovd_errorClean();
 
@@ -373,10 +376,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $qStandardCustomCols = lovd_queryDB_Old('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)');
                 while ($aStandard = mysql_fetch_assoc($qStandardCustomCols)) {
                     if (!in_array($aStandard['id'], $aAdded)) {
-                        $q = lovd_queryDB_Old('ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());
-                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $_AUTH['id']));
+                        lovd_queryDB_Old('ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());
+                        lovd_queryDB_Old('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $_AUTH['id']));
                     }
-                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($_POST['id'], $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $_AUTH['id']));
+                    lovd_queryDB_Old('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($_POST['id'], $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $_AUTH['id']));
                 }
 
                 // Write to log...
@@ -403,37 +406,39 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 }
                 
                 // Add transcripts.
-                // FIXME; deze code is voor mij niet goed interpreteerbaar - ik zie niet goed in detail wat
-                //   er gebeurt dus kan 't niet nakijken; misschien dat meer commentaar zou helpen.
                 $aSuccessTranscripts = array();
-                if (isset($_POST['active_transcripts'])) {
-                    // FIXME; probeer van deze "None" af te komen.
-                    if (!in_array('None', $_POST['active_transcripts'])) {
-                        foreach($_POST['active_transcripts'] as $sTranscript) {
-                            // Add transcript to gene
-                            $sTranscriptProtein = $zData['transcriptsProtein'][$sTranscript];
-                            $sTranscriptName = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)];
-                            $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
-                            $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($_POST['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['gTransStart'], $aTranscriptPositions['gTransEnd'], $_POST['created_by']));
-                            if (!$q) {
-                                // Silent error.
-                                lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
-                            } else {
-                                $aSuccessTranscripts[] = $sTranscript;
-                            }
+                if (!empty($_POST['active_transcripts'])) {
+                    foreach($_POST['active_transcripts'] as $sTranscript) {
+                        // Gather transcript information from session.
+                        $sTranscriptProtein = $zData['transcriptsProtein'][$sTranscript];
+                        $sTranscriptName = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)];
+                        $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
+
+                        // Add transcript to gene.
+                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($_POST['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['gTransStart'], $aTranscriptPositions['gTransEnd'], $_POST['created_by']));
+                        if (!$q) {
+                            // Silent error.
+                            lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
+                        } else {
+                            $aSuccessTranscripts[] = $sTranscript;
                         }
-                        if (count($aSuccessDiseases) && count($aSuccessTranscripts)) {
-                            lovd_writeLog('Event', LOG_EVENT, 'Disease and transcript information entries successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
-                        }
-                    }
-                } else {
-                    if (count($aSuccessDiseases)) {
-                        lovd_writeLog('Event', LOG_EVENT, 'Disease entries successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
                     }
                 }
 
+                if (count($aSuccessDiseases) && count($aSuccessTranscripts)) {
+                    lovd_writeLog('Event', LOG_EVENT, 'Disease and transcript entries successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
+                } elseif (count($aSuccessDiseases)) {
+                    lovd_writeLog('Event', LOG_EVENT, 'Disease entr' . (count($aSuccessDiseases) > 1? 'ies' : 'y') . ' successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
+                } elseif (count($aSuccessTranscripts)) {
+                    lovd_writeLog('Event', LOG_EVENT, 'Transcript entr' . (count($aSuccessTranscripts) > 1? 'ies' : 'y') . ' successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
+                }
+
+                
+
                 // Add current user as the curator. This should also be in the transaction.
                 @lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
+
+                unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]);
 
                 // Thank the user...
                 header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_POST['id'] . '?authorize');
@@ -462,8 +467,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         // Tooltip JS code.
         lovd_includeJS('inc-js-tooltip.php');
-        // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
-        lovd_includeJS('inc-js-insert-custom-links.php');
+        lovd_includeJS('inc-js-custom_links.php');
 
         // Table.
         print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
@@ -521,20 +525,23 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
         // Get NC from LOVD
         $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
 
-        // Temporary fix for mem leak; empty work array
-        $_SESSION['work'] = array();
-        $_POST['workID'] = lovd_generateRandomID();
-        $_SESSION['work'][$_POST['workID']] =
-                 array(
-                        'action' => '/genes/' . $sID . '?edit',
-                        'values' =>
-                                 array(
-                                        'genomic_references' => $aRefseqGenomic,
-                                      ),
-                      );
-    }
-    $zData['genomic_references'] = $_SESSION['work'][$_POST['workID']]['values']['genomic_references'];
+        if (!isset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
+            $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION] = array();
+        } 
+        
+        while (count($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]) >= 5) {
+            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][min(array_keys($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]))]);
+        }
 
+        // Generate a random workID
+        $nTime = gettimeofday();
+        $_POST['workID'] = $nTime['sec'] . $nTime['usec'];
+        // FIXME; use $_POST['workID'] = date("U"); in case gettimeofday doesn't work on some systems and we need a quick fix.
+
+        $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values']['genomic_references'] = $aRefseqGenomic;
+    }
+
+    $zData['genomic_references'] = $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values']['genomic_references'];
     if (count($_POST) > 1) {
         lovd_errorClean();
 
@@ -576,13 +583,13 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
             // Remove diseases.
             $aToRemove = array();
-            // FIXME; dit werkt niet, key bestaat niet.
             foreach ($zData['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $_POST['active_diseases'])) {
                     // User has requested removal...
                     $aToRemove[] = $nDisease;
                 }
             }
+
             if ($aToRemove) {
                 $q = lovd_queryDB_Old('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove));
                 if (!$q) {
@@ -597,8 +604,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             $aSuccess = array();
             $aFailed = array();
             foreach ($_POST['active_diseases'] as $nDisease) {
-                // FIXME; probeer van deze "None" af te komen.
-                if (!in_array($nDisease, $zData['active_diseases']) && $nDisease != 'None') {
+                if (!in_array($nDisease, $zData['active_diseases']) && !empty($nDisease)) {
                     // Add disease to gene.
                     $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
                     if (!$q) {
@@ -611,10 +617,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             if ($aFailed) {
                 // Silent error.
                 lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aFailed) == 1? 'y' : 'ies') . ' ' . implode(', ', $aFailed) . ' could not be added to gene ' . $sID);
-            }
-            if ($aSuccess) {
+            } elseif ($aSuccess) {
                 lovd_writeLog('Event', LOG_EVENT, 'Disease information entr' . (count($aSuccess) == 1? 'y' : 'ies') . ' ' . implode(', ', $aSuccess) . ' successfully added to gene ' . $sID);
             }
+
+            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1]);
@@ -648,8 +655,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
-    lovd_includeJS('inc-js-insert-custom-links.php');
+    lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1] . '?' . ACTION . '" method="post">' . "\n");
@@ -962,18 +968,18 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     }
 
     // Form & table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
-          '        <UL id="curator_list" class="sortable">' . "\n" .
-          '          <TABLE width="100%" class="head"><TR><TH width="10">&nbsp;</TH><TH>Name</TH>');
+    print('      <TABLE class="sortable_head" style="width : 552px;"><TR><TH width="20">&nbsp;</TH><TH>Name</TH>' . "\n");
     if (ACTION == 'authorize') {
         print('<TH width="100" align="right">Allow edit</TH><TH width="75" align="right">Shown</TH><TH width="30" align="right">&nbsp;</TH>');
     } else {
         print('<TH width="75" align="right">Shown</TH>');
     }
-    print('</TR></TABLE>' . "\n");
+    print('</TR></TABLE>' . "\n" .
+          '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+          '        <UL id="curator_list" class="sortable" style="margin-top : 0px; width : 550px;">' . "\n");
     // Now loop the items in the order given.
     foreach ($aCurators as $nID => $aVal) {
-        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . $aVal['name'] . '</TD>');
+        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD class="handle" width="10" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . $aVal['name'] . '</TD>');
         if (ACTION == 'authorize') {
             print('<TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' . $aVal['level'] . ' >= ' . LEVEL_MANAGER . ') { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($aVal['allow_edit'] || $aVal['level'] >= LEVEL_MANAGER? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['allow_edit']? ($aVal['shown']? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right">' . ($aVal['level'] >= $_AUTH['level'] && $nID != $_AUTH['id']? '&nbsp;' : '<A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A>') . '</TD>');
         } else {
@@ -1000,9 +1006,16 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
       // FIXME; disable JS functions authorize and unauthorize if not authorizing?
 ?>
-      <!-- Tim Taylor's ToolMan DHTML Library, see http://tool-man.org/examples/ -->
-      <SCRIPT type="text/javascript" src="lib/tool-man/drag_vertical.js"></SCRIPT>
-      <SCRIPT type="text/javascript">dragsort.makeListSortable(document.getElementById('curator_list'), setHandle)
+      <SCRIPT type='text/javascript' src='lib/jQuery/jquery-ui-1.8.15.sortable.min.js'></SCRIPT>
+      <SCRIPT type='text/javascript'>
+        $(function() {
+                $( '#curator_list' ).sortable({
+                        containment: 'parent',
+                        tolerance: 'pointer',
+                        handle: 'TD.handle',
+                });
+                $( '#curator_list' ).disableSelection();
+        });
 
         function lovd_authorizeUser (sViewListID, nID, sName, nLevel)
         {
@@ -1015,10 +1028,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             objUsers = document.getElementById('curator_list');
             oLI = document.createElement('LI');
             oLI.id = 'li_' + nID;
-            oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + nID + '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' + sName + '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + nID + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' + nLevel + ' >= <?php echo LEVEL_MANAGER; ?>) { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + nID + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' + nID + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
+            oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + nID + '"><TABLE width="100%"><TR><TD class="handle" width="10" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' + sName + '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + nID + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' + nLevel + ' >= <?php echo LEVEL_MANAGER; ?>) { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + nID + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'LOVDGeneAuthorizeUser\', \'' + nID + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
             objUsers.appendChild(oLI);
-            // Make new entry sortable also.
-            dragsort.makeListSortable(document.getElementById('curator_list'), setHandle);
 
             // Then, remove this row from the table.
             objElement.style.cursor = '';

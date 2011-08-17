@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-17
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -257,7 +257,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
 
     // Now loop the items in the order given.
     foreach ($aColumns as $sID) {
-        print('          <LI><INPUT type="hidden" name="columns[]" value="' . $sID . '"><TABLE width="100%"><TR><TD width="10"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13" class="handle"></TD><TD>' . substr($sID, $lCategory+1) . '</TD></TR></TABLE></LI>' . "\n");
+        print('        <LI><INPUT type="hidden" name="columns[]" value="' . $sID . '"><TABLE width="100%"><TR><TD class="handle" width="10" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . substr($sID, $lCategory+1) . '</TD></TR></TABLE></LI>' . "\n");
     }
 
     print('        </UL>' . "\n" .
@@ -265,9 +265,17 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
           '      </FORM>' . "\n\n");
 
 ?>
-      <!-- Tim Taylor's ToolMan DHTML Library, see http://tool-man.org/examples/ -->
-      <SCRIPT type="text/javascript" src="lib/tool-man/drag_vertical.js"></SCRIPT>
-      <SCRIPT type="text/javascript">dragsort.makeListSortable(document.getElementById('column_list'), setHandle)</SCRIPT>
+      <SCRIPT type='text/javascript' src='lib/jQuery/jquery-ui-1.8.15.sortable.min.js'></SCRIPT>
+      <SCRIPT type='text/javascript'>
+        $(function() {
+                $( '#column_list' ).sortable({
+                        containment: 'parent',
+                        tolerance: 'pointer',
+                        handle: 'TD.handle',
+                });
+                $( '#column_list' ).disableSelection();
+        });
+      </SCRIPT>
 <?php
 
     require ROOT_PATH . 'inc-bot.php';
@@ -2017,7 +2025,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         //   Pak de VOLLEDIGE code van 'add' er bij, en ga regel voor regel checken of alle functionaliteit die in 'add' zit, hier ook in zit.
         //   Controles, manier van loggen, manier van data ophalen, voortgangsbalk, etc.
         foreach ($_POST['target'] as $sColumn) {
-            lovd_isAuthorized($aTableInfo['unit'], $sColumn, true);
+            lovd_isAuthorized($aTableInfo['unit'], $sColumn);
             lovd_requireAUTH(LEVEL_CURATOR);
         }
     } else {
