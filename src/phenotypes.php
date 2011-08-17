@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-17
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -133,13 +133,72 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         exit;
     }
 
+    require ROOT_PATH . 'inc-lib-form.php';
+    lovd_errorClean();
+
+    if (isset($_GET['diseaseid'])) {
+        $_POST['diseaseid'] = $_GET['diseaseid'];
+    }
+    if (isset($_POST['diseaseid'])) {
+        $_POST['diseaseid'] = str_pad($_POST['diseaseid'], 5, "0", STR_PAD_LEFT);
+        if (!ctype_digit($_POST['diseaseid']) || !mysql_num_rows(lovd_queryDB_Old('SELECT i2d.diseaseid FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid'])))) {
+            lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease');
+        }
+    }
+
     require ROOT_PATH . 'class/object_phenotypes.php';
     if (isset($_POST['diseaseid'])) {
         $_DATA = new LOVD_Phenotype($_POST['diseaseid']);
     } else {
         $_DATA = new LOVD_Phenotype();
     }
-    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (empty($_POST['diseaseid']) || lovd_error()) {
+        $sSQL = 'SELECT d.id, d.name, d.symbol FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY d.name';
+        $q = lovd_queryDB_Old($sSQL, array($_POST['individualid']));
+        $aSelectDiseases = array();
+        if (mysql_num_rows($q)) {
+            while ($aDisease = mysql_fetch_assoc($q)) {
+                $aSelectDiseases[$aDisease['id']] = $aDisease['name'] . ' (' . $aDisease['symbol'] . ')';
+            }
+        } else {
+            // Only possible if the user types in a wrong individualid in the URL.
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('The individual #' . $_POST['individualid'] . ' does not have any disease entries yet, please go <A href="individuals/' . $_POST['individualid'] . '?edit">here</A> and add the disease(s) first.', 'warning');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+
+        if (!lovd_error()) {
+            print('      Please select the disease to which the phenotype information is related.<BR>' . "\n" .
+                  '      <BR>' . "\n\n");
+        }
+
+        lovd_errorPrint();
+
+        // Table.
+        print('      <FORM id="phenotypeCreate" action="' . CURRENT_PATH . '?create&amp;target=' . $_POST['individualid'] . '" method="post">' . "\n");
+
+        // Array which will make up the form table.
+        $aForm = array(
+                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('Select the disease', '', 'select', 'diseaseid', 1, $aSelectDiseases, '--Select--', false, false),
+                        array('', '', 'submit', 'Continue &raquo;'),
+                      );
+        lovd_viewForm($aForm);
+
+        print('</FORM>' . "\n\n" .
+              '<SCRIPT>' . "\n" .
+              '  if ($(\'#phenotypeCreate option\').size() == 2) { $(\'#phenotypeCreate select\')[0].selectedIndex = 1; $(\'#phenotypeCreate\').submit(); }' . "\n" .
+              '</SCRIPT>' . "\n\n");
+
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
 
     if (count($_POST) > 2) {
         lovd_errorClean();
@@ -153,7 +212,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                             $_DATA->buildFields());
 
             // Prepare values.
-            $_POST['individualid'] = $_GET['target'];
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['created_by'] = $_AUTH['id'];
@@ -162,8 +220,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
             // Write to log...
-            // FIXME; meer info?
-            lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID . ' for individual ' . $_POST['individualid'] . ' related to disease ' . $_POST['diseaseid']);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
@@ -186,45 +243,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    // FIXME; volgens mij staat dit op de verkeerde plek. Moet dit niet bovenaan staan, nog voor de controle op $_POST??? Zo gebeurt het overal voor formulieren die een eerste stap nodig hebben.
-    if (!isset($_POST['diseaseid'])) {
-        // FIXME; select * is overdreven.
-        $sSQL = 'SELECT * FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) WHERE i2d.individualid = ?';
-        $q = lovd_queryDB_Old($sSQL, array($_GET['target']));
-        $aSelectDiseases = array();
-        if ($q) {
-            while ($aDisease = mysql_fetch_assoc($q)) {
-                $aSelectDiseases[$aDisease['id']] = $aDisease['name'] . ' (' . $aDisease['symbol'] . ')';
-            }
-        } else {
-            // FIXME; dit is raar voor de gebruiker, een halve pagina zonder foutmelding???
-            //  Gebruik hier de mogelijkheden van lovd_queryDB_Old() meer.
-            exit;
-        }
-
-        // FIXME; ik heb aan dit stuk wat dingen zitten wijzigen, gebaseerd op hoe 't gedaan is in transcript?create. Probeer dingen standaard te houden!!! Anders moeten we straks weer alles gelijk gaan trekken.
-        if (GET) {
-            print('      Please select the disease to which the phenotype information is related.<BR>' . "\n" .
-                  '      <BR>' . "\n\n");
-        }
-
-        // Table.
-        print('      <FORM action="' . CURRENT_PATH . '?create&amp;target=' . $_GET['target'] . '" method="post">' . "\n");
-
-        // Array which will make up the form table.
-        $aForm = array(
-                        array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Select the disease', '', 'select', 'diseaseid', 1, $aSelectDiseases, '--Select--', false, false),
-                        array('', '', 'submit', 'Continue &raquo;'),
-                      );
-        lovd_viewForm($aForm);
-
-        print('</FORM>' . "\n\n");
-
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
     if (GET) {
         print('      To create a new phenotype information entry, please fill out the form below.<BR>' . "\n" .
               '      <BR>' . "\n\n");
@@ -234,8 +252,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
-    lovd_includeJS('inc-js-insert-custom-links.php');
+    lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?create&amp;target=' . $_GET['target'] . '" method="post">' . "\n");
@@ -247,9 +264,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                         array('', '', 'submit', 'Create phenotype information entry'),
                       ));
     lovd_viewForm($aForm);
-    // FIXME; dit ziet er in de broncode heel raar uit. Ik ben nog steeds voorstander van hidden inputs bovenaan plaatsen.
-    print('<INPUT type="hidden" name="diseaseid" value="' . $_POST['diseaseid'] . '">' . "\n" .
-          '</FORM>' . "\n\n");
+
+    print("\n" .
+          '        <INPUT type="hidden" name="diseaseid" value="' . $_POST['diseaseid'] . '">' . "\n" .
+          '      </FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -266,6 +284,18 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
     define('PAGE_TITLE', 'Edit an phenotype information entry');
     define('LOG_EVENT', 'PhenotypeEdit');
+
+    // Require manager clearance.
+    require ROOT_PATH . 'inc-lib-columns.php';
+    $aTableInfo = lovd_getTableInfoByCategory('Phenotype');
+
+    if (!$aTableInfo) {
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader('Re-order columns');
+        lovd_showInfoTable('The specified category does not exist!', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
 
     // Load appropiate user level for this phenotype entry.
     lovd_isAuthorized('phenotype', $nID);
@@ -289,6 +319,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
             // Prepare values.
             // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
+            // Ivar: checkFields hoort de data niet aan te passen, maar alleen te checken, dus ben het niet helemaal met je eens.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['edited_by'] = $_AUTH['id'];
@@ -333,7 +364,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    lovd_includeJS('inc-js-insert-custom-links.php');
+    lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");

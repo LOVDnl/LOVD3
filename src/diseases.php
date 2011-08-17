@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-16
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -187,20 +187,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             // Add genes.
             $aSuccess = array();
-            // FIXME; zorgt checkFields() niet al niet, dat deze var altijd set is?
-            if (isset($_POST['genes'])) {
-                // FIXME; probeer van None af te komen.
-                if (!in_array('None', $_POST['genes'])) {
-                    foreach ($_POST['genes'] as $sGene) {
-                        // Add gene to disease.
-                        // FIXME; hier doe je ze stuk voor stuk, in edit voeg je ze samen. Ik stel voor ze hier ook samen te voegen.
-                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
-                        if (!$q) {
-                            // Silent error.
-                            lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
-                        } else {
-                            $aSuccess[] = $sGene;
-                        }
+            if (!empty($_POST['genes'])) {
+                foreach ($_POST['genes'] as $sGene) {
+                    // Add gene to disease.
+                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
+                    if (!$q) {
+                        // Silent error.
+                        lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
+                    } else {
+                        $aSuccess[] = $sGene;
                     }
                 }
             }

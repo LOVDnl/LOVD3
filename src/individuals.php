@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-17
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,7 +82,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         if ($_AUTH['level'] >= LEVEL_OWNER) {
             $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
             $sNavigation .= ' | <A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
-            $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype to individual</A>';
+            if (mysql_num_rows(lovd_queryDB_Old('SELECT i2d.individualid FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID)))) {
+                $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype to individual</A>';
+            }
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
             }
@@ -116,11 +118,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
             require ROOT_PATH . 'class/object_phenotypes.php';
             foreach($zData['diseases'] as $aDisease) {
                 // FIXME; voeg hier een list(, , , ,) = $aDisease toe, zodat te volgen is wat er in deze array zit.
-                if (substr_count($zData['phenotypes'], ';' . $aDisease[0])) {
-                    $_GET['search_diseaseid'] = $aDisease[0];
-                    $_DATA = new LOVD_Phenotype($aDisease[0]);
+                list($id, $symbol, $name) = $aDisease;
+                if (substr_count($zData['phenotypes'], ';' . $id)) {
+                    $_GET['search_diseaseid'] = $id;
+                    $_DATA = new LOVD_Phenotype($id);
                     $_DATA->setSortDefault('phenotypeid');
-                    print('<B>' . $aDisease[2] . ' (<A href="diseases/' . $aDisease[0] . '">' . $aDisease[1] . '</A>)</B>');
+                    print('<B>' . $name . ' (<A href="diseases/' . $id . '">' . $symbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $id . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
                     $_DATA->viewList(false, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
                 }
             }
@@ -242,8 +245,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
-    lovd_includeJS('inc-js-insert-custom-links.php');
+    lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
@@ -271,7 +273,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Edit an entry.
 
     $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
-    define('PAGE_TITLE', 'Edit an individual information entry');
+    define('PAGE_TITLE', 'Edit individual #' . $nID);
     define('LOG_EVENT', 'IndividualEdit');
 
     // Load appropiate user level for this individual.
@@ -389,7 +391,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    lovd_includeJS('inc-js-insert-custom-links.php');
+    lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");

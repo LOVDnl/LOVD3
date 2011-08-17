@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-16
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -57,8 +57,10 @@ class LOVD_Screening extends LOVD_Custom {
         $this->sSQLLoadEntry = 'SELECT s.*, ' .
         // FIXME; kijkend hiernaar realiseer ik me, dat ik misschien "ownerid" beter "owned_by" had kunnen noemen... Wat denk jij?
         // FIXME; helemaal mee eens...
+                               'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ";") AS _genes, ' .
                                'uo.name AS owner ' .
                                'FROM ' . TABLE_SCREENINGS . ' AS s ' .
+                               'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.ownerid = uo.id) ' .
                                'WHERE s.id = ? ' .
                                'GROUP BY s.id';
@@ -170,6 +172,19 @@ class LOVD_Screening extends LOVD_Custom {
             }
         }
 
+        $qGenes = lovd_queryDB_Old('SELECT id FROM ' . TABLE_GENES);
+        $aGenes = array();
+        while ($z = mysql_fetch_row($qGenes)) {
+            $aGenes[] = $z[0];
+        }
+        if (isset($aData['genes']) && is_array($aData['genes'])) {
+            foreach ($aData['genes'] as $sGene) {
+                if ($sGene && !in_array($sGene, $aGenes)) {
+                    lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene');
+                }
+            }
+        }
+
         lovd_checkXSS();
     }
 
@@ -194,14 +209,29 @@ class LOVD_Screening extends LOVD_Custom {
             $aFormOwner = array('Owner of this screening', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
         }
 
+        // Get list of genes.
+        $aGenesForm = array();
+        $qData = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY name');
+        $nData = mysql_num_rows($qData);
+        if (!$nData) {
+            $aGenesForm = array('' => 'No gene entries available');
+        }
+        while ($r = mysql_fetch_row($qData)) {
+            $aGenesForm[$r[0]] = lovd_shortenString($r[1], 50) . ' (' . $r[0] . ')';
+        }
+        $nFieldSize = (count($aGenesForm) < 10? count($aGenesForm) : 10);
+
         // Array which will make up the form table.
         $this->aFormData = array_merge(
                  array(
-                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('POST', '', '', '', '40%', '14', '60%'),
                         array('', '', 'print', '<B>Screening information</B>'),
                         'hr',
                       ),
                  $this->buildViewForm(),
+                 array(
+                        array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, true),
+                      ),
                  array(
                         'hr',
                         'skip',

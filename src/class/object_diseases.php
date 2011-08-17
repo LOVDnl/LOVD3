@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-17
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -139,25 +139,13 @@ class LOVD_Disease extends LOVD_Object {
                       );
         parent::checkFields($aData);
 
-        // FIXME; eerst een concat om daarna te exploden???
-        // FIXME; gebruik lovd_getGeneList().
-        $qGenes = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id) AS genes FROM ' . TABLE_GENES);
-        $aGenes = mysql_fetch_row($qGenes);
-        $aGenes = explode(',', $aGenes[0]);
-        // FIXME; ik denk dat de query naar binnen deze if moet.
+        $qGenes = lovd_getGeneList();
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
-        if (isset($aData['genes'])) {
-            // FIXME; zou er een check op moeten, of dit wel een array is?
+        if (isset($aData['genes']) && is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
-                if (!in_array($sGene, $aGenes)) {
-                    // FIXME; kunnen we van deze None af?
-                    if ($sGene != 'None') {
-                        // FIXME; een if binnen een if kan ook in één if.
-                        // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($sGene) . ' does not exist" of zoiets.
-                        // FIXME; probeer de naam van het veld via het formulier te achterhalen.
-                        lovd_errorAdd('genes', 'Please select a proper gene in the \'This disease has been linked to these genes\' selection box');
-                    }
+                if (!in_array($sGene, $aGenes) || empty($sGene)) {
+                    lovd_errorAdd('genes', htmlspecialchars($sGene) . 'does not exist');
                 }
             }
         }
@@ -187,7 +175,7 @@ class LOVD_Disease extends LOVD_Object {
         } else {
             // FIXME; is het niet makkelijker om hier geen value op te geven ipv "None"? Het is toch geen verplicht veld, dus als ie geselecteerd wordt,
             // wordt de waarde automatisch genegeerd. Nu moest je een uitzondering plaatsen in checkFields() en genes.php.
-            $aGenesForm = array('None' => 'No gene entries available');
+            $aGenesForm = array('' => 'No gene entries available');
         }
         $nFieldSize = (count($aGenesForm) < 20? count($aGenesForm) : 20);
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-16
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -179,6 +179,26 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
             lovd_showInfoTable('Successfully created the screening information entry!', 'success');
+            
+            $aSuccessGenes = array();
+            if (!empty($_POST['genes']) && is_array($_POST['genes'])) {
+                foreach ($_POST['genes'] as $sGene) {
+                    // Add disease to gene.
+                    if ($sGene) {
+                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene));
+                        if (!$q) {
+                            // Silent error.
+                            lovd_writeLog('Error', LOG_EVENT, 'Gene entry ' . $sGene . ' - could not be added to screening ' . $nID);
+                        } else {
+                            $aSuccessGenes[] = $sGene;
+                        }
+                    }
+                }
+            }
+
+            if (count($aSuccessGenes)) {
+                lovd_writeLog('Event', LOG_EVENT, 'Gene entries successfully added to screening ' . $nID);
+            }
 
             require ROOT_PATH . 'inc-bot.php';
             exit;
@@ -203,7 +223,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    lovd_includeJS('inc-js-insert-custom-links.php');
+    lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '&amp;target=' . $_GET['target'] . '" method="post">' . "\n");
@@ -266,6 +286,49 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited screening information entry ' . $nID);
 
+            // Change linked genes?
+            // Genes the screening is currently linked to.
+
+            // Remove genes.
+            $aToRemove = array();
+            foreach ($zData['genes'] as $sGene) {
+                if ($sGene && !in_array($sGene, $_POST['genes'])) {
+                    // User has requested removal...
+                    $aToRemove[] = $sGene;
+                }
+            }
+
+            if ($aToRemove) {
+                $q = lovd_queryDB_Old('DELETE FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove));
+                if (!$q) {
+                    // Silent error.
+                    lovd_writeLog('Error', LOG_EVENT, 'Gene information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from screening ' . $nID);
+                } else {
+                    lovd_writeLog('Event', LOG_EVENT, 'Gene information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' successfully removed from screening ' . $nID);
+                }
+            }
+
+            // Add genes.
+            $aSuccess = array();
+            $aFailed = array();
+            foreach ($_POST['genes'] as $sGene) {
+                if (!in_array($sGene, $zData['genes']) && !empty($sGene)) {
+                    // Add gene to screening.
+                    $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene));
+                    if (!$q) {
+                        $aFailed[] = $sGene;
+                    } else {
+                        $aSuccess[] = $sGene;
+                    }
+                }
+            }
+            if ($aFailed) {
+                // Silent error.
+                lovd_writeLog('Error', LOG_EVENT, 'Gene information entr' . (count($aFailed) == 1? 'y' : 'ies') . ' ' . implode(', ', $aFailed) . ' could not be added to screening ' . $nID);
+            } elseif ($aSuccess) {
+                lovd_writeLog('Event', LOG_EVENT, 'Gene information entr' . (count($aSuccess) == 1? 'y' : 'ies') . ' ' . implode(', ', $aSuccess) . ' successfully added to screening ' . $nID);
+            }
+
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
@@ -298,7 +361,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    lovd_includeJS('inc-js-insert-custom-links.php');
+    lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");

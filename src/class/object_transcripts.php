@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-07-22
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2011-08-09
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -129,20 +129,8 @@ class LOVD_Transcript extends LOVD_Object {
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
-        global $zData; // FIXME; this could be done more elegantly.
 
         parent::checkFields($aData);
-
-        // FIXME; move to transcripts.php, only meant for selecting transcripts for a gene.
-        // FIXME; get rid of "None".
-        // Check if transcripts are in the list, so no data manipulation from user!
-        foreach ($aData['active_transcripts'] as $sTranscript) {
-            if (!in_array($sTranscript, $zData['transcripts']) || in_array($sTranscript, $zData['transcriptsAdded'])) {
-                if ($sTranscript != 'None') {
-                    return lovd_errorAdd('active_transcripts' ,'Please select a proper transcriptomic reference from the selection box.');
-                }
-            }
-        }
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
@@ -155,43 +143,16 @@ class LOVD_Transcript extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-        global $zData;
-
-        $atranscriptNames = array();
-        $aTranscriptsForm = array();
-        if (!empty($zData['transcripts'])) {
-            foreach ($zData['transcripts'] as $sTranscript) {
-                if (!isset($aTranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
-                    $aTranscriptsForm[$sTranscript] = lovd_shortenString($zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)], 50);
-                    $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
-                }
-            }
-            asort($aTranscriptsForm);
-        } else {
-            $aTranscriptsForm = array('None' => 'No transcripts available');
-        }
-        
-        $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
         
         // Array which will make up the form table.
         $this->aFormData =
                  array(
                            array('POST', '', '', '', '40%', '14', '60%'),
-           'transcript' => array('Transcriptomic reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, true),
-       'transcriptInfo' => array('', '', 'note', 'Select transcript references (NM accession numbers). You can select multiple transcripts by holding "CTRL or CMD" and clicking all transcripts desired.'),
-'transcript_ensembl_id' => array('Transcript Ensembl ID', '', 'text', 'id_ensembl', 10),
-   'protein_ensembl_id' => array('Protein Ensembl ID', '', 'text', 'id_protein_ensembl', 10),
-   'protein_uniprot_id' => array('Protein Uniprot ID', '', 'text', 'id_protein_uniprot', 10),
+                           array('Transcript Ensembl ID', '', 'text', 'id_ensembl', 10),
+                           array('Protein Ensembl ID', '', 'text', 'id_protein_ensembl', 10),
+                           array('Protein Uniprot ID', '', 'text', 'id_protein_uniprot', 10),
                            'skip',
                   );
-        if (ACTION == 'edit') {
-            unset($this->aFormData['transcript']);
-            unset($this->aFormData['transcriptInfo']);
-        } elseif (ACTION == 'create') {
-            unset($this->aFormData['protein_uniprot_id']);
-            unset($this->aFormData['protein_ensembl_id']);
-            unset($this->aFormData['transcript_ensembl_id']);
-        }
         
         return parent::getForm();
     }
@@ -218,10 +179,10 @@ class LOVD_Transcript extends LOVD_Object {
             if ($_PATH_ELEMENTS[0] == 'variants' && ACTION == 'create') {
                 //$zData['row_id'] = $zData['id'];
                 //$zData['row_link'] = 'variants?create&reference=Transcript&transcriptid=' . rawurlencode($zData['id']);
-                //$zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+                //$zData['geneid'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
                 $zData['row_id'] = '';
                 $zData['row_link'] = '';
-                $zData['id'] = '';
+                $zData['id_'] = '';
             } else {    
                 $zData['row_id'] = $zData['id'];
                 $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);

@@ -702,16 +702,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 require ROOT_PATH . 'class/object_users.php';
                 $_DATA = new LOVD_User();
                 $zData = $_DATA->loadEntry($nID);
-
-                // Query text.
-                // This also deletes the entries in variants??????.
-                // FIXME; implement deleteEntry()
-                $sSQL = 'DELETE FROM ' . TABLE_USERS . ' WHERE id = ?';
-                $aSQL = array($nID);
-                $q = lovd_queryDB_Old($sSQL, $aSQL);
-                if (!$q) {
-                    lovd_queryError(LOG_EVENT, $sSQL, mysql_error());
-                }
+                $_DATA->deleteEntry($nID);
 
                 // Write to log...
                 lovd_writeLog('Event', LOG_EVENT, 'Deleted user entry ' . $nID . ' - ' . $zData['name'] . ' (' . $zData['level'] . ')');
@@ -817,6 +808,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Throw a user out of the system.
 
     $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    define('LOG_EVENT', 'UserBoot');
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
@@ -838,8 +830,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     }
 
     // Write to log...
-    // FIXME; LOVD 3.0 standard, please.
-    lovd_writeLog('Event', 'UserBoot', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully booted user ' . $_POST['username'] . ' (' . $_POST['name'] . ')');
+    lovd_writeLog('Event', LOG_EVENT, 'successfully booted user ' . $_POST['username'] . ' (' . $_POST['name'] . ')');
 
     // Return the user where they came from.
     header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);
@@ -869,18 +860,20 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
         lovd_showInfoTable('No such ID!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
+    } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
+        // Can't unlock someone that is not locked or lock someone that is already locked.
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('User is already ' . ACTION . 'ed!', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
     }
-
-    // What are we doing?
-    // FIXME; the original code was better (before commit #55). Do you see why?
-    $sAction = ucfirst(ACTION);
 
     // The actual query.
     lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID), true);
 
     // Write to log...
-    // FIXME; LOVD 3.0 standard please!
-    lovd_writeLog('Event', 'User' . $sAction, $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully ' . strtolower($sAction) . 'ed user ' . $zData['username'] . ' (' . $zData['name'] . ')');
+    lovd_writeLog('Event', LOG_EVENT, 'successfully ' . ACTION . 'ed user ' . $zData['username'] . ' (' . $zData['name'] . ')');
 
     // Return the user where they came from.
     header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);
