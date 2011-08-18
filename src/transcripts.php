@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-18
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if ((empty($_PATH_ELEMENTS[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1]))) && !ACTION) {
     // URL: /transcripts
     // View all entries.
 
@@ -49,6 +49,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    (!empty($_PATH_ELEMENTS[1])? $_GET['search_geneid'] = $_PATH_ELEMENTS[1] : false);
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $_DATA->viewList();
@@ -105,178 +106,42 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 if (ACTION == 'create') {
-    // URL: /transcripts?create
+    // URL: /transcripts?create or /transcripts/DMD?create
     // Add a new transcript to a gene
 
     define('LOG_EVENT', 'TranscriptCreate');
 
-    // Is user authorized in any gene?
-    lovd_isAuthorized('gene', $_AUTH['curates']);
-    lovd_requireAUTH(LEVEL_CURATOR);
-
-    require ROOT_PATH . 'inc-lib-form.php';
-    require ROOT_PATH . 'class/REST2SOAP.php';
-    require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new LOVD_Transcript();
-
-
-    if (GET) {
-        // FIXME; If you're here for a specific gene, don't request info of all genes!
-        $qGenes = 'SELECT id, name, refseq_UD FROM ' . TABLE_GENES;
-        $zGenes = lovd_queryDB_Old($qGenes);
-        while ($aGene = mysql_fetch_row($zGenes)) {
-            $aGenes[$aGene[0]] = array('id' => $aGene[0], 'name' => $aGene[1], 'refseq_UD' => $aGene[2]);
-        }
-        $_POST['workID'] = lovd_generateRandomID();
-        // FIXME; Temporary fix for mem leak; empty entire work array.
-        $_SESSION['work'] = array();
-        $_SESSION['work'][$_POST['workID']] = array(
-                                                    'action' => '/transcripts' . (isset($_PATH_ELEMENTS[1])? '/' . $_PATH_ELEMENTS[1] : '') . '?create',
-                                                    'step' => '1',
-                                                    'values' => array(
-                                                                        'genes' => $aGenes,
-                                                                      ),
-                                                   );
-    }
-    define('PAGE_TITLE', 'Add transcript to ' . (isset($_SESSION['work'][$_POST['workID']]['values']['gene'])? 'gene ' . $_SESSION['work'][$_POST['workID']]['values']['gene']['id'] : 'a gene'));
-
-
-
-
-
-    if ($_SESSION['work'][$_POST['workID']]['step'] == '1') {
-        $zData = $_SESSION['work'][$_POST['workID']]['values'];
-        if (POST) {
-            lovd_errorClean();
-
-            // FIXME; use lovd_getGeneList();
-            if (!isset($zData['genes'][$_POST['geneSymbol']])) {
-                lovd_errorAdd('geneSymbol', 'Please select a gene out of the list below!');
-            }
-
-            if (!lovd_error()) {
-                require ROOT_PATH . 'inc-top.php';
-                require ROOT_PATH . 'class/progress_bar.php';
-                require ROOT_PATH . 'inc-lib-genes.php';
-
-                $sFormNextPage = '<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id="createTranscript" method="post">' . "\n" .
-                                 '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
-                                 '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
-                                 '        </FORM>';
-
-                $_BAR = new ProgressBar('', 'Collecting transcript information...', $sFormNextPage);
-
-                define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
-                require ROOT_PATH . 'inc-bot.php';
-
-                // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
-                flush();
-                
-                $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
-                $_BAR->setMessage('Collecting all available transcripts...');
-                $_BAR->setProgress(0);
-                
-                $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $zData['genes'][$_POST['geneSymbol']]['refseq_UD'], 'geneName' => $_POST['geneSymbol']));
-                if (!is_array($aOutput)) {
-                    $_MutalyzerWS->soapError ('getTranscriptsAndInfo', array('genomicReference' => $zData['genes'][$_POST['geneSymbol']]['refseq_UD'], 'geneName' => $_POST['geneSymbol']), $aOutput);
-                } else {
-                    if (empty($aOutput)) {
-                        $aTranscripts = array();
-                    } else {
-                        $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
-                        $aTranscripts = array();
-                        $aTranscriptsName = array();
-                        $aTranscriptsPositions = array();
-                        $aTranscriptsProtein = array();
-                        $qTranscriptsAdded = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id_ncbi ORDER BY id_ncbi SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid="' . $_POST['geneSymbol'] . '"');
-                        $aResultTranscriptsAdded = mysql_fetch_row($qTranscriptsAdded);
-                        $aTranscriptsAdded = explode(';', $aResultTranscriptsAdded[0]);
-                        $nTranscripts = count($aTranscriptsInfo) - count($aTranscriptsAdded);
-                        $nProgress = 0.0;
-                        foreach($aTranscriptsInfo as $aTranscriptInfo) {
-                            $aTranscriptInfo = $aTranscriptInfo['c'];
-                            $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo);
-                            if (!in_array($aTranscriptValues['id'], $aTranscriptsAdded)) {
-                                $nProgress = $nProgress + (100/$nTranscripts);
-                                $_BAR->setMessage('Collecting ' . $aTranscriptValues['id'] . ' info...');
-                                $aTranscripts[] = $aTranscriptValues['id'];
-                                $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($zData['genes'][$_POST['geneSymbol']]['name'] . ', ', '', $aTranscriptValues['product']);
-                                $aTranscriptsPositions[$aTranscriptValues['id']] = array('gTransStart' => $aTranscriptValues['gTransStart'], 'gTransEnd' => $aTranscriptValues['gTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
-                                $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getElementFromArray('proteinTranscript/id', $aTranscriptInfo, 'v');
-                                $_BAR->setProgress(0 + $nProgress);
-                            }
-                        }
-                    }
-                }
-                $_SESSION['work'][$_POST['workID']]['step'] = '2';
-                $_SESSION['work'][$_POST['workID']]['values'] = array(
-                                                                  'gene' => $zData['genes'][$_POST['geneSymbol']], 
-                                                                  'transcripts' => $aTranscripts,
-                                                                  'transcriptsProtein' => $aTranscriptsProtein,
-                                                                  'transcriptNames' => $aTranscriptsName,
-                                                                  'transcriptPositions' => $aTranscriptsPositions,
-                                                                  'transcriptsAdded' => $aTranscriptsAdded
-                                                                );
-                unset($_SESSION['work'][$_POST['workID']]['values']['genes']);
-                $_BAR->setProgress(100);
-                $_BAR->setMessage('Information collected, now building form...');
-                $_BAR->setMessageVisibility('done', true);
-
-                print('<SCRIPT type="text/javascript">' . "\n" .
-                      '  document.forms[\'createTranscript\'].submit();' . "\n" .
-                      '</SCRIPT>' . "\n\n");
-
-                lovd_checkXSS();
-
-                print('</BODY>' . "\n" .
-                  '</HTML>' . "\n");
-                exit;
-            }
-        }
-
-
-
-        if (isset($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1]))) {
-            // URL: /transcripts/DMD?create
-            // Add a new transcript to the specified gene symbol
-
-            require ROOT_PATH . 'inc-top.php';
-            $sGeneID = rawurldecode($_PATH_ELEMENTS[1]);
-
-            lovd_printHeader(PAGE_TITLE);
-
-            print('<FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" id="selectedGene" method="post">' . "\n" .
-                  '    <TABLE border="0" cellpadding="0" cellspacing="1" width="760">'. "\n" .
-                  '        <INPUT type="hidden" name="geneSymbol" value="' . $sGeneID . '">' . "\n" .
-                  '        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
-                  '    </TABLE>' . "\n" .
-                  '</FORM>' . "\n\n" .
-                  '<SCRIPT type="text/javascript">' . "\n" .
-                  '  document.forms[\'selectedGene\'].submit();' . "\n" .
-                  '</SCRIPT>' . "\n\n");
-
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-        }
-
+    if (!isset($_PATH_ELEMENTS[1])) {
+        define('PAGE_TITLE', 'Add transcript to a gene');
+        
+        // Is user authorized in any gene?
+        lovd_isAuthorized('gene', $_AUTH['curates']);
+        lovd_requireAUTH(LEVEL_CURATOR);
+        
         require ROOT_PATH . 'inc-top.php';
+        require ROOT_PATH . 'inc-lib-form.php';
         lovd_printHeader(PAGE_TITLE);
 
-        if (GET) {
-            print('      Please select the gene on which you wish to add a transcript.<BR>' . "\n" .
-                  '      <BR>' . "\n\n");
-        }
-
-        lovd_errorPrint();
-
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n" .
+        print('      Please select the gene on which you wish to add a transcript.<BR>' . "\n" .
+              '      <BR>' . "\n\n" .
+              '      <FORM name="transcriptsCreate" method="post" onsubmit="window.location = \'' . $_PATH_ELEMENTS[0] . '/\'+this.geneSymbol.options[this.geneSymbol.selectedIndex].value+\'?' . ACTION . '\'; return false;">' . "\n" .
               '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
 
-        $aSelectGene = array();
-        $aGenes = $_SESSION['work'][$_POST['workID']]['values']['genes'];
-        foreach ($aGenes as $key => $val) {
-            $aSelectGene[$key] = $val['name'] . ' (' . $val['id'] . ')';
+
+        if ($_AUTH['level'] >= LEVEL_MANAGER) {
+            $sSQL = 'SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY name';
+            $aSQL = array();
+        } else {
+            $sSQL = 'SELECT g.id, g.name FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_CURATES . ' AS cu ON (cu.geneid = g.id) WHERE cu.userid = ? AND allow_edit = 1 ORDER BY g.name';
+            $aSQL = array($_AUTH['id']);
         }
+
+        $aSelectGene = array();
+        $qGenes = lovd_queryDB_Old($sSQL, $aSQL);
+        while ($zGene = mysql_fetch_assoc($qGenes)) {
+            $aSelectGene[$zGene['id']] = $zGene['name'] . ' (' . $zGene['id'] . ')';
+        }
+
         // Array which will make up the form table.
         $aFormData = array(
                             array('POST', '', '', '', '30%', '14', '70%'),
@@ -284,30 +149,155 @@ if (ACTION == 'create') {
                             array('', '', 'submit', 'Continue &raquo;'),
                           );
         lovd_viewForm($aFormData);
-        print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
         print('</TABLE></FORM>' . "\n\n");
 
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
 
+    if (!in_array($_PATH_ELEMENTS[1], lovd_getGeneList())) {
+        header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '?' . ACTION);
+
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('Invalid gene symbol. Redirecting to gene selection...', 'warning');
+
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
+
+    // Is user authorized for the selected gene?
+    lovd_isAuthorized('gene', $_PATH_ELEMENTS[1]);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
 
 
 
-    if ($_SESSION['work'][$_POST['workID']]['step'] == '2') {
-        $zData = $_SESSION['work'][$_POST['workID']]['values'];
+
+    if (!POST) {
+        if (!isset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
+            $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION] = array();
+        } 
+        
+        while (count($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]) >= 5) {
+            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][min(array_keys($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]))]);
+        }
+
+        define('PAGE_TITLE', 'Add transcript to gene ' . $_PATH_ELEMENTS[1]);
+
+        $zGene = mysql_fetch_assoc(lovd_queryDB_Old('SELECT id, name, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PATH_ELEMENTS[1])));
+
+        require ROOT_PATH . 'inc-top.php';
+        require ROOT_PATH . 'class/progress_bar.php';
+        require ROOT_PATH . 'inc-lib-genes.php';
+        require ROOT_PATH . 'inc-lib-form.php';
+
+        // Generate a random workID
+        $nTime = gettimeofday();
+        $_POST['workID'] = $nTime['sec'] . $nTime['usec'];
+        // FIXME; use $_POST['workID'] = date("U"); in case gettimeofday doesn't work on some systems and we need a quick fix.
+
+        $sFormNextPage = '<FORM action="' . CURRENT_PATH . '?' . ACTION . '" id="createTranscript" method="post">' . "\n" .
+                         '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
+                         '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
+                         '        </FORM>';
+
+        $_BAR = new ProgressBar('', 'Collecting transcript information...', $sFormNextPage);
+
+        define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
+        require ROOT_PATH . 'inc-bot.php';
+
+        // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
+        flush();
+
+        require ROOT_PATH . 'class/REST2SOAP.php';
+        $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+        $_BAR->setMessage('Collecting all available transcripts...');
+        $_BAR->setProgress(0);
+
+        $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $zGene['refseq_UD'], 'geneName' => $zGene['id']));
+        if (!is_array($aOutput)) {
+            $_MutalyzerWS->soapError ('getTranscriptsAndInfo', array('genomicReference' => $zGene['refseq_UD'], 'geneName' => $zGene['id']), $aOutput);
+        } else {
+            if (empty($aOutput)) {
+                $aTranscripts = array();
+            } else {
+                $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
+                $aTranscripts = array();
+                $aTranscriptsName = array();
+                $aTranscriptsPositions = array();
+                $aTranscriptsProtein = array();
+                list($aResultTranscriptsAdded) = mysql_fetch_row(lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id_ncbi ORDER BY id_ncbi SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid="' . $zGene['id'] . '"'));
+                $aTranscriptsAdded = explode(';', $aResultTranscriptsAdded);
+                $nTranscripts = 0;
+                foreach ($aTranscriptsInfo as $aTranscript) {
+                    if (in_array($aTranscript['c']['id'][0]['v'], $aTranscriptsAdded)) {
+                        $nTranscripts += 1;
+                    }
+                }
+                $nProgress = 0.0;
+                foreach($aTranscriptsInfo as $aTranscriptInfo) {
+                    $aTranscriptInfo = $aTranscriptInfo['c'];
+                    $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo);
+                    if (!in_array($aTranscriptValues['id'], $aTranscriptsAdded)) {
+                        $nProgress = $nProgress + (100/$nTranscripts);
+                        $_BAR->setMessage('Collecting ' . $aTranscriptValues['id'] . ' info...');
+                        $aTranscripts[] = $aTranscriptValues['id'];
+                        $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($zGene['name'] . ', ', '', $aTranscriptValues['product']);
+                        $aTranscriptsPositions[$aTranscriptValues['id']] = array('gTransStart' => $aTranscriptValues['gTransStart'], 'gTransEnd' => $aTranscriptValues['gTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
+                        $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getElementFromArray('proteinTranscript/id', $aTranscriptInfo, 'v');
+                        $_BAR->setProgress(0 + $nProgress);
+                    }
+                }
+            }
+        }
+
+        $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values'] = array(
+                                                          'gene' => $zGene, 
+                                                          'transcripts' => $aTranscripts,
+                                                          'transcriptsProtein' => $aTranscriptsProtein,
+                                                          'transcriptNames' => $aTranscriptsName,
+                                                          'transcriptPositions' => $aTranscriptsPositions,
+                                                          'transcriptsAdded' => $aTranscriptsAdded
+                                                        );
+        $_BAR->setProgress(100);
+        $_BAR->setMessage('Information collected, now building form...');
+        $_BAR->setMessageVisibility('done', true);
+
+        print('<SCRIPT type="text/javascript">' . "\n" .
+              '  document.forms[\'createTranscript\'].submit();' . "\n" .
+              '</SCRIPT>' . "\n\n");
+
+        print('</BODY>' . "\n" .
+          '</HTML>' . "\n");
+        exit;
+
+
+
+
+
+    } elseif (isset($_POST['workID']) && array_key_exists($_POST['workID'], $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
+        require ROOT_PATH . 'inc-lib-form.php';
+        $zData = $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values'];
         if (count($_POST) > 1) {
             lovd_errorClean();
 
-            $_DATA->checkFields($_POST);
+            // Check if transcripts are in the list, so no data manipulation from user!
+            foreach ($_POST['active_transcripts'] as $sTranscript) {
+                if (!in_array($sTranscript, $zData['transcripts']) || in_array($sTranscript, $zData['transcriptsAdded'])) {
+                    if (!empty($sTranscript)) {
+                        return lovd_errorAdd('active_transcripts' ,'Please select a proper transcriptomic reference from the selection box.');
+                    }
+                }
+            }
 
             if (!lovd_error()) {
 
                 $_POST['created_by'] = $_AUTH['id'];
                 $_POST['created_date'] = date('Y-m-d H:i:s');
 
-                if (!empty($_POST['active_transcripts']) && $_POST['active_transcripts'][0] != 'None') {
+                if (!empty($_POST['active_transcripts']) && $_POST['active_transcripts'][0] != '') {
+                    $aSuccessTranscripts = array();
                     foreach($_POST['active_transcripts'] as $sTranscript) {
                         // Add transcript to gene
                         $sTranscriptProtein = (isset($zData['transcriptsProtein'][$sTranscript])? $zData['transcriptsProtein'][$sTranscript] : '');
@@ -326,6 +316,8 @@ if (ACTION == 'create') {
                     }
                 }
 
+                unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]);
+
                 // Thank the user...
                 header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . rawurlencode($zData['gene']['id']));
 
@@ -343,23 +335,37 @@ if (ACTION == 'create') {
         lovd_printHeader(PAGE_TITLE);
 
         if (!lovd_error()) {
-            print('      To add the selected transcripts to the gene, please press "Add" at the bottom of the form..<BR>' . "\n" .
+            print('      To add the selected transcripts to the gene, please press "Add" at the bottom of the form.<BR>' . "\n" .
                   '      <BR>' . "\n\n");
         }
 
         lovd_errorPrint();
-
-        // Tooltip JS code.
-        lovd_includeJS('inc-js-tooltip.php');   
+        
+        $atranscriptNames = array();
+        $aTranscriptsForm = array();
+        if (!empty($zData['transcripts'])) {
+            foreach ($zData['transcripts'] as $sTranscript) {
+                if (!isset($aTranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
+                    $aTranscriptsForm[$sTranscript] = lovd_shortenString($zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)], 50);
+                    $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
+                }
+            }
+            asort($aTranscriptsForm);
+        } else {
+            $aTranscriptsForm = array('' => 'No transcripts available');
+        }
+        
+        $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
 
         // Table.
-        print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
         // Array which will make up the form table.
-
         $aForm = array_merge(
-                     $_DATA->getForm(),
                      array(
+                            array('POST', '', '', '', '40%', '14', '60%'),
+                            array('Transcriptomic reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, true),
+                            array('', '', 'note', 'Select transcript references (NM accession numbers). You can select multiple transcripts by holding "CTRL or CMD" and clicking all transcripts desired.'),
                             array('', '', 'submit', 'Add transcript(s) to gene'),
                           ));
         lovd_viewForm($aForm);
@@ -408,8 +414,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-            //var_dump($nID);
-            //var_dump($_POST);
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
             // Write to log...

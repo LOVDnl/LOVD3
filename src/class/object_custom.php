@@ -98,7 +98,8 @@ class LOVD_Custom extends LOVD_Object {
                     $sSQL = 'SELECT c.*, sc.*, vot.id AS variantid ' .
                             'FROM ' . TABLE_COLS . ' AS c ' .
                             'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
-                            'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (sc.geneid = vot.geneid) ' .
+                            'INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t USING (geneid) ' .
+                            'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
                             'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
                             'AND vot.id=? ' .
                             'ORDER BY sc.col_order';

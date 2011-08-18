@@ -26,12 +26,32 @@
  * Fixed bug; LOVDs that were not installed yet, were throwing notices.
  * Added code for proper authorization of data owners to individuals.php, screenings.php and phenotypes.php. The correct user level is not yet assigned by lovd_isAuthorized().
  * Fixed some issues with HTML 4.01 compatibility.
- * Fixed bug; lovd_queryDB() did not show the entire query if it was throwing an
+ * Fixed bug; lovd_queryDB_Old() did not show the entire query if it was throwing an
    error message about the number of arguments used in the query.
 
 
-
-
+ * Added minified jQuery 1.6.2 to the newly created lib/jQuery folder.
+ * Added minified jQuery UI 1.8.15-core files(core/mouse/widget/position) & sortable file to lib/jQuery.
+ * Removed lib/tool-man folder and its contents entirely as it was outdated and a solid replacement was found in jQuery UI.
+ * Added plus.png to the gfx folder for general use.
+ * Included jQuery & jQuery UI in inc-top.php so they can be accessed everywhere in LOVD.
+ * Fixed bug; sorting in genes?sortCurator & columns?order now also works for IE by using jQuery UI sortable.
+ * Fixed bug; Changed the temporary memory leak fix to a solid permanent fix in genes?create, genes?edit & transcripts?create.
+ * Renamed 'inc-js-insert_custom_links.php' to 'inc-js-custom_links.php'.
+ * Implemented deleteEntry in users?delete & built in a check in users?(un)lock to see if a user is already (un)locked.
+ * Fixed bug; in phenotype?create now nothing happens when the user selects no disease, but now also checks the input for invalid diseaseids. Also only diseases that have custom columns enabled will be selectable now.
+ * If the individual has only one disease, then phenotypes?create selects that one automatically and goes to the form.
+ * The diseaseid can also be sent through a get variable in the URL in phenotypes?create.
+ * Added a gene selection box in screenings?create & screenings?edit.
+ * Added a 'Add phenotype to disease' button to the individual viewEntry for each disease.
+ * Fixed bug; Added some css to work with jQuery UI.
+ * Changed all references to inc-js-insert-custom-links.php to the new file inc-js-custom_links.php and removed the old file.
+ * Fixed bug; lovd_AJAX_viewListAddNextRow() now works properly in all browsers.
+ * Fixed bug; lovd_incluseJS() can now also handle arguments that include a path name.
+ * Fixed bug; in lovd_viewForm() no longer can a single selection list have a "select all" flag.
+ * Fixed bug; fixed the join from TABLE_SHARED_COLS to TABLE_VARIANTS_ON_TRANSCRIPTS in object_custom.php.
+ * Optimized & cleaned the transcripts?create code.
+ * transcripts/<gene symbol> now also works and is basically the same as transcripts with a search on <gene symbol>.
 
 
 /*******************

@@ -190,8 +190,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         // Tooltip JS code.
         lovd_includeJS('inc-js-tooltip.php');
-        // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
-        lovd_includeJS('inc-js-insert-custom-links.php');
+        lovd_includeJS('inc-js-custom_links.php');
 
         // Table.
         print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Genome' . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') .'" method="post">' . "\n");
@@ -217,22 +216,38 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         // URL: /variants?create&reference='Transcript&transcriptid=00001'
         // Create a variant on a transcript.
         define('LOG_EVENT', 'TranscriptVariantCreate');
-
-        // FIXME; merge deze twee IFs.
-        if (isset($_GET['transcriptid'])) {
-            if (ctype_digit($_GET['transcriptid'])) {
-                $_GET['transcriptid'] = str_pad($_GET['transcriptid'], 5, '0', STR_PAD_LEFT);
-                if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($_GET['transcriptid'])))) {
-                    define('PAGE_TITLE', 'Create a new variant entry for transcript #' . $_GET['transcriptid']);
+        
+        if (isset($_GET['target'])) {
+            if (ctype_digit($_GET['target'])) {
+                $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
+                if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
+                    $_POST['screeningid'] = $_GET['target'];
+                    define('PAGE_TITLE', 'Create a new variant entry for screening #' . $_GET['target']);
                 } else {
                     define('PAGE_TITLE', 'Create a new variant entry');
                     require ROOT_PATH . 'inc-top.php';
                     lovd_printHeader(PAGE_TITLE);
-                    lovd_showInfoTable('The transcript ID given is not valid, please go to the create variant page and select the desired transcript entry.', 'warning');
+                    lovd_showInfoTable('The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.', 'warning');
                     require ROOT_PATH . 'inc-bot.php';
                     exit;
                 }
             } else {
+                exit;
+            }
+        } else {
+            define('PAGE_TITLE', 'Create a new variant entry');
+        }
+
+        if (isset($_GET['transcriptid']) && ctype_digit($_GET['transcriptid'])) {
+            $_GET['transcriptid'] = str_pad($_GET['transcriptid'], 5, '0', STR_PAD_LEFT);
+            if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($_GET['transcriptid'])))) {
+                define('PAGE_TITLE', 'Create a new variant entry for transcript #' . $_GET['transcriptid']);
+            } else {
+                define('PAGE_TITLE', 'Create a new variant entry');
+                require ROOT_PATH . 'inc-top.php';
+                lovd_printHeader(PAGE_TITLE);
+                lovd_showInfoTable('The transcript ID given is not valid, please go to the create variant page and select the desired transcript entry.', 'warning');
+                require ROOT_PATH . 'inc-bot.php';
                 exit;
             }
         } else {
@@ -250,6 +265,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (POST) {
             lovd_errorClean();
             // FIXME; ik raak je hier kwijt; waar is dit allemaal voor? Waarom niet gewoon de checkFields() aanroepen?
+            // Ivar: Omdat het 2 verschillende data objecten zijn. Moet je dus ook de aparte checkFields en insertEntry aanroepen e.d.
+            //       En dus dan ook de $aFields apart doen.
             // Fields to be used.
             $aFieldsGenome = array_merge(
                                 array('allele', 'chromosome', 'ownerid', 'statusid', 'created_by', 'created_date'),
@@ -297,8 +314,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
 
                 // Thank the user...
-                // FIXME; stuur de gebruiker door naar de zojuist aangemaakte entry (of de genomic variant)!
-                header('Refresh: 3; url=' . lovd_getInstallURL() . 'transcripts/' . $_GET['transcriptid']);
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants/' . $nID);
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
@@ -328,8 +344,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         // Tooltip JS code.
         lovd_includeJS('inc-js-tooltip.php');
-        // FIXME; ik suggereer 'm inc-js-custom_links.php te noemen.
-        lovd_includeJS('inc-js-insert-custom-links.php');
+        lovd_includeJS('inc-js-custom_links.php');
 
         // Table.
         print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Transcript&amp;transcriptid=' . $_GET['transcriptid'] .'" method="post">' . "\n");
@@ -362,14 +377,13 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
 
-        // FIXME; je kunt de targets er niet zomaar aanplakken ;)
-        print('<TABLE class="data" border="0" cellpadding="0" cellspacing="2" width="950">' . "\n" .
+        print('<TABLE class="data" border="0" cellpadding="0" cellspacing="2" width="300">' . "\n" .
               '  <TBODY>' . "\n" .
-              '    <TR class="" style="cursor: pointer;" onmouseover="this.className = \'hover\';" onmouseout="this.className = \'\';" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? $_GET['target'] : '') . '\'">' . "\n" .
+              '    <TR class="" style="cursor: pointer;" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? '&target=' . $_GET['target'] : '') . '\'">' . "\n" .
               '      <TH><H5>Create a genomic variant &raquo;&raquo;</H5></TH>' . "\n" .
               '    </TR>' . "\n" .
-              '    <TR class="" style="cursor: pointer;" onmouseover="this.className = \'hover\';" onmouseout="this.className = \'\';" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? $_GET['target'] : '') . '\'">' . "\n" .
-              '      <TH><H5>Create a genomic variant &raquo;&raquo;</H5></TH>' . "\n" .
+              '    <TR class="" style="cursor: pointer;" onclick="var list = document.getElementById(\'TranscriptViewList\'); if (list.style.display == \'block\') { list.style.display = \'none\';} else { list.style.display = \'block\';}">' . "\n" .
+              '      <TH><H5>Create a transcript variant &raquo;&raquo;</H5></TH>' . "\n" .
               '    </TR>' . "\n" .
               '  </TBODY>' . "\n" .
               '</TABLE>' . "\n\n");
@@ -381,7 +395,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $_DATA = new LOVD_Transcript();
         // FIXME; waar zijn deze voor???
         print('<DIV id="TranscriptViewList" style="display:none;">');
-        $_DATA->viewList(false, array('id', 'variants'), false, false, false);
+        $_DATA->viewList(false, array('id_', 'variants'), false, false, false);
         print('</DIV>');
 
         require ROOT_PATH . 'inc-bot.php';
@@ -470,7 +484,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    lovd_includeJS('inc-js-insert-custom-links.php');
+    lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
@@ -506,8 +520,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
-    // FIXME; $zData is not being used at all...
-    $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (!empty($_POST)) {
@@ -529,7 +541,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $_DATA->deleteEntry($nID);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry ' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants');

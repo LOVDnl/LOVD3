@@ -31,23 +31,18 @@ Prioritize:
 - Er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
 - Check alle viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
 - Gene selection lists zijn veel te groot als je een database hebt met lange gen namen. LOVD 2.0 had daar een techniek voor, om dat in te korten.
-- BUG: Ik maak screening aan, gekoppeld aan individu. Mag niet selecteren welk gen ik gescreend heb.
 - Kijk 'ns naar https://grenada.lumc.nl/LOVD3/shared, er zit een individu in met een aantal mutaties. Kun je makkelijk naar al zijn data navigeren?
   * We missen veel links tussen data in. Onder variants on genome zou een variants_on_transcript viewList moeten, en ik moet naar de screening en individu kunnen vanuit daar. Dat soort dingen.
 - Was 't nou geregeld, dat inc-upgrade.php een curator koos voor genen zonder curator?
 - Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
-- Adding phenotype button should not appear if individual does not have a disease associated.
-- If only one disease: auto select that disease for phenotype add?
-- Adding phenotype: diseaseid in GET, zodat we er direct naar zouden kunnen linken. Scheelt ook gedoe in getForm() van phenotype.
 - Adding phenotype should not be possible if no columns have been enabled yet.
   * When disease is created, forward user to select columns for this disease.
 - Non-shared columns could not be removed. 
   * (@Ivo) Schoon deze code op.
-- (@Ivar) BUG: Maak phenotype aan, selecteer geen disease, submit form. Kijk nog eens goed naar transcripts?create en zorg er voor dat alle controles goed staan!!!
 - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
 - Veranderingen zoals besloten 2011-06-28
   * Variant/Times_reported / chromosomes_found o.i.d.?
-- (@Ivar) BUG: Gene mag niet een al gekozen symbol hebben, check ook in stap 2!
+- (@Ivar) BUG: Gene mag niet een al gekozen symbol hebben, check ook in stap 2! (Ivar 2011-08-15: Kan dit probleem niet reproduceren... symbol komt uit zData in stap 2!) 
 - Veranderingen zoals voorgesteld 2011-06-28?
   * Allele, genetic_origin, Phenotype/Inheritance
     - Current plans:
@@ -85,7 +80,6 @@ Prioritize:
         -sporadic, consanguinity unknown
 
     - Probleem: recombination? inherited from mother (moeder heeft 't) maar recombined to allele from father - hoe opslaan?
-- (@Ivar) Phenotype entries moeten ook statusid hebben!
 
 
 
@@ -103,10 +97,9 @@ Prioritize:
       Het verschil tussen ?authorize en ?sortCurators moet nog gemaakt worden. De laatste moet beschikbaar zijn voor curators.
 - Raar: /genes/DMD?authorize -> click alle users aan -> resort viewList.
   Nog raarder: probeer dan nog maar eens iemand uit de lijst te verwijderen.
-- loadEntry() en viewEntry() kolommen automatisch laten exploden op basis van hun naam; gc_NAME = array (;) of gc2_NAME = nested array (;;).
 - Use uniqid ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
-- Insert_test_data.php moet of goed getest worden, of weggeflikkerd worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
+- Insert_test_data.php moet of goed getest worden, of weggedaan worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
 - (@Ivo?) Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
 - Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
 - (@Ivo) BUG;
@@ -124,23 +117,15 @@ Prioritize:
             senv:Server - string index out of range
     (met genomic ref hebben we dezelfde foutmelding)
     * Ivar: het gaat hier specifiek om de UD die mist. Mutalyzer zil deze hebben voor het binnen halen van de transcript gegevens.
-- lovd_queryDB("SQL", true) geeft een query error for some reason (should be lovd_queryDB("SQL", array(), true) of course.
+- lovd_queryDB_Old("SQL", true) geeft een query error for some reason (should be lovd_queryDB_Old("SQL", array(), true) of course.
 - Transcript aanmaken totaal onmogelijk op shared installatie (traag, server (apache?) loopt vast)
   * Ivar: Dit zou door de tijdelijke mem leak fix sneller moeten gaan. Zorg er overigens wel voor dat je alle genes een keer edit ofzo.
           Dit geeft Mutalyzer de mogelijkheid om een UD nummer erbij te zoeken. Anders moeten we hier een script voor schrijven.
-- (@Ivar) Gen selecteren met transcript aanmaken niet handig; symbol staat niet vooraan (Johan wil 't zo?).
+- (@Ivar) Gen selecteren met transcript aanmaken niet handig; symbol staat niet vooraan (Johan wil 't zo? Ivar: Ja).
   * ViewList als oplossing? Page size klein houden?
 - Geheugengebruik op shared install is absurd hoog (2 GB per Apache thread)
-  * Memory leak in transcripts?create indien create niet wordt afgemaakt. Sowieso moet 't geheugengebruik van dit deel van 't script omlaag. Niet per se in alpha-01.
-  * genes?create idem dito
-  * genes?edit idem dito
-  * transcripts/DMD?create moet blijven op transcripts/DMD?create (nu verliest hij de DMD in de URL)
-  * Solution to mem_leak: max 5 work IDs van dezelfde action?
-    - Datum als key binnen action's work array.
-    - Ook te oude ID's opruimen?
-  * Sowieso work ID weggooien na afronden actie.
-  * Zelfde nodig met viewList data? Blijft ook hangen.
-- Ik heb het idee dat $bHalt in lovd_queryDB() veel vaker true dan false zou moeten zijn. Default op true zetten?
+  * Zelfde nodig met viewList data in $_SESSION? Blijft ook hangen.
+- Ik heb het idee dat $bHalt in lovd_queryDB_Old() veel vaker true dan false zou moeten zijn. Default op true zetten?
 - Vanaf beta moeten bij bugfixes de datum en versie gezet worden.
 - Bij installatie controleren of er een mailserver is? Poort 25 check?
 
@@ -187,7 +172,6 @@ Ook belangrijk, maar iets minder:
   * Moet in één transaction? If so, implement rollbacks?
   * Sets kolommen activeren per data type? Andersom kan al wel; kolom toevoegen aan sets data types.
 - Pathogenicity los koppelen, zodat "proof" kan worden toegevoegd, maar ook linken aan meerdere varianten.
-- (Ivar) Aangezien /transcripts/DMD?create werkt, moet /transcripts/DMD ook werken.
 - (Overleg I&I nodig) Disease -> trait? (eye color, etc)
   * Could we support both?
   * Probleem is dat je dan een speciale diseaseID nodig hebt met een flag = trait, of een flag in TABLE_SHARED_COLUMNS???

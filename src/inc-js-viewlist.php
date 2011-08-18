@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2011-05-17
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-08-18
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -117,7 +118,6 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
         //oForm.submit(); // Simply refresh the page.
     } else {
         // Find the next entry and add it to the table.
-        oTable = document.getElementById('viewlistTable_' + sViewListID);
 
         objHTTP.onreadystatechange = function ()
         {
@@ -125,13 +125,31 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
                 if (objHTTP.status == 200) {
                     if (objHTTP.responseText.length > 100) {
                         // Successfully retrieved stuff.
-                        // Now start an amazing detour.
-                        oTFoot = oTable.createTFoot();                 // Create table footer...
-                        oTFoot.style.display = 'none';                 // ...but hide it!
-                        // The following line doesn't work in IE 7 and IE 8. Don't know why. It says "Unknown runtime error". Other versions unknown.
-                        oTFoot.innerHTML = objHTTP.responseText;       // Now, put the row in using innerHTML
-                        oTable.tBodies[0].appendChild(oTFoot.rows[0]); // Then, when that's all parsed, append that to the table.
-                        oTable.deleteTFoot();                          // Then remove the temporary table footer.
+                        var sResponse = objHTTP.responseText;
+                        // clone last TR and fill in the new response data and returns the row.
+                        var newRow = $( '#viewlistTable_'+sViewListID+' tr:last' ).clone();
+                        var attrPatt = /<TR( ([a-z]+)="(.+?)")/i;
+                        attrPatt.compile(attrPatt);
+                        var valPatt = />(.+)<\/TD/;
+                        valPatt.compile(valPatt);
+                        // This is the same as ltrim and rtrim, but this works for all IE versions also.
+                        // The split command is basically an explode.
+                        var aResponse = sResponse.replace(/^\s*/, ''). replace(/\s*$/, '').split(/\n/);
+                        while (attrPatt.test(aResponse[0])) {
+                            attr = attrPatt.exec(aResponse[0]);
+                            $(newRow).attr(attr[2], attr[3]);
+                            aResponse[0] = aResponse[0].replace(attr[1], '');
+                        }
+                        // For some reason .clone() adds a style attribute to the row. Let's remove it.
+                        $(newRow).removeAttr('style');
+                        // Unset first element of aResponse(which is the TR).
+                        aResponse.splice(0,1);
+                        for (i in aResponse) {
+                            sInput = aResponse[i];
+                            var value = valPatt.exec(sInput);
+                            $(newRow).children().get(i).innerHTML = value[1];
+                        }
+                        newRow.insertAfter($( '#viewlistTable_'+sViewListID+' tr:last' ));
                         return true;
                     }
                 }

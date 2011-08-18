@@ -318,9 +318,7 @@ function lovd_includeJS ($sFile, $nPrefix = 3)
     }
 
     $sPrefix = str_repeat('  ', $nPrefix);
-    // This basename() implementation is necessary because in HTML the BASE header indicate the relative href, but PHP does not know this.
-    // Therefore, simply sending {ROOT_PATH . $sFile} will not work with ROOT_PATH other than ./ because the browser won't find the file.
-    print($sPrefix . '<SCRIPT type="text/javascript" src="' . (substr($sFile, 0, 4) == 'http'? $sFile : basename($sFile)) . (empty($sArg)? '' : '?' . $sArg) . '"></SCRIPT>' . "\n");
+    print($sPrefix . '<SCRIPT type="text/javascript" src="' . $sFile . (empty($sArg)? '' : '?' . $sArg) . '"></SCRIPT>' . "\n");
     return true;
 }
 
