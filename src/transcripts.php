@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-08-18
+ * Modified    : 2011-08-19
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -45,14 +45,15 @@ if ((empty($_PATH_ELEMENTS[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     // URL: /transcripts
     // View all entries.
 
-    define('PAGE_TITLE', 'View transcripts');
+    define('PAGE_TITLE', 'View transcripts' . (!empty($_PATH_ELEMENTS[1])? ' of gene ' . rawurlencode($_PATH_ELEMENTS[1]) : ''));
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    (!empty($_PATH_ELEMENTS[1])? $_GET['search_geneid'] = $_PATH_ELEMENTS[1] : false);
+    (!empty($_PATH_ELEMENTS[1])? $_GET['search_geneid'] = rawurlencode($_PATH_ELEMENTS[1]) : false);
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
-    $_DATA->viewList();
+    $_DATA->sSortDefault = (!empty($_PATH_ELEMENTS[1])? 'variants' : 'geneid');
+    $_DATA->viewList(false, (!empty($_PATH_ELEMENTS[1])? 'geneid' : ''));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -92,7 +93,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_GET['search_transcriptid'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants', 'H4');
-    (!$zData['variants']? print('<BR>' . "\n") : false);
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
     $_DATA->viewList(false, array('id', 'transcriptid'));

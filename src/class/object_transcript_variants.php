@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-06-09
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2011-08-19
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -132,9 +132,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     {
         $this->aFormData = array_merge(
                  array(
-                        array('', '', 'print', '<B>Variant information (regarding the selected transcript)</B>'),
+                        array('', '', 'print', '<B>Transcript variant information</B>'),
                         'hr',
-                        array('', '', 'note', 'TEMPORARILY UNAVAILABLE.'),
                       ),
                  $this->buildViewForm(),
                  array(
@@ -168,9 +167,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'variants/' . rawurlencode($zData['id']);
-            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            // STUB
         }
         
         return $zData;

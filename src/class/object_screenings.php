@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-08-16
+ * Modified    : 2011-08-19
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,6 +82,7 @@ class LOVD_Screening extends LOVD_Custom {
 
         // SQL code for viewing the list of screenings
         $this->aSQLViewList['SELECT']   = 's.*, ' .
+                                          's.id AS screeningid, ' .
                                           'COUNT(DISTINCT s2v.variantid) AS variants, ' .
                                           'uo.name AS owner';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
@@ -112,6 +113,9 @@ class LOVD_Screening extends LOVD_Custom {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
+                        'screeningid' => array(
+                                    'view' => array('Screening ID', 110),
+                                    'db' => array('s.id', 'ASC', 'INT_UNSIGNED')),
                         'id' => array(
                                     'view' => array('Screening ID', 110),
                                     'db'   => array('s.id', 'ASC', true)),
@@ -261,9 +265,7 @@ class LOVD_Screening extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'screenings/' . rawurlencode($zData['id']);
-            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            $zData['id'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';

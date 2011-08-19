@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-18
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -85,6 +85,22 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
         lovd_showNavigation($sNavigation);
     }
+
+    $_GET['search_id'] = $nID;
+    print('<BR><BR>' . "\n\n");
+    lovd_printHeader('Variant on transcripts', 'H4');
+    require ROOT_PATH . 'class/object_transcript_variants.php';
+    $_DATA = new LOVD_TranscriptVariant();
+    $_DATA->sRowLink = '';
+    $_DATA->viewList(false, array('id'), true, true);
+    unset($_GET['search_id']);
+
+    $_GET['search_screeningid'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
+    print('<BR><BR>' . "\n\n");
+    lovd_printHeader('Screenings', 'H4');
+    require ROOT_PATH . 'class/object_screenings.php';
+    $_DATA = new LOVD_Screening();
+    $_DATA->viewList(false, array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -193,7 +209,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_includeJS('inc-js-custom_links.php');
 
         // Table.
-        print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Genome' . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') .'" method="post">' . "\n");
+        print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Genome' . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array_merge(
@@ -222,7 +238,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
                 if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
                     $_POST['screeningid'] = $_GET['target'];
-                    define('PAGE_TITLE', 'Create a new variant entry for screening #' . $_GET['target']);
                 } else {
                     define('PAGE_TITLE', 'Create a new variant entry');
                     require ROOT_PATH . 'inc-top.php';
@@ -234,21 +249,20 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             } else {
                 exit;
             }
-        } else {
-            define('PAGE_TITLE', 'Create a new variant entry');
         }
 
         if (isset($_GET['transcriptid']) && ctype_digit($_GET['transcriptid'])) {
             $_GET['transcriptid'] = str_pad($_GET['transcriptid'], 5, '0', STR_PAD_LEFT);
-            if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($_GET['transcriptid'])))) {
-                define('PAGE_TITLE', 'Create a new variant entry for transcript #' . $_GET['transcriptid']);
-            } else {
+            list($sGene) = mysql_fetch_row(lovd_queryDB_Old('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($_GET['transcriptid'])));
+            if (empty($sGene)) {
                 define('PAGE_TITLE', 'Create a new variant entry');
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
                 lovd_showInfoTable('The transcript ID given is not valid, please go to the create variant page and select the desired transcript entry.', 'warning');
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
+            } else {
+                define('PAGE_TITLE', 'Create a new variant entry for transcript #' . $_GET['transcriptid']);
             }
         } else {
             exit;
@@ -256,10 +270,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         require ROOT_PATH . 'class/object_genome_variants.php';
         require ROOT_PATH . 'class/object_transcript_variants.php';
-        
+
         $_DATA = array();
         $_DATA['Genome'] = new LOVD_GenomeVariant();
-        $_DATA['Transcript'] = new LOVD_TranscriptVariant();
+        $_DATA['Transcript'] = new LOVD_TranscriptVariant($sGene);
         require ROOT_PATH . 'inc-lib-form.php';
 
         if (POST) {
@@ -313,6 +327,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 // Write to log...
                 lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
 
+                // Add variant to screening.
+                if (isset($_POST['screeningid'])) {
+                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
+                    if (!$q) {
+                        // Silent error.
+                        lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
+                    }
+                }
+
                 // Thank the user...
                 header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants/' . $nID);
 
@@ -347,12 +370,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_includeJS('inc-js-custom_links.php');
 
         // Table.
-        print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Transcript&amp;transcriptid=' . $_GET['transcriptid'] .'" method="post">' . "\n");
+        print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Transcript&amp;transcriptid=' . $_GET['transcriptid'] . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array_merge(
-                     $_DATA['Genome']->getForm(),
-                     $_DATA['Transcript']->getForm(),
+                     $_DATA['Genome']->getForm($_DATA['Transcript']),
                      array(
                             array('', '', 'submit', 'Create variant entry'),
                           ));
@@ -369,8 +391,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     } else {
         // URL: /variants?create
-        header('Location: ' . lovd_getInstallURL() . 'variants?create&reference=Genome');
-        exit;
         // Select wether the you want to create a variant on the genome or on a transcript.
         define('LOG_EVENT', 'VariantCreate');
         define('PAGE_TITLE', 'Create a new variant entry');
@@ -382,7 +402,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '    <TR class="" style="cursor: pointer;" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? '&target=' . $_GET['target'] : '') . '\'">' . "\n" .
               '      <TH><H5>Create a genomic variant &raquo;&raquo;</H5></TH>' . "\n" .
               '    </TR>' . "\n" .
-              '    <TR class="" style="cursor: pointer;" onclick="var list = document.getElementById(\'TranscriptViewList\'); if (list.style.display == \'block\') { list.style.display = \'none\';} else { list.style.display = \'block\';}">' . "\n" .
+              '    <TR class="" style="cursor: pointer;" onclick="$( \'#TranscriptViewList\' ).toggle();">' . "\n" .
               '      <TH><H5>Create a transcript variant &raquo;&raquo;</H5></TH>' . "\n" .
               '    </TR>' . "\n" .
               '  </TBODY>' . "\n" .
@@ -393,7 +413,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         require ROOT_PATH . 'class/object_transcripts.php';
         $_GET['page_size'] = 10;
         $_DATA = new LOVD_Transcript();
-        // FIXME; waar zijn deze voor???
+        $_DATA->sRowLink = 'variants?create&reference=Transcript&transcriptid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
         print('<DIV id="TranscriptViewList" style="display:none;">');
         $_DATA->viewList(false, array('id_', 'variants'), false, false, false);
         print('</DIV>');

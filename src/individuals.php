@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-08-17
+ * Modified    : 2011-08-19
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -117,7 +117,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
             $zData['diseases'] = array_map('explode', array_fill(0, count($zData['diseases']),';'), $zData['diseases']);
             require ROOT_PATH . 'class/object_phenotypes.php';
             foreach($zData['diseases'] as $aDisease) {
-                // FIXME; voeg hier een list(, , , ,) = $aDisease toe, zodat te volgen is wat er in deze array zit.
                 list($id, $symbol, $name) = $aDisease;
                 if (substr_count($zData['phenotypes'], ';' . $id)) {
                     $_GET['search_diseaseid'] = $id;
@@ -128,16 +127,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
                 }
             }
         } else {
-            print('<BR>' . "\n");
             lovd_showInfoTable('No phenotype entries found for this individual', 'stop');
         }
     } else {
-        print('<BR>' . "\n");
         lovd_showInfoTable('No disease entries found for this individual', 'stop');
     }
     unset($_GET['search_individualid']);
     unset($_GET['search_diseaseid']);
-    
+
     $_GET['search_screeningids'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants', 'H4');
@@ -145,6 +142,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_DATA = new LOVD_GenomeVariant();
     $_DATA->setSortDefault('id');
     $_DATA->viewList(false, 'screeningids', true);
+
+    $_GET['search_individualid'] = $zData['id'];
+    print('<BR><BR>' . "\n\n");
+    lovd_printHeader('Screenings', 'H4');
+    require ROOT_PATH . 'class/object_screenings.php';
+    $_DATA = new LOVD_Screening();
+    $_DATA->setSortDefault('id');
+    $_DATA->viewList(false, array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

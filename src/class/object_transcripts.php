@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-08-09
+ * Modified    : 2011-08-19
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -115,7 +115,7 @@ class LOVD_Transcript extends LOVD_Object {
                                     'db'   => array('t.id_ncbi', 'ASC', true)),
                         'variants' => array(
                                     'view' => array('Variants', 70),
-                                    'db'   => array('variants', 'ASC', 'INT_UNSIGNED')),
+                                    'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
                       );
         $this->sSortDefault = 'geneid';
 
@@ -175,19 +175,8 @@ class LOVD_Transcript extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            // FIXME; ik vind dit niet zo mooi, kan dit anders? Wellicht de links uitzetten vanaf de viewList() call?
-            if ($_PATH_ELEMENTS[0] == 'variants' && ACTION == 'create') {
-                //$zData['row_id'] = $zData['id'];
-                //$zData['row_link'] = 'variants?create&reference=Transcript&transcriptid=' . rawurlencode($zData['id']);
-                //$zData['geneid'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
-                $zData['row_id'] = '';
-                $zData['row_link'] = '';
-                $zData['id_'] = '';
-            } else {    
-                $zData['row_id'] = $zData['id'];
-                $zData['row_link'] = 'transcripts/' . rawurlencode($zData['id']);
-                $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
-            }
+            $this->sRowLink = str_replace('{{ID}}', $zData['id'], $this->sRowLink);
+            $zData['id_'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['gene_name_'] = '<A href="genes/' . rawurlencode($zData['geneid']) . '">' . $zData['geneid'] . '</A> (' . $zData['gene_name'] . ')';
         }

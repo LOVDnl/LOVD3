@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-19
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -62,11 +62,13 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vog.*, ' .
+                                           'GROUP_CONCAT(s2v.screeningid SEPARATOR "|") AS screeningids, ' .
                                            'uo.name AS owner_, ' .
                                            'ds.name AS status, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS vog ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.ownerid = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id) ' .
@@ -208,7 +210,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
 
 
-    function getForm ()
+    function getForm ($_Transcript = false)
     {
         // Build the form.
         global $_AUTH, $_SETT, $_CONF;
@@ -242,6 +244,11 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         array('Chromosome', '', 'select', 'chromosome', 1, $aSelectChromosome, false, false, false),
                       ),
                  $this->buildViewForm(),
+                 ($_Transcript? array(
+                                        'skip',
+                                        array('', '', 'print', '<B>Transcript variant information</B>'),
+                                     ) : array()),
+                 ($_Transcript? $_Transcript->buildViewForm() : array()),
                  array(
                         'hr',
                         'skip',
@@ -281,9 +288,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'variants/' . rawurlencode($zData['id']);
-            $zData['id'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            $this->sRowLink = 'variants/' . $zData['id'];
+            $zData['id'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['owner_'] = '<A href="users/' . $zData['ownerid'] . '">' . $zData['owner_'] . '</A>';
         }

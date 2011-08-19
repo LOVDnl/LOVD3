@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-08-16
+ * Modified    : 2011-08-18
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if ($_AUTH) {
         if ($_AUTH['level'] >= LEVEL_OWNER) {
             $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
-            $sNavigation .= ' | <A href="variants?create&amp;reference=Genome&amp;target=' . $nID . '">Add variant to screening</A>';
+            $sNavigation .= ' | <A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
             }
@@ -99,7 +99,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_GET['search_geneid'] = (!empty($zData['search_geneid'])? html_entity_decode(rawurldecode($zData['search_geneid'])) : 0);
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Genes screened', 'H4');
-    print('<BR>' . "\n");
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
     $_DATA->setSortDefault('id');
@@ -109,7 +108,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_GET['search_screeningids'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants found', 'H4');
-    (!$zData['variants']? print('<BR>' . "\n") : false);
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $_DATA->setSortDefault('id');

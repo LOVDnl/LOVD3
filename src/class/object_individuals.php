@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-19
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -322,9 +322,7 @@ class LOVD_Individual extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'individuals/' . rawurlencode($zData['id']);
-            $zData['individualid_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            $zData['individualid_'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
         }

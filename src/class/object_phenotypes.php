@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-18
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -62,10 +62,12 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
+                                           'd.symbol AS disease, ' .
                                            'uo.name AS owner_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
+                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (p.diseaseid = d.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (p.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (p.edited_by = ue.id)';
@@ -87,6 +89,8 @@ class LOVD_Phenotype extends LOVD_Custom {
         $this->aColumnsViewEntry = array_merge(
                  $this->buildViewEntry(),
                  array(
+                        'individualid_' => 'Individual ID',
+                        'disease_' => 'Associated disease',
                         'owner_' => 'Owner name',
                         'status_' => 'Phenotype data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -251,11 +255,10 @@ class LOVD_Phenotype extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            // FIXME; welke van deze zijn nog nodig, nu objects.php zelf al waardes gaat voorspellen?
-            $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'phenotypes/' . rawurlencode($zData['id']);
-            $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            $zData['id_'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
         } else {
+            $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
+            $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';
             $zData['owner_'] = '<A href="users/' . $zData['ownerid'] . '">' . $zData['owner_'] . '</A>';
             $zData['status_'] = $_SETT['data_status'][$zData['statusid']];
         }

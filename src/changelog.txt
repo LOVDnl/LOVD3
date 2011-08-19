@@ -52,6 +52,8 @@
  * Fixed bug; fixed the join from TABLE_SHARED_COLS to TABLE_VARIANTS_ON_TRANSCRIPTS in object_custom.php.
  * Optimized & cleaned the transcripts?create code.
  * transcripts/<gene symbol> now also works and is basically the same as transcripts with a search on <gene symbol>.
+ * Improved navigation from data to data by adding some extra viewLists.
+ * Implemented a working variants?create&reference=Transcript
 
 
 /*******************
