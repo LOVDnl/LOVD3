@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-18
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -171,6 +171,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     if (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false) {
         print('<BR>' . "\n\n");
     }
+    $sMessage = htmlspecialchars($sMessage);
 
     // A LOVD-Lib or Query error is always an LOVD bug! (unless MySQL went down)
     if ($sError == 'LOVD-Lib' || ($sError == 'Query' && strpos($sMessage, 'You have an error in your SQL syntax'))) {
@@ -218,6 +219,157 @@ function lovd_generateRandomID ($l = 10)
     }
     $nStart = mt_rand(0, 32-$l);
     return substr(md5(microtime()), $nStart, $l);
+}
+
+
+
+
+
+function lovd_getColumnData ($sTable)
+{
+    global $_TABLES;
+
+    // Gets and returns the column data for a certain table.
+    static $aTableCols = array();
+
+    // Only for tables that actually exist.
+    if (!in_array($sTable, $_TABLES)) {
+        return false;
+    }
+
+    if (empty($aTableCols[$sTable])) {
+        $q = lovd_queryDB_Old('SHOW COLUMNS FROM ' . mysql_real_escape_string($sTable));
+        if (!$q) {
+            // Should never happen!
+            return false;
+        }
+        $aTableCols[$sTable] = array();
+        while ($z = @mysql_fetch_assoc($q)) {
+            $aTableCols[$sTable][$z['Field']] =
+                     array(
+                            'type' => $z['Type'],
+                            'null' => $z['Null'],
+                            'default' => $z['Default'],
+                          );
+        }
+    }
+    
+    return $aTableCols[$sTable];
+}
+
+
+
+
+
+function lovd_getColumnLength ($sTable, $sCol)
+{
+    // Determines the column lengths for a given table and column.
+    $aTableCols = lovd_getColumnData($sTable);
+
+    if (!empty($aTableCols[$sCol])) {
+        // Table && col exist.
+        $sColType = $aTableCols[$sCol]['type'];
+
+        if (preg_match('/(CHAR|INT)\(([0-9]+)\)/i', $sColType, $aRegs)) {
+            return (int) $aRegs[2];
+
+        } elseif (preg_match('/^DATE(TIME)?/i', $sColType, $aRegs)) {
+            return (10 + (empty($aRegs[1])? 0 : 9));
+
+        } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
+            return (int) $aRegs[1];
+
+        } elseif (preg_match('/^(TINY|MEDIUM|LONG)?(TEXT|BLOB)/i', $sColType, $aRegs)) {
+            switch ($aRegs[1]) { // Key [1] must exist, because $aRegs[2] exists.
+                case 'TINY':
+                    return 255;
+                case 'MEDIUM':
+                    return 16777215;
+                case 'LONG':
+                    return 4294967295;
+                default:
+                    return 65535;
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+
+
+
+/*
+function lovd_getColumnMaxValue ($sTable, $sCol)
+{
+    // Determines the column's maximum value for numeric columns.
+    $aTableCols = lovd_getColumnData($sTable);
+
+    if (!empty($aTableCols[$sCol])) {
+        // Table && col exist.
+        $sColType = $aTableCols[$sCol]['type'];
+
+        if (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
+            return (float) (str_repeat('9', $aRegs[1] - $aRegs[2]) . '.' . str_repeat('9', $aRegs[2]));
+
+        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?(INT)/i', $sColType, $aRegs)) {
+            switch ($aRegs[1]) { // Key [1] must exist, because $aRegs[2] exists.
+                case 'TINY':
+                    return 255; // 2^8; 1 byte
+                case 'SMALL':
+                    return 65535; // 2^16; 2 bytes
+                case 'MEDIUM':
+                    return 16777215; // 2^24; 3 bytes
+                case 'BIG':
+                    return 18446744073709551615; // 2^64; 8 bytes
+                default:
+                    return 4294967295; // 2^32; 4 bytes
+            }
+        }
+    }
+
+    return 0;
+}
+*/
+
+
+
+
+
+function lovd_getColumnType ($sTable, $sCol)
+{
+    // Determines the column type for a given (table and) column.
+
+    if ($sTable) {
+        $aTableCols = lovd_getColumnData($sTable);
+        if (!empty($aTableCols[$sCol])) {
+            // Table && col exist.
+            $sColType = $aTableCols[$sCol]['type'];
+        }
+    } else {
+        // Custom column's MySQL type given, use that.
+        $sColType = $sCol;
+    }
+
+    if (!empty($sColType)) {
+        if (preg_match('/^(TINY|MEDIUM|LONG)?(BLOB)/i', $sColType)) {
+            return 'BLOB';
+        } elseif (preg_match('/^DATE/i', $sColType)) {
+            return 'DATE';
+        } elseif (preg_match('/^DATETIME/i', $sColType)) {
+            return 'DATETIME';
+        } elseif (preg_match('/^DEC|DECIMAL\([0-9]+,[0-9]+\)/i', $sColType)) {
+            return 'DECIMAL';
+        } elseif (preg_match('/^((VAR)?CHAR|(TINY|MEDIUM|LONG)?TEXT)/i', $sColType)) {
+            return 'TEXT';
+        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\([0-9]+\) UNSIGNED/i', $sColType)) {
+            return 'INT_UNSIGNED';
+        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\([0-9]+\)/i', $sColType)) {
+            return 'INT';
+        }
+    }
+    return false;
 }
 
 
@@ -663,7 +815,8 @@ function lovd_queryDB_Old ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = 
             // We handle arrays gracefully.
             $sSQL .= '\'' . mysql_real_escape_string(implode(';', $sArg)) . '\'';
         } else {
-            $sSQL .= (preg_match('/^\-?[0-9]+(.[0-9]+)?$/', $sArg)? $sArg : '\'' . mysql_real_escape_string($sArg) . '\'');
+            // Numeric arguments WILL ALSO BE QUOTED because MySQL handles '01' very different from 01 for VARCHAR columns.
+            $sSQL .= '\'' . mysql_real_escape_string($sArg) . '\'';
         }
         $sSQL .= $aQuery[$nKey + 1];
     }

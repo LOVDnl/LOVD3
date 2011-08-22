@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-22
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -813,7 +813,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
+    $zData = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         require ROOT_PATH . 'inc-top.php';
@@ -830,7 +830,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     }
 
     // Write to log...
-    lovd_writeLog('Event', LOG_EVENT, 'successfully booted user ' . $_POST['username'] . ' (' . $_POST['name'] . ')');
+    lovd_writeLog('Event', LOG_EVENT, 'Booted user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
 
     // Return the user where they came from.
     header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);
@@ -860,6 +860,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
         lovd_showInfoTable('No such ID!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
+
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
         // Can't unlock someone that is not locked or lock someone that is already locked.
         require ROOT_PATH . 'inc-top.php';
@@ -873,7 +874,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID), true);
 
     // Write to log...
-    lovd_writeLog('Event', LOG_EVENT, 'successfully ' . ACTION . 'ed user ' . $zData['username'] . ' (' . $zData['name'] . ')');
+    lovd_writeLog('Event', LOG_EVENT, ucfirst(ACTION) . 'ed user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
 
     // Return the user where they came from.
     header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);

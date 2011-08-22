@@ -186,6 +186,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                         $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene));
                         if (!$q) {
                             // Silent error.
+                            // FIXME; maybe better to group the error messages, just like when editing?
                             lovd_writeLog('Error', LOG_EVENT, 'Gene entry ' . $sGene . ' - could not be added to screening ' . $nID);
                         } else {
                             $aSuccessGenes[] = $sGene;

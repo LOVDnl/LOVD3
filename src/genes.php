@@ -137,24 +137,22 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'class/REST2SOAP.php';
     $_DATA = new LOVD_Gene();
 
+    $sPath = $_PATH_ELEMENTS[0] . '?' . ACTION;
     if (GET) {
-        if (!isset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
-            $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION] = array();
+        if (!isset($_SESSION['work'][$sPath])) {
+            $_SESSION['work'][$sPath] = array();
         } 
-        
-        while (count($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]) >= 5) {
-            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][min(array_keys($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]))]);
+
+        while (count($_SESSION['work'][$sPath]) >= 5) {
+            unset($_SESSION['work'][$sPath][min(array_keys($_SESSION['work'][$sPath]))]);
         }
 
-        // Generate a random workID
-        $nTime = gettimeofday();
-        $_POST['workID'] = $nTime['sec'] . $nTime['usec'];
-        // FIXME; use $_POST['workID'] = date("U"); in case gettimeofday doesn't work on some systems and we need a quick fix.
-        
-        $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['step'] = '1';
+        // Generate an unique workID that is sortable.
+        $_POST['workID'] = (string) microtime(true);
+        $_SESSION['work'][$sPath][$_POST['workID']]['step'] = '1';
     }
-    
-    if ($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['step'] == '1') {
+
+    if ($_SESSION['work'][$sPath][$_POST['workID']]['step'] == '1') {
         if (POST) {
             lovd_errorClean();
 
@@ -228,7 +226,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 // Get NC from LOVD
                 $_BAR->setMessage('Checking for NC...');
                 $_BAR->setProgress(33);
-                preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches);
+                preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches); // FIXME; so what about chrM? Doesn't HGNC have those?
                 $sChromosome = $aMatches[1];
                 $sChromBand = $aMatches[2];
                 $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
@@ -274,8 +272,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $_BAR->setProgress(100);
                 $_BAR->setMessage('Information collected, now building form...');
                 $_BAR->setMessageVisibility('done', true);
-                $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['step'] = '2';
-                $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values'] = array(
+                $_SESSION['work'][$sPath][$_POST['workID']]['step'] = '2';
+                $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array(
                                                                   'id' => $sSymbol,
                                                                   'name' => $sGeneName,
                                                                   'chromosome' => $sChromosome,
@@ -335,8 +333,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-    if ($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['step'] == '2') {
-        $zData = $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values'];
+    if ($_SESSION['work'][$sPath][$_POST['workID']]['step'] == '2') {
+        $zData = $_SESSION['work'][$sPath][$_POST['workID']]['values'];
         if (count($_POST) > 1) {
             lovd_errorClean();
 
@@ -437,7 +435,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 // Add current user as the curator. This should also be in the transaction.
                 @lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
 
-                unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]);
+                unset($_SESSION['work'][$sPath][$_POST['workID']]);
 
                 // Thank the user...
                 header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_POST['id'] . '?authorize');
@@ -509,6 +507,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     $_DATA = new LOVD_Gene();
     $zData = $_DATA->loadEntry($sID);
 
+    $sPath = $_PATH_ELEMENTS[0] . '?' . ACTION;
     if (GET) {
         require ROOT_PATH . 'inc-lib-genes.php';
 
@@ -524,23 +523,20 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
         // Get NC from LOVD
         $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
 
-        if (!isset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
-            $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION] = array();
+        if (!isset($_SESSION['work'][$sPath])) {
+            $_SESSION['work'][$sPath] = array();
         } 
-        
-        while (count($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]) >= 5) {
-            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][min(array_keys($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]))]);
+
+        while (count($_SESSION['work'][$sPath]) >= 5) {
+            unset($_SESSION['work'][$sPath][min(array_keys($_SESSION['work'][$sPath]))]);
         }
 
-        // Generate a random workID
-        $nTime = gettimeofday();
-        $_POST['workID'] = $nTime['sec'] . $nTime['usec'];
-        // FIXME; use $_POST['workID'] = date("U"); in case gettimeofday doesn't work on some systems and we need a quick fix.
-
-        $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values']['genomic_references'] = $aRefseqGenomic;
+        // Generate an unique workID that is sortable.
+        $_POST['workID'] = (string) microtime(true);
+        $_SESSION['work'][$sPath][$_POST['workID']]['values']['genomic_references'] = $aRefseqGenomic;
     }
 
-    $zData['genomic_references'] = $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values']['genomic_references'];
+    $zData['genomic_references'] = $_SESSION['work'][$sPath][$_POST['workID']]['values']['genomic_references'];
     if (count($_POST) > 1) {
         lovd_errorClean();
 
@@ -603,7 +599,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             $aSuccess = array();
             $aFailed = array();
             foreach ($_POST['active_diseases'] as $nDisease) {
-                if (!in_array($nDisease, $zData['active_diseases']) && !empty($nDisease)) {
+                if ($nDisease && !in_array($nDisease, $zData['active_diseases'])) {
                     // Add disease to gene.
                     $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
                     if (!$q) {
@@ -620,7 +616,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                 lovd_writeLog('Event', LOG_EVENT, 'Disease information entr' . (count($aSuccess) == 1? 'y' : 'ies') . ' ' . implode(', ', $aSuccess) . ' successfully added to gene ' . $sID);
             }
 
-            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]);
+            unset($_SESSION['work'][$sPath][$_POST['workID']]);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1]);
@@ -1003,9 +999,9 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     print("\n" .
           '      </FORM>' . "\n\n");
 
-      // FIXME; disable JS functions authorize and unauthorize if not authorizing?
+    lovd_includeJS('lib/jQuery/jquery-ui-1.8.15.sortable.min.js');
+    // FIXME; disable JS functions authorize and unauthorize if not authorizing?
 ?>
-      <SCRIPT type='text/javascript' src='lib/jQuery/jquery-ui-1.8.15.sortable.min.js'></SCRIPT>
       <SCRIPT type='text/javascript'>
         $(function() {
                 $( '#curator_list' ).sortable({

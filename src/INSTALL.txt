@@ -3,14 +3,12 @@ LOVD v.3.0 INSTALLATION GUIDE
 
 REQUIREMENTS
 ============
-
-LOVD 3.0 requires a webserver (preferably Apache), PHP >= 4.3.0 and 
+LOVD 3.0 requires a webserver (preferably Apache), PHP >= 5.1.0 and 
 MySQL >= 4.1.
 
 
 PREPARATIONS
 ============
-
 To install LOVD, first copy and rename the standard config file
 config.ini.php-lovd to config.ini.php and edit it in, for example, a basic text
 editor. This is absolutely mandatory, because you will need to enter the MySQL
@@ -36,13 +34,20 @@ http://httpd.apache.org/docs/2.0/howto/htaccess.html
 More information about AllowOverride:
 http://httpd.apache.org/docs/2.0/mod/core.html#allowoverride
 
+
+USING A WEBSERVER DIFFERENT THAN APACHE
+=======================================
 If you use a different webserver, make sure to configure it to deny access to
-the config.ini.php file. LOVD will access the file through the filesystem.
+the config.ini.php file. LOVD will access the file through the filesystem. Also,
+the .htaccess file sets a couple of PHP options and enables mod_rewrite. If you
+use a different webserver, please disable the following PHP options:
+register_globals, magic_quotes_gpc, mysql.trace_mode.
+Also make sure there is "MultiViews" functionality, which allows a PHP file like
+"setup.php" to be accessed as "/setup".
 
 
 INSTALLATION
 ============
-
 To install LOVD on a remote webserver, upload the LOVD directory with all the
 files to the webserver by, for instance, FTP. If you install LOVD on your own
 computer, you do not need to follow this step.
@@ -54,14 +59,12 @@ itself. For more information, see the LOVD manual.
 
 QUESTIONS?
 ==========
-
 If you have any questions, please see our website: www.LOVD.nl
-For the FAQ, see www.LOVD.nl/3.0/faq.php
+For the FAQ, see www.LOVD.nl/3.0/faq
 
 
 LOVD DEVELOPMENT TEAM
 =====================
-
 The LOVD development team currently consists of:
 Ivo Fokkema
 Ivar Lugtenburg
@@ -69,3 +72,5 @@ Ivar Lugtenburg
 And is supported by:
 Johan den Dunnen
 Peter Taschner
+
+All from the Leiden University Medical Center, Leiden, Netherlands.

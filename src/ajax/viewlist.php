@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2011-05-24
- * For LOVD    : 3.0-pre-22
+ * Modified    : 2011-08-16
+ * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -41,18 +41,19 @@ if (empty($_GET['viewlistid']) || empty($_GET['object']) || !preg_match('/^[A-Z_
 $aNeededLevel =
          array(
                 'Column' => LEVEL_CURATOR,
+                'Custom_ViewList' => 0,
                 'Disease' => 0,
                 'Gene' => 0,
+                'Genome_Variant' => 0,
+                'Individual' => 0,
                 'Link' => LEVEL_MANAGER,
                 'Log' => LEVEL_MANAGER,
+                'Phenotype' => 0,
+                'Screening' => 0,
                 'Transcript' => 0,
+                'Transcript_Variant' => 0,
                 'User' => LEVEL_MANAGER,
                 'Variant' => 0, // FIXME; Remove later when object Variant no longer exists.
-                'Genome_Variant' => 0,
-                'Transcript_Variant' => 0,
-                'Individual' => 0,
-                'Screening' => 0,
-                'Phenotype' => 0,
               );
 if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = $aNeededLevel[$_GET['object']];
@@ -79,7 +80,7 @@ define('_INC_TOP_INCLUDED_', 'ajax');
 
 
 $sObjectID = '';
-if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant'))) {
+if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant', 'Custom_ViewList'))) {
     $sObjectID = $_GET['object_id'];
 }
 require $sFile;

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-22
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -76,6 +76,8 @@ define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicat
 define('LEVEL_MANAGER', 7);
 define('LEVEL_ADMIN', 9);
 
+define('STATUS_IN_PROGRESS', 1);
+define('STATUS_PENDING', 2);
 define('STATUS_HIDDEN', 4);
 define('STATUS_MARKED', 7);
 define('STATUS_OK', 9);
@@ -156,6 +158,8 @@ $_SETT = array(
                           ),
                 'data_status' =>
                      array(
+                            STATUS_IN_PROGRESS => 'In progress',
+                            STATUS_PENDING => 'Pending',
                             STATUS_HIDDEN => 'Non public',
                             STATUS_MARKED => 'Marked',
                             STATUS_OK => 'Public',
@@ -473,7 +477,10 @@ if (!class_exists('PDO')) {
     }
 }
 
-// Initiate Database Connection.
+
+
+// DMD_SPECIFIC; FIXME; can we get rid of this already?
+// Initiate Database Connection (OLD WAY).
 $_DB = @mysql_connect($_INI['database']['hostname'], $_INI['database']['username'], $_INI['database']['password']);
 if (!$_DB) {
     // No connection!
@@ -491,6 +498,14 @@ if (($sCharSet = mysql_client_encoding()) && $sCharSet != 'utf8') {
     // mysql_set_charset() is available only with PHP 5.2.3 and MySQL 5.0.7.
     @lovd_queryDB_Old('SET NAMES utf8');
 }
+
+
+
+// Initiate Database Connection (NEW WAY).
+require ROOT_PATH . 'class/PDO.php';
+$_DB = new LOVD_PDO('mysql:host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
+
+
 
 ini_set('default_charset','UTF-8');
 

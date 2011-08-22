@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-08-16
+ * Modified    : 2011-08-17
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -206,7 +206,7 @@ class LOVD_Gene extends LOVD_Object {
         }
         if (isset($aData['active_diseases']) && is_array($aData['active_diseases'])) {
             foreach ($aData['active_diseases'] as $nDisease) {
-                if ($nDisease && in_array($nDisease, $aDiseases)) {
+                if ($nDisease && !in_array($nDisease, $aDiseases)) {
                     lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease');
                 }
             }

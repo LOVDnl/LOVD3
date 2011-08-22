@@ -176,12 +176,8 @@ class LOVD_Screening extends LOVD_Custom {
             }
         }
 
-        $qGenes = lovd_queryDB_Old('SELECT id FROM ' . TABLE_GENES);
-        $aGenes = array();
-        while ($z = mysql_fetch_row($qGenes)) {
-            $aGenes[] = $z[0];
-        }
-        if (isset($aData['genes']) && is_array($aData['genes'])) {
+        $aGenes = lovd_getGeneList();
+        if (!empty($aData['genes']) && is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
                 if ($sGene && !in_array($sGene, $aGenes)) {
                     lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene');
@@ -235,8 +231,6 @@ class LOVD_Screening extends LOVD_Custom {
                  $this->buildViewForm(),
                  array(
                         array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, true),
-                      ),
-                 array(
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>General information</B>'),

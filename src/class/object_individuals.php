@@ -64,10 +64,10 @@ class LOVD_Individual extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'i.*, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id) AS diseaseids, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS diseases, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id SEPARATOR ";") AS _diseaseids, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS __diseases, ' .
                                            // FIXME; TABLE_PHENOTYPES heeft een individual ID, dus je kunt een gewone count(*) opvragen, je hebt geen lijst phenotype IDs nodig.
-                                           'GROUP_CONCAT(DISTINCT p.id, ";", p.diseaseid SEPARATOR ";;") AS phenotypes, ' .
+                                           'GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS _phenotypes, ' .
                                            // FIXME; een niet-standaard separator is misschien niet zo handig voor de standaardisatie.
                                            'GROUP_CONCAT(DISTINCT s.id SEPARATOR "|") AS screeningids, ' .
                                            'uo.id AS owner, ' .

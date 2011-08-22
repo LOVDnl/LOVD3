@@ -140,9 +140,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $_POST['diseaseid'] = $_GET['diseaseid'];
     }
     if (isset($_POST['diseaseid'])) {
-        $_POST['diseaseid'] = str_pad($_POST['diseaseid'], 5, "0", STR_PAD_LEFT);
+        $_POST['diseaseid'] = str_pad($_POST['diseaseid'], 5, '0', STR_PAD_LEFT);
+        // FIXME; een COUNT(*) is vaak sneller dan een mysql_num_rows().
+        // FIXME; deze code is toch bedoeld om te kijken of er kolommen actief zijn voor de gekozen ziekte? Dan is zoeken op individu niet nodig.
+        // FIXME; dit code block heeft wat commentaar nodig, waar 't voor is.
         if (!ctype_digit($_POST['diseaseid']) || !mysql_num_rows(lovd_queryDB_Old('SELECT i2d.diseaseid FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid'])))) {
-            lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease');
+            lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease or no data fields have been enabled for this disease.');
         }
     }
 
@@ -162,10 +165,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $aSelectDiseases[$aDisease['id']] = $aDisease['name'] . ' (' . $aDisease['symbol'] . ')';
             }
         } else {
-            // Only possible if the user types in a wrong individualid in the URL.
+            // Wrong individual ID, individual without diseases, or diseases without phenotype columns.
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('The individual #' . $_POST['individualid'] . ' does not have any disease entries yet, please go <A href="individuals/' . $_POST['individualid'] . '?edit">here</A> and add the disease(s) first.', 'warning');
+            lovd_showInfoTable('The individual #' . $_POST['individualid'] . ' does not have any disease entries yet, or none of the diseases have data fields enabled. Please go <A href="individuals/' . $_POST['individualid'] . '?edit">here</A> and add the disease(s) first' . ($_AUTH['level'] < LEVEL_CURATOR? '.' : ' or <A href="columns/Phenotype">here</A> and enable phenotype columns.'), 'warning');
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }
@@ -285,7 +288,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Edit an phenotype information entry');
     define('LOG_EVENT', 'PhenotypeEdit');
 
-    // Require manager clearance.
     require ROOT_PATH . 'inc-lib-columns.php';
     $aTableInfo = lovd_getTableInfoByCategory('Phenotype');
 
@@ -320,6 +322,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Prepare values.
             // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
             // Ivar: checkFields hoort de data niet aan te passen, maar alleen te checken, dus ben het niet helemaal met je eens.
+            // Ivo: Daar heb je gelijk in, maar technisch gesproken wordt de data niet veranderd -
+            //   de controle die hier staat (alleen curator en hoger mag owner en status aanpassen)
+            //   staat al in checkFields(), dus wordt hier dubbel gedaan. Eigenlijk staat hier dus:
+            //   $_POST['ownerid'] = (!empty($_POST['ownerid'])? $_POST['ownerid'] : $_AUTH['id']);
+            //   en dat doen (eigenlijk een standaard waarde invullen) lijkt me best in
+            //   checkFields() te passen. Sterker nog, objects::checkFields() heeft al dat soort
+            //   dingen voor selection lists en checkboxes.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['edited_by'] = $_AUTH['id'];

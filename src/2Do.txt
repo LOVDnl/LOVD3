@@ -1,13 +1,21 @@
 Prioritize:
 ===========
-- CUSTOM VIEWLIST:
-  * Add object_custom_viewlist.php
-    - inherit objects.php directly.
-    - Bevat *vooraf ingestelde* queries, aColumnsViewList.
-    - Data voor custom columns die er ook tussen moeten, komt uit join van TABLE_ACTIVE_COLS met TABLE_COLS.
-    - sObject = "Custom"
+- We're missing the ID_sort !!!
+- Ownerid => owned_by
+- Er zijn nog een paar database veranderingen, zie top inc-sql-tables.php.
+- CUSTOM VIEWLISTS:
+    - FIXME; De custom class haalt de gegevens van alle kolommen op (TABLE_COLS), MAAR public_view kan per gen anders zijn!!!
     - (later) doet ook custom links.
-- INCORPORATE PDO.
+  * URLS:
+    + /variants             -> genomic variants
+    + /variants/chrX        -> genomic variants, chromosome X only (MAPPING TO /variants WITH ADDED SEARCH TERMS)
+    + /variants/in_gene     -> all transcript variants joined to genomic variants, show transcript ID and gene
+    + /variants/DMD         -> transcript variants of DMD gene joined to genomic variants, show transcript ID and gene (MAPPING TO /variants/in_gene WITH ADDED SEARCH TERMS)
+    - /view                 -> MAPPING TO /view/variants+screenings+individuals+phenotypes
+    - /view/variants        -> combined genomic/transcript view, per gene; one line per (genomic) variant and all NMs horizontally added.
+    - /variants/0000000001  -> viewEntry() for genomic variant
+      * EXTEND with transcript info!
+- INCORPORATE PDO EVERYWHERE.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
 - (@Ivo) Ga naar viewlist, hersorteer, zoek, hersorteer. Terug kun je wel door sort, maar niet de undo van het zoeken.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
@@ -46,7 +54,7 @@ Prioritize:
 - Veranderingen zoals voorgesteld 2011-06-28?
   * Allele, genetic_origin, Phenotype/Inheritance
     - Current plans:
-        Variant/Allele:
+        Variant/Allele (Variant/Phase?):
         -unknown
         -paternal (confirmed)
         -paternal (inferred)

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-16
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -304,10 +304,8 @@ class LOVD_Object {
         }
 
         $nID = mysql_insert_id();
-        if (function_exists('lovd_getColumnType') && function_exists('lovd_getColumnLength')) { // Should be true when inc-lib-forms.php has been included.
-            if (substr(lovd_getColumnType(constant($this->sTable), 'id'), 0, 3) == 'INT') {
-                $nID = str_pad($nID, lovd_getColumnLength(constant($this->sTable), 'id'), '0', STR_PAD_LEFT);
-            }
+        if (substr(lovd_getColumnType(constant($this->sTable), 'id'), 0, 3) == 'INT') {
+            $nID = str_pad($nID, lovd_getColumnLength(constant($this->sTable), 'id'), '0', STR_PAD_LEFT);
         }
         return $nID;
     }
@@ -588,8 +586,6 @@ class LOVD_Object {
             $aColsToSkip = array($aColsToSkip);
         }
 
-        // FIXME; the needed function should then be in a different library because inc-lib-form.php is for forms, not for viewLists!
-        require_once ROOT_PATH . 'inc-lib-form.php'; // For checking column type.
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
 
         // First, check if entries are in the database at all.
@@ -615,10 +611,11 @@ class LOVD_Object {
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
                 $CLAUSE = (strpos($aCol['db'][0], '.') === false? 'HAVING' : 'WHERE');
-                $sColType = lovd_getColumnType(constant($this->sTable), rtrim($sColumn, '_'));
-                if (!$sColType && $aCol['db'][2] !== true) {
-                    // Column type of an alias may be given by LOVD.
+                if ($aCol['db'][2] !== true) {
+                    // Column type of an alias is given by LOVD.
                     $sColType = $aCol['db'][2];
+                } else {
+                    $sColType = lovd_getColumnType(constant($this->sTable), rtrim($sColumn, '_'));
                 }
                 // Allow for searches where the order of words is forced by enclosing the values with double quotes; 
                 // Replace spaces in sentences between double quotes so they don't get exploded.
@@ -930,6 +927,7 @@ class LOVD_Object {
             // FIXME; incorporate garbage collection?
             $_SESSION['viewlists'][$sViewListID]['row_link'] = $this->sRowLink; // Implies array creation.
             //$_SESSION['viewlists'][$sViewListID]['last_used'] = time(); // For garbage collection (not yet implemented).
+            // ALTERNATIVE: create JS function lovd_restoreRowLink_XXX() (XXX == viewListID) that restores the rowLink, also after an Ajax Call.
         }
 
         while ($zData = mysql_fetch_assoc($q)) {

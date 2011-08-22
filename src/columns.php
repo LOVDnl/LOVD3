@@ -264,8 +264,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
           '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . ($sObject != ''? $aTableInfo['unit'] . 's/' . $sObject : 'columns/' . $sCategory) . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" .
           '      </FORM>' . "\n\n");
 
+    lovd_includeJS('lib/jQuery/jquery-ui-1.8.15.sortable.min.js');
 ?>
-      <SCRIPT type='text/javascript' src='lib/jQuery/jquery-ui-1.8.15.sortable.min.js'></SCRIPT>
       <SCRIPT type='text/javascript'>
         $(function() {
                 $( '#column_list' ).sortable({

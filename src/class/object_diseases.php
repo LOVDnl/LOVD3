@@ -139,12 +139,12 @@ class LOVD_Disease extends LOVD_Object {
                       );
         parent::checkFields($aData);
 
-        $qGenes = lovd_getGeneList();
+        $aGenes = lovd_getGeneList();
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
         if (isset($aData['genes']) && is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
-                if (!in_array($sGene, $aGenes) || empty($sGene)) {
+                if (!in_array($sGene, $aGenes)) {
                     lovd_errorAdd('genes', htmlspecialchars($sGene) . 'does not exist');
                 }
             }

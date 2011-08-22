@@ -82,8 +82,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         if ($_AUTH['level'] >= LEVEL_OWNER) {
             $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
             $sNavigation .= ' | <A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
+            // You can only add phenotype information to this individual, when there are phenotype columns enabled.
+            // FIXME; een COUNT(*) is vaak efficienter, omdat er dan geen data verstuurd hoeft te worden.
             if (mysql_num_rows(lovd_queryDB_Old('SELECT i2d.individualid FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID)))) {
-                $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype to individual</A>';
+                $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype information to individual</A>';
             }
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
@@ -100,40 +102,40 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    $_GET['search_individualid'] = $nID;
-    $_GET['search_diseaseid'] = (!empty($zData['diseaseids'])? str_replace(',', '|', $zData['diseaseids']) : '0');
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Diseases', 'H4');
     if (!empty($zData['diseases'])) {
+
+        // List of diseases associated with this person.
+        $_GET['search_diseaseid'] = implode('|', $zData['diseaseids']);
         require ROOT_PATH . 'class/object_diseases.php';
         $_DATA = new LOVD_Disease();
         $_DATA->viewList(false, 'diseaseid', true, true);
         print('<BR><BR>' . "\n\n");
 
+        // List of phenotype entries associated with this person, per disease.
+        $_GET['search_individualid'] = $nID;
         lovd_printHeader('Phenotypes', 'H4');
         if (!empty($zData['phenotypes'])) {
-            // FIXME; deze code heeft commentaar nodig. Ik snap niet waar de array_map voor is?
-            $zData['diseases'] = explode(';;', $zData['diseases']);
-            $zData['diseases'] = array_map('explode', array_fill(0, count($zData['diseases']),';'), $zData['diseases']);
             require ROOT_PATH . 'class/object_phenotypes.php';
             foreach($zData['diseases'] as $aDisease) {
-                list($id, $symbol, $name) = $aDisease;
-                if (substr_count($zData['phenotypes'], ';' . $id)) {
-                    $_GET['search_diseaseid'] = $id;
-                    $_DATA = new LOVD_Phenotype($id);
+                list($nDiseaseID, $sSymbol, $sName) = $aDisease;
+                if (in_array($nDiseaseID, $zData['phenotypes'])) {
+                    $_GET['search_diseaseid'] = $nDiseaseID;
+                    $_DATA = new LOVD_Phenotype($nDiseaseID);
                     $_DATA->setSortDefault('phenotypeid');
-                    print('<B>' . $name . ' (<A href="diseases/' . $id . '">' . $symbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $id . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
+                    print('<B>' . $sName . ' (<A href="diseases/' . $nDiseaseID . '">' . $sSymbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $nDiseaseID . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
                     $_DATA->viewList(false, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
                 }
             }
         } else {
             lovd_showInfoTable('No phenotype entries found for this individual', 'stop');
         }
+        unset($_GET['search_individualid']);
+        unset($_GET['search_diseaseid']);
     } else {
         lovd_showInfoTable('No disease entries found for this individual', 'stop');
     }
-    unset($_GET['search_individualid']);
-    unset($_GET['search_diseaseid']);
 
     $_GET['search_screeningids'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
     print('<BR><BR>' . "\n\n");

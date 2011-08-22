@@ -39,6 +39,7 @@
 // Human readable refseq velden staan nu bij gen, moeten naar transcript???
 // Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
 // FIXME; phenotype entries moeten ook status id hebben!!!
+// FIXME; remove g from position_g_start etc.
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {

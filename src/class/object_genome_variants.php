@@ -92,11 +92,13 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
-                 $this->buildViewEntry(),
                  array(
+                        'chromosome' => 'Chromosome',
                         'allele_' => 'Allele',
                         'pathogenicid' => 'Pathogenicity',
-                        'chromosome' => 'Chromosome',
+                      ),
+                 $this->buildViewEntry(),
+                 array(
                         'position_g_start' => 'Genomic start position',
                         'position_g_end' => 'Genomic end position',
                         'type' => 'Type',
@@ -119,7 +121,10 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'db'   => array('screeningids', 'ASC', 'TEXT')),
                         'id' => array(
                                     'view' => array('Variant ID', 90),
-                                    'db'   => array('vog.id', 'ASC', true))
+                                    'db'   => array('vog.id', 'ASC', true)),
+                        'chromosome' => array(
+                                    'view' => array('Chr', 50),
+                                    'db'   => array('vog.chromosome', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(

@@ -41,9 +41,16 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PATH_ELEMENTS[1]))) {
     // URL: /variants
-    // View all entries.
+    // URL: /variants/chrX
+    // View all genomic variant entries, optionally restricted by chromosome.
+
+    if (!empty($_PATH_ELEMENTS[1])) {
+        $sChr = $_PATH_ELEMENTS[1];
+    } else {
+        $sChr = '';
+    }
 
     define('PAGE_TITLE', 'View genomic variants');
     require ROOT_PATH . 'inc-top.php';
@@ -51,7 +58,45 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
-    $_DATA->viewList(false, 'screeningids');
+    $aColsToHide = array('screeningids');
+    if ($sChr) {
+        $_GET['search_chromosome'] = '="' . substr($sChr, 3) . '"';
+        $aColsToHide[] = 'chromosome';
+    }
+    $_DATA->viewList(false, $aColsToHide);
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
+    // URL: /variants/in_gene
+    // URL: /variants/DMD
+    // View all entries in any gene or a specific gene.
+
+    if ($_PATH_ELEMENTS[1] == 'in_gene') {
+        $sGene = '';
+    } elseif (in_array($_PATH_ELEMENTS[1], lovd_getGeneList())) {
+        $_GET['search_geneid'] = $sGene = $_PATH_ELEMENTS[1];
+    } else {
+        // Command/gene not understood.
+        // FIXME; perhaps a HTTP/1.0 501 Not Implemented? If so, provide proper output (gene not found) and
+        //   test if browsers show that output or their own error page. Also, then, use the same method at
+        //   the bottom of all files, as a last resort if command/URL is not understood. Do all of this LATER.
+        exit;
+    }
+
+    define('PAGE_TITLE', 'View transcript variants' . (!$sGene? '' : ' in ' . $sGene));
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    require ROOT_PATH . 'class/object_custom_viewlists.php';
+    $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
+    $_DATA->viewList(false, (!$sGene? '' : array('geneid', 'chromosome')));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -265,6 +310,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 define('PAGE_TITLE', 'Create a new variant entry for transcript #' . $_GET['transcriptid']);
             }
         } else {
+            // FIXME; als het een vereiste is, dat er een transcript ID gegeven wordt die numeriek is, zet dat dan in de elseif van regel 261.
             exit;
         }
 

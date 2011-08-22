@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-22
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -431,6 +431,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                     'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                                     'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP COLUMN edited_date',
                                     'UPDATE ' . TABLE_COLS . ' SET form_type = "ID||text|15" WHERE id = "VariantOnGenome/DBID" AND form_type = "ID||text|40"',
+                                  ),
+                    '3.0-alpha-04' =>
+                             array(
+                                    'INSERT INTO ' . TABLE_DATA_STATUS . ' VALUES (' . STATUS_IN_PROGRESS . ', "In progress")',
+                                    'INSERT INTO ' . TABLE_DATA_STATUS . ' VALUES (' . STATUS_PENDING . ', "Pending")',
                                   ),
                   );
 
