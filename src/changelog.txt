@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Alpha 04
- * 2011-09-05
+ * 2011-09-01
  *********/
  * For phenotype data entries, the status can now also be set.
  * Fixed bug; The reset password functionality was non functional.
@@ -38,6 +38,8 @@
    lovd_queryDB() will now always quote integers.
  * Implemented the /variants/chr# URL showing a viewList of all genomic variants
    on a specific chromosome.
+ * Fixed bug; Non-mandatory selection lists did not have the "(Optional)" suffix
+   on data entry forms.
 
 
  * Added minified jQuery 1.6.2 to the newly created lib/jQuery folder.
@@ -50,27 +52,32 @@
    in LOVD.
  * Fixed bug; sorting in genes?sortCurator & columns?order now also works for IE
    by using jQuery UI sortable.
+   Fixed #1: "Drag and drop sorting does not work in IE 8".
  * Fixed bug; Changed the temporary memory leak fix to a solid permanent fix in
    genes?create, genes?edit & transcripts?create.
  * Renamed 'inc-js-insert_custom_links.php' to 'inc-js-custom_links.php'.
  * Implemented deleteEntry in users?delete & built in a check in users?(un)lock
    to see if a user is already (un)locked.
- * Fixed bug; in phenotype?create now nothing happens when the user selects no disease, but now also checks the input for invalid diseaseids. Also only diseases that have custom columns enabled will be selectable now.   ** Please clarify **
+ * Fixed bug; In phenotype?create it is now mandatory to select a disease, and
+   also implemented checks for a valid diseaseid. Also only diseases that have
+   custom columns enabled will be selectable now.
  * If the individual has only one disease, then phenotypes?create selects that one automatically and goes to the form. ** Please clarify (possibly by simplifying, the changelog is for end users, not so much for developers!) **
- * The diseaseid can also be sent through a get variable in the URL in phenotypes?create. ** It's better to explain this in a way that end users are interested in; "Implemented one-click navigation from the individual's detailed view to the form to add phenotype information on a certain disease" **
+ * The diseaseid can also be sent through a GET variable in the URL in phenotypes?create. ** It's better to explain this in a way that end users are interested in; "Implemented one-click navigation from the individual's detailed view to the form to add phenotype information on a certain disease" **
  * Added a gene selection box in screenings?create & screenings?edit. ** Perhaps "Fixed bug; Couldn't select which genes were screened on screening data entry forms." **
- * Added a 'Add phenotype to disease' button to the individual viewEntry for each disease.
- * Changed all references to inc-js-insert-custom-links.php to the new file inc-js-custom_links.php and removed the old file.
+ * Added a 'Add phenotype to disease' button to the individual viewEntry for each disease.  *** This is pretty much the same as two lines before. It can be separated in the SVN log, but here I would combine them **
+ * Changed all references to inc-js-insert-custom-links.php to the new name
+   inc-js-custom_links.php and removed the old file.
  * Fixed bug; lovd_AJAX_viewListAddNextRow() now works properly in all browsers.
- * Fixed bug; lovd_incluseJS() can now also handle arguments that include a path
-   name.
- * Fixed bug; in lovd_viewForm() no longer can a single selection list have a
-   "select all" flag.
- * Fixed bug; fixed the join from TABLE_SHARED_COLS to TABLE_VARIANTS_ON_TRANSCRIPTS in object_custom.php.
+ * Fixed bug; lovd_includeJS() can now also handle files in a different path.
+ * Fixed bug; lovd_viewForm() allowed single selection lists to have a "select
+   all" link.
+ * Fixed bug; Fixed the join from TABLE_SHARED_COLS to TABLE_VARIANTS_ON_TRANSCRIPTS in object_custom.php.  *** Could a user get to this error? If not (only in development code), then no need to mention it here ***
  * Optimized & cleaned the transcripts?create code.
- * transcripts/<gene symbol> now also works and is basically the same as transcripts with a search on <gene symbol>.
- * Improved navigation from data to data by adding some extra viewLists.
- * Implemented a working variants?create&reference=Transcript
+ * Transcripts/<gene symbol> now also works and is basically the same as the
+   /transcripts view with a search on <gene symbol>.
+ * Improved navigation between linked data types by adding some extra viewLists
+   and links.
+ * Implemented a working form to create variants on transcript level.
 
 
 /*******************

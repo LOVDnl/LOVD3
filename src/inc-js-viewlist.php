@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2011-08-18
+ * Modified    : 2011-08-26
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -126,30 +126,27 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
                     if (objHTTP.responseText.length > 100) {
                         // Successfully retrieved stuff.
                         var sResponse = objHTTP.responseText;
-                        // clone last TR and fill in the new response data and returns the row.
-                        var newRow = $( '#viewlistTable_'+sViewListID+' tr:last' ).clone();
-                        var attrPatt = /<TR( ([a-z]+)="(.+?)")/i;
-                        attrPatt.compile(attrPatt);
-                        var valPatt = />(.+)<\/TD/;
-                        valPatt.compile(valPatt);
-                        // This is the same as ltrim and rtrim, but this works for all IE versions also.
-                        // The split command is basically an explode.
-                        var aResponse = sResponse.replace(/^\s*/, ''). replace(/\s*$/, '').split(/\n/);
-                        while (attrPatt.test(aResponse[0])) {
-                            attr = attrPatt.exec(aResponse[0]);
-                            $(newRow).attr(attr[2], attr[3]);
-                            aResponse[0] = aResponse[0].replace(attr[1], '');
-                        }
+                        // Clone last TR and fill in the new response data and returns the row.
+                        var newRow = $('#viewlistTable_' + sViewListID + ' tr:last').clone();
                         // For some reason .clone() adds a style attribute to the row. Let's remove it.
                         $(newRow).removeAttr('style');
-                        // Unset first element of aResponse(which is the TR).
-                        aResponse.splice(0,1);
-                        for (i in aResponse) {
-                            sInput = aResponse[i];
-                            var value = valPatt.exec(sInput);
-                            $(newRow).children().get(i).innerHTML = value[1];
+                        var attributes = new RegExp(/<TR( ([a-z]+)="(.+?)")/i);
+                        var values = new RegExp(/>(.+)<\/TD/);
+                        var aResponse = jQuery.trim(sResponse).split(/\n/);
+                        // Overwrite all attributes of newRow with the attributes given row retrieved with Ajax.
+                        while (attributes.test(aResponse[0])) {
+                            aAttributes = attributes.exec(aResponse[0]);
+                            $(newRow).attr(aAttributes[2], aAttributes[3]);
+                            aResponse[0] = aResponse[0].replace(aAttributes[1], ''); // Remove attribute from row string so we can get the next attribute.
                         }
-                        newRow.insertAfter($( '#viewlistTable_'+sViewListID+' tr:last' ));
+                        // Unset first element of aResponse (which is the TR).
+                        aResponse.splice(0,1);
+                        // Loop through TDs to copy their values.
+                        for (i in aResponse) {
+                            var aValue = values.exec(aResponse[i]);
+                            $(newRow).children().get(i).innerHTML = aValue[1];
+                        }
+                        newRow.insertAfter($('#viewlistTable_' + sViewListID + ' tr:last'));
                         return true;
                     }
                 }

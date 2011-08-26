@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-08-18
+ * Modified    : 2011-08-25
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -182,7 +182,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if (!empty($_POST['genes']) && is_array($_POST['genes'])) {
                 foreach ($_POST['genes'] as $sGene) {
                     // Add disease to gene.
-                    if ($sGene) {
+                    if (in_array($sGene, lovd_getGeneList())) {
                         $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene));
                         if (!$q) {
                             // Silent error.
@@ -291,7 +291,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Remove genes.
             $aToRemove = array();
             foreach ($zData['genes'] as $sGene) {
-                if ($sGene && !in_array($sGene, $_POST['genes'])) {
+                if (!in_array($sGene, $_POST['genes'])) {
                     // User has requested removal...
                     $aToRemove[] = $sGene;
                 }
@@ -311,7 +311,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $aSuccess = array();
             $aFailed = array();
             foreach ($_POST['genes'] as $sGene) {
-                if (!in_array($sGene, $zData['genes']) && !empty($sGene)) {
+                if (!in_array($sGene, $zData['genes']) && in_array($sGene, lovd_getGeneList())) {
                     // Add gene to screening.
                     $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene));
                     if (!$q) {

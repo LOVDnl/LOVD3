@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-08-17
+ * Modified    : 2011-08-25
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -112,11 +112,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // URL: /phenotypes?create
     // Create a new entry.
 
+    // FIXME; ik vind nog steeds dat vooral het begin van deze code nog enigszins rommelig is.
+    //   De structuur van de code voor de controle van de individual ID en het invullen er van,
+    //   is goed af te leiden van transcripts?create.
     define('LOG_EVENT', 'PhenotypeCreate');
 
     lovd_requireAUTH();
     
-    if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
+    if (!empty($_GET['target']) && ctype_digit($_GET['target'])) {
         $_GET['target'] = str_pad($_GET['target'], 8, "0", STR_PAD_LEFT);
         if (mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id=?', array($_GET['target'])))) {
             $_POST['individualid'] = $_GET['target'];
@@ -136,10 +139,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-lib-form.php';
     lovd_errorClean();
 
-    if (isset($_GET['diseaseid'])) {
+    if (!empty($_GET['diseaseid'])) {
         $_POST['diseaseid'] = $_GET['diseaseid'];
     }
-    if (isset($_POST['diseaseid'])) {
+    if (!empty($_POST['diseaseid'])) {
         $_POST['diseaseid'] = str_pad($_POST['diseaseid'], 5, '0', STR_PAD_LEFT);
         // FIXME; een COUNT(*) is vaak sneller dan een mysql_num_rows().
         // FIXME; deze code is toch bedoeld om te kijken of er kolommen actief zijn voor de gekozen ziekte? Dan is zoeken op individu niet nodig.
@@ -150,7 +153,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     }
 
     require ROOT_PATH . 'class/object_phenotypes.php';
-    if (isset($_POST['diseaseid'])) {
+    if (!empty($_POST['diseaseid'])) {
         $_DATA = new LOVD_Phenotype($_POST['diseaseid']);
     } else {
         $_DATA = new LOVD_Phenotype();

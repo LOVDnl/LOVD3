@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-08-19
+ * Modified    : 2011-08-25
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -211,13 +211,13 @@ class LOVD_Screening extends LOVD_Custom {
 
         // Get list of genes.
         $aGenesForm = array();
-        $qData = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY name');
+        $qData = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
         if (!$nData) {
             $aGenesForm = array('' => 'No gene entries available');
         }
         while ($r = mysql_fetch_row($qData)) {
-            $aGenesForm[$r[0]] = lovd_shortenString($r[1], 50) . ' (' . $r[0] . ')';
+            $aGenesForm[$r[0]] = $r[0] . ' (' . lovd_shortenString($r[1], 50) . ')';
         }
         $nFieldSize = (count($aGenesForm) < 10? count($aGenesForm) : 10);
 

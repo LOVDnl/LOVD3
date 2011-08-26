@@ -1,5 +1,13 @@
 Prioritize:
 ===========
+- WHEN TO RELEASE? SEPTEMBER 1?
+- Where still in the wrong order, make sure genes are presented ID first.
+- Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML achor; id_ == default.
+  * Currently, Object::prepareData() puts the link in every id_ column it can find.
+- LOVD 3.0 heeft libxml nodig, wordt dat ergens gecontroleerd?!!??
+  * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
+- libcurl gebruiken? Handig voor diverse connecties. Maar wel extra dependency! Bijv. Ubuntu heeft 'm niet standaard.
+- http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - We're missing the ID_sort !!!
 - Ownerid => owned_by
 - Er zijn nog een paar database veranderingen, zie top inc-sql-tables.php.
@@ -51,6 +59,8 @@ Prioritize:
 - Veranderingen zoals besloten 2011-06-28
   * Variant/Times_reported / chromosomes_found o.i.d.?
 - (@Ivar) BUG: Gene mag niet een al gekozen symbol hebben, check ook in stap 2! (Ivar 2011-08-15: Kan dit probleem niet reproduceren... symbol komt uit zData in stap 2!) 
+    Ivo: Het punt was volgens mij dat na het doorlopen van stap 1 inmiddels 't gen kan zijn aangemaakt, en heel stap 2 daar nergens meer op controleert.
+      Overigens, $zData is eigenlijk fout, aangezien 't niet uit de database komt, maar uit $_SESSION.
 - Veranderingen zoals voorgesteld 2011-06-28?
   * Allele, genetic_origin, Phenotype/Inheritance
     - Current plans:
@@ -125,15 +135,7 @@ Prioritize:
             senv:Server - string index out of range
     (met genomic ref hebben we dezelfde foutmelding)
     * Ivar: het gaat hier specifiek om de UD die mist. Mutalyzer zil deze hebben voor het binnen halen van de transcript gegevens.
-- lovd_queryDB_Old("SQL", true) geeft een query error for some reason (should be lovd_queryDB_Old("SQL", array(), true) of course.
-- Transcript aanmaken totaal onmogelijk op shared installatie (traag, server (apache?) loopt vast)
-  * Ivar: Dit zou door de tijdelijke mem leak fix sneller moeten gaan. Zorg er overigens wel voor dat je alle genes een keer edit ofzo.
-          Dit geeft Mutalyzer de mogelijkheid om een UD nummer erbij te zoeken. Anders moeten we hier een script voor schrijven.
-- (@Ivar) Gen selecteren met transcript aanmaken niet handig; symbol staat niet vooraan (Johan wil 't zo? Ivar: Ja).
-  * ViewList als oplossing? Page size klein houden?
-- Geheugengebruik op shared install is absurd hoog (2 GB per Apache thread)
-  * Zelfde nodig met viewList data in $_SESSION? Blijft ook hangen.
-- Ik heb het idee dat $bHalt in lovd_queryDB_Old() veel vaker true dan false zou moeten zijn. Default op true zetten?
+- Geheugengebruik hoog vanwege session: Ook fix nodig voor viewList data? Blijft ook hangen.
 - Vanaf beta moeten bij bugfixes de datum en versie gezet worden.
 - Bij installatie controleren of er een mailserver is? Poort 25 check?
 
