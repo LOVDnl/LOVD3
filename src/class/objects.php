@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-08-16
+ * Modified    : 2011-08-25
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -141,6 +141,7 @@ class LOVD_Object {
                 continue;
             }
             @list($sHeader, $sHelp, $sType, $sName) = $aField;
+            $sNameClean = preg_replace('/^\d{5}_/', '', $sName);
 
             // Mandatory fields, as defined by child object.
             if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
@@ -148,11 +149,11 @@ class LOVD_Object {
             }
 
             // Checking free text fields for max length, data types, etc.
-            if (in_array($sType, array('text', 'textarea')) && $sMySQLType = lovd_getColumnType(constant($this->sTable), $sName)) {
+            if (in_array($sType, array('text', 'textarea')) && $sMySQLType = lovd_getColumnType(constant($this->sTable), $sNameClean)) {
                 // FIXME; we're assuming here, that $sName equals the database name. Which is true is probably most/every case, but even so...
 
                 // Check max length.
-                $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sName);
+                $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
                 if (!empty($aData[$sName]) && strlen($aData[$sName]) > $nMaxLength) {
                     lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to ' . $nMaxLength . ' characters, you entered ' . strlen($aData[$sName]) . '.');
                 }
@@ -399,6 +400,13 @@ class LOVD_Object {
         // FIXME; hier mist commentaar.
         if (isset($zData['edited_by_']) && $zData['edited_by_'] == 'N/A') {
             $zData['edited_date' . ($sView == 'list'? '' : '_')] = 'N/A';
+        }
+
+        if ($sView == 'list') {
+            // By default, we put an anchor in the id_ field, if present.
+            if ($zData['row_link'] && array_key_exists('id_', $this->aColumnsViewList) && $zData['id']) {
+                $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            }
         }
 
         return $zData;
@@ -931,6 +939,7 @@ class LOVD_Object {
         }
 
         while ($zData = mysql_fetch_assoc($q)) {
+            // If row_id is not given by the database, but it should be created according to some format ($this->sRowID), put the data's ID in this format.
             if (!isset($zData['row_id'])) {
                 if ($this->sRowID !== '' && isset($zData['id'])) {
                     $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
@@ -938,6 +947,7 @@ class LOVD_Object {
                     $zData['row_id'] = '';
                 }
             }
+            // If row_link is not given by the database, but it should be created according to some format ($this->sRowLink), but the data's ID and the viewList's ID in this format.
             if (!isset($zData['row_link'])) {
                 if ($this->sRowLink !== '' && isset($zData['id'])) {
                     $zData['row_link'] = str_replace(array('{{ID}}', '{{ViewListID}}'), array(rawurlencode($zData['id']), $sViewListID), $this->sRowLink);
@@ -945,6 +955,7 @@ class LOVD_Object {
                     //$zData['row_link'] = preg_replace_callback('/\{\{zData_(\w+)\}\}/', create_function('$aRegs', 'global $zData; return rawurlencode($zData[$aRegs[1]]);'), $zData['row_link']);
                     // FIXME; sorry, couldn't figure out how to do this in one line. Suggestions are welcome.
                     foreach ($zData as $key => $val) {
+                        // Also allow data from $zData to be put into the row link.
                         $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_link']);
                     }
                 } else {

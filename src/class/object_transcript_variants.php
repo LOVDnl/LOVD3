@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-08-19
+ * Modified    : 2011-08-25
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -47,6 +47,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     var $sCategory = 'VariantOnTranscript';
     var $sTable = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
     var $bShared = true;
+    var $aTranscripts = array();
 
 
 
@@ -101,26 +102,54 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'transcriptid' => array(
                                     'view' => array('Transcript ID', 90),
                                     'db'   => array('vot.transcriptid', 'ASC', true)),
-                        'id' => array(
+                        'id_' => array(
                                     'view' => array('Variant ID', 90),
                                     'db'   => array('vot.id', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(
                       ));
-        
-        $this->sSortDefault = 'id';
-    
-        parent::LOVD_Object();
+
+        $this->sSortDefault = 'transcriptid';
+        $qTranscripts = lovd_queryDB_Old('SELECT id, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid=? ORDER BY id_ncbi', array($sObjectID));
+        While($r = mysql_fetch_row($qTranscripts)) {
+            $this->aTranscripts[] = $r;
+        }
+
+        $this->sRowLink = 'variants/{{ID}}';
     }
 
 
 
 
     
+    function buildViewForm ($sPrefix = '') {
+        return parent::buildViewForm($sPrefix);
+    }
+    
+    
+    
+    
+    
     function checkFields ($aData)
     {
-        // STUB
+        // Checks fields before submission of data.
+        foreach($this->aTranscripts as $aTranscript) {
+            list($nTranscriptID, $sTranscriptNM) = $aTranscript;
+            foreach ($this->aColumns as $sCol => $aCol) {
+                $sCol = $nTranscriptID . '_' . $sCol;
+                if ($aCol['mandatory']) {
+                    $this->aCheckMandatory[] = $sCol;
+                }
+                if (isset($aData[$sCol])) {
+                    $this->checkInputRegExp($sCol, $aData[$sCol]);
+                    $this->checkSelectedInput($sCol, $aData[$sCol]);
+                }
+            }
+        }
+
+        LOVD_Object::checkFields($aData);
+
         lovd_checkXSS();
     }
 
@@ -130,24 +159,13 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
     function getForm ()
     {
-        $this->aFormData = array_merge(
-                 array(
-                        array('', '', 'print', '<B>Transcript variant information</B>'),
-                        'hr',
-                      ),
-                 $this->buildViewForm(),
-                 array(
-                        'hr',
-'authorization_skip' => 'skip',
- 'authorization_hr1' => 'hr',
-     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
- 'authorization_hr2' => 'hr',
-                        'skip',
-                      ));
-                      
-        if (ACTION != 'edit') {
-            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+        $this->aFormData = array();
+        $this->aFormData[] = 'skip';
+        foreach($this->aTranscripts as $aTranscript) {
+            list($nTranscriptID, $sTranscriptNM) = $aTranscript;
+            $this->aFormData = array_merge($this->aFormData, array(array('', '', 'print', '<B>Transcript variant on ' . $sTranscriptNM . '</B>')), $this->buildViewForm($nTranscriptID . '_'), array('skip'));
         }
+        unset($this->aFormData[max(array_keys($this->aFormData))]);
         
         return parent::getForm();
     }
@@ -155,6 +173,25 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
 
+    function insertAll ($aData, $aFields = array())
+    {
+        foreach($this->aTranscripts as $aTranscript) {
+            list($nTranscriptID, $sTranscriptNM) = $aTranscript;
+            foreach($aFields as $sField) {
+                if (strpos($sField, '/')) {
+                    $aData[$sField] = $aData[$nTranscriptID . '_' . $sField];
+                }
+            }
+            $aData['transcriptid'] = $nTranscriptID;
+            parent::insertEntry($aData, $aFields);
+        }
+        return $this->aTranscripts;
+    }
+    
+    
+    
+    
+    
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.

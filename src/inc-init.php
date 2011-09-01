@@ -76,8 +76,8 @@ define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicat
 define('LEVEL_MANAGER', 7);
 define('LEVEL_ADMIN', 9);
 
-define('STATUS_IN_PROGRESS', 1);
-define('STATUS_PENDING', 2);
+define('STATUS_IN_PROGRESS', 1); // Submission not yet completed.
+define('STATUS_PENDING', 2);     // Submission completed and curator notified, but awaiting curation.
 define('STATUS_HIDDEN', 4);
 define('STATUS_MARKED', 7);
 define('STATUS_OK', 9);

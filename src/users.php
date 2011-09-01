@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-08-22
+ * Modified    : 2011-08-31
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -449,7 +449,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
     // Find curated genes and see if they're alone.
-    $q = lovd_queryDB_Old('SELECT DISTINCT geneid FROM lovd_v3_users2genes WHERE geneid NOT IN (SELECT DISTINCT geneid FROM lovd_v3_users2genes WHERE userid != ? AND allow_edit = 1)', array($nID), true);
+    $q = lovd_queryDB_Old('SELECT DISTINCT geneid FROM ' . TABLE_USERS2GENES . ' WHERE geneid NOT IN (SELECT DISTINCT geneid FROM ' . TABLE_USERS2GENES . ' WHERE userid != ? AND allow_edit = 1)', array($nID), true);
     $aCuratedGenes = array();
     while ($r = mysql_fetch_row($q)) {
         // Gene has no curator, and user is going to be deleted!

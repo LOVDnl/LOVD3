@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-08-19
+ * Modified    : 2011-09-01
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -183,21 +183,16 @@ class LOVD_Individual extends LOVD_Custom {
 
         // FIXME; eerst een concat om daarna te exploden???
         $qDiseases = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES, array());
-        $aDiseases = mysql_fetch_row($qDiseases);
-        $aDiseases = explode(',', $aDiseases[0]);
+        list($zDiseases) = mysql_fetch_row($qDiseases);
+        $aDiseases = explode(',', $zDiseases);
         // FIXME; ik denk dat de query naar binnen deze if moet.
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
         // FIXME; parent::checkFields() heeft er toch al voor gezorgd dat $aData['active_diseases'] bestaat en een array is, of niet?
         if (isset($aData['active_diseases'])) {
-            foreach ($aData['active_diseases'] as $sDisease) {
-                if (!in_array($sDisease, $aDiseases)) {
-                    if ($sDisease != 'None') {
-                        // FIXME; een if binnen een if kan ook in één if.
-                        // FIXME; ik stel voor hiervan te maken "value ' . htmlspecialchars($sDisease) . ' is not a valid disease" of zoiets.
-                        // Overigens is het volgens mij $nDisease.
-                        lovd_errorAdd('active_diseases', 'Please select a proper disease in the \'This gene has been linked to these diseases\' selection box');
-                    }
+            foreach ($aData['active_diseases'] as $nDisease) {
+                if ($nDisease && !in_array($nDisease, $aDiseases)) {
+                    lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease');
                 }
             }
         }
@@ -217,7 +212,9 @@ class LOVD_Individual extends LOVD_Custom {
         }
 
         if (!empty($_POST['statusid'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $_SETT['data_status'])) {
+            $aSelectStatus = $_SETT['data_status'];
+            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_IN_PENDING]);
+            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $aSelectStatus)) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
@@ -236,39 +233,34 @@ class LOVD_Individual extends LOVD_Custom {
     {
         // Build the form.
         global $_AUTH, $_SETT;
-        
+
         // Get list of diseases
         $aDiseasesForm = array();
         $qData = lovd_queryDB_Old('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
         $nData = mysql_num_rows($qData);
-        // FIXME; aangezien $aDiseasesForm leeg zal zijn als $nData 0 is, stel ik voor deze while buiten de if te doen,
-        // dan de if om te draaien. Dan heb je geen else nodig.
-        if ($nData) {
-            while ($r = mysql_fetch_row($qData)) {
-                $aDiseasesForm[$r[0]] = $r[1];
-            }
-        } else {
-            // FIXME; is het niet makkelijker om hier geen value op te geven ipv "None"? Het is toch geen verplicht veld, dus als ie geselecteerd wordt,
-            // wordt de waarde automatisch genegeerd. Nu moest je een uitzondering plaatsen in checkFields() en individuals.php.
-            $aDiseasesForm = array('None' => 'No disease entries available');
-        }
 
+        if (!$nData) {
+            $aDiseasesForm = array('' => 'No disease entries available');
+        }    
+        while ($r = mysql_fetch_row($qData)) {
+            $aDiseasesForm[$r[0]] = $r[1];
+        }
         $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
+
         $aSelectOwner = array();
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            // FIXME; sorteren ergens op? Naam? Of land? Kijk naar hoe dit in LOVD 2.0 geregeld is.
-            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS);
+            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name');
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }
+            $aSelectStatus = $_SETT['data_status'];
+            unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
             $aFormOwner = array('Owner of this individual', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
-            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $_SETT['data_status'], false, false, false);
+            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false);
         } else {
-            // FIXME; dit moet dan dus de owner zijn, mag die de status niet aanpassen (niet publiek -> wel publiek) of een publieke entry bewerken?
-            // Overigens, in jouw code mogen alleen managers hier komen... Dit moet even goed worden uitgedacht.
-            $aFormOwner = array('Owner of this individual', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
-            $aFormStatus = array('Status of this data', '', 'print', '<B>Non public</B>');
+            $aFormOwner = array();
+            $aFormStatus = array();
         }
 
         // Array which will make up the form table.
@@ -286,12 +278,12 @@ class LOVD_Individual extends LOVD_Custom {
                         'hr',
                         array('This individual has been diagnosed with these diseases', '', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
                         'hr',
-                        'skip',
-                        array('', '', 'print', '<B>General information</B>'),
-                        'hr',
-                        $aFormOwner,
-                        $aFormStatus,
-                        'hr',
+      'general_skip' => 'skip',
+           'general' => array('', '', 'print', '<B>General information</B>'),
+       'general_hr1' => 'hr',
+             'owner' => $aFormOwner,
+            'status' => $aFormStatus,
+       'general_hr2' => 'hr',
 'authorization_skip' => 'skip',
  'authorization_hr1' => 'hr',
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
@@ -301,6 +293,9 @@ class LOVD_Individual extends LOVD_Custom {
                       
         if (ACTION != 'edit') {
             unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+        }
+        if ($_AUTH['level'] < LEVEL_CURATOR) {
+            unset($this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
         }
 
         return parent::getForm();

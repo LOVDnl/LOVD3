@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2011-08-17
+ * Modified    : 2011-09-01
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,6 +56,26 @@ class LOVD_PDO extends PDO {
             // No connection or couldn't select database!
             lovd_displayError('Init', 'Error connecting to database: ' . $e->getMessage());
         }
+    }
+
+
+
+
+
+    function beginTransaction ()
+    {
+        // Wrapper to PDO::beginTransaction(), necessary because we need to link it to the initiated PDO class and not just to parent.
+        return $this->PDO->beginTransaction();
+    }
+
+
+
+
+
+    function commit ()
+    {
+        // Wrapper to PDO::commit(), necessary because we need to link it to the initiated PDO class and not just to parent.
+        return $this->PDO->commit();
     }
 
 
@@ -132,7 +152,7 @@ class LOVD_PDO extends PDO {
         } catch (PDOException $e) {
             if ($bHalt) {
                 try {
-                    @$this->PDO->rollBack(); // In case we were in a transaction. // FIXME; can we know?
+                    @$this->PDO->rollBack(); // In case we were in a transaction. // FIXME; we can know from PHP >= 5.3.3.
                 } catch (PDOException $eNoTransaction) {}
                 // lovd_queryError() will call lovd_displayError() which will halt the system.
                 lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sSQL, 'Error in PDO::query() while running query: ' . $e->getMessage());
@@ -141,6 +161,16 @@ class LOVD_PDO extends PDO {
             }
         }
         return $q;
+    }
+
+
+
+
+
+    function rollBack ()
+    {
+        // Wrapper to PDO::rollBack(), necessary because we need to link it to the initiated PDO class and not just to parent.
+        return $this->PDO->rollBack();
     }
 }
 ?>

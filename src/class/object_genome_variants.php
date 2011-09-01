@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-08-19
+ * Modified    : 2011-09-01
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -119,7 +119,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'screeningids' => array(
                                     'view' => array('Screening ID', 90),
                                     'db'   => array('screeningids', 'ASC', 'TEXT')),
-                        'id' => array(
+                        'id_' => array(
                                     'view' => array('Variant ID', 90),
                                     'db'   => array('vog.id', 'ASC', true)),
                         'chromosome' => array(
@@ -129,7 +129,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                  $this->buildViewList(),
                  array(
                         'allele_' => array(
-                                    'view' => array('Allele', 100),
+                                    'view' => array('Allele', 110),
                                     'db'   => array('vog.allele', 'ASC', true)),
                         'pathogenicid' => array(
                                     'view' => array('Pathogenicity', 110),
@@ -145,7 +145,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'db'   => array('ds.name', false, true)),
                       ));
         
-        $this->sSortDefault = 'id';
+        $this->sSortDefault = 'id_';
+
+        $this->sRowLink = 'variants/{{ID}}';
     }
 
 
@@ -200,7 +202,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         if (!empty($_POST['statusid'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $_SETT['data_status'])) {
+            $aSelectStatus = $_SETT['data_status'];
+            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_IN_PENDING]);
+            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $aSelectStatus)) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
@@ -215,27 +219,33 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
 
 
-    function getForm ($_Transcript = false)
+    function getForm ($aTranscriptsForm = array())
     {
         // Build the form.
         global $_AUTH, $_SETT, $_CONF;
 
-        $aSelectChromosome = array_combine(array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']), array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']));
+        $aChromosomes = array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
+        if (!empty($_GET['geneid'])) {
+            list($_POST['chromosome']) = list($sChromosome) = mysql_fetch_row(lovd_queryDB_Old('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id=?', array($_GET['geneid'])));
+            $aFormChromosome = array('Chromosome', '', 'print', $sChromosome);
+        } else {
+            $aSelectChromosome = array_combine($aChromosomes, $aChromosomes);
+            $aFormChromosome = array('Chromosome', '', 'select', 'chromosome', 1, $aSelectChromosome, false, false, false);
+        }
 
         $aSelectOwner = array();
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            // FIXME; sorteren ergens op? Naam? Of land? Kijk naar hoe dit in LOVD 2.0 geregeld is.
-            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS);
+            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name');
             while ($z = mysql_fetch_assoc($q)) {
                 $aSelectOwner[$z['id']] = $z['name'];
             }
+            $aSelectStatus = $_SETT['data_status'];
+            unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
             $aFormOwner = array('Owner of this variant', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
-            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $_SETT['data_status'], false, false, false);
+            $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false);
         } else {
-            // FIXME; dit moet dan dus de owner zijn, mag die de status niet aanpassen (niet publiek -> wel publiek) of een publieke entry bewerken?
-            // Overigens, in jouw code mogen alleen managers hier komen... Dit moet even goed worden uitgedacht.
-            $aFormOwner = array('Owner of this variant', '', 'print', '<B>' . $_AUTH['name'] . '</B>');
-            $aFormStatus = array('Status of this data', '', 'print', '<B>Non public</B>');
+            $aFormOwner = array();
+            $aFormStatus = array();
         }
 
         // Array which will make up the form table.
@@ -246,22 +256,18 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'hr',
                         array('Allele', '', 'select', 'allele', 1, $_SETT['var_allele'], false, false, false),
                         array('', '', 'note', 'If you wish to report an homozygous variant, please select "Both (homozygous)" here.'),
-                        array('Chromosome', '', 'select', 'chromosome', 1, $aSelectChromosome, false, false, false),
+                        $aFormChromosome,
                       ),
                  $this->buildViewForm(),
-                 ($_Transcript? array(
-                                        'skip',
-                                        array('', '', 'print', '<B>Transcript variant information</B>'),
-                                     ) : array()),
-                 ($_Transcript? $_Transcript->buildViewForm() : array()),
+                 $aTranscriptsForm,
                  array(
                         'hr',
-                        'skip',
-                        array('', '', 'print', '<B>General information</B>'),
-                        'hr',
-                        $aFormOwner,
-                        $aFormStatus,
-                        'hr',
+      'general_skip' => 'skip',
+           'general' => array('', '', 'print', '<B>General information</B>'),
+       'general_hr1' => 'hr',
+             'owner' => $aFormOwner,
+            'status' => $aFormStatus,
+       'general_hr2' => 'hr',
 'authorization_skip' => 'skip',
  'authorization_hr1' => 'hr',
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
@@ -271,6 +277,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       
         if (ACTION != 'edit') {
             unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+        }
+        if ($_AUTH['level'] < LEVEL_CURATOR) {
+            unset($this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
         }
 
         return parent::getForm();
@@ -293,8 +302,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            $this->sRowLink = 'variants/' . $zData['id'];
-            $zData['id'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
+            // STUB
         } else {
             $zData['owner_'] = '<A href="users/' . $zData['ownerid'] . '">' . $zData['owner_'] . '</A>';
         }

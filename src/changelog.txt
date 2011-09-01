@@ -61,17 +61,16 @@
  * Fixed bug; In phenotype?create it is now mandatory to select a disease, and
    also implemented checks for a valid diseaseid. Also only diseases that have
    custom columns enabled will be selectable now.
- * If the individual has only one disease, then phenotypes?create selects that one automatically and goes to the form. ** Please clarify (possibly by simplifying, the changelog is for end users, not so much for developers!) **
- * The diseaseid can also be sent through a GET variable in the URL in phenotypes?create. ** It's better to explain this in a way that end users are interested in; "Implemented one-click navigation from the individual's detailed view to the form to add phenotype information on a certain disease" **
- * Added a gene selection box in screenings?create & screenings?edit. ** Perhaps "Fixed bug; Couldn't select which genes were screened on screening data entry forms." **
- * Added a 'Add phenotype to disease' button to the individual viewEntry for each disease.  *** This is pretty much the same as two lines before. It can be separated in the SVN log, but here I would combine them **
+ * When an individual has only one disease, you don't have to select the disease when creating a new phenotype entry.
+ * Implemented one-click navigation from the individual's detailed view to the form to add phenotype information on a certain disease.
+ * Fixed bug; Couldn't select which genes were screened on screening data entry forms.
  * Changed all references to inc-js-insert-custom-links.php to the new name
    inc-js-custom_links.php and removed the old file.
  * Fixed bug; lovd_AJAX_viewListAddNextRow() now works properly in all browsers.
  * Fixed bug; lovd_includeJS() can now also handle files in a different path.
  * Fixed bug; lovd_viewForm() allowed single selection lists to have a "select
    all" link.
- * Fixed bug; Fixed the join from TABLE_SHARED_COLS to TABLE_VARIANTS_ON_TRANSCRIPTS in object_custom.php.  *** Could a user get to this error? If not (only in development code), then no need to mention it here ***
+ * Fixed bug; Fixed the database structure for transcript variant custom columns in object_custom.php.
  * Optimized & cleaned the transcripts?create code.
  * Transcripts/<gene symbol> now also works and is basically the same as the
    /transcripts view with a search on <gene symbol>.

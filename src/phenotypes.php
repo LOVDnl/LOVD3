@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-08-25
+ * Modified    : 2011-09-01
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -139,17 +139,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-lib-form.php';
     lovd_errorClean();
 
-    if (!empty($_GET['diseaseid'])) {
-        $_POST['diseaseid'] = $_GET['diseaseid'];
-    }
-    if (!empty($_POST['diseaseid'])) {
-        $_POST['diseaseid'] = str_pad($_POST['diseaseid'], 5, '0', STR_PAD_LEFT);
-        // FIXME; een COUNT(*) is vaak sneller dan een mysql_num_rows().
-        // FIXME; deze code is toch bedoeld om te kijken of er kolommen actief zijn voor de gekozen ziekte? Dan is zoeken op individu niet nodig.
-        // FIXME; dit code block heeft wat commentaar nodig, waar 't voor is.
-        if (!ctype_digit($_POST['diseaseid']) || !mysql_num_rows(lovd_queryDB_Old('SELECT i2d.diseaseid FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid'])))) {
-            lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease or no data fields have been enabled for this disease.');
+    if (!empty($_GET['diseaseid']) && ctype_digit($_GET['diseaseid'])) {
+        $_POST['diseaseid'] = str_pad($_GET['diseaseid'], 5, '0', STR_PAD_LEFT);
+        // Check if there are phenotype columns enabled for this disease & check if the $_POST['diseaseid'] is actually linked to this individual.
+        if (!mysql_num_rows(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid'])))) {
+            lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease id or no phenotype columns have been enabled for this disease.');
         }
+    } elseif (!empty($_GET['diseaseid']) && !ctype_digit($_GET['diseaseid'])) {
+        lovd_errorAdd('diseaseid', htmlspecialchars($_GET['diseaseid']) . ' is not a valid disease id.');
     }
 
     require ROOT_PATH . 'class/object_phenotypes.php';
@@ -219,7 +216,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             // Prepare values.
             $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
+            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
@@ -228,13 +225,28 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID . ' for individual ' . $_POST['individualid'] . ' related to disease ' . $_POST['diseaseid']);
 
-            // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            if (!isset($_SESSION['work']['submits'][$_POST['individualid']]['phenotypes'])) {
+                $_SESSION['work']['submits'][$_POST['individualid']]['phenotypes'] = array();
+            }
+
+            $_SESSION['work']['submits'][$_POST['individualid']]['phenotypes'][] = $nID;
+
+            $bSubmit = isset($_SESSION['work']['submits'][$_POST['individualid']]);
+            $sPersons = ($_SESSION['work']['submits'][$_POST['individualid']]['is_panel']? 'this group of individuals' : 'this individual');
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Successfully created the phenotype information entry!', 'success');
-
+            print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n" .
+                  '      <TABLE border="0" cellpadding="5" cellspacing="1" class="option">' . "\n" .
+                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
+                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                  '          <TD><B>Yes, I want to submit more phenotype information</B></TD></TR>' . "\n" .
+       ($bSubmit? '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
+                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                  '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" : '') .
+                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual?individualid=' . $_POST['individualid'] . '\'">' . "\n" .
+                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '' ) . '</B></TD></TR></TABLE><BR>' . "\n\n");
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }

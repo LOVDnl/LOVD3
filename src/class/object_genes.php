@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-08-25
+ * Modified    : 2011-09-01
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -86,9 +86,11 @@ class LOVD_Gene extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'g.*, ' .
                                           'g.id AS geneid, ' .
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
-                                          '(SELECT COUNT(*) FROM lovd_v3_variants_on_transcripts AS vot LEFT JOIN lovd_v3_transcripts AS t ON (t.id = vot.transcriptid) WHERE t.geneid = g.id) AS variants';
+                                          'COUNT(DISTINCT t.id) AS transcripts, ' .
+                                          '(SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid) WHERE t.geneid = g.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
-                                          'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' . 
+                                          'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
@@ -158,6 +160,9 @@ class LOVD_Gene extends LOVD_Object {
                         'chrom_band' => array(
                                     'view' => array('Band', 70),
                                     'db'   => array('g.chrom_band', false, true)),
+                        'transcripts' => array(
+                                    'view' => array('Transcripts', 90),
+                                    'db'   => array('transcripts', 'DESC', 'INT_UNSIGNED')),
                         'variants' => array(
                                     'view' => array('Variants', 70),
                                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
@@ -440,8 +445,6 @@ class LOVD_Gene extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'genes/' . rawurlencode($zData['id']);
             $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
             $zData['updated_date_'] = substr($zData['updated_date'], 0, 10);
         } else {

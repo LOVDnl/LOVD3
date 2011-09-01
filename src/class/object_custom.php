@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-08-24
+ * Modified    : 2011-08-25
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -173,11 +173,10 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function buildViewForm ()
+    function buildViewForm ($sPrefix = '')
     {
         // Builds the array needed to display the form.
         global $_PATH_ELEMENTS;
-
         $aFormData = array();
 
         foreach ($this->aColumns as $sCol => $aCol) {
@@ -191,7 +190,7 @@ class LOVD_Custom extends LOVD_Object {
                         $val .= ' (Optional)';
                     } elseif ($key == 3) {
                         // Add the form entry name.
-                        $aEntry[] = $sCol;
+                        $aEntry[] = $sPrefix . $sCol;
                     }
                     $aEntry[] = $val;
                 }
@@ -205,7 +204,7 @@ class LOVD_Custom extends LOVD_Object {
                         $val .= ' (Optional)';
                     } elseif ($key == 3) { // Size
                         // We need to place the form entry name (e.g. "Individual/Gender") in between.
-                        $aEntry[] = $sCol;
+                        $aEntry[] = $sPrefix . $sCol;
                     } elseif ($key == 4) { // Select: true|false|--select--
                         // We need to place the form entry data in between.
                         $aData = array();
@@ -324,9 +323,10 @@ class LOVD_Custom extends LOVD_Object {
     function checkInputRegExp ($sCol, $val)
     {
         // Checks if field input corresponds to the given regexp pattern.
-        if ($this->aColumns[$sCol]['preg_pattern'] && !empty($_POST[$sCol])) {
-            if (!preg_match($this->aColumns[$sCol]['preg_pattern'], $val)) {
-                lovd_errorAdd($sCol, 'The input in the \'' . $this->aColumns[$sCol]['form_type'][0] . '\' field does not correspond to the required input pattern.');
+        $sColClean = preg_replace('/^\d{5}_/', '', $sCol);
+        if ($this->aColumns[$sColClean]['preg_pattern'] && !empty($_POST[$sCol])) {
+            if (!preg_match($this->aColumns[$sColClean]['preg_pattern'], $val)) {
+                lovd_errorAdd($sCol, 'The input in the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' field does not correspond to the required input pattern.');
             }
         }
     }
@@ -338,14 +338,15 @@ class LOVD_Custom extends LOVD_Object {
     function checkSelectedInput ($sCol, $Val)
     {
         // Checks if the selected values are indeed from the selection list.
-        if ($this->aColumns[$sCol]['form_type'][2] == 'select' && $this->aColumns[$sCol]['form_type'][3] >= 1) {
+        $sColClean = preg_replace('/^\d{5}_/', '', $sCol);
+        if ($this->aColumns[$sColClean]['form_type'][2] == 'select' && $this->aColumns[$sColClean]['form_type'][3] >= 1) {
             if (!empty($Val)) {
-                $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sCol]['select_options']); // Trim whitespace from the options.
+                $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sColClean]['select_options']); // Trim whitespace from the options.
                 (!is_array($Val)? $Val = array($Val) : false);
                 foreach ($Val as $sValue) {
                     $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
                     if (!in_array($sValue, $aOptions)) {
-                        lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sCol]['form_type'][0] . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                        lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
                         break;
                     }
                 }
@@ -376,9 +377,20 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Initiate default values of fields in $_POST.
         foreach ($this->aColumns as $sCol => $aCol) {
+            $sColClean = preg_replace('/^\d{5}_/', '', $sCol);
             // Fill $_POST with the column's default value.
-            $_POST[$sCol] = $this->getDefaultValue($sCol);
+            $_POST[$sCol] = $this->getDefaultValue($sColClean);
         }
+    }
+    
+    
+    
+    
+    
+    function insertEntry ($aData, $aFields = array())
+    {
+        // To prevent error messages when LOVD_TranscriptVariant() wants to overload LOVD_Object::insertEntry();
+        return parent::insertEntry($aData, $aFields);
     }
     
     

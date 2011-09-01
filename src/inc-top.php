@@ -5,6 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
+ * Modified    : 2011-08-19
  * Modified    : 2011-08-17
  * For LOVD    : 3.0-alpha-04
  *
@@ -66,7 +67,10 @@ $_MENU = array(
                         'create' => array('Create a new disease information entry', LEVEL_MANAGER), // FIXME; level_curator?
                       ),
                 'screenings' => 'View screenings',
-//                'submit' => 'Submit new data', // Temp disabled.
+                'submit' => 'Submit new data',
+                array(
+                        '' => array('Submit a new variant', LEVEL_SUBMITTER),
+                     ),
                 'users' => 'LOVD users &amp; submitters',
                 'setup' => 'LOVD system setup',
 //                'docs' => 'LOVD documentation',

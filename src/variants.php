@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-08-18
+ * Modified    : 2011-09-01
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -118,12 +118,16 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $zData = $_DATA->viewEntry($nID);
-    
+
+    lovd_isAuthorized('variant', $nID);
+
     $sNavigation = '';
-    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="variants/' . $nID . '?edit">Edit variant entry</A>';
-        $sNavigation .= ' | <A href="variants/' . $nID . '?delete">Delete variant entry</A>';
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            $sNavigation .= ' | <A href="variants/' . $nID . '?delete">Delete variant entry</A>';
+        }
     }
 
     if ($sNavigation) {
@@ -131,14 +135,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    $_GET['search_id'] = $nID;
+    $_GET['search_id_'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variant on transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant();
     $_DATA->sRowLink = '';
-    $_DATA->viewList(false, array('id'), true, true);
-    unset($_GET['search_id']);
+    $_DATA->viewList(false, array('id_'), true, true);
+    unset($_GET['search_id_']);
 
     $_GET['search_screeningid'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
     print('<BR><BR>' . "\n\n");
@@ -158,315 +162,218 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // Create a new entry.
 
-    lovd_requireAUTH();
+    lovd_requireAUTH(LEVEL_SUBMITTER);
 
-    if (isset($_GET['reference']) && $_GET['reference'] == 'Genome') {
-        // URL: /variants?create&reference='Genome'
-        // Create a variant on the genome.
-        define('LOG_EVENT', 'GenomeVariantCreate');
+    define('LOG_EVENT', 'VariantCreate');
 
-        if (isset($_GET['target'])) {
-            if (ctype_digit($_GET['target'])) {
-                $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
-                if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
-                    $_POST['screeningid'] = $_GET['target'];
-                    define('PAGE_TITLE', 'Create a new variant entry for screening #' . $_GET['target']);
-                } else {
-                    define('PAGE_TITLE', 'Create a new variant entry');
-                    require ROOT_PATH . 'inc-top.php';
-                    lovd_printHeader(PAGE_TITLE);
-                    lovd_showInfoTable('The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.', 'warning');
-                    require ROOT_PATH . 'inc-bot.php';
-                    exit;
-                }
+    if (isset($_GET['target'])) {
+        if (ctype_digit($_GET['target'])) {
+            $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
+            if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
+                $_POST['screeningid'] = $_GET['target'];
             } else {
-                exit;
-            }
-        } else {
-            define('PAGE_TITLE', 'Create a new variant entry');
-        }
-
-        require ROOT_PATH . 'class/object_genome_variants.php';
-        $_DATA = new LOVD_GenomeVariant();
-        require ROOT_PATH . 'inc-lib-form.php';
-        
-        if (POST) {
-            lovd_errorClean();
-
-            $_DATA->checkFields($_POST);
-
-            if (!lovd_error()) {
-                // Fields to be used.
-                $aFields = array_merge(
-                                array('allele', 'chromosome', 'ownerid', 'statusid', 'created_by', 'created_date'),
-                                $_DATA->buildFields());
-
-                // Prepare values.
-                $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
-                $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
-                $_POST['created_by'] = $_AUTH['id'];
-                $_POST['created_date'] = date('Y-m-d H:i:s');
-
-                $nID = $_DATA->insertEntry($_POST, $aFields);
-
-                // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
-
-                // Add variant to screening.
-                if (isset($_POST['screeningid'])) {
-                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
-                    if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
-                    }
-                }
-
-                // Thank the user...
-                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
-
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
-                lovd_showInfoTable('Successfully created the variant entry!', 'success');
-
-                require ROOT_PATH . 'inc-bot.php';
-                exit;
-            }
-
-        } else {
-            // Default values.
-            $_DATA->setDefaultValues();
-        }
-
-
-
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
-
-        if (GET) {
-            print('      To create a new variant entry, please fill out the form below.<BR>' . "\n" .
-                  '      <BR>' . "\n\n");
-        }
-
-        lovd_errorPrint();
-
-        // Tooltip JS code.
-        lovd_includeJS('inc-js-tooltip.php');
-        lovd_includeJS('inc-js-custom_links.php');
-
-        // Table.
-        print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Genome' . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n");
-
-        // Array which will make up the form table.
-        $aForm = array_merge(
-                     $_DATA->getForm(),
-                     array(
-                            array('', '', 'submit', 'Create variant entry'),
-                          ));
-        lovd_viewForm($aForm);
-
-        print('      </FORM>' . "\n\n");
-
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-
-
-
-
-
-    } elseif (isset($_GET['reference']) && $_GET['reference'] == 'Transcript') {
-        // URL: /variants?create&reference='Transcript&transcriptid=00001'
-        // Create a variant on a transcript.
-        define('LOG_EVENT', 'TranscriptVariantCreate');
-        
-        if (isset($_GET['target'])) {
-            if (ctype_digit($_GET['target'])) {
-                $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
-                if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
-                    $_POST['screeningid'] = $_GET['target'];
-                } else {
-                    define('PAGE_TITLE', 'Create a new variant entry');
-                    require ROOT_PATH . 'inc-top.php';
-                    lovd_printHeader(PAGE_TITLE);
-                    lovd_showInfoTable('The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.', 'warning');
-                    require ROOT_PATH . 'inc-bot.php';
-                    exit;
-                }
-            } else {
-                exit;
-            }
-        }
-
-        if (isset($_GET['transcriptid']) && ctype_digit($_GET['transcriptid'])) {
-            $_GET['transcriptid'] = str_pad($_GET['transcriptid'], 5, '0', STR_PAD_LEFT);
-            list($sGene) = mysql_fetch_row(lovd_queryDB_Old('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($_GET['transcriptid'])));
-            if (empty($sGene)) {
                 define('PAGE_TITLE', 'Create a new variant entry');
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
-                lovd_showInfoTable('The transcript ID given is not valid, please go to the create variant page and select the desired transcript entry.', 'warning');
+                lovd_showInfoTable('The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.', 'warning');
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
-            } else {
-                define('PAGE_TITLE', 'Create a new variant entry for transcript #' . $_GET['transcriptid']);
             }
         } else {
-            // FIXME; als het een vereiste is, dat er een transcript ID gegeven wordt die numeriek is, zet dat dan in de elseif van regel 261.
             exit;
         }
+    }
 
-        require ROOT_PATH . 'class/object_genome_variants.php';
-        require ROOT_PATH . 'class/object_transcript_variants.php';
-
-        $_DATA = array();
-        $_DATA['Genome'] = new LOVD_GenomeVariant();
-        $_DATA['Transcript'] = new LOVD_TranscriptVariant($sGene);
-        require ROOT_PATH . 'inc-lib-form.php';
-
-        if (POST) {
-            lovd_errorClean();
-            // FIXME; ik raak je hier kwijt; waar is dit allemaal voor? Waarom niet gewoon de checkFields() aanroepen?
-            // Ivar: Omdat het 2 verschillende data objecten zijn. Moet je dus ook de aparte checkFields en insertEntry aanroepen e.d.
-            //       En dus dan ook de $aFields apart doen.
-            // Fields to be used.
-            $aFieldsGenome = array_merge(
-                                array('allele', 'chromosome', 'ownerid', 'statusid', 'created_by', 'created_date'),
-                                $_DATA['Genome']->buildFields());
-
-            $aFieldsTranscript = array_merge(
-                                array('id', 'transcriptid'),
-                                $_DATA['Transcript']->buildFields());
-
-            $aPOSTgenome = array();
-            $aPOSTtranscript = array();
-
-            foreach($aFieldsGenome as $key) {
-                if (isset($_POST[$key])) {
-                    $aPOSTgenome[$key] = $_POST[$key];
-                }
-            }
-
-            foreach($aFieldsTranscript as $key) {
-                if (isset($_POST[$key])) {
-                    $aPOSTtranscript[$key] = $_POST[$key];
-                }
-            }
-
-            $_DATA['Genome']->checkFields($aPOSTgenome);
-            $_DATA['Transcript']->checkFields($aPOSTtranscript);
-
-            $_POST = array_merge($aPOSTgenome, $aPOSTtranscript);
-
-            if (!lovd_error()) {
-                // Prepare values.
-                $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
-                $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
-                $_POST['created_by'] = $_AUTH['id'];
-                $_POST['created_date'] = date('Y-m-d H:i:s');
-
-                $nID = $_DATA['Genome']->insertEntry($_POST, $aFieldsGenome);
-                
-                $_POST['id'] = $nID;
-                $_POST['transcriptid'] = $_GET['transcriptid'];
-                
-                $_DATA['Transcript']->insertEntry($_POST, $aFieldsTranscript);
-
-                // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
-
-                // Add variant to screening.
-                if (isset($_POST['screeningid'])) {
-                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
-                    if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
-                    }
-                }
-
-                // Thank the user...
-                header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants/' . $nID);
-
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
-                lovd_showInfoTable('Successfully created the variant entry!', 'success');
-
-                require ROOT_PATH . 'inc-bot.php';
-                exit;
-            }
-
-        } else {
-            // Default values.
-            $_DATA['Genome']->setDefaultValues();
-            $_DATA['Transcript']->setDefaultValues();
-        }
-
-
-
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
-
-        if (GET) {
-            print('      To create a new variant entry, please fill out the form below.<BR>' . "\n" .
-                  '      <BR>' . "\n\n");
-        }
-
-        lovd_errorPrint();
-
-        // Tooltip JS code.
-        lovd_includeJS('inc-js-tooltip.php');
-        lovd_includeJS('inc-js-custom_links.php');
-
-        // Table.
-        print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=Transcript&amp;transcriptid=' . $_GET['transcriptid'] . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n");
-
-        // Array which will make up the form table.
-        $aForm = array_merge(
-                     $_DATA['Genome']->getForm($_DATA['Transcript']),
-                     array(
-                            array('', '', 'submit', 'Create variant entry'),
-                          ));
-        lovd_viewForm($aForm);
-
-        print('      </FORM>' . "\n\n");
-
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-
-
-
-
-
-    } else {
+    if (!isset($_GET['reference'])) {
         // URL: /variants?create
         // Select wether the you want to create a variant on the genome or on a transcript.
-        define('LOG_EVENT', 'VariantCreate');
         define('PAGE_TITLE', 'Create a new variant entry');
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
 
-        print('<TABLE class="data" border="0" cellpadding="0" cellspacing="2" width="300">' . "\n" .
-              '  <TBODY>' . "\n" .
-              '    <TR class="" style="cursor: pointer;" onclick="window.location=\'variants?create&reference=Genome' . (isset($_GET['target'])? '&target=' . $_GET['target'] : '') . '\'">' . "\n" .
-              '      <TH><H5>Create a genomic variant &raquo;&raquo;</H5></TH>' . "\n" .
-              '    </TR>' . "\n" .
-              '    <TR class="" style="cursor: pointer;" onclick="$( \'#TranscriptViewList\' ).toggle();">' . "\n" .
-              '      <TH><H5>Create a transcript variant &raquo;&raquo;</H5></TH>' . "\n" .
-              '    </TR>' . "\n" .
-              '  </TBODY>' . "\n" .
-              '</TABLE>' . "\n\n");
+        print('      What kind of variant would you like to submit?<BR><BR>' . "\n\n" .
+              '      <TABLE border="0" cellpadding="5" cellspacing="1" width="600" class="option">' . "\n" .
+              '        <TR onclick="window.location=\'variants?create&amp;reference=Genome' . (isset($_GET['target'])? '&amp;target=' . $_GET['target'] : '') . '\'">' . "\n" .
+              '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+              '          <TD><B>I want to create a genomic variant &raquo;&raquo;</B></TD></TR>' . "\n" .
+              '        <TR onclick="$( \'#GeneViewList\' ).toggle();">' . "\n" .
+              '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+              '          <TD><B>I want to create a transcript variant &raquo;&raquo;</B></TD></TR></TABLE><BR>' . "\n\n");
 
-        print ('<BR>' . "\n");
-
-        require ROOT_PATH . 'class/object_transcripts.php';
+        require ROOT_PATH . 'class/object_genes.php';
         $_GET['page_size'] = 10;
-        $_DATA = new LOVD_Transcript();
-        $_DATA->sRowLink = 'variants?create&reference=Transcript&transcriptid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
-        print('<DIV id="TranscriptViewList" style="display:none;">');
-        $_DATA->viewList(false, array('id_', 'variants'), false, false, false);
+        $_DATA = new LOVD_Gene();
+        $_DATA->sRowLink = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
+        print('<DIV id="GeneViewList" style="display:none;">');
+        $_GET['search_transcripts'] = '>0';
+        $_DATA->viewList(false, array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
         print('</DIV>');
 
         require ROOT_PATH . 'inc-bot.php';
         exit;
+
+
+
+
+
+    } elseif (!in_array($_GET['reference'], array('Genome', 'Transcript'))) {
+        exit;
     }
+
+    // URL: /variants?create&reference=('Genome'|'Transcript')
+    // Create a variant on the genome.
+
+    if ($_GET['reference'] == 'Transcript' && isset($_GET['geneid']) && preg_match('/^[a-z][a-z0-9#@-]+$/i', $_GET['geneid'])) {
+        $sGene = $_GET['geneid'];
+        if (!in_array($sGene, lovd_getGeneList())) {
+            define('PAGE_TITLE', 'Create a new variant entry');
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('The gene symbol given is not valid, please go to the create variant page and select the desired gene entry.', 'warning');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+    } elseif ($_GET['reference'] == 'Transcript' && empty($_GET['geneid'])) {
+        exit;
+    }
+
+    lovd_isAuthorized('gene', (isset($sGene)? $sGene : $_AUTH['curates']));
+
+    require ROOT_PATH . 'class/object_genome_variants.php';
+    $_DATA = array();
+    $_DATA['Genome'] = new LOVD_GenomeVariant();
+    if (isset($sGene)) {
+        require ROOT_PATH . 'class/object_transcript_variants.php';
+        $_DATA['Transcript'] = new LOVD_TranscriptVariant($sGene);
+    }
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (POST) {
+        lovd_errorClean();
+
+        $_DATA['Genome']->checkFields($_POST);
+
+        if (isset($sGene)) {
+            $_DATA['Transcript']->checkFields($_POST);
+        }
+
+        if (!lovd_error()) {
+            // Prepare the fields to be used for both genomic and transcript variant information.
+            $aFieldsGenome = array_merge(
+                                array('allele', 'chromosome', 'ownerid', 'statusid', 'created_by', 'created_date'),
+                                $_DATA['Genome']->buildFields());
+
+            // Prepare values.
+            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
+            $_POST['created_by'] = $_AUTH['id'];
+            $_POST['created_date'] = date('Y-m-d H:i:s');
+
+            $nID = $_DATA['Genome']->insertEntry($_POST, $aFieldsGenome);
+
+            if (isset($sGene)) {
+                $_POST['id'] = $nID;
+                $aFieldsTranscript = array_merge(
+                                        array('id', 'transcriptid'),
+                                        $_DATA['Transcript']->buildFields());
+                $aTranscriptID = $_DATA['Transcript']->insertAll($_POST, $aFieldsTranscript);
+            }
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
+
+            if (isset($_POST['screeningid'])) {
+                // Add variant to screening.
+                $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
+                if (!$q) {
+                    // Silent error.
+                    lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
+                }
+            }
+
+            $bSubmit = false;
+            if (isset($_POST['screeningid']) && isset($_SESSION['work']['submits'])) {
+                foreach($_SESSION['work']['submits'] as $nIndividualID => $aSubmit) {
+                    if (array_key_exists($_POST['screeningid'], $aSubmit['screenings'])) {
+                        $bSubmit = true;
+                        $_POST['individualid'] = $nIndividualID;
+                        break;
+                    }
+                }
+            }
+
+            if ($bSubmit) {
+                if (!isset($_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$_POST['screeningid']]['variants'])) {
+                    $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$_POST['screeningid']]['variants'] = array();
+                }
+                if (!isset($aTranscriptID)) {
+                    $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$_POST['screeningid']]['variants'][$nID] = array();
+                } else {
+                    $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$_POST['screeningid']]['variants'][$nID] = $aTranscriptID;
+                }
+                $sPersons = ($_SESSION['work']['submits'][$_POST['individualid']]['is_panel']? 'this group of individuals' : 'this individual');
+            }
+
+            if ($bSubmit) {
+                require ROOT_PATH . 'inc-top.php';
+                lovd_printHeader(PAGE_TITLE);
+                print('      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n" .
+                      '      <TABLE border="0" cellpadding="5" cellspacing="1" class="option">' . "\n" .
+                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $_POST['screeningid'] . '\'">' . "\n" .
+                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                      '          <TD><B>Yes, I want to submit more variants found by this mutation screening</B></TD></TR>' . "\n" .
+                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
+                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                      '          <TD><B>No, I want to submit another screening instead</B></TD></TR>' . "\n" .
+                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual?individualid=' . $_POST['individualid'] . '\'">' . "\n" .
+                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                      '          <TD><B>No, I have finished my submission</B></TD></TR></TABLE><BR>' . "\n\n");
+                require ROOT_PATH . 'inc-bot.php';
+            } else {
+                header('Location: ' . lovd_getInstallURL() . 'submit/variant?variantid=' . $nID);
+            }
+            exit;
+        }
+
+    } else {
+        // Default values.
+        $_DATA['Genome']->setDefaultValues();
+        if (isset($sGene)) {
+            $_DATA['Transcript']->setDefaultValues();
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    if (GET) {
+        print('      To create a new variant entry, please fill out the form below.<BR>' . "\n" .
+              '      <BR>' . "\n\n");
+    }
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+    lovd_includeJS('inc-js-custom_links.php');
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=' . $_GET['reference'] . (isset($sGene)? '&amp;geneid=' . rawurlencode($sGene) : '') . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA['Genome']->getForm((isset($sGene)? $_DATA['Transcript']->getForm() : array())),
+                 array(
+                        array('', '', 'submit', 'Create variant entry'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('      </FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
 }
 
 
@@ -482,7 +389,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('LOG_EVENT', 'VariantEdit');
 
     // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_isAuthorized('variant', $nID);
+    lovd_requireAUTH(LEVEL_OWNER);
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
