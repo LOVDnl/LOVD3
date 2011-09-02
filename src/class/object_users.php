@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-08-12
+ * Modified    : 2011-08-30
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -312,7 +312,7 @@ class LOVD_User extends LOVD_Object {
 
             // Remove user levels that are higher than or equal to the current user's level.
             unset($aUserLevels[LEVEL_COLLABORATOR], $aUserLevels[LEVEL_OWNER], $aUserLevels[LEVEL_CURATOR]); // Aren't real user levels.
-            for ($i = LEVEL_ADMINISTRATOR; $i >= $_AUTH['level']; $i --) {
+            for ($i = LEVEL_ADMIN; $i >= $_AUTH['level']; $i --) {
                 if (isset($aUserLevels[$i])) {
                     unset($aUserLevels[$i]);
                 }

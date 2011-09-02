@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-09-01
+ * Modified    : 2011-09-02
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -150,9 +150,9 @@ class LOVD_Phenotype extends LOVD_Custom {
         parent::checkFields($aData);
 
         // FIXME; move to object_custom.php.
-        if (!empty($_POST['ownerid'])) {
+        if (!empty($aData['ownerid'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
+                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['ownerid']));
                 if (!mysql_num_rows($q)) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this phenotype entry\' selection box.');
@@ -163,10 +163,10 @@ class LOVD_Phenotype extends LOVD_Custom {
             }
         }
 
-        if (!empty($_POST['statusid'])) {
+        if (!empty($aData['statusid'])) {
             $aSelectStatus = $_SETT['data_status'];
             unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_IN_PENDING]);
-            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $aSelectStatus)) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($aData['statusid'], $aSelectStatus)) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
@@ -216,7 +216,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                         array('', '', 'print', '<B>Phenotype information related to ' . $sDisease . '</B>'),
                         'hr',
                       ),
-                 $this->buildViewForm(),
+                 $this->buildForm(),
                  array(
                         'hr',
       'general_skip' => 'skip',

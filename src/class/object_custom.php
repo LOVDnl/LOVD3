@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-08-25
+ * Modified    : 2011-09-02
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -173,7 +173,7 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function buildViewForm ($sPrefix = '')
+    function buildForm ($sPrefix = '')
     {
         // Builds the array needed to display the form.
         global $_PATH_ELEMENTS;
@@ -323,7 +323,7 @@ class LOVD_Custom extends LOVD_Object {
     function checkInputRegExp ($sCol, $val)
     {
         // Checks if field input corresponds to the given regexp pattern.
-        $sColClean = preg_replace('/^\d{5}_/', '', $sCol);
+        $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
         if ($this->aColumns[$sColClean]['preg_pattern'] && !empty($_POST[$sCol])) {
             if (!preg_match($this->aColumns[$sColClean]['preg_pattern'], $val)) {
                 lovd_errorAdd($sCol, 'The input in the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' field does not correspond to the required input pattern.');
@@ -338,7 +338,7 @@ class LOVD_Custom extends LOVD_Object {
     function checkSelectedInput ($sCol, $Val)
     {
         // Checks if the selected values are indeed from the selection list.
-        $sColClean = preg_replace('/^\d{5}_/', '', $sCol);
+        $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
         if ($this->aColumns[$sColClean]['form_type'][2] == 'select' && $this->aColumns[$sColClean]['form_type'][3] >= 1) {
             if (!empty($Val)) {
                 $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sColClean]['select_options']); // Trim whitespace from the options.
@@ -353,11 +353,11 @@ class LOVD_Custom extends LOVD_Object {
             }
         }
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function getDefaultValue ($sCol)
     {
         // Returns the column type, so the input can be checked.
@@ -377,26 +377,16 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Initiate default values of fields in $_POST.
         foreach ($this->aColumns as $sCol => $aCol) {
-            $sColClean = preg_replace('/^\d{5}_/', '', $sCol);
+            $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
             // Fill $_POST with the column's default value.
             $_POST[$sCol] = $this->getDefaultValue($sColClean);
         }
     }
-    
-    
-    
-    
-    
-    function insertEntry ($aData, $aFields = array())
-    {
-        // To prevent error messages when LOVD_TranscriptVariant() wants to overload LOVD_Object::insertEntry();
-        return parent::insertEntry($aData, $aFields);
-    }
-    
-    
-    
-    
-    
+
+
+
+
+
     function loadEntry ($nID = false)
     {
         // Loads and returns an entry from the database.
@@ -410,11 +400,11 @@ class LOVD_Custom extends LOVD_Object {
 
         return $zData;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function prepareData ($zData = '', $sView = 'list')
     {
         $zData = parent::prepareData($zData, $sView);

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-09-01
+ * Modified    : 2011-09-02
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -163,9 +163,9 @@ class LOVD_Screening extends LOVD_Custom {
         parent::checkFields($aData);
 
         // FIXME; move to object_custom.php.
-        if (!empty($_POST['ownerid'])) {
+        if (!empty($aData['ownerid'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
+                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['ownerid']));
                 if (!mysql_num_rows($q)) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this screening entry\' selection box.');
@@ -196,7 +196,7 @@ class LOVD_Screening extends LOVD_Custom {
     {
         // Build the form.
         global $_AUTH;
-        
+
         $aSelectOwner = array();
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
@@ -228,7 +228,7 @@ class LOVD_Screening extends LOVD_Custom {
                         array('', '', 'print', '<B>Screening information</B>'),
                         'hr',
                       ),
-                 $this->buildViewForm(),
+                 $this->buildForm(),
                  array(
                         array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, true),
                         'hr',

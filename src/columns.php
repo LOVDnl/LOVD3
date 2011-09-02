@@ -1998,6 +1998,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
     $sColumnID = implode('/', $aCol);
     $sCategory = $aCol[1];
 
+    // FIXME; use lovd_getTableInfoByCategory().
     if ($sCategory == 'VariantOnGenome') {
         $sTable = constant('TABLE_VARIANTS');
     } elseif ($sCategory == 'VariantOnTranscript') {

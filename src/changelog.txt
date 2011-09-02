@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Alpha 04
- * 2011-09-01
+ * 2011-09-02
  *********/
  * For phenotype data entries, the status can now also be set.
  * Fixed bug; The reset password functionality was non functional.
@@ -40,8 +40,10 @@
    on a specific chromosome.
  * Fixed bug; Non-mandatory selection lists did not have the "(Optional)" suffix
    on data entry forms.
-
-
+ * Added jeegoocontext drop down menu, written by Erik van den Berg
+   (http://www.planitworks.nl/jeegoocontext)
+ * Cleaned up inc-upgrade.php; it is no longer supported to upgrade LOVD 3.0
+   from earlier than 3.0-pre-21.
  * Added minified jQuery 1.6.2 to the newly created lib/jQuery folder.
  * Added minified jQuery UI 1.8.15-core files (core/mouse/widget/position) &
    sortable file to lib/jQuery.

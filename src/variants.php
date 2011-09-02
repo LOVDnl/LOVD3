@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-09-01
+ * Modified    : 2011-09-02
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -80,10 +80,10 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
 
     if ($_PATH_ELEMENTS[1] == 'in_gene') {
         $sGene = '';
-    } elseif (in_array($_PATH_ELEMENTS[1], lovd_getGeneList())) {
-        $_GET['search_geneid'] = $sGene = $_PATH_ELEMENTS[1];
+    } elseif (in_array(rawurldecode($_PATH_ELEMENTS[1]), lovd_getGeneList())) {
+        $_GET['search_geneid'] = $sGene = rawurldecode($_PATH_ELEMENTS[1]);
     } else {
-        // Command/gene not understood.
+        // Command or gene not understood.
         // FIXME; perhaps a HTTP/1.0 501 Not Implemented? If so, provide proper output (gene not found) and
         //   test if browsers show that output or their own error page. Also, then, use the same method at
         //   the bottom of all files, as a last resort if command/URL is not understood. Do all of this LATER.
@@ -167,19 +167,16 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     define('LOG_EVENT', 'VariantCreate');
 
     if (isset($_GET['target'])) {
-        if (ctype_digit($_GET['target'])) {
-            $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
-            if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
-                $_POST['screeningid'] = $_GET['target'];
-            } else {
-                define('PAGE_TITLE', 'Create a new variant entry');
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
-                lovd_showInfoTable('The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.', 'warning');
-                require ROOT_PATH . 'inc-bot.php';
-                exit;
-            }
+        // On purpose not checking for numeric target. If it's not numeric, we'll automatically get to the error message below.
+        $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
+        if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
+            $_POST['screeningid'] = $_GET['target'];
         } else {
+            define('PAGE_TITLE', 'Create a new variant entry');
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.', 'warning');
+            require ROOT_PATH . 'inc-bot.php';
             exit;
         }
     }
@@ -196,7 +193,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '        <TR onclick="window.location=\'variants?create&amp;reference=Genome' . (isset($_GET['target'])? '&amp;target=' . $_GET['target'] : '') . '\'">' . "\n" .
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
               '          <TD><B>I want to create a genomic variant &raquo;&raquo;</B></TD></TR>' . "\n" .
-              '        <TR onclick="$( \'#GeneViewList\' ).toggle();">' . "\n" .
+              '        <TR onclick="$(\'#viewlistDiv_SelectGeneForSubmit\').toggle();">' . "\n" .
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
               '          <TD><B>I want to create a transcript variant &raquo;&raquo;</B></TD></TR></TABLE><BR>' . "\n\n");
 
@@ -204,10 +201,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $_GET['page_size'] = 10;
         $_DATA = new LOVD_Gene();
         $_DATA->sRowLink = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
-        print('<DIV id="GeneViewList" style="display:none;">');
         $_GET['search_transcripts'] = '>0';
-        $_DATA->viewList(false, array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
-        print('</DIV>');
+        $_DATA->viewList('SelectGeneForSubmit', array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
+        print('      <SCRIPT type="text/javascript">' . "\n" .
+              '        $("#viewlistDiv_SelectGeneForSubmit").hide();' . "\n" .
+              '      </SCRIPT>' . "\n");
 
         require ROOT_PATH . 'inc-bot.php';
         exit;
@@ -216,14 +214,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-    } elseif (!in_array($_GET['reference'], array('Genome', 'Transcript'))) {
+    } elseif (!in_array($_GET['reference'], array('Genome', 'Transcript')) || ($_GET['reference'] == 'Transcript' && empty($_GET['geneid']))) {
         exit;
     }
 
     // URL: /variants?create&reference=('Genome'|'Transcript')
     // Create a variant on the genome.
 
-    if ($_GET['reference'] == 'Transcript' && isset($_GET['geneid']) && preg_match('/^[a-z][a-z0-9#@-]+$/i', $_GET['geneid'])) {
+    if ($_GET['reference'] == 'Transcript') {
+        // On purpose not checking for format of $_GET['gene']. If it's not right, we'll automatically get to the error message below.
         $sGene = $_GET['geneid'];
         if (!in_array($sGene, lovd_getGeneList())) {
             define('PAGE_TITLE', 'Create a new variant entry');
@@ -232,9 +231,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             lovd_showInfoTable('The gene symbol given is not valid, please go to the create variant page and select the desired gene entry.', 'warning');
             require ROOT_PATH . 'inc-bot.php';
             exit;
+        } else {
+            define('PAGE_TITLE', 'Create a new variant entry for gene ' . $_GET['geneid']);
         }
-    } elseif ($_GET['reference'] == 'Transcript' && empty($_GET['geneid'])) {
-        exit;
+    } else {
+        define('PAGE_TITLE', 'Create a new variant entry');
     }
 
     lovd_isAuthorized('gene', (isset($sGene)? $sGene : $_AUTH['curates']));

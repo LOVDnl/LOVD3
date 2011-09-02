@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-09-01
+ * Modified    : 2011-09-02
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -89,7 +89,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
         parent::LOVD_Custom();
-        
+
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
                  array(
@@ -112,7 +112,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         // Because the disease information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
-        
+
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
@@ -153,7 +153,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
 
 
-    
+
     function checkFields ($aData)
     {
         global $_AUTH, $_SETT, $_CONF;
@@ -165,11 +165,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
             
-            if ($_AUTH['level'] < LEVEL_CURATOR) {
-                if ($aData['statusid'] > $zData['statusid']) {
-                    // FIXME; zullen we deze code in objects_custom doen? 
-                    lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
-                }
+            if ($_AUTH['level'] < LEVEL_CURATOR && $aData['statusid'] > $zData['statusid']) {
+                // FIXME; zullen we deze code in objects_custom doen? 
+                lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
             }
 
             $this->aCheckMandatory[] = 'password';
@@ -182,17 +180,17 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         parent::checkFields($aData);
 
-        if (!isset($_POST['allele']) || !array_key_exists($_POST['allele'], $_SETT['var_allele'])) {
+        if (!isset($aData['allele']) || !array_key_exists($aData['allele'], $_SETT['var_allele'])) {
             lovd_errorAdd('allele', 'Please select a proper allele from the \'Allele\' selection box.');
         }
 
-        if (!empty($_POST['chromosome']) && !array_key_exists($_POST['chromosome'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'])) {
+        if (!empty($aData['chromosome']) && !array_key_exists($aData['chromosome'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'])) {
             lovd_errorAdd('chromosome', 'Please select a proper chromosome from the \'Chromosome\' selection box.');
         }
 
-        if (!empty($_POST['ownerid'])) {
+        if (!empty($aData['ownerid'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($_POST['ownerid']));
+                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['ownerid']));
                 if (!mysql_num_rows($q)) {
                     lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this variant\' selection box.');
                 }
@@ -201,10 +199,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
         }
 
-        if (!empty($_POST['statusid'])) {
-            $aSelectStatus = $_SETT['data_status'];
-            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_IN_PENDING]);
-            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($_POST['statusid'], $aSelectStatus)) {
+        if (!empty($aData['statusid'])) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR && ($aData['statusid'] < STATUS_HIDDEN || !array_key_exists($aData['statusid'], $aSelectStatus))) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
@@ -224,11 +220,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // Build the form.
         global $_AUTH, $_SETT, $_CONF;
 
-        $aChromosomes = array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
         if (!empty($_GET['geneid'])) {
+            // Setting chromosome to $_POST so that insertEntry() will get the correct chromosome value as well. checkFields() will run getForm(), so it will always be available.
             list($_POST['chromosome']) = list($sChromosome) = mysql_fetch_row(lovd_queryDB_Old('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id=?', array($_GET['geneid'])));
             $aFormChromosome = array('Chromosome', '', 'print', $sChromosome);
         } else {
+            $aChromosomes = array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
             $aSelectChromosome = array_combine($aChromosomes, $aChromosomes);
             $aFormChromosome = array('Chromosome', '', 'select', 'chromosome', 1, $aSelectChromosome, false, false, false);
         }
@@ -258,7 +255,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         array('', '', 'note', 'If you wish to report an homozygous variant, please select "Both (homozygous)" here.'),
                         $aFormChromosome,
                       ),
-                 $this->buildViewForm(),
+                 $this->buildForm(),
                  $aTranscriptsForm,
                  array(
                         'hr',

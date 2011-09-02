@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-08-25
+ * Modified    : 2011-09-02
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -79,7 +79,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
         $this->sObjectID = $sObjectID;
         parent::LOVD_Custom();
-        
+
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
                  array(
@@ -95,7 +95,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
         // Because the disease information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
-        
+
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
@@ -122,18 +122,19 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
 
-    
-    function buildViewForm ($sPrefix = '') {
-        return parent::buildViewForm($sPrefix);
+
+    function buildForm ($sPrefix = '') {
+        return parent::buildForm($sPrefix);
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
+        // Loop through all transcripts to have each transcript's set of columns checked.
         foreach($this->aTranscripts as $aTranscript) {
             list($nTranscriptID, $sTranscriptNM) = $aTranscript;
             foreach ($this->aColumns as $sCol => $aCol) {
@@ -148,6 +149,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             }
         }
 
+        // Bypass LOVD_Custom::checkFields(), since it's functionality has been copied above.
         LOVD_Object::checkFields($aData);
 
         lovd_checkXSS();
@@ -163,7 +165,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         $this->aFormData[] = 'skip';
         foreach($this->aTranscripts as $aTranscript) {
             list($nTranscriptID, $sTranscriptNM) = $aTranscript;
-            $this->aFormData = array_merge($this->aFormData, array(array('', '', 'print', '<B>Transcript variant on ' . $sTranscriptNM . '</B>')), $this->buildViewForm($nTranscriptID . '_'), array('skip'));
+            $this->aFormData = array_merge($this->aFormData, array(array('', '', 'print', '<B>Transcript variant on ' . $sTranscriptNM . '</B>')), $this->buildForm($nTranscriptID . '_'), array('skip'));
         }
         unset($this->aFormData[max(array_keys($this->aFormData))]);
         
@@ -183,15 +185,15 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 }
             }
             $aData['transcriptid'] = $nTranscriptID;
-            parent::insertEntry($aData, $aFields);
+            LOVD_Object::insertEntry($aData, $aFields);
         }
         return $this->aTranscripts;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
@@ -209,6 +211,5 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         
         return $zData;
     }
-
 }
 ?>

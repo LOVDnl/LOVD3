@@ -141,7 +141,7 @@ class LOVD_Object {
                 continue;
             }
             @list($sHeader, $sHelp, $sType, $sName) = $aField;
-            $sNameClean = preg_replace('/^\d{5}_/', '', $sName);
+            $sNameClean = preg_replace('/^\d{5}_/', '', $sName); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
 
             // Mandatory fields, as defined by child object.
             if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
@@ -150,7 +150,7 @@ class LOVD_Object {
 
             // Checking free text fields for max length, data types, etc.
             if (in_array($sType, array('text', 'textarea')) && $sMySQLType = lovd_getColumnType(constant($this->sTable), $sNameClean)) {
-                // FIXME; we're assuming here, that $sName equals the database name. Which is true is probably most/every case, but even so...
+                // FIXME; we're assuming here, that $sName equals the database name. Which is true in probably most/every case, but even so...
 
                 // Check max length.
                 $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
@@ -234,11 +234,11 @@ class LOVD_Object {
             }
         }            
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function getCount ($nID = false)
     {
         // Returns the number of entries in the database table.
@@ -364,7 +364,6 @@ class LOVD_Object {
         }
 
         $zData = $this->autoExplode($zData);
-        
 
         return $zData;
     }
@@ -451,11 +450,11 @@ class LOVD_Object {
             }
         }
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function updateEntry ($nID, $aData, $aFields = array())
     {
         // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.

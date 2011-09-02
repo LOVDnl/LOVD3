@@ -5,8 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-08-19
- * Modified    : 2011-08-17
+ * Modified    : 2011-09-02
  * For LOVD    : 3.0-alpha-04
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -43,43 +42,95 @@ define('_INC_TOP_INCLUDED_', true);
 $_MENU = array(
                 'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'Home'),
                  array(
-                        '' => array('View all genes', 0),
-                        'create' => array('Create a new gene entry', LEVEL_MANAGER),
+                        '' => array('menu_magnifying_glass.png', 'View all genes', 0),
+                        'create' => array('plus.png', 'Create a new gene entry', LEVEL_MANAGER),
                       ),
                 'transcripts' => 'View transcripts',
                  array(
-                        '' => array('View all transcripts', 0),
-                        'create' => array('Create a new transcript information entry', LEVEL_CURATOR),
+                        '' => array('menu_magnifying_glass.png', 'View all transcripts', 0),
+                        'create' => array('plus.png', 'Create a new transcript information entry', LEVEL_CURATOR),
                       ),
                 'variants' => 'View variants',
                  array(
-                        '' => array('View all genomic variants', 0),
-                        '/submit' => array('Create a new data submission', LEVEL_SUBMITTER),
+                        '' => array('menu_magnifying_glass.png', 'View all genomic variants', 0),
+                        '/variants/in_gene' => array('menu_magnifying_glass.png', 'View all variants affecting transcripts', 0),
+                        '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                       ),
                 'individuals' => 'View individuals',
                  array(
-                        '' => array('View all individuals', 0),
-                        '/submit' => array('Create a new data submission', LEVEL_SUBMITTER),
+                        '' => array('menu_magnifying_glass.png', 'View all individuals', 0),
+                        '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
+                        'hr',
+                        '/columns/Individual?search_active_=1' => array('', 'View active custom columns', LEVEL_MANAGER),
+                        '/columns/Individual?search_active_=0' => array('', 'Enable more custom columns', LEVEL_MANAGER),
                       ),
                 'diseases' => 'View diseases',
                  array(
-                        '' => array('View all diseases', 0),
-                        'create' => array('Create a new disease information entry', LEVEL_MANAGER), // FIXME; level_curator?
+                        '' => array('menu_magnifying_glass.png', 'View all diseases', 0),
+                        'create' => array('plus.png', 'Create a new disease information entry', LEVEL_MANAGER), // FIXME; level_curator?
                       ),
                 'screenings' => 'View screenings',
+                 array(
+                        '' => array('menu_magnifying_glass.png', 'View all screenings', 0),
+                        '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
+                      ),
                 'submit' => 'Submit new data',
-                array(
-                        '' => array('Submit a new variant', LEVEL_SUBMITTER),
-                     ),
+                 array(
+                         '' => array('plus.png', 'Submit new data', 0),
+                      ),
                 'users' => 'LOVD users &amp; submitters',
+                'users_' =>
+                 array(
+                        '' => array('menu_magnifying_glass.png', 'View all users', LEVEL_MANAGER),
+                        'create' => array('plus.png', 'Register a new user account', LEVEL_MANAGER), // FIXME; submitter_register?
+                        // Public list of submitters?
+                        // My submissions?
+                      ),
+/*
+                'config' =>
+                         array(
+                                array('', '', 'Configuration', 'LOVD configuration area', 'lovd_config'),
+                                array('', 'switch_db', 'Switch gene', 'Switch gene', 'lovd_database_switch'),
+                                array('variants.php', 'search_all&search_status_=Submitted%7CNon_Public%7CMarked', 'Curate', 'Curate', 'lovd_variants_curate'),
+                                'vr',
+                                array('config_free_edit.php', 'fnr', 'Find &amp; Replace', 'Find &amp; Replace', 'lovd_free_edit_fnr'),
+                                array('config_free_edit.php', 'copy', 'Copy Column', 'Copy Column', 'lovd_free_edit_copy'),
+                                'vr',
+                                array('columns', 'add', 'Add column', 'Add unselected pre-configured custom variant column to the ' . $_SESSION['currdb'] . ' gene', 'lovd_columns_add'),
+                                array('columns', 'view_all', 'Edit columns', 'Manage selected custom columns in the ' . $_SESSION['currdb'] . ' gene', 'lovd_columns_edit'),
+                                'vr',
+                                array('genes', 'manage', 'Edit gene db', 'Manage ' . $_SESSION['currdb'] . ' gene', 'lovd_database_edit'),
+                                array('genes', 'empty', 'Empty gene db', 'Empty ' . $_SESSION['currdb'] . ' gene', 'lovd_database_empty'),
+                                'vr',
+                                array('download.php', 'view_all', 'Download', 'Download all variants from the ' . $_SESSION['currdb'] . ' gene database', 'lovd_save'),
+                                array('import', '', 'Import', 'Import variants into the ' . $_SESSION['currdb'] . ' gene database', 'lovd_database_import'),
+                                'vr',
+                                array('scripts', '', 'Scripts', 'LOVD scripts', 'lovd_scripts'),
+                              ),
+*/
                 'setup' => 'LOVD system setup',
+                'setup_' =>
+                 array(
+                        '/settings?edit' => array('menu_settings.png', 'LOVD system settings', LEVEL_MANAGER),
+                        'hr',
+                        '/columns?create' => array('menu_columns_create.png', 'Create new custom data column', LEVEL_MANAGER),
+                        '/columns' => array('menu_columns.png', 'Browse all custom data columns', LEVEL_MANAGER),
+                        'hr',
+                        '/links?create' => array('menu_links.png', 'Create a new custom link', LEVEL_MANAGER),
+                        '/links' => array('menu_links.png', 'Browse all available custom links', LEVEL_MANAGER),
+                        'hr',
+                        '/logs' => array('menu_logs.png', 'View system logs', LEVEL_MANAGER),
+                      ),
 //                'docs' => 'LOVD documentation',
+//                 array(
+//                        '' => array('', 'LOVD manual table of contents', 0),
+//                      ),
               );
 
 // Remove certain menu entries, if the user has no access to them.
 if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
-    unset($_MENU['users']); // FIXME; Submitter list should be public.
-    unset($_MENU['setup']);
+    unset($_MENU['users'], $_MENU['users_']); // FIXME; Submitter list should be public.
+    unset($_MENU['setup'], $_MENU['setup_']);
 }
 
 if (!defined('PAGE_TITLE')) {
@@ -156,7 +207,9 @@ lovd_includeJS('inc-js-openwindow.php', 1);
 lovd_includeJS('inc-js-toggle-visibility.js', 1); // Used on forms and variant overviews for small info tables.
 lovd_includeJS('lib/jQuery/jquery-1.6.2.min.js', 1);
 lovd_includeJS('lib/jQuery/jquery-ui-1.8.15.core.min.js', 1);
+lovd_includeJS('lib/jeegoocontext/jquery.jeegoocontext.min.js', 1);
 ?>
+  <LINK rel="stylesheet" type="text/css" href="lib/jeegoocontext/style.css">
 </HEAD>
 
 <BODY style="margin : 0px;">
@@ -242,39 +295,124 @@ print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="log
 $n         = 0;
 $bSel      = false;
 $bPrevSel  = false;
+$aMenus    = array();
 foreach ($_MENU as $sPrefix => $sTitle) {
-    // Array (children links of parent tabs) are not processed here.
+    // Arrays (children links of parent tabs) can only be processed if we still have the $sFile from the previous run.
     if (is_array($sTitle)) {
+        if (empty($sFile)) {
+            continue;
+        }
+        $sPrefix = substr($sFile, 4); // Remove 'tab_'.
+
+        // Menu will be built in an UL, that will be transformed into a dropdown menu by using the Jeegocontext script by www.planitworks.nl.
+        $sUL = '<UL id="menu_' . $sFile . '" class="jeegoocontext">' . "\n";
+        
+        foreach ($sTitle as $sURL => $aItem) {
+            if (!is_array($aItem)) {
+                if ($aItem == 'hr') {
+                    // Not using the "separator" class from the original code, since it's not compatible to our changes.
+                    $sUL .= '  <LI class="hr"><HR></LI>' . "\n";
+                }
+                continue;
+            }
+            list($sIMG, $sName, $nLevel) = $aItem;
+            $bDisabled = false;
+            if ($nLevel && $nLevel > $_AUTH['level']) {
+                $bDisabled = true;
+            } else {
+                if (!$sURL) {
+                    // Default action of default page.
+                    $sURL = $sPrefix;
+                } elseif ($sURL{0} == '/') {
+                    // Direct URL.
+                    $sURL = substr($sURL, 1);
+                } else {
+                    // Action given.
+                    $sURL = $sPrefix . '?' . $sURL;
+                }
+            }
+
+            if (!$bDisabled) {
+                $sUL .= '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A href="' . $sURL . '">' .
+                    (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
+                    '</A></LI>' . "\n";
+            }
+// class disabled, disabled. Nu gewoon maar even weggehaald.
+//            $sUL .= '  <LI' . ($bDisabled? ' class="disabled">' : (!$sIMG? '' : ' class="icon"') . '><A href="' . $sURL . '">') .
+//                (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
+//                ($bDisabled? '' : '</A>') . '</LI>' . "\n";
+        }
+        $sUL .= '</UL>' . "\n";
+
+        $aMenus[$sFile] = $sUL;
         continue;
     }
+
+
 
     // Determine if we're the current tab.
     $bSel = (substr(lovd_getProjectFile(), 1, strrpos(lovd_getProjectFile(), '.') - 1) == $sPrefix);
     // Auch! Hard coded exception!
     if (!$bSel && $sPrefix == 'docs' && substr(lovd_getProjectFile(), 0, 6) == '/docs/') { $bSel = true; }
-    $sFileName = 'tab_' . $sPrefix;
+    $sFile = 'tab_' . $sPrefix;
 
     // Print transition.
     print('      <IMG src="gfx/tab_' . (!$n? '0' : ($bPrevSel? 'F' : 'B')) . ($bSel? 'F' : 'B') . '.png" alt="" width="25" height="25" align="left">' . "\n");
 
     // Get header info.
-    $sFileName = 'gfx/' . $sFileName . '_' . ($bSel? 'F' : 'B') . '.png';
+    $sFileName = 'gfx/' . $sFile . '_' . ($bSel? 'F' : 'B') . '.png';
     $aImage = @getimagesize($sFileName);
     $sSize = $aImage[3];
 
     // Print header.
-    print('      <A href="' . $sPrefix . '"><IMG src="' . $sFileName . '" alt="' . $sTitle . '" title="' . $sTitle . '" ' . $sSize . ' align="left"></A>' . "\n");
+    print('      <A href="' . $sPrefix . '"><IMG src="' . $sFileName . '" alt="' . $sTitle . '" id="' . $sFile . '" ' . $sSize . ' align="left"></A>' . "\n");
 
     $bPrevSel = $bSel;
     $n ++;
 }
 
-// Closing transition.
-print('      <IMG src="gfx/tab_' . ($bPrevSel? 'F' : 'B') . '0.png" alt="" width="25" height="25" align="left">' . "\n");
-
-print('    </TD>' . "\n" .
+// Closing transition and close TR.
+print('      <IMG src="gfx/tab_' . ($bPrevSel? 'F' : 'B') . '0.png" alt="" width="25" height="25" align="left">' . "\n" .
+      '    </TD>' . "\n" .
       '  </TR>' . "\n" .
       '</TABLE>' . "\n\n");
+
+// Attach dropdown menus.
+print('<!-- Start drop down menu definitions -->' . "\n");
+foreach ($aMenus as $sUL) {
+    print($sUL . "\n");
+}
+print('
+<SCRIPT type="text/javascript">
+  $(function(){
+    var aMenuOptions = {
+        widthOverflowOffset: 0,
+        heightOverflowOffset: 1,' .
+//        submenuLeftOffset: -4,
+//        submenuTopOffset: -2,
+'
+        startLeftOffset: -20,
+        event: "mouseover",
+        openBelowContext: true,
+        autoHide: true,
+        delay: 500,
+        onSelect: function(e, context){
+            if($(this).hasClass("disabled"))
+            {              
+                return false;
+            } else {
+                window.location = $(this).find("a").attr("href");
+                return false;
+            }
+        },
+    };' . "\n");
+
+foreach (array_keys($aMenus) as $sTabID) {
+    print('    $(\'#' . $sTabID . '\').jeegoocontext(\'menu_' . $sTabID . '\', aMenuOptions);' . "\n");
+}
+print('  });
+</SCRIPT>' . "\n" .
+'<!-- End drop down menu definitions -->' . "\n");
 ?>
 
 
