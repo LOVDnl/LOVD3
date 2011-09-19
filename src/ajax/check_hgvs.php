@@ -3,12 +3,13 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2011-01-18
- * Modified    : 2011-09-09
+ * Created     : 2011-09-06
+ * Modified    : 2011-09-15
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *
  *
  *
  * This file is part of LOVD.
@@ -29,30 +30,25 @@
  *************/
 
 define('ROOT_PATH', '../');
-
 require ROOT_PATH . 'inc-init.php';
 
-if (!ACTION || count($_GET) <= 1 ) {
-    echo 'Insufficient arguments given.';
-    exit;
+if (empty($_GET['variant']) || !preg_match('/^(NM_\d{6,9}\.\d{1,2}:c)|(chr.{0,2}:g)\..+$/', $_GET['variant'])) {
+    die(AJAX_DATA_ERROR);
 }
 
-require ROOT_PATH . '/class/REST2SOAP.php';
+// Requires at least LEVEL_SUBMITTER, anything lower has no $_AUTH whatsoever.
+if (!$_AUTH) {
+    // If not authorized, die with error message.
+    die(AJAX_NO_AUTH);
+}
 
+require ROOT_PATH . 'class/REST2SOAP.php';
 $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
 
-$aArgs = array();
-foreach ($_GET as $key => $value) {
-    if ($value) {
-        $aArgs[$key] = $value;
-    }
-}
-
-$aOutput = $_MutalyzerWS->moduleCall(ACTION, $aArgs);
-
-if (!is_array($aOutput)) {
-    echo '"' . str_replace('"', '\"', $aOutput) . '"';
+$aOutput = $_MutalyzerWS->moduleCall('checkSyntax', array('variant' => $_GET['variant']));
+if (isset($aOutput['valid']) && $aOutput['valid'][0]['v'] == 'true') {
+    die(AJAX_TRUE); 
 } else {
-    echo '["' . implode('","', $aOutput) . '"]';
+    die(AJAX_FALSE);
 }
 ?>

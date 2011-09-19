@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-08
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -200,7 +200,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         if (!empty($aData['statusid'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR && ($aData['statusid'] < STATUS_HIDDEN || !array_key_exists($aData['statusid'], $aSelectStatus))) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR && ($aData['statusid'] < STATUS_HIDDEN || !array_key_exists($aData['statusid'], $_SETT['data_status']))) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
@@ -256,9 +256,11 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         $aFormChromosome,
                       ),
                  $this->buildForm(),
+                 array(
+                        'hr'
+                      ),
                  $aTranscriptsForm,
                  array(
-                        'hr',
       'general_skip' => 'skip',
            'general' => array('', '', 'print', '<B>General information</B>'),
        'general_hr1' => 'hr',

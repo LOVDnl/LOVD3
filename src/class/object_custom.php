@@ -5,7 +5,7 @@
  *
  * Created     : 2011-02-17
  * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -158,8 +158,8 @@ class LOVD_Custom extends LOVD_Object {
     function buildFields ()
     {
         // Gathers the columns to be used for lovd_(insert/update)Entry and returns them
-        // FIXME; Neither are used.
-        global $_AUTH, $_PATH_ELEMENTS;
+        // FIXME; Neither are used yet. When authorization is added to this function, then they will.
+        // global $_AUTH, $_PATH_ELEMENTS;
 
         $aFields = array();
         foreach($this->aColumns as $sCol => $aCol) {

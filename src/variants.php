@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-19
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -141,7 +141,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant();
     $_DATA->sRowLink = '';
-    $_DATA->viewList(false, array('id_'), true, true);
+    $_DATA->viewList(false, array('id_', 'transcriptid'), true, true);
     unset($_GET['search_id_']);
 
     $_GET['search_screeningid'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
@@ -344,8 +344,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         }
     }
 
-
-
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
@@ -361,7 +359,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?create&amp;reference=' . $_GET['reference'] . (isset($sGene)? '&amp;geneid=' . rawurlencode($sGene) : '') . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n");
+    print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?create&amp;reference=' . $_GET['reference'] . (isset($sGene)? '&amp;geneid=' . rawurlencode($sGene) : '') . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -372,6 +370,118 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_viewForm($aForm);
 
     print('      </FORM>' . "\n\n");
+    
+?>
+<SCRIPT>
+function lovd_checkHGVS () {
+    var oVariantDNA = $(this);
+    if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA') {
+        var sVariantNotation = 'chr<?php echo (isset($sGene)? $_POST['chromosome'] : '\' + $(\'#variantForm select[name="chromosome"]\').val() + \''); ?>:' + oVariantDNA.val();
+    } else {
+        var sVariantNotation = aTranscripts[oVariantDNA.attr('name').substring(0,5)] + ':' + oVariantDNA.val();
+    }
+    $.get('<?php echo ROOT_PATH; ?>ajax/check_hgvs.php', { variant: sVariantNotation },
+        function(sData) {
+            if (sData != '<?php echo AJAX_TRUE; ?>') {
+                $(oVariantDNA).siblings('img:first').attr({
+                    src: 'gfx/cross.png',
+                    alt: 'Not a valid HGVS syntax!',
+                    title: 'Not a valid HGVS syntax!'
+                }).show();
+                <?php echo (isset($sGene)? '$(oVariantDNA).siblings(\'button:eq(0)\').hide();' : '') ?>
+            } else {
+                $(oVariantDNA).siblings('img:first').attr({
+                    src: 'gfx/check.png',
+                    alt: 'Valid HGVS syntax!',
+                    title: 'Valid HGVS syntax!'
+                }).show();
+                <?php echo (isset($sGene)? '$(oVariantDNA).siblings(\'button:eq(0)\').show();' : '') ?>
+            }
+        });
+    return false;
+};
+
+function lovd_convertPosition (oElement) {
+    var oThisDNA = $(oElement).siblings('input:first');
+    if (oThisDNA.attr('name') == 'VariantOnGenome/DNA') {
+        var sVariantNotation = 'chr<?php echo $_POST['chromosome']; ?>:' + oThisDNA.val();
+    } else {
+        var sVariantNotation = aTranscripts[oThisDNA.attr('name').substring(0,5)] + ':' + oThisDNA.val();
+    }
+    $.get('<?php echo ROOT_PATH; ?>ajax/convert_position.php', { variant: sVariantNotation },
+        function(sData) {
+            if (sData != '<?php echo AJAX_DATA_ERROR; ?>' || sData != '<?php echo AJAX_FALSE; ?>') {
+                if (oThisDNA.attr('name') == 'VariantOnGenome/DNA') {
+                    aVariants = sData.split(';');
+                    var nVariants = aVariants.length;
+                    for (i=0; i<nVariants; i++) {
+                        var aVariant = /^(NM_\d{6,9}\.\d{1,2}):(c\..+)$/.exec(aVariants[i]);
+                        var oInput = $('#variantForm input[id_ncbi="' + aVariant[1] + '"]');
+                        if (oInput[0] != undefined) {
+                            oInput.attr('value', aVariant[2]);
+                            oInput.siblings('img:first').attr({
+                                src: 'gfx/check.png',
+                                alt: 'Valid HGVS syntax!',
+                                title: 'Valid HGVS syntax!'
+                            }).show();
+                            oInput.siblings('button:eq(0)').hide();
+                        }
+                    }
+                    $(oThisDNA).siblings('button:eq(0)').hide();
+                } else {
+                    var aVariant = /:(g\..+)$/.exec(sData);
+                    var oInput = $('#variantForm input[name="VariantOnGenome/DNA"]');
+                    oInput.attr('value', aVariant[1]);
+                    oInput.siblings('img:first').attr({
+                        src: 'gfx/check.png',
+                        alt: 'Valid HGVS syntax!',
+                        title: 'Valid HGVS syntax!'
+                    }).show();
+                    lovd_convertPosition(oInput.siblings('button:eq(0)'));
+                }
+            } else {
+                $(oThisDNA).siblings('img:first').attr({
+                    src: 'gfx/cross.png',
+                    alt: 'Not a valid HGVS syntax!',
+                    title: 'Not a valid HGVS syntax!'
+                }).show();
+                $(oThisDNA).siblings('button:eq(0)').hide();
+            }
+        });
+    return false;
+};
+
+var aTranscripts = {
+<?php 
+    if (isset($sGene)) {
+        $i = 0;
+        foreach($_DATA['Transcript']->aTranscripts as $nTranscriptID => $sTranscriptNM) {
+            if ($i == 0) {
+                echo '';
+            } else {
+                echo ', ';
+            }
+            echo '\'' . $nTranscriptID . '\' : \'' . $sTranscriptNM . '\''; 
+            $i++;
+        }
+    }
+?>};
+$( function () {
+    var oGenomicVariant = $('#variantForm input[name="VariantOnGenome/DNA"]');
+    $(oGenomicVariant).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($sGene)? '&nbsp;<BUTTON onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
+    $(oGenomicVariant).change(lovd_checkHGVS);
+    var oTranscriptVariants = $('#variantForm input[name$="_VariantOnTranscript/DNA"]');
+    if (oTranscriptVariants[0] != undefined) {
+        $(oTranscriptVariants).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($sGene)? '&nbsp;<BUTTON onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
+        var nTranscriptVariants = oTranscriptVariants.size();
+        for (i=0; i<nTranscriptVariants; i++) {
+            $(oTranscriptVariants[i]).attr('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0,5)]);
+        }
+        $(oTranscriptVariants).change(lovd_checkHGVS);
+    }
+});
+</SCRIPT>
+<?php
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

@@ -5,6 +5,19 @@
  *************/
 
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
+/*******************
+ * 3.0 Alpha 05
+ * 2011-10-04
+ *********/
+- Fixed bug; When deleting a user, an error occurred because of an invalid query to the database.
+- Fixed bug; When creating an individual entry, an error could have been shown on the screen.
+- Fixed bug; Registering a user would result into an infinite loop, freezing the browser because the code was expecting the user to be logged in.
+- Added new cross and check images in 11x11 and 16x16 and removed the old ones.
+- Added a register user functionality.
+- Added a reCAPTCHA library.
+- Implemented a reCAPTCHA to the user register form.
+- Implemented AJAX calls into the variant submission form so that the HGVS is checked instantly and you can convert the position from genomic to the transcripts and vice versa.
+
 
 /*******************
  * 3.0 Alpha 04

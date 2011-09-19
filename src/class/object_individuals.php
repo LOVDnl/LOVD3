@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-07
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -213,7 +213,7 @@ class LOVD_Individual extends LOVD_Custom {
 
         if (!empty($aData['statusid'])) {
             $aSelectStatus = $_SETT['data_status'];
-            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_IN_PENDING]);
+            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_PENDING]);
             if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($aData['statusid'], $aSelectStatus)) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {

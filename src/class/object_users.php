@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-08-30
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-08
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -119,7 +119,7 @@ class LOVD_User extends LOVD_Object {
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
                       );
 
         // Because the user information is publicly available, remove some columns for the public.
@@ -190,7 +190,7 @@ class LOVD_User extends LOVD_Object {
                         'countryid',
                         'email',
                       );
-        if (lovd_getProjectFile() == '/install/index.php' || ACTION == 'create') {
+        if (lovd_getProjectFile() == '/install/index.php' || in_array(ACTION, array('create', 'register'))) {
             $this->aCheckMandatory = array_merge($this->aCheckMandatory,
                      array(
                             'username',
@@ -228,7 +228,7 @@ class LOVD_User extends LOVD_Object {
             }
         }
 
-        if (ACTION == 'create') {
+        if (in_array(ACTION, array('create', 'register'))) {
             // Does the username exist already?
             if ($aData['username']) {
                 if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE username = ?', array($aData['username'])))) {
@@ -254,6 +254,22 @@ class LOVD_User extends LOVD_Object {
                     lovd_errorAdd('password_2', 'If you want to change the current password, please fill in both \'New password\' fields.');
                 } else {
                     lovd_errorAdd('password_2', 'Please fill in both \'Password\' fields.');
+                }
+            }
+        }
+
+        // Adding CAPTCHA check on registration form.
+        // If no response has been filled in, we need to complain. Otherwise, we should check the answer.
+        if (ACTION == 'register') {
+            $sCAPTCHAerror = '';
+            if (empty($_POST['recaptcha_response_field'])) {
+                lovd_errorAdd('', 'Please fill in the two words that you see in the image at the bottom of the form.');
+            } else {
+                // Check answer!
+                $response = recaptcha_check_answer('6Le0JQQAAAAAAB-iLSVi81tR5s8zTajluFFxkTPL', $_SERVER['REMOTE_ADDR'], $_POST['recaptcha_challenge_field'], $_POST['recaptcha_response_field']);
+                if (!($response->is_valid)) {
+                    lovd_errorAdd('', 'Registration authentication failed. Please try again by filling in the two words that you see in the image at the bottom of the form.');
+                    $sCAPTCHAerror = $response->error;
                 }
             }
         }
@@ -310,11 +326,13 @@ class LOVD_User extends LOVD_Object {
             // "Normal" user form; create user, edit user.
             $qCountryList = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_COUNTRIES . ' ORDER BY name');
 
-            // Remove user levels that are higher than or equal to the current user's level.
-            unset($aUserLevels[LEVEL_COLLABORATOR], $aUserLevels[LEVEL_OWNER], $aUserLevels[LEVEL_CURATOR]); // Aren't real user levels.
-            for ($i = LEVEL_ADMIN; $i >= $_AUTH['level']; $i --) {
-                if (isset($aUserLevels[$i])) {
-                    unset($aUserLevels[$i]);
+            if ($_AUTH) {
+                // Remove user levels that are higher than or equal to the current user's level IF you are logged in.
+                unset($aUserLevels[LEVEL_COLLABORATOR], $aUserLevels[LEVEL_OWNER], $aUserLevels[LEVEL_CURATOR]); // Aren't real user levels.
+                for ($i = LEVEL_ADMIN; $i >= $_AUTH['level']; $i --) {
+                    if (isset($aUserLevels[$i])) {
+                        unset($aUserLevels[$i]);
+                    }
                 }
             }
 
@@ -329,6 +347,7 @@ class LOVD_User extends LOVD_Object {
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
                         array('', '', 'print', '<B>User details</B>'),
+                        'hr',
                         array('Name', '', 'text', 'name', 30),
                         array('Institute', '', 'text', 'institute', 40),
                         array('Department (optional)', '', 'text', 'department', 40),
@@ -339,25 +358,31 @@ class LOVD_User extends LOVD_Object {
             'passwd' => array('Password', '', 'password', 'password_1', 20),
     'passwd_confirm' => array('Password (confirm)', '', 'password', 'password_2', 20),
      'passwd_change' => array('Must change password at next logon', '', 'checkbox', 'password_force_change'),
+                        'hr',
                         'skip',
                         array('', '', 'print', '<B>Referencing the lab</B>'),
+                        'hr',
                         array('Country', '', 'select', 'countryid', 1, ($bInstall? $aCountryList : $qCountryList), true, false, false),
                         array('City', 'Please enter your city, even if it\'s included in your postal address, for sorting purposes.', 'text', 'city', 30),
                         array('Reference (optional)', 'Your submissions will contain a reference to you in the format "Country:City" by default. You may change this to your preferred reference here.', 'text', 'reference', 30),
+                        'hr',
                         'skip',
                         array('', '', 'print', '<B>Security</B>'),
+                        'hr',
              'level' => array('Level', '', 'select', 'level', 1, $aUserLevels, false, false, false),
                         array('Allowed IP address list', 'To help prevent others to try and guess the username/password combination, you can restrict access to the account to a number of IP addresses or ranges.', 'text', 'allowed_ip', 20),
                         array('', '', 'note', '<I>Your current IP address: ' . $_SERVER['REMOTE_ADDR'] . '</I><BR><B>Please be extremely careful using this setting.</B> Using this setting too strictly, can deny the user access to LOVD, even if the correct credentials have been provided.<BR>Set to \'*\' to allow all IP addresses, use \'-\' to specify a range and use \';\' to separate addresses or ranges.'),
             'locked' => array('Locked', '', 'checkbox', 'locked'),
+                        'hr',
 'authorization_skip' => 'skip',
-     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20));
+     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
+                        'skip');
 
-        if ($bInstall) {
+        if ($bInstall || ACTION == 'register') {
             // No need to ask for the user's password when the user is not created yet.
             unset($this->aFormData['authorization_skip'], $this->aFormData['authorization']);
         }
-        if ($bInstall || (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == $_AUTH['id'])) {
+        if ($bInstall || (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == $_AUTH['id']) || ACTION == 'register') {
             // Some fields not allowed when creating/editing your own account.
             unset($this->aFormData['passwd_change'], $this->aFormData['level'], $this->aFormData['locked']);
         }
@@ -381,7 +406,6 @@ class LOVD_User extends LOVD_Object {
                 unset($this->aFormData['change_self']);
             }
         }
-
         return parent::getForm();
     }
 

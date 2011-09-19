@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-09
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -74,8 +74,10 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
         // SQL code for viewing the list of variants
         // FIXME: we should implement this in a different way
-        $this->aSQLViewList['SELECT']   = 'vot.*';
-        $this->aSQLViewList['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
+        $this->aSQLViewList['SELECT']   = 'vot.*, ' . 
+                                          't.id_ncbi';
+        $this->aSQLViewList['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
+                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id=vot.transcriptid)';
 
         $this->sObjectID = $sObjectID;
         parent::LOVD_Custom();
@@ -102,6 +104,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'transcriptid' => array(
                                     'view' => array('Transcript ID', 90),
                                     'db'   => array('vot.transcriptid', 'ASC', true)),
+                        'id_ncbi' => array(
+                                    'view' => array('Transcript', 120),
+                                    'db'   => array('t.id_ncbi', 'ASC', true)),
                         'id_' => array(
                                     'view' => array('Variant ID', 90),
                                     'db'   => array('vot.id', 'ASC', true)),
@@ -110,10 +115,10 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                  array(
                       ));
 
-        $this->sSortDefault = 'transcriptid';
+        $this->sSortDefault = 'id_ncbi';
         $qTranscripts = lovd_queryDB_Old('SELECT id, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid=? ORDER BY id_ncbi', array($sObjectID));
         While($r = mysql_fetch_row($qTranscripts)) {
-            $this->aTranscripts[] = $r;
+            $this->aTranscripts[$r[0]] = $r[1];
         }
 
         $this->sRowLink = 'variants/{{ID}}';
@@ -135,8 +140,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     {
         // Checks fields before submission of data.
         // Loop through all transcripts to have each transcript's set of columns checked.
-        foreach($this->aTranscripts as $aTranscript) {
-            list($nTranscriptID, $sTranscriptNM) = $aTranscript;
+        foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
             foreach ($this->aColumns as $sCol => $aCol) {
                 $sCol = $nTranscriptID . '_' . $sCol;
                 if ($aCol['mandatory']) {
@@ -163,9 +167,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     {
         $this->aFormData = array();
         $this->aFormData[] = 'skip';
-        foreach($this->aTranscripts as $aTranscript) {
-            list($nTranscriptID, $sTranscriptNM) = $aTranscript;
-            $this->aFormData = array_merge($this->aFormData, array(array('', '', 'print', '<B>Transcript variant on ' . $sTranscriptNM . '</B>')), $this->buildForm($nTranscriptID . '_'), array('skip'));
+        foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
+            $this->aFormData = array_merge($this->aFormData, array(array('', '', 'print', '<B>Transcript variant on ' . $sTranscriptNM . '</B>')), array('hr'), $this->buildForm($nTranscriptID . '_'), array('hr'), array('skip'));
         }
         unset($this->aFormData[max(array_keys($this->aFormData))]);
         
@@ -177,8 +180,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
     function insertAll ($aData, $aFields = array())
     {
-        foreach($this->aTranscripts as $aTranscript) {
-            list($nTranscriptID, $sTranscriptNM) = $aTranscript;
+        foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
             foreach($aFields as $sField) {
                 if (strpos($sField, '/')) {
                     $aData[$sField] = $aData[$nTranscriptID . '_' . $sField];

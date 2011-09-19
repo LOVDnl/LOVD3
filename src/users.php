@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-08-31
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-13
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -449,7 +449,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
     // Find curated genes and see if they're alone.
-    $q = lovd_queryDB_Old('SELECT DISTINCT geneid FROM ' . TABLE_USERS2GENES . ' WHERE geneid NOT IN (SELECT DISTINCT geneid FROM ' . TABLE_USERS2GENES . ' WHERE userid != ? AND allow_edit = 1)', array($nID), true);
+    $q = lovd_queryDB_Old('SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE geneid NOT IN (SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE userid != ? AND allow_edit = 1)', array($nID), true);
     $aCuratedGenes = array();
     while ($r = mysql_fetch_row($q)) {
         // Gene has no curator, and user is going to be deleted!
@@ -597,7 +597,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+/*if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
     // URL: /users/00001?delete
     // Remove a user from the system
     
@@ -797,7 +797,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
-}
+}*/
 
 
 
@@ -878,6 +878,116 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
 
     // Return the user where they came from.
     header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);
+    exit;
+}
+
+
+
+
+
+if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
+    // URL: users?register
+    // Register a new submitter
+
+    define('PAGE_TITLE', 'Register as new submitter');
+    define('LOG_EVENT', 'UserRegister');
+
+    if ($_AUTH) {
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('You are already a registered user.', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
+
+    require ROOT_PATH . 'class/object_users.php';
+    $_DATA = new LOVD_User();
+    require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'lib/reCAPTCHA/inc-lib-recaptcha.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'reference', 'username', 'password', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'created_date');
+
+            // Prepare values.
+            $_POST['password_force_change'] = 0;
+            $_POST['password'] = lovd_createPasswordHash($_POST['password_1']);
+            $_POST['level'] = LEVEL_SUBMITTER;
+            $_POST['login_attempts'] = 0;
+            $_POST['created_by'] = $_AUTH['id'];
+            $_POST['created_date'] = date('Y-m-d H:i:s');
+
+            $nID = $_DATA->insertEntry($_POST, $aFields);
+
+            $_SESSION['auth'] = $_DB->prepare('SELECT * FROM ' . TABLE_USERS . ' WHERE id=', array($nID))->fetch(PDO::FETCH_ASSOC);
+            $_AUTH &= $_SESSION['auth'];
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL());
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            // FIXME; uncomment this when e-mail notification is implemented.
+            lovd_showInfoTable('Your account has successfully been created!'/*'<BR>' . "\n" .
+                               'We\'ve sent you an email containing your account information.'*/, 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password'], $_POST['password_1'], $_POST['password_2']);
+        }
+
+    } else {
+        // Default values.
+        $_DATA->setDefaultValues();
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    if (GET) {
+        print('      To register as a new submitter, please fill out the form below.<BR>' . "\n" .
+              '      <BR>' . "\n\n");
+    }
+
+    lovd_errorPrint();
+    lovd_showInfoTable('Please note that you do <B>NOT</B> need to register to view the data available at these pages. You only need an account for submitting new variants.', 'warning');
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    global $sCAPTCHAerror;
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        array('', '', 'print', '<B>Registration authentication</B>'),
+                        'hr',
+                        array('Please fill in the two words that you see in the image', '', 'print', recaptcha_get_html('6Le0JQQAAAAAAPQ55JT0m0_AVX5RqgSnHBplWHxZ', $sCAPTCHAerror, SSL)),
+                        'hr',
+                        'skip',
+                        array('', '', 'submit', 'Register'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
     exit;
 }
 ?>

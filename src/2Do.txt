@@ -153,9 +153,6 @@ MOET OVERLEGD WORDEN:
   * Link IND2DIS: "proven"/"presumed" flag?
 - Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.
 - Als een viewList() gesorteerd wordt, moet de page terug naar 1?
-- Submissie LOVD 1.1.0 vergeleken met 2.0, vergeleken met 3.0:
-  * Hoe emails? Pas als klaar? Wat nou als niet klaar wordt opgegeven?
-  * Wanneer opslaan?
 - (BELANGRIJK) Allele => Gametic Phase? Check alle waardes in de groep.
 - Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
 - Hoe kunnen we toch toestaan, dat users voor een grote groep genen tegelijk curator kunnen worden gemaakt?

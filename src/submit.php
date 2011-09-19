@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2011-09-01
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-09
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -131,7 +131,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'variant') {
 
     if (isset($_GET['variantid']) && ctype_digit($_GET['variantid'])) {
         $_GET['variantid'] = str_pad($_GET['variantid'], 10, "0", STR_PAD_LEFT);
-        $zData = $_DB->prepare('SELECT * FROM ' . TABLE_VARIANTS . ' WHERE id=? AND statusid=?', array($_GET['variantid'], STATUS_IN_PROGRESS));
+        $zData = $_DB->prepare('SELECT id FROM ' . TABLE_VARIANTS . ' WHERE id=? AND statusid=?', array($_GET['variantid'], STATUS_IN_PROGRESS));
         if ($zData) {
             // STUB
         } else {
