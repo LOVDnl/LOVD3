@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-06
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -503,7 +503,7 @@ if (($sCharSet = mysql_client_encoding()) && $sCharSet != 'utf8') {
 
 // Initiate Database Connection (NEW WAY).
 require ROOT_PATH . 'class/PDO.php';
-$_DB = new LOVD_PDO('mysql:host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
+$_DB = new LOVD_PDO('mysql', 'host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
 
 
 
@@ -654,7 +654,7 @@ if (!defined('_NOT_INSTALLED_')) {
             // Saves me quering the database!
             $_SETT['admin'] = array('name' => $_AUTH['name'], 'email' => $_AUTH['email']);
         } else {
-            $_SETT['admin'] = array();
+            $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
             list($_SETT['admin']['name'], $_SETT['admin']['email']) = mysql_fetch_row(lovd_queryDB_Old('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN)));
         }
 

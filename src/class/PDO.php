@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2011-09-01
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-06
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -40,15 +40,20 @@ if (!defined('ROOT_PATH')) {
 class LOVD_PDO extends PDO {
     // This class provides a wrapper around PDO such that query errors are handled automatically by LOVD.
     var $PDO;
-    // FIXME; lovd_queryDB() provided the option to pass NULL. Does that work also in LOVD_PDO::prepare()->execute() ?
     // FIXME; lovd_queryDB() provided a $bDebug argument. How to implement that now?
     // FIXME; could we maybe use query() for an interface to PDO::query() AND PDO::prepare()?
     //   Especially if we're never using the (distinct!) optional arguments that these two functions have.
 
-    function LOVD_PDO ($sDSN, $sUsername, $sPassword)
+    function LOVD_PDO ($sBackend, $sDSN, $sUsername, $sPassword)
     {
         // Initiate database connection.
-        $aOptions = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'); // This method works also before 5.3.6, when "charset" was introduced in the DSN.
+        $sDSN = $sBackend . ':' . $sDSN;
+        if ($sBackend == 'mysql') {
+            // This method for setting the charset works also before 5.3.6, when "charset" was introduced in the DSN.
+            $aOptions = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8', PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE);
+        } else {
+            $aOptions = array();
+        }
         try {
             $this->PDO = new PDO($sDSN, $sUsername, $sPassword, $aOptions);
             $this->PDO->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -111,7 +116,7 @@ class LOVD_PDO extends PDO {
         try {
             $q = $this->PDO->prepare($sSQL, $aOptions);
             // Feature normal PDO does not allow; usually we want the query to be executed right away!
-            if (is_array($aSQL) && count($aSQL)) {
+            if (is_array($aSQL)) {
                 // lovd_queryDB() allowed the passing of arrays in the arguments.
                 foreach ($aSQL as $nKey => $Arg) {
                     if (is_array($Arg)) {

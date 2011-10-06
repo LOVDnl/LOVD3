@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-21
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -35,17 +35,17 @@ if (!defined('ROOT_PATH')) {
     exit;
 }
 
-// 2009-07-17; 2.0-20; Added increased execution time to help perform large upgrades.
-if ((int) ini_get('max_execution_time') < 60) {
-    set_time_limit(60);
-}
-
 // How are the versions related?
 $sCalcVersionFiles = lovd_calculateVersion($_SETT['system']['version']);
 $sCalcVersionDB = lovd_calculateVersion($_STAT['version']);
 
 if ($sCalcVersionFiles != $sCalcVersionDB) {
     // Version of files are not equal to version of database backend.
+
+    // Increased execution time to help perform large upgrades.
+    if ((int) ini_get('max_execution_time') < 60) {
+        @set_time_limit(60);
+    }
 
     // DB version greater than file version... then we have a problem.
     if ($sCalcVersionFiles < $sCalcVersionDB) {

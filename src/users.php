@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-09-13
+ * Modified    : 2011-10-06
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -924,20 +924,64 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
-            $_SESSION['auth'] = $_DB->prepare('SELECT * FROM ' . TABLE_USERS . ' WHERE id=', array($nID))->fetch(PDO::FETCH_ASSOC);
+            $_SESSION['auth'] = $_DB->prepare('SELECT * FROM ' . TABLE_USERS . ' WHERE id=?', array($nID))->fetch(PDO::FETCH_ASSOC);
             $_AUTH &= $_SESSION['auth'];
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
 
+            $aTo = array(array($_POST['name'], $_POST['email']));
+
+            $sMessage = 'Dear ' . $_POST['name'] . ',' . "\n\n" .
+                        'You have registered as a submitter of sequence variations for this LOVD system.' . "\n" .
+                        'Below is a copy of your registration information.' . "\n\n";
+
+            if ($_CONF['location_url']) {
+                $sMessage .= 'To log in to LOVD, click this link:' . "\n" .
+                             $_CONF['location_url'] . 'login' . "\n\n";
+            }
+            $sMessage .= 'Regards,' . "\n" .
+                         '    LOVD system at ' . $_CONF['institute'] . "\n\n";
+
+            // Array containing the fields.
+            $_POST['id'] = $nID;
+            list($_POST['country_']) = $_DB->prepare('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id=?', array($_POST['countryid']))->fetch();
+            $aMailFields =
+                     array(
+                            'data_source' => '_POST',
+                            'id' => 'Submitter ID',
+                            'name' => 'Name',
+                            'institute' => 'Institute',
+                            'department' => 'Department',
+                            'address' => 'Address',
+                            'city' => 'City',
+                            'country_' => 'Country',
+                            'email' => 'Email address',
+                            'telephone' => 'Telephone',
+                            'reference' => 'Reference',
+                            'username' => 'Username',
+                            'password_1' => 'Password',
+                          );
+
+            $aBody = array('message' => $sMessage, 'submitter_details' => $aMailFields);
+
+            $sBody = lovd_formatMail($aBody);
+
+            // Set proper subject.
+            $sSubject = 'LOVD registration';
+
+            // Send mail.
+            $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers']);
+
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL());
+            header('Refresh: ' . ($bMail? '3' : '5') . '; url=' . lovd_getInstallURL() . 'genes');
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            // FIXME; uncomment this when e-mail notification is implemented.
-            lovd_showInfoTable('Your account has successfully been created!'/*'<BR>' . "\n" .
-                               'We\'ve sent you an email containing your account information.'*/, 'success');
+            lovd_showInfoTable('Your account has successfully been created!<BR>' . "\n" .
+                               ($bMail? 'We\'ve sent you an email containing your account information.' : 
+                               'Due to an error, we couldn\'t send you an email containing your account information. Our apologies for the inconvenience.'),
+                               ($bMail? 'success' : 'information'));
 
             require ROOT_PATH . 'inc-bot.php';
             exit;

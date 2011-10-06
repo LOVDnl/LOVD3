@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-08-25
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-06
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -577,7 +577,11 @@ class LOVD_Object {
 
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOnlyRows = false)
     {
-        global $_PATH_ELEMENTS;
+        global $_PATH_ELEMENTS, $_DB;
+
+        if (!defined('LOG_EVENT')) {
+           define('LOG_EVENT', $this->sObject . '::viewList()');
+        }
 
         // Views list of entries in the database, allowing search.
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
@@ -648,6 +652,9 @@ class LOVD_Object {
                                         }
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
+                                    } elseif (preg_match('/^=""$/', $sTerm)) {
+                                        $$CLAUSE .= $aCol['db'][0] . ' IS ?';
+                                        $aArguments[$CLAUSE][] = NULL;
                                     } else {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
@@ -677,6 +684,9 @@ class LOVD_Object {
                                         }
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm) . (substr($sOperator, -4) == 'LIKE'? '%' : '');
+                                    } elseif (preg_match('/^=""$/', $sTerm)) {
+                                        $$CLAUSE .= $aCol['db'][0] . ' IS ?';
+                                        $aArguments[$CLAUSE][] = NULL;
                                     } else {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
@@ -686,15 +696,11 @@ class LOVD_Object {
                                         $sTerm = trim($sTerm, '"');
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'LIKE';
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
-                                        $sTerm = preg_replace('/^!/', '', $sTerm);
-                                        $sTerm = trim($sTerm, '"');
-                                        $aArguments[$CLAUSE][] = '%' . lovd_escapeSearchTerm($sTerm) . '%';
-                                    } elseif (preg_match('/^!?="([^"]+)"$/', $sTerm, $aMatches)) {
+                                        $aArguments[$CLAUSE][] = '%' . lovd_escapeSearchTerm($aMatches[1]) . '%';
+                                    } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
-                                        $sTerm = preg_replace('/^[!=]=?/', '', $sTerm);
-                                        $sTerm = trim($sTerm, '"');
-                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
+                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($aMatches[1]);
                                     } else {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
@@ -794,8 +800,8 @@ class LOVD_Object {
             // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
             // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
             // Last checked 2010-01-25, by Ivo Fokkema.
-            lovd_queryDB_Old('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
-            lovd_queryDB_Old('START TRANSACTION');
+            $_DB->query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+            $_DB->beginTransaction();
 
             // Run the actual query.
             $aArgs = array();
@@ -806,20 +812,16 @@ class LOVD_Object {
                 $aArgs[] = $aArg;
             }
 
-            $q = lovd_queryDB_Old($sSQL, $aArgs);
-            if (!$q) {
-// FIXME; what if using AJAX? Probably we should generate a number here, indicating the system to try once more. If that fails also, the JS should throw a general error, maybe.
-                lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewList()'), $sSQL, mysql_error());
-            }
+            $q = $_DB->prepare($sSQL, $aArgs);
 
             // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
-            list($nTotal) = mysql_fetch_row(lovd_queryDB_Old('SELECT FOUND_ROWS()'));
-            lovd_queryDB_Old('COMMIT'); // To end the transaction and the locks that come with it.
+            $nTotal = $_DB->query('SELECT FOUND_ROWS() AS rows')->fetchColumn();
+            $_DB->commit(); // To end the transaction and the locks that come with it.
 
             // It is possible, when increasing the page size from a page > 1, that you're ending up in an invalid page with no results.
             // Catching this error, by redirecting from here. Only Ajax handles this correctly, because in normal requests inc-top.php already executed.
             // NOTE: if we ever decide to have a page_size change reset page to 1, we can drop this code.
-            if (!mysql_num_rows($q) && $nTotal && !headers_sent()) {
+            if (!$q->rowCount() && $nTotal && !headers_sent()) {
                 // No results retrieved, but there are definitely hits to this query. Limit was wrong!
                 header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?' . preg_replace('/page=[^&]+/', 'page=1', $_SERVER['QUERY_STRING']));
                 exit;
@@ -900,7 +902,7 @@ class LOVD_Object {
                 $sBadSyntaxColumns = implode(', ', array_unique($aBadSyntaxColumns));
                 // FIXME; use an IF here.
                 $sMessageNormal = 'No results have been found that match your criteria.<BR>Please redefine your search criteria.';
-                $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) >= 2? 's' : '') . ' contain incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';
+                $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) > 1? 's contain' : ' contains') . ' incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';
                 $sMessage = (empty($aBadSyntaxColumns)? $sMessageNormal : $sMessageBadSyntax);
                 if ($bOnlyRows) {
                     die('0'); // Silent error.
@@ -937,7 +939,7 @@ class LOVD_Object {
             // ALTERNATIVE: create JS function lovd_restoreRowLink_XXX() (XXX == viewListID) that restores the rowLink, also after an Ajax Call.
         }
 
-        while ($zData = mysql_fetch_assoc($q)) {
+        while ($zData = $q->fetch(PDO::FETCH_ASSOC)) {
             // If row_id is not given by the database, but it should be created according to some format ($this->sRowID), put the data's ID in this format.
             if (!isset($zData['row_id'])) {
                 if ($this->sRowID !== '' && isset($zData['id'])) {

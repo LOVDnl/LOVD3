@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-08-16
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-05
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -100,6 +100,7 @@ function lovd_emailError ($sErrorCode, $sType, $bHalt = false)
     // Formats email errors for the error log, and optionally halts the system.
 
     // Format the error message.
+    // FIXME; Kan makkelijker???
     $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . $sErrorCode . '.' . "\n" .
               'Email type : ' . $sType;
 
@@ -165,7 +166,7 @@ function lovd_errorClean ()
 
 function lovd_errorFindField ($sField)
 {
-    // Returns index of whether or not a certain form field has an error or not.
+    // Returns index of whether or not a certain form field has an error.
     global $_ERROR;
     return @array_search($sField, $_ERROR['fields']);
 }
@@ -185,6 +186,57 @@ function lovd_errorPrint ()
         print('      <DIV class="err">' . "\n" .
               '        ' . implode('<BR>' . "\n" . '        ', $_ERROR['messages']) . '</DIV><BR>' . "\n\n");
     }
+}
+
+
+
+
+
+function lovd_formatMail ($aBody)
+{
+    // Returns a formatted body to send to the user.
+    // Format:
+    // $aBody = array(
+    //                'message' => 'Standard introduction message to the user',
+    //                'topic_title' => array(
+    //                                       'data_source' => 'variableName',
+    //                                       'key' => 'valueHeader',
+    //                                       'key' => 'valueHeader',
+    //                                      )
+    //               );
+
+    if (empty($aBody) || !is_array($aBody)) {
+        return false;
+    }
+
+    $sBody = $aBody['message'];
+    unset($aBody['message']);
+    if (count($aBody)) {
+        foreach($aBody as $sTopic => $aContent) {
+            $sSource = $aContent['data_source'];
+            unset($aContent['data_source']);
+
+            $sBody .= str_repeat('-', 70) . "\n" .
+                      '  ' . strtoupper(str_replace('_', ' ', $sTopic))  . "\n" .
+                      str_repeat('-', 70) . "\n";
+
+            // Padding to...
+            $lPad = 0;
+            foreach ($aContent as $val) {
+                $l = strlen($val);
+                if ($l > $lPad) {
+                    $lPad = $l;
+                }
+            }
+
+            foreach ($aContent as $key => $val) {
+                $sBody .= str_pad($val, $lPad) . ' : ' . str_replace("\n", "\n" . str_repeat(' ', $lPad + 3), lovd_wrapText($GLOBALS[$sSource][$key], 70 - $lPad - 3)) . "\n";
+            }
+            $sBody .= str_repeat('-', 70) . "\n\n";
+        }
+    }
+
+    return $sBody;
 }
 
 
@@ -306,6 +358,55 @@ function lovd_matchUsername ($s)
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Matches a string to the username pattern (non standard).
     return (preg_match('/^[A-Z][A-Z0-9_.-]{3,19}$/i', $s));
+}
+
+
+
+
+
+function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true)
+{
+    // Format:
+    // $aTo = array(
+    //              array('Name', "Email\r\nEmail\r\nEmail"),
+    //              array('Name', "Email\r\nEmail")
+    //             );
+
+    global $_SETT, $_CONF;
+
+    $sTo = '';
+    foreach ($aTo as $aRecipient) {
+        list($sName, $sEmails) = array_values($aRecipient);
+        $aEmails = explode("\r\n", $sEmails);
+        foreach ($aEmails as $sEmail) {
+            $sTo .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+        }
+    }
+    $sTo = rtrim($sTo, ', ');
+    $sBody = lovd_wrapText($sBody);
+
+    $bSafeMode = ini_get('safe_mode');
+
+    if (!$bSafeMode) {
+        $bMail = @mail($sTo, $sSubject, $sBody, $sHeaders, '-f ' . $_CONF['email_address']);
+    } else {
+        $bMail = @mail($sTo, $sSubject, $sBody, $sHeaders);
+    }
+
+    if ($bMail && $bFwdAdmin) {
+        $sBody = preg_replace('/^(Password[\s*]+: ).+/m', "$1" . '<password hidden>', $sBody);
+        $sBody = 'Dear ' . $_SETT['admin']['name'] . ",\n\n" .
+                 'As requested, a copy of the message I\'ve just sent.' . "\n\n" .
+                 str_repeat('-', 25) . ' Forwarded  Message ' . str_repeat('-', 25) . "\n\n" .
+                 rtrim($sBody) . "\n\n" .
+                 str_repeat('-', 22) . ' End of Forwarded Message ' . str_repeat('-', 22) . "\n";
+        return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'], false);
+    } elseif (!$bMail) {
+        lovd_writeLog('Error', 'SendMail', preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . LOG_EVENT . '.' . "\n" .
+                                           'Error : Couldn\'t send a mail with subject ' . $sSubject . ' to ' . $sTo);
+    }
+
+    return $bMail;
 }
 
 
@@ -557,7 +658,7 @@ function lovd_viewForm ($a,
 
 
 
-function lovd_wrapText ($s, $l = 80, $sCut = ' ')
+function lovd_wrapText ($s, $l = 70, $sCut = ' ')
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Wraps a text to a certain length.
@@ -569,6 +670,7 @@ function lovd_wrapText ($s, $l = 80, $sCut = ' ')
     }
     if ($sCut != ' ') {
         // If it's not a space, we will add it to the end of each line as well, so we use extra space.
+        // If word has no length, this may lovd_wrapText wrap at $l - 1;
         $l --;
     }
     $aCutAlt = array('-', ';', ',', ':', ')', '(', '&', '*', '>', '<');
