@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-08-18
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-12
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -36,7 +36,7 @@ function lovd_calculateVersion ($sVersion)
 
     // Slightly different preg_match pattern.
     if (preg_match('/^([1-9]\.[0-9](\.[0-9])?)(\-([0-9a-z-]{2,11}))?$/', $sVersion, $aVersion)) {
-        $sReturn = str_pad(str_replace('.', '', $aVersion[1]), 4, '0');
+        $sReturn = sprintf('%-04s', str_replace('.', '', $aVersion[1]));
         if (isset($aVersion[3])) {
             if (preg_match('/^(pre|dev)(\-([0-9]{2})([a-z])?)?$/', $aVersion[4], $aSub)) {
                 $sReturn -= 3;
@@ -581,9 +581,9 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
 
     // A data type that can be owned by somebody. First try and prove the ownership.
     // Check if Data is a $zData or a (list of) IDs.
-    if (array_key_exists('id', $Data) && array_key_exists('ownerid', $Data) && array_key_exists('created_by', $Data)) {
+    if (array_key_exists('id', $Data) && array_key_exists('owned_by', $Data) && array_key_exists('created_by', $Data)) {
         // $zData is being sent.
-        if ($Data['ownerid'] == $_AUTH['id'] || $Data['created_by'] == $_AUTH['id']) {
+        if ($Data['owned_by'] == $_AUTH['id'] || $Data['created_by'] == $_AUTH['id']) {
             if ($bSetUserLevel) {
                 $_AUTH['level'] = LEVEL_OWNER;
             }
@@ -594,7 +594,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
 
 
     if ($sType == 'variant') {
-        // Base authorization on ownerid (LEVEL_OWNER), created_by (LEVEL_OWNER) or otherwise try and find the gene this entry belongs to (LEVEL_CURATOR).
+        // Base authorization on owned_by (LEVEL_OWNER), created_by (LEVEL_OWNER) or otherwise try and find the gene this entry belongs to (LEVEL_CURATOR).
         // Array can be $zData or list of variant IDs.
         if (array_key_exists('id', $Data)) {
             // Variant's $zData is being sent.
@@ -607,7 +607,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         }
 
         // First: try to prove ownership/created_by.
-        list($bOwner) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (ownerid = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])), true));
+        list($bOwner) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])), true));
         if ($bOwner) {
             if ($bSetUserLevel) {
                 $_AUTH['level'] = LEVEL_OWNER;
@@ -918,6 +918,8 @@ function lovd_shortenString ($s, $l)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Shortens string nicely to a given length.
+    // FIXME; Should take into account any ( characters in the string and should close them after shortening them.
+    // FIXME; Should be able to shorten from the left as well, useful with for example transcript names.
     if (strlen($s) > $l) {
         $s = substr($s, 0, $l - 3) . '...';
     }

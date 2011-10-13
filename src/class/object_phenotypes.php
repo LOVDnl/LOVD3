@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-11
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -57,7 +57,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         $this->sSQLLoadEntry = 'SELECT p.*, ' .
                                'uo.name AS owner ' .
                                'FROM ' . TABLE_PHENOTYPES . ' AS p ' .
-                               'LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) ' .
+                               'LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id) ' .
                                'WHERE p.id = ?';
 
         // SQL code for viewing an entry.
@@ -68,7 +68,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (p.diseaseid = d.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (p.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (p.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'p.id';
@@ -78,7 +78,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                                           'p.id AS phenotypeid, ' .
                                           'uo.name AS owner';
         $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
-                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.ownerid = uo.id)';
+                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id)';
 
         $this->sObjectID = $sObjectID;
 
@@ -143,23 +143,23 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             // Mandatory fields.
-            $this->aCheckMandatory[] = 'ownerid';
+            $this->aCheckMandatory[] = 'owned_by';
             $this->aCheckMandatory[] = 'statusid';
         }
 
         parent::checkFields($aData);
 
         // FIXME; move to object_custom.php.
-        if (!empty($aData['ownerid'])) {
+        if (!empty($aData['owned_by'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['ownerid']));
+                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']));
                 if (!mysql_num_rows($q)) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this phenotype entry\' selection box.');
+                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this phenotype entry\' selection box.');
                 }
             } else {
                 // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
-                lovd_errorAdd('ownerid', 'Not allowed to change \'Owner of this phenotype entry\'.');
+                lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this phenotype entry\'.');
             }
         }
 
@@ -202,7 +202,7 @@ class LOVD_Phenotype extends LOVD_Custom {
             }
             $aSelectStatus = $_SETT['data_status'];
             unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
-            $aFormOwner = array('Owner of this phenotype entry', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
+            $aFormOwner = array('Owner of this phenotype entry', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false);
         } else {
             $aFormOwner = array();
@@ -263,7 +263,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         } else {
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
             $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';
-            $zData['owner_'] = '<A href="users/' . $zData['ownerid'] . '">' . $zData['owner_'] . '</A>';
+            $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner_'] . '</A>';
             $zData['status_'] = $_SETT['data_status'][$zData['statusid']];
         }
 
@@ -279,7 +279,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         global $_AUTH;
         
         $_POST['statusid'] = STATUS_OK;
-        $_POST['ownerid'] = $_AUTH['id'];
+        $_POST['owned_by'] = $_AUTH['id'];
         $this->initDefaultValues();
     }
 }

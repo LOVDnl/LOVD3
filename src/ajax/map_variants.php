@@ -151,7 +151,7 @@ $_SESSION['mapping']['current'][0] += $i;
 
 $nPercentage = round(round((($_SESSION['mapping']['current'][0] * 100) / $_SESSION['mapping']['current'][1]) / $nParts) * $nParts);
 if ($nPercentage == 100) { $nPercentage --; }
-print(str_pad($nPercentage, 2, '0', STR_PAD_LEFT) . "\t" . 'Mapping ' . $sGene . ': ' . round(($_SESSION['mapping']['current'][0] * 100) / $_SESSION['mapping']['current'][1]) . '% done...');
+print(sprintf('%02d', $nPercentage) . "\t" . 'Mapping ' . $sGene . ': ' . round(($_SESSION['mapping']['current'][0] * 100) / $_SESSION['mapping']['current'][1]) . '% done...');
 *///////////////////////////////////////////////////////////////////////////////
 ?>
 

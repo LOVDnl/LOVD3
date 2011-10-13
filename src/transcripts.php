@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-08-26
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-07
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -73,7 +73,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /transcripts/00001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View transcript #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -404,7 +404,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /transcripts/00001?edit
     // Edit a transcript
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Edit transcript #' . $nID);
     define('LOG_EVENT', 'TranscriptEdit');
 
@@ -490,7 +490,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /transcripts/00001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
     define('LOG_EVENT', 'TranscriptDelete');
 

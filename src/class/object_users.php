@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-09-08
+ * Modified    : 2011-10-12
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -59,11 +59,11 @@ class LOVD_User extends LOVD_Object {
                                'WHERE id = ?';
 
         // SQL code to insert the level names into the database output, so it can be searched on.
-        //   Problem is however, that the sorting than fails (alphabet and not level integer).
-        //   This can only be fixed, if we can get the field to sort on u.level but show and search on 'level'.
-        $sLevelQuery = ''; // FIXME; currently unused.
+        $sLevelQuery = '';
+        $aLevels = $_SETT['user_levels'];
+        unset($aLevels[LEVEL_OWNER]);
         foreach ($_SETT['user_levels'] as $nLevel => $sLevel) {
-            $sLevelQuery .= ' WHEN "' . $nLevel . '" THEN "' . $sLevel . '"';
+            $sLevelQuery .= ' WHEN "' . $nLevel . '" THEN "' . $nLevel . $sLevel . '"';
         }
 
         // SQL code for viewing an entry.
@@ -85,7 +85,8 @@ class LOVD_User extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
                                           'COUNT(CASE u2g.allow_edit WHEN 1 THEN u2g.geneid END) AS curates, ' .
                                           'c.name AS country_, ' .
-                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level';
+                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level_, ' . 
+                                          'CASE GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . '))' . $sLevelQuery . ' END AS level';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
@@ -111,7 +112,7 @@ class LOVD_User extends LOVD_Object {
                         'saved_work_' => 'Saved work',
                         'curates_' => 'Curator for',
 //                        'submits' => 'Submits',
-                        'level_' => 'User level',
+                        'level' => 'User level',
                         'allowed_ip_' => 'Allowed IP address list',
                         'status_' => 'Status',
                         'locked_' => 'Locked',
@@ -161,12 +162,11 @@ class LOVD_User extends LOVD_Object {
                         'created_date_' => array(
                                     'view' => array('Started', 80),
                                     'db'   => array('u.created_date', 'ASC', true)),
-                        'level_' => array(
+                        'level' => array(
                                     'view' => array('Level', 150),
-                                    // FIXME; zoeken op de level naam moet een oplossing voor gevonden worden!!!
-                                    'db'   => array('level', 'DESC', false)),
+                                    'db'   => array('level', 'DESC', 'TEXT')),
                       );
-        $this->sSortDefault = 'level_';
+        $this->sSortDefault = 'level';
 
         parent::LOVD_Object();
     }
@@ -426,7 +426,7 @@ class LOVD_User extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         $zData['active'] = file_exists(session_save_path() . '/sess_' . $zData['phpsessid']);
-        $zData['level_'] = $_SETT['user_levels'][$zData['level']];
+        $zData['level'] = substr($zData['level'], 1);
         if ($sView == 'list') {
             $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['name'] . '</A>';
             $sAlt = ($zData['active']? 'Online' : ($zData['locked']? 'Locked' : 'Offline'));

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-10-05
+ * Modified    : 2011-10-11
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -197,11 +197,11 @@ function lovd_formatMail ($aBody)
     // Returns a formatted body to send to the user.
     // Format:
     // $aBody = array(
-    //                'message' => 'Standard introduction message to the user',
-    //                'topic_title' => array(
-    //                                       'data_source' => 'variableName',
-    //                                       'key' => 'valueHeader',
-    //                                       'key' => 'valueHeader',
+    //                '<introduction message>',
+    //                '<topic_header>' => array(
+    //                                       '<sourceVariableName>',
+    //                                       '<key>' => '<valueHeader>',
+    //                                       '<key>' => '<valueHeader>',
     //                                      )
     //               );
 
@@ -209,12 +209,12 @@ function lovd_formatMail ($aBody)
         return false;
     }
 
-    $sBody = $aBody['message'];
-    unset($aBody['message']);
+    $sBody = $aBody[0];
+    unset($aBody[0]);
     if (count($aBody)) {
         foreach($aBody as $sTopic => $aContent) {
-            $sSource = $aContent['data_source'];
-            unset($aContent['data_source']);
+            $sSource = $aContent[0];
+            unset($aContent[0]);
 
             $sBody .= str_repeat('-', 70) . "\n" .
                       '  ' . strtoupper(str_replace('_', ' ', $sTopic))  . "\n" .
@@ -230,7 +230,7 @@ function lovd_formatMail ($aBody)
             }
 
             foreach ($aContent as $key => $val) {
-                $sBody .= str_pad($val, $lPad) . ' : ' . str_replace("\n", "\n" . str_repeat(' ', $lPad + 3), lovd_wrapText($GLOBALS[$sSource][$key], 70 - $lPad - 3)) . "\n";
+                $sBody .= sprintf('%-' . $lPad . 's', $val) . ' : ' . str_replace("\n", "\n" . str_repeat(' ', $lPad + 3), lovd_wrapText($GLOBALS[$sSource][$key], 70 - $lPad - 3)) . "\n";
             }
             $sBody .= str_repeat('-', 70) . "\n\n";
         }
@@ -264,7 +264,7 @@ function lovd_fetchDBID ($sGene, $sVariant, $sMutationCol = 'Variant/DNA')
             $sID = $sSymb . '_00001';
         } else {
             $nID = substr($sID, -5) + 1;
-            $sID = $sSymb . '_' . str_pad($nID, 5, '0', STR_PAD_LEFT);
+            $sID = $sSymb . '_' . sprintf('%05d', $nID);
         }
     } else {
         // 2009-08-26; 2.0-21; Select the first so-called word of the Variant/DBID field
@@ -524,7 +524,7 @@ function lovd_viewForm ($a,
             } elseif ($aField == 'hr') {
                 // Horizontal line (ruler).
                 // This construction may not entirely be correct when this function is called with different prefixes & suffixes than the default ones.
-                echo str_replace(' width="' . $sHeaderWidth . '"', '', str_replace('<TD', '<TD colspan="3"', $sHeaderPrefix)) . '<IMG src="' . ROOT_PATH . 'gfx/trans.png" alt="" width="100%" height="1" class="form_hr">' . $sDataSuffix;
+                echo str_replace(' width="' . $sHeaderWidth . '"', '', str_replace('<TD', '<TD colspan="3"', $sHeaderPrefix)) . '<IMG src="gfx/trans.png" alt="" width="100%" height="1" class="form_hr">' . $sDataSuffix;
                 continue;
             } elseif ($aField == 'end_fieldset' && $bInFieldset) {
                 // End of fieldset. Only given when fieldset is open and no new fieldset should be opened.

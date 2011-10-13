@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-09-01
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-11
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -77,7 +77,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /phenotypes/0000000001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View phenotype #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -120,7 +120,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_requireAUTH();
     
     if (!empty($_GET['target']) && ctype_digit($_GET['target'])) {
-        $_GET['target'] = str_pad($_GET['target'], 8, "0", STR_PAD_LEFT);
+        $_GET['target'] = sprintf('%08d', $_GET['target']);
         if (mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id=?', array($_GET['target'])))) {
             $_POST['individualid'] = $_GET['target'];
             define('PAGE_TITLE', 'Create a new phenotype information entry for individual #' . $_GET['target']);
@@ -140,7 +140,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_errorClean();
 
     if (!empty($_GET['diseaseid']) && ctype_digit($_GET['diseaseid'])) {
-        $_POST['diseaseid'] = str_pad($_GET['diseaseid'], 5, '0', STR_PAD_LEFT);
+        $_POST['diseaseid'] = sprintf('%05d', $_GET['diseaseid']);
         // Check if there are phenotype columns enabled for this disease & check if the $_POST['diseaseid'] is actually linked to this individual.
         if (!mysql_num_rows(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid'])))) {
             lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease id or no phenotype columns have been enabled for this disease.');
@@ -211,11 +211,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('diseaseid', 'individualid', 'ownerid', 'statusid', 'created_by', 'created_date'),
+                            array('diseaseid', 'individualid', 'owned_by', 'statusid', 'created_by', 'created_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
-            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
@@ -299,7 +299,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /phenotypes/0000000001?edit
     // Edit an entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Edit an phenotype information entry');
     define('LOG_EVENT', 'PhenotypeEdit');
 
@@ -331,7 +331,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('ownerid', 'statusid', 'edited_by', 'edited_date'),
+                            array('owned_by', 'statusid', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
@@ -340,11 +340,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Ivo: Daar heb je gelijk in, maar technisch gesproken wordt de data niet veranderd -
             //   de controle die hier staat (alleen curator en hoger mag owner en status aanpassen)
             //   staat al in checkFields(), dus wordt hier dubbel gedaan. Eigenlijk staat hier dus:
-            //   $_POST['ownerid'] = (!empty($_POST['ownerid'])? $_POST['ownerid'] : $_AUTH['id']);
+            //   $_POST['owned_by'] = (!empty($_POST['owned_by'])? $_POST['owned_by'] : $_AUTH['id']);
             //   en dat doen (eigenlijk een standaard waarde invullen) lijkt me best in
             //   checkFields() te passen. Sterker nog, objects::checkFields() heeft al dat soort
             //   dingen voor selection lists en checkboxes.
-            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
@@ -415,7 +415,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /phenotypes/0000000001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete phenotype information entry ' . $nID);
     define('LOG_EVENT', 'PhenotypeDelete');
 

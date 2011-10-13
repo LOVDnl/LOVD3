@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-09-19
+ * Modified    : 2011-10-11
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -110,7 +110,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /variants/0000000001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View genomic variant #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -168,7 +168,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     if (isset($_GET['target'])) {
         // On purpose not checking for numeric target. If it's not numeric, we'll automatically get to the error message below.
-        $_GET['target'] = str_pad($_GET['target'], 10, '0', STR_PAD_LEFT);
+        $_GET['target'] = sprintf('%010d', $_GET['target']);
         if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
             $_POST['screeningid'] = $_GET['target'];
         } else {
@@ -261,11 +261,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
             $aFieldsGenome = array_merge(
-                                array('allele', 'chromosome', 'ownerid', 'statusid', 'created_by', 'created_date'),
+                                array('allele', 'chromosome', 'owned_by', 'statusid', 'created_by', 'created_date'),
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
-            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
@@ -495,7 +495,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /variants/0000000001?edit
     // Edit an entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Edit a variant entry');
     define('LOG_EVENT', 'VariantEdit');
 
@@ -516,13 +516,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('allele', 'chromosome', 'ownerid', 'statusid', 'edited_by', 'edited_date'),
+                            array('allele', 'chromosome', 'owned_by', 'statusid', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
             // FIXME; deze checks kloppen niet; een submitter's edit zal nu een variant per definitie verbergen en de owner wordt mogelijk ook gereset.
             //   De "else" in deze checks zou eigenlijk de $zData waardes moeten zijn, of beter nog, pas in de $aFields zetten bij level >= LEVEL_CURATOR.
-            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
@@ -596,7 +596,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /variants/0000000001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete variant entry #' . $nID);
     define('LOG_EVENT', 'VariantDelete');
 

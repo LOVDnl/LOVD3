@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-10-06
+ * Modified    : 2011-10-12
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -101,7 +101,7 @@ $_SETT = array(
                 'user_levels' =>
                      array(
                             LEVEL_ADMIN        => 'Database administrator',
-                            LEVEL_MANAGER      => 'LOVD manager',
+                            LEVEL_MANAGER      => 'Manager',
                             LEVEL_CURATOR      => 'Curator',
                             LEVEL_OWNER        => 'Submitter (data owner)',
                             LEVEL_COLLABORATOR => 'Collaborator',
@@ -705,11 +705,11 @@ if (!defined('_NOT_INSTALLED_')) {
         }
 
         $_SETT['email_headers'] = 'MIME-Version: 1.0' . $sEol .
-                            'Content-Type: text/plain; charset=ISO-8859-1' . $sEol .
-                            'X-Priority: 3' . $sEol .
-                            'X-MSMail-Priority: Normal' . $sEol .
-                            'X-Mailer: PHP/' . phpversion() . $sEol .
-                            'From: ' . (ON_WINDOWS? '' : '"LOVDv.' . $_SETT['system']['version'] . ' (' . $_CONF['institute'] . ')" ') . '<' . $_CONF['email_address'] . '>';
+                                  'Content-Type: text/plain; charset=ISO-8859-1' . $sEol .
+                                  'X-Priority: 3' . $sEol .
+                                  'X-MSMail-Priority: Normal' . $sEol .
+                                  'X-Mailer: PHP/' . phpversion() . $sEol .
+                                  'From: ' . (ON_WINDOWS? '' : '"LOVD (' . lovd_shortenString($_CONF['system_title'], 50) . ')" ') . '<' . $_CONF['email_address'] . '>';
     }
 
 /*

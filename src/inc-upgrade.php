@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-09-21
+ * Modified    : 2011-10-11
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -115,6 +115,32 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'INSERT INTO ' . TABLE_DATA_STATUS . ' VALUES (' . STATUS_PENDING . ', "Pending")',
                                 'UPDATE ' . TABLE_COLS . ' SET description_form = "This ID is used to group multiple instances of the same variant together. The ID starts with the gene symbol of the transcript most influenced by the variant or otherwise the closest gene, followed by an underscore (_) and the ID code, which consists of six digits." WHERE id = "VariantOnGenome/DBID" AND description_form = "This ID is used to group multiple instances of the same variant together. The ID starts with the gene symbol of the transcript most influenced by the variant or otherwise the closest gene, followed by an underscore (_) and the ID code, usually six digits."',
                               ),
+                    '3.0-alpha-05' =>
+                         array(
+                                'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP FOREIGN KEY ' . TABLE_INDIVIDUALS . '_fk_ownerid',
+                                'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP KEY ownerid',
+                                'ALTER TABLE ' . TABLE_INDIVIDUALS . ' CHANGE ownerid owned_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD INDEX (owned_by)',
+                                'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_fk_ownerid',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' DROP KEY ownerid',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' CHANGE ownerid owned_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (owned_by)',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+
+                                'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP FOREIGN KEY ' . TABLE_PHENOTYPES . '_fk_ownerid',
+                                'ALTER TABLE ' . TABLE_PHENOTYPES . ' DROP KEY ownerid',
+                                'ALTER TABLE ' . TABLE_PHENOTYPES . ' CHANGE ownerid owned_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD INDEX (owned_by)',
+                                'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD CONSTRAINT ' . TABLE_PHENOTYPES . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+
+                                'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP FOREIGN KEY ' . TABLE_SCREENINGS . '_fk_ownerid',
+                                'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP KEY ownerid',
+                                'ALTER TABLE ' . TABLE_SCREENINGS . ' CHANGE ownerid owned_by SMALLINT(5) UNSIGNED ZEROFILL',
+                                'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD INDEX (owned_by)',
+                                'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                              ),
                   );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -143,7 +169,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
             $sFormNextPage .= '          <INPUT type="hidden" name="' . $key . '" value="' . htmlspecialchars($val) . '">' . "\n";
         }
     }
-    $sFormNextPage .= '          <INPUT type="submit" id="submit" value="Proceed &gt;&gt;">' . "\n" .
+    $sFormNextPage .= '          <INPUT type="submit" id="submit" value="Proceed &raquo;">' . "\n" .
                       '        </FORM>';
     // This already puts the progress bar on the screen.
     $_BAR = new ProgressBar('', 'Checking upgrade lock...', $sFormNextPage);
@@ -226,7 +252,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                       'Error while executing query ' . $i . ':\n' .
                                       '<PRE style="background : #F0F0F0;">' . htmlspecialchars($sError) . '</PRE><BR>\n\n' .
                                       'This implies these MySQL queries need to be executed manually:<BR>\n' .
-                                      '<PRE style="background : #F0F0F0;">\n<SPAN style="background : #C0C0C0;">' . str_pad($i, strlen(count($aSQL)), ' ', STR_PAD_LEFT) . '</SPAN> ' . htmlspecialchars($sSQL) . ';\n';
+                                      '<PRE style="background : #F0F0F0;">\n<SPAN style="background : #C0C0C0;">' . sprintf('%' . strlen(count($aSQL)) . 'd', $i) . '</SPAN> ' . htmlspecialchars($sSQL) . ';\n';
 
                     } else {
                         $nSQLDone ++;
@@ -244,7 +270,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                 } else {
                     // Something went wrong, so we need to print out the remaining queries...
                     $nSQLFailed ++;
-                    $sSQLFailed .= '<SPAN style="background : #C0C0C0;">' . str_pad($i, strlen(count($aSQL)), ' ', STR_PAD_LEFT) . '</SPAN> ' . htmlspecialchars($sSQL) . ';\n';
+                    $sSQLFailed .= '<SPAN style="background : #C0C0C0;">' . sprintf('%' . strlen(count($aSQL)) . 'd', $i) . '</SPAN> ' . htmlspecialchars($sSQL) . ';\n';
                 }
             }
 

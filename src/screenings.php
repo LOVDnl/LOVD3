@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-09-01
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-11
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -65,7 +65,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /screenings/0000000001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, '0', STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View screening #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -130,7 +130,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_requireAUTH();
     
     if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
-        $_GET['target'] = str_pad($_GET['target'], 8, "0", STR_PAD_LEFT);
+        $_GET['target'] = sprintf('%08d', $_GET['target']);
         if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
             $_POST['individualid'] = $_GET['target'];
             define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
@@ -158,11 +158,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('individualid', 'ownerid', 'created_by', 'created_date'),
+                            array('individualid', 'owned_by', 'created_by', 'created_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
-            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
@@ -263,7 +263,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /screenings/0000000001?edit
     // Edit an entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 10, "0", STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Edit an screening information entry');
     define('LOG_EVENT', 'ScreeningEdit');
 
@@ -284,12 +284,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('ownerid', 'edited_by', 'edited_date'),
+                            array('owned_by', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
             $_POST['individualid'] = $zData['individualid'];
-            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
             
@@ -401,7 +401,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /screenings/0000000001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
     define('LOG_EVENT', 'ScreeningDelete');
 

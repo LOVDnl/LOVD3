@@ -203,7 +203,7 @@ if (empty($_POST)) {
     print('      Welcome to the LOVD uninstaller. Please continue by providing your password.<BR>' . "\n" .
           '      <BR>' . "\n\n");
 
-    lovd_showInfoTable('WARNING! If you did not download your data, you will loose all of it!', 'warning');
+    lovd_showInfoTable('WARNING! If you did not download your data, you will lose all of it!', 'warning');
 }
 
 lovd_errorPrint();

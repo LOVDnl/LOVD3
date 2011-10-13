@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-09-01
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-11
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -65,7 +65,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /individuals/00000001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
+    $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View individual #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -184,11 +184,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('ownerid', 'statusid', 'created_by', 'created_date'),
+                            array('owned_by', 'statusid', 'created_by', 'created_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
-            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
@@ -216,7 +216,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             if (count($aSuccessDiseases)) {
-                lovd_writeLog('Event', LOG_EVENT, 'Disease entries successfully added to individual ' . $nID . ' - (Owner: ' . $_POST['ownerid'] . ')');
+                lovd_writeLog('Event', LOG_EVENT, 'Disease entries successfully added to individual ' . $nID . ' - (Owner: ' . $_POST['owned_by'] . ')');
                 $nDiseases = mysql_num_rows(lovd_queryDB_Old('SELECT DISTINCT diseaseid FROM ' . TABLE_SHARED_COLS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($_POST['active_diseases']) - 1) . ')', $_POST['active_diseases']));
             } else {
                 $nDiseases = 0;
@@ -300,7 +300,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /individuals/00000001?edit
     // Edit an entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
+    $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Edit individual #' . $nID);
     define('LOG_EVENT', 'IndividualEdit');
 
@@ -321,12 +321,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('ownerid', 'statusid', 'edited_by', 'edited_date'),
+                            array('owned_by', 'statusid', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
             // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
-            $_POST['ownerid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['ownerid'] : $_AUTH['id']);
+            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
@@ -446,7 +446,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /individuals/00000001?delete
     // Drop specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 8, '0', STR_PAD_LEFT);
+    $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete individual information entry ' . $nID);
     define('LOG_EVENT', 'IndividualDelete');
 

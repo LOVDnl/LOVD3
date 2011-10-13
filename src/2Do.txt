@@ -9,7 +9,6 @@ Prioritize:
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - Alpha 05: We're missing the ID_sort !!!
-- Alpha 05: Ownerid => owned_by
 - Alpha 05: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
 - Alpha 05: Phenotypes tab
 - Alpha 05: /columns/VariantOnTranscript/DMD -> viewList kolommen actief op DMD
@@ -292,7 +291,6 @@ LOVD 3.0
 
 KNOWN BUGS:
 ===========
-The user lists viewEntry() and viewList() should know the difference between submitters, collaborators and curators.
 
 Overdenkingen / Kleinere dingen om te doen:
 ===========================================

@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-03-08
- * For LOVD    : 3.0-pre-18
+ * Modified    : 2011-10-12
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -97,7 +98,7 @@ function lovd_checkURL () {
         if (objHTTP.status == 200 && objHTTP.responseText.substring(0,4) == "http") {
             objField.value = objHTTP.responseText;
             // 2009-06-26; 2.0-19; Fixed URL such that it works from all locations.
-            objCheck.innerHTML = '<IMG src="<?php echo lovd_getInstallURL(); ?>gfx/mark_1.png" align="top">';
+            objCheck.innerHTML = '<IMG src="<?php echo lovd_getInstallURL(); ?>gfx/check.png">';
         } else {
             // Throw error.
             if (!objField.value) {
@@ -113,6 +114,6 @@ function lovd_checkURL () {
         // Change "loading" image with a clean "Failed" image.
         window.alert("Sorry, your browser does not support automated verification of the URL.");
         // 2009-06-26; 2.0-19; Fixed URL such that it works from all locations.
-        objCheck.innerHTML = '<IMG src="<?php echo lovd_getInstallURL(); ?>gfx/mark_0.png" align="top">';
+        objCheck.innerHTML = '<IMG src="<?php echo lovd_getInstallURL(); ?>gfx/cross.png">';
     }
 }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-09-08
+ * Modified    : 2011-10-11
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,7 +69,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS vog ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.ownerid = uo.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (vog.edited_by = ue.id)';
@@ -84,7 +84,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.ownerid = uo.id) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
         $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
@@ -174,7 +174,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $this->aCheckMandatory[] = 'ownerid';
+            $this->aCheckMandatory[] = 'owned_by';
             $this->aCheckMandatory[] = 'statusid';
         }
 
@@ -188,14 +188,14 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             lovd_errorAdd('chromosome', 'Please select a proper chromosome from the \'Chromosome\' selection box.');
         }
 
-        if (!empty($aData['ownerid'])) {
+        if (!empty($aData['owned_by'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['ownerid']));
+                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']));
                 if (!mysql_num_rows($q)) {
-                    lovd_errorAdd('ownerid', 'Please select a proper owner from the \'Owner of this variant\' selection box.');
+                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this variant\' selection box.');
                 }
             } else {
-                lovd_errorAdd('ownerid', 'Not allowed to change \'Owner of this variant\'.');
+                lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this variant\'.');
             }
         }
 
@@ -238,7 +238,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
             $aSelectStatus = $_SETT['data_status'];
             unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
-            $aFormOwner = array('Owner of this variant', '', 'select', 'ownerid', 1, $aSelectOwner, false, false, false);
+            $aFormOwner = array('Owner of this variant', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false);
         } else {
             $aFormOwner = array();
@@ -303,7 +303,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         if ($sView == 'list') {
             // STUB
         } else {
-            $zData['owner_'] = '<A href="users/' . $zData['ownerid'] . '">' . $zData['owner_'] . '</A>';
+            $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner_'] . '</A>';
         }
 
         $zData['allele_'] = $_SETT['var_allele'][$zData['allele']];
@@ -320,7 +320,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         global $_AUTH;
         
         $_POST['statusid'] = STATUS_OK;
-        $_POST['ownerid'] = $_AUTH['id'];
+        $_POST['owned_by'] = $_AUTH['id'];
         $this->initDefaultValues();
     }
 }

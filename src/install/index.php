@@ -190,7 +190,7 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
                  $_USER->getForm(),
                  array(
                         'skip',
-                        array('', '', 'submit', 'Continue'),
+                        array('', '', 'submit', 'Continue &raquo;'),
                       ));
     lovd_viewForm($aForm);
 
@@ -581,7 +581,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . T
                  $_SYSSETTING->getForm(),
                  array(
                         'skip',
-                        array('', '', 'submit', 'Continue'),
+                        array('', '', 'submit', 'Continue &raquo;'),
                       ));
     lovd_viewForm($aForm);
 

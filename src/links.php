@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2011-08-12
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-07
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -68,7 +68,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /links/001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 3, '0', STR_PAD_LEFT);
+    $nID = sprintf('%03d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View custom link #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -210,7 +210,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /links/001?edit
     // Edit specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 3, '0', STR_PAD_LEFT);
+    $nID = sprintf('%03d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Edit custom link #' . $nID);
     define('LOG_EVENT', 'LinkEdit');
 
@@ -343,7 +343,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /links/001?delete
     // Delete specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 3, '0', STR_PAD_LEFT);
+    $nID = sprintf('%03d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete custom link #' . $nID);
     define('LOG_EVENT', 'LinkDelete');
 

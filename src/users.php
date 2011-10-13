@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-10-06
+ * Modified    : 2011-10-12
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -68,7 +68,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /users/00001
     // View specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View user account #' . $nID);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -208,7 +208,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /users/00001?edit
     // Edit specific entry.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Edit user account #' . $nID);
     define('LOG_EVENT', 'UserEdit');
 
@@ -323,7 +323,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /users/00001?change_password
     // Change a user's password.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Change password for user account #' . $nID);
     define('LOG_EVENT', 'UserResetPassword');
 
@@ -423,7 +423,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /users/00001?delete
     // Delete a specific user.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 
@@ -531,9 +531,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // FIXME; extend this later.
             list($nLogs) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID)));
             list($nCurates) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($nID)));
-            list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
-            list($nScreenings) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
-            list($nVars) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE ownerid = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
+            list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
+            list($nScreenings) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
+            list($nVars) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
             list($nGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE created_by = ? OR edited_by = ?', array($nID, $nID)));
 
             lovd_showInfoTable('<B>The user you are about to delete has the following references to data in this installation:</B><BR>' .
@@ -601,7 +601,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // URL: /users/00001?delete
     // Remove a user from the system
     
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 
@@ -730,9 +730,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
         lovd_errorPrint();
 
-        list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE ownerid=?', array($nID)));
-        list($nScreenings) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE ownerid=?', array($nID)));
-        list($nVars) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE ownerid=?', array($nID)));
+        list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE owned_by=?', array($nID)));
+        list($nScreenings) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE owned_by=?', array($nID)));
+        list($nVars) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE owned_by=?', array($nID)));
         list($nGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE edited_by=?', array($nID)));
 
         print('      <PRE>' . "\n" .
@@ -778,7 +778,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     lovd_errorPrint();
 
-    lovd_showInfoTable('WARNING! If you delete this user, you will loose all the references to this person in the data!', 'warning');
+    lovd_showInfoTable('WARNING! If you delete this user, you will lose all the references to this person in the data!', 'warning');
 
     // Table.
     print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
@@ -807,7 +807,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // users/00001?boot
     // Throw a user out of the system.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('LOG_EVENT', 'UserBoot');
 
     // Require manager clearance.
@@ -845,7 +845,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     // users/00001?lock || users/00001?unlock
     // Lock / unlock a user.
 
-    $nID = str_pad($_PATH_ELEMENTS[1], 5, '0', STR_PAD_LEFT);
+    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', ucfirst(ACTION) . ' user account #' . $nID);
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
 
@@ -943,12 +943,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
             $sMessage .= 'Regards,' . "\n" .
                          '    LOVD system at ' . $_CONF['institute'] . "\n\n";
 
-            // Array containing the fields.
+            // Array containing the submitter fields.
             $_POST['id'] = $nID;
             list($_POST['country_']) = $_DB->prepare('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id=?', array($_POST['countryid']))->fetch();
             $aMailFields =
                      array(
-                            'data_source' => '_POST',
+                            '_POST',
                             'id' => 'Submitter ID',
                             'name' => 'Name',
                             'institute' => 'Institute',
@@ -963,7 +963,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
                             'password_1' => 'Password',
                           );
 
-            $aBody = array('message' => $sMessage, 'submitter_details' => $aMailFields);
+            $aBody = array($sMessage, 'submitter_details' => $aMailFields);
 
             $sBody = lovd_formatMail($aBody);
 
