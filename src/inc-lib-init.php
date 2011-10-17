@@ -227,9 +227,8 @@ function lovd_generateRandomID ($l = 10)
 
 function lovd_getColumnData ($sTable)
 {
-    global $_TABLES;
-
     // Gets and returns the column data for a certain table.
+    global $_TABLES;
     static $aTableCols = array();
 
     // Only for tables that actually exist.
@@ -664,7 +663,7 @@ function lovd_magicUnquoteAll ()
 
 function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
     // LOVD's alternative to file(), in case the fopenwrappers are off...
-    // 2010-06-24; 2.0-27; Adapted to allow POST submission as well.
+    global $_SETT;
 
     if (substr($sURL, 0, 4) != 'http' || (ini_get('allow_url_fopen') && !$sPOST)) {
         // Normal file() is fine.
@@ -686,13 +685,14 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
     $aOutput = array();
     $aURL = parse_url($sURL);
     if ($aURL['host']) {
-        $f = @fsockopen($aURL['host'], 80); // Doesn't support SSL right now.
+        $f = @fsockopen($aURL['host'], 80); // Doesn't support SSL without OpenSSL.
         if ($f === false) {
             // No use continuing - it will only cause errors.
             return false;
         }
         $sRequest = ($sPOST? 'POST ' : 'GET ') . $aURL['path'] . (empty($aURL['query'])? '' : '?' . $aURL['query']) . ' HTTP/1.0' . "\r\n" .
                     'Host: ' . $aURL['host'] . "\r\n" .
+                    'User-Agent: LOVDv.' . $_SETT['system']['version'] . "\r\n" .
                     (!$sPOST? '' :
                     'Content-length: ' . strlen($sPOST) . "\r\n" .
                     'Content-Type: application/x-www-form-urlencoded' . "\r\n") .

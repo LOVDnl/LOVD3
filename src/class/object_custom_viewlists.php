@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2011-08-17
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-12
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -153,8 +153,8 @@ class LOVD_CustomViewList extends LOVD_Object {
         foreach ($aObjects as $sObject) {
             $aSQL[] = $sObject . '/%';
         }
-        $q = $_DB->prepare($sSQL, $aSQL);
-        while ($z = $q->fetch(PDO::FETCH_ASSOC)) {
+        $q = $_DB->query($sSQL, $aSQL);
+        while ($z = $q->fetchAssoc()) {
             $z['custom_links'] = array();
             $this->aColumns[$z['id']] = $z;
         }

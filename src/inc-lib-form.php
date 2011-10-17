@@ -100,7 +100,7 @@ function lovd_emailError ($sErrorCode, $sType, $bHalt = false)
     // Formats email errors for the error log, and optionally halts the system.
 
     // Format the error message.
-    // FIXME; Kan makkelijker???
+    // FIXME; Kan makkelijker??? // Een str_replace() zou ook wel werken... Deze code staat op minimaal 3 plaatsen.
     $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . $sErrorCode . '.' . "\n" .
               'Email type : ' . $sType;
 
@@ -670,7 +670,7 @@ function lovd_wrapText ($s, $l = 70, $sCut = ' ')
     }
     if ($sCut != ' ') {
         // If it's not a space, we will add it to the end of each line as well, so we use extra space.
-        // If word has no length, this may lovd_wrapText wrap at $l - 1;
+        // If word has no length, this may make lovd_wrapText() wrap at $l - 1;
         $l --;
     }
     $aCutAlt = array('-', ';', ',', ':', ')', '(', '&', '*', '>', '<');

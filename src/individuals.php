@@ -83,6 +83,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
             $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
             $sNavigation .= ' | <A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
             // You can only add phenotype information to this individual, when there are phenotype columns enabled.
+            // FIXME; num_rows on a SELECT COUNT(*) always returns True.
             if (mysql_num_rows(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID)))) {
                 $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype information to individual</A>';
             }
@@ -169,7 +170,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     define('PAGE_TITLE', 'Create a new individual information entry');
     define('LOG_EVENT', 'IndividualCreate');
 
-    // Require manager clearance.
     lovd_requireAUTH(LEVEL_SUBMITTER);
 
     require ROOT_PATH . 'class/object_individuals.php';

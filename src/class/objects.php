@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-10-11
+ * Modified    : 2011-10-12
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -386,17 +386,17 @@ class LOVD_Object {
         $zData = lovd_php_htmlspecialchars($zData);
         $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
         foreach($aUserColumns as $sUserColumn) {
-            // FIXME; ik krijg hoofdpijn van deze lange regel... wordt dit wel in een viewList toegepast? Links in een viewList verstoren nu de boel. De code kan simpeler. Ook moet er wat commentaar bij.
+            // FIXME; ik krijg hoofdpijn van deze lange regel... wordt dit wel in een viewList toegepast? Links in een viewList verstoren nu de boel. De code kan simpeler. Ook moet er wat commentaar bij..
             (isset($zData[$sUserColumn])? $zData[$sUserColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . ($sView == 'list'? '' : '_')] . '</A>' : 'N/A') : false);
         }
 
         $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');
         foreach($aDateColumns as $sDateColumn) {
-            // Ook deze code kan m.i. simpeler.
+            // Ook deze code kan m.i. simpeler..
             (isset($zData[$sDateColumn])? $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A') : false);
         }
 
-        // FIXME; hier mist commentaar.
+        // FIXME; hier mist commentaar..
         if (isset($zData['edited_by_']) && $zData['edited_by_'] == 'N/A') {
             $zData['edited_date' . ($sView == 'list'? '' : '_')] = 'N/A';
         }
@@ -652,9 +652,9 @@ class LOVD_Object {
                                         }
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
-                                    } elseif (preg_match('/^=""$/', $sTerm)) {
-                                        $$CLAUSE .= $aCol['db'][0] . ' IS ?';
-                                        $aArguments[$CLAUSE][] = NULL;
+                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
+                                        // INT fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
+                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
                                     } else {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
@@ -684,9 +684,9 @@ class LOVD_Object {
                                         }
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm) . (substr($sOperator, -4) == 'LIKE'? '%' : '');
-                                    } elseif (preg_match('/^=""$/', $sTerm)) {
-                                        $$CLAUSE .= $aCol['db'][0] . ' IS ?';
-                                        $aArguments[$CLAUSE][] = NULL;
+                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
+                                        // DATE(TIME) fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
+                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
                                     } else {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
@@ -697,6 +697,9 @@ class LOVD_Object {
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'LIKE';
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
                                         $aArguments[$CLAUSE][] = '%' . lovd_escapeSearchTerm($aMatches[1]) . '%';
+                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
+                                        $bNot = (substr($sTerm, 0, 1) == '!');
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . ($bNot? '!' : '') . '= "" OR ' . $aCol['db'][0] . ' IS ' . ($bNot? 'NOT ' : '') . 'NULL)';
                                     } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
                                         $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
@@ -812,10 +815,11 @@ class LOVD_Object {
                 $aArgs[] = $aArg;
             }
 
-            $q = $_DB->prepare($sSQL, $aArgs);
+            // FIXME; what if using AJAX? Probably we should generate a number here, if this query fails, telling the system to try once more. If that fails also, the JS should throw a general error, maybe.
+            $q = $_DB->query($sSQL, $aArgs);
 
             // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
-            $nTotal = $_DB->query('SELECT FOUND_ROWS() AS rows')->fetchColumn();
+            $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
             $_DB->commit(); // To end the transaction and the locks that come with it.
 
             // It is possible, when increasing the page size from a page > 1, that you're ending up in an invalid page with no results.
@@ -939,7 +943,7 @@ class LOVD_Object {
             // ALTERNATIVE: create JS function lovd_restoreRowLink_XXX() (XXX == viewListID) that restores the rowLink, also after an Ajax Call.
         }
 
-        while ($zData = $q->fetch(PDO::FETCH_ASSOC)) {
+        while ($zData = $q->fetchAssoc()) {
             // If row_id is not given by the database, but it should be created according to some format ($this->sRowID), put the data's ID in this format.
             if (!isset($zData['row_id'])) {
                 if ($this->sRowID !== '' && isset($zData['id'])) {

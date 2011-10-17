@@ -1,17 +1,27 @@
 Prioritize:
 ===========
+- Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? Ook dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
+- Submitter register: link naar eigen account zodat admin die de FWD ontvangt snel het account kan vinden?
+- CurrDB == DMD: alle tabs alleen de DMD info laten zien. Genes: genes/DMD. Variants: variants/DMD. Individuals: individuals/DMD (wat betekent: gescreened in DMD of gekoppeld aan een ziekte die aan DMD vast zit). Dat laatste kán nu niet, via de search boxes. Oplossing hele rare syntax? Dan wel behoorlijke veranderingen in objects.php nodig.
+- Screening create: niet meer dan 20 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
+  * Na screening create: aangeven varianten gevonden? restrict lijst VOT met genen die gescreened zijn (reversible).
+- BUG: terugknop in browser geeft niet goede viewlist settings (sort, search, etc)
+- Kolom activeren per gen: moet via POST omdat via GET soms te lang is.
+- Fixed bug; MySQL handles 01 very different than '01' for VARCHAR columns, so lovd_queryDB() will now always quote integers.
+  * Doet PDO dit ook goed?
+- Delete user verder ontmoedigen?
 - VariantOnGenome/dbSNP column with rsID (integer only!)
   * prepareData() has to deal with it automatically (external source, not a custom link)
+  * integer only... is dat wel handig? Misschien toch beter rs nummer?
 - Where still in the wrong order, make sure genes are presented ID first.
 - Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML achor; id_ == default.
   * Currently, Object::prepareData() puts the link in every id_ column it can find.
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!!??
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
-- Alpha 05: We're missing the ID_sort !!!
-- Alpha 05: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
-- Alpha 05: Phenotypes tab
-- Alpha 05: /columns/VariantOnTranscript/DMD -> viewList kolommen actief op DMD
+- Alpha 06: We're missing the ID_sort !!!
+- Alpha 06: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
+- Alpha 06: /columns/VariantOnTranscript/DMD -> viewList kolommen actief op DMD
 - Er zijn nog een paar database veranderingen nodig, zie top inc-sql-tables.php.
 - CUSTOM VIEWLISTS:
     - FIXME; De custom class haalt de gegevens van alle kolommen op (TABLE_COLS), MAAR public_view kan per gen anders zijn!!!
@@ -34,7 +44,7 @@ Prioritize:
     - Mist nog voor patients, phenotypes, screenings. Check variants code nog.
     - Curators mogen een patient en aangehangen info pas bekijken als hij een screening aan hun gen heeft.
     - Curatoren mogen in principe alleen de varianten aanpassen, geen patient data of phenotype data. Tenzij ze de owner of created_by zijn, natuurlijk.
-      * Over dit laatste een stemronde houden binnen de gebruikers?
+      * Dit niet enforcen, is meer "ongeschreven regel"
 - (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
   * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
 - (~~~~~~BELANGRIJK: Ivar) TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
@@ -103,15 +113,11 @@ Prioritize:
 - Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - "Individual has been screened, no variants have been found"
   - That means we need an additional column!!!!!!!!
-- Menu inbouwen, zodat "create" pagina's beschikbaar komen!
-  * Of tijdelijke andere oplossing.
 - (Ivo) Check column breedte; wordt dat berekend of moet er iets worden ingevuld? Minimale waarden?
 - (Later) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
   * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
   * Probleem: als wij de created_* data in de niet-versioned tabel hebben, MOETEN WE DIE ENTRY BEWAREN BIJ DELETION!!!
 - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
-- (Ivo) /genes/GENE?authorize en/of /genes/GENE?sortCurators
-      Het verschil tussen ?authorize en ?sortCurators moet nog gemaakt worden. De laatste moet beschikbaar zijn voor curators.
 - Raar: /genes/DMD?authorize -> click alle users aan -> resort viewList.
   Nog raarder: probeer dan nog maar eens iemand uit de lijst te verwijderen.
 - Use uniqid ipv lovd functie?
@@ -156,6 +162,7 @@ MOET OVERLEGD WORDEN:
 - Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
 - Hoe kunnen we toch toestaan, dat users voor een grote groep genen tegelijk curator kunnen worden gemaakt?
   * Probleem vergeleken met LOVD 2.0 is dat je allow_edit en shown ook moet kunnen bewerken... Of kunnen we daar omheen werken?
+- !<value> hoort ook lege velden te tonen?
 
 
 
@@ -163,14 +170,16 @@ MOET OVERLEGD WORDEN:
 Doen voordat LOVD 3.0 online gebruikt kan worden:
 =================================================
 - (Ivo) Stress test??? Als het datamodel écht moet worden aangepast, kan dat wellicht niet goed via inc-upgrade.php.
-- (Ivo) Zie ik nu in het getekende model, dat variant toch niet zonder patient kan, omdat hij een screening moet hebben die een patient moet hebben???
-
+  * Concurrent users testen! Normale overviews, hoeveel users kan het aan? Is dit wel LOVD specifiek of misschien teveel op de hardware?
+  * Gebruik om dit te testen Apache benchmarks? Wordt gebruikt om Apache aan te roepen, schijnt heel handig te zijn.
+  * Waarom is de interface traag maar een simpele query niet? Top? Query incl.  joins in MySQL runnen?
 
 
 
 
 
 Ook belangrijk, maar iets minder:
+- Kunnen custom links inserted worden door dynamic popups? PubMed geeft dan een popup met veld "PMID" en veld "Author". Kan dat geparsed worden uit de omschrijving van de custom link?
 - Alle formulieren moeten fieldsets gaan gebruiken!!!
     Fieldsets die dicht zijn, moeten dicht blijven na submit. Idem voor open.
     Fieldsets die een error hebben én dicht staan, moeten gemarkeerd worden. CSS class geven die alleen activeert als hij dicht staat???
@@ -209,7 +218,6 @@ Kán later, maar VOOR dat er externe gebruikers actief worden:
 - Denk uit hoe één data viewList() ingesteld kan worden; object_variants.php begint een zooitje te worden!!!
     Eerste argument kan ook een categorie zijn? VariantOnGenome, VariantAll, VariantIndividual, VariantScreeningIndividual, whatever???
 - In commit #40 is er bij diseases viewEntry() van alles veranderd, maar het werkt niet goed (notices) en volgens mij is de query te uitgebreid. Ik moet hier later nog naar kijken.
-- Nu searching werkt op kolommen die met HAVING zouden moeten worden doorzocht, pas dit toe in verschillende viewLists. Bijvoorbeeld users.
 
 
 - Hoe slaan we functional effect op?
@@ -222,6 +230,10 @@ Kán later, maar VOOR dat er externe gebruikers actief worden:
 
 LOVD 3.0
 ====================
+    Mutalyzer: als zelf via SSL beschikbaar, ga dan ook naar Mutalyzer via SSL!
+    Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)
+        Ook support mededelingen: voor versies alpha-01 t/m alpha-10 het bericht dat alpha niet meer ondersteund wordt, dus je moet upgraden. Of voor alle installs op onze server (signature check): downtime dan en dan. Op versie of op signature??? Zoiets.
+        Ook instellen per user level (submitter, curator, manager, db admin).
 ++++Check tijdens install of MultiViews / URL rewriting from .htaccess werkt. Drupal doet 't...
 ++++Tijdens install checken of autoextend aan staat? Anders kan InnoDB zonder ruimte komen te zitten.
         Dan meteen maar checken welke rechten de MySQL user heeft op de database.
@@ -288,6 +300,7 @@ LOVD 3.0
     Na aanmaken gen, doorsturen naar welke kolommen toevoegen/verwijderen/sorteren
         Idem na disease
     Bij aanmaken disease, controleren of je die disease mogelijk al hebt? Behalve op OMIM ID natuurlijk?
+    $_CONF['send_admin_submissions'] splitsen?
 
 KNOWN BUGS:
 ===========

@@ -245,6 +245,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             $aFormStatus = array();
         }
 
+        // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
+        // A similar if() to create the "authorization" block, or possibly an if() in the building of this form array, is easier to understand and more efficient.
         // Array which will make up the form table.
         $this->aFormData = array_merge(
                  array(
@@ -268,14 +270,11 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             'status' => $aFormStatus,
        'general_hr2' => 'hr',
 'authorization_skip' => 'skip',
- 'authorization_hr1' => 'hr',
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
- 'authorization_hr2' => 'hr',
-                        'skip',
                       ));
                       
         if (ACTION != 'edit') {
-            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization']);
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);

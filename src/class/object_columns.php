@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-08-12
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-09-28
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -72,8 +72,8 @@ class LOVD_Column extends LOVD_Object {
                         'colid' => 'Column ID',
                         'head_column' => '(Default) column heading',
                         'active_' => 'Active in LOVD?',
-                        'hgvs_' => 'HGVS column',
-                        'standard_' => 'Standard',
+                        'hgvs_' => 'HGVS required column',
+                        'standard_' => 'Standard/Enabled by default',
                         'mandatory_' => 'Mandatory',
                         'description_form' => 'Description on form',
                         'description_legend_short' => 'Description on short legend',
@@ -317,9 +317,10 @@ class LOVD_Column extends LOVD_Object {
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';
         }
+        // FIXME; for titles use tooltips?
         $zData['active_']      = '<IMG src="gfx/mark_' . (int) $zData['active'] . '.png" alt="" width="11" height="11">';
-        $zData['hgvs_']        = '<IMG src="gfx/mark_' . $zData['hgvs'] . '.png" alt="" width="11" height="11">';
-        $zData['standard_']    = '<IMG src="gfx/mark_' . $zData['standard'] . '.png" alt="" width="11" height="11">';
+        $zData['hgvs_']        = '<IMG src="gfx/mark_' . $zData['hgvs'] . '.png" alt="" title="This column is ' . ($zData['hgvs']? '' : 'not ') . 'required by the HGVS standards for sequence variant databases" width="11" height="11">';
+        $zData['standard_']    = '<IMG src="gfx/mark_' . $zData['standard'] . '.png" title="This column is ' . ($zData['standard']? '' : 'not ') . 'enabled by default" alt="" width="11" height="11">';
         $zData['public_view_'] = '<IMG src="gfx/mark_' . $zData['public_view'] . '.png" alt="" width="11" height="11">';
         $zData['created_by_']  = ($zData['created_by_']? $zData['created_by_'] : 'LOVD');
 

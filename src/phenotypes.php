@@ -139,14 +139,16 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-lib-form.php';
     lovd_errorClean();
 
-    if (!empty($_GET['diseaseid']) && ctype_digit($_GET['diseaseid'])) {
-        $_POST['diseaseid'] = sprintf('%05d', $_GET['diseaseid']);
-        // Check if there are phenotype columns enabled for this disease & check if the $_POST['diseaseid'] is actually linked to this individual.
-        if (!mysql_num_rows(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid'])))) {
-            lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease id or no phenotype columns have been enabled for this disease.');
+    if (!empty($_GET['diseaseid'])) {
+        if (ctype_digit($_GET['diseaseid'])) {
+            $_POST['diseaseid'] = sprintf('%05d', $_GET['diseaseid']);
+            // Check if there are phenotype columns enabled for this disease & check if the $_POST['diseaseid'] is actually linked to this individual.
+            if (!mysql_num_rows(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid'])))) {
+                lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease id or no phenotype columns have been enabled for this disease.');
+            }
+        } else {
+            lovd_errorAdd('diseaseid', htmlspecialchars($_GET['diseaseid']) . ' is not a valid disease id.');
         }
-    } elseif (!empty($_GET['diseaseid']) && !ctype_digit($_GET['diseaseid'])) {
-        lovd_errorAdd('diseaseid', htmlspecialchars($_GET['diseaseid']) . ' is not a valid disease id.');
     }
 
     require ROOT_PATH . 'class/object_phenotypes.php';

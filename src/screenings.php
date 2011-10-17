@@ -121,7 +121,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) && ctype_digit($_GET['target'])) {
     // URL: /screenings?create
     // Create a new entry.
 
@@ -129,20 +129,16 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     lovd_requireAUTH();
     
-    if (isset($_GET['target']) && ctype_digit($_GET['target'])) {
-        $_GET['target'] = sprintf('%08d', $_GET['target']);
-        if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
-            $_POST['individualid'] = $_GET['target'];
-            define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
-        } else {
-            define('PAGE_TITLE', 'Create a new screening information entry');
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'stop');
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-        }
+    $_GET['target'] = sprintf('%08d', $_GET['target']);
+    if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
+        $_POST['individualid'] = $_GET['target'];
+        define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
     } else {
+        define('PAGE_TITLE', 'Create a new screening information entry');
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
         exit;
     }
 

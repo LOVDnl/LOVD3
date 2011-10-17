@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-11
+ * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -350,7 +350,7 @@ class LOVD_Gene extends LOVD_Object {
                         array('', '', 'note', 'Select the genomic reference sequence (NG, NC, LRG accession number). Only the references that are available to LOVD are shown'),
                         'hr',
     'transcripts' =>    array('Transcript reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
-'transcript_info' =>    array('', '', 'note', 'Select transcript references (NM accession numbers). You can select multiple transcripts by holding "CTRL or CMD" and clicking all transcripts desired.'),
+'transcript_info' =>    array('', '', 'note', 'Select transcript references (NM accession numbers). You can select multiple transcripts by holding "Ctrl" on a PC or "Command" on a Mac and clicking all wanted transcripts.'),
                         'hr',
                         'skip',
                         'skip',

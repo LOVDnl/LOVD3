@@ -96,7 +96,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-alpha-04',
+                            'version' => '3.0-alpha-05',
                           ),
                 'user_levels' =>
                      array(
@@ -174,8 +174,8 @@ $_SETT = array(
                             9 => '<SPAN style="color:red;"><B>Critical</B></SPAN>',
                           ),
                 'upstream_URL' => 'http://www.LOVD.nl/',
-                'upstream_BTS_URL' => 'https://eu.liacs.nl/projects/LOVD3/report/1',
-                'upstream_BTS_URL_new_ticket' => 'https://eu.liacs.nl/projects/LOVD3/newticket',
+                'upstream_BTS_URL' => 'https://humgenprojects.lumc.nl/trac/LOVD3/report/1',
+                'upstream_BTS_URL_new_ticket' => 'https://humgenprojects.lumc.nl/trac/LOVD3/newticket',
                 'wikiprofessional_iprange' => '131.174.88.0-255',
                 'list_sizes' =>
                      array(
@@ -526,7 +526,12 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
 
     // Copying information that is required for the includes, but can't be read from the database.
     $_CONF = array('system_title' => 'LOVD 3.0 - Leiden Open Variation Database');
-    $_STAT = array('tree' => $_SETT['system']['tree'], 'build' => $_SETT['system']['build']);
+    if (!is_array($_STAT) || !count($_STAT)) {
+        // Check availability of $_STAT first before overwriting it, since it may exist - TABLE_STATUS is filled earlier than TABLE_CONFIG during installation.
+        $_STAT = array();
+    }
+    $_STAT['tree'] = $_SETT['system']['tree'];
+    $_STAT['build'] = $_SETT['system']['build'];
 
     // Are we installed properly?
     $aTables = array();

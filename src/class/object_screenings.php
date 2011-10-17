@@ -219,6 +219,8 @@ class LOVD_Screening extends LOVD_Custom {
         }
         $nFieldSize = (count($aGenesForm) < 10? count($aGenesForm) : 10);
 
+        // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
+        // A similar if() to create the "authorization" block, or possibly an if() in the building of this form array, is easier to understand and more efficient.
         // Array which will make up the form table.
         $this->aFormData = array_merge(
                  array(

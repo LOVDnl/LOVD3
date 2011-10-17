@@ -258,22 +258,6 @@ class LOVD_User extends LOVD_Object {
             }
         }
 
-        // Adding CAPTCHA check on registration form.
-        // If no response has been filled in, we need to complain. Otherwise, we should check the answer.
-        if (ACTION == 'register') {
-            $sCAPTCHAerror = '';
-            if (empty($_POST['recaptcha_response_field'])) {
-                lovd_errorAdd('', 'Please fill in the two words that you see in the image at the bottom of the form.');
-            } else {
-                // Check answer!
-                $response = recaptcha_check_answer('6Le0JQQAAAAAAB-iLSVi81tR5s8zTajluFFxkTPL', $_SERVER['REMOTE_ADDR'], $_POST['recaptcha_challenge_field'], $_POST['recaptcha_response_field']);
-                if (!($response->is_valid)) {
-                    lovd_errorAdd('', 'Registration authentication failed. Please try again by filling in the two words that you see in the image at the bottom of the form.');
-                    $sCAPTCHAerror = $response->error;
-                }
-            }
-        }
-
         // Check given security IP range.
         if (!empty($aData['allowed_ip']) && trim($aData['allowed_ip'])) {
             // This function will throw an error itself (second argument).
@@ -342,6 +326,7 @@ class LOVD_User extends LOVD_Object {
             $nGeneSize = ($nGenes < 5? $nGenes : 5);
         }
 
+        // FIXME; this is a mess...!!!
         // Array which will make up the form table.
         $this->aFormData =
                  array(
@@ -376,7 +361,7 @@ class LOVD_User extends LOVD_Object {
                         'hr',
 'authorization_skip' => 'skip',
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
-                        'skip');
+                      );
 
         if ($bInstall || ACTION == 'register') {
             // No need to ask for the user's password when the user is not created yet.

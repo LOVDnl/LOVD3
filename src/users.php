@@ -597,212 +597,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-/*if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
-    // URL: /users/00001?delete
-    // Remove a user from the system
-    
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
-    define('PAGE_TITLE', 'Delete user account #' . $nID);
-    define('LOG_EVENT', 'UserDelete');
-
-    // Require valid user.
-    lovd_requireAUTH();
-
-    if (GET) {
-        $_POST['workID'] = lovd_generateRandomID();
-        $_SESSION['work'][$_POST['workID']] = array(
-                                                    'action' => 'users/' . $nID . '?delete',
-                                                    'step' => '1',
-                                                   );
-    }
-
-    if ($_SESSION['work'][$_POST['workID']]['step'] == '1') {
-        if ($nID != $_AUTH['id']) {
-            // Neccessary level depends on level of user. Special case.
-            list($nLevel) = mysql_fetch_row(lovd_queryDB_Old('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
-            // Simple solution: if level is not lower than what you have, you're out.
-            if ($nLevel >= $_AUTH['level']) {
-                // This is a hack-attempt.
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
-                lovd_writeLog('Error', 'HackAttempt', 'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$nLevel] . ')');
-                lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
-                require ROOT_PATH . 'inc-bot.php';
-                exit;
-            }
-
-        } else {
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('Not allowed to delete yourself.', 'stop');
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-        }
-
-        require ROOT_PATH . 'inc-lib-form.php';
-
-        if (count($_POST) > 1) {
-            lovd_errorClean();
-
-            if (empty($_POST['password_1'])) {
-                lovd_errorAdd('password_1', 'Please fill in the \'Enter your password for authorization\' field.');
-            }
-
-            if ($_POST['password_1'] && !lovd_verifyPassword($_POST['password_1'], $_AUTH['password'])) {
-                lovd_errorAdd('password_1', 'Please enter your correct password for authorization.');
-            }
-
-            if (!lovd_error()) {
-                $_SESSION['work'][$_POST['workID']]['step'] = '2';
-                
-                // FIXME!!! I have no clue, why i can't use the path without '../'. The other pages don't seem to need it.
-                print('<FORM action="../' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION .'" id="confirmDelete" method="post">' . "\n" .
-                      '    <TABLE border="0" cellpadding="0" cellspacing="1" width="760">'. "\n" .
-                      '        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
-                      '    </TABLE>' . "\n" .
-                      '</FORM>' . "\n\n" .
-                      '<SCRIPT type="text/javascript">' . "\n" .
-                      '  document.forms[\'confirmDelete\'].submit();' . "\n" .
-                      '</SCRIPT>' . "\n\n");
-                exit;
-            } else {
-                // Because we're sending the data back to the form, I need to unset the password fields!
-                unset($_POST['password_1']);
-            }
-        }
-    }
-
-
-
-
-
-    if ($_SESSION['work'][$_POST['workID']]['step'] == '2') {
-        require ROOT_PATH . 'inc-lib-form.php';
-
-        if (count($_POST) > 1) {
-            lovd_errorClean();
-
-            if (empty($_POST['password_2']) || empty($_POST['password_3'])) {
-                lovd_errorAdd('password_2', 'Please fill in both the \'Enter your password for authorization\' and \'Password (confirm)\' fields.');
-                lovd_errorAdd('password_3', '');
-            }
-
-            if ($_POST['password_2'] != $_POST['password_3']) {
-                lovd_errorAdd('password_2', 'The entered passwords did not match!');
-                lovd_errorAdd('password_3', '');
-            }
-
-            // User had to enter his/her password for authorization.
-            if ($_POST['password_2'] && !lovd_verifyPassword($_POST['password_2'], $_AUTH['password'])) {
-                lovd_errorAdd('password_2', 'Please enter your correct password for authorization in both fields.');
-                lovd_errorAdd('password_3', '');
-            }
-
-            if (!lovd_error()) {
-                require ROOT_PATH . 'class/object_users.php';
-                $_DATA = new LOVD_User();
-                $zData = $_DATA->loadEntry($nID);
-                $_DATA->deleteEntry($nID);
-
-                // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, 'Deleted user entry ' . $nID . ' - ' . $zData['name'] . ' (' . $zData['level'] . ')');
-
-                // Thank the user...
-                header('Refresh: 3; url=' . lovd_getInstallURL() . 'users');
-
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
-                lovd_showInfoTable('Successfully deleted the user entry!', 'success');
-
-                require ROOT_PATH . 'inc-bot.php';
-                exit;
-            } else {
-                unset($_POST['password_2'], $_POST['password_3']);
-            }
-        }
-
-        require ROOT_PATH . 'inc-top.php';
-        require ROOT_PATH . 'class/object_users.php';
-        $_DATA = new LOVD_User();
-        $zData = $_DATA->loadEntry($nID);
-
-        lovd_printHeader(PAGE_TITLE);
-
-        lovd_errorPrint();
-
-        list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE owned_by=?', array($nID)));
-        list($nScreenings) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE owned_by=?', array($nID)));
-        list($nVars) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE owned_by=?', array($nID)));
-        list($nGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE edited_by=?', array($nID)));
-
-        print('      <PRE>' . "\n" .
-              '  <b>The user you are about to delete has the following references to data in this installation:</b>' . "\n" .
-              '  Found ' . $nIndividuals . ' individual' . ($nIndividuals == 1? '' : 's') . '.' . "\n" .
-              '  Found ' . $nScreenings . ' screening' . ($nScreenings == 1? '' : 's') . '.' . "\n" .
-              '  Found ' . $nVars . ' variant' . ($nVars == 1? '' : 's') . '.' . "\n" .
-              '  Found ' . $nGenes . ' gene' . ($nGenes == 1? '' : 's') . '.' . "\n" .
-              '      </PRE>' . "\n");
-
-        if ($nGenes || $nIndividuals || $nVars) {
-            lovd_showInfoTable('FINAL WARNING! If you delete this user, you will lose all the references to this person in the data!', 'warning');
-        }
-
-        // Table.
-        print('<FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
-
-        // Array which will make up the form table.
-        $aForm = array_merge(
-                     array(
-                            array('POST', '', '', '', '40%', '14', '60%'),
-                            array('Deleting user information entry', '', 'print', $nID . ' - ' . $zData['name'] . ' (' . $_SETT['user_levels'][$zData['level']] . ')'),
-                            'skip',
-                            array('Enter your password for authorization', '', 'password', 'password_2', 20),
-                            array('Password (confirm)', '', 'password', 'password_3', 20),
-                            array('', '', 'submit', 'Delete user entry'),
-                          ));
-        lovd_viewForm($aForm);
-
-        print('        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
-              '    </TABLE>' . "\n" .
-              '</FORM>' . "\n\n");
-
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
-
-
-
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
-
-    lovd_errorPrint();
-
-    lovd_showInfoTable('WARNING! If you delete this user, you will lose all the references to this person in the data!', 'warning');
-
-    // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
-
-    // Array which will make up the form table.
-    $aForm = array_merge(
-                     array(
-                     array('POST', '', '', '', '40%', '14', '60%'),
-                     array('Enter your password for authorization', '', 'password', 'password_1', 20),
-                     array('', '', 'submit', 'Delete user entry'),
-                   ));
-        lovd_viewForm($aForm);
-
-    print('    <INPUT name="workID" type="hidden" value="' . $_POST['workID'] . '">');
-    print('</FORM>' . "\n\n");
-
-    require ROOT_PATH . 'inc-bot.php';
-    exit;
-}*/
-
-
-
-
-
 if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'boot') {
     // users/00001?boot
     // Throw a user out of the system.
@@ -904,11 +698,25 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
     $_DATA = new LOVD_User();
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'lib/reCAPTCHA/inc-lib-recaptcha.php';
+    $sCAPTCHAerror = '';
 
     if (!empty($_POST)) {
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
+
+        // Adding CAPTCHA check on registration form.
+        // If no response has been filled in, we need to complain. Otherwise, we should check the answer.
+        if (empty($_POST['recaptcha_response_field'])) {
+            lovd_errorAdd('', 'Please fill in the two words that you see in the image at the bottom of the form.');
+        } else {
+            // Check answer!
+            $response = recaptcha_check_answer('6Le0JQQAAAAAAB-iLSVi81tR5s8zTajluFFxkTPL', $_SERVER['REMOTE_ADDR'], $_POST['recaptcha_challenge_field'], $_POST['recaptcha_response_field']);
+            if (!($response->is_valid)) {
+                lovd_errorAdd('', 'Registration authentication failed. Please try again by filling in the two words that you see in the image at the bottom of the form.');
+                $sCAPTCHAerror = $response->error;
+            }
+        }
 
         if (!lovd_error()) {
             // Fields to be used.
@@ -919,12 +727,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
             $_POST['password'] = lovd_createPasswordHash($_POST['password_1']);
             $_POST['level'] = LEVEL_SUBMITTER;
             $_POST['login_attempts'] = 0;
-            $_POST['created_by'] = $_AUTH['id'];
+            $_POST['created_by'] = NULL;
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
-            $_SESSION['auth'] = $_DB->prepare('SELECT * FROM ' . TABLE_USERS . ' WHERE id=?', array($nID))->fetch(PDO::FETCH_ASSOC);
+            $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
             $_AUTH &= $_SESSION['auth'];
 
             // Write to log...
@@ -945,7 +753,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
 
             // Array containing the submitter fields.
             $_POST['id'] = $nID;
-            list($_POST['country_']) = $_DB->prepare('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id=?', array($_POST['countryid']))->fetch();
+            $_POST['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($_POST['countryid']))->fetchColumn();
             $aMailFields =
                      array(
                             '_POST',
@@ -1006,8 +814,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
               '      <BR>' . "\n\n");
     }
 
-    lovd_errorPrint();
     lovd_showInfoTable('Please note that you do <B>NOT</B> need to register to view the data available at these pages. You only need an account for submitting new variants.', 'warning');
+    lovd_errorPrint();
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
@@ -1016,10 +824,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
-    global $sCAPTCHAerror;
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
+                        'skip',
                         array('', '', 'print', '<B>Registration authentication</B>'),
                         'hr',
                         array('Please fill in the two words that you see in the image', '', 'print', recaptcha_get_html('6Le0JQQAAAAAAPQ55JT0m0_AVX5RqgSnHBplWHxZ', $sCAPTCHAerror, SSL)),

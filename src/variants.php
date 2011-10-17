@@ -344,6 +344,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         }
     }
 
+
+
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
@@ -370,7 +372,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_viewForm($aForm);
 
     print('      </FORM>' . "\n\n");
-    
+
+// FIXME; Dit is te groot; plaats in inc-js-variants.php (naam is suggestie) ipv hier. Gebruik daarna lovd_includeJS(). Chromosome kan een argument worden, indien nodig. Kan ook een JS variabele zijn (eerst declareren, daarna script includen).
 ?>
 <SCRIPT>
 function lovd_checkHGVS () {

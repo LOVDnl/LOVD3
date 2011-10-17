@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2011-09-09
+ * Modified    : 2011-10-12
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -101,17 +101,17 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'individual') {
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
         $_DB->beginTransaction();
-        $q = $_DB->prepare('UPDATE ' . TABLE_INDIVIDUALS . ' SET statusid=? WHERE id=? AND statusid=?', array(STATUS_PENDING, $_GET['individualid'], STATUS_IN_PROGRESS));
+        $q = $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET statusid = ? WHERE id = ? AND statusid = ?', array(STATUS_PENDING, $_GET['individualid'], STATUS_IN_PROGRESS));
         if (!$q->rowCount()) {
             lovd_showInfoTable('Individual submission entry not found!', 'stop');
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }
         if (!empty($aSubmit['phenotypes'])) {
-            $_DB->prepare('UPDATE ' . TABLE_PHENOTYPES . ' SET statusid=? WHERE id IN (?' . str_repeat(', ?', count($aSubmit['phenotypes']) - 1) . ')', array_merge(array(STATUS_PENDING), $aSubmit['phenotypes']));
+            $_DB->query('UPDATE ' . TABLE_PHENOTYPES . ' SET statusid = ? WHERE id IN (?' . str_repeat(', ?', count($aSubmit['phenotypes']) - 1) . ')', array_merge(array(STATUS_PENDING), $aSubmit['phenotypes']));
         }
         if (!empty($aVariantIDs)) {
-            $_DB->prepare('UPDATE ' . TABLE_VARIANTS . ' SET statusid=? WHERE id IN (?' . str_repeat(', ?', count($aVariantIDs) - 1) . ')', array_merge(array(STATUS_PENDING), $aVariantIDs));
+            $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET statusid = ? WHERE id IN (?' . str_repeat(', ?', count($aVariantIDs) - 1) . ')', array_merge(array(STATUS_PENDING), $aVariantIDs));
         }
         // FIXME; Implement mail to curator here.
         // mail();
@@ -131,7 +131,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'variant') {
 
     if (isset($_GET['variantid']) && ctype_digit($_GET['variantid'])) {
         $_GET['variantid'] = str_pad($_GET['variantid'], 10, "0", STR_PAD_LEFT);
-        $zData = $_DB->prepare('SELECT id FROM ' . TABLE_VARIANTS . ' WHERE id=? AND statusid=?', array($_GET['variantid'], STATUS_IN_PROGRESS));
+        $zData = $_DB->query('SELECT id FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND statusid = ?', array($_GET['variantid'], STATUS_IN_PROGRESS));
         if ($zData) {
             // STUB
         } else {
@@ -149,7 +149,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'variant') {
         header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants/' . $_GET['variantid']);
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
-        $q = $_DB->prepare('UPDATE ' . TABLE_VARIANTS . ' SET statusid=? WHERE id=? AND statusid=?', array(STATUS_PENDING, $_GET['variantid'], STATUS_IN_PROGRESS));
+        $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET statusid = ? WHERE id = ? AND statusid = ?', array(STATUS_PENDING, $_GET['variantid'], STATUS_IN_PROGRESS));
         if (!$q->rowCount()) {
             lovd_showInfoTable('Variant submission entry not found!', 'stop');
             require ROOT_PATH . 'inc-bot.php';

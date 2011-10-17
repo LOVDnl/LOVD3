@@ -5,16 +5,17 @@
  *************/
 
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
+
 /*******************
  * 3.0 Alpha 05
- * 2011-10-13
+ * 2011-10-17
  *********/
- * Fixed bug; When deleting a user, an error occurred because of an invalid query
-   to the database.
+ * Fixed bug; When deleting a user, an error occurred because of an invalid
+   query to the database.
  * Fixed bug; When creating an individual entry, an error could have been shown
    on the screen.
- * Fixed bug; Registering a user would result into an infinite loop, freezing the
-   browser because the code was expecting the user to be logged in.
+ * Fixed bug; Registering a user would result into an infinite loop, freezing
+   the browser because the code was expecting the user to be logged in.
  * Added new cross and check images in 11x11 and 16x16 and removed the old ones.
  * Added a register user functionality.
  * Added a reCAPTCHA library.
@@ -29,14 +30,23 @@
    password reset processes.
  * Improved the compatibility with other database platforms.
  * Changed the wrap length of email body texts from 80 to 70 characters.
- * Implemented the search expression ="" to viewLists, which will matches columns
+ * Implemented the search expression ="" to viewLists, which will match columns
    with no value.
  * Changed PDO to use buffered queries.
  * Changed the standard email headers that are sent with all outgoing mails.
  * Search fields in the viewList now always fit the column.
  * Added a default location_url to the system settings form.
  * User level in the users viewList is now sortable AND searchable.
-
+ * Added some more information about the meaning of the icons on the custom
+   column overview if you move your mouse over them.
+ * LOVD now distributes an User-Agent string when using certain web calls.
+ * Changed URL of bug tracking system, since it has been moved.
+ * When installing LOVD, the database URL is now predicted for the user.
+ * Fixed problems with advanced searching in viewLists.
+ * Made some textual improvements.
+ * Improved the PDO wrapper.
+ * Fixed bug; Checking the install's URL didn't work during LOVD installation,
+   as notices were generated about a missing variable.
 
 
 /*******************
@@ -58,7 +68,9 @@
    then connects to MySQL using PDO. Actually implementing PDO everywhere will
    take some time.
  * Fixed bug; LOVDs that were not installed yet, were throwing notices.
- * Added code for proper authorization of data owners to individuals.php, screenings.php and phenotypes.php. The correct user level is not yet assigned by lovd_isAuthorized().
+ * Added code for proper authorization of data owners to individuals.php,
+   screenings.php and phenotypes.php. The correct user level is not yet assigned
+   by lovd_isAuthorized().
  * Fixed some issues with HTML 4.01 compatibility.
  * Fixed bug; lovd_queryDB() did not show the entire query if it was throwing an
    error message about the number of arguments used in the query.
@@ -82,7 +94,6 @@
    sortable file to lib/jQuery.
  * Removed lib/tool-man folder and its contents entirely as it was outdated and
    a solid replacement was found in jQuery UI.
- * Added plus.png to the gfx folder for general use.
  * Included jQuery & jQuery UI in inc-top.php so they can be accessed everywhere
    in LOVD.
  * Fixed bug; sorting in genes?sortCurator & columns?order now also works for IE
@@ -96,22 +107,27 @@
  * Fixed bug; In phenotype?create it is now mandatory to select a disease, and
    also implemented checks for a valid diseaseid. Also only diseases that have
    custom columns enabled will be selectable now.
- * When an individual has only one disease, you don't have to select the disease when creating a new phenotype entry.
- * Implemented one-click navigation from the individual's detailed view to the form to add phenotype information on a certain disease.
- * Fixed bug; Couldn't select which genes were screened on screening data entry forms.
+ * When an individual has only one disease, you don't have to select the disease
+   when creating a new phenotype entry.
+ * Implemented one-click navigation from the individual's detailed view to the
+   form to add phenotype information on a certain disease.
+ * Fixed bug; Couldn't select which genes were screened on screening data entry
+   forms.
  * Changed all references to inc-js-insert-custom-links.php to the new name
    inc-js-custom_links.php and removed the old file.
  * Fixed bug; lovd_AJAX_viewListAddNextRow() now works properly in all browsers.
  * Fixed bug; lovd_includeJS() can now also handle files in a different path.
  * Fixed bug; lovd_viewForm() allowed single selection lists to have a "select
    all" link.
- * Fixed bug; Fixed the database structure for transcript variant custom columns in object_custom.php.
+ * Fixed bug; Fixed the database structure for transcript variant custom columns
+   in object_custom.php.
  * Optimized & cleaned the transcripts?create code.
  * Transcripts/<gene symbol> now also works and is basically the same as the
    /transcripts view with a search on <gene symbol>.
  * Improved navigation between linked data types by adding some extra viewLists
    and links.
  * Implemented a working form to create variants on transcript level.
+ * Implemented full submission workflow.
 
 
 /*******************

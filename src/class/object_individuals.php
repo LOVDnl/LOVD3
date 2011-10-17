@@ -181,10 +181,10 @@ class LOVD_Individual extends LOVD_Custom {
 
         parent::checkFields($aData);
 
-        // FIXME; eerst een concat om daarna te exploden???
-        $qDiseases = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES, array());
-        list($zDiseases) = mysql_fetch_row($qDiseases);
-        $aDiseases = explode(',', $zDiseases);
+        // FIXME; eerst een concat om daarna te exploden????
+        $qDiseases = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES);
+        list($sDiseases) = mysql_fetch_row($qDiseases);
+        $aDiseases = explode(',', $sDiseases);
         // FIXME; ik denk dat de query naar binnen deze if moet.
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
@@ -263,6 +263,8 @@ class LOVD_Individual extends LOVD_Custom {
             $aFormStatus = array();
         }
 
+        // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
+        // A similar if() to create the "authorization" block, or possibly an if() in the building of this form array, is easier to understand and more efficient.
         // Array which will make up the form table.
         $this->aFormData = array_merge(
                  array(
