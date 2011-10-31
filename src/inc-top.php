@@ -1,12 +1,11 @@
 <?php
-// DMD_SPECIFIC, this code sucks. Look at all that opening and closing the PHP tags!
 /*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-31
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -38,7 +37,6 @@ if (!defined('ROOT_PATH')) {
 define('_INC_TOP_INCLUDED_', true);
 
 // Load menu.
-// FIXME; this needs to be a dropdown menu (like www.lgtc.nl)
 $_MENU = array(
                 'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'Home'),
                  array(
@@ -51,9 +49,11 @@ $_MENU = array(
                         'create' => array('plus.png', 'Create a new transcript information entry', LEVEL_CURATOR),
                       ),
                 'variants' => 'View variants',
+                'variants_' =>
                  array(
                         '' => array('menu_magnifying_glass.png', 'View all genomic variants', 0),
                         '/variants/in_gene' => array('menu_magnifying_glass.png', 'View all variants affecting transcripts', 0),
+                        '/variants/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all variants in the ' . $_SESSION['currdb'] . ' gene', 0),
                         '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                       ),
                 'individuals' => 'View individuals',
@@ -133,6 +133,11 @@ if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
     unset($_MENU['setup'], $_MENU['setup_']);
 }
 
+// Remove certain menu entries, if there is no gene selected.
+if (!$_SESSION['currdb']) {
+    unset($_MENU['variants_']['/variants/']);
+}
+
 if (!defined('PAGE_TITLE')) {
     $sFile = substr(lovd_getProjectFile(), 1, strrpos(lovd_getProjectFile(), '.') - 1);
     if (array_key_exists($sFile, $_MENU)) {
@@ -154,7 +159,7 @@ if (!defined('PAGE_TITLE')) {
   <LINK rel="stylesheet" type="text/css" href="styles.css">
   <LINK rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <?php
-// DMD_SPECIFIC; later?
+// FIXME; later?
 /*  <LINK rel="alternate" type="application/atom+xml" title="<?php echo $_CONF['system_title']; ?> Atom 1.0 feed" href="<?php echo ROOT_PATH; ?>api/feed.php" />*/
 ?>
 
@@ -164,33 +169,32 @@ if (!defined('PAGE_TITLE')) {
 <?php
 // A quick way to switch genes, regardless of on which page you are.
 // DMD_SPECIFIC, this does not work yet, needs to be rewritten, how do we do that?
-// SOWIESO ALS JE HIER AAN GAAT WERKEN, PAK DE NIEUWE LOVDv.2.0 CODE!
 /*
 print('    function lovd_switchGeneInline () {' . "\n" .
 // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
       '      varForm = \'<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDBInline" method="get" style="margin : 0px;"><SELECT name="select_db" onchange="document.getElementById(\\\'SelectGeneDBInline\\\').submit();">');
-$q = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_DBS . ' ORDER BY id');
+$q = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
 while ($z = mysql_fetch_assoc($q)) {
     // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
-    $z['gene'] = lovd_shortenString($z['gene'], 75);
-    if (substr($z['gene'], -3) == '...') {
-        $z['gene'] .= str_repeat(')', substr_count($z['gene'], '('));
+    $z['name'] = lovd_shortenString($z['name'], 75);
+    if (substr($z['name'], -3) == '...') {
+        $z['name'] .= str_repeat(')', substr_count($z['name'], '('));
     }
     // The str_replace will translate ' into \' so that it does not disturb the JS code.
-    print('<OPTION value="' . $z['id'] . '"' . ($_SESSION['currdb'] == $z['id']? ' selected' : '') . '>' . str_replace("'", "\'", $z['gene']) . '</OPTION>');
+    print('<OPTION value="' . $z['id'] . '"' . ($_SESSION['currdb'] == $z['id']? ' selected' : '') . '>' . str_replace("'", "\'", $z['name']) . '</OPTION>');
 }
 print('</SELECT>');
-// 2009-07-22; 2.0-21; Only use the $_GET variables that we have received (and not the ones we created ourselves).
+// Only use the $_GET variables that we have received (and not the ones we created ourselves).
 $aGET = explode('&', $_SERVER['QUERY_STRING']);
 foreach ($aGET as $val) {
-    if ($val) { // 2009-09-15; 2.0-22; Added if() to make sure pages without $_GET variables don't throw a notice.
+    if ($val) { // Added if() to make sure pages without $_GET variables don't throw a notice.
         @list($key, $val) = explode('=', $val);
         if (lovd_getProjectFile() == '/variants.php' && $key == 'view' && !is_numeric($val)) {
             // Fix problem when switching gene while viewing detailed variant information.
             $val = preg_replace('/^([0-9]+).*$/', "$1", $val);
         }
         if (!in_array($key, array('select_db', 'sent'))) {
-            print('<INPUT type="hidden" name="' . htmlspecialchars(rawurldecode($key)) . '" value="' . htmlspecialchars(rawurldecode($val)) . '">');
+            print('<INPUT type="hidden" name="' . htmlspecialchars(rawurldecode($key), ENT_QUOTES) . '" value="' . htmlspecialchars(rawurldecode($val), ENT_QUOTES) . '">');
         }
     }
 }
@@ -227,49 +231,46 @@ if (!is_array($aImage)) {
     $aImage = array('130', '50', '', 'width="130" heigth="50"');
 }    
 list($nWidth, $nHeight, $sType, $sSize) = $aImage;
-print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($_CONF['logo_uri'] == 'gfx/LOVD_logo130x50'? $nHeight : $nHeight + 20) . '">' . "\n" .
-      '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n");
-?>
-    </TD>
-<?php
+print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($nHeight + 5) . '">' . "\n" .
+      '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
+      '    </TD>' . "\n");
+
 $sCurrSymbol = $sCurrGene = '';
-// DMD_SPECIFIC; decide later what will happen here. Only show gene when you're truly working in it? In which case, it's a variable somewhere?
 /*
+// FIXME; how will we handle this?
 // During submission, show the gene we're submitting to instead of the currently selected gene.
 if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
     // Fetch gene's info from db... we don't have it anywhere yet.
     list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(lovd_queryDB_Old('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene'])));
-} elseif (!empty($_SESSION['currdb'])) {
+} else*/if (!empty($_SESSION['currdb'])) {
     // Just use currently selected database.
     $sCurrSymbol = $_SESSION['currdb'];
-    $sCurrGene = $_SETT['currdb']['gene'];
+    $sCurrGene = $_SETT['currdb']['name'];
 }
-*/
 
 print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
       '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>' . "\n" .
-      ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')&nbsp;<A href="#" onclick="javascript:lovd_switchGeneInline(); return false;"><IMG src="gfx/lovd_database_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top"></A></H5>' . "\n" : '') .
+//      ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')&nbsp;<A href="#" onclick="javascript:lovd_switchGeneInline(); return false;"><IMG src="gfx/lovd_database_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top"></A></H5>' . "\n" : '') .
+      ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')</H5>' . "\n" : '') .
       '    </TD>' . "\n" .
       '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
       '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] . ' [ <A href="status">Current LOVD status</A> ]<BR>' . "\n");
 if ($_AUTH) {
     print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
-          '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . ($_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A><BR>' . "\n");
+          '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
 } else {
-    print('      <A href="users?register"><B>Register as submitter</B></A> | <A href="login"><B>Log in</B></A><BR>' . "\n");
+    print('      <A href="users?register"><B>Register as submitter</B></A> | <A href="login"><B>Log in</B></A>' . "\n");
 }
 
 print('    </TD>' . "\n" .
       '  </TR>' . "\n");
 
 // Add curator info to header.
-// DMD_SPECIFIC; Test if this multiple email thingie works or not.
 if ($sCurrSymbol && $sCurrGene) {
     $sCurators = '';
-    $qCurators = lovd_queryDB_Old('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.geneid = ? AND u2g.allow_edit = 1 ORDER BY u.level DESC, u.name', array($sCurrSymbol));
-    $nCurators = mysql_num_rows($qCurators);
-    $i = 0;
-    while ($z = mysql_fetch_assoc($qCurators)) {
+    $aCurators = $_DB->query('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.geneid = ? AND u2g.allow_edit = 1 AND u2g.show_order > 0 ORDER BY u2g.show_order ASC, u.level DESC, u.name ASC', array($sCurrSymbol))->fetchAllAssoc();
+    $nCurators = count($aCurators);
+    foreach ($aCurators as $i => $z) {
         $i ++;
         $sCurators .= ($sCurators? ($i == $nCurators? ' and ' : ', ') : '') . '<A href="mailto:' . str_replace(array("\r\n", "\r", "\n"), ', ', trim($z['email'])) . '">' . $z['name'] . '</A>';
     }
@@ -333,7 +334,8 @@ foreach ($_MENU as $sPrefix => $sTitle) {
             }
 
             if (!$bDisabled) {
-                $sUL .= '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A href="' . $sURL . '">' .
+                // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
+                $sUL .= '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A href="' . lovd_getInstallURL(false) . $sURL . '">' .
                     (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
                     '</A></LI>' . "\n";
             }
@@ -365,7 +367,16 @@ foreach ($_MENU as $sPrefix => $sTitle) {
     $sSize = $aImage[3];
 
     // Print header.
-    print('      <A href="' . $sPrefix . '"><IMG src="' . $sFileName . '" alt="' . $sTitle . '" id="' . $sFile . '" ' . $sSize . ' align="left"></A>' . "\n");
+    $sURL = $sPrefix;
+    // If a gene has been selected, some of the tabs get different default URLs.
+    if ($_SESSION['currdb']) {
+        if (in_array($sPrefix, array('genes', 'transcripts', 'variants'))) {
+            $sURL = $sPrefix . '/' . $_SESSION['currdb'];
+        } elseif ($sPrefix == 'diseases') {
+            $sURL = $sPrefix . '?search_genes_=DMD';
+        }
+    }
+    print('      <A href="' . $sURL . '"><IMG src="' . $sFileName . '" alt="' . $sTitle . '" id="' . $sFile . '" ' . $sSize . ' align="left"></A>' . "\n");
 
     $bPrevSel = $bSel;
     $n ++;
@@ -395,7 +406,7 @@ print('
         event: "mouseover",
         openBelowContext: true,
         autoHide: true,
-        delay: 500,
+        delay: 100,
         onSelect: function(e, context){
             if($(this).hasClass("disabled"))
             {              

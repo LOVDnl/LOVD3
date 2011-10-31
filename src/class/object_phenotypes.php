@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-10-11
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-21
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -115,7 +115,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                  $this->buildViewList(),
                  array(
                         'owner' => array(
-                                    'view' => array('Owner', 140),
+                                    'view' => array('Owner', 160),
                                     'db'   => array('owner', 'ASC', true)),
                         'individualid' => array(
                                     'view' => array('Individual ID', 70),

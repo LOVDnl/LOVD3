@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-09-28
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-25
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -313,6 +313,7 @@ class LOVD_Column extends LOVD_Object {
             }
 
             $zData['mandatory_']       = '<IMG src="gfx/mark_' . $zData['mandatory'] . '.png" alt="" width="11" height="11">';
+            $zData['description_legend_full'] = html_entity_decode($zData['description_legend_full']);
             $zData['form_type_']       = lovd_describeFormType($zData) . '<BR>' . $zData['form_type'];
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';

@@ -50,7 +50,6 @@ $_AUTH = false;
 
 // FIXME; Somehow this doesn't work...
 session_start(); // Reinitiate... Otherwise the next line will do nothing.
-// DMD_SPECIFIC; FIXME; we still need to decide how to store this information.
 $_SESSION['currdb'] = $sCurrDB; // Put it back.
 header('Refresh: 5; url=' . lovd_getInstallURL());
 define('PAGE_TITLE', 'Log out');
@@ -63,7 +62,7 @@ $aTimes =
          array(
                 array( 1, 'sec', 'sec'),
                 array(60, 'min', 'min'),
-                array(60, 'hr', 'hrs'),
+                array(60, 'hr',  'hrs'),
                 array(24, 'day', 'days'),
               );
 

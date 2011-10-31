@@ -204,7 +204,7 @@ function recaptcha_get_signup_url ($domain = null, $appname = null) {
 function _recaptcha_aes_pad($val) {
 	$block_size = 16;
 	$numpad = $block_size - (strlen ($val) % $block_size);
-	return sprintf('%\'' . chr($numpad) . (strlen ($val) + $numpad) . 's', $val);;
+	return str_pad($val, strlen ($val) + $numpad, chr($numpad));
 }
 
 /* Mailhide related code */

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-10-12
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-28
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -70,6 +70,7 @@ class LOVD_User extends LOVD_Object {
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
                                            '(u.login_attempts >= 3) AS locked, ' .
                                            'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, ' .
+                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ", ") AS collaborates_, ' .
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
@@ -85,8 +86,8 @@ class LOVD_User extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
                                           'COUNT(CASE u2g.allow_edit WHEN 1 THEN u2g.geneid END) AS curates, ' .
                                           'c.name AS country_, ' .
-                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level_, ' . 
-                                          'CASE GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . '))' . $sLevelQuery . ' END AS level';
+                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level, ' . 
+                                          'CASE GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . '))' . $sLevelQuery . ' END AS level_';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
@@ -106,21 +107,22 @@ class LOVD_User extends LOVD_Object {
                         'country_' => 'Country',
                         'email' => 'Email address',
                         'reference' => 'Reference',
-                        'username' => array('Username', LEVEL_COLLABORATOR),
-                        'password_force_change_' => array('Force change password', LEVEL_COLLABORATOR),
-                        'phpsessid' => array('Session ID', LEVEL_COLLABORATOR),
+                        'username' => array('Username', LEVEL_CURATOR),
+                        'password_force_change_' => array('Force change password', LEVEL_MANAGER),
+                        'phpsessid' => array('Session ID', LEVEL_MANAGER),
                         'saved_work_' => 'Saved work',
                         'curates_' => 'Curator for',
+                        'collaborates_' => array('Collaborator for', LEVEL_MANAGER),
 //                        'submits' => 'Submits',
-                        'level' => 'User level',
+                        'level_' => 'User level',
                         'allowed_ip_' => 'Allowed IP address list',
                         'status_' => 'Status',
                         'locked_' => 'Locked',
-                        'last_login' => array('Last login', LEVEL_COLLABORATOR),
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'last_login' => array('Last login', LEVEL_MANAGER),
+                        'created_by_' => array('Created by', LEVEL_CURATOR),
+                        'created_date' => array('Date created', LEVEL_CURATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_CURATOR),
+                        'edited_date_' => array('Date last edited', LEVEL_CURATOR),
                       );
 
         // Because the user information is publicly available, remove some columns for the public.
@@ -162,11 +164,11 @@ class LOVD_User extends LOVD_Object {
                         'created_date_' => array(
                                     'view' => array('Started', 80),
                                     'db'   => array('u.created_date', 'ASC', true)),
-                        'level' => array(
+                        'level_' => array(
                                     'view' => array('Level', 150),
                                     'db'   => array('level', 'DESC', 'TEXT')),
                       );
-        $this->sSortDefault = 'level';
+        $this->sSortDefault = 'level_';
 
         parent::LOVD_Object();
     }
@@ -411,13 +413,13 @@ class LOVD_User extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         $zData['active'] = file_exists(session_save_path() . '/sess_' . $zData['phpsessid']);
-        $zData['level'] = substr($zData['level'], 1);
         if ($sView == 'list') {
             $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['name'] . '</A>';
             $sAlt = ($zData['active']? 'Online' : ($zData['locked']? 'Locked' : 'Offline'));
             $zData['status_'] = ($zData['locked'] || $zData['active']? '<IMG src="gfx/' . ($zData['locked']? 'status_locked' : 'status_online') . '.png" alt="' . $sAlt . '" title="' . $sAlt . '" width="14" height="14">' : '');
             $zData['last_login_'] = substr($zData['last_login'], 0, 10);
             $zData['created_date_'] = substr($zData['created_date'], 0, 10);
+            $zData['level_'] = substr($zData['level_'], 1);
 
         } else {
             $zData['password_force_change_'] = ($zData['password_force_change']? '<IMG src="gfx/mark_1.png" alt="" width="11" height="11"> Yes' : 'No');
@@ -429,6 +431,7 @@ class LOVD_User extends LOVD_Object {
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');
             $zData['locked_'] = ($zData['locked']? '<IMG src="gfx/status_locked.png" alt="Locked" title="Locked" width="14" height="14" align="top"> Locked' : 'No');
+            $zData['level_'] = $_SETT['user_levels'][$zData['level']];
 /*
     $zData['submits_'] = $zData['submits'] . ($zData['submits']? ' (<A href="' . ROOT_PATH . 'submitters_variants.php?submitterid=' . $zData['submitterid'] . '&all_genes">view</A>)' : '');
 */

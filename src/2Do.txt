@@ -1,5 +1,15 @@
 Prioritize:
 ===========
+- (Ivar) Isoleer JS code voor variant formulier, zodat het ook voor variant edit gebruikt kan worden.
+- Custom columns: niet consequent in hoofdletter gebruik bij meerdere woorden; zoals Times_Reported en Restriction_site.
+- Pathogenicity: "affects function"
+- IVO: Edit custom columns implement
+- IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
+  * VERGEET OOK PUBLIC_VIEW/PUBLIC_ENTRY CONTROLE NIET.
+- Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
+- FIXME; implement check on DBID if variant HAS NO GENES OR TRANSCRIPTS.
+- Leuk, TH's kunnen niet meer gecentered worden omdat er nu in de styles een standaard staat ingesteld. Hoe dat fixen?
+- Kloppen alle return values van PDO wel? query() moet modified rows teruggeven, ofzo?
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? Ook dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
 - Submitter register: link naar eigen account zodat admin die de FWD ontvangt snel het account kan vinden?
 - CurrDB == DMD: alle tabs alleen de DMD info laten zien. Genes: genes/DMD. Variants: variants/DMD. Individuals: individuals/DMD (wat betekent: gescreened in DMD of gekoppeld aan een ziekte die aan DMD vast zit). Dat laatste kán nu niet, via de search boxes. Oplossing hele rare syntax? Dan wel behoorlijke veranderingen in objects.php nodig.
@@ -30,7 +40,7 @@ Prioritize:
     + /variants             -> genomic variants
     + /variants/chrX        -> genomic variants, chromosome X only (MAPPING TO /variants WITH ADDED SEARCH TERMS)
     + /variants/in_gene     -> all transcript variants joined to genomic variants, show transcript ID and gene
-    + /variants/DMD         -> transcript variants of DMD gene joined to genomic variants, show transcript ID and gene (MAPPING TO /variants/in_gene WITH ADDED SEARCH TERMS)
+    + /variants/DMD         -> transcript variants of DMD gene joined to genomic variants, show transcript ID and gene (MAPPING TO /variants/in_gene, DIFFERENT COLUMN ORDER, SEARCH TERMS ADDED, SOME COLUMNS REMOVED)
     - /view                 -> MAPPING TO /view/variants+screenings+individuals+phenotypes
     - /view/DMD             -> combined genomic/transcript view, per gene; one line per (genomic) variant and all NMs horizontally added.
     + /variants/0000000001  -> viewEntry() for genomic variant
@@ -179,6 +189,8 @@ Doen voordat LOVD 3.0 online gebruikt kan worden:
 
 
 Ook belangrijk, maar iets minder:
+- Curator aanstellen voor aandoeningen? Hebben alleen rechten op phenotype entries van de ziektes waar ze curator van zijn, plus de aansluitende individuen.
+  * "Normale" curatoren mogen dan varianten, screenings alleen??? Of ook individuen???
 - Kunnen custom links inserted worden door dynamic popups? PubMed geeft dan een popup met veld "PMID" en veld "Author". Kan dat geparsed worden uit de omschrijving van de custom link?
 - Alle formulieren moeten fieldsets gaan gebruiken!!!
     Fieldsets die dicht zijn, moeten dicht blijven na submit. Idem voor open.
@@ -202,6 +214,7 @@ Ook belangrijk, maar iets minder:
   * Enter password in every page deactivated for some time?
   * Lock users after how many failed attempts?
   * Sessions last for how long?
+  * Password storage toch in bcrypt? (pas zeker weten beschikbaar met PHP 5.3)
   ...
 
 Lifestyle columns? Smoker yes/no? Where/how to store?
@@ -230,6 +243,7 @@ Kán later, maar VOOR dat er externe gebruikers actief worden:
 
 LOVD 3.0
 ====================
+    Als een patiënt DMD (ziekte) heeft, automatisch genomische varianten mappen op genen betrokken bij DMD indien op zelfde Chr? In het geval van meerdere genen, de dichtstbijzijnde?
     Mutalyzer: als zelf via SSL beschikbaar, ga dan ook naar Mutalyzer via SSL!
     Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)
         Ook support mededelingen: voor versies alpha-01 t/m alpha-10 het bericht dat alpha niet meer ondersteund wordt, dus je moet upgraden. Of voor alle installs op onze server (signature check): downtime dan en dan. Op versie of op signature??? Zoiets.

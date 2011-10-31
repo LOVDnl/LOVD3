@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-10-12
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-31
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -408,12 +408,11 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
 function lovd_getGeneList ()
 {
     // Gets the list of genes (ids only), to prevent repeated queries.
+    global $_DB;
+
     static $aGenes = array();
     if (!count($aGenes)) {
-        $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id');
-        while ($r = mysql_fetch_row($q)) {
-            $aGenes[] = $r[0];
-        }
+        $aGenes = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
     }
 
     return $aGenes;
@@ -867,7 +866,7 @@ function lovd_requireAUTH ($nLevel = 0)
     // low), and exits.
     // $_AUTH is for authorization; $_SETT is needed for the user levels;
     // $_CONF and $_STAT are for the top and bottom includes.
-    global $_AUTH, $_SETT, $_CONF, $_STAT;
+    global $_AUTH, $_DB, $_SETT, $_CONF, $_STAT;
 
     $aKeys = array_keys($_SETT['user_levels']);
     if ($nLevel !== 0 && !in_array($nLevel, $aKeys)) {

@@ -7,6 +7,33 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Alpha 06
+ * 2011-11-14
+ *********/
+ * Added the "Collaborates" column to the user's viewEntry, visible from Manager
+   and up.
+ * Fixed bug; The built-in Mutalyzer Syntax Checker on the variant create form
+   didn't work for variants on non-numeric chromosomes, due to misinterpretation
+   of 'chrX' as a malformed reference sequence.
+ * When visiting gene-specific pages, LOVD now creates the gene-specific header
+   with the list of curators displayed on the top of the page, like in LOVD 2.0.
+ * LOVD also remembers your selected gene while you are active in LOVD, and some
+   tabs' links are adapted to direct you to gene-specific overviews directly.
+ * Improved the PDO wrapper by implementing a PDOStatement::fetchAllAssoc().
+ * Changed order of columns in /variants/GENE overview, such that the variants
+   on the transcript level are shown first.
+ * Fixed bug; Internet Explorer users could be having some trouble with the drop
+   down menu because of a bug in IE.
+ * Added the protein NCBI ID column to the transcript viewList.
+
+
+
+
+
+
+
+
+/*******************
  * 3.0 Alpha 05
  * 2011-10-17
  *********/

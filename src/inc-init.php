@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-10-12
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-31
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -646,7 +646,7 @@ if (!defined('_NOT_INSTALLED_')) {
     @define('DELETE', false);
 
     // We really don't need any of this, if we're loaded by the update picture.
-    // DMD_SPECIFIC; CHECK THIS BLOCK LATER
+    // FIXME; double check all of this block.
     if (!in_array(lovd_getProjectFile(), array('/check_update.php', '/logout.php'))) {
         // Force user to change password.
         if ($_AUTH && $_AUTH['password_force_change'] && !(lovd_getProjectFile() == '/users.php' && in_array(ACTION, array('edit', 'change_password')) && $_PATH_ELEMENTS[1] == $_AUTH['id'])) {
@@ -660,32 +660,23 @@ if (!defined('_NOT_INSTALLED_')) {
             $_SETT['admin'] = array('name' => $_AUTH['name'], 'email' => $_AUTH['email']);
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
-            list($_SETT['admin']['name'], $_SETT['admin']['email']) = mysql_fetch_row(lovd_queryDB_Old('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN)));
+            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN))->fetchRow();
         }
 
-// DMD_SPECIFIC - Don't think we need this anymore.
-/*
         // Switch gene.
-        if (isset($_GET['select_db'])) {
-            if (!in_array($_GET['select_db'], lovd_getGeneList())) {
-                lovd_displayError('Init', 'You provided a non-existing gene database name');
+        // Gene switch will occur automatically at certain pages. They can be accessed by following links in LOVD itself, or possibly from outer sources.
+        if (preg_match('/^(genes|variants)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
+            $sSelectGene = $aRegs[2];
+        }      
+
+        if (!empty($sSelectGene)) {
+            if (in_array($sSelectGene, lovd_getGeneList())) {
+                $_SESSION['currdb'] = $sSelectGene;
+            } else {
+                // FIXME; we used to have this... but probably not such a good idea now (it replaces normal error at genes/GENE).
+                //lovd_displayError('Init', 'You provided a non-existing gene database name');
             }
         }
-*/
-
-// DMD_SPECIFIC; how are we going to handle this?
-        // Load gene data.
-        if (!empty($_SESSION['currdb'])) {
-            $_SETT['currdb'] = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb'])));
-            if (!$_SETT['currdb']) {
-                $_SESSION['currdb'] = false;
-            }
-        } else {
-            $_SESSION['currdb'] = false;
-        }
-
-        // Just often used...
-        define('GENE_COUNT', count(lovd_getGeneList()));
 
         // Simply so that we can build somewhat correct email headers.
         if (empty($_CONF['institute'])) {
@@ -715,6 +706,22 @@ if (!defined('_NOT_INSTALLED_')) {
                                   'X-MSMail-Priority: Normal' . $sEol .
                                   'X-Mailer: PHP/' . phpversion() . $sEol .
                                   'From: ' . (ON_WINDOWS? '' : '"LOVD (' . lovd_shortenString($_CONF['system_title'], 50) . ')" ') . '<' . $_CONF['email_address'] . '>';
+    }
+
+
+
+
+
+    if (!in_array(lovd_getProjectFile(), array('/check_update.php'))) {
+        // Load gene data.
+        if (!empty($_SESSION['currdb'])) {
+            $_SETT['currdb'] = @$_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb']))->fetchAssoc();
+            if (!$_SETT['currdb']) {
+                $_SESSION['currdb'] = false;
+            }
+        } else {
+            $_SESSION['currdb'] = false;
+        }
     }
 
 /*

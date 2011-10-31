@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2011-08-12
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-10-28
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -52,6 +52,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 list($nUsers)    = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_USERS));
 list($nLogs)     = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_LOGS));
 list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
+$nGenes          = count(lovd_getGeneList());
 $aTotalVars      = array();
 $nTotalVars      = 0;
 $q = lovd_queryDB_Old('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
@@ -80,7 +81,7 @@ print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . 
       '                  Users : ' . $nUsers . '<BR>' . "\n" .
       '                  Log entries : ' . $nLogs . '<BR>----------<BR>' . "\n" .
       '                  Individuals : ' . $nIndividuals . '<BR>' . "\n" .
-      '                  Genes : ' . GENE_COUNT . '</TD></TR>' . "\n" .
+      '                  Genes : ' . $nGenes . '</TD></TR>' . "\n" .
       '              <TR>' . "\n" .
       '                <TH>Variants</TH></TR>' . "\n" .
       '              <TR>' . "\n" .
@@ -197,7 +198,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '              <TR class="pointer" id="create_gene" onclick="window.location.href=\'setup_genes.php?action=create\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_database_create.png" alt="Create new gene database" width="32" height="32"></TD>' . "\n" .
       '                <TD>Create a new gene database.</TD></TR>' .
-      (!GENE_COUNT? '' :
+      (!$nGenes? '' :
       "\n" .
       '              <TR class="pointer" onclick="window.location.href=\'setup_genes.php?action=view_all\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_database_edit.png" alt="Manage gene databases" width="32" height="32"></TD>' . "\n" .

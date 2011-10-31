@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2011-10-11
+ * Modified    : 2011-10-18
  * For LOVD    : 3.0-alpha-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -316,10 +316,14 @@ function lovd_AJAX_viewListUpdateEntriesString (sViewListID)
 
 
 
-function lovd_stretchInputs(id) {
+function lovd_stretchInputs (id)
+{
+    // Stretches the input fields for search terms on all columns, since the
+    // column's size may be stretched because of the data contents.
+
     var aColumns = $("#viewlistTable_"+id+" th");
     var nColumns = aColumns.size();
-    for (var i=0; i<nColumns; i++) {
+    for (var i = 0; i < nColumns; i ++) {
         aColumns.eq(i).find("input").css("width", aColumns.eq(i).width() - 6);
     }
 }

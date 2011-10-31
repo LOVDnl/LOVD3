@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2011-10-13
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-31
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -196,10 +196,21 @@ class LOVD_PDOStatement extends PDOStatement {
 
 
 
+    function fetchAllAssoc ()
+    {
+        // Wrapper around PDOStatement::fetchAll(PDO::FETCH_ASSOC).
+        // THIS WRAPPER DOES NOT SUPPORT ANY OF THE PDOStatement::fetchAll() ARGUMENTS!
+        return $this->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+
+
+
     function fetchAssoc ()
     {
         // Wrapper around PDOStatement::fetch(PDO::FETCH_ASSOC).
-        // THIS WRAPPER DOES NOT SUPPORT THE cursor_orientation OR offset ARGUMENTS!
+        // THIS WRAPPER DOES NOT SUPPORT ANY OF THE PDOStatement::fetch() ARGUMENTS!
         return $this->fetch(PDO::FETCH_ASSOC);
     }
 

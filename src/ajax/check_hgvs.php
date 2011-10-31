@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2011-09-15
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-26
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -32,9 +32,12 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-if (empty($_GET['variant']) || !preg_match('/^(NM_\d{6,9}\.\d{1,2}:c)|(chr.{0,2}:g)\..+$/', $_GET['variant'])) {
+if (empty($_GET['variant']) || !preg_match('/^(c:c|g:g)\..+$/', $_GET['variant'])) {
     die(AJAX_DATA_ERROR);
 }
+
+// Take the c. or g. off.
+$_GET['variant'] = substr($_GET['variant'], 2);
 
 // Requires at least LEVEL_SUBMITTER, anything lower has no $_AUTH whatsoever.
 if (!$_AUTH) {

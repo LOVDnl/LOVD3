@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2011-10-12
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-18
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -53,7 +53,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
         lovd_errorClean();
 
         // Find account.
-        $zData = $_DB->prepare('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username']))->fetch(PDO::FETCH_ASSOC);
+        $zData = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username']))->fetchAssoc();
         if (!$zData) {
             lovd_errorAdd('This username does not exist.');
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for inexistent/denied account ' . $_POST['username']);
@@ -77,7 +77,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             }
 
             // Update database.
-            $_DB->prepare('UPDATE ' . TABLE_USERS . ' SET password_autogen = MD5(?) WHERE username = ?', array($sPasswd, $_POST['username']));
+            $_DB->query('UPDATE ' . TABLE_USERS . ' SET password_autogen = MD5(?) WHERE username = ?', array($sPasswd, $_POST['username']));
 
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' . $_POST['username']);
 
@@ -94,7 +94,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $sMessage = 'Dear ' . $zData['name'] . ',' . "\n\n" .
                         'Your password from your LOVD account has been reset, as requested. Your new, randomly generated, password can be found below. Please log in to LOVD and choose a new password.' . "\n\n" .
                         'Below is a copy of your updated account information.' . "\n\n" .
-                        'If you did not request a new password, you can disregard this message. Your old password will continue to function normally. However, you may then want to report this email to the LOVD manager, who can investigate possible misuse of the system.' . "\n\n";
+                        'If you did not request a new password, you can disregard this message. Your old password will continue to function normally. However, you may then want to report this email to the Database administrator ' . $_SETT['admin']['name'] . ', email: ' . $_SETT['admin']['email'] . ', who can investigate possible misuse of the system.' . "\n\n";
 
             // Add the location of the database, so that the user can just click the link.
             if ($_CONF['location_url']) {
@@ -105,9 +105,9 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
                          '    LOVD ' . $_SETT['system']['version'] . ' system at ' . $_CONF['institute'] . "\n\n";
 
             // Array containing the unlock code field.
-            $_POST['password_autogen'] = $sPasswd;
+            $a['password_autogen'] = $sPasswd;
             $aMailFields = array(
-                            '_POST',
+                            'a',
                             'password_autogen' => 'New password / unlocking code',
                            );
 

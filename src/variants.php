@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-10-11
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-26
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -379,13 +379,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 function lovd_checkHGVS () {
     var oVariantDNA = $(this);
     if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA') {
-        var sVariantNotation = 'chr<?php echo (isset($sGene)? $_POST['chromosome'] : '\' + $(\'#variantForm select[name="chromosome"]\').val() + \''); ?>:' + oVariantDNA.val();
+        var sVariantNotation = 'g:' + oVariantDNA.val(); // The actual chromosome is not important, it's just the syntax that matters here.
     } else {
-        var sVariantNotation = aTranscripts[oVariantDNA.attr('name').substring(0,5)] + ':' + oVariantDNA.val();
+        var sVariantNotation = 'c:' + oVariantDNA.val(); // The actual transcript is not important, it's just the syntax that matters here.
     }
     $.get('<?php echo ROOT_PATH; ?>ajax/check_hgvs.php', { variant: sVariantNotation },
         function(sData) {
             if (sData != '<?php echo AJAX_TRUE; ?>') {
+                // Mutalyzer says No, or our regexp didn't find a c. or g. at the beginning, or user lost $_AUTH.
                 $(oVariantDNA).siblings('img:first').attr({
                     src: 'gfx/cross.png',
                     alt: 'Not a valid HGVS syntax!',

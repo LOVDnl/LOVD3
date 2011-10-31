@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-10-12
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-28
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -77,7 +77,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // Allow everybody to see certain details, but only managers to view all? Hide username, certain info from others?
     // Require valid user.
     lovd_requireAUTH();
-    
+
+    lovd_isAuthorized('gene', $_AUTH['curates']); // Enables LEVEL_COLLABORATOR and LEVEL_CURATOR for object_users.php.
+
     // Require manager clearance, if user is not viewing himself.
     if ($nID != $_AUTH['id']) {
         lovd_requireAUTH(LEVEL_MANAGER);
