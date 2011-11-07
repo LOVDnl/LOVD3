@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-10-12
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-11-07
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -74,7 +74,7 @@ class LOVD_Object {
 
 
 
-    function LOVD_Object ()
+    function __construct()
     {
         // Default constructor.
         if (!$this->sTable) {
@@ -946,16 +946,20 @@ class LOVD_Object {
         while ($zData = $q->fetchAssoc()) {
             // If row_id is not given by the database, but it should be created according to some format ($this->sRowID), put the data's ID in this format.
             if (!isset($zData['row_id'])) {
-                if ($this->sRowID !== '' && isset($zData['id'])) {
-                    $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
+                if (isset($zData['id'])) {
+                    if ($this->sRowID !== '') {
+                        $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
+                    } else {
+                        $zData['row_id'] = $zData['id'];
+                    }
                 } else {
                     $zData['row_id'] = '';
                 }
             }
-            // If row_link is not given by the database, but it should be created according to some format ($this->sRowLink), but the data's ID and the viewList's ID in this format.
+            // If row_link is not given by the database, but it should be created according to some format ($this->sRowLink), put the data's ID and the viewList's ID in this format.
             if (!isset($zData['row_link'])) {
-                if ($this->sRowLink !== '' && isset($zData['id'])) {
-                    $zData['row_link'] = str_replace(array('{{ID}}', '{{ViewListID}}'), array(rawurlencode($zData['id']), $sViewListID), $this->sRowLink);
+                if ($this->sRowLink !== '' && $zData['row_id']) {
+                    $zData['row_link'] = str_replace(array('{{ID}}', '{{ViewListID}}'), array(rawurlencode($zData['row_id']), $sViewListID), $this->sRowLink);
                     //$zData['row_link'] = preg_replace('/\{\{zData_(\w)+\}\}/', rawurlencode("$1"), $zData['row_link']);
                     //$zData['row_link'] = preg_replace_callback('/\{\{zData_(\w+)\}\}/', create_function('$aRegs', 'global $zData; return rawurlencode($zData[$aRegs[1]]);'), $zData['row_link']);
                     // FIXME; sorry, couldn't figure out how to do this in one line. Suggestions are welcome.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-10-25
+ * Modified    : 2011-11-07
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,7 +48,7 @@ class LOVD_Transcript extends LOVD_Object {
 
 
 
-    function LOVD_Transcript ()
+    function __construct ()
     {
         // Default constructor.
 
@@ -122,7 +122,7 @@ class LOVD_Transcript extends LOVD_Object {
                       );
         $this->sSortDefault = 'geneid';
 
-        parent::LOVD_Object();
+        parent::__construct();
     }
 
 

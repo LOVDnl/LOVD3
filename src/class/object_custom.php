@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-11-07
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
- *     
  *
  * This file is part of LOVD.
  *
@@ -52,10 +52,10 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function LOVD_Custom ()
+    function __construct ()
     {
         // Default constructor.
-        global $_AUTH, $_SETT, $nID;
+        global $_AUTH, $_DB, $_SETT, $nID;
 
         $aArgs = array();	
 
@@ -115,26 +115,24 @@ class LOVD_Custom extends LOVD_Object {
             $this->aColumns[$z['id']] = $z;
         }
 
-        // FIXME; beter weer in 1 query... hoe zorg je er voor, dat de custom links niet steeds opnieuw geparsed worden?
+
+
         // Gather the custom link information.
-        $qLinks = lovd_queryDB_Old('SELECT * FROM ' . TABLE_LINKS);
-        while ($zLink = mysql_fetch_assoc($qLinks)) {
-            $zLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $zLink['pattern_text'])) . '/';
-            $zLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $zLink['replace_text']);
-            $this->aCustomLinks[$zLink['id']] = $zLink;
-        }
-
-        // Add the custom links to the columns that use them.
-        $qCols2Links = lovd_queryDB_Old('SELECT * ' .
-                                    'FROM ' . TABLE_COLS2LINKS . ' ' .
-                                    'WHERE colid LIKE ?', array((isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%'));
-        while ($zCols2Links = mysql_fetch_assoc($qCols2Links)) {
-            if (isset($this->aColumns[$zCols2Links['colid']])) {
-                $this->aColumns[$zCols2Links['colid']]['custom_links'][] = $zCols2Links['linkid'];
+        $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) WHERE c2l.colid LIKE ? GROUP BY l.id',
+            array((isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%'))->fetchAllAssoc();
+        foreach ($aLinks as $aLink) {
+            $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text'])) . '/';
+            $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
+            $aCols = explode(';', $aLink['colids']);
+            foreach ($aCols as $sColID) {
+                if (isset($this->aColumns[$sColID])) {
+                    $this->aColumns[$sColID]['custom_links'][] = $aLink['id'];
+                }
             }
+            $this->aCustomLinks[$aLink['id']] = $aLink;
         }
 
-        parent::LOVD_Object();
+        parent::__construct();
     }
 
 
@@ -416,7 +414,7 @@ class LOVD_Custom extends LOVD_Object {
                     if ($sView == 'list') {
                         $sReplaceText = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . str_replace('"', '\\\'', $sReplaceText) . '\', this);">' . strip_tags($sReplaceText) . '</SPAN>';
                     }
-                    $zData[$aCol['colid']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['colid']]);
+                    $zData[$aCol['id']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['id']]);
                 }
             }
         }

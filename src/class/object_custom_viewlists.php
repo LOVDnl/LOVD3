@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2011-10-31
+ * Modified    : 2011-11-02
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,7 +50,7 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
 
-    function LOVD_CustomViewList ($aObjects = array())
+    function __construct ($aObjects = array())
     {
         // Default constructor.
         global $_DB, $_AUTH;
@@ -201,6 +201,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         // First data table in view.
                         $this->sSortDefault = ''; // FIXME; how will we fake sorting on DNA, while in fact we'll sort on something else? Objects.php?
                     }
+                    $this->sRowLink = 'variants/{{zData_id}}#{{zData_transcriptid}}';
                     break;
 
                 case 'VariantOnTranscript':
@@ -226,37 +227,23 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
 
-
-/*
-
-        // FIXME; beter weer in 1 query... hoe zorg je er voor, dat de custom links niet steeds opnieuw geparsed worden?
-        // Gather the custom link information.
-        $qLinks = lovd_queryDB_Old('SELECT * FROM ' . TABLE_LINKS);
-        while ($zLink = mysql_fetch_assoc($qLinks)) {
-            $zLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $zLink['pattern_text'])) . '/';
-            $zLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $zLink['replace_text']);
-            $this->aCustomLinks[$zLink['id']] = $zLink;
-        }
-
-        // Add the custom links to the columns that use them.
-        $qCols2Links = lovd_queryDB_Old('SELECT * ' .
-                                    'FROM ' . TABLE_COLS2LINKS . ' ' .
-                                    'WHERE colid LIKE ?', array((isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%'));
-        while ($zCols2Links = mysql_fetch_assoc($qCols2Links)) {
-            if (isset($this->aColumns[$zCols2Links['colid']])) {
-                $this->aColumns[$zCols2Links['colid']]['custom_links'][] = $zCols2Links['linkid'];
+        // Gather the custom link information. It's just easier to load all custom links, instead of writing code that checks for the appropiate objects.
+        $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) GROUP BY l.id')->fetchAllAssoc();
+        foreach ($aLinks as $aLink) {
+            $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text'])) . '/';
+            $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
+            $aCols = explode(';', $aLink['colids']);
+            foreach ($aCols as $sColID) {
+                if (isset($this->aColumns[$sColID])) {
+                    $this->aColumns[$sColID]['custom_links'][] = $aLink['id'];
+                }
             }
+            $this->aCustomLinks[$aLink['id']] = $aLink;
         }
 
         // Not including parent constructor, because these table settings will make it freak out.
-//        parent::LOVD_Object();
-
-        // Set default row ID and link for viewList().
-//        $this->sRowID = strtolower($this->sObject) . '_{{ID}}';
-        $this->sRowID = '{{ID}}'; // FIXME; having the object in front of it seems better, but then we need to isolate the ID using JS if we need it.
-        // Default link example: users/00001.
-        $this->sRowLink = strtolower($this->sObject) . 's/{{ID}}';
-*/
+        //parent::__construct();
+        // Therefore, row links need to be created by us (which is done above).
     }
 
 
@@ -278,7 +265,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     if ($sView == 'list') {
                         $sReplaceText = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . str_replace('"', '\\\'', $sReplaceText) . '\', this);">' . strip_tags($sReplaceText) . '</SPAN>';
                     }
-                    $zData[$aCol['colid']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['colid']]);
+                    $zData[$aCol['id']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['id']]);
                 }
             }
         }

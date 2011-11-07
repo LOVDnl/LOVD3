@@ -35,7 +35,7 @@ input, textarea, button, select {font-family : Verdana, Helvetica, Arial, sans-s
 select                          {padding-left : 0px; padding-right : 0px;}
 input:hover, input:focus, textarea:hover, textarea:focus, button:hover, select:hover, select:focus
                                 {background : #F0F3FF; border : 1px solid #112244;}
-th                              {text-align : left;}
+th                              {text-align : left;} /* Because IE auto-centers them */
 
 
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-10-25
+ * Modified    : 2011-11-07
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,7 +49,7 @@ class LOVD_Column extends LOVD_Object {
 
 
 
-    function LOVD_Column ()
+    function __construct ()
     {
         // Default constructor.
 
@@ -104,19 +104,19 @@ class LOVD_Column extends LOVD_Object {
                                     'view' => array('(Default) heading', 150),
                                     'db'   => array('c.head_column', 'ASC', true)),
                         'active_' => array(
-                                    'view' => array('Active', 60, 'align="center"'),
+                                    'view' => array('Active', 60, 'style="text-align : center;"'),
                                     'db'   => array('IFNULL((a.created_by > 0), 0)', 'DESC', true)),
                         'hgvs_' => array(
-                                    'view' => array('HGVS', 50, 'align="center"'),
+                                    'view' => array('HGVS', 50, 'style="text-align : center;"'),
                                     'db'   => array('c.hgvs', 'DESC', true)),
                         'standard_' => array(
-                                    'view' => array('Standard', 80, 'align="center"'),
+                                    'view' => array('Standard', 80, 'style="text-align : center;"'),
                                     'db'   => array('c.standard', 'DESC', true)),
                         'public_view_' => array(
-                                    'view' => array('Public', 60, 'align="center"'),
+                                    'view' => array('Public', 60, 'style="text-align : center;"'),
                                     'db'   => array('c.public_view', 'DESC', true)),
                         'col_order' => array(
-                                    'view' => array('Order&nbsp;', 60, 'align="right"'),
+                                    'view' => array('Order&nbsp;', 60, 'style="text-align : right;"'),
                                     'db'   => array('SUBSTRING_INDEX(c.id, "/", 1), col_order', 'ASC')),
                         'form_type_' => array(
                                     'view' => array('Form type', 200)),
@@ -126,7 +126,7 @@ class LOVD_Column extends LOVD_Object {
                       );
         $this->sSortDefault = 'category';
 
-        parent::LOVD_Object();
+        parent::__construct();
     }
 
 

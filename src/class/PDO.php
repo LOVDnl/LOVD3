@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2011-10-31
+ * Modified    : 2011-11-07
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -127,7 +127,12 @@ class LOVD_PDO extends PDO {
             // We'll do an prepare() and execute(), not a query()!
             $q = $this->prepare($sSQL, $bHalt); // Error handling by our own PDO class.
             if ($q) {
-                $q->execute($aSQL, $bHalt); // Error handling by our own PDOStatement class.
+                $b = $q->execute($aSQL, $bHalt); // Error handling by our own PDOStatement class.
+                if (!$b) {
+                    // We should actually return true||false now, but the user of this function probably wants to do a
+                    // fetch() if the execute was successful, so return the PDOStatement object just like PDO::query().
+                    return false;
+                }
             }
 
         } else {

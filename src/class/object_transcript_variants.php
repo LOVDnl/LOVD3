@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-09-09
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-11-07
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -53,7 +53,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
 
-    function LOVD_TranscriptVariant ($sObjectID = '')
+    function __construct ($sObjectID = '')
     {
         // Default constructor.
 
@@ -80,7 +80,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id=vot.transcriptid)';
 
         $this->sObjectID = $sObjectID;
-        parent::LOVD_Custom();
+        parent::__construct();
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(

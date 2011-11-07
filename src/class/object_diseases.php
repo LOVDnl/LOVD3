@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-08-17
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-11-07
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -48,7 +48,7 @@ class LOVD_Disease extends LOVD_Object {
 
 
 
-    function LOVD_Disease ()
+    function __construct ()
     {
         // Default constructor.
 
@@ -117,7 +117,7 @@ class LOVD_Disease extends LOVD_Object {
                       );
         $this->sSortDefault = 'symbol';
 
-        parent::LOVD_Object();
+        parent::__construct();
     }
 
 

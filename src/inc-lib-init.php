@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-10-31
+ * Modified    : 2011-11-02
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -143,7 +143,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Writes an error message to the errorlog and displays the same message on
     // screen for the user. This function halts PHP processing in all cases.
-    global $_AUTH, $_SETT, $_CONF, $_STAT;
+    global $_AUTH, $_DB, $_SETT, $_CONF, $_STAT;
 
     // Check if, and which, top include has been used.
     if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {

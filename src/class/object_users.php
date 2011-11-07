@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-10-28
+ * Modified    : 2011-11-07
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,7 +48,7 @@ class LOVD_User extends LOVD_Object {
 
 
 
-    function LOVD_User ()
+    function __construct ()
     {
         // Default constructor.
         global $_SETT;
@@ -149,15 +149,15 @@ class LOVD_User extends LOVD_Object {
                                     'view' => array('Country', 200),
                                     'db'   => array('c.name', 'ASC', true)),
                         'curates' => array(
-                                    'view' => array('Curated DBs', 100),
+                                    'view' => array('Curated DBs', 100, 'style="text-align : right;"'),
                                     'db'   => array('curates', 'DESC', 'INT_UNSIGNED')),
 /*
                         'submits' => array(
-                                    'view' => array('Submits', 75, 'align="right"'),
+                                    'view' => array('Submits', 75, 'style="text-align : right;"'),
                                     'db'   => array('submits', 'DESC')),
 */
                         'status_' => array(
-                                    'view' => array('Status', 50, 'align="center"')),
+                                    'view' => array('Status', 50, 'style="text-align : center;"')),
                         'last_login_' => array(
                                     'view' => array('Last login', 80),
                                     'db'   => array('u.last_login', 'DESC', true)),
@@ -166,11 +166,11 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('u.created_date', 'ASC', true)),
                         'level_' => array(
                                     'view' => array('Level', 150),
-                                    'db'   => array('level', 'DESC', 'TEXT')),
+                                    'db'   => array('level_', 'DESC', 'TEXT')),
                       );
         $this->sSortDefault = 'level_';
 
-        parent::LOVD_Object();
+        parent::__construct();
     }
 
 

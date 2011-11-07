@@ -25,6 +25,11 @@
  * Fixed bug; Internet Explorer users could be having some trouble with the drop
    down menu because of a bug in IE.
  * Added the protein NCBI ID column to the transcript viewList.
+ * Fixed bug; Using the back button in your browser didn't always work properly
+   when searching data using viewLists.
+ * Fixed notice on phenotype data entry form.
+ * Clicking on an entry in the "variant affecting transcripts" viewList now also
+   links to the entry's viewEntry, and custom links are now displayed properly.
 
 
 

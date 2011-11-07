@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-10-31
+ * Modified    : 2011-11-01
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -39,13 +39,17 @@ define('_INC_TOP_INCLUDED_', true);
 // Load menu.
 $_MENU = array(
                 'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'Home'),
+                'genes_' =>
                  array(
                         '' => array('menu_magnifying_glass.png', 'View all genes', 0),
+                        '/genes/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View the ' . $_SESSION['currdb'] . ' gene homepage', 0),
                         'create' => array('plus.png', 'Create a new gene entry', LEVEL_MANAGER),
                       ),
                 'transcripts' => 'View transcripts',
+                'transcripts_' =>
                  array(
                         '' => array('menu_magnifying_glass.png', 'View all transcripts', 0),
+                        '/transcripts/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all transcripts of the ' . $_SESSION['currdb'] . ' gene', 0),
                         'create' => array('plus.png', 'Create a new transcript information entry', LEVEL_CURATOR),
                       ),
                 'variants' => 'View variants',
@@ -135,6 +139,8 @@ if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
 
 // Remove certain menu entries, if there is no gene selected.
 if (!$_SESSION['currdb']) {
+    unset($_MENU['genes_']['/genes/']);
+    unset($_MENU['transcripts_']['/transcripts/']);
     unset($_MENU['variants_']['/variants/']);
 }
 

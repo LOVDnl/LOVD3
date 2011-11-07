@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-10-21
+ * Modified    : 2011-11-02
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,7 +49,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
 
 
-    function LOVD_Phenotype ($sObjectID = '')
+    function __construct ($sObjectID = '')
     {
         // Default constructor.
 
@@ -83,7 +83,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         $this->sObjectID = $sObjectID;
 
         // Run parent constructor to find out about the custom columns.
-        parent::LOVD_Custom();
+        parent::__construct();
         
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
@@ -165,7 +165,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         if (!empty($aData['statusid'])) {
             $aSelectStatus = $_SETT['data_status'];
-            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_IN_PENDING]);
+            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_PENDING]);
             if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($aData['statusid'], $aSelectStatus)) {
                 lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
             } elseif ($_AUTH['level'] < LEVEL_CURATOR) {

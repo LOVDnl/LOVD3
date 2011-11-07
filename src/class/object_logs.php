@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2011-05-17
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-11-07
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -48,7 +48,7 @@ class LOVD_Log extends LOVD_Object {
 
 
 
-    function LOVD_Log ()
+    function __construct ()
     {
         // Default constructor.
 
@@ -73,14 +73,14 @@ class LOVD_Log extends LOVD_Object {
                                     'view' => array('Event', 100),
                                     'db'   => array('l.event', 'ASC', true)),
                         'del' => array(
-                                    'view' => array('&nbsp;', 14, 'align="center"')),
+                                    'view' => array('&nbsp;', 14, 'style="text-align : center;"')),
                         'entry' => array(
                                     'view' => array('Entry', 700),
                                     'db'   => array('l.log', false, true)),
                       );
         $this->sSortDefault = 'date';
 
-        parent::LOVD_Object();
+        parent::__construct();
     }
 
 

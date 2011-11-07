@@ -8,14 +8,10 @@ Prioritize:
   * VERGEET OOK PUBLIC_VIEW/PUBLIC_ENTRY CONTROLE NIET.
 - Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - FIXME; implement check on DBID if variant HAS NO GENES OR TRANSCRIPTS.
-- Leuk, TH's kunnen niet meer gecentered worden omdat er nu in de styles een standaard staat ingesteld. Hoe dat fixen?
-- Kloppen alle return values van PDO wel? query() moet modified rows teruggeven, ofzo?
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? Ook dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
 - Submitter register: link naar eigen account zodat admin die de FWD ontvangt snel het account kan vinden?
-- CurrDB == DMD: alle tabs alleen de DMD info laten zien. Genes: genes/DMD. Variants: variants/DMD. Individuals: individuals/DMD (wat betekent: gescreened in DMD of gekoppeld aan een ziekte die aan DMD vast zit). Dat laatste kán nu niet, via de search boxes. Oplossing hele rare syntax? Dan wel behoorlijke veranderingen in objects.php nodig.
 - Screening create: niet meer dan 20 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
   * Na screening create: aangeven varianten gevonden? restrict lijst VOT met genen die gescreened zijn (reversible).
-- BUG: terugknop in browser geeft niet goede viewlist settings (sort, search, etc)
 - Kolom activeren per gen: moet via POST omdat via GET soms te lang is.
 - Fixed bug; MySQL handles 01 very different than '01' for VARCHAR columns, so lovd_queryDB() will now always quote integers.
   * Doet PDO dit ook goed?
@@ -23,7 +19,6 @@ Prioritize:
 - VariantOnGenome/dbSNP column with rsID (integer only!)
   * prepareData() has to deal with it automatically (external source, not a custom link)
   * integer only... is dat wel handig? Misschien toch beter rs nummer?
-- Where still in the wrong order, make sure genes are presented ID first.
 - Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML achor; id_ == default.
   * Currently, Object::prepareData() puts the link in every id_ column it can find.
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!!??
@@ -35,7 +30,6 @@ Prioritize:
 - Er zijn nog een paar database veranderingen nodig, zie top inc-sql-tables.php.
 - CUSTOM VIEWLISTS:
     - FIXME; De custom class haalt de gegevens van alle kolommen op (TABLE_COLS), MAAR public_view kan per gen anders zijn!!!
-    - (later) doet ook custom links.
   * URLS:
     + /variants             -> genomic variants
     + /variants/chrX        -> genomic variants, chromosome X only (MAPPING TO /variants WITH ADDED SEARCH TERMS)
@@ -47,19 +41,10 @@ Prioritize:
       * EXTEND with transcript info!
 - INCORPORATE PDO EVERYWHERE.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
-- (@Ivo) Ga naar viewlist, hersorteer, zoek, hersorteer. Terug kun je wel door sort, maar niet de undo van het zoeken.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
   * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
-  * Eerst moet er code geschreven worden die de authorisatie van de gebruiker goed detecteert!
-    - Mist nog voor patients, phenotypes, screenings. Check variants code nog.
-    - Curators mogen een patient en aangehangen info pas bekijken als hij een screening aan hun gen heeft.
-    - Curatoren mogen in principe alleen de varianten aanpassen, geen patient data of phenotype data. Tenzij ze de owner of created_by zijn, natuurlijk.
-      * Dit niet enforcen, is meer "ongeschreven regel"
 - (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
   * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
-- (~~~~~~BELANGRIJK: Ivar) TranscriptVariant: add, edit, delete (gekoppeld aan GenomeVariant!)
-- (BELANGRIJK) Alle links nalopen, of ze werken.
-- (BELANGRIJK: Ivo) Pathogenicity?
 - (~BELANGRIJK: Ivo) Icoontjes voor setup???
 - (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
 - status.php:
@@ -69,8 +54,7 @@ Prioritize:
 - Check alle viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
 - Gene selection lists zijn veel te groot als je een database hebt met lange gen namen. LOVD 2.0 had daar een techniek voor, om dat in te korten.
 - Kijk 'ns naar https://grenada.lumc.nl/LOVD3/shared, er zit een individu in met een aantal mutaties. Kun je makkelijk naar al zijn data navigeren?
-  * We missen veel links tussen data in. Onder variants on genome zou een variants_on_transcript viewList moeten, en ik moet naar de screening en individu kunnen vanuit daar. Dat soort dingen.
-- Was 't nou geregeld, dat inc-upgrade.php een curator koos voor genen zonder curator?
+  * Variants on genome: ik moet naar de individu kunnen vanuit daar.
 - Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
 - When disease is created, forward user to select columns for this disease.
 - (@Ivar) Code voor remove van custom columns moet nog "gefixed" worden; er staan belangrijke FIXME's in.
@@ -120,6 +104,7 @@ Prioritize:
 
 
 
+- Als account gelocked wordt, moet er naar de gebruiker die gelocked is, gemailed worden.
 - Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - "Individual has been screened, no variants have been found"
   - That means we need an additional column!!!!!!!!
@@ -215,6 +200,7 @@ Ook belangrijk, maar iets minder:
   * Lock users after how many failed attempts?
   * Sessions last for how long?
   * Password storage toch in bcrypt? (pas zeker weten beschikbaar met PHP 5.3)
+  * Na eerste password fail een reCAPTCHA tonen?
   ...
 
 Lifestyle columns? Smoker yes/no? Where/how to store?

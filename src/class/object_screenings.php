@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-10-21
+ * Modified    : 2011-11-07
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,7 +49,7 @@ class LOVD_Screening extends LOVD_Custom {
 
 
 
-    function LOVD_Screening ()
+    function __construct ()
     {
         // Default constructor.
 
@@ -89,7 +89,7 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aSQLViewList['GROUP_BY'] = 's.id';
 
         // Run parent constructor to find out about the custom columns.
-        parent::LOVD_Custom();
+        parent::__construct();
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
@@ -137,7 +137,6 @@ class LOVD_Screening extends LOVD_Custom {
                                     'db'   => array('s.edited_date', 'ASC', true)),
                       ));
         $this->sSortDefault = 'id';
-        parent::LOVD_Object();
     }
 
 

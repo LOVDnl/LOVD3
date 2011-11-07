@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-10-21
+ * Modified    : 2011-11-07
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,7 +51,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
 
 
-    function LOVD_GenomeVariant ()
+    function __construct ()
     {
         // Default constructor.
 
@@ -88,7 +88,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
         $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
-        parent::LOVD_Custom();
+        parent::__construct();
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
