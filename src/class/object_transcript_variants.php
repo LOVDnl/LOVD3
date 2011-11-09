@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-08
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,10 +58,11 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // Default constructor.
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT vot.*, ' .
+        $this->sSQLLoadEntry = 'SELECT vot.* ' .
                                'FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
-                               'WHERE vot.id=? ' .
-                               'GROUP BY=vot.id';
+                               'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON(vot.transcriptid = t.id) ' .
+                               'WHERE vot.id = ? ' .
+                               'AND t.geneid = ?';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vot.*, ' .
@@ -74,10 +75,13 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
         // SQL code for viewing the list of variants
         // FIXME: we should implement this in a different way
-        $this->aSQLViewList['SELECT']   = 'vot.*, ' . 
-                                          't.id_ncbi';
+        $this->aSQLViewList['SELECT']   = 'vot.*, ' .
+                                          't.id_ncbi, ' .
+                                          'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
-                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id=vot.transcriptid)';
+                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid)';
 
         $this->sObjectID = $sObjectID;
         parent::__construct();
@@ -113,10 +117,13 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                       ),
                  $this->buildViewList(),
                  array(
+                        'status' => array(
+                                    'view' => array('Status', 70),
+                                    'db'   => array('ds.name', false, true)),
                       ));
 
         $this->sSortDefault = 'id_ncbi';
-        $qTranscripts = lovd_queryDB_Old('SELECT id, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid=? ORDER BY id_ncbi', array($sObjectID));
+        $qTranscripts = lovd_queryDB_Old('SELECT id, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? ORDER BY id_ncbi', array($sObjectID));
         While($r = mysql_fetch_row($qTranscripts)) {
             $this->aTranscripts[$r[0]] = $r[1];
         }
@@ -170,14 +177,15 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
             $this->aFormData = array_merge($this->aFormData, array(array('', '', 'print', '<B>Transcript variant on ' . $sTranscriptNM . '</B>')), array('hr'), $this->buildForm($nTranscriptID . '_'), array('hr'), array('skip'));
         }
-        unset($this->aFormData[max(array_keys($this->aFormData))]);
-        
+        array_pop($this->aFormData);
+
         return parent::getForm();
     }
 
 
 
 
+ 
     function insertAll ($aData, $aFields = array())
     {
         foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
@@ -196,6 +204,70 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
 
+    function loadAll ($nID = false)
+    {
+        // Loads all variantOnTranscript entries from the database.
+        if (empty($nID)) {
+            // We were called, but the class wasn't initiated with an ID. Fail.
+            lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::loadEntry() - Method didn\'t receive ID');
+        }
+
+        global $_DB;
+
+        $z = @$_DB->query($this->sSQLLoadEntry, array($nID, $this->sObjectID))->fetchAllAssoc();
+        // FIXME; check if $zData['status'] exists, if so, check status versus lovd_isAuthorized().
+        // Set $zData to false if user should not see this entry.
+        if (!$z) {
+            global $_CONF, $_SETT, $_STAT, $_AUTH;
+
+            $sError = mysql_error(); // Save the mysql_error before it disappears.
+
+            // Check if, and which, top include has been used.
+            if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {
+                if (is_readable(ROOT_PATH . 'inc-top.php')) {
+                    require ROOT_PATH . 'inc-top.php';
+                } else {
+                    require ROOT_PATH . 'inc-top-clean.php';
+                }
+            }
+
+            if (defined('PAGE_TITLE') && defined('_INC_TOP_INCLUDED_')) {
+                lovd_printHeader(PAGE_TITLE);
+            }
+
+            if ($sError) {
+                lovd_queryError($this->sObject . '::loadEntry()', $sSQL, $sError);
+            }
+
+            lovd_showInfoTable('No such ID!', 'stop');
+
+            if (defined('_INC_TOP_INCLUDED_')) {
+                require ROOT_PATH . 'inc-bot.php';
+            } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
+                require ROOT_PATH . 'inc-bot-clean.php';
+            }
+            exit;
+        }
+
+        $zData = array();
+        foreach($z as $aVariantOnTranscript) {
+            $aVariantOnTranscript = $this->autoExplode($aVariantOnTranscript);
+            foreach ($this->aColumns as $sColClean => $aCol) {
+                $sCol = $aVariantOnTranscript['transcriptid'] . '_' . $sColClean;
+                if ($aCol['form_type'][2] == 'select' && $aCol['form_type'][3] > 1) {
+                    $zData[$sCol] = explode(';', $aVariantOnTranscript[$sColClean]);
+                } else {
+                    $zData[$sCol] = $aVariantOnTranscript[$sColClean];
+                }
+            }
+        }
+        return $zData;
+    }
+    
+    
+    
+    
+    
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
@@ -212,6 +284,68 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         }
         
         return $zData;
+    }
+    
+    
+    
+    
+    
+    function setDefaultValues ()
+    {
+        // Initiate default values of fields in $_POST.
+        foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
+            foreach ($this->aColumns as $sColClean => $aCol) {
+                $sCol = $nTranscriptID . '_' . $sColClean;
+                // Fill $_POST with the column's default value.
+                $_POST[$sCol] = $this->getDefaultValue($sColClean);
+            }
+        }
+    }
+    
+    
+    
+    
+    
+    function updateAll ($nID, $aData, $aFields = array())
+    {
+        // Edit all VariantOnTranscript entries.
+        foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
+            foreach($aFields as $sField) {
+                if (strpos($sField, '/')) {
+                    $aData[$sField] = $aData[$nTranscriptID . '_' . $sField];
+                }
+            }
+
+            // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
+            if (!trim($nID)) {
+                lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive ID');
+            } elseif (!is_array($aData) || !count($aData)) {
+                lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive data array');
+            } elseif (!is_array($aFields) || !count($aFields)) {
+                $aFields = array_keys($aData);
+            }
+
+            // Query text.
+            $sSQL = 'UPDATE ' . constant($this->sTable) . ' SET ';
+            $aSQL = array();
+            foreach ($aFields as $key => $sField) {
+                $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
+                if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
+                    $aData[$sField] = NULL;
+                }
+                $aSQL[] = $aData[$sField];
+            }
+            $sSQL .= ' WHERE id = ? AND transcriptid = ?';
+            $aSQL[] = $nID;
+            $aSQL[] = $nTranscriptID;
+
+            $q = lovd_queryDB_Old($sSQL, $aSQL);
+            if (!$q) {
+                lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::updateEntry()'), $sSQL, mysql_error());
+            }
+
+            return mysql_affected_rows();
+        }
     }
 }
 ?>

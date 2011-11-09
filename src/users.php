@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-10-28
+ * Modified    : 2011-11-09
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -748,7 +748,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
 
             if ($_CONF['location_url']) {
                 $sMessage .= 'To log in to LOVD, click this link:' . "\n" .
-                             $_CONF['location_url'] . 'login' . "\n\n";
+                             $_CONF['location_url'] . 'login' . "\n\n" .
+                             'You can also go straight to your account using the following link:' . "\n" .
+                             $_CONF['location_url'] . 'users/' . $_AUTH['id'] . "\n\n";
             }
             $sMessage .= 'Regards,' . "\n" .
                          '    LOVD system at ' . $_CONF['institute'] . "\n\n";
@@ -759,7 +761,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
             $aMailFields =
                      array(
                             '_POST',
-                            'id' => 'Submitter ID',
+                            'id' => 'User ID',
                             'name' => 'Name',
                             'institute' => 'Institute',
                             'department' => 'Department',

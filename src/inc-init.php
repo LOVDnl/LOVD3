@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-10-31
+ * Modified    : 2011-11-09
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -179,6 +179,7 @@ $_SETT = array(
                 'wikiprofessional_iprange' => '131.174.88.0-255',
                 'list_sizes' =>
                      array(
+                            10,
                             25,
                             50,
                             100,
@@ -688,23 +689,19 @@ if (!defined('_NOT_INSTALLED_')) {
 
         // Determine email header line endings.
         // Define constant to quickly check if we're on Windows, since sending emails on Windows requires yet one more adaptation.
-        // FIXME; can we maybe use PHP_EOL? Available since PHP 4.3.10 and PHP 5.0.2.
         if (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')) {
-                $sEol = "\r\n";
                 define('ON_WINDOWS', true);
         } elseif (strtoupper(substr(PHP_OS, 0, 3) == 'MAC')) {
-                $sEol = "\r";
                 define('ON_WINDOWS', false);
         } else {
-                $sEol = "\n";
                 define('ON_WINDOWS', false);
         }
 
-        $_SETT['email_headers'] = 'MIME-Version: 1.0' . $sEol .
-                                  'Content-Type: text/plain; charset=ISO-8859-1' . $sEol .
-                                  'X-Priority: 3' . $sEol .
-                                  'X-MSMail-Priority: Normal' . $sEol .
-                                  'X-Mailer: PHP/' . phpversion() . $sEol .
+        $_SETT['email_headers'] = 'MIME-Version: 1.0' . PHP_EOL .
+                                  'Content-Type: text/plain; charset=UTF-8' . PHP_EOL .
+                                  'X-Priority: 3' . PHP_EOL .
+                                  'X-MSMail-Priority: Normal' . PHP_EOL .
+                                  'X-Mailer: PHP/' . phpversion() . PHP_EOL .
                                   'From: ' . (ON_WINDOWS? '' : '"LOVD (' . lovd_shortenString($_CONF['system_title'], 50) . ')" ') . '<' . $_CONF['email_address'] . '>';
     }
 

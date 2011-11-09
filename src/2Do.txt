@@ -1,6 +1,5 @@
 Prioritize:
 ===========
-- (Ivar) Isoleer JS code voor variant formulier, zodat het ook voor variant edit gebruikt kan worden.
 - Custom columns: niet consequent in hoofdletter gebruik bij meerdere woorden; zoals Times_Reported en Restriction_site.
 - Pathogenicity: "affects function"
 - IVO: Edit custom columns implement
@@ -9,17 +8,17 @@ Prioritize:
 - Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - FIXME; implement check on DBID if variant HAS NO GENES OR TRANSCRIPTS.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? Ook dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
-- Submitter register: link naar eigen account zodat admin die de FWD ontvangt snel het account kan vinden?
 - Screening create: niet meer dan 20 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
   * Na screening create: aangeven varianten gevonden? restrict lijst VOT met genen die gescreened zijn (reversible).
 - Kolom activeren per gen: moet via POST omdat via GET soms te lang is.
 - Fixed bug; MySQL handles 01 very different than '01' for VARCHAR columns, so lovd_queryDB() will now always quote integers.
   * Doet PDO dit ook goed?
+  * Ivar: PDO doet '01' -> '01', '1' -> '1', 1 -> '1', 01 -> '1'. Dus alleen als je ongequote 01 geeft dan maakt PDO er een '1' van.
 - Delete user verder ontmoedigen?
 - VariantOnGenome/dbSNP column with rsID (integer only!)
   * prepareData() has to deal with it automatically (external source, not a custom link)
   * integer only... is dat wel handig? Misschien toch beter rs nummer?
-- Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML achor; id_ == default.
+- Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
   * Currently, Object::prepareData() puts the link in every id_ column it can find.
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!!??
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?

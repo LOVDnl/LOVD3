@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-09
- * Modified    : 2011-09-15
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-11-02
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -32,7 +32,8 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-if (empty($_GET['variant']) || !preg_match('/^(NM_\d{6,9}\.\d{1,2}:c)|(chr.{0,2}:g)\..+$/', $_GET['variant'])) {
+$aGenes = lovd_getGeneList();
+if (empty($_GET['variant']) || !preg_match('/^(NM_\d{6,9}\.\d{1,2}:c)|(chr.{0,2}:g)\..+$/', $_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes)) {
     die(AJAX_DATA_ERROR);
 }
 
@@ -45,7 +46,7 @@ if (!$_AUTH) {
 require ROOT_PATH . 'class/REST2SOAP.php';
 $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
 
-$aOutput = $_MutalyzerWS->moduleCall('numberConversion', array('build' => 'hg19', 'variant' => $_GET['variant']));
+$aOutput = $_MutalyzerWS->moduleCall('numberConversion', array('build' => 'hg19', 'variant' => $_GET['variant'], 'gene' => $_GET['gene']));
 $sVariants = '';
 if (isset($aOutput['string'])) {
     foreach($aOutput['string'] as $aVariant) {

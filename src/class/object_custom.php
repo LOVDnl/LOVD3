@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-09
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -43,6 +43,7 @@ require_once ROOT_PATH . 'class/objects.php';
 class LOVD_Custom extends LOVD_Object {
     // This class extends the basic Object class and it handles the Link object.
     var $sObject = 'Custom';
+    var $sCategory = '';
     var $bShared = false;
     var $aColumns = array();
     var $aCustomLinks = array();
@@ -59,17 +60,14 @@ class LOVD_Custom extends LOVD_Object {
 
         $aArgs = array();	
 
-        // FIXME; Is het misschien een idee $this->sCategory altijd in te vullen hier? Dus
-        //   if (!$this->sCategory) { $this->sCategory = $this->sObject; }
-        //   dat scheelt een hoop IF()'s.
+        $this->sCategory = (empty($this->sCategory)? $this->sObject : $this->sCategory);
 
-        // Note: $sCategory is only defined by the variant types, because of the difference in their $sObject and the custom column category they use.
         if (!$this->bShared) {
             // "Simple", non-shared, data types (individuals, genomic variants, screenings).
             $sSQL = 'SELECT c.*, ac.* ' .
                     'FROM ' . TABLE_ACTIVE_COLS . ' AS ac ' .
                     'LEFT OUTER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) ' .
-                    'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
+                    'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
                     'ORDER BY c.col_order';
         } else {
             // Shared data type (variants on transcripts, phenotypes).
@@ -78,8 +76,8 @@ class LOVD_Custom extends LOVD_Object {
                 $sSQL = 'SELECT c.*, sc.* ' .
                         'FROM ' . TABLE_COLS . ' AS c ' .
                         'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
-                        'WHERE c.id LIKE "' . (isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%" ' .
-                        'AND ' . ($this->sObject == 'Phenotype'? 'sc.diseaseid=' : 'sc.geneid=') . '? ' .
+                        'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
+                        'AND ' . ($this->sObject == 'Phenotype'? 'sc.diseaseid = ' : 'sc.geneid = ') . '? ' .
                         'ORDER BY sc.col_order';
                 $aArgs[] = $this->sObjectID;
             } else {
@@ -91,8 +89,8 @@ class LOVD_Custom extends LOVD_Object {
                             'FROM ' . TABLE_COLS . ' AS c ' .
                             'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
                             'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (sc.diseaseid = p.diseaseid) ' .
-                            'WHERE c.id LIKE "' . $this->sObject . '/%" ' .
-                            'AND p.id=? ' .
+                            'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
+                            'AND p.id = ? ' .
                             'ORDER BY sc.col_order';
                 } elseif ($this->sObject == 'Transcript_Variant') {
                     $sSQL = 'SELECT c.*, sc.*, vot.id AS variantid ' .
@@ -101,7 +99,7 @@ class LOVD_Custom extends LOVD_Object {
                             'INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t USING (geneid) ' .
                             'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
                             'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
-                            'AND vot.id=? ' .
+                            'AND vot.id = ? ' .
                             'ORDER BY sc.col_order';
                 }
                 $aArgs[] = $nID;
@@ -119,7 +117,7 @@ class LOVD_Custom extends LOVD_Object {
 
         // Gather the custom link information.
         $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) WHERE c2l.colid LIKE ? GROUP BY l.id',
-            array((isset($this->sCategory)? $this->sCategory : $this->sObject) . '/%'))->fetchAllAssoc();
+            array($this->sCategory . '/%'))->fetchAllAssoc();
         foreach ($aLinks as $aLink) {
             $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text'])) . '/';
             $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
@@ -130,6 +128,11 @@ class LOVD_Custom extends LOVD_Object {
                 }
             }
             $this->aCustomLinks[$aLink['id']] = $aLink;
+        }
+
+        // Hide entries that are not marked or public.
+        if (!in_array($this->sObject, array('Screening', 'Transcript_Variant')) && $_AUTH['level'] < LEVEL_CURATOR) {
+            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . 'statusid > ' . STATUS_HIDDEN;
         }
 
         parent::__construct();
@@ -375,9 +378,8 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Initiate default values of fields in $_POST.
         foreach ($this->aColumns as $sCol => $aCol) {
-            $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
             // Fill $_POST with the column's default value.
-            $_POST[$sCol] = $this->getDefaultValue($sColClean);
+            $_POST[$sCol] = $this->getDefaultValue($sCol);
         }
     }
 

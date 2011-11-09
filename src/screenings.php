@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-10-11
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-11-01
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -96,14 +96,16 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    $_GET['search_geneid'] = (!empty($zData['search_geneid'])? html_entity_decode(rawurldecode($zData['search_geneid'])) : 0);
-    print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Genes screened', 'H4');
-    require ROOT_PATH . 'class/object_genes.php';
-    $_DATA = new LOVD_Gene();
-    $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, 'geneid', true, true, false);
-    unset($_GET['search_geneid']);
+    if (!empty($zData['search_geneid'])) {
+        $_GET['search_geneid'] = html_entity_decode(rawurldecode($zData['search_geneid']));
+        print('<BR><BR>' . "\n\n");
+        lovd_printHeader('Genes screened', 'H4');
+        require ROOT_PATH . 'class/object_genes.php';
+        $_DATA = new LOVD_Gene();
+        $_DATA->setSortDefault('id');
+        $_DATA->viewList(false, 'geneid', true, true, false);
+        unset($_GET['search_geneid']);
+    }
     
     $_GET['search_screeningids'] = $nID;
     print('<BR><BR>' . "\n\n");
@@ -192,7 +194,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
                 $_SESSION['work']['submits'][$_POST['individualid']]['screenings'] = array();
             }
 
-            $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$nID] = array();
+            $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][] = $nID;
             $sPersons = (false && $_POST['panel_size'] > 1? 'this group of individuals' : 'this individual');
             $bSubmit = isset($_SESSION['work']['submits'][$_POST['individualid']]);
 
@@ -203,12 +205,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
                   '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $nID . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>Yes, I want to submit variants found by this mutation screening</B></TD></TR>' . "\n" .
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
+                  /*'        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I want to submit another mutation screening on ' . $sPersons . ' instead</B></TD></TR>' . "\n" .
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual?individualid=' . $_POST['individualid'] . '\'">' . "\n" .
+                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $_POST['individualid'] . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '' ) . '</B></TD></TR></TABLE><BR>' . "\n\n");
+                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '' ) . '</B></TD></TR>'*/'      </TABLE><BR>' . "\n\n");
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }

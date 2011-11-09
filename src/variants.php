@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-10-26
+ * Modified    : 2011-11-09
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,6 +82,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
         $sGene = '';
     } elseif (in_array(rawurldecode($_PATH_ELEMENTS[1]), lovd_getGeneList())) {
         $_GET['search_geneid'] = $sGene = rawurldecode($_PATH_ELEMENTS[1]);
+        lovd_isAuthorized('gene', $sGene); // To show non public entries.
     } else {
         // Command or gene not understood.
         // FIXME; perhaps a HTTP/1.0 501 Not Implemented? If so, provide proper output (gene not found) and
@@ -118,7 +119,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $zData = $_DATA->viewEntry($nID);
-
     lovd_isAuthorized('variant', $nID);
 
     $sNavigation = '';
@@ -143,6 +143,26 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_DATA->sRowLink = '';
     $_DATA->viewList(false, array('id_', 'transcriptid'), true, true);
     unset($_GET['search_id_']);
+
+?>
+<SCRIPT type="text/javascript">
+var aTranscripts = {
+<?php 
+    if (isset($sGene)) {
+        $i = 0;
+        foreach($_DATA['Transcript']->aTranscripts as $nTranscriptID => $sTranscriptNM) {
+            if ($i == 0) {
+                echo '';
+            } else {
+                echo ', ';
+            }
+            echo '\'' . $nTranscriptID . '\' : \'' . $sTranscriptNM . '\''; 
+            $i++;
+        }
+    }
+?>};
+</SCRIPT>
+<?php
 
     $_GET['search_screeningid'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
     print('<BR><BR>' . "\n\n");
@@ -171,6 +191,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $_GET['target'] = sprintf('%010d', $_GET['target']);
         if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target'])))) {
             $_POST['screeningid'] = $_GET['target'];
+            $_GET['search_id_'] = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn();
         } else {
             define('PAGE_TITLE', 'Create a new variant entry');
             require ROOT_PATH . 'inc-top.php';
@@ -192,10 +213,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '      <TABLE border="0" cellpadding="5" cellspacing="1" width="600" class="option">' . "\n" .
               '        <TR onclick="window.location=\'variants?create&amp;reference=Genome' . (isset($_GET['target'])? '&amp;target=' . $_GET['target'] : '') . '\'">' . "\n" .
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-              '          <TD><B>I want to create a genomic variant &raquo;&raquo;</B></TD></TR>' . "\n" .
+              '          <TD><B>I want to create a variant on genomic level &raquo;&raquo;</B></TD></TR>' . "\n" .
               '        <TR onclick="$(\'#viewlistDiv_SelectGeneForSubmit\').toggle();">' . "\n" .
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-              '          <TD><B>I want to create a transcript variant &raquo;&raquo;</B></TD></TR></TABLE><BR>' . "\n\n");
+              '          <TD><B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B></TD></TR></TABLE><BR>' . "\n\n");
 
         require ROOT_PATH . 'class/object_genes.php';
         $_GET['page_size'] = 10;
@@ -222,7 +243,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // Create a variant on the genome.
 
     if ($_GET['reference'] == 'Transcript') {
-        // On purpose not checking for format of $_GET['gene']. If it's not right, we'll automatically get to the error message below.
+        // On purpose not checking for format of $_GET['geneid']. If it's not right, we'll automatically get to the error message below.
         $sGene = $_GET['geneid'];
         if (!in_array($sGene, lovd_getGeneList())) {
             define('PAGE_TITLE', 'Create a new variant entry');
@@ -295,7 +316,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $bSubmit = false;
             if (isset($_POST['screeningid']) && isset($_SESSION['work']['submits'])) {
                 foreach($_SESSION['work']['submits'] as $nIndividualID => $aSubmit) {
-                    if (array_key_exists($_POST['screeningid'], $aSubmit['screenings'])) {
+                    if (in_array($_POST['screeningid'], $aSubmit['screenings'])) {
                         $bSubmit = true;
                         $_POST['individualid'] = $nIndividualID;
                         break;
@@ -304,15 +325,13 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             if ($bSubmit) {
-                if (!isset($_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$_POST['screeningid']]['variants'])) {
-                    $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$_POST['screeningid']]['variants'] = array();
+                if (!isset($_SESSION['work']['submits'][$_POST['individualid']]['variants'])) {
+                    $_SESSION['work']['submits'][$_POST['individualid']]['variants'] = array();
                 }
-                if (!isset($aTranscriptID)) {
-                    $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$_POST['screeningid']]['variants'][$nID] = array();
-                } else {
-                    $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][$_POST['screeningid']]['variants'][$nID] = $aTranscriptID;
-                }
+                $_SESSION['work']['submits'][$_POST['individualid']]['variants'][] = $nID;
                 $sPersons = ($_SESSION['work']['submits'][$_POST['individualid']]['is_panel']? 'this group of individuals' : 'this individual');
+            } else {
+                $_SESSION['work']['submits']['variantid'][$nID] = $nID;
             }
 
             if ($bSubmit) {
@@ -326,12 +345,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                       '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
                       '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                       '          <TD><B>No, I want to submit another screening instead</B></TD></TR>' . "\n" .
-                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual?individualid=' . $_POST['individualid'] . '\'">' . "\n" .
+                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $_POST['individualid'] . '\'">' . "\n" .
                       '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                       '          <TD><B>No, I have finished my submission</B></TD></TR></TABLE><BR>' . "\n\n");
                 require ROOT_PATH . 'inc-bot.php';
             } else {
-                header('Location: ' . lovd_getInstallURL() . 'submit/variant?variantid=' . $nID);
+                header('Location: ' . lovd_getInstallURL() . 'submit/finish/variant?variantid=' . $nID);
             }
             exit;
         }
@@ -373,88 +392,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     print('      </FORM>' . "\n\n");
 
-// FIXME; Dit is te groot; plaats in inc-js-variants.php (naam is suggestie) ipv hier. Gebruik daarna lovd_includeJS(). Chromosome kan een argument worden, indien nodig. Kan ook een JS variabele zijn (eerst declareren, daarna script includen).
+    lovd_includeJS('inc-js-variants.php?chromosome=' . $_POST['chromosome'] . (isset($sGene)? '&geneid=' . $sGene : ''));
 ?>
-<SCRIPT>
-function lovd_checkHGVS () {
-    var oVariantDNA = $(this);
-    if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA') {
-        var sVariantNotation = 'g:' + oVariantDNA.val(); // The actual chromosome is not important, it's just the syntax that matters here.
-    } else {
-        var sVariantNotation = 'c:' + oVariantDNA.val(); // The actual transcript is not important, it's just the syntax that matters here.
-    }
-    $.get('<?php echo ROOT_PATH; ?>ajax/check_hgvs.php', { variant: sVariantNotation },
-        function(sData) {
-            if (sData != '<?php echo AJAX_TRUE; ?>') {
-                // Mutalyzer says No, or our regexp didn't find a c. or g. at the beginning, or user lost $_AUTH.
-                $(oVariantDNA).siblings('img:first').attr({
-                    src: 'gfx/cross.png',
-                    alt: 'Not a valid HGVS syntax!',
-                    title: 'Not a valid HGVS syntax!'
-                }).show();
-                <?php echo (isset($sGene)? '$(oVariantDNA).siblings(\'button:eq(0)\').hide();' : '') ?>
-            } else {
-                $(oVariantDNA).siblings('img:first').attr({
-                    src: 'gfx/check.png',
-                    alt: 'Valid HGVS syntax!',
-                    title: 'Valid HGVS syntax!'
-                }).show();
-                <?php echo (isset($sGene)? '$(oVariantDNA).siblings(\'button:eq(0)\').show();' : '') ?>
-            }
-        });
-    return false;
-};
-
-function lovd_convertPosition (oElement) {
-    var oThisDNA = $(oElement).siblings('input:first');
-    if (oThisDNA.attr('name') == 'VariantOnGenome/DNA') {
-        var sVariantNotation = 'chr<?php echo $_POST['chromosome']; ?>:' + oThisDNA.val();
-    } else {
-        var sVariantNotation = aTranscripts[oThisDNA.attr('name').substring(0,5)] + ':' + oThisDNA.val();
-    }
-    $.get('<?php echo ROOT_PATH; ?>ajax/convert_position.php', { variant: sVariantNotation },
-        function(sData) {
-            if (sData != '<?php echo AJAX_DATA_ERROR; ?>' || sData != '<?php echo AJAX_FALSE; ?>') {
-                if (oThisDNA.attr('name') == 'VariantOnGenome/DNA') {
-                    aVariants = sData.split(';');
-                    var nVariants = aVariants.length;
-                    for (i=0; i<nVariants; i++) {
-                        var aVariant = /^(NM_\d{6,9}\.\d{1,2}):(c\..+)$/.exec(aVariants[i]);
-                        var oInput = $('#variantForm input[id_ncbi="' + aVariant[1] + '"]');
-                        if (oInput[0] != undefined) {
-                            oInput.attr('value', aVariant[2]);
-                            oInput.siblings('img:first').attr({
-                                src: 'gfx/check.png',
-                                alt: 'Valid HGVS syntax!',
-                                title: 'Valid HGVS syntax!'
-                            }).show();
-                            oInput.siblings('button:eq(0)').hide();
-                        }
-                    }
-                    $(oThisDNA).siblings('button:eq(0)').hide();
-                } else {
-                    var aVariant = /:(g\..+)$/.exec(sData);
-                    var oInput = $('#variantForm input[name="VariantOnGenome/DNA"]');
-                    oInput.attr('value', aVariant[1]);
-                    oInput.siblings('img:first').attr({
-                        src: 'gfx/check.png',
-                        alt: 'Valid HGVS syntax!',
-                        title: 'Valid HGVS syntax!'
-                    }).show();
-                    lovd_convertPosition(oInput.siblings('button:eq(0)'));
-                }
-            } else {
-                $(oThisDNA).siblings('img:first').attr({
-                    src: 'gfx/cross.png',
-                    alt: 'Not a valid HGVS syntax!',
-                    title: 'Not a valid HGVS syntax!'
-                }).show();
-                $(oThisDNA).siblings('button:eq(0)').hide();
-            }
-        });
-    return false;
-};
-
+<SCRIPT type="text/javascript">
 var aTranscripts = {
 <?php 
     if (isset($sGene)) {
@@ -470,20 +410,6 @@ var aTranscripts = {
         }
     }
 ?>};
-$( function () {
-    var oGenomicVariant = $('#variantForm input[name="VariantOnGenome/DNA"]');
-    $(oGenomicVariant).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($sGene)? '&nbsp;<BUTTON onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
-    $(oGenomicVariant).change(lovd_checkHGVS);
-    var oTranscriptVariants = $('#variantForm input[name$="_VariantOnTranscript/DNA"]');
-    if (oTranscriptVariants[0] != undefined) {
-        $(oTranscriptVariants).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($sGene)? '&nbsp;<BUTTON onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
-        var nTranscriptVariants = oTranscriptVariants.size();
-        for (i=0; i<nTranscriptVariants; i++) {
-            $(oTranscriptVariants[i]).attr('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0,5)]);
-        }
-        $(oTranscriptVariants).change(lovd_checkHGVS);
-    }
-});
 </SCRIPT>
 <?php
 
@@ -507,32 +433,57 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_isAuthorized('variant', $nID);
     lovd_requireAUTH(LEVEL_OWNER);
 
+    $bGene = false;
+    $z = $_DB->query('SELECT vot.*, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ? GROUP BY vot.id', array($nID))->fetchAssoc();
+    if (!empty($z['geneids'])) {
+        $aGenes = explode(';', $z['geneids']); 
+        $bGene = true;
+    }
+
     require ROOT_PATH . 'class/object_genome_variants.php';
-    $_DATA = new LOVD_GenomeVariant();
-    $zData = $_DATA->loadEntry($nID);
+    $_DATA = array();
+    $_DATA['Genome'] = new LOVD_GenomeVariant();
+    $zData = $_DATA['Genome']->loadEntry($nID);
+    if ($bGene) {
+        require ROOT_PATH . 'class/object_transcript_variants.php';
+        foreach ($aGenes as $sGene) {
+            if (lovd_isAuthorized('gene', $sGene)) {
+                $_DATA['Transcript'][$sGene] = new LOVD_TranscriptVariant($sGene);
+                $zData = array_merge($zData, $_DATA['Transcript'][$sGene]->loadAll($nID));
+            }
+        }
+    }
+
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (POST) {
         lovd_errorClean();
 
-        $_DATA->checkFields($_POST);
+        $_DATA['Genome']->checkFields($_POST);
+
+        if ($bGene) {
+            $_DATA['Transcript'][$sGene]->checkFields($_POST);
+        }
 
         if (!lovd_error()) {
-            // Fields to be used.
-            $aFields = array_merge(
-                            array('allele', 'chromosome', 'owned_by', 'statusid', 'edited_by', 'edited_date'),
-                            $_DATA->buildFields());
+            // Prepare the fields to be used for both genomic and transcript variant information.
+            $aFieldsGenome = array_merge(
+                                array('allele', 'chromosome', 'owned_by', 'statusid', 'edited_by', 'edited_date'),
+                                $_DATA['Genome']->buildFields());
 
             // Prepare values.
-            // FIXME; deze checks kloppen niet; een submitter's edit zal nu een variant per definitie verbergen en de owner wordt mogelijk ook gereset.
-            //   De "else" in deze checks zou eigenlijk de $zData waardes moeten zijn, of beter nog, pas in de $aFields zetten bij level >= LEVEL_CURATOR.
             $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
+            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
             // FIXME: implement versioning in updateEntry!
-            $_DATA->updateEntry($nID, $_POST, $aFields);
+            $_DATA['Genome']->updateEntry($nID, $_POST, $aFieldsGenome);
+
+            if ($bGene) {
+                $aFieldsTranscript = $_DATA['Transcript'][$sGene]->buildFields();
+                $aTranscriptID = $_DATA['Transcript'][$sGene]->updateAll($nID, $_POST, $aFieldsTranscript);
+            }
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited variant entry ' . $nID);
@@ -561,6 +512,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
+    
+
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
@@ -576,17 +529,39 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM id="variantForm" action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
-                 $_DATA->getForm(),
+                 $_DATA['Genome']->getForm(($bGene? $_DATA['Transcript'][$sGene]->getForm() : array())),
                  array(
                         array('', '', 'submit', 'Edit variant entry'),
                       ));
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
+
+    lovd_includeJS('inc-js-variants.php?chromosome=' . $_POST['chromosome'] . ($bGene? '&geneid=' . $sGene : ''));
+
+?>
+<SCRIPT type="text/javascript">
+var aTranscripts = {
+<?php 
+    if ($bGene) {
+        $i = 0;
+        foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $sTranscriptNM) {
+            if ($i == 0) {
+                echo '';
+            } else {
+                echo ', ';
+            }
+            echo '\'' . $nTranscriptID . '\' : \'' . $sTranscriptNM . '\''; 
+            $i++;
+        }
+    }
+?>};
+</SCRIPT>
+<?php
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

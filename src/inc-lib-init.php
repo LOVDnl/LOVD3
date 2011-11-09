@@ -479,7 +479,7 @@ function lovd_includeJS ($sFile, $nPrefix = 3)
 function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
 {
     // Checks whether a user is allowed to view or edit a certain data type.
-    // $Data may be a (list of) IDs or a $zData.
+    // $Data may be a (list of) IDs.
     // If $bSetUserLevel is true, the $_AUTH['level'] field will be edited
     // according to the result of this function.
     // Returns false, 0 or 1, depending on the authorization level of the user.
@@ -487,7 +487,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     // 0    : allowed to view hidden data, not allowed to edit (LEVEL_COLLABORATOR).
     // 1    : allowed to view hidden data, allowed to edit (LEVEL_CURATOR).
     // Returns 1 by default for any user with level LEVEL_MANAGER or higher.
-    global $_AUTH;
+    global $_AUTH, $_DB, $_CONF;
 
     if (!$_AUTH) {
         return false;
@@ -496,23 +496,13 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     }
 
     // Check data type.
-    // FIXME; enable screenings, patients, phenotypes.
-    if (!$Data || !in_array($sType, array('gene', 'disease', 'transcript', 'variant'))) {
+    if (!$Data || !in_array($sType, array('gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
         return false;
     }
 
-
-
-    // FIXME; Use a switch() here if more data types have been defined?
     if ($sType == 'gene') {
         // Base authorization on (max of) $_AUTH['curates'] and/or $_AUTH['collaborates'].
         if (is_array($Data)) {
-            // Array can be $zData or list of gene symbols.
-            if (array_key_exists('id', $Data)) {
-                // Gene's $zData is being sent.
-                return lovd_isAuthorized('gene', $Data['id'], $bSetUserLevel);
-            }
-
             // Gets authorization if one gene matches.
             $AuthMax = false;
             foreach ($Data as $sID) {
@@ -520,11 +510,11 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
                 if ($Auth !== false) {
                     $AuthMax = $Auth;
                     if ($AuthMax == 1) {
-                        return 1; // Level, if needed, has been set by the resursive call.
+                        return 1; // Level, if needed, has been set by the recursive call.
                     }
                 }
             }
-            return $AuthMax; // Level, if needed, has been set by the resursive call.
+            return $AuthMax; // Level, if needed, has been set by the recursive call.
 
         } else {
             // These arrays are built up in inc-auth.php for users with level < LEVEL_MANAGER.
@@ -536,88 +526,59 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         }
     }
 
-
-
     // Makes it easier to check the data.
     if (!is_array($Data)) {
         $Data = array($Data);
     }
 
-
-
-    if ($sType == 'transcript') {
-        // Base authorization on geneid or otherwise try and find the gene this entry belongs to.
-        // Check if Data is a $zData or a (list of) IDs.
-        if (array_key_exists('id', $Data) && array_key_exists('geneid', $Data)) {
-            // Transcript's $zData is being sent.
-            return lovd_isAuthorized('gene', $Data['geneid'], $bSetUserLevel);
-        }
-
-        // Retrieve list of genes this/these transcript(s) belong to.
-        list($sGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
-        return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
-
-
-
-    } elseif ($sType == 'disease') {
-        // Base authorization on geneid or otherwise try and find the gene this entry belongs to.
-        // Check if Data is a $zData or a (list of) IDs.
-        // FIXME; allow for geneids array in $zData type of argument? First check how we're actually using this function.
-        // FIXME; $zData zal eigenlijk nooit een lovd_isAuthorized bij elkaar roepen, want dan ben je al te laat ($zData is output van viewEntry()).
-        if (array_key_exists('id', $Data)) {
-            // Disease's $zData is being sent.
-            //return lovd_isAuthorized('gene', $Data['geneid'], $bSetUserLevel);
-            $Data = array($Data['id']);
-        }
-
-        // Retrieve list of genes this/these disease(s) belong to.
-        list($sGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
-        return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+    switch($sType) {
+        // Queries for every data type.
+        case 'transcript':
+            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+        case 'disease':
+            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+        case 'variant':
+            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
+        case 'individual':
+            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
+        case 'phenotype':
+            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (s.individualid = p.individualid) WHERE p.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
+        case 'screening':
+            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
+        default:
+            return false;
     }
 
-
-
-    // A data type that can be owned by somebody. First try and prove the ownership.
-    // Check if Data is a $zData or a (list of) IDs.
-    if (array_key_exists('id', $Data) && array_key_exists('owned_by', $Data) && array_key_exists('created_by', $Data)) {
-        // $zData is being sent.
-        if ($Data['owned_by'] == $_AUTH['id'] || $Data['created_by'] == $_AUTH['id']) {
-            if ($bSetUserLevel) {
-                $_AUTH['level'] = LEVEL_OWNER;
-            }
-            return 1;
-        }
+    // Run the authorization on genes.
+    $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+    if ($Auth) {
+        // Level has already been set by recursive call.
+        return 1;
     }
-
-
-
-    if ($sType == 'variant') {
-        // Base authorization on owned_by (LEVEL_OWNER), created_by (LEVEL_OWNER) or otherwise try and find the gene this entry belongs to (LEVEL_CURATOR).
-        // Array can be $zData or list of variant IDs.
-        if (array_key_exists('id', $Data)) {
-            // Variant's $zData is being sent.
-            if (array_key_exists('geneid', $Data)) {
-                return lovd_isAuthorized('gene', $Data['geneid'], $bSetUserLevel);
-            } elseif (array_key_exists('transcriptid', $Data)) {
-                return lovd_isAuthorized('transcript', $Data['transcriptid'], $bSetUserLevel);
-            }
-            $Data = array($zData['id']); // Try authorization through the ID.
+    // Check for ownership.
+    if ($bOwner && $_CONF['allow_submitter_mods']) {
+        if ($bSetUserLevel) {
+            $_AUTH['level'] = LEVEL_OWNER;
         }
-
-        // First: try to prove ownership/created_by.
-        list($bOwner) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])), true));
-        if ($bOwner) {
-            if ($bSetUserLevel) {
-                $_AUTH['level'] = LEVEL_OWNER;
-            }
-            return 1;
-        }
-
-        // Last: try to get to a curated gene. Shortest connection is to the transcripts, but continuing to genes will save the system an additional query from transcripts to genes.
-        list($sGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data, true));
-        return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+        return 1;
     }
-
+    // Collaborator OR Owner, but not allowed to edit own entries.
+    if ($Auth === 0 || $bOwner) {
+        if ($bSetUserLevel) {
+            $_AUTH['level'] = LEVEL_COLLABORATOR;
+        }
+        return 0;
+    }
     return false;
 }
 

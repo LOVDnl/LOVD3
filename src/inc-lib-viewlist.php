@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2011-05-17
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2011-10-21
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -52,8 +52,6 @@ function lovd_pagesplitInit ()
     // The Init function returns $sSQLLimit, a string with the limit
     // information you need to include in your query.
     global $_SETT;
-// FIXME; DMD_SPECIFIC; This is a temporary addition. Should not be in release.
-$_SETT['list_sizes'][] = 10;
 
     if (!empty($_GET['page']) && is_numeric($_GET['page'])) {
         $_GET['page'] = (int) $_GET['page'];

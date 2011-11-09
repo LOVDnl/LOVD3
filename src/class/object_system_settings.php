@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-10-11
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-19
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -144,8 +144,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('Institute (optional)', 'The institute which runs this database is displayed in the public area and in emails sent by LOVD. Is commonly set to a laboratory name or a website name.', 'text', 'institute', 45),
                         array('Database URL (optional)', 'This is the URL with which the database can be accessed by the outside world, including "http://" or "https://". It will also be used in emails sent by LOVD. This field is mandatory if you select the "Include in the global LOVD listing" option.<BR>If you click the "check" link, LOVD will verify or try to predict the value.', 'print', '<INPUT type="text" name="location_url" size="40" id="location_url" value="' . (empty($_POST['location_url'])? '' : htmlspecialchars($_POST['location_url'])) . '"' . (!lovd_errorFindField('location_url')? '' : ' class="err"') . '>&nbsp;<SPAN id="location_url_check">(<A href="#" onclick="javascript:lovd_checkURL(); return false;">check</A>)</SPAN>'),
                         array('LOVD email address', 'This email address will be used to send emails from LOVD to users. We need this address to make sure that emails from LOVD arrive. Please note that although strictly spoken this email address does not need to exist, we recommend that you use a valid address.', 'text', 'email_address', 40),
-                        //array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'checkbox', 'send_admin_submissions'),
-                        array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
+                        array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'checkbox', 'send_admin_submissions'),
       'refseq_build' => array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
                         //array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'select', 'api_feed_history', 1, $aFeedHistory, false, false, false),
                         array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
@@ -173,8 +172,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'hr',
                         array('Lock users after 3rd failed login?', 'Do you want to lock users (submitters, curators and managers) after three failed attempts to log in using their username?<BR>(This does <I>not</I> affect the database administrator account)', 'checkbox', 'lock_users'),
                         array('Allow (locked) users to retrieve a new password?', 'Do you want to enable an "I forgot my password" option that allows users who forgot their password to retrieve a new one?', 'checkbox', 'allow_unlock_accounts'),
-                        //array('Enable submitters to change data?', 'Enabling this setting allows submitters to make changes to data previously submitted by them or assigned to them.', 'checkbox', 'allow_submitter_mods'),
-                        array('Enable submitters to change data?', 'Enabling this setting allows submitters to make changes to data previously submitted by them or assigned to them.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
+                        array('Enable submitters to change data?', 'Enabling this setting allows submitters to make changes to data previously submitted by them or assigned to them.', 'checkbox', 'allow_submitter_mods'),
                         //array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'checkbox', 'allow_count_hidden_entries'),
                         array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         array('Force SSL-only access to LOVD?', 'SSL is a secure protocol allowing for encryption of data sent between you and LOVD. When you will record sensitive individual information in LOVD, you <B>should</B> enable this setting, as the individual information can otherwise be \'sniffed\' off the network. If you do not record sensitive information, enabling SSL is <I>recommended</I>.', 'checkbox', 'use_ssl'),

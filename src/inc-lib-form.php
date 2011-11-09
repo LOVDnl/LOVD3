@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-10-11
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-26
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -208,32 +208,43 @@ function lovd_formatMail ($aBody)
     if (empty($aBody) || !is_array($aBody)) {
         return false;
     }
-
     $sBody = $aBody[0];
     unset($aBody[0]);
-    if (count($aBody)) {
-        foreach($aBody as $sTopic => $aContent) {
-            $sSource = $aContent[0];
-            unset($aContent[0]);
+    foreach($aBody as $sTopic => $aContent) {
+        $sBody .= str_repeat('-', 70) . "\n" .
+                  '  ' . strtoupper(str_replace('_', ' ', $sTopic))  . "\n" .
+                  str_repeat('-', 70) . "\n";
+        if (!is_array($aContent[0])) {
+            $aContent = array($aContent);
+        }
 
-            $sBody .= str_repeat('-', 70) . "\n" .
-                      '  ' . strtoupper(str_replace('_', ' ', $sTopic))  . "\n" .
-                      str_repeat('-', 70) . "\n";
+        foreach ($aContent as $aSubContent) {
+            if (!is_array($aSubContent)) {
+                if ($aSubContent == 'skip') {
+                    $sBody .= "\n\n";
+                } elseif ($aSubContent == 'hr') {
+                    $sBody .= str_repeat('-', 70) . "\n";
+                }
+                continue;
+            }
+            $sSource = $aSubContent[0];
+            unset($aSubContent[0]);
 
             // Padding to...
             $lPad = 0;
-            foreach ($aContent as $val) {
+            foreach ($aSubContent as $val) {
                 $l = strlen($val);
                 if ($l > $lPad) {
                     $lPad = $l;
                 }
             }
 
-            foreach ($aContent as $key => $val) {
+            foreach ($aSubContent as $key => $val) {
                 $sBody .= sprintf('%-' . $lPad . 's', $val) . ' : ' . str_replace("\n", "\n" . str_repeat(' ', $lPad + 3), lovd_wrapText($GLOBALS[$sSource][$key], 70 - $lPad - 3)) . "\n";
             }
-            $sBody .= str_repeat('-', 70) . "\n\n";
+            $sBody .= str_repeat('-', 70) . "\n";
         }
+        $sBody .= "\n";
     }
 
     return $sBody;
@@ -364,13 +375,13 @@ function lovd_matchUsername ($s)
 
 
 
-function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true)
+function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $aCc = array(), $aBcc = array())
 {
     // Format:
-    // $aTo = array(
-    //              array('Name', "Email\r\nEmail\r\nEmail"),
-    //              array('Name', "Email\r\nEmail")
-    //             );
+    // $aTo, $aCc, $aBcc = array(
+    //                           array('Name', "Email\r\nEmail\r\nEmail"),
+    //                           array('Name', "Email\r\nEmail")
+    //                          );
 
     global $_SETT, $_CONF;
 
@@ -383,10 +394,28 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true)
         }
     }
     $sTo = rtrim($sTo, ', ');
+    $sCc = '';
+    foreach ($aCc as $aRecipient) {
+        list($sName, $sEmails) = array_values($aRecipient);
+        $aEmails = explode("\r\n", $sEmails);
+        foreach ($aEmails as $sEmail) {
+            $sCc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+        }
+    }
+    $sCc = rtrim($sCc, ', ');
+    $sBcc = '';
+    foreach ($aBcc as $aRecipient) {
+        list($sName, $sEmails) = array_values($aRecipient);
+        $aEmails = explode("\r\n", $sEmails);
+        foreach ($aEmails as $sEmail) {
+            $sBcc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+        }
+    }
+    $sBcc = rtrim($sBcc, ', ');
     $sBody = lovd_wrapText($sBody);
+    $sHeaders = $sHeaders . (!empty($sCc)? PHP_EOL . 'Cc: ' . $sCc : '') . (!empty($sBcc)? PHP_EOL . 'Bcc: ' . $sBcc : '');
 
     $bSafeMode = ini_get('safe_mode');
-
     if (!$bSafeMode) {
         $bMail = @mail($sTo, $sSubject, $sBody, $sHeaders, '-f ' . $_CONF['email_address']);
     } else {

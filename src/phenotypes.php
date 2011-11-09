@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-10-11
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-11-01
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -86,7 +86,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_isAuthorized('phenotype', $nID);
 
     require ROOT_PATH . 'class/object_phenotypes.php';
-    $_DATA = new LOVD_Phenotype();
+    $_DATA = new LOVD_Phenotype(); // FIXME; $nID needs to be set for this call!!!
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
@@ -246,9 +246,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
        ($bSubmit? '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" : '') .
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual?individualid=' . $_POST['individualid'] . '\'">' . "\n" .
+                  /*'        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $_POST['individualid'] . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '' ) . '</B></TD></TR></TABLE><BR>' . "\n\n");
+                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '' ) . '</B></TD></TR>'*/ '      </TABLE><BR>' . "\n\n");
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }

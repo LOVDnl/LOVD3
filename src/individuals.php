@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-10-11
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-10-31
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -230,9 +230,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 unset($_SESSION['work']['submits'][min(array_keys($_SESSION['work']['submits']))]);
             }
             $_SESSION['work']['submits'][$nID] = array('id' => $nID, 'is_panel' => (false && $_POST['panel_size'] > 1? true : false));
-            if ($nDiseases) {
-                $_SESSION['work']['submits'][$nID]['diseases'] = $_POST['active_diseases'];
-            }
             
             $sPersons = (false && $_POST['panel_size'] > 1? 'this group of individuals' : 'this individual');
             $sMessage = (empty($_POST['active_diseases'])? 'No diseases were selected for ' . $sPersons . '.\nThe phenotype information that can be submitted depends on the selected diseases.' : 'The disease' . (count($_POST['active_diseases']) > 1? 's' : '') . ' added to ' . $sPersons . ' do not have phenotype columns enabled yet.');
@@ -247,9 +244,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                   '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $nID . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" .
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual?individualid=' . $nID . '\'">' . "\n" .
+                  /*'        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $nID . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I have finished my submission</B></TD></TR></TABLE><BR>' . "\n\n");
+                  '          <TD><B>No, I have finished my submission</B></TD></TR>'*/'      </TABLE><BR>' . "\n\n");
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }

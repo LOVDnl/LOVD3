@@ -331,6 +331,8 @@ class LOVD_Object {
             $sSQL = 'SELECT * FROM ' . constant($this->sTable) . ' WHERE id = ?';
         }
         $zData = @mysql_fetch_assoc(lovd_queryDB_Old($sSQL, array($nID)));
+        // FIXME; check if $zData['status'] exists, if so, check status versus lovd_isAuthorized().
+        // Set $zData to false if user should not see this entry.
         if (!$zData) {
             global $_CONF, $_SETT, $_STAT, $_AUTH;
 
@@ -642,7 +644,7 @@ class LOVD_Object {
                                 case 'DECIMAL':
                                 case 'INT_UNSIGNED':
                                 case 'INT':
-                                    if (preg_match('/^([><]=?|!)?(\d+(\.\d+)?)$/', $sTerm, $aMatches)) {
+                                    if (preg_match('/^([><]=?|!)?(-?\d+(\.\d+)?)$/', $sTerm, $aMatches)) {
                                         $sOperator = $aMatches[1];
                                         $sTerm = $aMatches[2];
                                         if ($sOperator) {
