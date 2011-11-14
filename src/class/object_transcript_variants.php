@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-11-08
+ * Modified    : 2011-11-11
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -53,24 +53,22 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
 
-    function __construct ($sObjectID = '')
+    function __construct ($sObjectID = '', $nID = '')
     {
         // Default constructor.
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT vot.* ' .
                                'FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
-                               'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON(vot.transcriptid = t.id) ' .
+                               'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
                                'WHERE vot.id = ? ' .
                                'AND t.geneid = ?';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vot.*, ' .
-                                           'uc.name AS created_by_, ' .
-                                           'ue.name AS edited_by_';
+                                           't.id_ncbi';
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vot.created_by = uc.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (vot.edited_by = ue.id)';
+                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'vot.id';
 
         // SQL code for viewing the list of variants
@@ -84,20 +82,15 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid)';
 
         $this->sObjectID = $sObjectID;
+        $this->nID = $nID;
         parent::__construct();
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
                  array(
-                        'transcriptid' => 'Transcript ID',
+                        'id_ncbi' => 'Transcript ID',
                       ),
-                 $this->buildViewEntry(),
-                 array(
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date edited', LEVEL_COLLABORATOR),
-                      ));
+                 $this->buildViewEntry());
 
         // Because the disease information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
@@ -346,6 +339,16 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
             return mysql_affected_rows();
         }
+    }
+
+
+
+
+
+    function viewEntry ($nID = false) {
+        list($nID, $nTranscriptID) = explode(',', $nID);
+        $this->aSQLViewEntry['WHERE'] = 'vot.transcriptid = \'' . $nTranscriptID . '\'' . (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' . $this->aSQLViewEntry['WHERE'] : '');
+        parent::viewEntry($nID);
     }
 }
 ?>

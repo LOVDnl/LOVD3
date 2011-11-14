@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-11-09
+ * Modified    : 2011-11-11
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -135,32 +135,54 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
+    print('<BR><BR>' . "\n\n" .
+          '      <DIV id="viewentryDiv">' . "\n" .
+          '      </DIV>' . "\n\n");
+
     $_GET['search_id_'] = $nID;
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variant on transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
-    $_DATA = new LOVD_TranscriptVariant();
-    $_DATA->sRowLink = '';
-    $_DATA->viewList(false, array('id_', 'transcriptid'), true, true);
+    $_DATA = new LOVD_TranscriptVariant('', $nID);
+    $_DATA->sRowID = '{{transcriptid}}';
+    $_DATA->sRowLink = 'javascript:window.location.hash = \'{{ID}}\'; return false';
+    $_DATA->viewList(false, array('id_', 'transcriptid', 'status'), true, true);
     unset($_GET['search_id_']);
 
 ?>
+
 <SCRIPT type="text/javascript">
-var aTranscripts = {
-<?php 
-    if (isset($sGene)) {
-        $i = 0;
-        foreach($_DATA['Transcript']->aTranscripts as $nTranscriptID => $sTranscriptNM) {
-            if ($i == 0) {
-                echo '';
-            } else {
-                echo ', ';
-            }
-            echo '\'' . $nTranscriptID . '\' : \'' . $sTranscriptNM . '\''; 
-            $i++;
+var prevHash = '';
+$( function () {
+    lovd_AJAX_viewEntryLoad();
+    setInterval(lovd_AJAX_viewEntryLoad, 250);
+});
+
+
+
+
+
+function lovd_AJAX_viewEntryLoad () {
+    var hash = window.location.hash; //Puts hash in variable, but does not removes the # character, because jQuery conveniently needs it.
+    if (hash) {
+        if (hash != prevHash) {
+            // hash present in URL.
+            $( prevHash ).attr('class', 'data');
+            $( hash ).attr('class', 'data bold');
+
+            $( '#viewentryDiv' ).stop().css('opacity','0');
+            $.get('ajax/viewentry.php', { nID: '<?php echo $nID; ?>,' + hash.substring(1), object: 'Transcript_Variant', gene: 'ASL' },
+                function(sData) {
+                    if (sData != '<?php echo AJAX_NO_AUTH; ?>' && sData != '<?php echo AJAX_DATA_ERROR; ?>' && sData != '<?php echo AJAX_FALSE; ?>') {
+                        $( '#viewentryDiv' ).html(sData).fadeTo(1000, 1);
+                    }
+                });
+            prevHash = hash;
+        } else {
+            $( hash ).attr('class', 'data bold');
         }
     }
-?>};
+}
 </SCRIPT>
 <?php
 

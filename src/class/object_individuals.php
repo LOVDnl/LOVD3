@@ -106,7 +106,7 @@ class LOVD_Individual extends LOVD_Custom {
 
         // Run parent constructor to find out about the custom columns.
         parent::__construct();
-        
+
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
                  $this->buildViewEntry(),

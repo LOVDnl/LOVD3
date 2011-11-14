@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-11
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -530,7 +530,7 @@ class LOVD_Object {
                 $sIDColumn = constant($this->sTable) . '.id';
             }
         }
-        $this->aSQLViewEntry['WHERE'] = $sIDColumn . ' = ?' . (!$this->aSQLViewEntry['WHERE']? '' : ' ' . $this->aSQLViewEntry['WHERE']);
+        $this->aSQLViewEntry['WHERE'] = $sIDColumn . ' = ?' . (!$this->aSQLViewEntry['WHERE']? '' : ' AND ' . $this->aSQLViewEntry['WHERE']);
         $sSQL = 'SELECT ' . $this->aSQLViewEntry['SELECT'] .
                ' FROM ' . $this->aSQLViewEntry['FROM'] .
                ' WHERE ' . $this->aSQLViewEntry['WHERE'] .
@@ -539,6 +539,7 @@ class LOVD_Object {
 
         // Run the actual query.
         $zData = mysql_fetch_assoc(lovd_queryDB_Old($sSQL, array($nID)));
+
         if (!$zData) {
             lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewEntry()'), $sSQL, mysql_error());
         }
@@ -754,6 +755,7 @@ class LOVD_Object {
             print('      <FORM action="' . CURRENT_PATH . '" method="get" id="viewlistForm_' . $sViewListID . '" style="margin : 0px;" onsubmit="return false;">' . "\n" .
                   '        <INPUT type="hidden" name="viewlistid" value="' . $sViewListID . '">' . "\n" .
                   '        <INPUT type="hidden" name="object" value="' . $this->sObject . '">' . "\n" .
+                  '        <INPUT type="hidden" name="nid" value="' . (isset($this->nID)? $this->nID : '') . '">' . "\n" .
                   '        <INPUT type="hidden" name="object_id" value="' . (isset($this->sObjectID)? $this->sObjectID : '') . '">' . "\n" .
 // FIXME; do we ever use ACTION in a ViewList? Wait until we've made variants.php to know for sure.
 // FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
@@ -934,6 +936,17 @@ class LOVD_Object {
             }
         }
 
+        // To make row ids persist when the viewList is refreshed, we must store the row id in $_SESSION.
+        if (!empty($_SESSION['viewlists'][$sViewListID]['row_id'])) {
+            // FIXME; code can no longer overwrite the viewList, the first used value always overrides. Create setter!
+            $this->sRowID = $_SESSION['viewlists'][$sViewListID]['row_id'];
+        } else {
+            // FIXME; incorporate garbage collection?
+            $_SESSION['viewlists'][$sViewListID]['row_id'] = $this->sRowID; // Implies array creation.
+            //$_SESSION['viewlists'][$sViewListID]['last_used'] = time(); // For garbage collection (not yet implemented).
+            // ALTERNATIVE: create JS function lovd_restoreRowLink_XXX() (XXX == viewListID) that restores the rowLink, also after an Ajax Call.
+        }
+
         // To make row links persist when the viewList is refreshed, we must store the row link in $_SESSION.
         if (!empty($_SESSION['viewlists'][$sViewListID]['row_link'])) {
             // FIXME; code can no longer overwrite the viewList, the first used value always overrides. Create setter!
@@ -951,6 +964,9 @@ class LOVD_Object {
                 if (isset($zData['id'])) {
                     if ($this->sRowID !== '') {
                         $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
+                        foreach ($zData as $key => $val) {
+                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_id']);
+                        }
                     } else {
                         $zData['row_id'] = $zData['id'];
                     }
@@ -966,7 +982,9 @@ class LOVD_Object {
                     //$zData['row_link'] = preg_replace_callback('/\{\{zData_(\w+)\}\}/', create_function('$aRegs', 'global $zData; return rawurlencode($zData[$aRegs[1]]);'), $zData['row_link']);
                     // FIXME; sorry, couldn't figure out how to do this in one line. Suggestions are welcome.
                     foreach ($zData as $key => $val) {
-                        // Also allow data from $zData to be put into the row link.
+                        // Also allow data from $zData to be put into the row link & row id.
+                        // FIXME; This is a temporary ugly solution, so we need to fix this later!!!!
+                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_link']);
                         $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_link']);
                     }
                 } else {

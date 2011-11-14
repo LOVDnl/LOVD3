@@ -33,7 +33,22 @@
 
 
 
-
+ * Changed the end of submission URL from submit/(individual|variant)/<ID> to
+   submit/finish/(individual|variant)/<ID>.
+ * Implemented mailing to curators etc. at the end of a submission.
+ * Authorization of users is now supported for all data types.
+ * Searching numeric columns will now also allow negative numbers.
+ * Enabled the "Forward messages to database admin" & "Enable submitters to
+   change data" options in sytem settings.
+ * Only public & marked entries are now visible.
+ * Implemented default values for variant forms.
+ * Variants on transcript can now be edited and include HGVS syntax check &
+   position converter on the form.
+ * Changed the Content-Type of the standard email headers to charset UTF-8.
+ * Variants on transcript viewlists now have a status field, which is actually
+   the status from the corresponding genomic variant.
+ * Added a viewEntry for variants on transcript below the genomic variant in
+   variants/<variantid>#<transcriptid>.
 
 
 

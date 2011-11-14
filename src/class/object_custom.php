@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-11-09
+ * Modified    : 2011-11-11
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,7 +48,7 @@ class LOVD_Custom extends LOVD_Object {
     var $aColumns = array();
     var $aCustomLinks = array();
     var $sObjectID = '';
-
+    var $nID = '';
 
 
 
@@ -56,7 +56,7 @@ class LOVD_Custom extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH, $_DB, $_SETT, $nID;
+        global $_AUTH, $_DB, $_SETT;
 
         $aArgs = array();	
 
@@ -82,8 +82,6 @@ class LOVD_Custom extends LOVD_Object {
                 $aArgs[] = $this->sObjectID;
             } else {
                 // FIXME; kan er niet wat specifieke info in de objects (e.g. object_phenotypes) worden opgehaald, zodat dit stukje hier niet nodig is?
-                // FIXME; $nID op global zetten voelt wat "breekbaar". Verander je daar ooit eens naar een andere variabele naam, failed dit stukje hier.
-                //    Is er een andere oplossing voor te vinden? Argument meegeven in constructor misschien?
                 if ($this->sObject == 'Phenotype') {
                     $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
                             'FROM ' . TABLE_COLS . ' AS c ' .
@@ -102,7 +100,7 @@ class LOVD_Custom extends LOVD_Object {
                             'AND vot.id = ? ' .
                             'ORDER BY sc.col_order';
                 }
-                $aArgs[] = $nID;
+                $aArgs[] = $this->nID;
             }
         }
         $q = lovd_queryDB_Old($sSQL, $aArgs);
@@ -131,7 +129,7 @@ class LOVD_Custom extends LOVD_Object {
         }
 
         // Hide entries that are not marked or public.
-        if (!in_array($this->sObject, array('Screening', 'Transcript_Variant')) && $_AUTH['level'] < LEVEL_CURATOR) {
+        if ($this->sObject != 'Screening' && $_AUTH['level'] < LEVEL_CURATOR) {
             $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . 'statusid > ' . STATUS_HIDDEN;
         }
 

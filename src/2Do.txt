@@ -20,6 +20,7 @@ Prioritize:
   * integer only... is dat wel handig? Misschien toch beter rs nummer?
 - Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
   * Currently, Object::prepareData() puts the link in every id_ column it can find.
+- We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to debug!!!
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!!??
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734

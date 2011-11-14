@@ -3,13 +3,12 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2010-02-18
+ * Created     : 2011-11-09
  * Modified    : 2011-11-11
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -32,29 +31,19 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-if (empty($_GET['viewlistid']) || empty($_GET['object']) || !preg_match('/^[A-Z_]+$/i', $_GET['object'])) {
+if (empty($_GET['nID']) || empty($_GET['object']) || !preg_match('/^[A-Z_]+$/i', $_GET['object'])) {
     die(AJAX_DATA_ERROR);
 }
+
+// lovd_isAuthorized() has to be implemented somewhere around here when authorization checks are built into viewEntry()
 
 // The required security to load the viewList() depends on the data that is shown.
 // To prevent security problems if we forget to set a requirement here, we default to LEVEL_ADMIN.
 $aNeededLevel =
          array(
-                'Column' => LEVEL_CURATOR,
-                'Custom_ViewList' => 0,
-                'Disease' => 0,
-                'Gene' => 0,
-                'Genome_Variant' => 0,
-                'Individual' => 0,
-                'Link' => LEVEL_MANAGER,
-                'Log' => LEVEL_MANAGER,
-                'Phenotype' => 0,
-                'Screening' => 0,
-                'Transcript' => 0,
                 'Transcript_Variant' => 0,
-                'User' => LEVEL_MANAGER,
-                'Variant' => 0, // FIXME; Remove later when object Variant no longer exists.
               );
+
 if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = $aNeededLevel[$_GET['object']];
 } else {
@@ -78,20 +67,8 @@ if (!file_exists($sFile)) {
 // Having a double inc-top & bot when a queryerror shows up, is so ugly, so...
 define('_INC_TOP_INCLUDED_', 'ajax');
 
-
-$sObjectID = '';
-$nID = '';
-if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant', 'Custom_ViewList'))) {    
-    if (isset($_GET['object_id'])) {
-        $sObjectID = $_GET['object_id'];
-    } elseif (isset($_GET['nid'])) {
-        $nID = $_GET['nid'];
-    }
-}
 require $sFile;
 $_GET['object'] = 'LOVD_' . str_replace('_', '', $_GET['object']); // FIXME; test dit op een windows, test case-insensitivity.
-$aColsToSkip = (!empty($_GET['skip'])? $_GET['skip'] : array());
-$_DATA = new $_GET['object']($sObjectID, $nID);
-// Set $bHideNav to false always, since this ajax request could only have been sent if there were navigation buttons.
-$_DATA->viewList($_GET['viewlistid'], $aColsToSkip, (!empty($_GET['nohistory'])? true : false), (!empty($_GET['hidenav'])? true : false), (!empty($_GET['only_rows'])? true : false));
+$_DATA = new $_GET['object']((isset($_GET['gene'])? $_GET['gene'] : ''));
+$_DATA->viewEntry($_GET['nID']);
 ?>
