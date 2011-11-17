@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-11-11
+ * Modified    : 2011-11-17
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -136,7 +136,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     }
 
     print('<BR><BR>' . "\n\n" .
-          '      <DIV id="viewentryDiv">' . "\n" .
+          '      <DIV id="viewentryDiv">' .
           '      </DIV>' . "\n\n");
 
     $_GET['search_id_'] = $nID;
@@ -144,8 +144,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_printHeader('Variant on transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant('', $nID);
-    $_DATA->sRowID = '{{transcriptid}}';
-    $_DATA->sRowLink = 'javascript:window.location.hash = \'{{ID}}\'; return false';
+    $_DATA->sRowID = 'VOT_{{transcriptid}}';
+    $_DATA->sRowLink = 'javascript:window.location.hash = \'{{transcriptid}}\'; return false';
     $_DATA->viewList(false, array('id_', 'transcriptid', 'status'), true, true);
     unset($_GET['search_id_']);
 
@@ -163,23 +163,28 @@ $( function () {
 
 
 function lovd_AJAX_viewEntryLoad () {
-    var hash = window.location.hash; //Puts hash in variable, but does not removes the # character, because jQuery conveniently needs it.
+    var hash = window.location.hash.substring(1); //Puts hash in variable, but does not removes the # character, because jQuery conveniently needs it.
     if (hash) {
         if (hash != prevHash) {
             // hash present in URL.
-            $( prevHash ).attr('class', 'data');
-            $( hash ).attr('class', 'data bold');
+            $( '#VOT_' + prevHash ).attr('class', 'data');
+            $( '#VOT_' + hash ).attr('class', 'data bold');
 
-            $( '#viewentryDiv' ).stop().css('opacity','0');
-            $.get('ajax/viewentry.php', { nID: '<?php echo $nID; ?>,' + hash.substring(1), object: 'Transcript_Variant', gene: 'ASL' },
+            if (!($.browser.msie && $.browser.version < 9.0)) {
+                $( '#viewentryDiv' ).stop().css('opacity','0');
+            }
+            $.get('ajax/viewentry.php', { nID: '<?php echo $nID; ?>,' + hash, object: 'Transcript_Variant', gene: '' },
                 function(sData) {
                     if (sData != '<?php echo AJAX_NO_AUTH; ?>' && sData != '<?php echo AJAX_DATA_ERROR; ?>' && sData != '<?php echo AJAX_FALSE; ?>') {
-                        $( '#viewentryDiv' ).html(sData).fadeTo(1000, 1);
+                        $( '#viewentryDiv' ).html('\n' + sData);
+                        if (!($.browser.msie && $.browser.version < 9.0)) {
+                            $( '#viewentryDiv' ).fadeTo(1000, 1);
+                        }
                     }
                 });
             prevHash = hash;
         } else {
-            $( hash ).attr('class', 'data bold');
+            $( '#VOT_' + hash ).attr('class', 'data bold');
         }
     }
 }

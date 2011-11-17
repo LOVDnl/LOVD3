@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-10-07
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-11-16
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -265,6 +265,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
           '      </FORM>' . "\n\n");
 
     lovd_includeJS('lib/jQuery/jquery-ui-1.8.15.sortable.min.js');
+
 ?>
       <SCRIPT type='text/javascript'>
         $(function() {
@@ -306,7 +307,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
         lovd_printHeader(PAGE_TITLE);
 
         if (isset($_SERVER['HTTP_REFERER']) && substr($_SERVER['HTTP_REFERER'], -4) == 'edit') {
-            lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of loosing data!', 'warning');
+            lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of losing data!', 'warning');
         }
 
         print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
@@ -368,36 +369,21 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
         // Mandatory and Numeric fields depend on column type.
         switch ($_POST['form_type']) {
             case 'text':
-                $aCheckM['size'] = 'Width on form (characters)';
-                $aCheckM['maxlength'] = 'Maximum input length (characters)';
-                $aCheckN['size'] = 'Width on form (characters)';
-                $aCheckN['maxlength'] = 'Maximum input length (characters)';
-                break;
             case 'int':
                 $aCheckM['size'] = 'Width on form (characters)';
                 $aCheckM['maxlength'] = 'Maximum input length (characters)';
-                $aCheckN['size'] = 'Width on form (characters)';
-                $aCheckN['maxlength'] = 'Maximum input length (characters)';
-                $aCheckN['default_val'] = 'Default value (optional)';
                 break;
             case 'decimal':
                 $aCheckM['size'] = 'Width on form (characters)';
                 $aCheckM['maxlength'] = 'Number of digits before the decimal point';
                 $aCheckM['scale'] = 'Number of digits following the decimal point';
-                $aCheckN['size'] = 'Width on form (characters)';
-                $aCheckN['maxlength'] = 'Number of digits before the decimal point';
-                $aCheckN['scale'] = 'Number of digits following the decimal point';
-                $aCheckN['default_val'] = 'Default value (optional)';
                 break;
             case 'date':
                 $aCheckM['size'] = 'Width on form (characters)';
-                $aCheckN['size'] = 'Width on form (characters)';
                 break;
             case 'textarea':
                 $aCheckM['size'] = 'Width on form (characters)';
                 $aCheckM['rows'] = 'Height on form (lines)';
-                $aCheckN['size'] = 'Width on form (characters)';
-                $aCheckN['rows'] = 'Height on form (lines)';
                 break;
             case 'select':
                 $aCheckM['select_options'] = 'List of possible options';
@@ -407,6 +393,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
                 $aCheckM['select_options'] = 'List of possible options';
                 $aCheckN['rows'] = 'Height on form (lines)';
                 break;
+        }
+        if (substr($_POST['form_type'], 0, 5) != 'select') {
+            $aCheckN = $aCheckM;
+        }
+        if (in_array($_POST['form_type'], array('int', 'decimal'))) {
+            $aCheckN['default_val'] = 'Default value (optional)';
         }
 
         // Mandatory fields...

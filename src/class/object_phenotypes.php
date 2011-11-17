@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-11-02
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,7 +49,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
 
 
-    function __construct ($sObjectID = '')
+    function __construct ($sObjectID = '', $nID = '')
     {
         // Default constructor.
 
@@ -81,16 +81,19 @@ class LOVD_Phenotype extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id)';
 
         $this->sObjectID = $sObjectID;
+        $this->nID = $nID;
 
         // Run parent constructor to find out about the custom columns.
         parent::__construct();
         
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
-                 $this->buildViewEntry(),
                  array(
                         'individualid_' => 'Individual ID',
                         'disease_' => 'Associated disease',
+                      ),
+                 $this->buildViewEntry(),
+                 array(
                         'owner_' => 'Owner name',
                         'status_' => 'Phenotype data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -227,15 +230,12 @@ class LOVD_Phenotype extends LOVD_Custom {
              'owner' => $aFormOwner,
             'status' => $aFormStatus,
        'general_hr2' => 'hr',
-'authorization_skip' => 'skip',
- 'authorization_hr1' => 'hr',
-     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
- 'authorization_hr2' => 'hr',
                         'skip',
+     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
                       
         if (ACTION != 'edit') {
-            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+            unset($this->aFormData['authorization']);
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);

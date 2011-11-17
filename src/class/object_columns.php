@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -148,7 +148,6 @@ class LOVD_Column extends LOVD_Object {
                         'description_legend_full',
                         'mysql_type',
                         'form_type',
-                        'password',
                       );
         parent::checkFields($aData);
 
@@ -200,6 +199,7 @@ class LOVD_Column extends LOVD_Object {
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
                         array('', '', 'print', '<B>Column name and descriptions</B>'),
+                        'hr',
 //          'category' => array('Category', '', 'select', 'category', 1, $aCategories, true, false, false),
           'category' => array('', '', 'print', '<I>Selected category: ' . $_POST['category'] . '</I>'),
              'colid' => array('Column ID', '', 'text', 'colid', 30),
@@ -207,13 +207,17 @@ class LOVD_Column extends LOVD_Object {
                         array('Column heading', 'This will appear above the column in data tables.', 'text', 'head_column', 30),
                         array('Description on short legend', '', 'textarea', 'description_legend_short', 40, 2),
                         array('Description on full legend', '', 'textarea', 'description_legend_full', 40, 2),
+                        'hr',
                         'skip',
                         array('', '', 'print', '<B>Data and form settings</B> (Use data type wizard to change values)'),
+                        'hr',
                         array('', '', 'print', '<BUTTON type="button" onclick="javascript:lovd_openWindow(\'' . $_PATH_ELEMENTS[0] . '?data_type_wizard\', \'DataTypeWizard\', 800, 400); return false;">Start data type wizard</BUTTON>'),
                         array('MySQL data type', '<B>Experts only!</B> Only change this field manually when you know what you\'re doing! Otherwise, use the data type wizard by clicking the button above this field.', 'text', 'mysql_type', 30),
                         array('Form type', '<B>Experts only!</B> Only change this field manually when you know what you\'re doing! Otherwise, use the data type wizard by clicking the button above the MySQL data type field.', 'text', 'form_type', 30),
+                        'hr',
                         'skip',
                         array('', '', 'print', '<B>Column settings</B>'),
+                        'hr',
      'settings_note' => array('', '', 'print', '<I>Please note that fields marked with * are merely default values. For each configured {{ DATATYPE }}, these values may be changed at any later time.</I>'),
           'standard' => array('Include this column for newly configured ', '', 'checkbox', 'standard'),
              'width' => array('Column display width in pixels', '', 'text', 'width', 5),
@@ -221,12 +225,15 @@ class LOVD_Column extends LOVD_Object {
          'mandatory' => array('Mandatory field', '', 'checkbox', 'mandatory'),
        'public_view' => array('Show contents to public', '', 'checkbox', 'public_view'),
         'public_add' => array('Show field on submission form', '', 'checkbox', 'public_add'),
+                        'hr',
 // FIXME; implement this later.
 //                        array('Include in "hidden entries" search form', '', 'checkbox', 'allow_count_all'),
 //                        array('', '', 'print', '<SPAN class="form_note">Selecting this checkbox allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on this column.</SPAN>'),
                         'skip',
                         array('', '', 'print', '<B>Link settings</B>'),
+                        'hr',
                         array('Active custom links', '', 'select', 'active_links', $nLinkSize, $aLinks, false, true, true),
+                        'hr',
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20));
 

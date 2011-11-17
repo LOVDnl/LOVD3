@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-11-11
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -144,6 +144,7 @@ class LOVD_Object {
             $sNameClean = preg_replace('/^\d{5}_/', '', $sName); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
 
             // Mandatory fields, as defined by child object.
+            $this->aCheckMandatory[] = 'password';
             if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
             }

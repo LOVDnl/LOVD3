@@ -20,7 +20,7 @@ Prioritize:
   * integer only... is dat wel handig? Misschien toch beter rs nummer?
 - Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
   * Currently, Object::prepareData() puts the link in every id_ column it can find.
-- We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to debug!!!
+- We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!!??
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
@@ -174,6 +174,7 @@ Doen voordat LOVD 3.0 online gebruikt kan worden:
 
 
 Ook belangrijk, maar iets minder:
+- Hash moet ook meegestuurd worden naar login.php zodat de user naar de juiste pagina terug kan worden redirect.
 - Curator aanstellen voor aandoeningen? Hebben alleen rechten op phenotype entries van de ziektes waar ze curator van zijn, plus de aansluitende individuen.
   * "Normale" curatoren mogen dan varianten, screenings alleen??? Of ook individuen???
 - Kunnen custom links inserted worden door dynamic popups? PubMed geeft dan een popup met veld "PMID" en veld "Author". Kan dat geparsed worden uit de omschrijving van de custom link?

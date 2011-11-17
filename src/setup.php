@@ -218,7 +218,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
             'Individuals' =>
                  array(
                         array('individuals?create', 'lovd_question.png', 'Create new individual', 'Create new individual entry.'),
-                        array('individuals', 'lovd_question.png', 'View all individuals', 'View all individual entries.'),
+                        array('individuals', 'lovd_question.png', 'View all individuals', 'Manage individuals.'),
                       ),
             'Variants' =>
                  array(

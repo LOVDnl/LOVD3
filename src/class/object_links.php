@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-17
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -141,14 +141,14 @@ class LOVD_Link extends LOVD_Object {
             }
         }
 
-        if (!empty($aData['active_columns'])) {
+        if (!isset($aData['active_columns'])) {
+            $_POST['active_columns'] = array();
+        } elseif (!empty($aData['active_columns'])) {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
             $sSQL = 'SELECT GROUP_CONCAT(id) FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'';
             // FIXME; volgens de coding standard is dit $rColumns;
-            $zColumns = mysql_fetch_row(lovd_queryDB_Old($sSQL));
-            // FIXME; eerst een group_concat, daarna een explode()?
-            // FIXME; je kunt ook een list() gebruiken, dan heb je $rColumns helemaal niet nodig.
-            $aColumns = explode(',', $zColumns[0]);
+            list($zColumns) = mysql_fetch_row(lovd_queryDB_Old($sSQL));
+            $aColumns = explode(',', $zColumns);
             foreach($aData['active_columns'] as $sCol) {
                 if (substr_count($sCol, '/') && !in_array($sCol, $aColumns)) {
                     // FIXME; dus zonder / er in, wordt de column doorgelaten?
@@ -271,7 +271,13 @@ class LOVD_Link extends LOVD_Object {
                         'skip',
                         array('', '', 'print', '<B>Link settings</B>'),
                         array('Active for columns', '', 'print', $sSelect),
+                        'skip',
+     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                   );
+
+        if (ACTION != 'edit') {
+            unset($this->aFormData['authorization']);
+        }
 
         return parent::getForm();
     }

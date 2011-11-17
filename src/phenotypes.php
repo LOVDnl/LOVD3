@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-11-01
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -86,7 +86,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_isAuthorized('phenotype', $nID);
 
     require ROOT_PATH . 'class/object_phenotypes.php';
-    $_DATA = new LOVD_Phenotype(); // FIXME; $nID needs to be set for this call!!!
+    $_DATA = new LOVD_Phenotype('', $nID);
     $zData = $_DATA->viewEntry($nID);
 
     $sNavigation = '';
@@ -305,23 +305,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('PAGE_TITLE', 'Edit an phenotype information entry');
     define('LOG_EVENT', 'PhenotypeEdit');
 
-    require ROOT_PATH . 'inc-lib-columns.php';
-    $aTableInfo = lovd_getTableInfoByCategory('Phenotype');
-
-    if (!$aTableInfo) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('Re-order columns');
-        lovd_showInfoTable('The specified category does not exist!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
     // Load appropiate user level for this phenotype entry.
     lovd_isAuthorized('phenotype', $nID);
     lovd_requireAUTH(LEVEL_OWNER);
 
     require ROOT_PATH . 'class/object_phenotypes.php';
-    $_DATA = new LOVD_Phenotype();
+    $_DATA = new LOVD_Phenotype('', $nID);
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 

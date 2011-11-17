@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,9 +99,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ),
                  $this->buildViewEntry(),
                  array(
-                        'position_g_start' => 'Genomic start position',
-                        'position_g_end' => 'Genomic end position',
-                        'type' => 'Type',
                         'owner_' => 'Owner',
                         'status' => 'Variant data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -144,7 +141,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true)),
                       ));
-        
+
         $this->sSortDefault = 'id_';
 
         $this->sRowLink = 'variants/{{ID}}';
@@ -164,13 +161,11 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
-            
+
             if ($_AUTH['level'] < LEVEL_CURATOR && $aData['statusid'] > $zData['statusid']) {
                 // FIXME; zullen we deze code in objects_custom doen? 
                 lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
             }
-
-            $this->aCheckMandatory[] = 'password';
         }
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -184,12 +184,17 @@ class LOVD_Disease extends LOVD_Object {
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
                         array('', '', 'print', '<B>Disease information</B>'),
+                        'hr',
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
                         array('OMIM ID', '', 'text', 'id_omim', 10),
+                        'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to genes</B>'),
+                        'hr',
                         array('This disease has been linked to these genes', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
+                        'hr',
+                        'skip',
                   );
 
         return parent::getForm();

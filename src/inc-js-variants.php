@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2011-11-08
+ * Modified    : 2011-11-17
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -120,11 +120,11 @@ function lovd_convertPosition (oElement) {
 
 $( function () {
     var oGenomicVariant = $('#variantForm input[name="VariantOnGenome/DNA"]');
-    $(oGenomicVariant).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($_GET['geneid'])? '&nbsp;<BUTTON onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
+    $(oGenomicVariant).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($_GET['geneid'])? '&nbsp;<BUTTON type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
     $(oGenomicVariant).change(lovd_checkHGVS);
     var oTranscriptVariants = $('#variantForm input[name$="_VariantOnTranscript/DNA"]');
     if (oTranscriptVariants[0] != undefined) {
-        $(oTranscriptVariants).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($_GET['geneid'])? '&nbsp;<BUTTON onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
+        $(oTranscriptVariants).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($_GET['geneid'])? '&nbsp;<BUTTON type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
         var nTranscriptVariants = oTranscriptVariants.size();
         for (i=0; i<nTranscriptVariants; i++) {
             $(oTranscriptVariants[i]).attr('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0,5)]);

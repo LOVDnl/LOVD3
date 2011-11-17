@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -286,15 +286,12 @@ class LOVD_Individual extends LOVD_Custom {
              'owner' => $aFormOwner,
             'status' => $aFormStatus,
        'general_hr2' => 'hr',
-'authorization_skip' => 'skip',
- 'authorization_hr1' => 'hr',
-     'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
- 'authorization_hr2' => 'hr',
                         'skip',
+      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
                       
         if (ACTION != 'edit') {
-            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization_hr1'], $this->aFormData['authorization'], $this->aFormData['authorization_hr2']);
+            unset($this->aFormData['authorization']);
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);

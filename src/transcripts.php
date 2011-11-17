@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-10-07
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-11-16
+ * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -287,7 +287,6 @@ if (ACTION == 'create') {
 
     // Now make sure we have a valid workID.
     if (!isset($_POST['workID']) || !array_key_exists($_POST['workID'], $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
-        var_dump($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]);
         exit;
     }
 
