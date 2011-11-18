@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-11-11
+ * Modified    : 2011-11-14
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -53,6 +53,7 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
+
     function __construct ()
     {
         // Default constructor.
@@ -77,7 +78,7 @@ class LOVD_Custom extends LOVD_Object {
                         'FROM ' . TABLE_COLS . ' AS c ' .
                         'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
                         'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
-                        'AND ' . ($this->sObject == 'Phenotype'? 'sc.diseaseid = ' : 'sc.geneid = ') . '? ' .
+                        'AND ' . ($this->sObject == 'Phenotype'? 'sc.diseaseid' : 'sc.geneid') . ' = ? ' .
                         'ORDER BY sc.col_order';
                 $aArgs[] = $this->sObjectID;
             } else {

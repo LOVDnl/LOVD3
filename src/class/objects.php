@@ -293,7 +293,7 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
-            if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
+            if ($aData[$sField] === '' && (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' || substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 4) == 'DATE')) {
                 $aData[$sField] = NULL;
             }
             $aSQL[] = $aData[$sField];
@@ -475,7 +475,7 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
-            if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
+            if ($aData[$sField] === '' && (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' || substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 4) == 'DATE')) {
                 $aData[$sField] = NULL;
             }
             $aSQL[] = $aData[$sField];
@@ -504,15 +504,19 @@ class LOVD_Object {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::viewEntry() - Method didn\'t receive ID');
         }
 
+        $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
+
         // Check existence of entry.
         list($n) = $this->getCount($nID);
         if (!$n) {
             global $_SETT, $_STAT, $_AUTH;
             lovd_showInfoTable('No such ID!', 'stop');
-            if (defined('_INC_TOP_INCLUDED_')) {
-                require ROOT_PATH . 'inc-bot.php';
-            } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
-                require ROOT_PATH . 'inc-bot-clean.php';
+            if (!$bAjax) {
+                if (defined('_INC_TOP_INCLUDED_')) {
+                    require ROOT_PATH . 'inc-bot.php';
+                } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
+                    require ROOT_PATH . 'inc-bot-clean.php';
+                }
             }
             exit;
         }
@@ -581,13 +585,13 @@ class LOVD_Object {
 
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOnlyRows = false)
     {
+        // Views list of entries in the database, allowing search.
         global $_PATH_ELEMENTS, $_DB;
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
         }
 
-        // Views list of entries in the database, allowing search.
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
 
         // ViewLists need an ID to identify the specific viewList, in case there are a few in one document.
@@ -756,8 +760,10 @@ class LOVD_Object {
             print('      <FORM action="' . CURRENT_PATH . '" method="get" id="viewlistForm_' . $sViewListID . '" style="margin : 0px;" onsubmit="return false;">' . "\n" .
                   '        <INPUT type="hidden" name="viewlistid" value="' . $sViewListID . '">' . "\n" .
                   '        <INPUT type="hidden" name="object" value="' . $this->sObject . '">' . "\n" .
-                  '        <INPUT type="hidden" name="nid" value="' . (isset($this->nID)? $this->nID : '') . '">' . "\n" .
-                  '        <INPUT type="hidden" name="object_id" value="' . (isset($this->sObjectID)? $this->sObjectID : '') . '">' . "\n" .
+                  (!isset($this->sObjectID)? '' :
+                  '        <INPUT type="hidden" name="object_id" value="' . $this->sObjectID . '">' . "\n") . // The ID of the gene for VOT viewLists, or the ID of the disease for phenotype viewLists.
+                  (!isset($this->nID)? '' :
+                  '        <INPUT type="hidden" name="id" value="' . $this->nID . '">' . "\n") . // The ID of the VOG for VOT viewLists, or the ID of the individual for phenotype viewLists.
 // FIXME; do we ever use ACTION in a ViewList? Wait until we've made variants.php to know for sure.
 // FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
                   (!ACTION? '' :
@@ -998,8 +1004,9 @@ class LOVD_Object {
             $zData = $this->prepareData($zData);
 
             // FIXME; rawurldecode() in the line below should have a better solution.
+            // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
             print("\n" .
-                  '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . $zData['row_link'] . '\';') . '"') . '>');
+                  '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . lovd_getInstallURL(false) . $zData['row_link'] . '\';') . '"') . '>');
             foreach ($this->aColumnsViewList as $sField => $aCol) {
                 if (in_array($sField, $aColsToSkip)) {
                     continue;

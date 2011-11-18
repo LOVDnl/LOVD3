@@ -145,13 +145,13 @@ class LOVD_Link extends LOVD_Object {
             $_POST['active_columns'] = array();
         } elseif (!empty($aData['active_columns'])) {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
+            // FIXME; eerst een group_concat, daarna een explode()? 
             $sSQL = 'SELECT GROUP_CONCAT(id) FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'';
-            // FIXME; volgens de coding standard is dit $rColumns;
-            list($zColumns) = mysql_fetch_row(lovd_queryDB_Old($sSQL));
-            $aColumns = explode(',', $zColumns);
+            list($sColumns) = mysql_fetch_row(lovd_queryDB_Old($sSQL));
+            $aColumns = explode(',', $sColumns);
             foreach($aData['active_columns'] as $sCol) {
                 if (substr_count($sCol, '/') && !in_array($sCol, $aColumns)) {
-                    // FIXME; dus zonder / er in, wordt de column doorgelaten?
+                    // Columns without slashes are the category headers, that could be selected.
                     lovd_errorAdd('active_columns', 'Please select a valid custom column from the \'Active for columns\' selection box.');
                 }
             }

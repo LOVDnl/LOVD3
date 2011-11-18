@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2011-11-01
+ * Modified    : 2011-11-14
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -88,31 +88,28 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         $aSubmit = $_SESSION['work']['submits'][$nID];
     }
 
-    if ($_AUTH['level'] < LEVEL_MANAGER) {
-
-        if ($_AUTH['level'] <= LEVEL_OWNER) {
-            $_DB->beginTransaction();
-            if ($_PATH_ELEMENTS[2] == 'variant') {
-                $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET statusid = ? WHERE id = ? AND statusid = ?', array(STATUS_PENDING, $aSubmit['variants'][0], STATUS_IN_PROGRESS));
-            } elseif ($_PATH_ELEMENTS[2] == 'individual') {
-                if (!empty($aSubmit['phenotypes'])) {
-                    $q = $_DB->query('UPDATE ' . TABLE_PHENOTYPES . ' SET statusid = ? WHERE id IN (?' . str_repeat(', ?', count($aSubmit['phenotypes']) - 1) . ') AND statusid = ?', array_merge(array(STATUS_PENDING), $aSubmit['phenotypes'], array(STATUS_IN_PROGRESS)));
-                }
-                if (!empty($aSubmit['variants'])) {
-                    $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET statusid = ? WHERE id IN (?' . str_repeat(', ?', count($aSubmit['variants']) - 1) . ') AND statusid = ?', array_merge(array(STATUS_PENDING), $aSubmit['variants'], array(STATUS_IN_PROGRESS)));
-                }
-                $q = $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET statusid = ? WHERE id = ? AND statusid = ?', array(STATUS_PENDING, $nID, STATUS_IN_PROGRESS));
+    if ($_AUTH['level'] <= LEVEL_OWNER) {
+        $_DB->beginTransaction();
+        if ($_PATH_ELEMENTS[2] == 'variant') {
+            $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET statusid = ? WHERE id = ? AND statusid = ?', array(STATUS_PENDING, $aSubmit['variants'][0], STATUS_IN_PROGRESS));
+        } elseif ($_PATH_ELEMENTS[2] == 'individual') {
+            if (!empty($aSubmit['phenotypes'])) {
+                $q = $_DB->query('UPDATE ' . TABLE_PHENOTYPES . ' SET statusid = ? WHERE id IN (?' . str_repeat(', ?', count($aSubmit['phenotypes']) - 1) . ') AND statusid = ?', array_merge(array(STATUS_PENDING), $aSubmit['phenotypes'], array(STATUS_IN_PROGRESS)));
             }
-            if (!$q->rowCount()) {
-                // This can only happen if a LEVEL_ADMIN deletes(or changes the status of) the entry before the submitter gets here
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
-                lovd_showInfoTable('Submission entry not found!', 'stop');
-                require ROOT_PATH . 'inc-bot.php';
-                exit;
+            if (!empty($aSubmit['variants'])) {
+                $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET statusid = ? WHERE id IN (?' . str_repeat(', ?', count($aSubmit['variants']) - 1) . ') AND statusid = ?', array_merge(array(STATUS_PENDING), $aSubmit['variants'], array(STATUS_IN_PROGRESS)));
             }
-            $_DB->commit();
+            $q = $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET statusid = ? WHERE id = ? AND statusid = ?', array(STATUS_PENDING, $nID, STATUS_IN_PROGRESS));
         }
+        if (!$q->rowCount()) {
+            // This can only happen if a LEVEL_ADMIN deletes(or changes the status of) the entry before the submitter gets here
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Submission entry not found!', 'stop');
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+        }
+        $_DB->commit();
     }
 
     if ($_PATH_ELEMENTS[2] == 'variant') {

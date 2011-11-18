@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-11-16
+ * Modified    : 2011-11-17
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -396,6 +396,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
         }
         if (substr($_POST['form_type'], 0, 5) != 'select') {
             $aCheckN = $aCheckM;
+            unset($aCheckN['name']);
         }
         if (in_array($_POST['form_type'], array('int', 'decimal'))) {
             $aCheckN['default_val'] = 'Default value (optional)';

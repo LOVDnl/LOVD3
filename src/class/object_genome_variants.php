@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-11-16
+ * Modified    : 2011-11-17
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -156,7 +156,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         global $_AUTH, $_SETT, $_CONF;
 
         // Mandatory fields.
-        $this->aCheckMandatory = array('chromosome');
+        $this->aCheckMandatory =
+                 array(
+                        'chromosome',
+                        'owned_by',
+                        'statusid',
+                      );
 
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
@@ -167,12 +172,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
             }
         }
-
-        if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $this->aCheckMandatory[] = 'owned_by';
-            $this->aCheckMandatory[] = 'statusid';
-        }
-
         parent::checkFields($aData);
 
         if (!isset($aData['allele']) || !array_key_exists($aData['allele'], $_SETT['var_allele'])) {

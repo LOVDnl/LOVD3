@@ -120,11 +120,11 @@ function lovd_convertPosition (oElement) {
 
 $( function () {
     var oGenomicVariant = $('#variantForm input[name="VariantOnGenome/DNA"]');
-    $(oGenomicVariant).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($_GET['geneid'])? '&nbsp;<BUTTON type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
+    $(oGenomicVariant).parent().append('&nbsp;&nbsp;<IMG style="display:none;"><?php echo (isset($_GET['geneid'])? '&nbsp;<BUTTON type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
     $(oGenomicVariant).change(lovd_checkHGVS);
     var oTranscriptVariants = $('#variantForm input[name$="_VariantOnTranscript/DNA"]');
     if (oTranscriptVariants[0] != undefined) {
-        $(oTranscriptVariants).parent().append('&nbsp;&nbsp;<IMG style="display:none;">' + '<?php echo (isset($_GET['geneid'])? '&nbsp;<BUTTON type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
+        $(oTranscriptVariants).parent().append('&nbsp;&nbsp;<IMG style="display:none;"><?php echo (isset($_GET['geneid'])? '&nbsp;<BUTTON type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>' : '') ?>');
         var nTranscriptVariants = oTranscriptVariants.size();
         for (i=0; i<nTranscriptVariants; i++) {
             $(oTranscriptVariants[i]).attr('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0,5)]);

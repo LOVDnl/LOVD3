@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-10-31
+ * Modified    : 2011-11-15
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -244,7 +244,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                   '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $nID . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" .
-                  /*'        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $nID . '\'">' . "\n" .
+                /* FIXME; Once we have code to allow the user (and remind them) to continue the unfinished submission, we can enable this part again (although it would be nice to put a warning here, also).
+                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $nID . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I have finished my submission</B></TD></TR>'*/'      </TABLE><BR>' . "\n\n");
             require ROOT_PATH . 'inc-bot.php';
@@ -318,13 +319,17 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('owned_by', 'statusid', 'edited_by', 'edited_date'),
+                            array('edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
-            // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
-            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                $aFields[] = 'owned_by';
+                $aFields[] = 'statusid';
+            } elseif ($zData['statusid'] >= STATUS_MARKED) {
+                $aFields[] = 'statusid';
+                $_POST['statusid'] = STATUS_MARKED;
+            }
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 

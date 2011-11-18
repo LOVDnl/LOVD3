@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Alpha 06
- * 2011-11-14
+ * 2011-11-18
  *********/
  * Added the "Collaborates" column to the user's viewEntry, visible from Manager
    and up.
@@ -30,9 +30,16 @@
  * Fixed notice on phenotype data entry form.
  * Clicking on an entry in the "variant affecting transcripts" viewList now also
    links to the entry's viewEntry, and custom links are now displayed properly.
-
-
-
+ * Fixed bug; The viewLists of individuals, screenings and phenotypes has no
+   functional anchor.
+ * Fixed bug; "Owned by" and "Status" fields are now only editable for curators
+   and higher. The status of entries edited by the data owner, will be lowered
+   to Marked, if it was set to Public.
+ * Fixed bug; When leaving a Date data field empty, the database stored
+   "0000-00-00".
+ * Fixed bug; Internet Explorer users could be having some trouble with links
+   from the "variants affecting transcripts" page, because Internet Explorer's
+   Javascript engine does not respect the <BASE> tag.
  * Changed the end of submission URL from submit/(individual|variant)/<ID> to
    submit/finish/(individual|variant)/<ID>.
  * Implemented mailing to curators etc. at the end of a submission.
@@ -40,7 +47,7 @@
  * Searching numeric columns will now also allow negative numbers.
  * Enabled the "Forward messages to database admin" & "Enable submitters to
    change data" options in system settings.
- * Only public & marked entries are now visible.
+ * Only public & marked entries are now visible to non-authorized users.
  * Implemented default values for variant forms.
  * Variants on transcript can now be edited and include HGVS syntax check &
    position converter on the form.
@@ -57,8 +64,6 @@
    the map variants buttons.
  * Added a password field to the custom links edit form.
  * Changed the layout of some forms.
-
-
 
 
 /*******************

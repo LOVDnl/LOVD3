@@ -114,7 +114,7 @@ class LOVD_Screening extends LOVD_Custom {
                         'screeningid' => array(
                                     'view' => array('Screening ID', 110),
                                     'db' => array('s.id', 'ASC', 'INT_UNSIGNED')),
-                        'id' => array(
+                        'id_' => array(
                                     'view' => array('Screening ID', 110),
                                     'db'   => array('s.id', 'ASC', true)),
                         'individualid' => array(
@@ -136,7 +136,7 @@ class LOVD_Screening extends LOVD_Custom {
                                     'view' => array('Date edited', 130),
                                     'db'   => array('s.edited_date', 'ASC', true)),
                       ));
-        $this->sSortDefault = 'id';
+        $this->sSortDefault = 'id_';
     }
 
 
@@ -152,11 +152,11 @@ class LOVD_Screening extends LOVD_Custom {
             global $zData; // FIXME; this could be done more elegantly.
         }
 
-        if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            // Mandatory fields.
-            $this->aCheckMandatory[] = 'owned_by';
-        }
-
+        // Mandatory fields.
+        $this->aCheckMandatory =
+                 array(
+                        'owned_by',
+                      );
         parent::checkFields($aData);
 
         // FIXME; move to object_custom.php.
@@ -265,9 +265,7 @@ class LOVD_Screening extends LOVD_Custom {
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
 
-        if ($sView == 'list') {
-            $zData['id'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
-        } else {
+        if ($sView == 'entry') {
             // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
             $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner'] . '</A>';

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-11-07
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -191,26 +191,11 @@ class LOVD_User extends LOVD_Object {
                         'city',
                         'countryid',
                         'email',
+                        'username', // LOVD will not complain if a mandatory column has not been added to the form.
+                        'password_1',
+                        'password_2',
+                        'password',
                       );
-        if (lovd_getProjectFile() == '/install/index.php' || in_array(ACTION, array('create', 'register'))) {
-            $this->aCheckMandatory = array_merge($this->aCheckMandatory,
-                     array(
-                            'username',
-                            'password_1',
-                            'password_2',
-                          ));
-        }
-        if (lovd_getProjectFile() != '/install/index.php') {
-            $this->aCheckMandatory[] = 'password';
-        }
-        if (lovd_getProjectFile() == '/users.php' && ACTION == 'change_password') {
-            $this->aCheckMandatory =
-                     array(
-                            'password',
-                            'password_1',
-                            'password_2',
-                          );
-        }
         parent::checkFields($aData);
 
         // Email address.

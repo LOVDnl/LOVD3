@@ -125,7 +125,7 @@ class LOVD_Individual extends LOVD_Custom {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
-                        'individualid_' => array(
+                        'id_' => array(
                                     'view' => array('Individual ID', 110),
                                     'db'   => array('i.id', 'ASC', true)),
                       ),
@@ -150,7 +150,7 @@ class LOVD_Individual extends LOVD_Custom {
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true)),
                       ));
-        $this->sSortDefault = 'individualid_';
+        $this->sSortDefault = 'id_';
     }
 
 
@@ -161,24 +161,22 @@ class LOVD_Individual extends LOVD_Custom {
     {
         global $_AUTH, $_SETT;
 
+        // Mandatory fields.
+        $this->aCheckMandatory =
+                 array(
+                        'owned_by',
+                        'statusid',
+                        'password',
+                      );
+
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
             
-            // Mandatory fields.
-            $this->aCheckMandatory[] = 'password';
-
             if (!empty($aData['statusid']) && $_AUTH['level'] < LEVEL_CURATOR) {
                 lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\'.');
             }
         }
-
-        if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            // Mandatory fields.
-            $this->aCheckMandatory[] = 'owned_by';
-            $this->aCheckMandatory[] = 'statusid';
-        }
-
         parent::checkFields($aData);
 
         // FIXME; eerst een concat om daarna te exploden????
@@ -315,9 +313,7 @@ class LOVD_Individual extends LOVD_Custom {
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
 
-        if ($sView == 'list') {
-            $zData['individualid_'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
-        } else {
+        if ($sView == 'entry') {
             $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
         }
 

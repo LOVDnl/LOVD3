@@ -1,10 +1,18 @@
 Prioritize:
 ===========
+- Phenotype col cK: "10000.00": The 'cK (Optional)' field is limited to 7 characters, you entered 8. MySQL type:   DEC(7,2)
+- viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
+- Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
+- Transcript toevoegen aan gen, variant editen, je krijgt nu een extra block, maar wijzigingen worden genegeerd.
+- Gen geselecteerd, en transcript toevoegen? huidig gen eerst kiezen.
+- Password is mandatory by default, can be removed from individual object files.
+- (@Ivar) Add comments in submit.php.
+- Individuals, screenings, phenotypes hebben geen functionele anchor in de viewList.
 - Custom columns: niet consequent in hoofdletter gebruik bij meerdere woorden; zoals Times_Reported en Restriction_site.
 - Pathogenicity: "affects function"
 - IVO: Edit custom columns implement
 - IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
-  * VERGEET OOK PUBLIC_VIEW/PUBLIC_ENTRY CONTROLE NIET.
+  * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET.
 - Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - FIXME; implement check on DBID if variant HAS NO GENES OR TRANSCRIPTS.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? Ook dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
@@ -24,10 +32,12 @@ Prioritize:
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!!??
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
-- Alpha 06: We're missing the ID_sort !!!
-- Alpha 06: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
-- Alpha 06: /columns/VariantOnTranscript/DMD -> viewList kolommen actief op DMD
+- Alpha 07: We're missing the ID_sort !!!
+- Alpha 07: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
+- Alpha 07: /columns/VariantOnTranscript/DMD -> viewList kolommen actief op DMD
 - Er zijn nog een paar database veranderingen nodig, zie top inc-sql-tables.php.
+- Het is niet duidelijk wat object_id nu precies is (gene symbol of disease id, bedoeld om te bepalen welke cc actief zijn)
+  - Ook id is niet echt duidelijk (dit is eigenlijk de foreign key van de entry (variantid, individualid), bedoeld om te bepalen welke cc actief zijn)
 - CUSTOM VIEWLISTS:
     - FIXME; De custom class haalt de gegevens van alle kolommen op (TABLE_COLS), MAAR public_view kan per gen anders zijn!!!
   * URLS:
@@ -230,6 +240,10 @@ Kán later, maar VOOR dat er externe gebruikers actief worden:
 
 LOVD 3.0
 ====================
+    Als Find & Replace wordt ingebouwd, moet de opzet anders worden:
+        Een viewList, met daarboven heel compact het formulier voor de Find & Replace
+        De voorgestelde verandering is direct zichtbaar gemarkeerd in de viewList (wordt gedaan in PHP/Prepare data), die ze kunnen sorteren, navigeren, etc.
+            Wellicht niet extra doorzoeken, want dan krijg je verschil DB inhoud/wat je op het scherm ziet.
     Als een patiënt DMD (ziekte) heeft, automatisch genomische varianten mappen op genen betrokken bij DMD indien op zelfde Chr? In het geval van meerdere genen, de dichtstbijzijnde?
     Mutalyzer: als zelf via SSL beschikbaar, ga dan ook naar Mutalyzer via SSL!
     Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)

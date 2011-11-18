@@ -79,16 +79,6 @@ table.logo img       {display : block;}
 
 
 
-/* Top table with the submenu *//*
-table.submenu           {font-size : 11px; background : #F0F3FF; border : 1px solid #224488;}
-table.submenu table     {font-size : 11px;}
-table.submenu table td  {padding : 5px;}
-table.submenu a         {color : #000000; text-decoration : none;}
-table.submenu a:visited {color : #000000;}
-table.submenu a:active  {color : #000000;}
-
-
-
 /* Footer message: Powered by LOVD ... */
 table.footer           {font-size : 11px; background : #224488; color : #FFFFFF; border-top : 2px solid #000000; border-bottom : 2px solid #000000;}
 table.footer a         {color : #FFFFFF;}
@@ -142,13 +132,6 @@ table.setup                     {border : 1px solid #224488; background : #F0F3F
 table.setup td                  {padding-left : 5px; font-size : 11px;}
 table.setup tr.pointer          {cursor : pointer;}
 table.setup tr.pointer:hover    {background : #E0E9FF;}
-
-
-
-/* Table for LOVD gene homepage and variant detail view. *//*
-table.gene                      {border : 1px solid #AFC8FA;}
-table.gene th                   {background : #AFC8FA; padding-left : 4px; padding-right : 4px;}
-table.gene td                   {background : #F0F3FF; padding-left : 4px; padding-right : 4px;}
 
 
 

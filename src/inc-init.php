@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-11-09
+ * Modified    : 2011-11-14
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -96,7 +96,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-alpha-05',
+                            'version' => '3.0-alpha-06',
                           ),
                 'user_levels' =>
                      array(
@@ -690,11 +690,9 @@ if (!defined('_NOT_INSTALLED_')) {
         // Determine email header line endings.
         // Define constant to quickly check if we're on Windows, since sending emails on Windows requires yet one more adaptation.
         if (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')) {
-                define('ON_WINDOWS', true);
-        } elseif (strtoupper(substr(PHP_OS, 0, 3) == 'MAC')) {
-                define('ON_WINDOWS', false);
+            define('ON_WINDOWS', true);
         } else {
-                define('ON_WINDOWS', false);
+            define('ON_WINDOWS', false);
         }
 
         $_SETT['email_headers'] = 'MIME-Version: 1.0' . PHP_EOL .

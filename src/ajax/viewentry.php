@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-09
- * Modified    : 2011-11-11
+ * Modified    : 2011-11-15
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,13 +31,13 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-if (empty($_GET['nID']) || empty($_GET['object']) || !preg_match('/^[A-Z_]+$/i', $_GET['object'])) {
+if (empty($_GET['id']) || empty($_GET['object']) || !preg_match('/^[A-Z_]+$/i', $_GET['object'])) {
     die(AJAX_DATA_ERROR);
 }
 
-// lovd_isAuthorized() has to be implemented somewhere around here when authorization checks are built into viewEntry()
+// FIXME; lovd_isAuthorized() has to be implemented somewhere around here when authorization checks are built into viewEntry()
 
-// The required security to load the viewList() depends on the data that is shown.
+// The required security to load the viewEntry() depends on the data that is shown.
 // To prevent security problems if we forget to set a requirement here, we default to LEVEL_ADMIN.
 $aNeededLevel =
          array(
@@ -67,8 +67,25 @@ if (!file_exists($sFile)) {
 // Having a double inc-top & bot when a queryerror shows up, is so ugly, so...
 define('_INC_TOP_INCLUDED_', 'ajax');
 
+
+$sObjectID = '';
+$nID = '';
+if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant', 'Custom_ViewList'))) {
+    if (isset($_GET['object_id'])) {
+        $sObjectID = $_GET['object_id'];
+    }
+    if (isset($_GET['id'])) {
+        $nID = $_GET['id'];
+    }
+
+    // Exception for VOT viewEntry, we need to isolate the gene from the ID to correctly pass this to the data object.
+    if ($_GET['object'] == 'Transcript_Variant') {
+        list($nVariantID, $nTranscriptID) = explode(',', $nID);
+        $sObjectID = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscriptID))->fetchColumn();
+    }
+}
 require $sFile;
 $_GET['object'] = 'LOVD_' . str_replace('_', '', $_GET['object']); // FIXME; test dit op een windows, test case-insensitivity.
-$_DATA = new $_GET['object']((isset($_GET['gene'])? $_GET['gene'] : ''));
-$_DATA->viewEntry($_GET['nID']);
+$_DATA = new $_GET['object']($sObjectID);
+$_DATA->viewEntry($nID);
 ?>

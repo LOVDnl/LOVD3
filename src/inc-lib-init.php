@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-11-02
+ * Modified    : 2011-11-14
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -933,83 +933,6 @@ function lovd_showNavigation ($sBody, $nPrefix = 3)
           $sPrefix . '  <TR align="center">' . "\n" .
           $sPrefix . '    <TD>' . $sBody . '</TD></TR></TABLE>'. "\n\n");
 }
-
-
-
-
-
-/*
-DMD_SPECIFIC
-function lovd_switchDB ()
-{
-    // Outputs the HTML to allow user to switch genes.
-    // $_AUTH is for authorization; $_SETT, $_CONF and $_STAT are for the top
-    // and bottom includes.
-    global $_AUTH, $_SETT, $_CONF, $_STAT;
-
-    $qGenes = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_DBS . ' ORDER BY id');
-    $nGenes = mysql_num_rows($qGenes);
-
-    if (!defined('_INC_TOP_INCLUDED_') && $nGenes == 1) {
-        // Just one gene, redirect to the gene's homepage.
-        list($_SESSION['currdb']) = mysql_fetch_row($qGenes);
-        // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
-        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?select_db=' . $_SESSION['currdb']);
-        exit;
-    }
-
-    // Because we want the right menu item to be selected.
-    $_GET['action'] = 'switch_db';
-
-    // 2009-09-29; 2.0-22; Also check for clean top include.
-    if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {
-        if (is_readable('inc-top.php')) {
-            require 'inc-top.php';
-        } else {
-            require ROOT_PATH . 'inc-top.php';
-        }
-        lovd_printHeader('home_select', 'Home - Select gene database');
-    }
-
-    if (!$nGenes) {
-        print('      There is currently no gene configured in LOVD yet.<BR>' . "\n\n");
-        if (HAS_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
-            print('      <BR>' . "\n\n");
-            lovd_showInfoTable('Go here to <A href="setup_genes.php?action=create">create new genes in LOVD</A>.');
-        }
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
-    }
-
-    print('      Please select a gene database:<BR>' . "\n" .
-    // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
-          '      <FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDB" method="get">' . "\n" .
-          '        <SELECT name="select_db" onchange="document.getElementById(\'SelectGeneDB\').submit();">' . "\n");
-    while ($zGenes = mysql_fetch_assoc($qGenes)) {
-        print('          <OPTION value="' . $zGenes['id'] . '"' . ($_SESSION['currdb'] == $zGenes['id']? ' selected' : '') . '>' . $zGenes['id'] . ' (' . $zGenes['name'] . ')</OPTION>' . "\n");
-    }
-    print('        </SELECT><BR>' . "\n" .
-          '        <INPUT type="submit" value="Select gene database">' . "\n" .
-          '      </FORM>' . "\n\n");
-
-    if ($nGenes == 1) {
-        // Just one gene, redirect to the gene's homepage.
-        print('      <SCRIPT type="text/javascript">' . "\n" .
-              '        <!--' . "\n" .
-              '        document.forms[0].submit();' . "\n" .
-              '        // -->' . "\n" .
-              '      </SCRIPT>' . "\n\n");
-    }
-
-    // 2009-09-29; 2.0-22; If the clean top include has been used, use the clean bottom include.
-    if (defined('_INC_TOP_CLEAN_INCLUDED_')) {
-        require ROOT_PATH . 'inc-bot-clean.php';
-    } else {
-        require ROOT_PATH . 'inc-bot.php';
-    }
-    exit;
-}
-*/
 
 
 

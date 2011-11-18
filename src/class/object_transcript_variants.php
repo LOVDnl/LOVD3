@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-11-11
+ * Modified    : 2011-11-16
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -178,7 +178,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
 
- 
+
     function insertAll ($aData, $aFields = array())
     {
         foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
@@ -256,11 +256,11 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         }
         return $zData;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
@@ -278,11 +278,11 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         
         return $zData;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function setDefaultValues ()
     {
         // Initiate default values of fields in $_POST.
@@ -294,14 +294,15 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             }
         }
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     function updateAll ($nID, $aData, $aFields = array())
     {
         // Edit all VariantOnTranscript entries.
+        $nAffected = 0;
         foreach($this->aTranscripts as $nTranscriptID => $sTranscriptNM) {
             foreach($aFields as $sField) {
                 if (strpos($sField, '/')) {
@@ -337,8 +338,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::updateEntry()'), $sSQL, mysql_error());
             }
 
-            return mysql_affected_rows();
+            $nAffected += mysql_affected_rows();
         }
+        return $nAffected;
     }
 
 
@@ -346,8 +348,17 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
     function viewEntry ($nID = false) {
+        global $_DB;
+
         list($nID, $nTranscriptID) = explode(',', $nID);
-        $this->aSQLViewEntry['WHERE'] = 'vot.transcriptid = \'' . $nTranscriptID . '\'' . (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' . $this->aSQLViewEntry['WHERE'] : '');
+        $this->aSQLViewEntry['WHERE'] .= (empty($this->aSQLViewEntry['WHERE'])? '' : ' AND ') . 'vot.transcriptid = \'' . $nTranscriptID . '\'';
+
+        // Before passing this on to parent::viewEntry(), perform a standard getCount() check on the transcript ID,
+        // to make sure that we won't get a query error when the combination of VariantID/TranscriptID does not yield
+        // any results. Easiest is then to fake a wrong $nID such that parent::viewEntry() will complain.
+        if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid = ?', array($nID, $nTranscriptID))->fetchColumn()) {
+            $nID = -1;
+        }
         parent::viewEntry($nID);
     }
 }

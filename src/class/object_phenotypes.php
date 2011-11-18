@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-11-16
+ * Modified    : 2011-11-17
  * For LOVD    : 3.0-alpha-06
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -128,7 +128,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                                     'db'   => array('p.diseaseid', 'ASC', true)),
                       ));
 
-        $this->sSortDefault = 'id';
+        $this->sSortDefault = 'id_';
     }
 
 
@@ -140,16 +140,11 @@ class LOVD_Phenotype extends LOVD_Custom {
         global $_AUTH, $_SETT;
 
         // Mandatory fields.
-        if (ACTION == 'edit') {
-            $this->aCheckMandatory[] = 'password';
-        }
-
-        if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            // Mandatory fields.
-            $this->aCheckMandatory[] = 'owned_by';
-            $this->aCheckMandatory[] = 'statusid';
-        }
-
+        $this->aCheckMandatory =
+                 array(
+                        'owned_by',
+                        'statusid',
+                      );
         parent::checkFields($aData);
 
         // FIXME; move to object_custom.php.
@@ -260,9 +255,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
 
-        if ($sView == 'list') {
-            $zData['id_'] = '<A href="' . $this->sRowLink . '" class="hide">' . $zData['id'] . '</A>';
-        } else {
+        if ($sView == 'entry') {
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
             $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';
             $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner_'] . '</A>';

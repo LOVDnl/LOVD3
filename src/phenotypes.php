@@ -108,7 +108,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) && ctype_digit($_GET['target'])) {
     // URL: /phenotypes?create
     // Create a new entry.
 
@@ -118,21 +118,17 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     define('LOG_EVENT', 'PhenotypeCreate');
 
     lovd_requireAUTH();
-    
-    if (!empty($_GET['target']) && ctype_digit($_GET['target'])) {
-        $_GET['target'] = sprintf('%08d', $_GET['target']);
-        if (mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id=?', array($_GET['target'])))) {
-            $_POST['individualid'] = $_GET['target'];
-            define('PAGE_TITLE', 'Create a new phenotype information entry for individual #' . $_GET['target']);
-        } else {
-            define('PAGE_TITLE', 'Create a new phenotype information entry');
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
-            lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add phenotype" button.', 'warning');
-            require ROOT_PATH . 'inc-bot.php';
-            exit;
-        }
+
+    $_GET['target'] = sprintf('%08d', $_GET['target']);
+    if (mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
+        $_POST['individualid'] = $_GET['target'];
+        define('PAGE_TITLE', 'Create a new phenotype information entry for individual #' . $_GET['target']);
     } else {
+        define('PAGE_TITLE', 'Create a new phenotype information entry');
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add phenotype" button.', 'warning');
+        require ROOT_PATH . 'inc-bot.php';
         exit;
     }
 
@@ -154,8 +150,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'class/object_phenotypes.php';
     if (!empty($_POST['diseaseid'])) {
         $_DATA = new LOVD_Phenotype($_POST['diseaseid']);
-    } else {
-        $_DATA = new LOVD_Phenotype();
     }
 
     if (empty($_POST['diseaseid']) || lovd_error()) {
@@ -246,7 +240,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
        ($bSubmit? '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" : '') .
-                  /*'        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $_POST['individualid'] . '\'">' . "\n" .
+                /* FIXME; Once we have code to allow the user (and remind them) to continue the unfinished submission, we can enable this part again (although it would be nice to put a warning here, also).
+                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $_POST['individualid'] . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '' ) . '</B></TD></TR>'*/ '      </TABLE><BR>' . "\n\n");
             require ROOT_PATH . 'inc-bot.php';
@@ -322,21 +317,17 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('owned_by', 'statusid', 'edited_by', 'edited_date'),
+                            array('edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
-            // FIXME; ik ben er voor om zoiets in checkFields() te doen en het hier dan schoon te houden.
-            // Ivar: checkFields hoort de data niet aan te passen, maar alleen te checken, dus ben het niet helemaal met je eens.
-            // Ivo: Daar heb je gelijk in, maar technisch gesproken wordt de data niet veranderd -
-            //   de controle die hier staat (alleen curator en hoger mag owner en status aanpassen)
-            //   staat al in checkFields(), dus wordt hier dubbel gedaan. Eigenlijk staat hier dus:
-            //   $_POST['owned_by'] = (!empty($_POST['owned_by'])? $_POST['owned_by'] : $_AUTH['id']);
-            //   en dat doen (eigenlijk een standaard waarde invullen) lijkt me best in
-            //   checkFields() te passen. Sterker nog, objects::checkFields() heeft al dat soort
-            //   dingen voor selection lists en checkboxes.
-            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_HIDDEN);
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                $aFields[] = 'owned_by';
+                $aFields[] = 'statusid';
+            } elseif ($zData['statusid'] >= STATUS_MARKED) {
+                $aFields[] = 'statusid';
+                $_POST['statusid'] = STATUS_MARKED;
+            }
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 

@@ -135,12 +135,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    print('<BR><BR>' . "\n\n" .
-          '      <DIV id="viewentryDiv">' .
+    print('      <BR><BR>' . "\n\n" .
+          '      <DIV id="viewentryDiv">' . "\n" .
           '      </DIV>' . "\n\n");
 
     $_GET['search_id_'] = $nID;
-    print('<BR><BR>' . "\n\n");
+    print('      <BR><BR>' . "\n\n");
     lovd_printHeader('Variant on transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant('', $nID);
@@ -148,7 +148,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_DATA->sRowLink = 'javascript:window.location.hash = \'{{transcriptid}}\'; return false';
     $_DATA->viewList(false, array('id_', 'transcriptid', 'status'), true, true);
     unset($_GET['search_id_']);
-
 ?>
 
 <SCRIPT type="text/javascript">
@@ -163,19 +162,20 @@ $( function () {
 
 
 function lovd_AJAX_viewEntryLoad () {
-    var hash = window.location.hash.substring(1); //Puts hash in variable, but does not removes the # character, because jQuery conveniently needs it.
+    var hash = window.location.hash.substring(1);
     if (hash) {
         if (hash != prevHash) {
-            // hash present in URL.
+            // Hash changed, (re)load viewEntry.
+            // Set the correct status for the TRs in the viewList (highlight the active TR).
             $( '#VOT_' + prevHash ).attr('class', 'data');
             $( '#VOT_' + hash ).attr('class', 'data bold');
 
             if (!($.browser.msie && $.browser.version < 9.0)) {
-                $( '#viewentryDiv' ).stop().css('opacity','0');
+                $( '#viewentryDiv' ).stop().css('opacity','0'); // Stop execution of actions, set opacity = 0 (hidden, but not taken out of the flow).
             }
-            $.get('ajax/viewentry.php', { nID: '<?php echo $nID; ?>,' + hash, object: 'Transcript_Variant', gene: '' },
+            $.get('ajax/viewentry.php', { object: 'Transcript_Variant', id: '<?php echo $nID; ?>,' + hash },
                 function(sData) {
-                    if (sData != '<?php echo AJAX_NO_AUTH; ?>' && sData != '<?php echo AJAX_DATA_ERROR; ?>' && sData != '<?php echo AJAX_FALSE; ?>') {
+                    if (sData.length > 2) {
                         $( '#viewentryDiv' ).html('\n' + sData);
                         if (!($.browser.msie && $.browser.version < 9.0)) {
                             $( '#viewentryDiv' ).fadeTo(1000, 1);
@@ -184,6 +184,7 @@ function lovd_AJAX_viewEntryLoad () {
                 });
             prevHash = hash;
         } else {
+            // The viewList could have been resubmitted now, so reset this value (not very efficient).
             $( '#VOT_' + hash ).attr('class', 'data bold');
         }
     }
@@ -420,25 +421,21 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     print('      </FORM>' . "\n\n");
 
     lovd_includeJS('inc-js-variants.php?chromosome=' . $_POST['chromosome'] . (isset($sGene)? '&geneid=' . $sGene : ''));
-?>
-<SCRIPT type="text/javascript">
-var aTranscripts = {
-<?php 
+
+    print('      <SCRIPT type="text/javascript">' . "\n" .
+          '        var aTranscripts = {');
     if (isset($sGene)) {
         $i = 0;
         foreach($_DATA['Transcript']->aTranscripts as $nTranscriptID => $sTranscriptNM) {
-            if ($i == 0) {
-                echo '';
-            } else {
+            if ($i) {
                 echo ', ';
             }
             echo '\'' . $nTranscriptID . '\' : \'' . $sTranscriptNM . '\''; 
             $i++;
         }
     }
-?>};
-</SCRIPT>
-<?php
+    print('};' . "\n" .
+          '      </SCRIPT>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -461,9 +458,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_requireAUTH(LEVEL_OWNER);
 
     $bGene = false;
-    $z = $_DB->query('SELECT vot.*, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ? GROUP BY vot.id', array($nID))->fetchAssoc();
-    if (!empty($z['geneids'])) {
-        $aGenes = explode(';', $z['geneids']); 
+    $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ? GROUP BY vot.id', array($nID))->fetchColumn();
+    if (!empty($sGenes)) {
+        $aGenes = explode(';', $sGenes);
         $bGene = true;
     }
 
@@ -495,12 +492,17 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
             $aFieldsGenome = array_merge(
-                                array('allele', 'chromosome', 'owned_by', 'statusid', 'edited_by', 'edited_date'),
+                                array('allele', 'chromosome', 'edited_by', 'edited_date'),
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
-            $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
-            $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                $aFieldsGenome[] = 'owned_by';
+                $aFieldsGenome[] = 'statusid';
+            } elseif ($zData['statusid'] >= STATUS_MARKED) {
+                $aFieldsGenome[] = 'statusid';
+                $_POST['statusid'] = STATUS_MARKED;
+            }
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
@@ -570,25 +572,20 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     lovd_includeJS('inc-js-variants.php?chromosome=' . $_POST['chromosome'] . ($bGene? '&geneid=' . $sGene : ''));
 
-?>
-<SCRIPT type="text/javascript">
-var aTranscripts = {
-<?php 
+    print('      <SCRIPT type="text/javascript">' . "\n" .
+          '        var aTranscripts = {');
     if ($bGene) {
         $i = 0;
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $sTranscriptNM) {
-            if ($i == 0) {
-                echo '';
-            } else {
+            if ($i) {
                 echo ', ';
             }
             echo '\'' . $nTranscriptID . '\' : \'' . $sTranscriptNM . '\''; 
             $i++;
         }
     }
-?>};
-</SCRIPT>
-<?php
+    print('};' . "\n" .
+          '      </SCRIPT>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
