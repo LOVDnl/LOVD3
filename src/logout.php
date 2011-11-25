@@ -39,7 +39,6 @@ if (!$_AUTH) {
 
 @lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET phpsessid = "" WHERE id = ?', array($_AUTH['id']));
 $nSec = time() - strtotime($_AUTH['last_login']);
-// DMD_SPECIFIC; FIXME; we still need to decide how to store this information.
 $sCurrDB = $_SESSION['currdb']; // Temp storage.
 $_SESSION = array(); // Delete variables both from $_SESSION and from session file.
 if (isset($_COOKIE[session_name()])) {

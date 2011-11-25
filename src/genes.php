@@ -456,7 +456,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         lovd_printHeader(PAGE_TITLE);
 
         if (!lovd_error()) {
-            print('      To create a new gene database, please complete the form below and press "Create" at the bottom of the form..<BR>' . "\n" .
+            print('      To create a new gene database, please complete the form below and press "Create" at the bottom of the form.<BR>' . "\n" .
                   '      <BR>' . "\n\n");
         }
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-11-01
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-25
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,7 +63,7 @@ $_MENU = array(
                 'individuals' => 'View individuals',
                  array(
                         '' => array('menu_magnifying_glass.png', 'View all individuals', 0),
-                        '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
+                        'create' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                         'hr',
                         '/columns/Individual?search_active_=1' => array('', 'View active custom columns', LEVEL_MANAGER),
                         '/columns/Individual?search_active_=0' => array('', 'Enable more custom columns', LEVEL_MANAGER),
@@ -379,7 +379,7 @@ foreach ($_MENU as $sPrefix => $sTitle) {
         if (in_array($sPrefix, array('genes', 'transcripts', 'variants'))) {
             $sURL = $sPrefix . '/' . $_SESSION['currdb'];
         } elseif ($sPrefix == 'diseases') {
-            $sURL = $sPrefix . '?search_genes_=DMD';
+            $sURL = $sPrefix . '?search_genes_=' . $_SESSION['currdb'];
         }
     }
     print('      <A href="' . $sURL . '"><IMG src="' . $sFileName . '" alt="' . $sTitle . '" id="' . $sFile . '" ' . $sSize . ' align="left"></A>' . "\n");

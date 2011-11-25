@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-11-17
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-25
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -62,6 +62,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vog.*, ' .
+                                           'GROUP_CONCAT(DISTINCT s.individualid SEPARATOR ";") AS _individualids, ' .
                                            'GROUP_CONCAT(s2v.screeningid SEPARATOR "|") AS screeningids, ' .
                                            'uo.name AS owner_, ' .
                                            'ds.name AS status, ' .
@@ -69,6 +70,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS vog ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id) ' .
@@ -93,6 +95,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
                  array(
+                        'individualid_' => 'Individual ID',
                         'chromosome' => 'Chromosome',
                         'allele_' => 'Allele',
                         'pathogenicid' => 'Pathogenicity',
@@ -296,6 +299,11 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         if ($sView == 'list') {
             // STUB
         } else {
+            $zData['individualid_'] = '';
+            // While in principle a variant should only be connected to one patient, due to database model limitations, through several screenings, one could link a variant to more individuals.
+            foreach ($zData['individualids'] as $nID) {
+                $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
+            }
             $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner_'] . '</A>';
         }
 

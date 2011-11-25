@@ -1,11 +1,9 @@
 Prioritize:
 ===========
-- Phenotype col cK: "10000.00": The 'cK (Optional)' field is limited to 7 characters, you entered 8. MySQL type:   DEC(7,2)
+- (@Ivar) ViewEntry Individual -> Add phenotype information to individual -> (finish) -> Hoe ga ik nu terug naar de individu?
+- VOT viewlist onder VOG selecteert niet de juiste kolommen
 - viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
 - Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
-- Transcript toevoegen aan gen, variant editen, je krijgt nu een extra block, maar wijzigingen worden genegeerd.
-- Gen geselecteerd, en transcript toevoegen? huidig gen eerst kiezen.
-- Password is mandatory by default, can be removed from individual object files.
 - (@Ivar) Add comments in submit.php.
 - Individuals, screenings, phenotypes hebben geen functionele anchor in de viewList.
 - Custom columns: niet consequent in hoofdletter gebruik bij meerdere woorden; zoals Times_Reported en Restriction_site.
@@ -15,7 +13,8 @@ Prioritize:
   * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET.
 - Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - FIXME; implement check on DBID if variant HAS NO GENES OR TRANSCRIPTS.
-- Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? Ook dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
+- Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
+  * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
 - Screening create: niet meer dan 20 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
   * Na screening create: aangeven varianten gevonden? restrict lijst VOT met genen die gescreened zijn (reversible).
 - Kolom activeren per gen: moet via POST omdat via GET soms te lang is.
@@ -47,8 +46,7 @@ Prioritize:
     + /variants/DMD         -> transcript variants of DMD gene joined to genomic variants, show transcript ID and gene (MAPPING TO /variants/in_gene, DIFFERENT COLUMN ORDER, SEARCH TERMS ADDED, SOME COLUMNS REMOVED)
     - /view                 -> MAPPING TO /view/variants+screenings+individuals+phenotypes
     - /view/DMD             -> combined genomic/transcript view, per gene; one line per (genomic) variant and all NMs horizontally added.
-    + /variants/0000000001  -> viewEntry() for genomic variant
-      * EXTEND with transcript info!
+    + /variants/0000000001  -> viewEntry() for genomic variant, transcript info included
 - INCORPORATE PDO EVERYWHERE.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
@@ -62,9 +60,6 @@ Prioritize:
   * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
 - Er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
 - Check alle viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
-- Gene selection lists zijn veel te groot als je een database hebt met lange gen namen. LOVD 2.0 had daar een techniek voor, om dat in te korten.
-- Kijk 'ns naar https://grenada.lumc.nl/LOVD3/shared, er zit een individu in met een aantal mutaties. Kun je makkelijk naar al zijn data navigeren?
-  * Variants on genome: ik moet naar de individu kunnen vanuit daar.
 - Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
 - When disease is created, forward user to select columns for this disease.
 - (@Ivar) Code voor remove van custom columns moet nog "gefixed" worden; er staan belangrijke FIXME's in.
@@ -114,6 +109,8 @@ Prioritize:
 
 
 
+- In individual viewList: lijst genen meest gemuteerd?
+- In data download: info in de header over de filters die gebruikt zijn.
 - Als account gelocked wordt, moet er naar de gebruiker die gelocked is, gemailed worden.
 - Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - "Individual has been screened, no variants have been found"

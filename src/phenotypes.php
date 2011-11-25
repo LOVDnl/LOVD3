@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-11-16
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-25
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -228,7 +228,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
             $_SESSION['work']['submits'][$_POST['individualid']]['phenotypes'][] = $nID;
 
             $bSubmit = isset($_SESSION['work']['submits'][$_POST['individualid']]);
-            $sPersons = ($_SESSION['work']['submits'][$_POST['individualid']]['is_panel']? 'this group of individuals' : 'this individual');
+            $sPersons = (!empty($_SESSION['work']['submits'][$_POST['individualid']]['is_panel'])? 'this group of individuals' : 'this individual');
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);

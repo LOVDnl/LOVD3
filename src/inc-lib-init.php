@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-11-14
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-24
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -165,8 +165,12 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
         }
     }
 
-    // Write to log file.
-    $bLog = @lovd_writeLog($sLogFile, $sError, $sMessage);
+    // Write to log file... if we're not here because we don't have MySQL.
+    if (function_exists('mysql_connect')) {
+        $bLog = @lovd_writeLog($sLogFile, $sError, $sMessage);
+    } else {
+        $bLog = false;
+    }
 
     if (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false) {
         print('<BR>' . "\n\n");
@@ -276,7 +280,7 @@ function lovd_getColumnLength ($sTable, $sCol)
             return (10 + (empty($aRegs[1])? 0 : 9));
 
         } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
-            return (int) $aRegs[1];
+            return ($aRegs[1] - $aRegs[2]);
 
         } elseif (preg_match('/^(TINY|MEDIUM|LONG)?(TEXT|BLOB)/i', $sColType, $aRegs)) {
             switch ($aRegs[1]) { // Key [1] must exist, because $aRegs[2] exists.
@@ -358,6 +362,8 @@ function lovd_getColumnType ($sTable, $sCol)
             return 'DATE';
         } elseif (preg_match('/^DATETIME/i', $sColType)) {
             return 'DATETIME';
+        } elseif (preg_match('/^DEC|DECIMAL\([0-9]+,[0-9]+\) UNSIGNED/i', $sColType)) {
+            return 'DECIMAL_UNSIGNED';
         } elseif (preg_match('/^DEC|DECIMAL\([0-9]+,[0-9]+\)/i', $sColType)) {
             return 'DECIMAL';
         } elseif (preg_match('/^((VAR)?CHAR|(TINY|MEDIUM|LONG)?TEXT)/i', $sColType)) {

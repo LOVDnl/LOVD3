@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-11-16
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-25
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -148,6 +148,9 @@ if (ACTION == 'create') {
         while ($zGene = mysql_fetch_assoc($qGenes)) {
             $aSelectGene[$zGene['id']] = $zGene['id'] . ' (' . $zGene['name'] . ')';
         }
+
+        // Select currently selected gene, if any.
+        $_POST['geneSymbol'] = $_SESSION['currdb'];
 
         // Array which will make up the form table.
         $aFormData = array(

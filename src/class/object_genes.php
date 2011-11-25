@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-11-16
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-23
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -335,6 +335,7 @@ class LOVD_Gene extends LOVD_Object {
                         array('', '', 'print', '<B>Relation to diseases</B>'),
                         'hr',
                         array('This gene has been linked to these diseases', '', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
+                        array('', '', 'note', 'Above are all disease entries currently configured in LOVD. You can select multiple diseases by holding "Ctrl" on a PC or "Command" on a Mac and clicking all wanted diseases.'),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Reference sequences (mandatory)</B>'),

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-11-16
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-24
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -144,7 +144,7 @@ class LOVD_Disease extends LOVD_Object {
         //   De parent checkFields vraagt de getForm() namelijk al op.
         if (isset($aData['genes']) && is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
-                if (!in_array($sGene, $aGenes)) {
+                if ($sGene && !in_array($sGene, $aGenes)) {
                     lovd_errorAdd('genes', htmlspecialchars($sGene) . 'does not exist');
                 }
             }

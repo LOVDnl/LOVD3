@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-11-16
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-22
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -134,6 +134,9 @@ class LOVD_Object {
         $aFormInfo = $aForm[0];
         unset($aForm[0]);
 
+        // Always mandatory.
+        $this->aCheckMandatory[] = 'password';
+
         // Validate form by looking at the form itself, and check what's needed.
         foreach ($aForm as $key => $aField) {
             if (!is_array($aField)) {
@@ -144,7 +147,6 @@ class LOVD_Object {
             $sNameClean = preg_replace('/^\d{5}_/', '', $sName); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
 
             // Mandatory fields, as defined by child object.
-            $this->aCheckMandatory[] = 'password';
             if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
             }
@@ -155,8 +157,20 @@ class LOVD_Object {
 
                 // Check max length.
                 $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
-                if (!empty($aData[$sName]) && strlen($aData[$sName]) > $nMaxLength) {
-                    lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to ' . $nMaxLength . ' characters, you entered ' . strlen($aData[$sName]) . '.');
+                if (!empty($aData[$sName])) {
+                    // For numerical columns, maxlength works differently!
+                    if (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
+                        // SIGNED cols: negative values.
+                        if (in_array($sMySQLType, array('DECIMAL', 'INT')) && (int) $aData[$sName] < (int)('-' . str_repeat('9', $nMaxLength))) {
+                            lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to numbers no lower than -' . str_repeat('9', $nMaxLength) . '.');
+                        }
+                        // ALL numerical cols: positive values.
+                        if ((int) $aData[$sName] > (int) str_repeat('9', $nMaxLength)) {
+                            lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . str_repeat('9', $nMaxLength) . '.');
+                        }
+                    } elseif (strlen($aData[$sName]) > $nMaxLength) {
+                        lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to ' . $nMaxLength . ' characters, you entered ' . strlen($aData[$sName]) . '.');
+                    }
                 }
 
                 // Check data type.
@@ -173,8 +187,9 @@ class LOVD_Object {
                             }
                             break;
                         case 'DECIMAL':
-                            if (!is_numeric($aData[$sName])) {
-                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a number.');
+                        case 'DECIMAL_UNSIGNED':
+                            if (!is_numeric($aData[$sName]) || ($sMySQLType != 'DECIMAL' && $aData[$sName] < 0)) {
+                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a' . ($sMySQLType == 'DECIMAL'? '' : ' positive') . ' number.');
                             }
                             break;
                         case 'INT':

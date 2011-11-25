@@ -7,6 +7,30 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Alpha 07
+ * 2011-12-05
+ *********/
+ * Fixed bug; When a gene has been selected, the disease tab was always linking
+   to diseases associated to the DMD gene, even if there was no DMD gene.
+ * When viewing a chromosome-specific variant overview, the chromosome number is
+   mentioned in the page title.
+ * Fixed bug; DECIMAL type columns weren't properly checked for their values'
+   maximum allowed lengths nor if negative numbers were allowed.
+ * Fixed bug; INT type columns weren't properly checked for their values'
+   maximum allowed lengths.
+ * Fixed bug; On servers without MySQL support, LOVD didn't return a proper
+   warning anymore.
+ * Fixed bug; Fixed an unclear error message that might be shown when creating a
+   disease with no genes in the database yet.
+ * Improved the navigation a bit by implementing shorter routes.
+
+
+
+
+
+
+
+/*******************
  * 3.0 Alpha 06
  * 2011-11-18
  *********/
