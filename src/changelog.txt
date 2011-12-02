@@ -23,6 +23,17 @@
  * Fixed bug; Fixed an unclear error message that might be shown when creating a
    disease with no genes in the database yet.
  * Improved the navigation a bit by implementing shorter routes.
+ * Fixed bug; The "New password" fields were always mandatory when editing a
+   user's account.
+ * Fixed bug; Newly created submitter accounts were reported to have last been
+   logged in in the year 1970.
+ * Fixed bug; A variable name in inc-top.php interfered with a variable name in
+   lovd_requireAuth(), which made lovd_requireAuth() print a wrong error message
+   when a user did not have proper rights to view a page.
+ * Reimplemented /variants/GENE viewList - the variants can now only be viewed
+   per transcript. The viewer can switch transcripts if others are available for
+   the selected gene. Also created the /variants/GENE/NM_ID URL, which locks the
+   view on the given transcript.
 
 
 

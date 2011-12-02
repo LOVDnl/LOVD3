@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2011-11-02
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-12-01
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -161,8 +161,7 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
 
-        // FIXME; perhaps there is a better option for this?
-        if ($this->sObjectID == 'Transcript,VariantOnTranscript,VariantOnGenome' && CURRENT_PATH == 'variants/in_gene') {
+        if ($this->sObjectID == 'Transcript,VariantOnTranscript,VariantOnGenome') {
             // The joining of the tables needed for this view are in this order, but I want a different order on display.
             $aObjects = array('Transcript', 'VariantOnGenome', 'VariantOnTranscript');
         }
@@ -205,10 +204,16 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscript':
-                    // No fixed columns.
+                    // The fixed columns.
+                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
+                         array(
+                                'transcriptid' => array(
+                                        'view' => array('TranscriptID', 50),
+                                        'db'   => array('vot.transcriptid', 'ASC', 'INT_UNSIGNED')),
+                              ));
                     if (!$this->sSortDefault) {
                         // First data table in view.
-                        $this->sSortDefault = ''; // FIXME; how will we fake sorting on DNA, while in fact we'll sort on something else? Objects.php?
+                        $this->sSortDefault = 'VariantOnTranscript/DNA'; // FIXME; how will we fake sorting on DNA, while in fact we'll sort on something else? Objects.php?
                     }
                     break;
             }

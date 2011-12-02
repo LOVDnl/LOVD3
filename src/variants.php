@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-11-21
+ * Modified    : 2011-12-02
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,7 +58,7 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', 
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
-    $aColsToHide = array('screeningids');
+    $aColsToHide = array('screeningids', 'allele_');
     if ($sChr) {
         $_GET['search_chromosome'] = '="' . substr($sChr, 3) . '"';
         $aColsToHide[] = 'chromosome';
@@ -73,16 +73,51 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', 
 
 
 
-if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
+if (!ACTION && !empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'in_gene') {
     // URL: /variants/in_gene
-    // URL: /variants/DMD
-    // View all entries in any gene or a specific gene.
+    // View all entries effecting a transcript.
 
-    if ($_PATH_ELEMENTS[1] == 'in_gene') {
-        $sGene = '';
-    } elseif (in_array(rawurldecode($_PATH_ELEMENTS[1]), lovd_getGeneList())) {
+    define('PAGE_TITLE', 'View transcript variants');
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    require ROOT_PATH . 'class/object_custom_viewlists.php';
+    $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
+    $_DATA->viewList(false, array('transcriptid'));
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
+    // URL: /variants/DMD
+    // URL: /variants/DMD/NM_004006.2
+    // View all entries in a specific gene, affecting a specific trancript.
+
+    if (in_array(rawurldecode($_PATH_ELEMENTS[1]), lovd_getGeneList())) {
         $_GET['search_geneid'] = $sGene = rawurldecode($_PATH_ELEMENTS[1]);
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
+
+        // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
+        $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE t.geneid = ? AND vot.id IS NOT NULL', array($sGene))->fetchAllCombine();
+        $nTranscripts = count($aTranscripts);
+
+        // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscripts.
+        if (!empty($_PATH_ELEMENTS[2])) {
+            $nTranscript = array_search($_PATH_ELEMENTS[2], $aTranscripts);
+            if ($nTranscript === false) {
+                // NM does not exist. Throw error or just simply redirect?
+                header('Location: ' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1]);
+                exit;
+            } else {
+                $aTranscripts = array($nTranscript => $aTranscripts[$nTranscript]);
+                $nTranscripts = 1;
+            }
+        }
     } else {
         // Command or gene not understood.
         // FIXME; perhaps a HTTP/1.0 501 Not Implemented? If so, provide proper output (gene not found) and
@@ -91,13 +126,33 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
         exit;
     }
 
-    define('PAGE_TITLE', 'View transcript variants' . (!$sGene? '' : ' in ' . $sGene));
+    define('PAGE_TITLE', 'View transcript variants in ' . $sGene);
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+    $sViewListID = 'LOVDCustomVL_VOT_VOG_' . $sGene;
+
+    // If this gene has only one NM, show that one. Otherwise have people pick one.
+    list($nTranscriptID, $sTranscript) = each($aTranscripts);
+    if ($nTranscripts == 1) {
+        $_GET['search_transcriptid'] = $nTranscriptID;
+    } else {
+        // Create select box.
+        // We would like to be able to link to this list, focussing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.
+        if (!isset($_GET['search_transcriptid']) || !isset($aTranscripts[$_GET['search_transcriptid']])) {
+            $_GET['search_transcriptid'] = $nTranscriptID;
+        }
+        $sSelect = '<SELECT id="change_transcript" onchange="$(\'input[name=\\\'search_transcriptid\\\']\').val($(this).val()); lovd_AJAX_viewListSubmit(\'' . $sViewListID . '\');">';
+        foreach ($aTranscripts as $nTranscriptID => $sTranscript) {
+            $sSelect .= '<OPTION value="' . $nTranscriptID . '"' . ($_GET['search_transcriptid'] != $nTranscriptID? '' : ' selected') . '>' . $sTranscript . '</OPTION>';
+        }
+        $sTranscript = $sSelect . '</SELECT>';
+    }
+    lovd_showInfoTable('The variants shown are numbered using the ' . $sTranscript . ' transcript reference sequence.');
+
     require ROOT_PATH . 'class/object_custom_viewlists.php';
-    $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
-    $_DATA->viewList(false, (!$sGene? '' : array('geneid', 'chromosome')));
+    $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'));
+    $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome'));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

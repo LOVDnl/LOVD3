@@ -1,7 +1,6 @@
 Prioritize:
 ===========
 - (@Ivar) ViewEntry Individual -> Add phenotype information to individual -> (finish) -> Hoe ga ik nu terug naar de individu?
-- VOT viewlist onder VOG selecteert niet de juiste kolommen
 - viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
 - Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
 - (@Ivar) Add comments in submit.php.
@@ -31,7 +30,6 @@ Prioritize:
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!!??
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
-- Alpha 07: We're missing the ID_sort !!!
 - Alpha 07: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
 - Alpha 07: /columns/VariantOnTranscript/DMD -> viewList kolommen actief op DMD
 - Er zijn nog een paar database veranderingen nodig, zie top inc-sql-tables.php.
@@ -43,9 +41,9 @@ Prioritize:
     + /variants             -> genomic variants
     + /variants/chrX        -> genomic variants, chromosome X only (MAPPING TO /variants WITH ADDED SEARCH TERMS)
     + /variants/in_gene     -> all transcript variants joined to genomic variants, show transcript ID and gene
-    + /variants/DMD         -> transcript variants of DMD gene joined to genomic variants, show transcript ID and gene (MAPPING TO /variants/in_gene, DIFFERENT COLUMN ORDER, SEARCH TERMS ADDED, SOME COLUMNS REMOVED)
+    + /variants/DMD         -> transcript variants of DMD gene joined to genomic variants, per transcript
     - /view                 -> MAPPING TO /view/variants+screenings+individuals+phenotypes
-    - /view/DMD             -> combined genomic/transcript view, per gene; one line per (genomic) variant and all NMs horizontally added.
+    - /view/DMD             -> combined genomic/transcript view, per gene, per transcript; one line per variant
     + /variants/0000000001  -> viewEntry() for genomic variant, transcript info included
 - INCORPORATE PDO EVERYWHERE.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
@@ -109,6 +107,7 @@ Prioritize:
 
 
 
+- <OPTGROUP label="groep"><OPTION value="asdf">asdf</OPTION></OPTGROUP> voor custom link active for columns selection?
 - In individual viewList: lijst genen meest gemuteerd?
 - In data download: info in de header over de filters die gebruikt zijn.
 - Als account gelocked wordt, moet er naar de gebruiker die gelocked is, gemailed worden.
@@ -256,18 +255,7 @@ LOVD 3.0
         start-transaction statement was START TRANSACTION or BEGIN statement, rollback does not cancel that statement. Further SQL statements become part
         of the transaction until the occurrence of COMMIT, ROLLBACK, or some SQL statement that causes an implicit commit.
     Submission:
-        1) Vul individual info in
-        2) Phenotype info? Yes/No?
-            If yes: Selecteer ziekte (pre-filled?) en vul phenotype in (formulieren anders per phenotype!)
-        3) Detectie technieken invullen? Zo ja: geef per det. tech. aan welke genen (genlijst maken uit gegeven disease?) getest zijn), en aangeven of varianten gevonden zijn.
-            (als men aangeeft dat er varianten waren, maar toen stopte, moeten ze later maar die koppeling weer aanleggen (verschil variantid = 0 / NULL om te helpen?))
-                Of anders: misschien dan verplichten door te gaan?
-        4) Varianten invullen: per gen is formulier anders, dus daarna per gen een variant invoeren, inclusief ind2var data? Of allele apart splitsen?
-            Bij het invullen, aangeven door welke eerder ingevulde detection technieken hij gevonden is?
-        Submissies over verschillende genen moet geen probleem meer zijn.
-            Warning: multiple curators should be warned, then.
-            Submit ombouwen; gen kiezen per variant die je toevoegt?
-                Dan moet je in het overzicht van wat er gesubmit is, wel de variant lists per gen doen, zoals variant detailed view.
+        Varianten invullen: aangeven door welke eerder ingevulde detection technieken hij gevonden is?
     WebService / Feed can be turned on or off? Explain there that turning it off can imply less traffic to their database.
         Mummi had een mooie quote die curators kan waarschuwen voor de effecten, als ze die uit zetten:
             You (and some curators) probably won't agree with me fully on the above, I'm sure. But there could still be a useful compromise to be made here: have an on/off switch for the WS/feed access methods so curators can disable these if they wish, but at the same time 'educate' them in what I argued above about data accessibility. They can then balance this against their desire to, for one reason or other, limit accessibility options to HTML only.
@@ -275,7 +263,6 @@ LOVD 3.0
     Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
     History/revision control: misschien max 5 levels terug ofzo? Instellen ergens? Of een bepaalde tijd maar? Auto clean up?
     Raymond Dalgleish wil beta-tester zijn.
-    Instelling: sta curatoren toe individualdata te wijzigen van individuals met mutaties ook in andere genen (dus nog steeds met minimaal 1 mutatie in eigen gen).
     Het hele HTML/XSS probleem. Nu hebben we nog overal XSS checks, behalve in de custom link script, toch? Deny HTML input voor column data?
         Het hele probleem is dat alle output moet ge-htmlspecialchar()ed worden om normaal getoond te worden als er een < in zit. Maar echte HTML gaat dan verloren.
         Toch overal maar htmlspecialchars invoeren? Dan moet bij de custom links worden uitgekeken dat het niet twee keer gebeurt, en daarnaast moeten de custom links later worden toegepast.

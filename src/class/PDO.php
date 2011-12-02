@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2011-11-09
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-30
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -211,6 +211,51 @@ class LOVD_PDOStatement extends PDOStatement {
         // Wrapper around PDOStatement::fetchAll(PDO::FETCH_ASSOC).
         // THIS WRAPPER DOES NOT SUPPORT ANY OF THE PDOStatement::fetchAll() ARGUMENTS!
         return $this->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+
+
+
+    function fetchAllColumn ($nCol = 0)
+    {
+        // Wrapper around PDOStatement::fetchAll(PDO::FETCH_COLUMN).
+        // THIS WRAPPER ONLY SUPPORTS THE col number PDOStatement::fetchAll() ARGUMENT!
+        if (!ctype_digit($nCol)) {
+            $nCol = 0;
+        }
+        return $this->fetchAll(PDO::FETCH_COLUMN, $nCol);
+    }
+
+
+
+
+
+    function fetchAllCombine ($nCol1 = 0, $nCol2 = 1)
+    {
+        // Wrapper around PDOStatement::fetchAll() that creates an array with one field's results as the keys and the other field's results as values.
+        if (!ctype_digit($nCol1)) {
+            $nCol1 = 0;
+        }
+        if (!ctype_digit($nCol2)) {
+            $nCol2 = 1;
+        }
+        $a = array();
+        while ($r = $this->fetchRow()) {
+            $a[$r[$nCol1]] = $r[$nCol2];
+        }
+        return $a;
+    }
+
+
+
+
+
+    function fetchAllRow ()
+    {
+        // Wrapper around PDOStatement::fetchAll(PDO::FETCH_NUM).
+        // THIS WRAPPER DOES NOT SUPPORT ANY OF THE PDOStatement::fetchAll() ARGUMENTS!
+        return $this->fetchAll(PDO::FETCH_NUM);
     }
 
 

@@ -192,9 +192,13 @@ class LOVD_User extends LOVD_Object {
                         'countryid',
                         'email',
                         'username', // LOVD will not complain if a mandatory column has not been added to the form.
-                        'password_1',
-                        'password_2',
                       );
+
+        // New password is only mandatory when we're forcing a change to the password.
+        if (ACTION == 'change_password') {
+            $this->aCheckMandatory[] = 'password_1';
+            $this->aCheckMandatory[] = 'password_2';
+        }
         parent::checkFields($aData);
 
         // Email address.
