@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-09-02
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2011-12-01
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -111,7 +111,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     lovd_printHeader('Active transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
-    $_DATA->setSortDefault('id');
+    $_DATA->setSortDefault('variants');
     $_DATA->viewList(false, 'geneid', true, true);
 
     require ROOT_PATH . 'inc-bot.php';
@@ -264,7 +264,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                             $aTranscripts[] = $aTranscriptValues['id'];
                             $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($sGeneName . ', ', '', $aTranscriptValues['product']);
                             $aTranscriptsPositions[$aTranscriptValues['id']] = array('gTransStart' => $aTranscriptValues['gTransStart'], 'gTransEnd' => $aTranscriptValues['gTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
-                            $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getElementFromArray('proteinTranscript/id', $aTranscriptInfo, 'v');
+                            $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getValueFromElement('proteinTranscript/id', $aTranscriptInfo);
                             $_BAR->setProgress(66 + $nProgress);
                         }
                     }
@@ -401,7 +401,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                         }
                     }
                 }
-                
+
                 // Add transcripts.
                 $aSuccessTranscripts = array();
                 if (!empty($_POST['active_transcripts'])) {
@@ -430,7 +430,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     lovd_writeLog('Event', LOG_EVENT, 'Transcript entr' . (count($aSuccessTranscripts) > 1? 'ies' : 'y') . ' successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
                 }
 
-                
 
                 // Add current user as the curator. This should also be in the transaction.
                 @lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));

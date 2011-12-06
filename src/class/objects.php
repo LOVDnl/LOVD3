@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-11-22
+ * Modified    : 2011-12-01
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -761,6 +761,11 @@ class LOVD_Object {
         }
 
         $this->aSQLViewList['ORDER_BY'] = $this->aColumnsViewList[$aOrder[0]]['db'][0] . ' ' . $aOrder[1] . (empty($this->aSQLViewList['ORDER_BY'])? '' : ', ' . $this->aSQLViewList['ORDER_BY']);
+        if ($aOrder[0] == 'VariantOnGenome/DNA') {
+            $this->aSQLViewList['ORDER_BY'] = 'chromosome ' . $aOrder[1] . ', ' . 'position_g_start ' . $aOrder[1] . ', ' . 'position_g_end ' . $aOrder[1] . ', ' . $this->aSQLViewList['ORDER_BY'];
+        } else if ($aOrder[0] == 'VariantOnTranscript/DNA') {
+            $this->aSQLViewList['ORDER_BY'] = 'position_c_start ' . $aOrder[1] . ', ' . 'position_c_start_intron ' . $aOrder[1] . ', ' . 'position_c_end ' . $aOrder[1] . ', ' . 'position_c_end_intron ' . $aOrder[1] . ', ' . $this->aSQLViewList['ORDER_BY'];
+        }
 
 
 

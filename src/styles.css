@@ -3,8 +3,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2011-11-11
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-18
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -35,6 +35,8 @@ input, textarea, button, select {font-family : Verdana, Helvetica, Arial, sans-s
 select                          {padding-left : 0px; padding-right : 0px;}
 input:hover, input:focus, textarea:hover, textarea:focus, button:hover, select:hover, select:focus
                                 {background : #F0F3FF; border : 1px solid #112244;}
+input:disabled, select:disabled, .err:disabled
+								{color : #444444; background : #DDDDDD; border : 1px solid #333333;}
 th                              {text-align : left;} /* Because IE auto-centers them */
 .bold                           {font-weight : bold;}
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-10-10
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-12-05
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -160,6 +160,7 @@ $aTableSQL =
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     geneid VARCHAR(20) NOT NULL,
     name VARCHAR(255) NOT NULL,
+    id_mutalyzer TINYINT(3) UNSIGNED ZEROFILL,
     id_ncbi VARCHAR(255) NOT NULL,
     id_ensembl VARCHAR(255) NOT NULL,
     id_protein_ncbi VARCHAR(255) NOT NULL,
@@ -218,8 +219,8 @@ $aTableSQL =
     PRIMARY KEY (id))
     ' . $sSettings
 
-         , 'TABLE_PATHOGENIC' =>
-   'CREATE TABLE ' . TABLE_PATHOGENIC . ' (
+         , 'TABLE_EFFECT' =>
+   'CREATE TABLE ' . TABLE_EFFECT . ' (
     id TINYINT(2) UNSIGNED ZEROFILL NOT NULL,
     name VARCHAR(5) NOT NULL,
     PRIMARY KEY (id))
@@ -284,7 +285,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_VARIANTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     allele TINYINT(2) UNSIGNED NOT NULL,
-    pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
+    effectid TINYINT(2) UNSIGNED ZEROFILL,
     chromosome VARCHAR(2) NOT NULL,
     position_g_start INT UNSIGNED,
     position_g_end INT UNSIGNED,
@@ -297,13 +298,13 @@ $aTableSQL =
     edited_date DATETIME,
     PRIMARY KEY (id),
     INDEX (allele),
-    INDEX (pathogenicid),
+    INDEX (effectid),
     INDEX (chromosome, position_g_start, position_g_end),
     INDEX (owned_by),
     INDEX (statusid),
     INDEX (created_by),
     INDEX (edited_by),
-    CONSTRAINT ' . TABLE_VARIANTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -346,19 +347,19 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL,
     transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
+    effectid TINYINT(2) UNSIGNED ZEROFILL,
     position_c_start MEDIUMINT,
     position_c_start_intron INT,
     position_c_end MEDIUMINT,
     position_c_end_intron INT,
     PRIMARY KEY (id, transcriptid),
     INDEX (transcriptid),
-    INDEX (pathogenicid),
+    INDEX (effectid),
     INDEX (position_c_start, position_c_end),
     INDEX (position_c_start, position_c_start_intron, position_c_end, position_c_end_intron),
     CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id FOREIGN KEY (id) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
 
 //         , 'TABLE_VARIANTS_ON_TRANSCRIPTS_REV' =>
@@ -436,6 +437,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_SCREENINGS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
+    variants_found BOOLEAN NOT NULL,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,

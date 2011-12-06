@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-11-14
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-12-05
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -120,7 +120,7 @@ $_SETT = array(
                             3 => 'Both (homozygous)',
                           ),
 
-                'var_pathogenic' =>
+                'var_effect' =>
                      array(
                             5 => 'Unknown',
                             9 => 'Pathogenic',
@@ -128,7 +128,7 @@ $_SETT = array(
                             3 => 'Probably no pathogenicity',
                             1 => 'No known pathogenicity',
                           ),
-                'var_pathogenic_short' =>
+                'var_effect_short' =>
                      array(
                             '11' => '-/-',
                             '13' => '-/-?',
@@ -227,6 +227,7 @@ $_SETT = array(
                                                             '22' => 'NC_000022.9',
                                                             'X'  => 'NC_000023.9',
                                                             'Y'  => 'NC_000024.8',
+                                                            'M'  => 'NC_001807.4 ',
                                                           ),
                                           ),
                             'hg19' =>
@@ -258,6 +259,7 @@ $_SETT = array(
                                                             '22' => 'NC_000022.10',
                                                             'X'  => 'NC_000023.10',
                                                             'Y'  => 'NC_000024.9',
+                                                            'M'  => 'NC_012920.1',
                                                           ),
                                           ),
                           ),
@@ -418,7 +420,7 @@ $_TABLES =
                 'TABLE_DISEASES' => TABLEPREFIX . '_diseases',
                 'TABLE_GEN2DIS' => TABLEPREFIX . '_genes2diseases',
                 'TABLE_DATA_STATUS' => TABLEPREFIX . '_data_status',
-                'TABLE_PATHOGENIC' => TABLEPREFIX . '_variant_pathogenicity',
+                'TABLE_EFFECT' => TABLEPREFIX . '_variant_effect',
                 'TABLE_INDIVIDUALS' => TABLEPREFIX . '_individuals',
                 'TABLE_IND2DIS' => TABLEPREFIX . '_individuals2diseases',
                 'TABLE_VARIANTS' => TABLEPREFIX . '_variants',
@@ -446,11 +448,10 @@ $_TABLES =
                 //'TABLE_PHENOTYPES_REV' => TABLEPREFIX . '_phenotypes_revisions',
                 //'TABLE_SCREENINGS_REV' => TABLEPREFIX . '_screenings_revisions',
 
-                // REMOVED in 3.0-pre-19; delete only if sure that there are no legacy versions still out there!
+                // REMOVED in 3.0-alpha-07; delete only if sure that there are no legacy versions still out there!
                 // SEE ALSO uninstall.php !!!
-                // REMOVE THIS ONLY IF line 503 IS ALSO ADAPTED!!!
-                'TABLE_PATIENTS' => TABLEPREFIX . '_patients',
-                'TABLE_PAT2DIS' => TABLEPREFIX . '_patients2diseases',
+                // REMOVE THIS ONLY IF line 544 IS ALSO ADAPTED!!!
+                'TABLE_PATHOGENIC' => TABLEPREFIX . '_variant_pathogenicity',
               );
 
 foreach ($_TABLES as $sConst => $sTable) {
@@ -542,7 +543,7 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
             $aTables[] = $r[0];
         }
     }
-    if (count($aTables) < (count($_TABLES) - 2)) {
+    if (count($aTables) < (count($_TABLES) - 1)) {
         // We're not completely installed.
         define('_NOT_INSTALLED_', true);
     }

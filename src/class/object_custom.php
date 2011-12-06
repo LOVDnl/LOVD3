@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-11-14
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-11-18
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -53,13 +53,12 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-
     function __construct ()
     {
         // Default constructor.
         global $_AUTH, $_DB, $_SETT;
 
-        $aArgs = array();	
+        $aArgs = array();
 
         $this->sCategory = (empty($this->sCategory)? $this->sObject : $this->sCategory);
 
@@ -74,13 +73,23 @@ class LOVD_Custom extends LOVD_Object {
             // Shared data type (variants on transcripts, phenotypes).
             if ($this->sObjectID) {
                 // Parent object given (a gene for variants, a disease for phenotypes).
-                $sSQL = 'SELECT c.*, sc.* ' .
-                        'FROM ' . TABLE_COLS . ' AS c ' .
-                        'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
-                        'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
-                        'AND ' . ($this->sObject == 'Phenotype'? 'sc.diseaseid' : 'sc.geneid') . ' = ? ' .
-                        'ORDER BY sc.col_order';
-                $aArgs[] = $this->sObjectID;
+                if ($this->sObject == 'Phenotype') {
+                    $sSQL = 'SELECT c.*, sc.* ' .
+                            'FROM ' . TABLE_COLS . ' AS c ' .
+                            'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
+                            'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
+                            'AND sc.diseaseid = ? ' .
+                            'ORDER BY sc.col_order';
+                    $aArgs[] = $this->sObjectID;
+                } elseif ($this->sObject == 'Transcript_Variant') {
+                    $aArgs = explode(',', $this->sObjectID);
+                    $sSQL = 'SELECT c.*, sc.* ' .
+                            'FROM ' . TABLE_COLS . ' AS c ' .
+                            'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
+                            'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
+                            'AND sc.geneid IN(?' . str_repeat(', ?', count($aArgs) - 1) . ') ' .
+                            'ORDER BY sc.col_order, sc.colid';
+                }
             } else {
                 // FIXME; kan er niet wat specifieke info in de objects (e.g. object_phenotypes) worden opgehaald, zodat dit stukje hier niet nodig is?
                 if ($this->sObject == 'Phenotype') {

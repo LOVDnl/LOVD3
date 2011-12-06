@@ -6,7 +6,6 @@ Prioritize:
 - (@Ivar) Add comments in submit.php.
 - Individuals, screenings, phenotypes hebben geen functionele anchor in de viewList.
 - Custom columns: niet consequent in hoofdletter gebruik bij meerdere woorden; zoals Times_Reported en Restriction_site.
-- Pathogenicity: "affects function"
 - IVO: Edit custom columns implement
 - IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
   * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET.
@@ -32,7 +31,6 @@ Prioritize:
 - http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - Alpha 07: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
 - Alpha 07: /columns/VariantOnTranscript/DMD -> viewList kolommen actief op DMD
-- Er zijn nog een paar database veranderingen nodig, zie top inc-sql-tables.php.
 - Het is niet duidelijk wat object_id nu precies is (gene symbol of disease id, bedoeld om te bepalen welke cc actief zijn)
   - Ook id is niet echt duidelijk (dit is eigenlijk de foreign key van de entry (variantid, individualid), bedoeld om te bepalen welke cc actief zijn)
 - CUSTOM VIEWLISTS:
@@ -70,17 +68,9 @@ Prioritize:
 - Veranderingen zoals voorgesteld 2011-06-28?
   * Allele, genetic_origin, Phenotype/Inheritance
     - Current plans:
-        Variant/Allele (Variant/Phase?):
-        -unknown
-        -paternal (confirmed)
-        -paternal (inferred)
-        -maternal (confirmed)
-        -maternal (inferred)
-        -parent #1
-        -parent #2
-        -both (homozygous) (there is still discussion about this)
+        Variant/allele -> Variant/Phase?
 
-        Variant/Genetic_Origin
+        Variant/genetic_origin
         -unknown
         -inherited
         -de novo
@@ -102,8 +92,6 @@ Prioritize:
         -sporadic, parents consanguineous
         -sporadic, parents not consanguineous
         -sporadic, consanguinity unknown
-
-    - Probleem: recombination? inherited from mother (moeder heeft 't) maar recombined to allele from father - hoe opslaan?
 
 
 

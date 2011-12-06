@@ -313,7 +313,7 @@ foreach ($_MENU as $sPrefix => $sTitle) {
 
         // Menu will be built in an UL, that will be transformed into a dropdown menu by using the Jeegocontext script by www.planitworks.nl.
         $sUL = '<UL id="menu_' . $sFile . '" class="jeegoocontext">' . "\n";
-        
+
         foreach ($sTitle as $sURL => $aItem) {
             if (!is_array($aItem)) {
                 if ($aItem == 'hr') {

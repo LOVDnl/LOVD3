@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-11-25
+ * Modified    : 2011-12-05
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,10 +82,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aSQLViewList['SELECT']   = 'vog.*, ' .
                                           // FIXME; de , is niet de standaard.
                                           'GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
+                                          'e.name AS effect, ' .
                                           'uo.name AS owner, ' .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
         $this->aSQLViewList['GROUP_BY'] = 'vog.id';
@@ -98,7 +100,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'individualid_' => 'Individual ID',
                         'chromosome' => 'Chromosome',
                         'allele_' => 'Allele',
-                        'pathogenicid' => 'Pathogenicity',
+                        'effect_reported' => 'Affects function (reported)',
+                        'effect_concluded' => 'Affects function (concluded)',
                       ),
                  $this->buildViewEntry(),
                  array(
@@ -131,9 +134,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'allele_' => array(
                                     'view' => array('Allele', 110),
                                     'db'   => array('vog.allele', 'ASC', true)),
-                        'pathogenicid' => array(
-                                    'view' => array('Pathogenicity', 110),
-                                    'db'   => array('vog.pathogenicid', 'ASC', true)),
+                        'effect' => array(
+                                    'view' => array('Affects function', 70),
+                                    'db'   => array('e.name', 'ASC', 'TEXT')),
                         'type' => array(
                                     'view' => array('Type', 70),
                                     'db'   => array('vog.type', 'ASC', true)),
@@ -162,9 +165,14 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aCheckMandatory =
                  array(
                         'chromosome',
+                        'effect_reported',
                         'owned_by',
                         'statusid',
                       );
+
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            $this->aCheckMandatory[] = 'effect_concluded';
+        }
 
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
@@ -179,6 +187,14 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         if (!isset($aData['allele']) || !array_key_exists($aData['allele'], $_SETT['var_allele'])) {
             lovd_errorAdd('allele', 'Please select a proper allele from the \'Allele\' selection box.');
+        }
+
+        if (isset($aData['effect_reported']) && !array_key_exists($aData['effect_reported'], $_SETT['var_effect'])) {
+            lovd_errorAdd('effect_reported', 'Please select a proper pathogenicity from the \'Affects function (reported)\' selection box.');
+        }
+
+        if (isset($aData['effect_concluded']) && !array_key_exists($aData['effect_concluded'], $_SETT['var_effect'])) {
+            lovd_errorAdd('effect_concluded', 'Please select a proper pathogenicity from the \'Affects function (concluded)\' selection box.');
         }
 
         if (!empty($aData['chromosome']) && !array_key_exists($aData['chromosome'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'])) {
@@ -212,15 +228,17 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
 
 
-    function getForm ($aTranscriptsForm = array())
+    function getForm ()
     {
         // Build the form.
-        global $_AUTH, $_SETT, $_CONF;
+        global $_AUTH, $_SETT, $_CONF, $zData, $_DATA;
 
         if (!empty($_GET['geneid'])) {
             // Setting chromosome to $_POST so that insertEntry() will get the correct chromosome value as well. checkFields() will run getForm(), so it will always be available.
-            list($_POST['chromosome']) = list($sChromosome) = mysql_fetch_row(lovd_queryDB_Old('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id=?', array($_GET['geneid'])));
+            list($_POST['chromosome']) = list($sChromosome) = mysql_fetch_row(lovd_queryDB_Old('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id = ?', array($_GET['geneid'])));
             $aFormChromosome = array('Chromosome', '', 'print', $sChromosome);
+        } elseif (ACTION == 'edit') {
+            $aFormChromosome = array('Chromosome', '', 'print', $zData['chromosome']);
         } else {
             $aChromosomes = array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
             $aSelectChromosome = array_combine($aChromosomes, $aChromosomes);
@@ -242,6 +260,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             $aFormStatus = array();
         }
 
+        $aTranscriptsForm = array();
+        if (!empty($_DATA['Transcript'])) {
+            $aTranscriptObject = reset($_DATA['Transcript']);
+            $aTranscriptsForm = $aTranscriptObject->getForm();
+        }
+
         // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
         // A similar if() to create the "authorization" block, or possibly an if() in the building of this form array, is easier to understand and more efficient.
         // Array which will make up the form table.
@@ -252,10 +276,13 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'hr',
                         array('Allele', '', 'select', 'allele', 1, $_SETT['var_allele'], false, false, false),
                         array('', '', 'note', 'If you wish to report an homozygous variant, please select "Both (homozygous)" here.'),
+                        
                         $aFormChromosome,
                       ),
                  $this->buildForm(),
                  array(
+                        array('Affects function (reported)', '', 'select', 'effect_reported', 1, $_SETT['var_effect'], false, false, false),
+            'effect' => array('Affects function (concluded)', '', 'select', 'effect_concluded', 1, $_SETT['var_effect'], false, false, false),
                         'hr'
                       ),
                  $aTranscriptsForm,
@@ -274,7 +301,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             unset($this->aFormData['authorization_skip'], $this->aFormData['authorization']);
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
-            unset($this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
+            unset($this->aFormData['effect'], $this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
         }
 
         return parent::getForm();
@@ -305,9 +332,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
             }
             $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner_'] . '</A>';
+            $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
+            $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
         }
 
         $zData['allele_'] = $_SETT['var_allele'][$zData['allele']];
+        
 
         return $zData;
     }
@@ -319,7 +349,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     function setDefaultValues ()
     {
         global $_AUTH;
-        
+
         $_POST['statusid'] = STATUS_OK;
         $_POST['owned_by'] = $_AUTH['id'];
         $this->initDefaultValues();

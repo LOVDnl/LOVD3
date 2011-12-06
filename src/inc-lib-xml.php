@@ -180,12 +180,12 @@ function lovd_getElementFromArray ($sPath = '', $aArray = array(), $sType = '')
 {
     // Designed to easily parse the array returned by lovd_xml2array() 
     // Example: "Animal/Cat/favoriteToy[1]" will result in "$aXML['Animal'][0]['c']['Cat'][0]['c']['favoriteToy'][1]"
-       
+
     if (empty($aArray) || !is_array($aArray)) {
         return false;
     }
     $aStructure = $aArray;
-    
+
     if (is_string($sPath) && strlen($sPath) > 0) {
         $aPath = explode("/", trim($sPath, '/'));
     
@@ -195,13 +195,13 @@ function lovd_getElementFromArray ($sPath = '', $aArray = array(), $sType = '')
                 $sName  = str_replace("[" . $nIndex . "]", "", $sElement);
             } else {
                 $nIndex = false;
-                $sName  = $sElement;           
+                $sName  = $sElement;
             }
-                    
+
             if (!isset($aStructure[$sName][($nIndex === false? 0 : $nIndex)]['c'])) {
                 return false;
             }
-                    
+
             if ($sElement == end($aPath)) {
                 if ($sType == '') {
                     return ($nIndex === false? $aStructure[$sName] : $aStructure[$sName][$nIndex]);
@@ -211,7 +211,7 @@ function lovd_getElementFromArray ($sPath = '', $aArray = array(), $sType = '')
             } else {
                 $aStructure = &$aStructure[$sName][($nIndex === false? 0 : $nIndex)]['c'];
             }
-            
+
         }
     } else {
         return false;

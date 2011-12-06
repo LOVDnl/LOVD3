@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-10-11
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-12-05
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -141,6 +141,26 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD INDEX (owned_by)',
                                 'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD CONSTRAINT ' . TABLE_SCREENINGS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                               ),
+                    '3.0-alpha-07' =>
+                        array(
+                                'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN id_mutalyzer TINYINT(3) UNSIGNED ZEROFILL AFTER name',
+                                'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD COLUMN variants_found BOOLEAN NOT NULL DEFAULT 1 AFTER individualid',
+
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS . '_fk_pathogenicid',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' DROP KEY pathogenicid',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' CHANGE pathogenicid effectid TINYINT(2) UNSIGNED ZEROFILL DEFAULT NULL',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (effectid)',
+
+                                'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_pathogenicid',
+                                'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP KEY pathogenicid',
+                                'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' CHANGE pathogenicid effectid TINYINT(2) UNSIGNED ZEROFILL DEFAULT NULL',
+                                'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD INDEX (effectid)',
+
+                                'RENAME TABLE ' . TABLE_PATHOGENIC . ' TO ' . TABLE_EFFECT,
+
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                                'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                             ),
                   );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -150,6 +170,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         $aUpdates['3.0-alpha-01'] = array_merge($aUpdates['3.0-alpha-01'], $aColSQL);
     }
 
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-07')) {
+        // DROP VariantOnTranscript/DBID if it exists.
+        $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
+        if (in_array('VariantOnTranscript/DBID', $aColumns)) {
+            $aUpdates['3.0-alpha-07'][] = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP COLUMN `VariantOnTranscript/DBID`';
+        }
+    }
 
 
     // To make sure we upgrade the database correctly, we add the current version to the list...

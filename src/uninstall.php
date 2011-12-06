@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2011-10-28
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-12-05
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -92,7 +92,7 @@ if (!empty($_POST)) {
 
                 // The reason to invert the tables is to handle all foreign key constraints nicely.
                 $aTables = array_reverse($_TABLES);
-                $nTables = count($aTables);
+                $nTables = count($aTables) - 1;
 
                 $_BAR->setMessage('Removing data tables...');
 
@@ -154,10 +154,11 @@ if (!empty($_POST)) {
                 }
             }
             $nTables = count($aTables);
-            // FIXME. remove later when TABLE_PATIENTS AND TABLE_PATIENTS2DISEASES are exterminated in all LOVD installations.
+            // FIXME. remove later when TABLE_PATHOGENIC is exterminated in all LOVD installations.
+            // REMOVE ALSO the "- 1" on line 95!
             //print('  Found ' . $nTables . '/' . count($_TABLES) . ' tables.' . "\n");
             $_TABLES_cleaned = $_TABLES;
-            unset($_TABLES_cleaned['TABLE_PATIENTS'], $_TABLES_cleaned['TABLE_PAT2DIS']);
+            unset($_TABLES_cleaned['TABLE_PATHOGENIC']);
             print('  Found ' . $nTables . '/' . count($_TABLES_cleaned) . ' tables.' . "\n");
 
             // FIXME; add more later.
