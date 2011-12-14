@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-11-18
+ * Modified    : 2011-12-06
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -197,11 +197,12 @@ class LOVD_Custom extends LOVD_Object {
                     if (!$key && !$aCol['mandatory']) {
                         // Add '(Optional)'.
                         $val .= ' (Optional)';
-                    } elseif ($key == 3) {
+                    }
+                    $aEntry[] = $val;
+                    if ($key == 2) {
                         // Add the form entry name.
                         $aEntry[] = $sPrefix . $sCol;
                     }
-                    $aEntry[] = $val;
                 }
                 $aFormData[] = $aEntry;
 

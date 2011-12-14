@@ -58,6 +58,7 @@ $_MENU = array(
                         '' => array('menu_magnifying_glass.png', 'View all genomic variants', 0),
                         '/variants/in_gene' => array('menu_magnifying_glass.png', 'View all variants affecting transcripts', 0),
                         '/variants/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all variants in the ' . $_SESSION['currdb'] . ' gene', 0),
+                        '/view/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'Full data view for the ' . $_SESSION['currdb'] . ' gene', 0),
                         '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                       ),
                 'individuals' => 'View individuals',

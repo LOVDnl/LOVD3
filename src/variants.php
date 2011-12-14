@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-12-06
+ * Modified    : 2011-12-09
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,7 +99,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
     // View all entries in a specific gene, affecting a specific trancript.
 
     if (in_array(rawurldecode($_PATH_ELEMENTS[1]), lovd_getGeneList())) {
-        $_GET['search_geneid'] = $sGene = rawurldecode($_PATH_ELEMENTS[1]);
+        $sGene = rawurldecode($_PATH_ELEMENTS[1]);
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
         // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
@@ -206,46 +206,46 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     unset($_GET['search_id_']);
 ?>
 
-<SCRIPT type="text/javascript">
-var prevHash = '';
-$( function () {
-    lovd_AJAX_viewEntryLoad();
-    setInterval(lovd_AJAX_viewEntryLoad, 250);
-});
+      <SCRIPT type="text/javascript">
+        var prevHash = '';
+        $( function () {
+            lovd_AJAX_viewEntryLoad();
+            setInterval(lovd_AJAX_viewEntryLoad, 250);
+        });
 
 
 
 
 
-function lovd_AJAX_viewEntryLoad () {
-    var hash = window.location.hash.substring(1);
-    if (hash) {
-        if (hash != prevHash) {
-            // Hash changed, (re)load viewEntry.
-            // Set the correct status for the TRs in the viewList (highlight the active TR).
-            $( '#VOT_' + prevHash ).attr('class', 'data');
-            $( '#VOT_' + hash ).attr('class', 'data bold');
+        function lovd_AJAX_viewEntryLoad () {
+            var hash = window.location.hash.substring(1);
+            if (hash) {
+                if (hash != prevHash) {
+                    // Hash changed, (re)load viewEntry.
+                    // Set the correct status for the TRs in the viewList (highlight the active TR).
+                    $( '#VOT_' + prevHash ).attr('class', 'data');
+                    $( '#VOT_' + hash ).attr('class', 'data bold');
 
-            if (!($.browser.msie && $.browser.version < 9.0)) {
-                $( '#viewentryDiv' ).stop().css('opacity','0'); // Stop execution of actions, set opacity = 0 (hidden, but not taken out of the flow).
-            }
-            $.get('ajax/viewentry.php', { object: 'Transcript_Variant', id: '<?php echo $nID; ?>,' + hash },
-                function(sData) {
-                    if (sData.length > 2) {
-                        $( '#viewentryDiv' ).html('\n' + sData);
-                        if (!($.browser.msie && $.browser.version < 9.0)) {
-                            $( '#viewentryDiv' ).fadeTo(1000, 1);
-                        }
+                    if (!($.browser.msie && $.browser.version < 9.0)) {
+                        $( '#viewentryDiv' ).stop().css('opacity','0'); // Stop execution of actions, set opacity = 0 (hidden, but not taken out of the flow).
                     }
-                });
-            prevHash = hash;
-        } else {
-            // The viewList could have been resubmitted now, so reset this value (not very efficient).
-            $( '#VOT_' + hash ).attr('class', 'data bold');
+                    $.get('ajax/viewentry.php', { object: 'Transcript_Variant', id: '<?php echo $nID; ?>,' + hash },
+                        function(sData) {
+                            if (sData.length > 2) {
+                                $( '#viewentryDiv' ).html('\n' + sData);
+                                if (!($.browser.msie && $.browser.version < 9.0)) {
+                                    $( '#viewentryDiv' ).fadeTo(1000, 1);
+                                }
+                            }
+                        });
+                    prevHash = hash;
+                } else {
+                    // The viewList could have been resubmitted now, so reset this value (not very efficient).
+                    $( '#VOT_' + hash ).attr('class', 'data bold');
+                }
+            }
         }
-    }
-}
-</SCRIPT>
+      </SCRIPT>
 <?php
 
     $_GET['search_screeningid'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
@@ -481,26 +481,26 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     lovd_includeJS('inc-js-variants.php?chromosome=' . $_POST['chromosome']);
 ?>
-<SCRIPT type="text/javascript">
+      <SCRIPT type="text/javascript">
 
-$( '.transcript' ).each(function () {
-    $(this).parent().parent().find(">:first-child").html('<INPUT class="ignore" name="ignore_' + $(this).attr('transcriptid') + '" type="checkbox"> <B>Ignore this transcript</B>');
-});
+        $( '.transcript' ).each(function () {
+            $(this).parent().parent().find(">:first-child").html('<INPUT class="ignore" name="ignore_' + $(this).attr('transcriptid') + '" type="checkbox"> <B>Ignore this transcript</B>');
+        });
 
-$( '.ignore' ).click(function () {
-    var oBeginTranscript = $(this).parent().parent().next();
-    var oNextElement = oBeginTranscript.next();
-    while (oNextElement.children().size() > 1) {
-        // More than one TD, so it is an input field.
-        if ($(this).attr('checked')) {
-            oNextElement.find(">:last-child").find(">:first-child").attr('disabled', true);
-        } else {
-            oNextElement.find(">:last-child").find(">:first-child").removeAttr('disabled');
-        }
-        oNextElement = oNextElement.next();
-    }
-});
-var aTranscripts = {
+        $( '.ignore' ).click(function () {
+            var oBeginTranscript = $(this).parent().parent().next();
+            var oNextElement = oBeginTranscript.next();
+            while (oNextElement.children().size() > 1) {
+                // More than one TD, so it is an input field.
+                if ($(this).attr('checked')) {
+                    oNextElement.find(">:last-child").find(">:first-child").attr('disabled', true);
+                } else {
+                    oNextElement.find(">:last-child").find(">:first-child").removeAttr('disabled');
+                }
+                oNextElement = oNextElement.next();
+            }
+        });
+        var aTranscripts = {
 <?php 
     if (isset($sGene)) {
         $i = 0;
@@ -522,10 +522,9 @@ var aTranscripts = {
             echo '$( \'input[name="ignore_' . substr($key, 7, 5) . '"]\' ).attr(\'checked\', true).trigger(\'click\').attr(\'checked\', true);' . "\n";
         }
     }
-?>
 
-</SCRIPT>
-<?php
+    print("\n" .
+          '      </SCRIPT>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

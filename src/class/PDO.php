@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2011-11-30
+ * Modified    : 2011-12-06
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -234,10 +234,10 @@ class LOVD_PDOStatement extends PDOStatement {
     function fetchAllCombine ($nCol1 = 0, $nCol2 = 1)
     {
         // Wrapper around PDOStatement::fetchAll() that creates an array with one field's results as the keys and the other field's results as values.
-        if (!ctype_digit($nCol1)) {
+        if (!ctype_digit($nCol1) && !is_int($nCol1)) {
             $nCol1 = 0;
         }
-        if (!ctype_digit($nCol2)) {
+        if (!ctype_digit($nCol2) && !is_int($nCol2)) {
             $nCol2 = 1;
         }
         $a = array();

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-12-07
+ * Modified    : 2011-12-14
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -96,7 +96,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-alpha-06',
+                            'version' => '3.0-alpha-07',
                           ),
                 'user_levels' =>
                      array(
@@ -607,7 +607,7 @@ if (!empty($_STAT['signature'])) {
     session_name('PHPSESSID_' . $_SETT['cookie_id']);
 
     // Start sessions - use cookies.
-    session_start();
+    @session_start();
 }
 header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version']) || $_STAT['version'] == $_SETT['system']['version']? '' : ' (DB @ ' . $_STAT['version'] . ')'));
 
@@ -667,7 +667,7 @@ if (!defined('_NOT_INSTALLED_')) {
 
         // Switch gene.
         // Gene switch will occur automatically at certain pages. They can be accessed by following links in LOVD itself, or possibly from outer sources.
-        if (preg_match('/^(genes|variants)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
+        if (preg_match('/^(genes|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
             $sSelectGene = $aRegs[2];
         }      
 

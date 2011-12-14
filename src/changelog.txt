@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Alpha 07
- * 2011-12-??
+ * 2011-12-14
  *********/
  * Fixed bug; When a gene has been selected, the disease tab was always linking
    to diseases associated to the DMD gene, even if there was no DMD gene.
@@ -34,27 +34,36 @@
    per transcript. The viewer can switch transcripts if others are available for
    the selected gene. Also created the /variants/GENE/NM_ID URL, which locks the
    view on the given transcript.
-
-
-
-
-
-
+ * When viewing a variant's details, the affected transcripts now also mention
+   the gene symbol.
+ * Added links to gene and transcript pages from the variant's detailed view.
+ * Fixed bug; Under some circumstances, you could get two "No results have been
+   found that match your criteria." error messages below each other.
+ * Implemented /transcripts/NM_ID, that forwards to the correct numeric ID.
+ * Fixed bug; Values of checkbox custom columns were not stored in the database.
+ * Fixed bug; When removing a VariantOnTranscript or Phenotype custom column,
+   the multiple selection list to select from which objects the column should be
+   removed, was not restricted to a certain maximum size.
+ * Fixed bug; DATETIME columns with DATETIME values got an error message that
+   they should contain DATE values.
+ * Added the /view/GENE page that shows variant, screening and individual data
+   joined to each other, per gene, like was done in LOVD 2.0.
  * Changed the dbSNP custom link so that it can accept "rs1234567" as well as
    just "1234567".
- * Fixed bug; `VariantOnTranscripts` custom columns are now retrieved properly.
- * Added the "Affects function" selection box to all variant create & edit
-   forms, which will be the replacement of pathogenicity in LOVD2.
- * Added a mitochondrial reference to the chromosome selection box when creating
-   or editing a genomic variant.
- * Added support for a variant that lies on 2 or more transcripts coming from
-   seperate genes respectively.
+ * Fixed bug; The VariantOnTranscripts ViewList did not show any active custom
+   columns.
+ * Added the "Affects function" selection list to all variant create & edit 
+   forms, which will be the replacement of the "Pathogenicity" field from LOVD2.
+ * Added the option M (mitochondrial) to the chromosome selection list when
+   creating a genomic variant.
+ * Added support for editing a variant that affects transcripts of more than one
+   gene.
  * Added a "loading..." image when the map variants button is pressed in the
    variant create & edit form.
- * Changed the sorting order on `VariantOnGenome/DNA` and
-   `VariantOnTranscript/DNA`.
- * Added the option to ignore specific transcripts in the VariantOnTranscript
-   create form.
+ * Changed the way LOVD sorts on the `VariantOnGenome/DNA` and
+   `VariantOnTranscript/DNA` columns.
+ * When creating a variant on transcript level, you can now ignore specific
+   transcripts.
  * The variant edit form now only shows the transcripts that the variant is
    mapped on.
 

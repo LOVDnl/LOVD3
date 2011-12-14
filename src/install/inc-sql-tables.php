@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-12-05
+ * Modified    : 2011-12-09
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -437,7 +437,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_SCREENINGS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     individualid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
-    variants_found BOOLEAN NOT NULL,
+    variants_found BOOLEAN NOT NULL DEFAULT 1,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,

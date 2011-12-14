@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2011-10-07
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2011-12-05
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -126,9 +126,8 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     } elseif ($n == 1) {
         header('Location: ' . lovd_getInstallURL() . 'diseases/' . $nID);
     } else {
-        // Multiple hits. This forward would allow for even more hits,
-        // because this search method below works on partial matches.
-        header('Location: ' . lovd_getInstallURL() . 'diseases?search_symbol=' . rawurlencode($sID));
+        // Multiple hits. Forward to exact match search.
+        header('Location: ' . lovd_getInstallURL() . 'diseases?search_symbol=%3D%22' . rawurlencode($sID) . '%22');
     }
     exit;
 }

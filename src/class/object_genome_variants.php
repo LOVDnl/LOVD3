@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-12-05
+ * Modified    : 2011-12-13
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -132,7 +132,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                  $this->buildViewList(),
                  array(
                         'allele_' => array(
-                                    'view' => array('Allele', 110),
+                                    'view' => array('Allele', 120),
                                     'db'   => array('vog.allele', 'ASC', true)),
                         'effect' => array(
                                     'view' => array('Affects function', 70),
@@ -324,7 +324,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            // STUB
+            $zData['effect'] = $_SETT['var_effect_short'][$zData['effectid']];
         } else {
             $zData['individualid_'] = '';
             // While in principle a variant should only be connected to one patient, due to database model limitations, through several screenings, one could link a variant to more individuals.
@@ -337,7 +337,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         $zData['allele_'] = $_SETT['var_allele'][$zData['allele']];
-        
 
         return $zData;
     }

@@ -30,6 +30,7 @@ php_flag mysql.trace_mode Off
     RewriteRule ^uninstall(.*)$ uninstall.php
     RewriteRule ^users(.*)$ users.php
     RewriteRule ^variants(.*)$ variants.php
+    RewriteRule ^view(.*)$ view.php
     RewriteRule ^settings(.*)$ settings.php
     RewriteRule ^setup(.*)$ setup.php
 </IfModule>

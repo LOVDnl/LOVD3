@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-12-01
+ * Modified    : 2011-12-12
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -258,13 +258,15 @@ class LOVD_Object {
     function getCount ($nID = false)
     {
         // Returns the number of entries in the database table.
+        global $_DB;
+
         if ($nID) {
-            list($nCount) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE id = ?', array($nID)));
+            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE id = ?', array($nID))->fetchColumn();
         } else {
             if ($this->nCount) {
                 return $this->nCount;
             }
-            list($nCount) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . constant($this->sTable)));
+            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable))->fetchColumn();
             $this->nCount = $nCount;
         }
         return $nCount;
@@ -334,6 +336,7 @@ class LOVD_Object {
     function loadEntry ($nID = false)
     {
         // Loads and returns an entry from the database.
+        global $_DB;
 
         if (empty($nID)) {
             // We were called, but the class wasn't initiated with an ID. Fail.
@@ -346,7 +349,7 @@ class LOVD_Object {
         } else {
             $sSQL = 'SELECT * FROM ' . constant($this->sTable) . ' WHERE id = ?';
         }
-        $zData = @mysql_fetch_assoc(lovd_queryDB_Old($sSQL, array($nID)));
+        $zData = @$_DB->query($sSQL, array($nID))->fetchAssoc();
         // FIXME; check if $zData['status'] exists, if so, check status versus lovd_isAuthorized().
         // Set $zData to false if user should not see this entry.
         if (!$zData) {
@@ -513,6 +516,7 @@ class LOVD_Object {
     function viewEntry ($nID = false)
     {
         // Views just one entry from the database.
+        global $_DB;
 
         if (empty($nID)) {
             // We were called, but the class wasn't initiated with an ID. Fail.
@@ -534,6 +538,10 @@ class LOVD_Object {
                 }
             }
             exit;
+        }
+
+        if (!defined('LOG_EVENT')) {
+            define('LOG_EVENT', $this->sObject . '::viewEntry()');
         }
 
         // Manipulate WHERE to include ID, and build query.
@@ -558,11 +566,7 @@ class LOVD_Object {
                ' GROUP BY ' . $this->aSQLViewEntry['GROUP_BY']);
 
         // Run the actual query.
-        $zData = mysql_fetch_assoc(lovd_queryDB_Old($sSQL, array($nID)));
-
-        if (!$zData) {
-            lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::viewEntry()'), $sSQL, mysql_error());
-        }
+        $zData = $_DB->query($sSQL, array($nID))->fetchAssoc();
 
         $zData = $this->autoExplode($zData);
 
@@ -697,7 +701,7 @@ class LOVD_Object {
                                                 break;
                                             case '<':
                                             case '>=':
-                                                $sTerm .= ' 00:00:00';
+                                                $sTerm .= ' 00:00:00'; // FIXME; some databases may not like this on DATE columns.
                                                 break;
                                             case '!':
                                             default:
@@ -942,14 +946,14 @@ class LOVD_Object {
                 if ($bOnlyRows) {
                     die('0'); // Silent error.
                 }
-                print('</TABLE>' . "\n");
+                print('</TABLE><BR>' . "\n"); // <BR> is necessary to keep the InfoTable apart from the data headers.
                 if (!$bHideNav) {
                     print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
                           '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                           '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
                 }
-                print('      </DIV></FORM><BR>' . "\n\n");
                 lovd_showInfoTable($sMessage, 'stop');
+                print('      </DIV></FORM>' . "\n\n");
                 return true;
             } else {
                 if ($bOnlyRows) {

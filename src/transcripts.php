@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-12-01
+ * Modified    : 2011-12-12
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -101,9 +101,37 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_printHeader('Variants', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
-    $_DATA->viewList(false, array('id', 'transcriptid', 'id_ncbi'));
+    $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
+    $_DATA->viewList(false, array('geneid', 'transcriptid', 'id_ncbi', 'id_'));
 
     require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+    // URL: /transcripts/NM_004006.2
+    // Try to find a transcripts by its NCBI ID and forward.
+    // When we have multiple hits, refer to listView.
+
+    $sID = rawurldecode($_PATH_ELEMENTS[1]);
+    $aIDs = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchAllColumn();
+    $n = count($aIDs);
+    /*if (!$n) {
+        define('PAGE_TITLE', 'View transcript');
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable('No such ID!', 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+    } else*/if ($n == 1) {
+        header('Location: ' . lovd_getInstallURL() . 'transcripts/' . $aIDs[0]);
+    } else {
+        // Multiple hits. Forward to exact match search.
+        header('Location: ' . lovd_getInstallURL() . 'transcripts?search_id_ncbi=%3D%22' . rawurlencode($sID) . '%22');
+    }
     exit;
 }
 
@@ -136,18 +164,14 @@ if (ACTION == 'create') {
               '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
 
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $sSQL = 'SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id';
+            $sSQL = 'SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id';
             $aSQL = array();
         } else {
-            $sSQL = 'SELECT g.id, g.name FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_CURATES . ' AS cu ON (cu.geneid = g.id) WHERE cu.userid = ? AND allow_edit = 1 ORDER BY g.id';
+            $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_CURATES . ' AS cu ON (cu.geneid = g.id) WHERE cu.userid = ? AND allow_edit = 1 ORDER BY g.id';
             $aSQL = array($_AUTH['id']);
         }
 
-        $aSelectGene = array();
-        $qGenes = lovd_queryDB_Old($sSQL, $aSQL);
-        while ($zGene = mysql_fetch_assoc($qGenes)) {
-            $aSelectGene[$zGene['id']] = $zGene['id'] . ' (' . $zGene['name'] . ')';
-        }
+        $aSelectGene = $_DB->query($sSQL, $aSQL)->fetchAllCombine();
 
         // Select currently selected gene, if any.
         $_POST['geneSymbol'] = $_SESSION['currdb'];
@@ -354,6 +378,12 @@ if (ACTION == 'create') {
 
     lovd_printHeader(PAGE_TITLE);
 
+    if (empty($zData['transcripts'])) {
+        lovd_showInfoTable('No more transcripts available that have not been added yet!', 'warning');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
+
     if (!lovd_error()) {
         print('      To add the selected transcripts to the gene, please press "Add" at the bottom of the form.<BR>' . "\n" .
               '      <BR>' . "\n\n");
@@ -361,20 +391,15 @@ if (ACTION == 'create') {
 
     lovd_errorPrint();
 
-    // FIXME; perhaps just better, when there are no (more) transcripts available, to put a message there and not the entire form anyway?
     $atranscriptNames = array();
     $aTranscriptsForm = array();
-    if (!empty($zData['transcripts'])) {
-        foreach ($zData['transcripts'] as $sTranscript) {
-            if (!isset($aTranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
-                $aTranscriptsForm[$sTranscript] = lovd_shortenString($zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)], 50);
-                $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
-            }
+    foreach ($zData['transcripts'] as $sTranscript) {
+        if (!isset($aTranscriptNames[preg_replace('/\.\d+/', '', $sTranscript)])) {
+            $aTranscriptsForm[$sTranscript] = lovd_shortenString($zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)], 50);
+            $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
         }
-        asort($aTranscriptsForm);
-    } else {
-        $aTranscriptsForm = array('' => 'No ' . (count($zData['transcriptsAdded'])? 'more ' : '') . 'transcripts available');
     }
+    asort($aTranscriptsForm);
     
     $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
 

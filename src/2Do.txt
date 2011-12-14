@@ -1,19 +1,29 @@
 Prioritize:
 ===========
+- Custom View:
+  * Heeft geen link als geen individu getoond, anders naar variant, maar dat moet andersom!
+  * Er gaat iets niet goed, die joins gaan niet goed.
+    - https://localhost/LOVDv.3.0-dev/view/SGCA/NM_001135697.1 geeft twee vars (2#12 en 1#12) maar dat kan helemaal niet (var 2 heeft die DNA niet)
+  * The full data overview moet nog de varianten tonen, die óók in de individu gevonden zijn.
+- (@Ivar) Alle variant en/of data views uitbreiden met affects function en andere standaard kolommen die LOVD 2.0 ook toont.
+  * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
+- (@Ivar) LOVD user maken (ID 00000) die niet bekijkbaar is, maar wel gebruikt wordt om te markeren dat processen automatisch zijn verlopen. Alle custom cols en links etc created_by daarop zetten in install scripts.
+  * Liefst ook in inc-upgrade er voor zorgen, dat alle bekende custom links en cols de created_by op 0 krijgen!
+- (@Ivar) Panel implementeren; Times_reported weg (waardes kopieëren), viewEntries titels aanpassen (ook nog andere tekst?)
 - (@Ivar) ViewEntry Individual -> Add phenotype information to individual -> (finish) -> Hoe ga ik nu terug naar de individu?
-- viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
-- Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
+- (@Ivar) viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
+- (@Ivar) Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
 - (@Ivar) Add comments in submit.php.
-- Individuals, screenings, phenotypes hebben geen functionele anchor in de viewList.
+- (@Ivar) Individuals, screenings, phenotypes hebben geen functionele anchor in de viewList.
 - Custom columns: niet consequent in hoofdletter gebruik bij meerdere woorden; zoals Times_Reported en Restriction_site.
 - IVO: Edit custom columns implement
 - IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
   * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET.
-- Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
-- FIXME; implement check on DBID if variant HAS NO GENES OR TRANSCRIPTS.
+- (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
+- (@Ivar) FIXME; implement check on DBID if variant HAS NO GENES OR TRANSCRIPTS.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
-- Screening create: niet meer dan 20 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
+- (@Ivar) Screening create: niet meer dan 20 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
   * Na screening create: aangeven varianten gevonden? restrict lijst VOT met genen die gescreened zijn (reversible).
 - Kolom activeren per gen: moet via POST omdat via GET soms te lang is.
 - Fixed bug; MySQL handles 01 very different than '01' for VARCHAR columns, so lovd_queryDB() will now always quote integers.
@@ -21,7 +31,6 @@ Prioritize:
   * Ivar: PDO doet '01' -> '01', '1' -> '1', 1 -> '1', 01 -> '1'. Dus alleen als je ongequote 01 geeft dan maakt PDO er een '1' van.
 - Delete user verder ontmoedigen?
 - VariantOnGenome/dbSNP column with rsID (integer only!)
-  * prepareData() has to deal with it automatically (external source, not a custom link)
   * integer only... is dat wel handig? Misschien toch beter rs nummer?
 - Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
   * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -168,6 +177,8 @@ Doen voordat LOVD 3.0 online gebruikt kan worden:
 
 
 Ook belangrijk, maar iets minder:
+- lovd_setUpdatedDate() implementeren.
+- Custom viewList heeft nog geen phenotype data.
 - Hash moet ook meegestuurd worden naar login.php zodat de user naar de juiste pagina terug kan worden redirect.
 - Curator aanstellen voor aandoeningen? Hebben alleen rechten op phenotype entries van de ziektes waar ze curator van zijn, plus de aansluitende individuen.
   * "Normale" curatoren mogen dan varianten, screenings alleen??? Of ook individuen???
@@ -393,9 +404,6 @@ Not sure yet how to...
 - Bij het editen insluiten de modified_date van de entry. Als die, bij het editen van de data ineens anders is, moet je een foutmelding geven. Twee mensen hebben tegelijkertijd er aan gewerkt!
     Wellicht direct in de update query?
 - All the traffic to variants and individuals in LOVD 2.0 enters through variants.php, lucky me. So this file in 3.0 will both serve the "new" clean URLs, but if it detects the old LOVD 2.0 formatted URLs, it will forward to the standard URL.
-- If we let people pick an NM for a gene, how do we get to more information about this NM? Does NCBI provide this?
-  * Have been looking into this. Can we make this shorter: http://www.ncbi.nlm.nih.gov/nuccore/?EntrezSystem2.PEntrez.DbConnector.LastQueryKey=1&EntrezSystem2.PEntrez.DbConnector.Cmd=file&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.sPresentation=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.FFormat=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.Db=nuccore&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.QueryKey=1&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.CurrFilter=all&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.ResultCount=1&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.Id=NM_004006.2&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.uid=238018044&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.FileFormat=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.LastPresentation=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.Presentation=docsum&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.PageSize=20&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.LastPageSize=20&EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_ResultsController.ResultCount=1&p%24a=EntrezSystem2.PEntrez.Nuccore.Sequence_ResultsPanel.Sequence_DisplayBar.SendToSubmit&p%24l=EntrezSystem2&p%24st=nuccore
-  * Or use eUtils???
 - Genen als HOXA@ en UGT1A zijn officieel een erkend gensymbool maar zijn families van genen; ze hebben een NG per groep genen, maar een NM per gen, en de Mutalyzer SOAP call flipt omdat die geen NC slice kan maken.
 
 

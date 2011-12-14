@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-11-17
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2011-12-13
+ * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -559,6 +559,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
         // Default values.
         $_POST = $_SESSION['data_wizard'];
 
+        $aVals = array();
         switch ($_POST['form_type']) {
             case 'text':
                 $aVals = array('size' => 30, 'maxlength' => 255);
@@ -1644,7 +1645,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
 
             print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
-            $nTargets = ($nTargets > 10? 10 : $nTargets);
+            $nTargets = ($nTargets > 15? 15 : $nTargets);
 
             // Array which will make up the form table.
             $aForm = array(
@@ -2200,6 +2201,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
 
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+    $nTargets = ($nTargets > 15? 15 : $nTargets);
 
     // Array which will make up the form table.
     $aForm = array_merge(

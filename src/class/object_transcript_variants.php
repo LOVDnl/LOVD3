@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-12-07
+ * Modified    : 2011-12-13
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -66,7 +66,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vot.*, ' .
-                                           't.id_ncbi';
+                                           't.geneid, t.id_ncbi';
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
                                            'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'vot.id';
@@ -74,7 +74,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // SQL code for viewing the list of variants
         // FIXME: we should implement this in a different way
         $this->aSQLViewList['SELECT']   = 'vot.*, ' .
-                                          't.id_ncbi, ' .
+                                          't.geneid, t.id_ncbi, ' .
                                           'e.name AS effect, ' .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
@@ -90,7 +90,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
                  array(
-                        'id_ncbi' => 'Transcript ID',
+                        'geneid_' => 'Gene',
+                        'id_ncbi_' => 'Transcript ID',
                         'effect_reported' => 'Affects function (reported)',
                         'effect_concluded' => 'Affects function (concluded)',
                       ),
@@ -102,6 +103,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
+                        'geneid' => array(
+                                    'view' => array('Gene', 70),
+                                    'db'   => array('t.geneid', 'ASC', true)),
                         'transcriptid' => array(
                                     'view' => array('Transcript ID', 90),
                                     'db'   => array('vot.transcriptid', 'ASC', true)),
@@ -155,7 +159,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // Loop through all transcripts to have each transcript's set of columns checked.
         global $_AUTH, $_CONF, $_SETT;
 
-        foreach(array_keys($this->aTranscripts) as $nTranscriptID) {
+        foreach (array_keys($this->aTranscripts) as $nTranscriptID) {
             if (empty($aData['ignore_' . $nTranscriptID])) {
                 foreach ($this->aColumns as $sCol => $aCol) {
                     $sCol = $nTranscriptID . '_' . $sCol;
@@ -198,7 +202,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         $this->aFormData = array();
         $this->aFormData[] = 'skip';
 
-        foreach($this->aTranscripts as $nTranscriptID => $aTranscript) {
+        foreach ($this->aTranscripts as $nTranscriptID => $aTranscript) {
             list($sTranscriptNM, $sGene) = $aTranscript;
             $aEffectForm = array(array('Affects function (reported)', '', 'select', $nTranscriptID . '_effect_reported', 1, $_SETT['var_effect'], false, false, false));
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
@@ -227,9 +231,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
     function insertAll ($aData, $aFields = array())
     {
-        foreach(array_keys($this->aTranscripts) as $nTranscriptID) {
+        foreach (array_keys($this->aTranscripts) as $nTranscriptID) {
             if (empty($aData['ignore_' . $nTranscriptID])) {
-                foreach($aFields as $sField) {
+                foreach ($aFields as $sField) {
                     if (strpos($sField, '/')) {
                         $aData[$sField] = $aData[$nTranscriptID . '_' . $sField];
                     }
@@ -292,7 +296,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         }
 
         $zData = array();
-        foreach($z as $aVariantOnTranscript) {
+        foreach ($z as $aVariantOnTranscript) {
             $aVariantOnTranscript = $this->autoExplode($aVariantOnTranscript);
             foreach ($this->aColumns as $sColClean => $aCol) {
                 $sCol = $aVariantOnTranscript['transcriptid'] . '_' . $sColClean;
@@ -324,8 +328,10 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
-            // STUB
+            $zData['effect'] = $_SETT['var_effect_short'][$zData['effectid']];
         } else {
+            $zData['geneid_'] = '<A href="genes/' . $zData['geneid'] . '">' . $zData['geneid'] . '</A>';
+            $zData['id_ncbi_'] = '<A href="transcripts/' . $zData['transcriptid'] . '">' . $zData['id_ncbi'] . '</A>';
             $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
             $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
         }
@@ -340,7 +346,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     function setAllDefaultValues ()
     {
         // Initiate default values of fields in $_POST.
-        foreach(array_keys($this->aTranscripts) as $nTranscriptID) {
+        foreach (array_keys($this->aTranscripts) as $nTranscriptID) {
             foreach (array_keys($this->aColumns) as $sColClean) {
                 $sCol = $nTranscriptID . '_' . $sColClean;
                 // Fill $_POST with the column's default value.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2011-12-05
+ * Modified    : 2011-12-09
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -92,7 +92,7 @@ if (!empty($_POST)) {
 
                 // The reason to invert the tables is to handle all foreign key constraints nicely.
                 $aTables = array_reverse($_TABLES);
-                $nTables = count($aTables) - 1;
+                $nTables = count($aTables);
 
                 $_BAR->setMessage('Removing data tables...');
 
@@ -155,7 +155,6 @@ if (!empty($_POST)) {
             }
             $nTables = count($aTables);
             // FIXME. remove later when TABLE_PATHOGENIC is exterminated in all LOVD installations.
-            // REMOVE ALSO the "- 1" on line 95!
             //print('  Found ' . $nTables . '/' . count($_TABLES) . ' tables.' . "\n");
             $_TABLES_cleaned = $_TABLES;
             unset($_TABLES_cleaned['TABLE_PATHOGENIC']);

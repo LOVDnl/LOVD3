@@ -3,7 +3,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2011-11-18
+ * Modified    : 2011-12-14
  * For LOVD    : 3.0-alpha-07
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
@@ -35,8 +35,8 @@ input, textarea, button, select {font-family : Verdana, Helvetica, Arial, sans-s
 select                          {padding-left : 0px; padding-right : 0px;}
 input:hover, input:focus, textarea:hover, textarea:focus, button:hover, select:hover, select:focus
                                 {background : #F0F3FF; border : 1px solid #112244;}
-input:disabled, select:disabled, .err:disabled
-								{color : #444444; background : #DDDDDD; border : 1px solid #333333;}
+input:disabled, select:disabled, .err:disabled, .err:hover:disabled
+                                {color : #444444; background : #DDDDDD; border : 1px solid #333333;}
 th                              {text-align : left;} /* Because IE auto-centers them */
 .bold                           {font-weight : bold;}
 
@@ -144,6 +144,7 @@ table.data a.hide               {color : #000000; text-decoration : none;} /* So
 table.data th                   {background : #AFC8FA; padding-left : 4px; padding-right : 4px;}
 table.data td                   {background : #F0F3FF; padding-left : 4px; padding-right : 4px;}
 table.data tr.data:hover td     {background : #C8DCFA;}
+table.data input:disabled       {color : #000000; background : #FFFFFF; border : 1px solid #224488;}
 /*table.data tr.del a             {color : #AAAAAA;}
 table.data tr.del td            {background : #F8FAFF; color : #AAAAAA;}
 table.data tr.del_hover a       {color : #AAAAAA;}
