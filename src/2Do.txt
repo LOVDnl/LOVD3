@@ -1,5 +1,11 @@
 Prioritize:
 ===========
+- http://127.0.0.1/LUMC_www/svn/LOVD3/trunk/src/columns/Individual/Remarks?remove
+  * Notice: Undefined variable: nTargets in /home/ifokkema/backup_LUMC_2011-12-14/www/svn/LOVD3/trunk/src/columns.php on line 2205
+  * Notice: Undefined variable: nTargets in /home/ifokkema/backup_LUMC_2011-12-14/www/svn/LOVD3/trunk/src/columns.php on line 2205
+- http://127.0.0.1/LUMC_www/svn/LOVD3/trunk/src/phenotypes/0000000001
+  * Notice: Undefined index: in /home/ifokkema/backup_LUMC_2011-12-14/www/svn/LOVD3/trunk/src/class/object_phenotypes.php on line 262
+- Add Individual/Parents/Father and /Mother.
 - Custom View:
   * Heeft geen link als geen individu getoond, anders naar variant, maar dat moet andersom!
   * Er gaat iets niet goed, die joins gaan niet goed.

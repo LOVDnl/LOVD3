@@ -27,10 +27,11 @@ php_flag mysql.trace_mode Off
     RewriteRule ^login(.*)$ login.php
     RewriteRule ^logout(.*)$ logout.php
     RewriteRule ^logs(.*)$ logs.php
+    RewriteRule ^pedigree(.*)$ pedigree.php
+    RewriteRule ^settings(.*)$ settings.php
+    RewriteRule ^setup(.*)$ setup.php
     RewriteRule ^uninstall(.*)$ uninstall.php
     RewriteRule ^users(.*)$ users.php
     RewriteRule ^variants(.*)$ variants.php
     RewriteRule ^view(.*)$ view.php
-    RewriteRule ^settings(.*)$ settings.php
-    RewriteRule ^setup(.*)$ setup.php
 </IfModule>
