@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-11-15
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-01-09
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -51,7 +51,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
-    $_DATA->viewList(false, 'diseaseids');
+    $_DATA->viewList(false, array('panelid', 'diseaseids'));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -184,10 +184,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('owned_by', 'statusid', 'created_by', 'created_date'),
+                            array('panelid', 'panel_size', 'owned_by', 'statusid', 'created_by', 'created_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
+            $_POST['panelid'] = (!empty($_POST['panelid'])? sprintf('%08d', $_POST['panelid']) : $_POST['panelid']);
             $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
             $_POST['created_by'] = $_AUTH['id'];
@@ -223,15 +224,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             // Save the individualid in $_SESSION so that other create forms know we are in the middle of a submission.
-            if (!isset($_SESSION['work']['submits'])) {
-                $_SESSION['work']['submits'] = array();
+            if (!isset($_SESSION['work']['submits']['individual'])) {
+                $_SESSION['work']['submits']['individual'] = array();
             }
-            while (count($_SESSION['work']['submits']) >= 10) {
-                unset($_SESSION['work']['submits'][min(array_keys($_SESSION['work']['submits']))]);
+            while (count($_SESSION['work']['submits']['individual']) >= 10) {
+                unset($_SESSION['work']['submits']['individual'][min(array_keys($_SESSION['work']['submits']['individual']))]);
             }
-            $_SESSION['work']['submits'][$nID] = array('id' => $nID, 'is_panel' => (false && $_POST['panel_size'] > 1? true : false));
+            $_SESSION['work']['submits']['individual'][$nID] = array('id' => $nID, 'panel_size' => $_POST['panel_size']);
             
-            $sPersons = (false && $_POST['panel_size'] > 1? 'this group of individuals' : 'this individual');
+            $sPersons = ($_POST['panel_size'] > 1? 'this group of individuals' : 'this individual');
             $sMessage = (empty($_POST['active_diseases'])? 'No diseases were selected for ' . $sPersons . '.\nThe phenotype information that can be submitted depends on the selected diseases.' : 'The disease' . (count($_POST['active_diseases']) > 1? 's' : '') . ' added to ' . $sPersons . ' do not have phenotype columns enabled yet.');
 
             require ROOT_PATH . 'inc-top.php';
@@ -319,10 +320,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('edited_by', 'edited_date'),
+                            array('panelid', 'panel_size', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
+            $_POST['panelid'] = (!empty($_POST['panelid'])? sprintf('%08d', $_POST['panelid']) : $_POST['panelid']);
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFields[] = 'owned_by';
                 $aFields[] = 'statusid';

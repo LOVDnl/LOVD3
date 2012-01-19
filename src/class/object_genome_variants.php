@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-12-13
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-19
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -183,6 +183,15 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
             }
         }
+
+        if (isset($this->aColumns['VariantOnGenome/DBID'])) {
+            if (empty($aData['VariantOnGenome/DBID'])) {
+                $aData['VariantOnGenome/DBID'] = $_POST['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
+            } elseif (!lovd_checkDBID($aData)) {
+                lovd_errorAdd('VariantOnGenome/DBID', 'Please enter a valid ID in the \'ID\' field or leave it blank and LOVD will predict it.');
+            }
+        }
+
         parent::checkFields($aData);
 
         if (!isset($aData['allele']) || !array_key_exists($aData['allele'], $_SETT['var_allele'])) {
@@ -190,11 +199,11 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         if (isset($aData['effect_reported']) && !array_key_exists($aData['effect_reported'], $_SETT['var_effect'])) {
-            lovd_errorAdd('effect_reported', 'Please select a proper pathogenicity from the \'Affects function (reported)\' selection box.');
+            lovd_errorAdd('effect_reported', 'Please select a proper functional effect from the \'Affects function (reported)\' selection box.');
         }
 
         if (isset($aData['effect_concluded']) && !array_key_exists($aData['effect_concluded'], $_SETT['var_effect'])) {
-            lovd_errorAdd('effect_concluded', 'Please select a proper pathogenicity from the \'Affects function (concluded)\' selection box.');
+            lovd_errorAdd('effect_concluded', 'Please select a proper functional effect from the \'Affects function (concluded)\' selection box.');
         }
 
         if (!empty($aData['chromosome']) && !array_key_exists($aData['chromosome'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'])) {
@@ -235,8 +244,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         if (!empty($_GET['geneid'])) {
             // Setting chromosome to $_POST so that insertEntry() will get the correct chromosome value as well. checkFields() will run getForm(), so it will always be available.
-            list($_POST['chromosome']) = list($sChromosome) = mysql_fetch_row(lovd_queryDB_Old('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id = ?', array($_GET['geneid'])));
-            $aFormChromosome = array('Chromosome', '', 'print', $sChromosome);
+            $aFormChromosome = array('Chromosome', '', 'print', $_POST['chromosome']);
         } elseif (ACTION == 'edit') {
             $aFormChromosome = array('Chromosome', '', 'print', $zData['chromosome']);
         } else {
@@ -276,7 +284,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'hr',
                         array('Allele', '', 'select', 'allele', 1, $_SETT['var_allele'], false, false, false),
                         array('', '', 'note', 'If you wish to report an homozygous variant, please select "Both (homozygous)" here.'),
-                        
                         $aFormChromosome,
                       ),
                  $this->buildForm(),

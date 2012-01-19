@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2011-12-07
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-19
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -81,8 +81,12 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
     list($nTranscriptID, $sTranscript) = each($aTranscripts);
-    if ($nTranscripts == 1) {
+    if ($nTranscripts == 0) {
+        $_GET['search_transcriptid'] = 0;
+        $sMessage = 'No transcripts or mapped variants found for this gene';
+    } elseif ($nTranscripts == 1) {
         $_GET['search_transcriptid'] = $nTranscriptID;
+        $sMessage = 'The variants shown are mapped on the ' . $sTranscript . ' transcript reference sequence.';
     } else {
         // Create select box.
         // We would like to be able to link to this list, focussing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.

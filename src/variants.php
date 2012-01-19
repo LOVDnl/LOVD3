@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2011-12-09
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-19
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -134,8 +134,12 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
     list($nTranscriptID, $sTranscript) = each($aTranscripts);
-    if ($nTranscripts == 1) {
+    if ($nTranscripts == 0) {
+        $_GET['search_transcriptid'] = 0;
+        $sMessage = 'No transcripts or mapped variants found for this gene';
+    } elseif ($nTranscripts == 1) {
         $_GET['search_transcriptid'] = $nTranscriptID;
+        $sMessage = 'The variants shown are mapped on the ' . $sTranscript . ' transcript reference sequence.';
     } else {
         // Create select box.
         // We would like to be able to link to this list, focussing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.
@@ -146,14 +150,16 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
         foreach ($aTranscripts as $nTranscriptID => $sTranscript) {
             $sSelect .= '<OPTION value="' . $nTranscriptID . '"' . ($_GET['search_transcriptid'] != $nTranscriptID? '' : ' selected') . '>' . $sTranscript . '</OPTION>';
         }
-        $sTranscript = $sSelect . '</SELECT>';
+        $sMessage = 'The variants shown are numbered using the ' . $sSelect . '</SELECT> transcript reference sequence.';
     }
-    lovd_showInfoTable('The variants shown are numbered using the ' . $sTranscript . ' transcript reference sequence.');
+    lovd_showInfoTable($sMessage);
 
-    require ROOT_PATH . 'class/object_custom_viewlists.php';
-    $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'));
-    $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
-    $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome'));
+    if ($nTranscripts > 0) {
+        require ROOT_PATH . 'class/object_custom_viewlists.php';
+        $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'));
+        $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
+        $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome'));
+    }
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -298,7 +304,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '        <TR onclick="window.location=\'variants?create&amp;reference=Genome' . (isset($_GET['target'])? '&amp;target=' . $_GET['target'] : '') . '\'">' . "\n" .
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
               '          <TD><B>I want to create a variant on genomic level &raquo;&raquo;</B></TD></TR>' . "\n" .
-              '        <TR onclick="$(\'#viewlistDiv_SelectGeneForSubmit\').toggle();">' . "\n" .
+              '        <TR onclick="$(\'#container\').toggle();">' . "\n" .
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
               '          <TD><B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B></TD></TR></TABLE><BR>' . "\n\n");
 
@@ -306,10 +312,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $_GET['page_size'] = 10;
         $_DATA = new LOVD_Gene();
         $_DATA->sRowLink = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
+        if (isset($_SESSION['viewlists'])) {
+            $_SESSION['viewlists']['SelectGeneForSubmit']['row_link'] = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
+        }
         $_GET['search_transcripts'] = '>0';
+        print('      <DIV id="container">' . "\n");
         $_DATA->viewList('SelectGeneForSubmit', array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
-        print('      <SCRIPT type="text/javascript">' . "\n" .
-              '        $("#viewlistDiv_SelectGeneForSubmit").hide();' . "\n" .
+        print('      </DIV>' . "\n" .
+              '      <SCRIPT type="text/javascript">' . "\n" .
+              '        $("#container").hide();' . "\n" .
               '      </SCRIPT>' . "\n");
 
         require ROOT_PATH . 'inc-bot.php';
@@ -351,6 +362,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     if (isset($sGene)) {
         require ROOT_PATH . 'class/object_transcript_variants.php';
         $_DATA['Transcript'][$sGene] = new LOVD_TranscriptVariant($sGene);
+        $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
+        $_POST['chromosome'] = $_DB->query('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn();
     }
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -401,10 +414,16 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             $bSubmit = false;
-            if (isset($_POST['screeningid']) && isset($_SESSION['work']['submits'])) {
-                foreach($_SESSION['work']['submits'] as $nIndividualID => $aSubmit) {
-                    if (in_array($_POST['screeningid'], $aSubmit['screenings'])) {
+            $sSubmitType = '';
+            if (isset($_POST['screeningid']) && isset($_SESSION['work']['submits']['screening'][$_POST['screeningid']])) {
+                $bSubmit = true;
+                $aSubmit = &$_SESSION['work']['submits']['screening'][$_POST['screeningid']];
+                $sSubmitType = 'screening';
+            } elseif (isset($_POST['screeningid']) && isset($_SESSION['work']['submits']['individual'])) {
+                foreach($_SESSION['work']['submits']['individual'] as $nIndividualID => &$aSubmit) {
+                    if (isset($aSubmit['screenings']) && in_array($_POST['screeningid'], $aSubmit['screenings'])) {
                         $bSubmit = true;
+                        $sSubmitType = 'individual';
                         $_POST['individualid'] = $nIndividualID;
                         break;
                     }
@@ -412,13 +431,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             if ($bSubmit) {
-                if (!isset($_SESSION['work']['submits'][$_POST['individualid']]['variants'])) {
-                    $_SESSION['work']['submits'][$_POST['individualid']]['variants'] = array();
+                if (!isset($aSubmit['variants'])) {
+                    $aSubmit['variants'] = array();
                 }
-                $_SESSION['work']['submits'][$_POST['individualid']]['variants'][] = $nID;
-                $sPersons = ($_SESSION['work']['submits'][$_POST['individualid']]['is_panel']? 'this group of individuals' : 'this individual');
+                $aSubmit['variants'][] = $nID;
             } else {
-                $_SESSION['work']['submits']['variantid'][$nID] = $nID;
+                $_SESSION['work']['submits']['variant'][$nID] = $nID;
             }
 
             if ($bSubmit) {
@@ -429,10 +447,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                       '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $_POST['screeningid'] . '\'">' . "\n" .
                       '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                       '          <TD><B>Yes, I want to submit more variants found by this mutation screening</B></TD></TR>' . "\n" .
+        ($sSubmitType == 'individual'?
                       '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
                       '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                      '          <TD><B>No, I want to submit another screening instead</B></TD></TR>' . "\n" .
-                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $_POST['individualid'] . '\'">' . "\n" .
+                      '          <TD><B>No, I want to submit another screening instead</B></TD></TR>' . "\n" : '') .
+                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'] . '\'">' . "\n" .
                       '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                       '          <TD><B>No, I have finished my submission</B></TD></TR></TABLE><BR>' . "\n\n");
                 require ROOT_PATH . 'inc-bot.php';
@@ -501,20 +520,17 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
         });
         var aTranscripts = {
-<?php 
+<?php
     if (isset($sGene)) {
         $i = 0;
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
             list($sTranscriptNM, $sGeneSymbol) = $aTranscript;
-            if ($i) {
-                echo ', ';
-            }
-            echo '\'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\']';
+            echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\']';
             $i++;
         }
     }
 
-    echo '};';
+    echo "\n" . '        };';
 
     foreach ($_POST as $key => $val) {
         if (substr($key, 0, 7) == 'ignore_') {
@@ -557,6 +573,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $_DATA = array();
     $_DATA['Genome'] = new LOVD_GenomeVariant();
     $zData = $_DATA['Genome']->loadEntry($nID);
+    $_POST['id'] = $nID;
+    $_POST['chromosome'] = $zData['chromosome'];
     if ($bGene) {
         require ROOT_PATH . 'class/object_transcript_variants.php';
         foreach ($aGenes as $sGene) {
@@ -565,6 +583,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 $zData = array_merge($zData, $_DATA['Transcript'][$sGene]->loadAll($nID));
             }
         }
+        $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
     }
 
     require ROOT_PATH . 'inc-lib-form.php';
@@ -677,22 +696,20 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    lovd_includeJS('inc-js-variants.php?chromosome=' . $_POST['chromosome']);
+    lovd_includeJS('inc-js-variants.php?chromosome=' . $zData['chromosome']);
 
     print('      <SCRIPT type="text/javascript">' . "\n" .
           '        var aTranscripts = ');
+
     if ($bGene) {
-        print('{');
+        print('{' . "\n");
         $i = 0;
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
             list($sTranscriptNM, $sGeneSymbol) = $aTranscript;
-            if ($i) {
-                echo ', ';
-            }
-            echo '\'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\']';
+            echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\']';
             $i++;
         }
-        print('}');
+        print("\n" . '        }');
     } else {
         print('false');
     }

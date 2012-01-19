@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2011-12-13
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-18
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -176,11 +176,11 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                     $this->aCheckMandatory[] = $nTranscriptID . '_effect_concluded';
                 }
                 if (isset($aData[$nTranscriptID . '_effect_reported']) && !array_key_exists($aData[$nTranscriptID . '_effect_reported'], $_SETT['var_effect'])) {
-                    lovd_errorAdd($nTranscriptID . '_effect_reported', 'Please select a proper pathogenicity from the \'Affects function (reported)\' selection box.');
+                    lovd_errorAdd($nTranscriptID . '_effect_reported', 'Please select a proper functional effect from the \'Affects function (reported)\' selection box.');
                 }
 
                 if (isset($aData[$nTranscriptID . '_effect_concluded']) && !array_key_exists($aData[$nTranscriptID . '_effect_concluded'], $_SETT['var_effect'])) {
-                    lovd_errorAdd($nTranscriptID . '_effect_concluded', 'Please select a proper pathogenicity from the \'Affects function (concluded)\' selection box.');
+                    lovd_errorAdd($nTranscriptID . '_effect_concluded', 'Please select a proper functional effect from the \'Affects function (concluded)\' selection box.');
                 }
             }
         }
@@ -231,6 +231,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
     function insertAll ($aData, $aFields = array())
     {
+        global $_AUTH;
+
         foreach (array_keys($this->aTranscripts) as $nTranscriptID) {
             if (empty($aData['ignore_' . $nTranscriptID])) {
                 foreach ($aFields as $sField) {

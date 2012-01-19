@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2011-12-06
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-11
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -138,12 +138,20 @@ class LOVD_Custom extends LOVD_Object {
             $this->aCustomLinks[$aLink['id']] = $aLink;
         }
 
-        // Hide entries that are not marked or public.
-        if ($this->sObject != 'Screening' && $_AUTH['level'] < LEVEL_CURATOR) {
-            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . 'statusid > ' . STATUS_HIDDEN;
-        }
+
 
         parent::__construct();
+
+        // Hide entries that are not marked or public.
+        if (in_array($this->sCategory, array('VariantOnGenome', 'VariantOnTranscript'))) {
+            $sAlias = 'vog';
+        } else {
+            $sAlias = strtolower($this->sCategory{0});
+        }
+        
+        if ($this->sObject != 'Screening' && $_AUTH['level'] < LEVEL_CURATOR) {
+            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '((' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '") OR ' . $sAlias . '.statusid > ' . STATUS_HIDDEN . ')';
+        }
     }
 
 

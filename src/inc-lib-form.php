@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2011-10-26
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-01-19
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -29,34 +29,90 @@
  *
  *************/
 
-/*
-DMD_SPECIFIC
-function lovd_checkDBID ($sGene, $sVariant, $sMutationCol = 'Variant/DNA', $sDBID, $nIDtoIgnore = 0)
+function lovd_checkDBID ($aData)
 {
-    // Checks if given $sVariant and $sDBID match. I.e., whether or not there is
+    // Checks if given variant and DBID match. I.e., whether or not there is
     // already an entry where this variant and DBID come together.
     // NOTE: We're assuming that the DBID field actually exists. Using this
     // function implies you've checked for it's presence.
-    // 2008-06-25; 2.0-08; All checks ignore the current variant, if the ID is given.
+    // All checks ignore the current variant, if the ID is given.
+    global $_DB;
 
-    // 2009-06-11; 2.0-19; GENE_00000 is always allowed.
-    if ($sDBID == substr($sGene, 0, strpos($sGene . '_', '_')) . '_00000') {
+    // GENE_000000 is always allowed.
+    $sSymbol = substr($aData['VariantOnGenome/DBID'], 0, strpos($aData['VariantOnGenome/DBID'], '_'));
+    $sGenomeVariant = '';
+    if (!empty($aData['VariantOnGenome/DNA'])) {
+        $sGenomeVariant = str_replace(array('(', ')', '?'), '', $aData['VariantOnGenome/DNA']);
+    }
+    if (!isset($aData['aTranscripts'])) {
+        $aData['aTranscripts'] = array();
+    }
+    $aTranscriptVariants = array();
+    foreach ($aData['aTranscripts'] as $nTranscriptID => $aTranscript) {
+        if (!empty($aData[$nTranscriptID . '_VariantOnTranscript/DNA'])) {
+            $aTranscriptVariants[$nTranscriptID] = str_replace(array('(', ')', '?'), '', $aData[$nTranscriptID . '_VariantOnTranscript/DNA']);
+        }
+    }
+
+    if (!empty($aData['aTranscripts'])) {
+        $aGenes = array();
+        foreach ($aData['aTranscripts'] as $nTranscriptID => $aTranscript) {
+            $aGenes[] = $aTranscript[1];
+            if (!isset($aData['ignore_' . $nTranscriptID]) && $aData['VariantOnGenome/DBID'] == $aTranscript[1] . '_000000') {
+                return true;
+            }
+        }
+    }
+
+    if ($aData['VariantOnGenome/DBID'] == 'chr' . $aData['chromosome'] . '_000000') {
         return true;
     }
 
-    $sVariant = str_replace(array('(', ')', '?'), '', $sVariant);
-    // Variant/DBID combo already exists?
-    list($n) = @mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE REPLACE(REPLACE(REPLACE(`' . $sMutationCol . '`, "(", ""), ")", ""), "?", "") = "' . $sVariant . '" AND `Variant/DBID` LIKE "' . $sDBID . '%"' . ($nIDtoIgnore? ' AND variantid != "' . $nIDtoIgnore . '"' : '')));
-    if (!$n) {
-        // Check if the chosen ID is empty, then.
-        list($n) = @mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE `Variant/DBID` LIKE "' . $sDBID . '%"' . ($nIDtoIgnore? ' AND variantid != "' . $nIDtoIgnore . '"' : '')));
-        if ($n) {
+    $nIDtoIgnore = 0;
+    if (!empty($aData['id'])) {
+        $nIDtoIgnore = $aData['id'];
+    }
+
+    $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ?', array($aData['VariantOnGenome/DBID']))->fetchColumn();
+    if ($nHasDBID && !empty($aData) && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
+        $sSQL = 'SELECT DISTINCT t.geneid, ' .
+                'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
+                'vog.`VariantOnGenome/DBID` ' .
+                'FROM ' . TABLE_VARIANTS . ' AS vog LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
+                'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
+                'WHERE (';
+        $aArgs = array();
+        $sWhere = '';
+        if (!empty($sGenomeVariant)) {
+            $sWhere .= '(REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?) ';
+            $aArgs = array_merge($aArgs, array($sGenomeVariant, $aData['chromosome']));
+        }
+        foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
+            $sWhere .= (!empty($sWhere)? 'OR ' : '') . '(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?) ';
+            $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
+        }
+        if (!empty($aData['VariantOnGenome/DBID'])) {
+            $sWhere .= ') AND vog.`VariantOnGenome/DBID` LIKE BINARY ? ';
+            $aArgs = array_merge($aArgs, array($aData['VariantOnGenome/DBID']));
+        }
+        if ($nIDtoIgnore > 0) {
+            $sWhere .= 'AND vog.id != ? ';
+            $aArgs[] = sprintf('%010d', $nIDtoIgnore);
+        }
+        $sSQL .= $sWhere . 'GROUP BY vog.id';
+        $aOutput = $_DB->query($sSQL, $aArgs)->fetchAllRow();
+        $nOptions = count($aOutput);
+
+        if (!$nOptions) {
             return false;
         }
+    } elseif (!empty($aGenes) && !in_array($sSymbol, $aGenes)) {
+        return false;
+    } elseif (empty($aGenes) && substr($aData['VariantOnGenome/DBID'], 0, 3) == 'chr' && $sSymbol != 'chr' . $aData['chromosome'] && !in_array($sSymbol, lovd_getGeneList())) {
+        return false;
     }
     return true;
 }
-*/
 
 
 
@@ -254,38 +310,86 @@ function lovd_formatMail ($aBody)
 
 
 
-/*
-DMD_SPECIFIC
-function lovd_fetchDBID ($sGene, $sVariant, $sMutationCol = 'Variant/DNA')
+function lovd_fetchDBID ($aData)
 {
-    // Searches through the $sGene variants to fetch lowest DBID belonging to
+    // Searches through the $aData variants to fetch lowest DBID belonging to
     // this variant, otherwise returns next variant ID not in use.
     // NOTE: We're assuming that the DBID field actually exists. Using this
     // function implies you've checked for it's presence.
+    global $_DB;
 
-    $sSymb = substr($sGene, 0, strpos($sGene . '_', '_'));
-    $lID = strlen($sSymb) + 6;
-    $sVariant = str_replace(array('(', ')', '?'), '', $sVariant);
-    // 2008-06-27; 2.0-08; Drop the regexp check. The field either contains an ID or not, and the actual regexp is much more extensive anyway!
-    list($sVariantDB, $sID) = @mysql_fetch_row(mysql_query('SELECT DISTINCT `' . $sMutationCol . '`, `Variant/DBID` FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE REPLACE(REPLACE(REPLACE(`' . $sMutationCol . '`, "(", ""), ")", ""), "?", "") = "' . $sVariant . '" AND `Variant/DBID` != "" ORDER BY `Variant/DBID`'));
-    if (empty($sVariantDB)) {
-        // Nieuwe!
-        list($sID) = @mysql_fetch_row(mysql_query('SELECT MAX(LEFT(`Variant/DBID`, ' . $lID . ')) FROM `' . TABLEPREFIX . '_' . mysql_real_escape_string($sGene) . '_variants` WHERE LEFT(`Variant/DBID`, ' . $lID . ') REGEXP "^' . $sSymb . '_[0-9]{5}"'));
-        if (!$sID) {
-            $sID = $sSymb . '_00001';
-        } else {
-            $nID = substr($sID, -5) + 1;
-            $sID = $sSymb . '_' . sprintf('%05d', $nID);
-        }
-    } else {
-        // 2009-08-26; 2.0-21; Select the first so-called word of the Variant/DBID field
-        // We're assuming here that the start of the DBID field will always be the ID, like the column's default RegExp forces.
-        preg_match('/^(\w+)\b/', $sID, $aMatches);
-        $sID = $aMatches[1];
+    $sGenomeVariant = '';
+    if (!empty($aData['VariantOnGenome/DNA'])) {
+        $sGenomeVariant = str_replace(array('(', ')', '?'), '', $aData['VariantOnGenome/DNA']);
     }
-    return $sID;
+    if (!isset($aData['aTranscripts'])) {
+        $aData['aTranscripts'] = array();
+    }
+    $aTranscriptVariants = array();
+    foreach ($aData['aTranscripts'] as $nTranscriptID => $aTranscript) {
+        if (!empty($aData[$nTranscriptID . '_VariantOnTranscript/DNA'])) {
+            $aTranscriptVariants[$nTranscriptID] = str_replace(array('(', ')', '?'), '', $aData[$nTranscriptID . '_VariantOnTranscript/DNA']);
+        }
+        $sGene = $aTranscript[1];
+    }
+
+    if (!empty($aData) && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
+        $sSQL = 'SELECT DISTINCT t.geneid, ' .
+                'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
+                'vog.`VariantOnGenome/DBID` ' .
+                'FROM ' . TABLE_VARIANTS . ' AS vog LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' .
+                'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
+                'WHERE ';
+        $aArgs = array();
+        $sWhere = '';
+        if (!empty($sGenomeVariant)) {
+            $sWhere .= '(REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?) ';
+            $aArgs = array_merge($aArgs, array($sGenomeVariant, $aData['chromosome']));
+        }
+        foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
+            $sWhere .= (!empty($sWhere)? 'OR' : '') . ' (REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?) ';
+            $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
+        }
+
+        $sSQL .= $sWhere . 'GROUP BY vog.id';
+        $aOutput = $_DB->query($sSQL, $aArgs)->fetchAllRow();
+        $nOptions = count($aOutput);
+
+        if (!$nOptions) {
+            $sSymbol = (isset($sGene)? $sGene : 'chr' . $aData['chromosome']);
+            $lID = strlen($sSymbol) + 7;
+            $sDBID = $_DB->query('SELECT RIGHT(MAX(LEFT(`VariantOnGenome/DBID`, ' . $lID . ')), 6) FROM ' . TABLE_VARIANTS . ' WHERE LEFT(`VariantOnGenome/DBID`, ' . $lID . ') REGEXP "^' . $sSymbol . '_[0-9]{6}"')->fetchColumn();
+            if (!$sDBID) {
+                $sDBID = $sSymbol . '_00001';
+            } else {
+                $nID = substr($sDBID, -6) + 1;
+                $sDBID = $sSymbol . '_' . sprintf('%06d', $nID);
+            }
+        } elseif ($nOptions == 1) {
+            $sDBID = $aOutput[0][2];
+        } else {
+            $sDBID = 'chr' . $aData['chromosome'] . '_999999';
+            foreach($aOutput as $aOption) {
+                if (preg_match('/^((.+)_(\d{6}))\b/', $aOption[2], $aMatches)) {
+                    $sSymbol = substr($sDBID, 0, strpos($sDBID, '_'));
+                    if ($aMatches[2] == $sSymbol && $aMatches[3] < substr($sDBID, -6)) {
+                        $sDBID = $aMatches[1];
+                    } elseif ($aMatches[2] != $sSymbol && isset($sGene) && $aMatches[2] == $sGene) {
+                        $sDBID = $aMatches[1];
+                    } elseif (substr($sSymbol, 0, 3) == 'chr' && substr($aMatches[2], 0, 3) != 'chr') {
+                        $sDBID = $aMatches[1];
+                    }
+                }
+            }
+            if ($sDBID == 'chr' . $aData['chromosome'] . '_999999') {
+                $sDBID = '';
+            }
+        }
+        return $sDBID;
+    } else {
+        return false;
+    }
 }
-*/
 
 
 

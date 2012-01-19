@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2011-11-25
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-12
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -221,30 +221,53 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID . ' for individual ' . $_POST['individualid'] . ' related to disease ' . $_POST['diseaseid']);
 
-            if (!isset($_SESSION['work']['submits'][$_POST['individualid']]['phenotypes'])) {
-                $_SESSION['work']['submits'][$_POST['individualid']]['phenotypes'] = array();
+            if (isset($_SESSION['work']['submits']['individual'][$_POST['individualid']])) {
+                $bSubmit = true;
+
+                $nPanel = $_SESSION['work']['submits']['individual'][$_POST['individualid']]['panel_size'];
+
+                if (!isset($_SESSION['work']['submits']['individual'][$_POST['individualid']]['phenotypes'])) {
+                    $_SESSION['work']['submits']['individual'][$_POST['individualid']]['phenotypes'] = array();
+                }
+
+                $_SESSION['work']['submits']['individual'][$_POST['individualid']]['phenotypes'][] = $nID;
+            } else {
+                $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_POST['individualid']))->fetchColumn();
+
+                if (!isset($_SESSION['work']['submits']['phenotype'])) {
+                    $_SESSION['work']['submits']['phenotype'] = array();
+                }
+
+                while (count($_SESSION['work']['submits']['phenotype']) >= 10) {
+                    unset($_SESSION['work']['submits']['phenotype'][min(array_keys($_SESSION['work']['submits']['phenotype']))]);
+                }
+
+                $_SESSION['work']['submits']['phenotype'][$nID] = $nID;
+
+                $bSubmit = false;
             }
 
-            $_SESSION['work']['submits'][$_POST['individualid']]['phenotypes'][] = $nID;
+            $sPersons = ($nPanel > 1? 'this group of individuals' : 'this individual');
 
-            $bSubmit = isset($_SESSION['work']['submits'][$_POST['individualid']]);
-            $sPersons = (!empty($_SESSION['work']['submits'][$_POST['individualid']]['is_panel'])? 'this group of individuals' : 'this individual');
-
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
-            print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n" .
-                  '      <TABLE border="0" cellpadding="5" cellspacing="1" class="option">' . "\n" .
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
-                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>Yes, I want to submit more phenotype information</B></TD></TR>' . "\n" .
-       ($bSubmit? '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
-                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" : '') .
-                /* FIXME; Once we have code to allow the user (and remind them) to continue the unfinished submission, we can enable this part again (although it would be nice to put a warning here, also).
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $_POST['individualid'] . '\'">' . "\n" .
-                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '' ) . '</B></TD></TR>'*/ '      </TABLE><BR>' . "\n\n");
-            require ROOT_PATH . 'inc-bot.php';
+            if ($bSubmit) {
+                require ROOT_PATH . 'inc-top.php';
+                lovd_printHeader(PAGE_TITLE);
+                print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n" .
+                      '      <TABLE border="0" cellpadding="5" cellspacing="1" class="option">' . "\n" .
+                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
+                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                      '          <TD><B>Yes, I want to submit more phenotype information</B></TD></TR>' . "\n" .
+                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
+                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                      '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" .
+          // FIXME; Remove this when it is possible to finish a submission half-way and continue later.
+                    /*'        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . ($bSubmit? 'individual/' . $_POST['individualid'] : 'phenotype/' . $nID) . '\'">' . "\n" .
+                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                      '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '') : '') . '</B></TD></TR>*/ '      </TABLE><BR>' . "\n\n");
+                require ROOT_PATH . 'inc-bot.php';
+            } else {
+                header('Location: ' . lovd_getInstallURL() . 'submit/finish/phenotype/' . $nID);
+            }
             exit;
         }
 
@@ -297,7 +320,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Edit an entry.
 
     $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
-    define('PAGE_TITLE', 'Edit an phenotype information entry');
+    define('PAGE_TITLE', 'Edit phenotype #' . $nID);
     define('LOG_EVENT', 'PhenotypeEdit');
 
     // Load appropiate user level for this phenotype entry.
@@ -398,7 +421,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Drop specific entry.
 
     $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
-    define('PAGE_TITLE', 'Delete phenotype information entry ' . $nID);
+    define('PAGE_TITLE', 'Delete phenotype #' . $nID);
     define('LOG_EVENT', 'PhenotypeDelete');
 
     // FIXME; hier moet een goede controle komen, wanneer lager is toegestaan.

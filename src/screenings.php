@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-11-17
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-01-12
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -190,13 +190,33 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
                 lovd_writeLog('Event', LOG_EVENT, 'Gene entries successfully added to screening ' . $nID);
             }
 
-            if (!isset($_SESSION['work']['submits'][$_POST['individualid']]['screenings'])) {
-                $_SESSION['work']['submits'][$_POST['individualid']]['screenings'] = array();
+            if (isset($_SESSION['work']['submits']['individual'][$_POST['individualid']])) {
+                $bSubmit = true;
+
+                $nPanel = $_SESSION['work']['submits']['individual'][$_POST['individualid']]['panel_size'];
+
+                if (!isset($_SESSION['work']['submits']['individual'][$_POST['individualid']]['screenings'])) {
+                    $_SESSION['work']['submits']['individual'][$_POST['individualid']]['screenings'] = array();
+                }
+
+                $_SESSION['work']['submits']['individual'][$_POST['individualid']]['screenings'][] = $nID;
+            } else {
+                $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_POST['individualid']))->fetchColumn();
+
+                if (!isset($_SESSION['work']['submits']['screening'])) {
+                    $_SESSION['work']['submits']['screening'] = array();
+                }
+
+                while (count($_SESSION['work']['submits']['screening']) >= 10) {
+                    unset($_SESSION['work']['submits']['screening'][min(array_keys($_SESSION['work']['submits']['screening']))]);
+                }
+
+                $_SESSION['work']['submits']['screening'][$nID] = array();
+
+                $bSubmit = false;
             }
 
-            $_SESSION['work']['submits'][$_POST['individualid']]['screenings'][] = $nID;
-            $sPersons = (false && $_POST['panel_size'] > 1? 'this group of individuals' : 'this individual');
-            $bSubmit = isset($_SESSION['work']['submits'][$_POST['individualid']]);
+            $sPersons = ($nPanel > 1? 'this group of individuals' : 'this individual');
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
@@ -209,9 +229,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
                   '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I want to submit another mutation screening on ' . $sPersons . ' instead</B></TD></TR>' . "\n" .
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $_POST['individualid'] . '\'">' . "\n" .
+      (!$bSubmit? '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . ($bSubmit? 'individual/' . $_POST['individualid'] : 'screening/' . $nID) . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '' ) . '</B></TD></TR>'*/'      </TABLE><BR>' . "\n\n");
+                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '') . '</B></TD></TR>' : '      ')*/ '      </TABLE><BR>' . "\n\n");
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }

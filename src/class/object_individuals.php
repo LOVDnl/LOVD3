@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-11-25
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-18
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *     
@@ -111,6 +111,8 @@ class LOVD_Individual extends LOVD_Custom {
         $this->aColumnsViewEntry = array_merge(
                  $this->buildViewEntry(),
                  array(
+                        'panelid_' => 'Panel ID',
+                        'panel_size' => 'Panel size',
                         'owner_' => 'Owner name',
                         'status' => 'Individual data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -128,6 +130,9 @@ class LOVD_Individual extends LOVD_Custom {
                         'id_' => array(
                                     'view' => array('Individual ID', 110),
                                     'db'   => array('i.id', 'ASC', true)),
+                        'panelid' => array(
+                                    'view' => array('Panel ID', 70),
+                                    'db'   => array('i.panelid', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(
@@ -143,6 +148,9 @@ class LOVD_Individual extends LOVD_Custom {
                         'variants_' => array(
                                     'view' => array('Variants', 75),
                                     'db'   => array('variants_', 'ASC', 'INT_UNSIGNED')),
+                        'panel_size' => array(
+                                    'view' => array('Panel size', 70),
+                                    'db'   => array('i.panel_size', 'DESC', true)),
                         'owner' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
@@ -159,11 +167,12 @@ class LOVD_Individual extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        global $_AUTH, $_SETT;
+        global $_AUTH, $_SETT, $_DB;
 
         // Mandatory fields.
         $this->aCheckMandatory =
                  array(
+                        'panel_size',
                         'owned_by',
                         'statusid',
                       );
@@ -171,12 +180,21 @@ class LOVD_Individual extends LOVD_Custom {
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
-            
+
             if (!empty($aData['statusid']) && $_AUTH['level'] < LEVEL_CURATOR) {
                 lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\'.');
             }
         }
         parent::checkFields($aData);
+
+        if (!empty($aData['panelid'])) {
+            $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ? AND panel_size > 1', array($aData['panelid']))->fetchColumn();
+            if (empty($nPanel)) {
+                lovd_errorAdd('panelid', 'No Panel found with this \'Panel ID\'');
+            } elseif ($nPanel <= $aData['panel_size']) {
+                lovd_errorAdd('panel_size', 'The entered \'Panel size\' must be lower than the \'Panel size\' of the panel with the entered \'Panel ID\'');
+            }
+        }
 
         // FIXME; eerst een concat om daarna te exploden????
         $qDiseases = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES);
@@ -186,7 +204,7 @@ class LOVD_Individual extends LOVD_Custom {
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
         // FIXME; parent::checkFields() heeft er toch al voor gezorgd dat $aData['active_diseases'] bestaat en een array is, of niet?
-        if (isset($aData['active_diseases'])) {
+        if (!empty($aData['active_diseases'])) {
             foreach ($aData['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $aDiseases)) {
                     lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease');
@@ -271,6 +289,9 @@ class LOVD_Individual extends LOVD_Custom {
                       ),
                  $this->buildForm(),
                  array(
+                        array('Panel size', '', 'text', 'panel_size', 10),
+                        array('', '', 'note', 'Fill in how many individuals this entry will represent.'),
+                        array('Panel ID', 'Fill in the ID to which this individual or group of individuals belong to.', 'text', 'panelid', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
@@ -313,6 +334,7 @@ class LOVD_Individual extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'entry') {
+            $zData['panelid_'] = (!empty($zData['panelid'])? '<A href="individuals/' . $zData['panelid'] . '">' . $zData['panelid'] . '</A>' : '-');
             $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
         }
 
@@ -326,7 +348,8 @@ class LOVD_Individual extends LOVD_Custom {
     function setDefaultValues ()
     {
         global $_AUTH;
-        
+
+        $_POST['panel_size'] = 1;
         $_POST['statusid'] = STATUS_OK;
         $_POST['owned_by'] = $_AUTH['id'];
         $this->initDefaultValues();
