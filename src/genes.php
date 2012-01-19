@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-12-01
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-18
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -182,6 +182,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                             lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' no longer exists in the HGNC database.');
                         } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $sGeneName, $aRegs)) {
                             lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' is deprecated, please use ' . $aRegs[1]);
+                        } elseif ($sChromLocation == 'reserved') {
+                            lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' does not yet have a public association with a chromosomal location');
                         }
                     } else {
                         lovd_errorAdd('hgnc_id', 'Entry was not found in the HGNC database.');
@@ -226,9 +228,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 // Get NC from LOVD
                 $_BAR->setMessage('Checking for NC...');
                 $_BAR->setProgress(33);
-                preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches); // FIXME; so what about chrM? Doesn't HGNC have those?
-                $sChromosome = $aMatches[1];
-                $sChromBand = $aMatches[2];
+
+                if ($sChromLocation == 'mitochondria') {
+                    $sChromosome = 'M';
+                    $sChromBand = '';
+                } else {
+                    preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches);
+                    $sChromosome = $aMatches[1];
+                    $sChromBand = $aMatches[2];
+                }
                 $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
 
                 // Get UDID from mutalyzer

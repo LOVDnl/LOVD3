@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2011-11-29
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-09
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
@@ -38,6 +38,13 @@ define('AJAX_DATA_ERROR', '9');
 
 function lovd_checkHGVS () {
     var oVariantDNA = $(this);
+    $(oVariantDNA).siblings('img:first').attr({
+        src: 'gfx/lovd_loading.gif',
+        width: '16px',
+        height: '16px',
+        alt: 'Loading...',
+        title: 'Loading...'
+    }).show();
     if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA') {
         var sVariantNotation = 'g:' + oVariantDNA.val(); // The actual chromosome is not important, it's just the syntax that matters here.
     } else {
@@ -52,7 +59,7 @@ function lovd_checkHGVS () {
                     alt: 'Not a valid HGVS syntax!',
                     title: 'Not a valid HGVS syntax!'
                 }).show();
-                if (aTranscripts) {
+                if (!$.isEmptyObject(aTranscripts)) {
                     $(oVariantDNA).siblings('button:eq(0)').hide();
                 }
 
@@ -62,7 +69,7 @@ function lovd_checkHGVS () {
                     alt: 'Valid HGVS syntax!',
                     title: 'Valid HGVS syntax!'
                 }).show();
-                if (aTranscripts) {
+                if (!$.isEmptyObject(aTranscripts)) {
                     $(oVariantDNA).siblings('button:eq(0)').show();
                 }
 

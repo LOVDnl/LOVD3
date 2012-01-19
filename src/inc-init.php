@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-12-14
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-19
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -96,7 +96,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-alpha-07',
+                            'version' => '3.0-alpha-07b',
                           ),
                 'user_levels' =>
                      array(
@@ -122,11 +122,11 @@ $_SETT = array(
 
                 'var_effect' =>
                      array(
-                            5 => 'Unknown',
+                            5 => 'Effect unknown',
                             9 => 'Affects function',
                             7 => 'Probably affects function',
-                            3 => 'Probably no functional effect',
-                            1 => 'No known functional effect',
+                            3 => 'Probably does not affect function',
+                            1 => 'Does not affect function',
                           ),
                 'var_effect_short' =>
                      array(

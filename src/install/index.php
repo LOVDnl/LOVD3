@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2011-08-12
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2012-01-18
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -304,9 +304,12 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     $nInstallSQL += $nCountries;
 
 
-    // (3) Creating administrator.
-    $aInstallSQL['Creating LOVD database administrator account...'] =
+    // (3) Creating LOVD user & administrator.
+    $aInstallSQL['Creating LOVD user & LOVD database administrator account...'] =
              array(
+                    'INSERT INTO ' . TABLE_USERS . '(name, created_date) VALUES ("LOVD", NOW())',
+                    'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
+                    'ALTER TABLE ' . TABLE_USERS . ' AUTO_INCREMENT = 1',
                     'INSERT INTO ' . TABLE_USERS . ' VALUES (NULL, "' . mysql_real_escape_string($_POST['name']) . '", "' . mysql_real_escape_string($_POST['institute']) . '", "' . mysql_real_escape_string($_POST['department']) . '", "' . mysql_real_escape_string($_POST['telephone']) . '", "' . mysql_real_escape_string($_POST['address']) . '", "' . mysql_real_escape_string($_POST['city']) . '", "' . mysql_real_escape_string($_POST['countryid']) . '", "' . mysql_real_escape_string($_POST['email']) . '", "' . mysql_real_escape_string($_POST['reference']) . '", "' . mysql_real_escape_string($_POST['username']) . '", "' . mysql_real_escape_string($_POST['password']) . '", "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', "' . mysql_real_escape_string($_POST['allowed_ip']) . '", 0, NOW(), 1, NOW(), NULL, NULL)',
                   );
     $nInstallSQL ++;
@@ -320,12 +323,12 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     $nInstallSQL += $nStatuses;
 
 
-    // (5) Registering LOVD variant pathogenicities.
-    $nPathogenicities = count($_SETT['var_pathogenic_short']);
-    foreach ($_SETT['var_pathogenic_short'] as $nPath => $sPath) {
-        $aInstallSQL['Registering LOVD variant pathogenicities...'][] = 'INSERT INTO ' . TABLE_PATHOGENIC . ' VALUES (' . $nPath . ', "' . $sPath . '")';
+    // (5) Registering LOVD variant functional effects.
+    $nFunctionalEffects = count($_SETT['var_effect_short']);
+    foreach ($_SETT['var_effect_short'] as $nPath => $sPath) {
+        $aInstallSQL['Registering LOVD variant functional effects...'][] = 'INSERT INTO ' . TABLE_EFFECT . ' VALUES (' . $nPath . ', "' . $sPath . '")';
     }
-    $nInstallSQL += $nPathogenicities;
+    $nInstallSQL += $nFunctionalEffects;
 
 
     // (6) Creating standard LOVD custom columns.

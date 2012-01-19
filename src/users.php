@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-12-02
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-18
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -730,9 +730,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
             $_POST['level'] = LEVEL_SUBMITTER;
             $_POST['login_attempts'] = 0;
             $_POST['last_login'] = $_POST['created_date'] = date('Y-m-d H:i:s');
-            $_POST['created_by'] = NULL;
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
+            $_DB->query('UPDATE ' . TABLE_USERS . ' SET created_by = id WHERE id = ?', array($nID));
 
             $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
             $_AUTH &= $_SESSION['auth'];

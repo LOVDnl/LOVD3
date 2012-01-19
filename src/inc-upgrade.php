@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-12-13
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-19
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *
@@ -164,6 +164,15 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
                                 'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=[1]\" target=\"_blank\">dbSNP</A>" WHERE id = 2 AND replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?type=rs&amp;rs=rs[1]\" target=\"_blank\">dbSNP</A>"',
                              ),
+                    '3.0-alpha-07b' =>
+                        array(
+                                'UPDATE ' . TABLE_COLS . ' SET form_type = "ID|This ID is used to group multiple instances of the same variant together. The ID starts with the gene symbol of the transcript most influenced by the variant or otherwise the closest gene, followed by an underscore (_) and the 6 digit ID code.|text|20" WHERE id = "VariantOnGenome/DBID"',
+                                'UPDATE ' . TABLE_COLS . ' SET description_form = "NOTE: This field will be predicted and filled in by LOVD, if left empty." WHERE id = "VariantOnGenome/DBID"',
+                                'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf\\\\d+-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf\\\\d+|[A-Z][A-Z0-9]+))_[0-9]{6}\\\\b/" WHERE id = "VariantOnGenome/DBID"',
+                                'UPDATE ' . TABLE_COLS . ' SET description_legend_short = REPLACE(description_legend_short, "Database", "DataBase"), description_legend_full = REPLACE(description_legend_full, "Database", "DataBase") WHERE id = "VariantOnGenome/DBID"',
+                                'INSERT INTO ' . TABLE_USERS . '(name, created_date) VALUES("LOVD", NOW())',
+                                'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0 WHERE username = ""',
+                             ),
                   );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -179,6 +188,16 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         if (in_array('VariantOnTranscript/DBID', $aColumns)) {
             $aUpdates['3.0-alpha-07'][] = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP COLUMN `VariantOnTranscript/DBID`';
         }
+    }
+
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-07b')) {
+        // DROP Individual/Times_Reported if it exists and copy its data to panel_size.
+        $aColumns = $_DB->query('DESCRIBE ' . TABLE_INDIVIDUALS)->fetchAllColumn();
+        if (in_array('Individual/Times_Reported', $aColumns)) {
+            $aUpdates['3.0-alpha-07b'][] = 'UPDATE ' . TABLE_INDIVIDUALS . ' SET panel_size = `Individual/Times_Reported`';
+            $aUpdates['3.0-alpha-07b'][] = 'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP COLUMN `Individual/Times_Reported`';
+        }
+        $aUpdates['3.0-alpha-07b'][] = 'DELETE FROM ' . TABLE_COLS . ' WHERE id = "Individual/Times_Reported"';
     }
 
 
