@@ -133,7 +133,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
               '          <TD>' . $zData['disclaimer_text_'] . '</TD></TR></TABLE><BR>' . "\n\n");
     }
 
-    $_GET['search_geneid'] = $sID;
+    $_GET['search_geneid'] = '="' . $sID . '"';
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Active transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcripts.php';
@@ -221,7 +221,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if (!lovd_error()) {
                 require ROOT_PATH . 'inc-top.php';
                 require ROOT_PATH . 'class/progress_bar.php';
-                require ROOT_PATH . 'inc-lib-genes.php';
                 
                 $sFormNextPage = '<FORM action="' . CURRENT_PATH . '?' . ACTION . '" id="createGene" method="post">' . "\n" .
                                  '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
@@ -543,8 +542,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     $sPath = $_PATH_ELEMENTS[0] . '?' . ACTION;
     if (GET) {
-        require ROOT_PATH . 'inc-lib-genes.php';
-
         $aRefseqGenomic = array();
         // Get LRG if it exists
         if ($sLRG = getLrgByGeneSymbol($sID)) {
@@ -982,6 +979,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             // We must have something non-empty here, otherwise the JS fails when selecting users.
             $_GET['search_id'] = '!0';
         }
+        $_GET['page_size'] = 10;
         $_DATA->sRowLink = 'javascript:lovd_authorizeUser(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_name}}\', \'{{zData_level}}\'); return false;';
         // FIXME; if all users have been selected, you get the message "No entries found for this gene!" which is a bit weird, but also I can't reload the viewList because I don't have a DIV.
         $_DATA->viewList('LOVDGeneAuthorizeUser', array('id', 'status_', 'last_login_', 'created_date_'), true); // Create known viewListID for lovd_unauthorizeUser().

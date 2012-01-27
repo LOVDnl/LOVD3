@@ -11,16 +11,32 @@
  * 2012-01-31
  *********/
  * Fixed bug; Sometimes transcripts where shown under a gene's detailed view
-   that belonged to genes with only a similar name. Closes #6: "showing active
-   transcripts".
+   that belonged to genes with only a similar name.
+   Closes #6: "showing active transcripts".
  * Fixed bug; Password reset tried to send an email even if the user was unknown
-   but it threw a PHP error instead.
-   
-   
-   
-   
-   
-   
+   but it threw a PHP error instead. Also, you can no longer check if a username
+   exists by using this function.
+ * The default page size for the viewList used to select curators is now 10.
+ * Fixed notices in columns.php.
+ * Fixed bug; Removing a VariantOnTranscript column that has been added to many
+   genes resulted in a very long selection list.
+ * Fixed bug; The row links from the view/GENE viewList were not correct.
+ * Fixed weird display of the view/GENE viewList when no transcripts or variants
+   are available.
+ * Added a column with the individual's disease(s) to the view/GENE viewList.
+
+
+
+
+
+
+
+
+
+
+
+
+
  * Added a user called LOVD for usage in (created|edited|updated)_by columns in case of LOVD making changes to the database itself
  * Fixed bug; The display for checkbox custom columns was not working properly when viewing the column properties
  * Fixed bug; When creating a custom (multiple) select column, LOVD would throw an error saying the select_options have to be numeric
@@ -71,6 +87,7 @@
 
 
 /*******************
+>>>>>>> .r110
  * 3.0 Alpha 07
  * 2011-12-14
  *********/

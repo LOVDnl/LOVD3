@@ -229,7 +229,6 @@ if (ACTION == 'create') {
 
         require ROOT_PATH . 'inc-top.php';
         require ROOT_PATH . 'class/progress_bar.php';
-        require ROOT_PATH . 'inc-lib-genes.php';
         require ROOT_PATH . 'inc-lib-form.php';
 
         // Generate a unique workID, that is sortable.

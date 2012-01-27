@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2011-12-09
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-27
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -31,7 +31,6 @@
 
 // STILL TODO:
 // Transcripts misschien niet altijd aan genen vast? microRNA's?
-// PATHOGENICITY.....
 // All those IDs for the genes!!! Store differently?
 // "Parental_origin and Origin attributes have been merged into one attribute called as genetic_source."
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
@@ -290,6 +289,7 @@ $aTableSQL =
     position_g_start INT UNSIGNED,
     position_g_end INT UNSIGNED,
     type VARCHAR(10),
+    mapping_flags TINYINT UNSIGNED NOT NULL,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,

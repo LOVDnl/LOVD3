@@ -1,10 +1,23 @@
 Prioritize:
 ===========
-- Add Individual/Parents/Father and /Mother.
+- (@Ivar) Add comments in checkDBID en fetchDBID
+- Diseases should be column in view/GENE
+- De Oostenrijkse DB sluit:
+  http://grenada.lumc.nl/LSDB_list/lsdb.php?action=view_all&symbol_start=DHCR7
+  (zie email van 9 jan)
+- (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
+- POST-beta-01:
+  - Allow to create new VOT with existing VOG
+  - Allow to connect a variant with two screenings
+  - Johan wil dat we bij de redirect("Successfully created *****") een knop zetten. Er moet dan een tekst staan met "You are being redirected, if not you can click here". Schijnbaar werkt de redirect soms niet.
+    + Redirect: zouden we dan misschien een functie moeten maken? Code voor een knopje met redirect (JS lijkt me het handigst?) in een lovd_showInfoTable() is dan best wel weer lang.
+  - Ook moeten we ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
+    + Submit: zou ik in de 2Do zetten en nog niet in de code, aangezien de curator nog niet kan importeren :)
+  - HGNC niet te bereiken? Nette foutmelding of mirror gebruiken?
+
+- Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
 - Custom View:
   * Heeft geen link als geen individu getoond, anders naar variant, maar dat moet andersom!
-  * Er gaat iets niet goed, die joins gaan niet goed.
-    - https://localhost/LOVDv.3.0-dev/view/SGCA/NM_001135697.1 geeft twee vars (2#12 en 1#12) maar dat kan helemaal niet (var 2 heeft die DNA niet)
   * The full data overview moet nog de varianten tonen, die óók in de individu gevonden zijn.
 - (@Ivar) Alle variant en/of data views uitbreiden met affects function en andere standaard kolommen die LOVD 2.0 ook toont.
   * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
@@ -13,19 +26,17 @@ Prioritize:
 - (@Ivar) Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
 - (@Ivar) Add comments in submit.php.
 - (@Ivar) Individuals, screenings, phenotypes hebben geen functionele anchor in de viewList.
-- Custom columns: niet consequent in hoofdletter gebruik bij meerdere woorden; zoals Times_Reported en Restriction_site.
 - IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
   * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET.
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
-- (@Ivar) Screening create: niet meer dan 20 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
+- (@Ivar) Screening create: niet meer dan 15 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
   * Na screening create: aangeven varianten gevonden? restrict lijst VOT met genen die gescreened zijn (reversible).
 - Kolom activeren per gen: moet via POST omdat via GET soms te lang is.
-- Fixed bug; MySQL handles 01 very different than '01' for VARCHAR columns, so lovd_queryDB() will now always quote integers.
-  * Doet PDO dit ook goed?
-  * Ivar: PDO doet '01' -> '01', '1' -> '1', 1 -> '1', 01 -> '1'. Dus alleen als je ongequote 01 geeft dan maakt PDO er een '1' van.
 - Delete user verder ontmoedigen?
+- VariantOnGenome/dbSNP column with rsID
+  * Beter heel nummer mét rs erbij.
 - Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
   * Currently, Object::prepareData() puts the link in every id_ column it can find.
 - We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!

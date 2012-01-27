@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-01-26
+ * Modified    : 2012-01-27
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1902,7 +1902,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
     // If ALTER time is large enough, mention something about it.
     if ($tAlter > $tAlterMax) {
-        lovd_showInfoTable('Please note that the time estimated to add this column to the ' . $aTableInfo['table_name'] . ' data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table is possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
+        lovd_showInfoTable('Please note that the time estimated to add this column to the ' . $aTableInfo['table_name'] . ' data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table are possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
     }
 
     lovd_errorPrint();

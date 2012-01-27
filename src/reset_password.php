@@ -4,13 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2011-10-18
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-01-26
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *
  *
  *
  * This file is part of LOVD.
@@ -55,8 +54,13 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
         // Find account.
         $zData = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username']))->fetchAssoc();
         if (!$zData) {
-            lovd_errorAdd('This username does not exist.');
-            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for inexistent/denied account ' . $_POST['username']);
+            // If username does not exist, we don't want to let the user know. So this message in entire incorrect.
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            print('      Successfully reset your password.<BR>' . "\n" .
+                  '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login.php">unlock your account</A> and choose a new password.<BR><BR>' . "\n\n");
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
         }
 
         if (!lovd_error()) {
@@ -138,6 +142,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             exit;
 
         } else {
+            unset($_POST['username']);
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for denied account ' . $_POST['username']);
         }
     }

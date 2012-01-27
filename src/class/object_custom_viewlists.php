@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2011-12-14
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-27
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -112,6 +112,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
+                        $aSQL['SELECT'] .= ', vog.id AS row_id'; // To ensure other table's id columns don't interfere.
                         $aSQL['FROM'] = TABLE_VARIANTS . ' AS vog';
                         $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS)->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vog.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
@@ -135,6 +136,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.*';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
+                        $aSQL['SELECT'] .= ', vot.id AS row_id'; // To ensure other table's id columns don't interfere.
                         $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
                         $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vot.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
@@ -189,7 +191,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'Individual':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.*';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY d.symbol SEPARATOR ", ") AS diseases_';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';
@@ -221,6 +223,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                         }
                         $aSQL['FROM'] .= ')';
                     }
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' .
+                                     TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) LEFT OUTER JOIN ' .
+                                     TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)';
                     break;
             }
         }
@@ -273,7 +278,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         // First data table in view.
                         $this->sSortDefault = 'VariantOnGenome/DNA';
                     }
-                    $this->sRowLink = 'variants/{{zData_id}}#{{zData_transcriptid}}';
+                    $this->sRowLink = 'variants/{{zData_row_id}}#{{zData_transcriptid}}';
                     break;
 
                 case 'VariantOnTranscript':
@@ -309,7 +314,13 @@ class LOVD_CustomViewList extends LOVD_Object {
 
                 case 'Individual':
                     $sPrefix = 'i.';
-                    // No fixed columns.
+                    // The fixed columns.
+                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
+                         array(
+                                'diseases_' => array(
+                                            'view' => array('Disease', 175),
+                                            'db'   => array('diseases_', false, true)),
+                              ));
                     if (!$this->sSortDefault) {
                         $this->sSortDefault = 'id';
                     }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2012-01-19
+ * Modified    : 2012-01-27
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,12 +81,11 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
     list($nTranscriptID, $sTranscript) = each($aTranscripts);
-    if ($nTranscripts == 0) {
-        $_GET['search_transcriptid'] = 0;
-        $sMessage = 'No transcripts or mapped variants found for this gene';
+    if (!$nTranscripts) {
+        $sMessage = 'No transcripts or variants found for this gene.';
     } elseif ($nTranscripts == 1) {
         $_GET['search_transcriptid'] = $nTranscriptID;
-        $sMessage = 'The variants shown are mapped on the ' . $sTranscript . ' transcript reference sequence.';
+        $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
     } else {
         // Create select box.
         // We would like to be able to link to this list, focussing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.
@@ -98,12 +97,15 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
             $sSelect .= '<OPTION value="' . $nTranscriptID . '"' . ($_GET['search_transcriptid'] != $nTranscriptID? '' : ' selected') . '>' . $sTranscript . '</OPTION>';
         }
         $sTranscript = $sSelect . '</SELECT>';
+        $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
     }
-    lovd_showInfoTable('The variants shown are numbered using the ' . $sTranscript . ' transcript reference sequence.');
+    lovd_showInfoTable($sMessage);
 
-    require ROOT_PATH . 'class/object_custom_viewlists.php';
-    $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome', 'Screening', 'Individual'), $sGene);
-    $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome'));
+    if ($nTranscripts > 0) {
+        require ROOT_PATH . 'class/object_custom_viewlists.php';
+        $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome', 'Screening', 'Individual'), $sGene);
+        $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome'));
+    }
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

@@ -175,7 +175,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              ),
                     '3.0-alpha-07c' =>
                         array(
-                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN mapping_flags TINYINT UNSIGNED NOT NULL',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN mapping_flags TINYINT UNSIGNED NOT NULL AFTER type',
                                 'ALTER TABLE ' . TABLE_USERS . ' AUTO_INCREMENT = 1',
                                 'UPDATE ' . TABLE_COLS . ' SET edited_by = 0 WHERE id = "VariantOnGenome/DBID"',
                                 'UPDATE ' . TABLE_COLS . ' SET width = 80 WHERE id = "VariantOnGenome/DBID"',
