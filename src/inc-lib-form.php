@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-01-19
+ * Modified    : 2012-01-23
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -73,7 +73,7 @@ function lovd_checkDBID ($aData)
         $nIDtoIgnore = $aData['id'];
     }
 
-    $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ?', array($aData['VariantOnGenome/DBID']))->fetchColumn();
+    $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ? AND vog.id != ?', array($aData['VariantOnGenome/DBID'], $nIDtoIgnore))->fetchColumn();
     if ($nHasDBID && !empty($aData) && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
         $sSQL = 'SELECT DISTINCT t.geneid, ' .
                 'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
@@ -360,7 +360,7 @@ function lovd_fetchDBID ($aData)
             $lID = strlen($sSymbol) + 7;
             $sDBID = $_DB->query('SELECT RIGHT(MAX(LEFT(`VariantOnGenome/DBID`, ' . $lID . ')), 6) FROM ' . TABLE_VARIANTS . ' WHERE LEFT(`VariantOnGenome/DBID`, ' . $lID . ') REGEXP "^' . $sSymbol . '_[0-9]{6}"')->fetchColumn();
             if (!$sDBID) {
-                $sDBID = $sSymbol . '_00001';
+                $sDBID = $sSymbol . '_000001';
             } else {
                 $nID = substr($sDBID, -6) + 1;
                 $sDBID = $sSymbol . '_' . sprintf('%06d', $nID);

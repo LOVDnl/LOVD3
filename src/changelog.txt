@@ -7,6 +7,70 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 01
+ * 2012-01-31
+ *********/
+ * Fixed bug; Sometimes transcripts where shown under a gene's detailed view
+   that belonged to genes with only a similar name. Closes #6: "showing active
+   transcripts".
+ * Fixed bug; Password reset tried to send an email even if the user was unknown
+   but it threw a PHP error instead.
+   
+   
+   
+   
+   
+   
+ * Added a user called LOVD for usage in (created|edited|updated)_by columns in case of LOVD making changes to the database itself
+ * Fixed bug; The display for checkbox custom columns was not working properly when viewing the column properties
+ * Fixed bug; When creating a custom (multiple) select column, LOVD would throw an error saying the select_options have to be numeric
+ * Fixed bug; When removing a non-shared custom column, you would get a notice
+ * The new LOVD user can now no longer be viewed in users/00000 & all links to this user have been turned into text
+ * All standard custom columns & custom links have now been set to Created by = LOVD
+ * Implemented custom columns edit page
+ * The column width can now no longer allow more than 3 digits
+ * It is now possible to edit/create up to 5 columns simultaneously in different tabs/windows without losing data
+ * Changed the copyright message to include 2012 in the bottom of LOVD
+ * Implemented a dynamic change of the example below the 'width' input field in the custom columns edit & create forms
+ * Fixed bug; The variant create form would throw a notice
+ * Fixed bug; Added a proper message when there are no transcripts available OR there is only one available when on (variants|view)/<geneSymbol>, preventing a bug in the viewList
+ * Fixed bug; Prevented a variant from being added to the same target every time due to a bug in the code
+ * Fixed bug; Prevented a notice from occurring regarding the chromosome in the variant edit form
+ * Fixed bug; Variants which were not public where still viewable in some viewLists
+ * Rewrote the submission mailing process, so that screenings & phenotypes can be added to an individual properly with a notification mail to the curator(s) and such
+ * Implemented panelid & panel size
+ * Implemented VariantOnGenome/DBID check & predict functions into the variant create and edit forms
+ * Corrected some pathogenicity error messages on the variant forms
+ * Fixed bug; Installing LOVD would cause a notice, because pathogenicity was not yet changed to functional effect
+ * Fixed bug; The map variant button did not properly check if there are no transcripts
+ * Changed the VariantOnGenome/DBID descriptions, regular expression pattern check and form type for the new LOVD3 implementation
+ * Removed Individual/Times_Reported and copied its data to panel size
+ * Changed some of the functional effect option names
+ * Added a loading image implementation to the HGVS check on the variant create & edit form
+ * Genes with a mitchondrial location can now be added in the create gene form
+ * The code from "register as submitter" now fills the Created by column with that user id instead of leaving it empty
+ * Gene symbols with a 'reserved' chromosomal location will not be allowed to be added to LOVD since mutalyzer cannot do anything if the chromosome is not known
+ * Sometimes the variant create or edit forms would take a long time to load, this has now been fixed
+ * Changed the default width for "VariantOnGenome/DBID" from 200 to 80
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************
  * 3.0 Alpha 07
  * 2011-12-14
  *********/

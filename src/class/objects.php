@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-01-19
+ * Modified    : 2012-01-27
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -408,7 +408,9 @@ class LOVD_Object {
         $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
         foreach($aUserColumns as $sUserColumn) {
             // FIXME; ik krijg hoofdpijn van deze lange regel... wordt dit wel in een viewList toegepast? Links in een viewList verstoren nu de boel. De code kan simpeler. Ook moet er wat commentaar bij..
-            (isset($zData[$sUserColumn])? $zData[$sUserColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . ($sView == 'list'? '' : '_')] . '</A>' : 'N/A') : false);
+            if (!empty($zData[$sUserColumn]) && $zData[$sUserColumn] != '00000') {
+                (isset($zData[$sUserColumn])? $zData[$sUserColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . ($sView == 'list'? '' : '_')] . '</A>' : 'N/A') : false);
+            }
         }
 
         $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');

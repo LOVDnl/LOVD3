@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-01-18
+ * Modified    : 2012-01-27
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -35,6 +35,33 @@ require ROOT_PATH . 'inc-init.php';
 if ($_AUTH) {
     // If authorized, check for updates.
     require ROOT_PATH . 'inc-upgrade.php';
+}
+
+
+
+
+
+function lovd_getLRGbyGeneSymbol ($sGeneSymbol)
+{
+    // Get LRG reference sequence 
+    preg_match('/(LRG_\d+)\s+' . $sGeneSymbol . '/', implode(' ', lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt')), $aMatches);
+    if(!empty($aMatches)) {
+        return $aMatches[1];
+    }
+    return false;
+}
+
+
+
+
+
+function lovd_getNGbyGeneSymbol ($sGeneSymbol)
+{
+    preg_match('/' . $sGeneSymbol . '\s+(NG_\d+\.\d+)/', implode(' ', lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt')), $aMatches);
+    if (!empty($aMatches)) {
+        return $aMatches[1];
+    }
+    return false;
 }
 
 
@@ -214,14 +241,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 // Get LRG if it exists
                 $aRefseqGenomic = array();
                 $_BAR->setMessage('Checking for LRG...');
-                if ($sLRG = getLrgByGeneSymbol($sSymbol)) {
+                if ($sLRG = lovd_getLRGbyGeneSymbol($sSymbol)) {
                     $aRefseqGenomic[] = $sLRG;
                 }
 
                 // Get NG if it exists
                 $_BAR->setMessage('Checking for NG...');
                 $_BAR->setProgress(16);
-                if ($sNG = getNgByGeneSymbol($sSymbol)) {
+                if ($sNG = lovd_getNGbyGeneSymbol($sSymbol)) {
                     $aRefseqGenomic[] = $sNG;
                 }
 

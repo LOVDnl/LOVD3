@@ -9,7 +9,7 @@
  *
  * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *
  *
  *
  * This file is part of LOVD.
@@ -58,7 +58,7 @@ if (empty($_STAT)) {
 <?php
 print('      Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n");
 ?>
-      &copy;2004-2010 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>
+      &copy;2004-2012 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>
     </TD>
   </TR>
 </TABLE>

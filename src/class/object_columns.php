@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-11-16
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-01-26
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -54,7 +54,7 @@ class LOVD_Column extends LOVD_Object {
         // Default constructor.
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT c.*, SUBSTRING_INDEX(c.id, "/", 1) AS category, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, (a.created_by > 0) AS active FROM ' . TABLE_COLS . ' AS c LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) WHERE c.id = ?';
+        $this->sSQLLoadEntry = 'SELECT c.*, SUBSTRING_INDEX(c.id, "/", 1) AS category, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, (a.created_by > 0) AS active, GROUP_CONCAT(c2l.linkid SEPARATOR ";") AS _active_links FROM ' . TABLE_COLS . ' AS c LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) LEFT OUTER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (c.id = c2l.colid) WHERE c.id = ?';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'c.*, SUBSTRING_INDEX(c.id, "/", 1) AS category, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, (a.created_by > 0) AS active, uc.name AS created_by_, ue.name AS edited_by_';
@@ -149,11 +149,16 @@ class LOVD_Column extends LOVD_Object {
                         'mysql_type',
                         'form_type',
                       );
+
+        if (ACTION == 'edit') {
+            unset($this->aCheckMandatory['colid']);
+        }
+
         parent::checkFields($aData);
 
         // ColID format.
-        if ($aData['colid'] && !preg_match('/^[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)*$/', $aData['colid'])) {
-            lovd_errorAdd('colid', 'The column ID is not of the correct format. It can contain only letters, numbers and underscores. Subcategories must be devided by a slash (/).');
+        if (!empty($aData['colid']) && !preg_match('/^[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)*$/', $aData['colid'])) {
+            lovd_errorAdd('colid', 'The column ID is not of the correct format. It can contain only letters, numbers and underscores. Subcategories must be divided by a slash (/).');
         }
 
         // ColID must not exist in the database.
@@ -162,6 +167,12 @@ class LOVD_Column extends LOVD_Object {
             if ($n) {
                 lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
             }
+        }
+
+        // Width can not be more than 3 digits.
+        if (!empty($aData['width']) && $aData['width'] > 999) {
+            $aData['width'] = 999;
+            lovd_errorAdd('width', 'The width can not be more than 3 digits!');
         }
 
         // MySQL type format.
@@ -183,24 +194,20 @@ class LOVD_Column extends LOVD_Object {
     {
         // Build the form.
 //        global $_AUTH, $_SETT, $_PATH_ELEMENTS;
-        global $_PATH_ELEMENTS;
+        global $_PATH_ELEMENTS, $_DB;
 
         // Get links list, to connect column to link.
-        $aLinks = array();
-        $qLinks = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name');
-        $nLinks = mysql_num_rows($qLinks);
-        $nLinkSize = ($nLinks < 10? $nLinks : 10);
-        while ($r = mysql_fetch_row($qLinks)) {
-            $aLinks[$r[0]] = $r[1];
-        }
+        $qLinks = $_DB->query('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name');
+        $nLinkSize = $qLinks->rowCount();
+        $nLinkSize = ($nLinkSize < 10? $nLinkSize : 10);
+        $aLinks = $qLinks->fetchAllCombine();
 
         // Array which will make up the form table.
         $this->aFormData =
                  array(
-                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('POST', '', '', '', '60%', '14', '40%'),
                         array('', '', 'print', '<B>Column name and descriptions</B>'),
                         'hr',
-//          'category' => array('Category', '', 'select', 'category', 1, $aCategories, true, false, false),
           'category' => array('', '', 'print', '<I>Selected category: ' . $_POST['category'] . '</I>'),
              'colid' => array('Column ID', '', 'text', 'colid', 30),
         'colid_note' => array('', '', 'note', 'This ID must be unique and may contain only letters, numbers and underscores. Subcategories must be divided by a slash (/), such as \'{{ EXAMPLE }}\'.'),
@@ -211,7 +218,7 @@ class LOVD_Column extends LOVD_Object {
                         'skip',
                         array('', '', 'print', '<B>Data and form settings</B> (Use data type wizard to change values)'),
                         'hr',
-                        array('', '', 'print', '<BUTTON type="button" onclick="javascript:lovd_openWindow(\'' . $_PATH_ELEMENTS[0] . '?data_type_wizard\', \'DataTypeWizard\', 800, 400); return false;">Start data type wizard</BUTTON>'),
+                        array('', '', 'print', '<BUTTON type="button" onclick="javascript:lovd_openWindow(\'' . $_PATH_ELEMENTS[0] . '?data_type_wizard&workID=' . $_POST['workID'] . '\', \'DataTypeWizard\', 800, 400); return false;">Start data type wizard</BUTTON>'),
                         array('MySQL data type', '<B>Experts only!</B> Only change this field manually when you know what you\'re doing! Otherwise, use the data type wizard by clicking the button above this field.', 'text', 'mysql_type', 30),
                         array('Form type', '<B>Experts only!</B> Only change this field manually when you know what you\'re doing! Otherwise, use the data type wizard by clicking the button above the MySQL data type field.', 'text', 'form_type', 30),
                         'hr',
@@ -235,6 +242,7 @@ class LOVD_Column extends LOVD_Object {
                         array('Active custom links', '', 'select', 'active_links', $nLinkSize, $aLinks, false, true, true),
                         'hr',
                         'skip',
+      'apply_to_all' => array('Apply changes to all {{ UNIT }} where this column is active', '', 'checkbox', 'apply_to_all'),
                         array('Enter your password for authorization', '', 'password', 'password', 20));
 
         // Change some text on the form.
@@ -242,6 +250,7 @@ class LOVD_Column extends LOVD_Object {
             case 'Individual':
                 unset($this->aFormData['settings_note']);
                 unset($this->aFormData['standard']);
+                unset($this->aFormData['apply_to_all']);
                 $this->aFormData['colid_note'][3] = str_replace('{{ EXAMPLE }}', 'Geograpic_origin/Country', $this->aFormData['colid_note'][3]);
                 break;
             case 'Phenotype':
@@ -251,15 +260,18 @@ class LOVD_Column extends LOVD_Object {
                 $this->aFormData['width'][0] .= ' *';
                 $this->aFormData['mandatory'][0] .= ' *';
                 $this->aFormData['public_view'][0] .= ' *';
+                $this->aFormData['apply_to_all'][0] = str_replace('{{ UNIT }}', 'diseases', $this->aFormData['apply_to_all'][0]);
                 break;
             case 'Screening':
                 unset($this->aFormData['settings_note']);
                 unset($this->aFormData['standard']);
+                unset($this->aFormData['apply_to_all']);
                 $this->aFormData['colid_note'][3] = str_replace('{{ EXAMPLE }}', 'Protocol/Date_updated', $this->aFormData['colid_note'][3]);
                 break;
             case 'VariantOnGenome':
                 unset($this->aFormData['settings_note']);
                 unset($this->aFormData['standard']);
+                unset($this->aFormData['apply_to_all']);
                 $this->aFormData['colid_note'][3] = str_replace('{{ EXAMPLE }}', 'Frequency/dbSNP', $this->aFormData['colid_note'][3]); // FIXME; I think this example sucks.
                 break;
             case 'VariantOnTranscript':
@@ -269,13 +281,14 @@ class LOVD_Column extends LOVD_Object {
                 $this->aFormData['width'][0] .= ' *';
                 $this->aFormData['mandatory'][0] .= ' *';
                 $this->aFormData['public_view'][0] .= ' *';
+                $this->aFormData['apply_to_all'][0] = str_replace('{{ UNIT }}', 'genes', $this->aFormData['apply_to_all'][0]);
                 break;
         }
-/*
-// Het hele formulier moet anders met het editen... het display gedeelte moet apart denk ik - "edit display settings"; variant en phenotype cols hebben "set defaults for new genes/diseases", alle hebben "edit data types" ofzo.
+
+        // Het hele formulier moet anders met het editen... het display gedeelte moet apart denk ik - "edit display settings"; variant en phenotype cols hebben "set defaults for new genes/diseases", alle hebben "edit data types" ofzo.
         if (ACTION == 'edit') {
+            unset($this->aFormData['colid'], $this->aFormData['colid_note']);
         }
-*/
 
         return parent::getForm();
     }
@@ -328,7 +341,7 @@ class LOVD_Column extends LOVD_Object {
         // FIXME; for titles use tooltips?
         $zData['active_']      = '<IMG src="gfx/mark_' . (int) $zData['active'] . '.png" alt="" width="11" height="11">';
         $zData['hgvs_']        = '<IMG src="gfx/mark_' . $zData['hgvs'] . '.png" alt="" title="This column is ' . ($zData['hgvs']? '' : 'not ') . 'required by the HGVS standards for sequence variant databases" width="11" height="11">';
-        $zData['standard_']    = '<IMG src="gfx/mark_' . $zData['standard'] . '.png" title="This column is ' . ($zData['standard']? '' : 'not ') . 'enabled by default" alt="" width="11" height="11">';
+        $zData['standard_']    = '<IMG src="gfx/mark_' . $zData['standard'] . '.png" alt="" title="This column is ' . ($zData['standard']? '' : 'not ') . 'enabled by default" width="11" height="11">';
         $zData['public_view_'] = '<IMG src="gfx/mark_' . $zData['public_view'] . '.png" alt="" width="11" height="11">';
         $zData['created_by_']  = ($zData['created_by_']? $zData['created_by_'] : 'LOVD');
 

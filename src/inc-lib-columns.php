@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-04-08
- * For LOVD    : 3.0-pre-19
+ * Modified    : 2012-01-23
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -32,7 +32,7 @@
 function lovd_describeFormType ($zData) {
     // Returns sensible form type information based on form type code.
 
-    if (!is_array($zData) || empty($zData['form_type']) || substr_count($zData['form_type'], '|') < 3) {
+    if (!is_array($zData) || empty($zData['form_type']) || substr_count($zData['form_type'], '|') < 2) {
         return false;
     }
 
@@ -51,6 +51,8 @@ function lovd_describeFormType ($zData) {
             if ($nOptions) {
                 $sFormType .= ' (' . ($aFormType[5] == 'true'? 'multiple; ' : '') . $nOptions . ' option' . ($nOptions == 1? '' : 's') . ')';
             }
+            break;
+        case 'checkbox':
             break;
     }
 

@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-09-10
- * Modified    : 2011-04-20
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2012-12-26
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -40,6 +41,7 @@ if (!defined('ROOT_PATH')) {
 class ProgressBar {
     // This class creates a progress bar that can be controlled in various ways.
     var $sID = '';
+    var $nCurrentPercentage = 0;
 
 
 
@@ -157,8 +159,12 @@ class ProgressBar {
             $nPercentage = round($nPercentage);
         }
 
-        print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '.style.width = \'' . $nPercentage . '%\'; oPB_' . $this->sID . '_value.innerHTML = \'' . $nPercentage . '%\'; </SCRIPT>' . "\n");
-        flush();
+        if ($this->nCurrentPercentage != $nPercentage) {
+            // Only 'update' the percentage if it actually changes...
+            $this->nCurrentPercentage = $nPercentage;
+            print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '.style.width = \'' . $nPercentage . '%\'; oPB_' . $this->sID . '_value.innerHTML = \'' . $nPercentage . '%\'; </SCRIPT>' . "\n");
+            flush();
+        }
         return $nPercentage;
     }
 }

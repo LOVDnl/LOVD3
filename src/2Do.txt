@@ -1,10 +1,5 @@
 Prioritize:
 ===========
-- http://127.0.0.1/LUMC_www/svn/LOVD3/trunk/src/columns/Individual/Remarks?remove
-  * Notice: Undefined variable: nTargets in /home/ifokkema/backup_LUMC_2011-12-14/www/svn/LOVD3/trunk/src/columns.php on line 2205
-  * Notice: Undefined variable: nTargets in /home/ifokkema/backup_LUMC_2011-12-14/www/svn/LOVD3/trunk/src/columns.php on line 2205
-- http://127.0.0.1/LUMC_www/svn/LOVD3/trunk/src/phenotypes/0000000001
-  * Notice: Undefined index: in /home/ifokkema/backup_LUMC_2011-12-14/www/svn/LOVD3/trunk/src/class/object_phenotypes.php on line 262
 - Add Individual/Parents/Father and /Mother.
 - Custom View:
   * Heeft geen link als geen individu getoond, anders naar variant, maar dat moet andersom!
@@ -13,20 +8,15 @@ Prioritize:
   * The full data overview moet nog de varianten tonen, die óók in de individu gevonden zijn.
 - (@Ivar) Alle variant en/of data views uitbreiden met affects function en andere standaard kolommen die LOVD 2.0 ook toont.
   * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
-- (@Ivar) LOVD user maken (ID 00000) die niet bekijkbaar is, maar wel gebruikt wordt om te markeren dat processen automatisch zijn verlopen. Alle custom cols en links etc created_by daarop zetten in install scripts.
-  * Liefst ook in inc-upgrade er voor zorgen, dat alle bekende custom links en cols de created_by op 0 krijgen!
-- (@Ivar) Panel implementeren; Times_reported weg (waardes kopieëren), viewEntries titels aanpassen (ook nog andere tekst?)
 - (@Ivar) ViewEntry Individual -> Add phenotype information to individual -> (finish) -> Hoe ga ik nu terug naar de individu?
 - (@Ivar) viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
 - (@Ivar) Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
 - (@Ivar) Add comments in submit.php.
 - (@Ivar) Individuals, screenings, phenotypes hebben geen functionele anchor in de viewList.
 - Custom columns: niet consequent in hoofdletter gebruik bij meerdere woorden; zoals Times_Reported en Restriction_site.
-- IVO: Edit custom columns implement
 - IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
   * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET.
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
-- (@Ivar) FIXME; implement check on DBID if variant HAS NO GENES OR TRANSCRIPTS.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
 - (@Ivar) Screening create: niet meer dan 20 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
@@ -36,12 +26,10 @@ Prioritize:
   * Doet PDO dit ook goed?
   * Ivar: PDO doet '01' -> '01', '1' -> '1', 1 -> '1', 01 -> '1'. Dus alleen als je ongequote 01 geeft dan maakt PDO er een '1' van.
 - Delete user verder ontmoedigen?
-- VariantOnGenome/dbSNP column with rsID (integer only!)
-  * integer only... is dat wel handig? Misschien toch beter rs nummer?
 - Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
   * Currently, Object::prepareData() puts the link in every id_ column it can find.
 - We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
-- LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!!??
+- LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!?!?
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - Alpha 07: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
@@ -143,7 +131,7 @@ Prioritize:
     SOAP response :
             senv:Server - string index out of range
     (met genomic ref hebben we dezelfde foutmelding)
-    * Ivar: het gaat hier specifiek om de UD die mist. Mutalyzer zil deze hebben voor het binnen halen van de transcript gegevens.
+    * Ivar: het gaat hier specifiek om de UD die mist. Mutalyzer wil deze hebben voor het binnen halen van de transcript gegevens.
 - Geheugengebruik hoog vanwege session: Ook fix nodig voor viewList data? Blijft ook hangen.
 - Vanaf beta moeten bij bugfixes de datum en versie gezet worden.
 - Bij installatie controleren of er een mailserver is? Poort 25 check?

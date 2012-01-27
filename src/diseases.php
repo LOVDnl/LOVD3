@@ -320,7 +320,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             foreach ($_POST['genes'] as $sGene) {
                 if (!in_array($sGene, $zData['genes']) && $sGene != 'None') {
                     // FIXME; Nu dat PDO beschikbaar is, doe dit in een prepared statement met multiple executes.
-                    // Add gene to gene.
+                    // Add disease to gene.
                     $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
                     if (!$q) {
                         $aFailed[] = $sGene;

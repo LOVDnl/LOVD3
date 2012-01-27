@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2011-12-13
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-01-26
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -310,11 +310,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of losing data!', 'warning');
         }
 
-        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '&amp;workID=' . $_GET['workID'] . '" method="post">' . "\n");
 
         // If we've been here before, select last used option.
-        if (!empty($_SESSION['data_wizard']['form_type'])) {
-            $_POST['form_type'] = $_SESSION['data_wizard']['form_type'];
+        if (!empty($_SESSION['data_wizard'][$_GET['workID']]['form_type'])) {
+            $_POST['form_type'] = $_SESSION['data_wizard'][$_GET['workID']]['form_type'];
         }
 
         // Form types.
@@ -348,7 +348,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
     }
 
     // Store in SESSION.
-    $_SESSION['data_wizard']['form_type'] = $_POST['form_type'];
+    $_SESSION['data_wizard'][$_GET['workID']]['form_type'] = $_POST['form_type'];
 
 
 
@@ -394,7 +394,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
                 $aCheckN['rows'] = 'Height on form (lines)';
                 break;
         }
-        if (substr($_POST['form_type'], 0, 5) != 'select') {
+
+        if (substr($_POST['form_type'], 0, 6) != 'select') {
             $aCheckN = $aCheckM;
             unset($aCheckN['name']);
         }
@@ -459,7 +460,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
                 if (!isset($_POST[$key])) {
                     $_POST[$key] = '';
                 }
-                $_SESSION['data_wizard'][$key] = $_POST[$key];
+                $_SESSION['data_wizard'][$_GET['workID']][$key] = $_POST[$key];
             }
 
             // MySQL and Form type.
@@ -557,7 +558,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
 
     } else {
         // Default values.
-        $_POST = $_SESSION['data_wizard'];
+        global $_DB;
+
+        $_POST = $_SESSION['data_wizard'][$_GET['workID']];
 
         $aVals = array();
         switch ($_POST['form_type']) {
@@ -585,7 +588,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
         }
 
         foreach ($aVals as $key => $val) {
-            $_POST[$key] = (!empty($_SESSION['data_wizard'][$key])? $_SESSION['data_wizard'][$key] : $val);
+            $_POST[$key] = (!empty($_SESSION['data_wizard'][$_GET['workID']][$key])? $_SESSION['data_wizard'][$_GET['workID']][$key] : $val);
         }
     }
 
@@ -716,7 +719,13 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     $_DATA = new LOVD_Column();
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (count($_POST) > 1) {
+    // Generate a unique workID, that is sortable.
+    if (!isset($_POST['workID'])) {
+        $nTime = gettimeofday();
+        $_POST['workID'] = $nTime['sec'] . $nTime['usec'];
+    }
+
+    if (count($_POST) > 2) {
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
@@ -760,7 +769,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             // Clean up...
-            $_SESSION['data_wizard'] = array();
+            $_SESSION['data_wizard'][$_POST['workID']] = array();
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created column ' . $_POST['id'] . ' (' . $_POST['head_column'] . ')');
@@ -787,7 +796,16 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     } else {
         // Default values.
         $_DATA->setDefaultValues();
-        $_SESSION['data_wizard'] = array();
+
+        if (!isset($_SESSION['data_wizard'])) {
+            $_SESSION['data_wizard'] = array();
+        }
+
+        while (count($_SESSION['data_wizard']) >= 5) {
+            unset($_SESSION['data_wizard'][min(array_keys($_SESSION['data_wizard']))]);
+        }
+
+        $_SESSION['data_wizard'][$_POST['workID']] = array();
     }
 
 
@@ -806,7 +824,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
           '        <INPUT type="hidden" name="select_options" value="' . $_POST['select_options'] . '">' . "\n" .
           '        <INPUT type="hidden" name="preg_pattern" value="' . $_POST['preg_pattern'] . '">' . "\n" .
 // FIXME; remove this when implemented properly.
-          '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n");
+          '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n" .
+          '        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -817,6 +836,27 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
+
+?>
+<SCRIPT>
+function lovd_setWidth () {
+    var line = $(this).parent().parent().next().children(':last').children(':first');
+    if ($(this).attr('value') > 999) {
+        $(this).attr('value', 999);
+        alert('The width cannot be more than 3 digits!');
+        return false;
+    }
+    $(line).attr('width', $(this).attr('value'));
+    $(line).next().next().html('(This is ' + $(this).attr('value') + ' pixels)');
+    return false;
+}
+
+$( function () {
+    $('input[name="width"]').change(lovd_setWidth);
+});
+
+</SCRIPT>
+<?php
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -829,7 +869,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
     // URL: /columns/Variant/DNA?edit
     // Edit specific column.
-die();
 
     $aCol = $_PATH_ELEMENTS;
     unset($aCol[0]); // 'columns';
@@ -848,329 +887,284 @@ die();
 
     // Require form functions.
     require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'inc-lib-columns.php';
+
+    // Generate a unique workID, that is sortable.
+    if (!isset($_POST['workID'])) {
+        $nTime = gettimeofday();
+        $_POST['workID'] = $nTime['sec'] . $nTime['usec'];
+    }
+
+    $aColumnInfo = lovd_getTableInfoByCategory($sCategory);
+    // If type has changed... take action!
+    // Check size of table where this column needs to be added to and determine necessary time.
+    $tAlterMax = 5; // If it takes more than 5 seconds, complain.
+    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE ?', array($aColumnInfo['table_sql']))->fetchAssoc();
+    $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
+    $nSizeIndexes = $zStatus['Index_length'];
+    // Calculating time it could take to rebuild the table. This is just an estimate and it depends
+    // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
+    // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
+    // (results of some quick benchmarks in September 2010 by ifokkema)
+    $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
 
     if (count($_POST) > 1) {
-/*********************************
+
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
 
-        // Mandatory fields.
-        $aCheck =
-                 array(
-                        'head_column' => 'Column heading',
-                        'description_legend_short' => 'Description on short legend',
-                        'description_legend_full' => 'Description on full legend',
-                        'mysql_type' => 'MySQL data type',
-                        'form_type' => 'Form type',
-                        'password' => 'Enter your password for authorization',
-                      );
-
-        foreach ($aCheck as $key => $val) {
-            if (empty($_POST[$key])) {
-                lovd_errorAdd($key, 'Please fill in the \'' . $val . '\' field.');
-            }
-        }
-
-        // FIXME; are we just assuming that select_options, preg_pattern and form_format are OK?
-
-        // MySQL type format.
-        // 2009-02-16; 2.0-16; Allow for input of default values using "DEFAULT ..."
-        // 2009-06-16; 2.0-19; Added DECIMAL, DATE and DATETIME types.
-        if ($_POST['mysql_type'] && !preg_match('/^(TEXT|VARCHAR\([0-9]{1,3}\)|DATE(TIME)?|((TINY|SMALL|MEDIUM|BIG)?INT\([0-9]{1,2}\)|DECIMAL\([0-9]{1,2}\,[0-9]{1,2}\))( UNSIGNED)?)( DEFAULT ([0-9]+|"[^"]+"))?$/i', stripslashes($_POST['mysql_type']))) {
-            lovd_errorAdd('mysql_type', 'The MySQL data type is not recognized. Please use the data type wizard to generate a proper MySQL data type.');
-        }
-
-        // User had to enter his/her password for authorization.
-        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
-            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
-
         if (!lovd_error()) {
-            // FIXME; Warning if MySQL type has been changed... possibly loss of data will occur.
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
 
-            // First, alter all tables who have this column. Less problematic if things go wrong.
-            if ($zData['mysql_type'] != stripslashes($_POST['mysql_type'])) {
-                // Type changed... take action!
-                $aSQL = array();
-                if (substr($zData['colid'], 0, 7) == 'Variant') {
-                    // Check genes to find if column is active.
-                    $aGenes = lovd_getGeneList();
-                    foreach ($aGenes as $sSymbol) {
-                        list($b) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
-                        if ($b) {
-                            // Column present in this gene.
-                            // 2009-02-16; 2.0-16; Added stripslashes to allow receiving quotes. This variable has been checked using regexps, so can be considered safe.
-                            $aSQL[TABLEPREFIX . '_' . $sSymbol . '_variants'] = 'ALTER TABLE ' . TABLEPREFIX . '_' . $sSymbol . '_variants MODIFY COLUMN `' . $zData['colid'] . '` ' . stripslashes($_POST['mysql_type']);
-                        }
-                    }
+            // Fields to be used.
+            $aFields = array('width', 'standard', 'mandatory', 'head_column', 'description_form', 'description_legend_short', 'description_legend_full', 'mysql_type', 'form_type', 'select_options', 'preg_pattern', 'public_view', 'public_add', 'allow_count_all', 'edited_by', 'edited_date');
 
+            // Prepare values.
+            $_POST['standard'] = (isset($_POST['standard'])? $_POST['standard'] : $zData['standard']); 
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
+
+            $sMessage = 'Editing columns MySQL type' . ($tAlter < 4? '' : '(this make take some time)') . '...';
+
+            // If ALTER time is large enough, mention something about it.
+            if ($tAlter > $tAlterMax) {
+                lovd_showInfoTable('Please note that the time estimated to edit this columns MySQL type is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table are possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
+            }
+
+            require ROOT_PATH . 'class/progress_bar.php';
+            // This already puts the progress bar on the screen.
+            $_BAR = new ProgressBar('', $sMessage);
+
+            define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
+            require ROOT_PATH . 'inc-bot.php';
+            // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
+            flush();
+
+
+
+            if ($zData['mysql_type'] != $_POST['mysql_type']) {
+                // Now, start with ALTER TABLE if necessary, since that will take the longest time and ends a transaction anyway.
+                // If it fails directly after this, one can always just redo the edit. LOVD will detect properly that it still needs to be edited in TABLE_COLS.
+                $aColumns = $_DB->query('DESCRIBE ' . $aColumnInfo['table_sql'])->fetchAllColumn();
+                if (in_array($sColumnID, $aColumns)) {
+                    // Column active for this table.
+                    // This variables have been checked using regexps, so can be considered safe.
+                    $q = $_DB->query('ALTER TABLE ' . $aColumnInfo['table_sql'] . ' MODIFY COLUMN `' . $sColumnID . '` ' . $_POST['mysql_type']);
+                }
+            }
+
+            $_BAR->setProgress(80);
+            $_BAR->setMessage('Editing column information...');
+
+            // Update entry.
+            $_DATA->updateEntry($sColumnID, $_POST, $aFields);
+
+            // Change active custom links?
+            // Remove custom links.
+            $aToRemove = array();
+            foreach ($zData['active_links'] as $nLinkID) {
+                if ($nLinkID && !in_array($nLinkID, $_POST['active_links'])) {
+                    // User has requested removal...
+                    $aToRemove[] = $nLinkID;
+                }
+            }
+            if ($aToRemove) {
+                $q = $_DB->query('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($sColumnID), $aToRemove));
+                if (!$q) {
+                    // Silent error.
+                    // FIXME; deze log entries zijn precies andersom dan bij create (wat wordt aan wat toegevoegd/verwijderd). Dat moeten we standaardiseren, maar wellicht even overleggen over LOVD-breed.
+                    lovd_writeLog('Error', LOG_EVENT, 'Custom link' . (count($aToRemove) > 1? 's' : '') . ' ' . implode(', ', $aToRemove) . ' could not be removed from column ' . $sColumnID);
                 } else {
-                    // Patient column.
-                    list($b) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
-                    if ($b) {
-                        // Column present in patient table.
-                        // 2009-02-16; 2.0-16; Added stripslashes to allow receiving quotes. This variable has been checked using regexps, so can be considered safe.
-                        $aSQL[TABLE_PATIENTS] = 'ALTER TABLE ' . TABLE_PATIENTS . ' MODIFY COLUMN `' . $zData['colid'] . '` ' . stripslashes($_POST['mysql_type']);
-                    }
-                }
-
-                // If we've got any entries in $aSQL, go ahead...
-                $nSQL = count($aSQL);
-                if ($nSQL) {
-                    // Loop needed queries...
-                    foreach ($aSQL as $sTable => $sQ) {
-                        $q = mysql_query($sQ);
-                        if (!$q) {
-                            $sError = mysql_error(); // Save the mysql_error before it disappears.
-                            require ROOT_PATH . 'inc-top.php';
-                            lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
-                            lovd_dbFout('ColEditError', $sQ, $sError, false);
-                            lovd_showInfoTable('Error while modifying ' . $sTable . ' table!<BR>This may indicate an error in the MySQL data definition. For more information, see the error log.', 'warning');
-                            lovd_showInfoTable('Unfortunately, due to an error I cannot continue to edit the column. Your changes are lost.', 'stop');
-                            require ROOT_PATH . 'inc-bot.php';
-                            exit;
-                        }
-                    }
+                    lovd_writeLog('Event', LOG_EVENT, 'Custom link' . (count($aToRemove) > 1? 's' : '') . ' ' . implode(', ', $aToRemove) . ' successfully removed from column ' . $sColumnID);
                 }
             }
 
-
-
-            // Use ::updateEntry() here!
-            // Query text.
-            $sQ = 'UPDATE ' . TABLE_COLS . ' SET ';
-
-            // Standard fields to be used.
-            $aQ = array('standard', 'mandatory', 'head_column', 'description_form', 'description_legend_short', 'description_legend_full', 'mysql_type', 'form_type', 'select_options', 'preg_pattern', 'public_view', 'public_add', 'allow_count_all');
-
-            foreach ($aQ as $key => $val) {
-                $sQ .= ($key? ', ' : '') . $val . ' = "' . $_POST[$val] . '"';
+            // Add custom links.
+            $aSuccess = array();
+            $aFailed = array();
+            $q = $_DB->prepare('INSERT IGNORE INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)');
+            foreach ($_POST['active_links'] as $nLinkID) {
+                if (!in_array($nLinkID, $zData['active_links'])) {
+                    // Add custom link to column.
+                    $q->execute(array($sColumnID, $nLinkID));
+                    if (!$q) {
+                        $aFailed[] = $nLinkID;
+                    } else {
+                        $aSuccess[] = $nLinkID;
+                    }
+                }
             }
-
-            $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
-
-            $q = mysql_query($sQ);
-            if (!$q) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
-                lovd_dbFout('ColEdit', $sQ, $sError);
+            if ($aFailed) {
+                // Silent error.
+                lovd_writeLog('Error', LOG_EVENT, 'Custom link' . (count($aFailed) > 1? 's' : '') . ' ' . implode(', ', $aFailed) . ' could not be added to column ' . $sColumnID);
+            }
+            if ($aSuccess) {
+                lovd_writeLog('Event', LOG_EVENT, 'Custom link' . (count($aSuccess) > 1? 's' : '') . ' ' . implode(', ', $aSuccess) . ' successfully added to column ' . $sColumnID);
             }
 
             // Write to log...
-            lovd_writeLog('MySQL:Event', 'ColEdit', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully edited column ' . $zData['colid'] . ' (' . $_POST['head_column'] . ')');
+            lovd_writeLog('Event', LOG_EVENT, 'Edited column ' . $sColumnID . ' (' . $_POST['head_column'] . ')');
 
+            $_BAR->setProgress(90);
 
-
-            // 2009-04-15; 2.0-18; Allow to update all active columns as well.
-            // Fields to be used.
-            $aColsToCopy = array('mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public_view', 'public_add');
-
+            // Allow to update all active columns as well.
             if ($_POST['apply_to_all']) {
-                if (substr($zData['colid'], 0, 7) == 'Variant') {
-                    // Variant column.
-                    // Check all genes; update will just fail if column is not active for a particular gene.
-                    $aGenes = lovd_getGeneList();
-                    foreach ($aGenes as $sSymbol) {
-                        $sQ = 'UPDATE ' . TABLEPREFIX . '_' . $sSymbol . '_columns SET ';
-                        foreach ($aColsToCopy as $key => $val) {
-                            $sQ .= ($key? ', ' : '') . $val . ' = "' . $_POST[$val] . '"';
-                        }
-                        $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
+                $_BAR->setMessage('Applying new default settings for this column to all ' . $aColumnInfo['unit'] . 's...');
 
-                        $q = mysql_query($sQ);
-                        if (mysql_affected_rows()) {
-                            // Write to log...
-                            lovd_writeLog('MySQL:Event', 'ColEdit', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully edited variant column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ') in ' . $sSymbol . ' gene');
-                        }
-                    }
+                // Fields to be used.
+                $aColsToCopy = array('width', 'col_order', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public_view', 'public_add');
 
-                } else {
-                    // Patient column.
-                    $sQ = 'UPDATE '. TABLE_PATIENTS_COLS . ' SET ';
+                if ($aColumnInfo['shared']) {
+                    $sSQL = 'UPDATE ' . TABLE_SHARED_COLS . ' SET ';
+                    $aArgs = array();
                     foreach ($aColsToCopy as $key => $val) {
-                        $sQ .= ($key? ', ' : '') . $val . ' = "' . $_POST[$val] . '"';
+                        $sSQL .= ($key? ', ' : '') . $val . ' = ?';
+                        $aArgs[] = $_POST[$val];
                     }
-                    $sQ .= ', edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
+                    $sSQL .= ', edited_by = ?, edited_date = ? WHERE colid = ?';
+                    $aArgs[] = $_AUTH['id'];
+                    $aArgs[] = $_POST['edited_date'];
+                    $aArgs[] = $sColumnID;
 
-                    $q = mysql_query($sQ);
-                    if (mysql_affected_rows()) {
+                    $q = $_DB->query($sSQL, $aArgs);
+                    if ($q->rowCount()) {
                         // Write to log...
-                        lovd_writeLog('MySQL:Event', 'ColEdit', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully edited patient column ' . $zData['colid'] . ' (' . mysql_real_escape_string($zData['head_column']) . ')');
+                        lovd_writeLog('Error', LOG_EVENT, 'Column ' . $sColumnID . ' reset to new defaults for all ' . $aColumnInfo['unit'] . 's');
                     }
                 }
             }
 
-
-
-            // 2008-12-02; 2.0-15; Change active columns. added by Gerard
-            // Fetch columns link is currently active for.
-            $aLinksActive = array();
-            $q = mysql_query('SELECT l.linkid, l.linkname FROM ' . TABLE_COLS2LINKS . ' AS c2l LEFT JOIN ' . TABLE_LINKS . ' AS l USING (linkid) WHERE c2l.colid = "' . $zData['colid'] . '"');
-            while (list($nLinkID, $sLinkName) = mysql_fetch_row($q)) {
-                $aLinksActive[$nLinkID] = $sLinkName;
-            }
-
-            // To prevent errors to show up on screen.
-            if (!isset($_POST['active_links'])) {
-                $_POST['active_links'] = array();
-            }
-
-            // Remove link.
-            foreach ($aLinksActive AS $nLinkID => $sLinkName) {
-                if (!in_array($nLinkID, $_POST['active_links'])) {
-                    // User has requested removal...
-                    $q = mysql_query('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE linkid = "' . $nLinkID . '" AND colid = "' . $zData['colid'] . '"');
-                    if (!$q) {
-                        // Silent error.
-                        lovd_writeLog('MySQL:Error', 'ColEdit', 'Custom link ' . $nLinkID . ' (' . $sLinkName . ') could not be removed from ' . $zData['colid']);
-                    } else {
-                        lovd_writeLog('MySQL:Event', 'ColEdit', 'Custom link ' . $nLinkID . ' (' . $sLinkName . ') successfully removed from ' . $zData['colid']);
-                    }
-                }
-            }
-
-            // Fetch requested custom link names.
-            $aLinksRequested = array();
-            if (count($_POST['active_links'])) {
-                $q = mysql_query('SELECT linkid, linkname FROM ' . TABLE_LINKS . ' WHERE linkid IN (' . implode(', ', $_POST['active_links']) . ')');
-                while (list($nLinkID, $sLinkName) = mysql_fetch_row($q)) {
-                    $aLinksRequested[$nLinkID] = $sLinkName;
-                }
-            }
-
-            // Add link.
-            foreach ($_POST['active_links'] AS $nLinkID) {
-                if (!array_key_exists($nLinkID, $aLinksActive)) {
-                    // User has requested addition...
-                    $q = mysql_query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("' . $zData['colid'] . '", "' . $nLinkID . '")');
-                    if (!$q) {
-                        // Silent error
-                        lovd_writeLog('MySQL:Error', 'ColEdit', 'Custom link ' . $nLinkID . ' (' . $aLinksRequested[$nLinkID] . ') could not be added to ' . $zData['colid']);
-                    } else {
-                        lovd_writeLog('MySQL:Event', 'ColEdit', 'Custom link ' . $nLinkID . ' (' . $aLinksRequested[$nLinkID] . ') successfully added to ' . $zData['colid']);
-                    }
-                }
-            }
+            $_BAR->setProgress(100);
+            $_BAR->setMessage('Done!');
 
             // Clean up...
-            $_SESSION['data_wizard'] = array();
+            unset($_SESSION['data_wizard'][$_POST['workID']]);
 
             // Thank the user...
-            header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view&view=' . rawurlencode($_GET['edit']));
+            $_BAR->setMessage('Successfully edited column "' . $zData['head_column'] . '"!', 'done');
+            $_BAR->setMessageVisibility('done', true);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
-            print('      Successfully edited column \'' . $zData['colid'] . '\'!<BR>' .
-                  ($zData['mysql_type'] != stripslashes($_POST['mysql_type']) && $nSQL? 'Modified ' . $nSQL . ' data table' . ($nSQL == 1? '.' : 's.') : '') .
-                  '<BR>' . "\n\n");
+                // When printing stuff on the page, NOTE that inc-bot.php has already been closed!!!!!!!!!!!!!!
+        /**************************************
+                // 2010-07-26; 2.0-28; In case the column is mandatory, check for existing patient entries that cause problems importing downloaded data.
+                $nEmptyValues = 0;
+                if ($zData['mandatory'] == '1') {
+                    $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PATIENTS;
+                    $nEmptyValues = @mysql_fetch_row(mysql_query($sQ));
+                }
 
-            require ROOT_PATH . 'inc-bot.php';
+                // 2010-07-27; 2.0-28; Only forward the user when there is no problem adding the column.
+                if (!$nEmptyValues) {
+                    // Dit moet nu met JS!
+                    header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true));
+        */
+        // TMP:
+        $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sColumnID, 3);
+        /*
+                }
+
+                // Als we dan toch een lovd_showInfoTable() proberen te krijgen, doe die dan ook even voor de Done! message...
+                // 2010-07-27; 2.0-28; Warning when a mandatory column has been added and there are already entries.
+                if ($nEmptyValues) {
+                    lovd_showInfoTable('You added a mandatory column to the patient table, which already has entries. Please note that this will cause errors when importing data files you downloaded from LOVD.', 'warning');
+                }
+        *//////////////////////////////////
+            print('</BODY>' . "\n" .
+                  '</HTML>' . "\n");
+
             exit;
 
         } else {
-            // Errors, so the whole lot returns to the form.
-            lovd_magicUnquoteAll();
-
             // Because we're sending the data back to the form, I need to unset the password fields!
             unset($_POST['password']);
         }
-
     } else {
-        foreach ($zData as $key => $val) {
-            if (!isset($_POST[$key]) || !$_POST[$key]) {
-                $_POST[$key] = $val;
-            }
-        }
-        $_POST['password'] = '';
-
-        // 2008-12-02; 2.0-15; Load connected links.
-        $_POST['active_links'] = array();
-        $q = mysql_query('SELECT linkid FROM ' . TABLE_COLS2LINKS . ' WHERE colid = "' . $zData['colid'] . '"');
-        while (list($nLinkID) = @mysql_fetch_row($q)) {
-            $_POST['active_links'][] = $nLinkID;
+        // Default values.
+        if (!isset($_SESSION['data_wizard'])) {
+            $_SESSION['data_wizard'] = array();
         }
 
-        // Default data type information, loaded in SESSION.
-        $aFormType = explode('|', $zData['form_type']);
-        $_SESSION['data_wizard'] =
+        while (count($_SESSION['data_wizard']) >= 5) {
+            unset($_SESSION['data_wizard'][min(array_keys($_SESSION['data_wizard']))]);
+        }
+
+        $_SESSION['data_wizard'][$_POST['workID']] = $_POST = array_merge($_POST, $zData);
+
+        $aFormType = explode('|', $_POST['form_type']);
+        $_SESSION['data_wizard'][$_POST['workID']] =
                  array(
-                        'form_type' => '',
+                        'form_type' => $aFormType[2],
                         'name' => $aFormType[0],
+                        'help_text' => $aFormType[1],
                         'size' => '',
+                        'description_form' => $zData['description_form'],
                         'maxlength' => '',
                         'scale' => '',
                         'preg_pattern' => $zData['preg_pattern'],
                         'unsigned' => '',
                         'default_val' => '',
+                        'cols' => '',
                         'rows' => '',
                         'select' => '',
                         'select_options' => $zData['select_options'],
                         'select_all' => '',
                       );
 
-        // Load $_SESSION['data_wizard'] with current data from form_type and mysql_type.
-        switch ($aFormType[1]) {
+        // Load $_SESSION['form_type'] with current data from form_type and mysql_type.
+        switch ($aFormType[2]) {
             case 'text':
                 // VARCHAR, TEXT or INT columns.
-                $_SESSION['data_wizard']['size'] = $aFormType[2];
+                
+                $_SESSION['data_wizard'][$_POST['workID']]['size'] = $aFormType[3];
                 if (preg_match('/^VARCHAR\(([0-9]+)\)/', $zData['mysql_type'], $aRegs)) {
-                    $_SESSION['data_wizard']['form_type'] = 'text';
-                    $_SESSION['data_wizard']['maxlength'] = $aRegs[1];
+                    $_SESSION['data_wizard'][$_POST['workID']]['maxlength'] = $aRegs[1];
                 } elseif (substr($zData['mysql_type'], 0, 4) == 'TEXT') {
-                    $_SESSION['data_wizard']['form_type'] = 'text';
-                    $_SESSION['data_wizard']['maxlength'] = 65535;
+                    $_SESSION['data_wizard'][$_POST['workID']]['maxlength'] = 65535;
                 } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\(([0-9]+)\) *(UNSIGNED)?/', $zData['mysql_type'], $aRegs)) {
-                    $_SESSION['data_wizard']['form_type'] = 'int';
+                    $_SESSION['data_wizard'][$_POST['workID']]['form_type'] = 'int';
                     // 2009-02-16; 2.0-16; Should be $aRegs[2], not [1] of course.
-                    $_SESSION['data_wizard']['maxlength'] = $aRegs[2];
+                    $_SESSION['data_wizard'][$_POST['workID']]['maxlength'] = $aRegs[2];
                     // 2009-02-16; 2.0-16; Should be $aRegs[3], not [2] of course.
-                    $_SESSION['data_wizard']['unsigned']  = (!empty($aRegs[3])? 1 : 0);
-                } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\) *(UNSIGNED)?/', $zData['mysql_type'], $aRegs)) {
-                    // 2009-06-11; 2.0-19; Added DECIMAL, DATE and DATETIME types.
-                    $_SESSION['data_wizard']['form_type'] = 'decimal';
-                    $_SESSION['data_wizard']['maxlength'] = $aRegs[1] - $aRegs[2];
-                    $_SESSION['data_wizard']['scale'] = $aRegs[2];
-                    $_SESSION['data_wizard']['unsigned']  = (!empty($aRegs[3])? 1 : 0);
+                    $_SESSION['data_wizard'][$_POST['workID']]['unsigned']  = (!empty($aRegs[3])? 1 : 0);
+                } elseif (preg_match('/^DEC\(([0-9]+),([0-9]+)\) *(UNSIGNED)?/', $zData['mysql_type'], $aRegs)) {
+                    // 2009-06-11; 2.0-19; Added DEC, DATE and DATETIME types.
+                    $_SESSION['data_wizard'][$_POST['workID']]['form_type'] = 'dec';
+                    $_SESSION['data_wizard'][$_POST['workID']]['maxlength'] = $aRegs[1] - $aRegs[2];
+                    $_SESSION['data_wizard'][$_POST['workID']]['scale'] = $aRegs[2];
+                    $_SESSION['data_wizard'][$_POST['workID']]['unsigned']  = (!empty($aRegs[3])? 1 : 0);
                 } elseif (preg_match('/^DATE(TIME)?/', $zData['mysql_type'], $aRegs)) {//need $aRegs for the default value
-                    $_SESSION['data_wizard']['form_type'] = 'date';
-                    $_SESSION['data_wizard']['time'] = (!empty($aRegs[1])? 1 : 0);
-                } else {
-                    // Should not happen.
-                    $_SESSION['data_wizard']['form_type'] = 'text';
+                    $_SESSION['data_wizard'][$_POST['workID']]['form_type'] = 'date';
+                    $_SESSION['data_wizard'][$_POST['workID']]['time'] = (!empty($aRegs[1])? 1 : 0);
                 }
 
                 // 2009-02-16; 2.0-16; Introducing default values.
                 if (preg_match('/ DEFAULT ([0-9]+|"[^"]+")/', $zData['mysql_type'], $aRegs)) {
                     // Process default values.
-                    $_SESSION['data_wizard']['default_val'] = trim($aRegs[1], '"');
+                    $_SESSION['data_wizard'][$_POST['workID']]['default_val'] = trim($aRegs[1], '"');
                 }
                 break;
             case 'textarea':
                 // TEXT column.
-                $_SESSION['data_wizard']['form_type'] = 'textarea';
-                $_SESSION['data_wizard']['size']      = $aFormType[2];
-                $_SESSION['data_wizard']['rows']      = $aFormType[3];
+                $_SESSION['data_wizard'][$_POST['workID']]['cols']      = $aFormType[3];
+                $_SESSION['data_wizard'][$_POST['workID']]['rows']      = $aFormType[4];
                 break;
             case 'select':
                 // VARCHAR or TEXT columns.
-                if ($aFormType[4] == 'false') {
-                    $_SESSION['data_wizard']['form_type'] = 'select';
-                    $_SESSION['data_wizard']['select']    = ($aFormType[3] == 'false'? 0 : 1);
+                if ($aFormType[5] == 'false') {
+                    $_SESSION['data_wizard'][$_POST['workID']]['select']    = ($aFormType[4] == 'false'? 0 : 1);
                 } else {
-                    $_SESSION['data_wizard']['form_type']  = 'select_multiple';
-                    $_SESSION['data_wizard']['rows']       = $aFormType[2];
-                    $_SESSION['data_wizard']['select']     = ($aFormType[3] == 'false'? 0 : 1);
-                    $_SESSION['data_wizard']['select_all'] = ($aFormType[5] == 'false'? 0 : 1);
+                    $_SESSION['data_wizard'][$_POST['workID']]['form_type']  .= '_multiple';
+                    $_SESSION['data_wizard'][$_POST['workID']]['rows']       = $aFormType[3];
+                    $_SESSION['data_wizard'][$_POST['workID']]['select']     = ($aFormType[4] == 'false'? 0 : 1);
+                    $_SESSION['data_wizard'][$_POST['workID']]['select_all'] = ($aFormType[6] == 'false'? 0 : 1);
                 }
                 break;
             case 'checkbox':
                 // TINYINT(1) UNSIGNED column.
-                $_SESSION['data_wizard']['form_type']  = 'checkbox';
                 break;
         }
-*/
     }
 
 
@@ -1183,55 +1177,14 @@ die();
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
 
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $sColumnID . '?' . ACTION . '" method="post">' . "\n" .
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkSubmittedForm();">' . "\n" .
+          '        <INPUT type="hidden" name="category" value="' . $_POST['category'] . '">' . "\n" .
           '        <INPUT type="hidden" name="description_form" value="' . $_POST['description_form'] . '">' . "\n" .
           '        <INPUT type="hidden" name="select_options" value="' . $_POST['select_options'] . '">' . "\n" .
           '        <INPUT type="hidden" name="preg_pattern" value="' . $_POST['preg_pattern'] . '">' . "\n" .
 // FIXME; remove this when implemented properly.
-          '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n");
-/*
-
-    // Allow to update all active columns as well.
-        // Check if column is active anywhere.
-        list($bInUse) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_COLS . ' WHERE colid = "' . $zData['colid'] . '" UNION SELECT COUNT(*) FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
-    }
-
-    // Array which will make up the form table.
-    $aForm = array(
-                    array('POST', '', '', '50%', '50%'),
-                    array('', 'print', '<B>Column name and descriptions</B>'),
-                    array('Column heading', 'text', 'head_column', 30),
-                    array('', 'print', '<SPAN class="form_note">This will appear above the column on data listings and the legend.</SPAN>'),
-                    array('Description on form', 'textarea', 'description_form', 40, 2),
-                    array('Description on short legend', 'textarea', 'description_legend_short', 40, 2),
-                    array('Description on full legend', 'textarea', 'description_legend_full', 40, 2),
-                    'skip',
-                    array('', 'print', '<B>Data settings</B> (Use data type wizard to change values)'),
-                    array('', 'print', '<BUTTON type="button" onclick="javascript:lovd_openWindow(\'' . $_SERVER['PHP_SELF'] . '?action=form_type_define&amp;from_action=' . $_GET['action'] . '\', \'FormTypeDefine\', 800, 400); return false;">Start data type wizard</BUTTON>'),
-                    array('MySQL data type', 'text', 'mysql_type', 30),
-                    array('Form type', 'text', 'form_type', 30),
-                    'skip',
-                    array('', 'print', '<B>Column settings</B>'),
-                    array('Standard for new genes (Variant columns only)', 'checkbox', 'standard'),
-                    array('Mandatory field', 'checkbox', 'mandatory'),
-                    array('Show contents to public', 'checkbox', 'public'),
-                    array('Show field on public forms', 'checkbox', 'public_form'),
-                    array('Include in search form', 'checkbox', 'allow_count_all'),
-                    array('', 'print', '<SPAN class="form_note">Selecting this checkbox allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on this column.</SPAN>'),
-                    'skip',
-                    array('', 'print', '<B>Link settings</B>'),
-                    array('Active custom links', 'select', 'active_links', $nLinkSize, $aLinks, false, true, false),
-                    'skip',
-                  );
-    // 2009-04-15; 2.0-18; Allow to update all active columns as well.
-    if ($bInUse) {
-        if (substr($zData['colid'], 0, 7) == 'Variant') {
-            $aForm[] = array('Apply changes to all genes where this column is active', 'checkbox', 'apply_to_all');
-        } else {
-            $aForm[] = array('Apply changes to patient table where this column is active', 'checkbox', 'apply_to_all');
-        }
-    }
-*////////////////////////////////////
+          '        <INPUT type="hidden" name="allow_count_all" value="' . $_POST['allow_count_all'] . '">' . "\n" .
+          '        <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -1242,14 +1195,40 @@ die();
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
+    
+    $sJSMessage = 'Are you sure you want to change the MySQL data type of this column? Changing the data type of an existing column causes a risk of losing data!';
+    $sJSMessage .= ($tAlter > $tAlterMax? '\nPlease note that the time estimated to edit this columns MySQL type is ' . round($tAlter) . ' seconds. During this time, no updates to the data table are possible.' : '');
+
+?>
+<SCRIPT type="text/javascript">
+function lovd_checkSubmittedForm () {
+    if ($('input[name="mysql_type"]').attr('value') != '<?php echo $zData['mysql_type'] ?>') {
+        return window.confirm('<?php echo $sJSMessage ?>');
+    }
+}
+
+function lovd_setWidth () {
+    var line = $(this).parent().parent().next().children(':last').children(':first');
+    if ($(this).attr('value') > 999) {
+        $(this).attr('value', 999);
+        alert('The width cannot be more than 3 digits!');
+        return false;
+    }
+    $(line).attr('width', $(this).attr('value'));
+    $(line).next().next().html('(This is ' + $(this).attr('value') + ' pixels)');
+    return false;
+}
+
+$( function () {
+    $('input[name="width"]').change(lovd_setWidth);
+});
+
+</SCRIPT>
+<?php
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
-
-
-
-
 
 /*
 if ($_GET['action'] == 'drop' && !empty($_GET['drop'])) {
@@ -1789,7 +1768,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
 
             // If ALTER time is large enough, mention something about it.
             if ($tAlter > $tAlterMax) {
-                lovd_showInfoTable('Please note that the time estimated to add this column to the internal data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table is possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
+                lovd_showInfoTable('Please note that the time estimated to add this column to the internal data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table are possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
             }
 
             require ROOT_PATH . 'class/progress_bar.php';
@@ -2147,6 +2126,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         $sSQL .= ' ORDER BY g.id';
         $qTargets = lovd_queryDB_Old($sSQL, $aSQL);
         $nTargets = mysql_num_rows($qTargets);
+        $nTargets = ($nTargets > 15? 15 : $nTargets);
         if ($nTargets) {
             print('      Please select the gene(s) for which you want to remove the ' . $zData['colid'] . ' column from.<BR><BR>' . "\n");
             $aSelectObject = array(
@@ -2178,6 +2158,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         $sSQL .= ' ORDER BY d.symbol';
         $qTargets = lovd_queryDB_Old($sSQL, $aSQL);
         $nTargets = mysql_num_rows($qTargets);
+        $nTargets = ($nTargets > 15? 15 : $nTargets);
         if ($nTargets) {
             print('      Please select the disease(s) for which you want to remove the ' . $zData['colid'] . ' column from.<BR><BR>' . "\n");
             $aSelectObject = array(
@@ -2201,8 +2182,6 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
 
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
-
-    $nTargets = ($nTargets > 15? 15 : $nTargets);
 
     // Array which will make up the form table.
     $aForm = array_merge(

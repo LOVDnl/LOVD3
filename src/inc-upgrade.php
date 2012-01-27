@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-01-19
+ * Modified    : 2012-01-27
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -173,6 +173,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'INSERT INTO ' . TABLE_USERS . '(name, created_date) VALUES("LOVD", NOW())',
                                 'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0 WHERE username = ""',
                              ),
+                    '3.0-alpha-07c' =>
+                        array(
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN mapping_flags TINYINT UNSIGNED NOT NULL',
+                                'ALTER TABLE ' . TABLE_USERS . ' AUTO_INCREMENT = 1',
+                                'UPDATE ' . TABLE_COLS . ' SET edited_by = 0 WHERE id = "VariantOnGenome/DBID"',
+                                'UPDATE ' . TABLE_COLS . ' SET width = 80 WHERE id = "VariantOnGenome/DBID"',
+                             ),
                   );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -200,6 +207,18 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         $aUpdates['3.0-alpha-07b'][] = 'DELETE FROM ' . TABLE_COLS . ' WHERE id = "Individual/Times_Reported"';
     }
 
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-07c')) {
+        // SET all standard custom columns and custom links to created_by new LOVD user.
+        $aColumns = array(
+                            'Individual/Lab_ID', 'Individual/Reference', 'Individual/Remarks', 'Individual/Remarks_Non_Public', 'Individual/Gender', 'Individual/Mutation/Origin',
+                            'Individual/Origin/Geographic', 'Individual/Origin/Ethnic', 'Individual/Origin/Population', 'Screening/Date', 'Screening/Technique', 'Screening/Template',
+                            'Screening/Tissue', 'VariantOnGenome/DBID', 'VariantOnGenome/DNA', 'VariantOnGenome/DNA_published', 'VariantOnGenome/Frequency', 'VariantOnGenome/Reference',
+                            'VariantOnGenome/Remarks', 'VariantOnGenome/Restriction_site', 'VariantOnGenome/Type', 'VariantOnTranscript/DNA', 'VariantOnTranscript/DNA_published',
+                            'VariantOnTranscript/Exon', 'VariantOnTranscript/Location', 'VariantOnTranscript/Protein', 'VariantOnTranscript/RNA'
+                         );
+        $aUpdates['3.0-alpha-07c'][] = 'UPDATE ' . TABLE_COLS . ' SET created_by = 0 WHERE id IN ("'. implode('", "', $aColumns) . '")';
+        $aUpdates['3.0-alpha-07c'][] = 'UPDATE ' . TABLE_LINKS . ' SET created_by = 0 WHERE id <= 4';
+    }
 
     // To make sure we upgrade the database correctly, we add the current version to the list...
     if (!isset($aUpdates[$_SETT['system']['version']])) {
