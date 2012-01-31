@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2011-10-28
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-01-31
+ * For LOVD    : 3.0-beta-01
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -207,23 +207,23 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
 */
             'Transcripts' =>
                  array(
-                        array('transcripts?create', 'lovd_question.png', 'Create new transcript', 'Create a new transcript.'),
-                        array('transcripts', 'lovd_question.png', 'View all transcripts', 'Manage transcripts.'),
+                        array('transcripts?create', 'lovd_transcripts_create.png', 'Create new transcript', 'Create a new transcript.'),
+                        array('transcripts', 'lovd_transcripts.png', 'View all transcripts', 'Manage transcripts.'),
                       ),
             'Diseases' =>
                  array(
-                        array('diseases?create', 'lovd_question.png', 'Create new disease', 'Create a new disease information entry.'),
-                        array('diseases', 'lovd_question.png', 'View all diseases', 'Manage disease information entries.'),
+                        array('diseases?create', 'lovd_diseases_create.png', 'Create new disease', 'Create a new disease information entry.'),
+                        array('diseases', 'lovd_diseases.png', 'View all diseases', 'Manage disease information entries.'),
                       ),
             'Individuals' =>
                  array(
-                        array('individuals?create', 'lovd_question.png', 'Create new individual', 'Create new individual entry.'),
-                        array('individuals', 'lovd_question.png', 'View all individuals', 'Manage individuals.'),
+                        array('individuals?create', 'lovd_individuals_create.png', 'Create new individual', 'Create new individual entry.'),
+                        array('individuals', 'lovd_individuals.png', 'View all individuals', 'Manage individuals.'),
                       ),
             'Variants' =>
                  array(
-                        array('variants?create', 'lovd_question.png', 'Create new variant', 'Create a new variant.'),
-                        array('variants', 'lovd_question.png', 'View all variants', 'Manage variants.'),
+                        array('variants?create', 'lovd_variants_create.png', 'Create new variant', 'Create a new variant.'),
+                        array('variants', 'lovd_variants.png', 'View all variants', 'Manage variants.'),
                       ),
 /*
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .

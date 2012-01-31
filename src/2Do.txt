@@ -1,7 +1,10 @@
 Prioritize:
 ===========
+- (@Ivo) Gene aangemaakt, door naar curators kiezen. Maar ik ben de enige user... beetje suf.
+- (@Ivo) User count bij deinstall staat op 2, maar ik ben de enige. Suf.
+- Als een curator submit, en ik ben de enige curator, moet er dan wel gemailed worden?
+- (@Ivo) Bugfix check op MultiViews
 - (@Ivar) Add comments in checkDBID en fetchDBID
-- Diseases should be column in view/GENE
 - De Oostenrijkse DB sluit:
   http://grenada.lumc.nl/LSDB_list/lsdb.php?action=view_all&symbol_start=DHCR7
   (zie email van 9 jan)
@@ -14,7 +17,7 @@ Prioritize:
   - Ook moeten we ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
     + Submit: zou ik in de 2Do zetten en nog niet in de code, aangezien de curator nog niet kan importeren :)
   - HGNC niet te bereiken? Nette foutmelding of mirror gebruiken?
-
+  - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
 - Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
 - Custom View:
   * Heeft geen link als geen individu getoond, anders naar variant, maar dat moet andersom!
@@ -50,13 +53,8 @@ Prioritize:
 - CUSTOM VIEWLISTS:
     - FIXME; De custom class haalt de gegevens van alle kolommen op (TABLE_COLS), MAAR public_view kan per gen anders zijn!!!
   * URLS:
-    + /variants             -> genomic variants
-    + /variants/chrX        -> genomic variants, chromosome X only (MAPPING TO /variants WITH ADDED SEARCH TERMS)
-    + /variants/in_gene     -> all transcript variants joined to genomic variants, show transcript ID and gene
-    + /variants/DMD         -> transcript variants of DMD gene joined to genomic variants, per transcript
     - /view                 -> MAPPING TO /view/variants+screenings+individuals+phenotypes
     - /view/DMD             -> combined genomic/transcript view, per gene, per transcript; one line per variant
-    + /variants/0000000001  -> viewEntry() for genomic variant, transcript info included
 - INCORPORATE PDO EVERYWHERE.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
@@ -74,8 +72,6 @@ Prioritize:
 - When disease is created, forward user to select columns for this disease.
 - (@Ivar) Code voor remove van custom columns moet nog "gefixed" worden; er staan belangrijke FIXME's in.
 - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
-- Veranderingen zoals besloten 2011-06-28
-  * Variant/Times_reported / chromosomes_found o.i.d.?
 - (@Ivar) BUG: Gene mag niet een al gekozen symbol hebben, check ook in stap 2! (Ivar 2011-08-15: Kan dit probleem niet reproduceren... symbol komt uit zData in stap 2!) 
     Ivo: Het punt was volgens mij dat na het doorlopen van stap 1 inmiddels 't gen kan zijn aangemaakt, en heel stap 2 daar nergens meer op controleert.
       Overigens, $zData is eigenlijk fout, aangezien 't niet uit de database komt, maar uit $_SESSION.
@@ -126,7 +122,6 @@ Prioritize:
 - Use uniqid ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
 - Insert_test_data.php moet of goed getest worden, of weggedaan worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
-- (@Ivo?) Melding van viewList() dat er geen resultaten zijn, moet binnen de normale DIV, zodat de viewList() te herladen is. Zie FIXME bij genes/GENE?authorize.
 - Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
 - (@Ivo) BUG;
     /check_update?icon returned error in code block Unknown.
@@ -144,7 +139,7 @@ Prioritize:
     (met genomic ref hebben we dezelfde foutmelding)
     * Ivar: het gaat hier specifiek om de UD die mist. Mutalyzer wil deze hebben voor het binnen halen van de transcript gegevens.
 - Geheugengebruik hoog vanwege session: Ook fix nodig voor viewList data? Blijft ook hangen.
-- Vanaf beta moeten bij bugfixes de datum en versie gezet worden.
+- Vanaf beta moeten bij bugfixes de datum en versie gezet worden..
 - Bij installatie controleren of er een mailserver is? Poort 25 check?
 - Bij aanmaken gen en geen LRG, wel check of LRG bestaat voor pending? (LRG webservice)
   * Dan op een bepaalde manier de curator van op de hoogte stellen?
