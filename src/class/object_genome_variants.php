@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-01-19
+ * Modified    : 2012-01-31
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -148,7 +148,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'db'   => array('ds.name', false, true)),
                       ));
 
-        $this->sSortDefault = 'id_';
+        $this->sSortDefault = 'VariantOnGenome/DNA';
 
         $this->sRowLink = 'variants/{{ID}}';
     }

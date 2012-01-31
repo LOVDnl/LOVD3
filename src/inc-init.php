@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-01-27
+ * Modified    : 2012-01-30
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -90,13 +90,13 @@ define('AJAX_DATA_ERROR', '9');
 $aRequired =
          array(
                 'PHP'   => '5.1.0',
-                'MySQL' => '4.1.1',
+                'MySQL' => '4.1.2',
               );
 
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-alpha-07c',
+                            'version' => '3.0-alpha-07d',
                           ),
                 'user_levels' =>
                      array(
@@ -414,6 +414,7 @@ $_TABLES =
          array(
                 'TABLE_COUNTRIES' => TABLEPREFIX . '_countries',
                 'TABLE_USERS' => TABLEPREFIX . '_users',
+                'TABLE_CHROMOSOMES' => TABLEPREFIX . '_chromosomes',
                 'TABLE_GENES' => TABLEPREFIX . '_genes',
                 'TABLE_CURATES' => TABLEPREFIX . '_users2genes',
                 'TABLE_TRANSCRIPTS' => TABLEPREFIX . '_transcripts',

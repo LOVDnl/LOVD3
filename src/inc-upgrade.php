@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-01-27
+ * Modified    : 2012-01-31
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -180,6 +180,16 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'UPDATE ' . TABLE_COLS . ' SET edited_by = 0 WHERE id = "VariantOnGenome/DBID"',
                                 'UPDATE ' . TABLE_COLS . ' SET width = 80 WHERE id = "VariantOnGenome/DBID"',
                              ),
+                    '3.0-alpha-07d' =>
+                        array(
+                                'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN chromosome VARCHAR(2)',
+                                'ALTER TABLE ' . TABLE_GENES . ' ADD INDEX (chromosome)',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN chromosome VARCHAR(2)',
+                                'CREATE TABLE ' . TABLE_CHROMOSOMES . ' (name VARCHAR(2) NOT NULL, sort_id TINYINT(3) UNSIGNED NOT NULL, hg18_id_ncbi VARCHAR(20) NOT NULL, hg19_id_ncbi VARCHAR(20) NOT NULL, PRIMARY KEY (name)) ENGINE=InnoDB, DEFAULT CHARACTER SET utf8',
+                'chr_values' => 'Reserved for the insert query of the new chromosome table. This will be added later in this script.',
+                                'ALTER TABLE ' . TABLE_GENES . ' ADD CONSTRAINT ' . TABLE_GENES . '_fk_chromosome FOREIGN KEY (chromosome) REFERENCES ' . TABLE_CHROMOSOMES . ' (name) ON DELETE SET NULL ON UPDATE CASCADE',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_chromosome FOREIGN KEY (chromosome) REFERENCES ' . TABLE_CHROMOSOMES . ' (name) ON DELETE SET NULL ON UPDATE CASCADE',
+                             ),
                   );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -218,6 +228,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                          );
         $aUpdates['3.0-alpha-07c'][] = 'UPDATE ' . TABLE_COLS . ' SET created_by = 0 WHERE id IN ("'. implode('", "', $aColumns) . '")';
         $aUpdates['3.0-alpha-07c'][] = 'UPDATE ' . TABLE_LINKS . ' SET created_by = 0 WHERE id <= 4';
+    }
+
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-07d')) {
+        // INSERT chromosome in the new TABLE_CHROMOSOMES.
+        require ROOT_PATH . 'install/inc-sql-chromosomes.php';
+        $aUpdates['3.0-alpha-07d']['chr_values'] = $aChromosomeSQL[0];
     }
 
     // To make sure we upgrade the database correctly, we add the current version to the list...

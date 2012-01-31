@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-01-18
+ * Modified    : 2012-01-30
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -39,8 +39,8 @@ $aInstallSteps =
                 array(0, 'Introduction'),
                 array(0, 'Administrator account details'),
                 array(30, 'Installing database tables'),
-                array(60, 'Configuring LOVD system settings'),
-                array(95, 'Configuring LOVD modules'),
+                array(90, 'Configuring LOVD system settings'),
+                //array(95, 'Configuring LOVD modules'),
                 array(100, 'Done'),
               );
 
@@ -315,7 +315,13 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     $nInstallSQL ++;
 
 
-    // (4) Registering LOVD variant statuses.
+    // (4) Registering chromosome references
+    require ROOT_PATH . 'install/inc-sql-chromosomes.php';
+    $aInstallSQL['Registering chromosome references...'][] = $aChromosomeSQL[0];
+    $nInstallSQL ++;
+
+
+    // (5) Registering LOVD variant statuses.
     $nStatuses = count($_SETT['data_status']);
     foreach ($_SETT['data_status'] as $nStatus => $sStatus) {
         $aInstallSQL['Registering LOVD variant statuses...'][] = 'INSERT INTO ' . TABLE_DATA_STATUS . ' VALUES (' . $nStatus . ', "' . $sStatus . '")';
@@ -323,7 +329,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     $nInstallSQL += $nStatuses;
 
 
-    // (5) Registering LOVD variant functional effects.
+    // (6) Registering LOVD variant functional effects.
     $nFunctionalEffects = count($_SETT['var_effect_short']);
     foreach ($_SETT['var_effect_short'] as $nPath => $sPath) {
         $aInstallSQL['Registering LOVD variant functional effects...'][] = 'INSERT INTO ' . TABLE_EFFECT . ' VALUES (' . $nPath . ', "' . $sPath . '")';
@@ -331,14 +337,14 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     $nInstallSQL += $nFunctionalEffects;
 
 
-    // (6) Creating standard LOVD custom columns.
+    // (7) Creating standard LOVD custom columns.
     require 'inc-sql-columns.php';
     $nCols = count($aColSQL);
     $aInstallSQL['Creating LOVD custom columns...'] = $aColSQL;
     $nInstallSQL += $nCols;
 
 
-    // (7) Activating standard custom columns.
+    // (8) Activating standard custom columns.
     foreach ($aColSQL as $sCol) {
         $sCol = str_replace('INSERT INTO ' . TABLE_COLS . ' VALUES ', '', $sCol);
         // FIXME; add some comments here, I can't follow this code.
@@ -359,90 +365,23 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
             }
         }
     }
-    
-    
-/*
-    // (7) Adding standard patient columns.
-    // Gather info on standard custom patient columns.
-    $aColsToCopy = array('colid', 'col_order', 'width', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public', 'public_form', 'created_by', 'created_date');
-    $qCols = lovd_queryDB_Old('SELECT * FROM ' . TABLE_COLS . ' WHERE (hgvs = 1 OR standard = 1) AND colid LIKE "Patient/%"');
-    $nCols = mysql_num_rows($qCols);
-
-    // Create the columns...
-    print('Registering LOVD standard patient columns [');
-    require ROOT_PATH . 'class/currdb.php';
-    $_CURRDB = new CurrDB(false);
-
-    $aColsOrder = array_keys($aColSQL);
-    
-    while ($z = mysql_fetch_assoc($qCols)) {
-        $z['col_order'] = array_search($z['colid'], $aColsOrder);
-
-        // Calculate the standard width of the column based on the maximum number of characters.
-        $nHeadLength = strlen($z['head_column']);
-        $nColLength = $_CURRDB->getFieldLength($z['colid']) / 2;
-        $nColLength = ($nColLength < $nHeadLength? $nHeadLength : $nColLength);
-        // Compensate for small/large fields.
-        $nColLength = ($nColLength < 5? 5 : ($nColLength > 35? 35 : $nColLength));
-        if ($nColLength < 10) {
-            $z['width'] = 10*$nColLength;
-        } else {
-            $z['width'] = 8*$nColLength;
-        }
-        $z['width'] = ($z['width'] > 200? 200 : $z['width']);
-
-        // Created_* columns...
-        $z['created_by'] = 0; // 'LOVD'
-        $z['created_date'] = date('Y-m-d H:i:s');
-
-        $sQ = 'INSERT INTO ' . TABLE_PATIENTS_COLS . ' (';
-        $aCol = array();
-        foreach ($aColsToCopy as $sCol) {
-            if (isset($z[$sCol])) {
-                $sQ .= (substr($sQ, -1) == '('? '' : ', ') . $sCol;
-                $aCol[] = $z[$sCol];
-            }
-        }
-        $sQ .= ') VALUES (';
-
-        foreach ($aCol as $key => $val) {
-            $sQ .= ($key? ', ' : '') . '"' . $val . '"';
-        }
-        $sQ .= ')';
-
-        // Insert default LOVD custom column.
-        $q = @mysql_query($sQ);
-
-        // Alter patient table to include column.
-        // 2009-02-16; 2.0-16; Added stripslashes to allow receiving quotes. This variable has been checked using regexps, so can be considered safe.
-        $sQ = 'ALTER TABLE ' . TABLE_PATIENTS . ' ADD COLUMN `' . $z['colid'] . '` ' . stripslashes($z['mysql_type']) . ' NOT NULL AFTER patientid';
-        $q = @mysql_query($sQ);
-    }
-
-    // (8) Adding standard phenotype columns.
-    // (9) Adding standard screening columns.
-
-                'TABLE_PATIENT_COLS' => TABLEPREFIX . '_patient_columns',
-                'TABLE_PHENOTYPE_COLS' => TABLEPREFIX . '_phenotype_columns',
-                'TABLE_SCREENING_COLS' => TABLEPREFIX . '_screening_columns',
-*/
 
 
-    // (10) Creating standard custom links.
+    // (9) Creating standard custom links.
     require 'inc-sql-links.php';
     $nLinks = count($aLinkSQL);
     $aInstallSQL['Creating LOVD custom links...'] = $aLinkSQL;
     $nInstallSQL += $nLinks;
 
 
-    // (11) Creating LOVD status.
+    // (10) Creating LOVD status.
     $aInstallSQL['Registering LOVD system status...'] =
              array(
                     'INSERT INTO ' . TABLE_STATUS . ' VALUES (0, "' . $_SETT['system']['version'] . '", "' . $sSignature . '", NULL, NULL, NULL, NULL, NULL, NOW(), NULL)');
     $nInstallSQL ++;
 
 
-    // (12) Creating standard external sources.
+    // (11) Creating standard external sources.
     require 'inc-sql-sources.php';
     $nSources = count($aSourceSQL);
     $aInstallSQL['Creating external sources...'] = $aSourceSQL;
@@ -598,7 +537,7 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . T
 
 
 
-if ($_GET['step'] == 4 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_MODULES))) {
+/*if ($_GET['step'] == 4 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_MODULES))) {
     // Step 4: Configuring LOVD modules.
     if (@mysql_num_rows(lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLE_MODULES))) != 1) {
         // Didn't finish previous step correctly.
@@ -641,7 +580,7 @@ if ($_GET['step'] == 4 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . T
 
     $aFailed = array();
     $aSuccess = array();
-/*
+*//*
 // DMD_SPECIFIC
     while (($sModuleID = readdir($hDir)) !== false) {
         if ($_MODULES->isInstalled($sModuleID) || substr($sModuleID, 0, 1) == '.' || !is_dir(MODULE_PATH . $sModuleID) || !is_readable(MODULE_PATH . $sModuleID . '/module.php')) {
@@ -702,7 +641,7 @@ if ($_GET['step'] == 4 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . T
         lovd_writeLog('Install', 'Installation', 'New module installed: ' . $sModuleID . '/module.php returns "' . $aModule['name'] . '"');
         $aSuccess[] = $sModuleID;
     }
-*/
+*//*
 
     // Print result of module scan to screen!
     $sFailed = '';
@@ -739,17 +678,19 @@ if ($_GET['step'] == 4 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . T
 
     require 'inc-bot.php';
     exit;
-} elseif ($_GET['step'] == 4) { $_GET['step'] ++; }
+} elseif ($_GET['step'] == 4) { $_GET['step'] ++; }*/
 
 
 
 
 
-if ($_GET['step'] == 5) {
+//if ($_GET['step'] == 5) {
+if ($_GET['step'] == 4) {
     // Step 5: Done.
     if (!@mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_CONFIG))) {
         // Didn't finish previous step correctly.
-        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 2));
+        //header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 2));
+        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 1));
         exit;
     }
 

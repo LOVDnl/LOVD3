@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-01-27
+ * Modified    : 2012-01-31
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -378,11 +378,31 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
             $aFieldsGenome = array_merge(
-                                array('allele', 'effectid', 'chromosome', 'owned_by', 'statusid', 'created_by', 'created_date'),
+                                array('allele', 'effectid', 'chromosome', 'position_g_start', 'type', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'created_date'),
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
             $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['effect_concluded'] : '5');
+
+            require ROOT_PATH . 'class/REST2SOAP.php';
+            $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+            $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']));
+            $_POST['position_g_start'] = $aOutput['start_g'][0]['v'];
+            $_POST['position_g_end'] = $aOutput['end_g'][0]['v'];
+            $_POST['type'] = $aOutput['mutationType'][0]['v'];
+
+            foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'])) {
+                    $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']));
+                    if (!empty($aOutput) && empty($aOutput['messages'][0]['v'])) {
+                        $_POST[$nTranscriptID . '_position_c_start'] = $aOutput['startmain'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_start_intron'] = $aOutput['startoffset'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_end_intron'] = $aOutput['endoffset'][0]['v'];
+                    }
+                }
+            }
+
             $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
             $_POST['created_by'] = $_AUTH['id'];
@@ -394,7 +414,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if (isset($sGene)) {
                 $_POST['id'] = $nID;
                 $aFieldsTranscript = array_merge(
-                                        array('id', 'transcriptid', 'effectid'),
+                                        array('id', 'transcriptid', 'effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'),
                                         $_DATA['Transcript'][$sGene]->buildFields());
                 $aTranscriptID = $_DATA['Transcript'][$sGene]->insertAll($_POST, $aFieldsTranscript);
             }
@@ -613,6 +633,34 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 $aFieldsGenome[] = 'statusid';
                 $_POST['statusid'] = STATUS_MARKED;
             }
+
+            require ROOT_PATH . 'class/REST2SOAP.php';
+            $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+            if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == 'NULL') {
+                $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type'));
+                $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']));
+                $_POST['position_g_start'] = $aOutput['start_g'][0]['v'];
+                $_POST['position_g_end'] = $aOutput['end_g'][0]['v'];
+                $_POST['type'] = $aOutput['mutationType'][0]['v'];
+            }
+
+            foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA'] || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
+                    $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']));
+                    if (!empty($aOutput) && empty($aOutput['messages'][0]['v'])) {
+                        $_POST[$nTranscriptID . '_position_c_start'] = $aOutput['startmain'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_start_intron'] = $aOutput['startoffset'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_end_intron'] = $aOutput['endoffset'][0]['v'];
+                    }
+                } else {
+                    $_POST[$nTranscriptID . '_position_c_start'] = $zData[$nTranscriptID . '_position_c_start'];
+                    $_POST[$nTranscriptID . '_position_c_start_intron'] = $zData[$nTranscriptID . '_position_c_start_intron'];
+                    $_POST[$nTranscriptID . '_position_c_end'] = $zData[$nTranscriptID . '_position_c_end'];
+                    $_POST[$nTranscriptID . '_position_c_end_intron'] = $zData[$nTranscriptID . '_position_c_end_intron'];
+                }
+            }
+
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
@@ -623,7 +671,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             if ($bGene) {
                 $aFieldsTranscripts = array();
                 foreach ($aGenes as $sGene) {
-                    $aFieldsTranscripts[$sGene] = array_merge(array('effectid'), $_DATA['Transcript'][$sGene]->buildFields());
+                    $aFieldsTranscripts[$sGene] = array_merge(array('effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'), $_DATA['Transcript'][$sGene]->buildFields());
                 }
                 $aTranscriptID = $_DATA['Transcript'][$sGene]->updateAll($nID, $_POST, $aFieldsTranscripts);
             }

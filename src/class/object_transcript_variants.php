@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-01-18
+ * Modified    : 2012-01-31
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -242,6 +242,10 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 }
                 $aData['transcriptid'] = $nTranscriptID;
                 $aData['effectid'] = $aData[$nTranscriptID . '_effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $aData[$nTranscriptID . '_effect_concluded'] : '5');
+                $aData['position_c_start'] = $aData[$nTranscriptID . '_position_c_start'];
+                $aData['position_c_start_intron'] = $aData[$nTranscriptID . '_position_c_start_intron'];
+                $aData['position_c_end'] = $aData[$nTranscriptID . '_position_c_end'];
+                $aData['position_c_end_intron'] = $aData[$nTranscriptID . '_position_c_end_intron'];
                 LOVD_Object::insertEntry($aData, $aFields);
             }
         }
@@ -309,6 +313,10 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 }
             }
             $zData[$aVariantOnTranscript['transcriptid'] . '_effectid'] = $aVariantOnTranscript['effectid'];
+            $zData[$aVariantOnTranscript['transcriptid'] . '_position_c_start'] = $aVariantOnTranscript['position_c_start'];
+            $zData[$aVariantOnTranscript['transcriptid'] . '_position_c_start_intron'] = $aVariantOnTranscript['position_c_start_intron'];
+            $zData[$aVariantOnTranscript['transcriptid'] . '_position_c_end'] = $aVariantOnTranscript['position_c_end'];
+            $zData[$aVariantOnTranscript['transcriptid'] . '_position_c_end_intron'] = $aVariantOnTranscript['position_c_end_intron'];
         }
         return $zData;
     }
@@ -376,6 +384,10 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 }
             }
             $aData['effectid'] = $aData[$nTranscriptID . '_effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $aData[$nTranscriptID . '_effect_concluded'] : $zData[$nTranscriptID . '_effectid']{1});
+            $aData['position_c_start'] = $aData[$nTranscriptID . '_position_c_start'];
+            $aData['position_c_start_intron'] = $aData[$nTranscriptID . '_position_c_start_intron'];
+            $aData['position_c_end'] = $aData[$nTranscriptID . '_position_c_end'];
+            $aData['position_c_end_intron'] = $aData[$nTranscriptID . '_position_c_end_intron'];
 
             // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
             if (!trim($nID)) {

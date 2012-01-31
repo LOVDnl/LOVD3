@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-01-27
+ * Modified    : 2012-01-31
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -44,14 +44,7 @@ if (!defined('ROOT_PATH')) {
     require ROOT_PATH . 'inc-init.php';
 }
 
-// TYPE is older and therefore preferred for backward compatibility,
-// but it is removed from MySQL version 5.5. ENGINE was introduced in 4.1.2.
-if (mysql_get_server_info() >= '4.1.2') {
-    $sSettings = 'ENGINE';
-} else {
-    $sSettings = 'TYPE';
-}
-$sSettings .= '=InnoDB,
+$sSettings = 'ENGINE=InnoDB,
     DEFAULT CHARACTER SET utf8';
 
 $aTableSQL =
@@ -98,11 +91,20 @@ $aTableSQL =
     CONSTRAINT ' . TABLE_USERS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
 
+        , 'TABLE_CHROMOSOMES' =>
+   'CREATE TABLE ' . TABLE_CHROMOSOMES . ' (
+    name VARCHAR(2) NOT NULL,
+    sort_id TINYINT(3) UNSIGNED NOT NULL,
+    hg18_id_ncbi VARCHAR(20) NOT NULL,
+    hg19_id_ncbi VARCHAR(20) NOT NULL,
+    PRIMARY KEY (name))
+    ' . $sSettings
+
          , 'TABLE_GENES' =>
    'CREATE TABLE ' . TABLE_GENES . ' (
     id VARCHAR(20) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    chromosome VARCHAR(2) NOT NULL,
+    chromosome VARCHAR(2),
     chrom_band VARCHAR(20) NOT NULL,
     refseq_genomic VARCHAR(15) NOT NULL,
     refseq_UD VARCHAR(25) NOT NULL,
@@ -134,9 +136,11 @@ $aTableSQL =
     updated_by SMALLINT(5) UNSIGNED ZEROFILL,
     updated_date DATETIME,
     PRIMARY KEY (id),
+    INDEX (chromosome),
     INDEX (created_by),
     INDEX (edited_by),
     INDEX (updated_by),
+    CONSTRAINT ' . TABLE_GENES . '_fk_chromosome FOREIGN KEY (chromosome) REFERENCES ' . TABLE_CHROMOSOME . ' (name) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_GENES . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_GENES . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_GENES . '_fk_updated_by FOREIGN KEY (updated_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
@@ -285,7 +289,7 @@ $aTableSQL =
     id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     allele TINYINT(2) UNSIGNED NOT NULL,
     effectid TINYINT(2) UNSIGNED ZEROFILL,
-    chromosome VARCHAR(2) NOT NULL,
+    chromosome VARCHAR(2),
     position_g_start INT UNSIGNED,
     position_g_end INT UNSIGNED,
     type VARCHAR(10),
@@ -305,6 +309,7 @@ $aTableSQL =
     INDEX (created_by),
     INDEX (edited_by),
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT ' . TABLE_VARIANTS . '_fk_chromosome FOREIGN KEY (chromosome) REFERENCES ' . TABLE_CHROMOSOME . ' (name) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
