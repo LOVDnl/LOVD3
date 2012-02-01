@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-01-30
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-01
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -90,6 +90,10 @@ define('AJAX_DATA_ERROR', '9');
 $aRequired =
          array(
                 'PHP'   => '5.1.0',
+                'PHP_functions' =>
+                     array(
+                            'xml_parser_create', // We could also look for libxml constants?
+                          ),
                 'MySQL' => '4.1.2',
               );
 

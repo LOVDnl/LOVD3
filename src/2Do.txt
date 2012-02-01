@@ -1,41 +1,94 @@
 Prioritize:
 ===========
-- (@Ivo) Gene aangemaakt, door naar curators kiezen. Maar ik ben de enige user... beetje suf.
-- (@Ivo) User count bij deinstall staat op 2, maar ik ben de enige. Suf.
-- Als een curator submit, en ik ben de enige curator, moet er dan wel gemailed worden?
-- (@Ivo) Bugfix check op MultiViews
+- Set unique key op transcript NM nummer.
+- (@Ivo) BUG;
+    /check_update?icon returned error in code block Unknown.
+    Query : SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM lovd_v3_genes AS g LEFT OUTER JOIN lovd_v3_users2genes AS u2g ON (g.id = u2g.geneid) LEFT OUTER JOIN lovd_v3_genes2diseases AS g2d ON (g.id = g2d.geneid) INNER JOIN lovd_v3_diseases AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 ORDER BY g.id
+    Error : Mixing of GROUP columns (MIN(),MAX(),COUNT(),...) with no GROUP columns is illegal if there is no GROUP BY clause
+  + Check_update.php heeft nog rare trucjes m.b.t. het tellen van de varianten.
+- Zoeken op !Value moet ook "OR IS NULL" toevoegen.
+- BUG? Waarom werkt !="" niet op Individuals/Age_of_diagnosis ??????
 - (@Ivar) Add comments in checkDBID en fetchDBID
-- De Oostenrijkse DB sluit:
-  http://grenada.lumc.nl/LSDB_list/lsdb.php?action=view_all&symbol_start=DHCR7
-  (zie email van 9 jan)
-- (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
-- POST-beta-01:
-  - Allow to create new VOT with existing VOG
-  - Allow to connect a variant with two screenings
+- (@Ivar) Add comments in submit.php.
+- (@Ivar) viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
+- IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
+  + objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
+  + VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns).
+    * OOK IN CUSTOM VIEWLIST
+- (@Ivar) Screening create: niet meer dan 15 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
+  * Na screening create: aangeven varianten gevonden? restrict lijst VOT met genen die gescreened zijn (reversible).
+- Tijdens het aanmaken van een screening moet een submitter kunnen aangeven of er varianten zijn gevonden.
+  + Indien er geen varianten zijn gevonden, ook niet vragen om deze toe te voegen.
+  + Indien er varianten zijn gevonden, moet de submitter bestaande varianten van dit individu kunnen selecteren als "met deze screening bevestigd".
+    * Moet met viewList, plus optie "select all", zoals ook genes/DMD?authorize.
+- Allow to create new VOT with existing VOG
+  + Gebruiker selecteert transcript uit ViewList (check op chromosoom), PHP mapt variant op aangegeven NM (gebruik ajax/convert_position.php), insert into DB, forward naar edit variant form, evt. scrollen naar nieuwe VOT.
+- (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
+- (@Ivar) Alle variant en/of data views uitbreiden met affects function en andere standaard kolommen die LOVD 2.0 ook toont.
+  * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
+- (@Ivo) Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
+- (BELANGRIJK) Testen wat public / curator wel en niet mag.
+  + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
+  + Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.
+- (@Ivar) Code voor remove van custom columns moet nog "gefixed" worden; er staan belangrijke FIXME's in.
+- (@Ivar) BUG: Gene mag niet een al gekozen symbol hebben, check ook in stap 2! (Ivar 2011-08-15: Kan dit probleem niet reproduceren... symbol komt uit zData in stap 2!) 
+    Ivo: Het punt was volgens mij dat na het doorlopen van stap 1 inmiddels 't gen kan zijn aangemaakt, en heel stap 2 daar nergens meer op controleert.
+      Overigens, $zData is eigenlijk fout, aangezien 't niet uit de database komt, maar uit $_SESSION.
+- Verify current status, and include:
+    Variant/genetic_origin
+    -unknown
+    -inherited
+    -de novo
+    -de novo, germline
+    -de novo, somatic
+    -uniparental disomy
+    -uniparental disomy, maternal allele
+    -uniparental disomy, paternal allele
+    -in vitro (cloned)
+    -non-human (model organism)
+
+    Phenotype/Inheritance
+    -familial
+    -familial, autosomal dominant
+    -familial, autosomal recessive
+    -familial, autosomal recessive, consanguineous
+    -familial, X-linked
+    -sporadic
+    -sporadic, parents consanguineous
+    -sporadic, parents not consanguineous
+    -sporadic, consanguinity unknown
+
+- Beta-03:
+  - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
+  - (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
+    + Hierna kan de transcript ViewList voor nieuwe VOT op bestaande VOG specifieker worden geselecteerd.
   - Johan wil dat we bij de redirect("Successfully created *****") een knop zetten. Er moet dan een tekst staan met "You are being redirected, if not you can click here". Schijnbaar werkt de redirect soms niet.
     + Redirect: zouden we dan misschien een functie moeten maken? Code voor een knopje met redirect (JS lijkt me het handigst?) in een lovd_showInfoTable() is dan best wel weer lang.
   - Ook moeten we ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
     + Submit: zou ik in de 2Do zetten en nog niet in de code, aangezien de curator nog niet kan importeren :)
   - HGNC niet te bereiken? Nette foutmelding of mirror gebruiken?
-  - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
+  - /columns/VariantOnTranscript/DMD -> (LINK MOET ANDERS HETEN) viewList kolommen actief op DMD
+  - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
+  - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
+
+- Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)
+  + Ook support mededelingen: voor versies alpha-01 t/m alpha-10 het bericht dat alpha niet meer ondersteund wordt, dus je moet upgraden. Of voor alle installs op onze server (signature check): downtime dan en dan. Op versie of op signature??? Zoiets.
+  + Ook instellen per user level (submitter, curator, manager, db admin).
+  + Na het inloggen, indien er een update is, een tooltip weergeven rechtsonder dat er een update is! Niet de hele tijd dus, alleen nadat je net bent ingelogd.
+    * Je kunt $_STAT gewoon analyseren, want het icoon is al geladen tijdens het inloggen dus hoort al te weten dat er een update is!
+    * Popup heeft andere kleur aan de hand van update belangrijkheid...
+    * Kan popup zo'n hoekje hebben die naar het logo wijst?
+- Vanaf beta moeten bij bugfixes de datum en versie gezet worden..
+- INCORPORATE PDO EVERYWHERE.
+- (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
+- <OPTGROUP label="groep"><OPTION value="asdf">asdf</OPTION></OPTGROUP> voor custom link active for columns selection?
 - Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
 - Custom View:
-  * Heeft geen link als geen individu getoond, anders naar variant, maar dat moet andersom!
   * The full data overview moet nog de varianten tonen, die óók in de individu gevonden zijn.
-- (@Ivar) Alle variant en/of data views uitbreiden met affects function en andere standaard kolommen die LOVD 2.0 ook toont.
-  * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
-- (@Ivar) ViewEntry Individual -> Add phenotype information to individual -> (finish) -> Hoe ga ik nu terug naar de individu?
-- (@Ivar) viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
-- (@Ivar) Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
-- (@Ivar) Add comments in submit.php.
-- (@Ivar) Individuals, screenings, phenotypes hebben geen functionele anchor in de viewList.
-- IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
-  * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET.
+- Probleem LOVD2 c.0, c.= en c.? notaties. Speciale variant IDs of andere flag? Wel/niet tonen = instelling?
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
-- (@Ivar) Screening create: niet meer dan 15 genen selecteren, anders foutmelding dat een genome-brede analyse geen selectie van genen vereist.
-  * Na screening create: aangeven varianten gevonden? restrict lijst VOT met genen die gescreened zijn (reversible).
 - Kolom activeren per gen: moet via POST omdat via GET soms te lang is.
 - Delete user verder ontmoedigen?
 - VariantOnGenome/dbSNP column with rsID
@@ -45,106 +98,49 @@ Prioritize:
 - We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!?!?
   * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
-- http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
-- Alpha 07: flag voor screening voor wel/niet variants gevonden (pas dan ook pagina na screenings?create aan, in submissie).
-- Alpha 07: /columns/VariantOnTranscript/DMD -> viewList kolommen actief op DMD
+- Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - Het is niet duidelijk wat object_id nu precies is (gene symbol of disease id, bedoeld om te bepalen welke cc actief zijn)
   - Ook id is niet echt duidelijk (dit is eigenlijk de foreign key van de entry (variantid, individualid), bedoeld om te bepalen welke cc actief zijn)
 - CUSTOM VIEWLISTS:
-    - FIXME; De custom class haalt de gegevens van alle kolommen op (TABLE_COLS), MAAR public_view kan per gen anders zijn!!!
   * URLS:
-    - /view                 -> MAPPING TO /view/variants+screenings+individuals+phenotypes
-    - /view/DMD             -> combined genomic/transcript view, per gene, per transcript; one line per variant
-- INCORPORATE PDO EVERYWHERE.
+    - /view     -> MAPPING TO /view/variants+screenings+individuals+phenotypes
+    - All the traffic to variants and individuals in LOVD 2.0 enters through variants.php, lucky me. So this file in 3.0 will both serve the "new" clean URLs, but if it detects the old LOVD 2.0 formatted URLs, it will forward to the standard URL.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
-- (BELANGRIJK) Testen wat public / curator wel en niet mag.
-  * Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
-- (BELANGRIJK) Cols instelling public_add, public_view moet gerespecteerd worden!!!!!!
-  * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
-- (~BELANGRIJK: Ivo) Icoontjes voor setup???
-- (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
 - status.php:
   * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
   * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
 - Er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
-- Check alle viewLists, iedere viewList *moet* een anchor hebben op de belangrijkste kolom (=degene die praktisch nooit verborgen zal worden).
 - Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
 - When disease is created, forward user to select columns for this disease.
-- (@Ivar) Code voor remove van custom columns moet nog "gefixed" worden; er staan belangrijke FIXME's in.
-- Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
-- (@Ivar) BUG: Gene mag niet een al gekozen symbol hebben, check ook in stap 2! (Ivar 2011-08-15: Kan dit probleem niet reproduceren... symbol komt uit zData in stap 2!) 
-    Ivo: Het punt was volgens mij dat na het doorlopen van stap 1 inmiddels 't gen kan zijn aangemaakt, en heel stap 2 daar nergens meer op controleert.
-      Overigens, $zData is eigenlijk fout, aangezien 't niet uit de database komt, maar uit $_SESSION.
 - Veranderingen zoals voorgesteld 2011-06-28?
   * Allele, genetic_origin, Phenotype/Inheritance
     - Current plans:
         Variant/allele -> Variant/Phase?
-
-        Variant/genetic_origin
-        -unknown
-        -inherited
-        -de novo
-        -de novo, germline
-        -de novo, somatic
-        -uniparental disomy
-        -uniparental disomy, maternal allele
-        -uniparental disomy, paternal allele
-        -in vitro (cloned)
-        -non-human (model organism)
-
-        Phenotype/Inheritance
-        -familial
-        -familial, autosomal dominant
-        -familial, autosomal recessive
-        -familial, autosomal recessive, consanguineous
-        -familial, X-linked
-        -sporadic
-        -sporadic, parents consanguineous
-        -sporadic, parents not consanguineous
-        -sporadic, consanguinity unknown
-
-
-
-- <OPTGROUP label="groep"><OPTION value="asdf">asdf</OPTION></OPTGROUP> voor custom link active for columns selection?
 - In individual viewList: lijst genen meest gemuteerd?
 - In data download: info in de header over de filters die gebruikt zijn.
 - Als account gelocked wordt, moet er naar de gebruiker die gelocked is, gemailed worden.
-- Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
-- "Individual has been screened, no variants have been found"
-  - That means we need an additional column!!!!!!!!
-- (Ivo) Check column breedte; wordt dat berekend of moet er iets worden ingevuld? Minimale waarden?
 - (Later) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
   * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
   * Probleem: als wij de created_* data in de niet-versioned tabel hebben, MOETEN WE DIE ENTRY BEWAREN BIJ DELETION!!!
-- (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
+  + History/revision control: misschien max 5 levels terug ofzo? Instellen ergens? Of een bepaalde tijd maar? Auto clean up?
+  + Revisie aanmaken ja/nee is een optie, ik hoef dan niet in de system settings te kiezen om dit aan of uit te zetten?
+    * Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
 - Raar: /genes/DMD?authorize -> click alle users aan -> resort viewList.
-  Nog raarder: probeer dan nog maar eens iemand uit de lijst te verwijderen.
-- Use uniqid ipv lovd functie?
+- Use uniqid() ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
-- Insert_test_data.php moet of goed getest worden, of weggedaan worden. Ik heb alleen genes, transcripts en diseases na het runnen daarvan, maar geen errors op mijn scherm gezien.
-- Zoek op row_id en row_link in prepareData() calls, die zullen hopelijk nergens meer nodig zijn (viewList() genereert ze nu zelf).
-- (@Ivo) BUG;
-    /check_update?icon returned error in code block Unknown.
-    Query : SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM lovd_v3_genes AS g LEFT OUTER JOIN lovd_v3_users2genes AS u2g ON (g.id = u2g.geneid) LEFT OUTER JOIN lovd_v3_genes2diseases AS g2d ON (g.id = g2d.geneid) INNER JOIN lovd_v3_diseases AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 ORDER BY g.id
-    Error : Mixing of GROUP columns (MIN(),MAX(),COUNT(),...) with no GROUP columns is illegal if there is no GROUP BY clause
 - Links to other resources op gene viewEntry() moet opgeruimd worden; niet-actieve velden weg.
-- Transcript create mag niet zonder genomic ref, want:
-    Error: SOAP (Logged)
-    /transcripts?create returned error in module 'getTranscriptsAndInfo'.
-    Arguments :
-            genomicReference = ""
-            geneName = "DMD"
-    SOAP response :
-            senv:Server - string index out of range
-    (met genomic ref hebben we dezelfde foutmelding)
-    * Ivar: het gaat hier specifiek om de UD die mist. Mutalyzer wil deze hebben voor het binnen halen van de transcript gegevens.
 - Geheugengebruik hoog vanwege session: Ook fix nodig voor viewList data? Blijft ook hangen.
-- Vanaf beta moeten bij bugfixes de datum en versie gezet worden..
 - Bij installatie controleren of er een mailserver is? Poort 25 check?
 - Bij aanmaken gen en geen LRG, wel check of LRG bestaat voor pending? (LRG webservice)
   * Dan op een bepaalde manier de curator van op de hoogte stellen?
   * Bij gebruik LRG webservice: Pontus: "Should a key be leaked or stolen in a way so that it is misused, we may need to reserve the right to ban that key. In that case, you would perhaps want to implement some way of redistributing new keys to the LOVD installations..."
     Me: "I see - in that case I can't hard-code it in, but need to store it in the database somewhere. However, anyone wanting to abuse the system could easily find out the new key. So if somebody really does want to do harm, it's quite impossible to lock them out *without* locking LOVDs out, unless you would introduce per-LOVD keys and match each key with a certain IP address..."
+- (@Ivo) De Oostenrijkse DB sluit:
+  http://grenada.lumc.nl/LSDB_list/lsdb.php?action=view_all&symbol_start=DHCR7
+  (zie email van 9 jan)
+- Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
+- Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
+- De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
 
 
 
@@ -154,13 +150,9 @@ MOET OVERLEGD WORDEN:
 =====================
 - Zwakkere koppeling tussen individu en disease?
   * Link IND2DIS: "proven"/"presumed" flag?
-- Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.
-- Als een viewList() gesorteerd wordt, moet de page terug naar 1?
 - (BELANGRIJK) Allele => Gametic Phase? Check alle waardes in de groep.
-- Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
 - Hoe kunnen we toch toestaan, dat users voor een grote groep genen tegelijk curator kunnen worden gemaakt?
   * Probleem vergeleken met LOVD 2.0 is dat je allow_edit en shown ook moet kunnen bewerken... Of kunnen we daar omheen werken?
-- !<value> hoort ook lege velden te tonen?
 
 
 
@@ -208,7 +200,6 @@ Ook belangrijk, maar iets minder:
   * Password storage toch in bcrypt? (pas zeker weten beschikbaar met PHP 5.3)
   * Na eerste password fail een reCAPTCHA tonen?
   ...
-
 Lifestyle columns? Smoker yes/no? Where/how to store?
 
 
@@ -217,18 +208,9 @@ Lifestyle columns? Smoker yes/no? Where/how to store?
 
 Kán later, maar VOOR dat er externe gebruikers actief worden:
 =============================================================
-- Check_update.php heeft nog rare trucjes m.b.t. het tellen van de varianten.
-
-
-- Denk uit hoe één data viewList() ingesteld kan worden; object_variants.php begint een zooitje te worden!!!
-    Eerste argument kan ook een categorie zijn? VariantOnGenome, VariantAll, VariantIndividual, VariantScreeningIndividual, whatever???
 - In commit #40 is er bij diseases viewEntry() van alles veranderd, maar het werkt niet goed (notices) en volgens mij is de query te uitgebreid. Ik moet hier later nog naar kijken.
-
-
-- Hoe slaan we functional effect op?
-- Hoe slaan we pathogeniciteit op?
-
 - Tabs instellen?
+
 
 
 
@@ -241,10 +223,6 @@ LOVD 3.0
             Wellicht niet extra doorzoeken, want dan krijg je verschil DB inhoud/wat je op het scherm ziet.
     Als een patiënt DMD (ziekte) heeft, automatisch genomische varianten mappen op genen betrokken bij DMD indien op zelfde Chr? In het geval van meerdere genen, de dichtstbijzijnde?
     Mutalyzer: als zelf via SSL beschikbaar, ga dan ook naar Mutalyzer via SSL!
-    Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)
-        Ook support mededelingen: voor versies alpha-01 t/m alpha-10 het bericht dat alpha niet meer ondersteund wordt, dus je moet upgraden. Of voor alle installs op onze server (signature check): downtime dan en dan. Op versie of op signature??? Zoiets.
-        Ook instellen per user level (submitter, curator, manager, db admin).
-++++Check tijdens install of MultiViews / URL rewriting from .htaccess werkt. Drupal doet 't...
 ++++Tijdens install checken of autoextend aan staat? Anders kan InnoDB zonder ruimte komen te zitten.
         Dan meteen maar checken welke rechten de MySQL user heeft op de database.
     Both deadlocks and lock wait timeouts are normal on busy servers and it is necessary for applications to be aware that they may happen and handle them by retrying.
@@ -253,14 +231,10 @@ LOVD 3.0
     When a transaction rollback occurs due to a deadlock or lock wait timeout, it cancels the effect of the statements within the transaction. But if the
         start-transaction statement was START TRANSACTION or BEGIN statement, rollback does not cancel that statement. Further SQL statements become part
         of the transaction until the occurrence of COMMIT, ROLLBACK, or some SQL statement that causes an implicit commit.
-    Submission:
-        Varianten invullen: aangeven door welke eerder ingevulde detection technieken hij gevonden is?
     WebService / Feed can be turned on or off? Explain there that turning it off can imply less traffic to their database.
         Mummi had een mooie quote die curators kan waarschuwen voor de effecten, als ze die uit zetten:
             You (and some curators) probably won't agree with me fully on the above, I'm sure. But there could still be a useful compromise to be made here: have an on/off switch for the WS/feed access methods so curators can disable these if they wish, but at the same time 'educate' them in what I argued above about data accessibility. They can then balance this against their desire to, for one reason or other, limit accessibility options to HTML only.
             NB The accessibility issue will become especially relevant in the future when we will have the various distributed search tools: curators need to be informed that if they disable the WS/feed access methods, their LSDB will not be included alongside with all the other datasources in the federation, and so they will be less visible to potential users, get less traffic, and (ultimately) fewer citations than they might otherwise receive, and overall less peer recognition at the end of the day.
-    Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
-    History/revision control: misschien max 5 levels terug ofzo? Instellen ergens? Of een bepaalde tijd maar? Auto clean up?
     Raymond Dalgleish wil beta-tester zijn.
     Het hele HTML/XSS probleem. Nu hebben we nog overal XSS checks, behalve in de custom link script, toch? Deny HTML input voor column data?
         Het hele probleem is dat alle output moet ge-htmlspecialchar()ed worden om normaal getoond te worden als er een < in zit. Maar echte HTML gaat dan verloren.
@@ -269,15 +243,11 @@ LOVD 3.0
     Een array opbouwen van $_PATH_ELEMENTS / ACTIONS met titels waar we zijn geweest (edits, dels, creates e.d. niet opgeslagen) zodat je makkelijk terug kunt?
     Probeer iets in te bouwen, dat een upgrade te negeren is. Dat dus iemand kan zeggen; ik wil blijven werken, ik weet dat er een probleem is. Maak dan het scherm duidelijk anders. Continue bericht bovenaan o.i.d.?
         $_SESSION VAR, uitgelezen door inc-top.php.
-    Revisie aanmaken ja/nee is een optie, ik hoef dan niet in de system settings te kiezen om dit aan of uit te zetten?
-        Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
     Data license? Mummi schreef er over (Science Commons) 8 november 2009
         == Creative Commons, right? License chooser inbouwen per gen. Maar wat doen met de genomic variants?
     Implement tokens for forms that do not ask passwords? Tokens valid for 5 minutes only? Not to prevent abuse of computers left logged in, because the token will be regenerated, but against CSRF.
     Create disease: probeer te standaardiseren door data op te halen van OMIM of iets anders, zoals create gene ook basis data ophaalt.
-    De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
     Mouseover (hover) over kolom namen op viewList() ? Waar stellen we dat in? Alleen met custom columns of ook met andere views? Idem in viewEntry?
-    Laat de install checken op de aanwezigheid van bepaalde functies, zoals XML functies.
     Om het renderen van de pagina niet te laten wachten op het downloaden van JS includes, kan deze code gebruikt worden. Werkt (nu nog) alleen op nieuwere browsers; oudere wachten alsnog (dus wel backwards compatible).
         <script>
             var node = document.createElement('script');
@@ -286,22 +256,14 @@ LOVD 3.0
             node.src = 'example.js';
             // Now insert the node into the DOM, perhaps using insertBefore()
         </script>
-    Na het inloggen, indien er een update is, een tooltip weergeven rechtsonder dat er een update is! Niet de hele tijd dus, alleen nadat je net bent ingelogd.
-        Je kunt $_STAT gewoon analyseren, want het icoon is al geladen tijdens het inloggen dus hoort al te weten dat er een update is!
-        Popup heeft andere kleur aan de hand van update belangrijkheid...
-        Kan popup zo'n hoekje hebben die naar het logo wijst?
     Kan de inc-upgrade intelligenter gemaakt worden zodat na een ALTER TABLE ADD COLUMN de foutmelding "Duplicate column name XXX" netjes wordt afgevangen?
     Fouten tijdens upgraden loggen, zodat na te zoeken is waar 't fout ging?
-    Probleem LOVD2 c.0, c.= en c.? notaties. Speciale variant IDs of andere flag? Wel/niet tonen = instelling?
     Ondersteuning DOI i.p.v. PubMed? NMDB2 heeft al een DOI custom link.
     Genomische positie velden hernoemen naar hg19_* ?
     Na aanmaken gen, doorsturen naar welke kolommen toevoegen/verwijderen/sorteren
         Idem na disease
     Bij aanmaken disease, controleren of je die disease mogelijk al hebt? Behalve op OMIM ID natuurlijk?
     $_CONF['send_admin_submissions'] splitsen?
-
-KNOWN BUGS:
-===========
 
 Overdenkingen / Kleinere dingen om te doen:
 ===========================================
@@ -312,22 +274,14 @@ Voorstel schrijven voor nieuwe functies voor de Mutalyzer webservice, standaardi
 Tabs instelbaar: system settings bepaalt welke tabs worden getoond; genes, diseases, transcripts, users, individuals, etc.
     Misschien niet de system settings maar individueel? Extra tabje toevoegen die + heet, die de lijst mogelijke tabs geeft met een checkbox er voor? Gebruiker vinkt aan en uit, klikt Save en pagina herlaad?
         Beter nog: inc-top herlaad? Ajax daarvoor gebruiken?
-Formulier voor toevoegen/edit kolom: onchange toevoegen aan kolom breedte veld voor dynamische update.
 Een column ID moet altijd met een hoofdletter gemaakt worden, dus daar moet een controle op!
-FINISH COLUMNS EDIT??? First think about how to do this???
-    Display settings en global settings individual cols zijn in 2.0 gescheiden, dat heeft echt 0 nut en is verwarrend. Kappen, dus!
-        Denk nog ff na of verschillende niveau's misschien verschillende dingen moeten kunnen editen, zo niet er gewoon 1 script van maken.
-        Variants & phenotypes zijn dan dus speciaal. "Edit gene-specific display settings" / "Edit disease-specific display settings" of iets dergelijks.
-        Dit al in 2.0 regelen? Zet dan op de global edit form bij de Variant cols: changes to *these* fields will not show on the gene's column display settings (whatever) unless you reset these columns to the new default settings.
+Columns edit, scheiding display settings / default settings:
+    Denk nog ff na of verschillende niveau's misschien verschillende dingen moeten kunnen editen, zo niet er gewoon 1 script van maken.
+    Variants & phenotypes zijn dan dus speciaal. "Edit gene-specific display settings" / "Edit disease-specific display settings" of iets dergelijks.
 ik moet nog eens kijken naar welke formulieren een password nodig hebben
-TABLE_VARIANTS_ON_TRANSCRIPTS heeft nu alleen een valid_from om te linken naar TABLE_VARIANTS. Maar dat is niet enforced, dat die combi voorkomt in TABLE_VARIANTS.
-    Hoe vaak zal de data in zowel TABLE_VARIANTS als TABLE_VARIANTS_ON_TRANSCRIPTS bewerkt worden??? Misschien moeten we het afhandelen als twee aparte entiteiten,
-        en TABLE_VARIANTS_ON_TRANSCRIPTS alle versioning kolommen geven; de juiste variant wordt er dan bijgezocht op basis van alleen de ID.
-    Kan TABLE_VARIANTS niet een AUTO_NUMBERING hebben?
 
 Waar we echt mee bezig zijn:
 ============================
-position_g_mrna_start en position_g_mrna_end (TABLE_TRANSCRIPTS), volgens mij moet dat simpeler.
 checkFields() roept getForm() aan om te bepalen hoe de velden heten. Dus als er een error is, wordt getForm() twee keer aangeroepen.
     Voor forms met veel queries is dat een beetje vervelend. Kan getForm() niet een static variabele in gebruik nemen,
     die ziet dat het formulier al eerder gemaakt is (door de checkFields() call) en die dan direct returnen?
@@ -342,22 +296,22 @@ Create gene: herstel percentages van voorgang, zodat het logischer verloopt.
 Edit gene: created date kunnen veranderen???? Beetje vreemd, maar sowieso slikt hij de H:i:s niet die er achter staat.
 
 
+
 // Lijst van questions about the future:
 Tabs, volgorde goed?
     Submitters tab nu Users, ook zodat je db admin en managers kan zien?
         Voor de normale gebruikers moeten we bepaalde kolommen weghalen. En andere toevoegen? Adres staat niet genoemd. Zien de normale mensen de details ook (= doorklikken), of moeten we een nieuwe view maken?
 Submenu's weg, knopjes met uitschuif met opties?
-    Gebruik kleuren om te scheiden? Laat zien nu geen verschil zien tussen var + ind; maar straks nog meer categoriën!
-        Hide set columns, unhide all columns = algemeen
+Gebruik kleuren in ViewLists om te scheiden? Laat zien nu geen verschil zien tussen var + ind; maar straks nog meer categoriën!
+    Hide set columns, unhide all columns = algemeen
     Vinkjes voor iedere entry om snel te curaten/deleten/booten/etc oid?
 Suggesties:
-    Includen van de Setup in de Configuration, de dropdown als alternatief voor het horizontale menu was een goed idee,
+    Includen van de Setup in de Configuration
     submitters should be able to edit info to whichever individual, but edit only their own data,
-    dropdown menu "tools" above variants is a good idea, right click on variant -> maybe left click on a small button or mouseover explaining to right-click?,
+    right click on variant -> maybe left click on a small button or mouseover explaining to right-click?,
     show pathogenicity in color values for the whole line?, skip the download format - people can use the system to edit?, maybe check out the uniprot download format?,
         The uniprot format by the way has the advantage to use lines for the data, so adding more lines for a individual's phenotype data is just fine, but the file gets so long...
     mouseover column or column header for legend info?
-CURRDB in cookie!
 
 
 
@@ -365,9 +319,6 @@ Wat moet ik onthouden tijdens het coden?
 =========================================
 * $_SERVER['PHP_SELF'] werkt niet meer! Want daar kan vanalles in staan. SCRIPT_NAME niet gebruiken voor doorsturen, omdat we geen .php in de URL willen.
     Af en toe ff zoeken, om te kijken of het stiekem toch gebruikt wordt.
-* mysql_query() moeten omgezet worden
-* mail() moeten omgezet worden
-* column names have been changed for tables, or the order has been changed. setting names the same.
 * Unique variant overview toont alleen DNA veld???
 * SELECT COUNT(*) FROM t = slower on InnoDB (index scan needed). SHOW TABLE STATUS also can be used if an *approximate* row count is sufficient.
 * TRUNCATE TABLE == DELETE FROM @ InnoDB. As of MySQL 4.1.13, truncate operations cause an implicit commit. Before 4.1.13, truncate operations are not transaction-safe; an error occurs when attempting one in the course of an active transaction.
@@ -384,10 +335,8 @@ Wat moet ik onthouden tijdens het coden?
     Curator
     Manager
     Database administrator
-* Remove comments like "// 2009-12-34; 2.0-??; blabla
 * Je hoeft links helemaal niet zo lang te maken, vanwege de BASE in de header.
-* $_SESSION['currdb'] zou eigenlijk alleen maar moeten zijn, om te onthouden waar je ook al weer was. Verder hoeft dat ding helemaal niet getoond te worden bovenaan de pagina, tenzij je echt ín een gen zit... toch?
-* lovd_dbFout -> lovd_queryError()
+
 
 
 Not sure yet how to...
@@ -395,15 +344,11 @@ Not sure yet how to...
 - Custom Column database system online
 - GPL 2 only? Of toch 3 houden? Of 3 only maken? ff checken...
 - API HTTP status codes: http://gif.phpnet.org/frederic/programs/http_status_codes/
-- Mutationcol nog wel nodig???
 - Delete users: Delete optie gewoon weglaten, tenzij er geen children zijn?
-- Variant listings
-    Nu kunnen we zoeken op detection technique en disease, we moeten dat toch wel blijven tonen... of? Kunnen we met MySQL 4.1 technieken de laatste tonen? Extra queries te zwaar? Stored procedures?
 - Consequence (RNA / AA changes) apart van DNA houden?
 - Aanmaken disease - voorstellen cols dmv OMIM ID en ontology lookup?
 - Bij het editen insluiten de modified_date van de entry. Als die, bij het editen van de data ineens anders is, moet je een foutmelding geven. Twee mensen hebben tegelijkertijd er aan gewerkt!
     Wellicht direct in de update query?
-- All the traffic to variants and individuals in LOVD 2.0 enters through variants.php, lucky me. So this file in 3.0 will both serve the "new" clean URLs, but if it detects the old LOVD 2.0 formatted URLs, it will forward to the standard URL.
 - Genen als HOXA@ en UGT1A zijn officieel een erkend gensymbool maar zijn families van genen; ze hebben een NG per groep genen, maar een NM per gen, en de Mutalyzer SOAP call flipt omdat die geen NC slice kan maken.
 
 
@@ -432,46 +377,22 @@ Needed before release
         Standaard mouseover met uitleg? Standaard notes er bij?
         Opsplitsen in twee boxen waar entries heen gesleept kunnen worden?
         Omzetten naar lijst checkboxes?
-    Loop nog een keer goed door de authenticatie heen; wat moet het publiek kunnen zien en wat niet? staat dat goed ingesteld?
     Import: choose character set
         Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
         nodig... maar dat werkt pas vanaf 4.3.0... Toch proberen? Alleen laden met config_import.txt, denk ik.
         Testfile heb ik in mijn email, van David Bonthron (Wed, 18 Jun 2008 12:28:46 +0100).
     Astrid Out en Carli Tops zouden graag de mogelijkheid hebben om een overzicht te krijgen van individuals naar mutaties, i.e.
         in de database van GenX kunnen zoeken op (aanwezigheid van?) varianten in GenY.
-    Zorg er voor dat je LOVD 2.0 urls kan ontvangen, backward compatible.
-        variants.php?select_db=GENE&action=view&view=    of zoeken op DBID links.
-    Check alle links nog een keer, of die goed zijn gelegd. Ik ben begonnen zonder dat helder te hebben.
     Default list_size moet onthouden worden in COOKIE, net zoals de hidden cols.
 ++++Check alle queries 'ns.
     Cols - check huidige omschrijvingen in DMD of shared LOVD install, wellicht anders nu.
         DB-ID column heet ID op het formulier.
 +++ Kolommen verkeerd gemapped.
-        Peter: Individual/Independent_Families en Individual/Isolated_Cases naar Variant (SDH only?).
         Johan: country/ethnicity kolommen van individual naar variant (Ind2Var!).
             Individual/Origin/Geographic, Individual/Origin/Ethnic, Individual/Origin/Population
                 Ertussen dan maar? Wacht ff hoor... de speciale variant overview werkt alleen op de Individual cols...
             (...) veel naar gevraagd wordt (Variant_Amino_acid_SIFT, Variant_Amino_acid_PolyPhen, Variant_Amino_acid_AlignGVGD, DNA-reported).
             Er is verwarring en overlap over de onderwerpen Allele, Individual/Occurence, Individual/Mutation/Origin, Individual/Mutation/Origin_De_Novo.
-                De Alelle kolom covert eigenlijk al de Inheritance.
-                Daarom heb ik een alternatief aangemaakt, te weten;
-                Variant_Origin
-                Origin; family (other affecteds besides brother/sister), sporadic (no affected relatives besides brother/sister), consanguinity parents, de novo (sporadic but de novo origin variant unproven)
-                Keuzes uit drop-down menu;
-                    ? (unknown)
-                    familial
-                    sporadic
-                    sporadic, consanguineous parents
-                    sporadic, non-consanguineous parents
-                    sporadic, consanguinity parents?
-                    de novo, in individual
-                    de novo, in mother
-                    de novo, in mother (grandmaternal allele)
-                    de novo, in mother (grandpaternal allele)
-                    de novo, in father
-                    de novo, in father (grandmaternal allele)
-                    de novo, in father (grandpaternal allele)
-        Origin, Origin_De_Novo, Occurence (Tony)
 ++  Store submission for later? Dan hoort een ingelogde gebruiker een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
     Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
         Dat moet dan ongelofelijk goed gecontroleerd worden!!!
@@ -480,10 +401,7 @@ Needed before release
         Johan wil een installatie dicht kunnen gooien (behalve hem en de DBA ofzo?), om tijdelijk te voorkomen dat submitters iets editen.
     Column type wizard:
         Select: waarde i.p.v. yes (-- select --) or no.
-    MySQL-type kan geen DATETIME zijn, dat wordt niet geaccepteerd.
     Gebruikers de external sources laten beheren?
-    SET CHARACTER SET character_set_name (voor vaststellen communicatie MySQL <-> Client. MySQL versie?
-        Hebben we niet nodig, omdat de communicatie niet uitmaakt? Als ik maar terugkrijg, wat ik er eerder in heb gestopt.
     Kunnen we bij de upgrade zien of een upgrade al gedaan is? Dat een foutmelding "duplicate key" ofzo ondervangen wordt, zodat ie doorgaat?
     Find & Replace:
         Allowing full regexp mode where you can build your own regular expression; submitting the form will first return
@@ -492,10 +410,8 @@ Needed before release
 
 
 
-
 OTHER:
     If family ID column present, report in unique variant overview how many entries in total AND how many families in total.
-    1 import file voor varianten voor meerdere genen?
     Internationalization?
 - Boven log entries een paar blokken plaatsen; per log eentje. JS er op, die search_name invult, en formulier submit.
   * Eventueel met highlight.

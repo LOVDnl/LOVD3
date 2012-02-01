@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2012-01-31
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-01
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -49,7 +49,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 // Some info & statistics.
-list($nUsers)    = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_USERS));
+list($nUsers)    = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0'));
 list($nLogs)     = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_LOGS));
 list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS));
 $nGenes          = count(lovd_getGeneList());

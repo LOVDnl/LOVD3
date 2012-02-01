@@ -471,7 +471,13 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 unset($_SESSION['work'][$sPath][$_POST['workID']]);
 
                 // Thank the user...
-                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_POST['id'] . '?authorize');
+                // 2012-02-01; 3.0-beta-02; If there is only one user, don't forward to the Add curators page.
+                if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
+                    header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_POST['id'] . '?authorize');
+                } else {
+                    // FIXME; should be sent to list of columns for this gene, but that page does not exist yet.
+                    header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $_POST['id']);
+                }
 
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);

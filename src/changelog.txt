@@ -7,6 +7,28 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 02
+ * 2012-03-05 ?????????????????????????
+ *********/
+ * Went through the entire 2Do.txt file to resort the new priorities after
+   3.0-beta-01.
+ * The installation process now checks if MultiViews or mod_rewrite (or
+   something equivalent on non-Apache servers) is activated. It also checks for
+   the PHP function xml_parser_create().
+   Closes #4: "Problems running LOVD 3.0 on Windows 7/WampServer 2.0".
+ * Updated the INSTALL.txt to reflect this.
+ * Removed link to LOVD status page for now since we haven't implemented it yet.
+ * When resorting a ViewList, the list will return to the first page.
+ * When there is only one user in the database, after creating a gene you are no
+   longer forwarded to the "Add curator" page.
+
+
+
+
+
+
+
+/*******************
  * 3.0 Beta 01
  * 2012-01-31
  *********/

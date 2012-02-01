@@ -34,6 +34,9 @@ http://httpd.apache.org/docs/2.0/howto/htaccess.html
 More information about AllowOverride:
 http://httpd.apache.org/docs/2.0/mod/core.html#allowoverride
 
+Also, make sure you have MultiViews or mod_rewrite enabled. This allows a PHP
+file like "/setup.php" to be accessed as "/setup".
+
 
 USING A WEBSERVER DIFFERENT THAN APACHE
 =======================================
@@ -43,7 +46,7 @@ the .htaccess file sets a couple of PHP options and enables mod_rewrite. If you
 use a different webserver, please disable the following PHP options:
 register_globals, magic_quotes_gpc, mysql.trace_mode.
 Also make sure there is "MultiViews" functionality, which allows a PHP file like
-"setup.php" to be accessed as "/setup".
+"/setup.php" to be accessed as "/setup".
 
 
 INSTALLATION

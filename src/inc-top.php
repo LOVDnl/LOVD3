@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2011-12-22
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-01
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -262,7 +262,8 @@ print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
       ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')</H5>' . "\n" : '') .
       '    </TD>' . "\n" .
       '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
-      '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] . ' [ <A href="status">Current LOVD status</A> ]<BR>' . "\n");
+// 2012-02-01; 3.0-beta-02; Disable link to status page for now.
+      '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] . '<!-- [ <A href="status">Current LOVD status</A> ]--><BR>' . "\n");
 if ($_AUTH) {
     print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
           '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");

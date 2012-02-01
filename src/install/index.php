@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-01-30
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-01
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -85,33 +85,58 @@ if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
 
     // Requirements. This is where we would want to check software versions, PHP modules, etc.
 
-    // Check for PHP, MySQL versions.
+    // Check for PHP version, PHP functions, MySQL version.
     $sPHPVers = str_replace('_', '-', PHP_VERSION) . '-';
     $sPHPVers = substr($sPHPVers, 0, strpos($sPHPVers, '-'));
     $bPHP = ($sPHPVers >= $aRequired['PHP']);
     $sPHP = '<IMG src="gfx/mark_' . (int) $bPHP . '.png" alt="" width="11" height="11">&nbsp;PHP : ' . $sPHPVers . ' (' . $aRequired['PHP'] . ' required)';
+
+    // 2012-02-01; 3.0-beta-02; Added check for xml_parser_create(), easily allowing other PHP functions to be checked also.
+    $bPHPFunctions = true;
+    $sPHPFunctions = '';
+    foreach ($aRequired['PHP_functions'] as $sFunction) {
+        $bFunction = function_exists($sFunction);
+        if (!$bFunction) {
+            $bPHPFunctions = false;
+        }
+        $sPHPFunctions .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bFunction . '.png" alt="" width="11" height="11">&nbsp;PHP function : ' . $sFunction . '()<BR>';
+    }
+
     $sMySQLVers = str_replace('_', '-', mysql_get_server_info()) . '-';
     $sMySQLVers = substr($sMySQLVers, 0, strpos($sMySQLVers, '-'));
     $bMySQL = ($sMySQLVers >= $aRequired['MySQL']);
     $sMySQL = '<IMG src="gfx/mark_' . (int) $bMySQL . '.png" alt="" width="11" height="11">&nbsp;MySQL : ' . $sMySQLVers . ' (' . $aRequired['MySQL'] . ' required)';
+
     // Check for InnoDB support.
     list(,$sInnoDB) = @mysql_fetch_row(lovd_queryDB_Old('SHOW VARIABLES LIKE "have\_innodb"'));
     $bInnoDB = ($sInnoDB == 'YES');
     $sInnoDB = '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bInnoDB . '.png" alt="" width="11" height="11">&nbsp;MySQL InnoDB support ' . ($bInnoDB? 'en' : 'dis') . 'abled (required)';
-    if (!$bPHP || !$bMySQL || !$bInnoDB) {
+
+    // 2012-02-01; 3.0-beta-02; Check for "MultiViews" or Apache's mod_rewrite, or anything some other webserver may have that does the same.
+    $aResultNoExt = @lovd_php_file(lovd_getInstallURL() . 'setup');
+    $aResultExt   = @lovd_php_file(lovd_getInstallURL() . 'setup.php');
+    $bMultiViews  = !(!$aResultNoExt && $aResultExt);
+    $sMultiViews  = '<IMG src="gfx/mark_' . (int) $bMultiViews . '.png" alt="" width="11" height="11">&nbsp;MultiViews, mod_rewrite or equivalent : ' . ($bMultiViews? 'en' : 'dis') . 'abled (required)';
+    // FIXME; link to manual?
+
+    if (!$bPHP || !$bPHPFunctions || !$bMySQL || !$bInnoDB || !$bMultiViews) {
         // Failure!
         lovd_showInfoTable('One or more requirements are not met!<BR>I will now bluntly refuse to install.<BR><BR>' .
                            $sPHP . '<BR>' .
+                           $sPHPFunctions .
                            $sMySQL . '<BR>' .
-                           $sInnoDB, 'stop');
+                           $sInnoDB . '<BR>' .
+                           $sMultiViews, 'stop');
         require 'inc-bot.php';
         exit;
     } else {
         // Success!
         lovd_showInfoTable('System check for requirements all OK!<BR><BR>' .
                            $sPHP . '<BR>' .
+                           $sPHPFunctions .
                            $sMySQL . '<BR>' .
-                           $sInnoDB, 'success');
+                           $sInnoDB . '<BR>' .
+                           $sMultiViews, 'success');
     }
 
     print('      The installation of LOVD consists of ' . (count($aInstallSteps) - 1) . ' simple steps.

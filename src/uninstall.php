@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2011-12-09
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-02-01
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -163,7 +163,8 @@ if (!empty($_POST)) {
             // FIXME; add more later.
             // General statistics...
             print("\n");
-            $nUsers = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS)->fetchColumn();
+            // 2012-02-01; 3.0-beta-02; Exclude "LOVD" system user.
+            $nUsers = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn();
             $nIndividuals = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS)->fetchColumn();
             $nScreenings = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS)->fetchColumn();
             $nVars = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS)->fetchColumn();
