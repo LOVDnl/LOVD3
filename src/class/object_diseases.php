@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2011-11-24
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-02-02
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -161,20 +161,15 @@ class LOVD_Disease extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
+        global $_DB;
 
         // Get list of genes, to connect disease to gene.
-        $aGenesForm = array();
-        $qData = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", name, ")") FROM ' . TABLE_GENES . ' ORDER BY id');
-        $nData = mysql_num_rows($qData);
-        // FIXME; aangezien $aGenesForm leeg zal zijn als $nData 0 is, stel ik voor deze while buiten de if te doen,
-        //   dan de if om te draaien. Dan heb je geen else nodig.
-        if ($nData) {
-            while ($r = mysql_fetch_row($qData)) {
-                $aGenesForm[$r[0]] = $r[1];
-            }
-        } else {
-            // FIXME; is het niet makkelijker om hier geen value op te geven ipv "None"? Het is toch geen verplicht veld, dus als ie geselecteerd wordt,
-            // wordt de waarde automatisch genegeerd. Nu moest je een uitzondering plaatsen in checkFields() en genes.php.
+        $aGenesForm = $_DB->query('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllCombine();
+        $nData = count($aGenesForm);
+        foreach ($aGenesForm as $sID => $sGene) {
+            $aGenesForm[$sID] = $sID . ' (' . lovd_shortenString($sGene, 50) . ')';
+        }
+        if (!$nData) {
             $aGenesForm = array('' => 'No gene entries available');
         }
         $nFieldSize = (count($aGenesForm) < 20? count($aGenesForm) : 20);

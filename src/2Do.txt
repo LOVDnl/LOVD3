@@ -1,13 +1,7 @@
 Prioritize:
 ===========
 - Set unique key op transcript NM nummer.
-- (@Ivo) BUG;
-    /check_update?icon returned error in code block Unknown.
-    Query : SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM lovd_v3_genes AS g LEFT OUTER JOIN lovd_v3_users2genes AS u2g ON (g.id = u2g.geneid) LEFT OUTER JOIN lovd_v3_genes2diseases AS g2d ON (g.id = g2d.geneid) INNER JOIN lovd_v3_diseases AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 ORDER BY g.id
-    Error : Mixing of GROUP columns (MIN(),MAX(),COUNT(),...) with no GROUP columns is illegal if there is no GROUP BY clause
-  + Check_update.php heeft nog rare trucjes m.b.t. het tellen van de varianten.
-- Zoeken op !Value moet ook "OR IS NULL" toevoegen.
-- BUG? Waarom werkt !="" niet op Individuals/Age_of_diagnosis ??????
+- (@Ivo) Check_update.php heeft nog rare trucjes m.b.t. het tellen van de varianten.
 - (@Ivar) Add comments in checkDBID en fetchDBID
 - (@Ivar) Add comments in submit.php.
 - (@Ivar) viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
@@ -21,12 +15,16 @@ Prioritize:
   + Indien er geen varianten zijn gevonden, ook niet vragen om deze toe te voegen.
   + Indien er varianten zijn gevonden, moet de submitter bestaande varianten van dit individu kunnen selecteren als "met deze screening bevestigd".
     * Moet met viewList, plus optie "select all", zoals ook genes/DMD?authorize.
+- Screening ViewEntry: geen Variant ViewList tonen indien aangevinkt dat geen varianten zijn gevonden. Dubbelcheck op SCR2VAR???
+  + Ook geen knopje Add variants indien aangegeven dat er geen varianten gevonden zijn.
+- Screening edit: getForm(): check op SCR2VAR: indien varianten gevonden zijn, moet vinkje aanstaan en niet uit te zetten zijn
+  + Bijvoorbeeld door een plaatje te gebruiken.
+  + Andersom: als er geen varianten gevonden zijn: mag de gebruiker de waarde nog wel veranderen.
 - Allow to create new VOT with existing VOG
   + Gebruiker selecteert transcript uit ViewList (check op chromosoom), PHP mapt variant op aangegeven NM (gebruik ajax/convert_position.php), insert into DB, forward naar edit variant form, evt. scrollen naar nieuwe VOT.
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
 - (@Ivar) Alle variant en/of data views uitbreiden met affects function en andere standaard kolommen die LOVD 2.0 ook toont.
   * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
-- (@Ivo) Gen namen inkorten op disease create/edit, zoals ook gedaan op screenings formulier
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
   + Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.

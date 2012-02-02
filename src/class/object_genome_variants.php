@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-01-31
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-02
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -240,7 +240,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
-        global $_AUTH, $_SETT, $_CONF, $zData, $_DATA;
+        global $_AUTH, $_CONF, $_DB, $_SETT, $zData, $_DATA;
 
         if (!empty($_GET['geneid'])) {
             // Setting chromosome to $_POST so that insertEntry() will get the correct chromosome value as well. checkFields() will run getForm(), so it will always be available.
@@ -255,13 +255,10 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         $aSelectOwner = array();
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name');
-            while ($z = mysql_fetch_assoc($q)) {
-                $aSelectOwner[$z['id']] = $z['name'];
-            }
+            $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id > 0 ORDER BY name')->fetchAllCombine();
+            $aFormOwner = array('Owner of this variant', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aSelectStatus = $_SETT['data_status'];
             unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
-            $aFormOwner = array('Owner of this variant', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false);
         } else {
             $aFormOwner = array();

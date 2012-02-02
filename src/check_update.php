@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2011-08-12
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2012-02-02
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -70,7 +70,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
     if ($_CONF['send_stats']) {
         // Collect stats...
         // Number of submitters.
-        list($nSubs) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_USERS . ' AS u WHERE u.id NOT IN (SELECT c.userid FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id)'));
+        list($nSubs) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_USERS . ' AS u WHERE u.id > 0 AND u.id NOT IN (SELECT c.userid FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id)'));
         $sPOSTVars .= '&submitter_count=' . $nSubs;
 
         // Number of genes.
@@ -88,7 +88,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         list($nUniqueVariants) = mysql_fetch_row(mysql_query('SELECT COUNT(DISTINCT `VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS));
         $sPOSTVars .= '&uniquevariant_count=' . $nUniqueVariants;
 
-        // FIXME, I disabled this part. Fix it. Take Times_Reported et al in consideration.
+        // FIXME, I disabled this part. Fix it. Take panel_size et al in consideration.
         // Number of variants.
         if (false && isset($_CURRDB) && $_CURRDB->colExists('Individual/Times_Reported')) {
             list($nVariants) = mysql_fetch_row(lovd_queryDB_Old('SELECT SUM(p.`Individual/Times_Reported`) FROM ' . TABLE_INDIVIDUALS . ' AS p LEFT JOIN ' . TABLE_VARIANTS . ' AS v ON (p.id = v.individualid)'));

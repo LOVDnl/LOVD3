@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-01
+ * Modified    : 2012-02-02
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -871,12 +871,19 @@ function lovd_requireAUTH ($nLevel = 0)
 
 function lovd_shortenString ($s, $l)
 {
-    // Function kindly provided by Ileos.nl in the interest of Open Source.
+    // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Shortens string nicely to a given length.
-    // FIXME; Should take into account any ( characters in the string and should close them after shortening them.
     // FIXME; Should be able to shorten from the left as well, useful with for example transcript names.
     if (strlen($s) > $l) {
-        $s = substr($s, 0, $l - 3) . '...';
+        $s = substr($s, 0, $l - 3);
+        // 2012-02-02; 3.0-beta-02; Now also makes sure the parentheses are balanced.
+        //   It assumes they were balanced before shorting the string.
+        $nClosingParenthesis = 0;
+        while (substr_count($s, '(') > (substr_count($s, ')') + $nClosingParenthesis)) {
+            $s = substr($s, 0, -1);
+            $nClosingParenthesis ++;
+        }
+        $s .= '...' . str_repeat(')', $nClosingParenthesis);
     }
     return $s;
 }

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-01-18
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-02
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -91,7 +91,7 @@ class LOVD_User extends LOVD_Object {
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)';
-        $this->aSQLViewList['WHERE']     = 'u.id != 0';
+        $this->aSQLViewList['WHERE']    = 'u.id > 0';
         $this->aSQLViewList['GROUP_BY'] = 'u.id';
         $this->aSQLViewList['ORDER_BY'] = 'level DESC, u.name ASC';
 

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2011-11-17
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-02-02
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -182,25 +182,20 @@ class LOVD_Phenotype extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
-        global $_AUTH, $_SETT;
+        global $_AUTH, $_DB, $_SETT;
 
         if (ACTION == 'edit') {
             global $zData;
             $_POST['diseaseid'] = $zData['diseaseid'];
         }
 
-        list($sDisease) = mysql_fetch_row(lovd_queryDB_Old('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id=?', array($_POST['diseaseid'])));
-
-        $aSelectOwner = array();
+        $sDisease = $_DB->query('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($_POST['diseaseid']))->fetchColumn();
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name');
-            while ($z = mysql_fetch_assoc($q)) {
-                $aSelectOwner[$z['id']] = $z['name'];
-            }
+            $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id > 0 ORDER BY name')->fetchAllCombine();
+            $aFormOwner = array('Owner of this phenotype entry', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aSelectStatus = $_SETT['data_status'];
             unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
-            $aFormOwner = array('Owner of this phenotype entry', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false);
         } else {
             $aFormOwner = array();

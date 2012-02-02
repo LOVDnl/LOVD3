@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2011-11-16
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-02-02
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -192,29 +192,25 @@ class LOVD_Screening extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
-        global $_AUTH;
+        global $_AUTH, $_DB;
 
         $aSelectOwner = array();
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name');
-            while ($z = mysql_fetch_assoc($q)) {
-                $aSelectOwner[$z['id']] = $z['name'];
-            }
+            $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id > 0 ORDER BY name')->fetchAllCombine();
             $aFormOwner = array('Owner of this screening', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
         } else {
             $aFormOwner = array();
         }
 
         // Get list of genes.
-        $aGenesForm = array();
-        $qData = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id');
-        $nData = mysql_num_rows($qData);
+        $aGenesForm = $_DB->query('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllCombine();
+        $nData = count($aGenesForm);
+        foreach ($aGenesForm as $sID => $sGene) {
+            $aGenesForm[$sID] = $sID . ' (' . lovd_shortenString($sGene, 50) . ')';
+        }
         if (!$nData) {
             $aGenesForm = array('' => 'No gene entries available');
-        }
-        while ($r = mysql_fetch_row($qData)) {
-            $aGenesForm[$r[0]] = $r[0] . ' (' . lovd_shortenString($r[1], 50) . ')';
         }
         $nFieldSize = (count($aGenesForm) < 10? count($aGenesForm) : 10);
 

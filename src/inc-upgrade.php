@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-01-31
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-02
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -305,6 +305,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         // This recursive count returns a higher count then we would seem to want at first glance,
         // because each version's array of queries count as one as well.
         // However, because we will run one additional query per version, this number will be correct anyway.
+        // 2012-02-02; 3.0-beta-02; But of course we should exclude the older versions...
+        foreach ($aUpdates as $sVersion => $aSQL) {
+            if (lovd_calculateVersion($sVersion) <= $sCalcVersionDB || lovd_calculateVersion($sVersion) > $sCalcVersionFiles) {
+                unset($aUpdates[$sVersion]);
+            }
+        }
         $nSQL = count($aUpdates, true);
 
         // Actually run the SQL...
@@ -315,9 +321,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         $sSQLFailed = '';
 
         foreach ($aUpdates as $sVersion => $aSQL) {
-            if (lovd_calculateVersion($sVersion) <= $sCalcVersionDB || lovd_calculateVersion($sVersion) > $sCalcVersionFiles) {
-                continue;
-            }
             $_BAR->setMessage('To ' . $sVersion . '...');
 
             $aSQL[] = 'UPDATE ' . TABLE_STATUS . ' SET version = "' . $sVersion . '", updated_date = NOW()';

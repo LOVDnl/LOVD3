@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-01
+ * Modified    : 2012-02-02
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -650,7 +650,7 @@ class LOVD_Object {
         $aBadSyntaxColumns = array();
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
-                $CLAUSE = (strpos($aCol['db'][0], '.') === false? 'HAVING' : 'WHERE');
+                $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false? 'HAVING' : 'WHERE');
                 if ($aCol['db'][2] !== true) {
                     // Column type of an alias is given by LOVD.
                     $sColType = $aCol['db'][2];
@@ -679,7 +679,7 @@ class LOVD_Object {
                                         } else {
                                             $sOperator = '=';
                                         }
-                                        $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // INT fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
@@ -711,7 +711,7 @@ class LOVD_Object {
                                                 $sTerm = $aMatches[2] . (!isset($aMatches[3])? '' : $aMatches[3] . (!isset($aMatches[4])? '' : $aMatches[4]));
                                                 break;
                                         }
-                                        $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm) . (substr($sOperator, -4) == 'LIKE'? '%' : '');
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // DATE(TIME) fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
@@ -722,16 +722,19 @@ class LOVD_Object {
                                     break;
                                 default:
                                     if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
-                                        $sTerm = trim($sTerm, '"');
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'LIKE';
-                                        $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         $aArguments[$CLAUSE][] = '%' . lovd_escapeSearchTerm($aMatches[1]) . '%';
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         $bNot = (substr($sTerm, 0, 1) == '!');
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . ($bNot? '!' : '') . '= "" OR ' . $aCol['db'][0] . ' IS ' . ($bNot? 'NOT ' : '') . 'NULL)';
+                                        if ($bNot) {
+                                            $$CLAUSE .= '(' . $aCol['db'][0] . ' != "" AND ' . $aCol['db'][0] . ' IS NOT NULL)';
+                                        } else {
+                                            $$CLAUSE .= '(' . $aCol['db'][0] . ' = "" OR ' . $aCol['db'][0] . ' IS NULL)';
+                                        }
                                     } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
-                                        $$CLAUSE .= $aCol['db'][0] . ' ' . $sOperator . ' ?';
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($aMatches[1]);
                                     } else {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
