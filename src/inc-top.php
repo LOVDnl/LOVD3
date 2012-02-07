@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-02-01
+ * Modified    : 2012-02-06
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,7 +65,7 @@ $_MENU = array(
                  array(
                         '' => array('menu_magnifying_glass.png', 'View all individuals', 0),
                         'create' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
-                        'hr',
+                        'hr' => 'hr',
                         '/columns/Individual?search_active_=1' => array('', 'View active custom columns', LEVEL_MANAGER),
                         '/columns/Individual?search_active_=0' => array('', 'Enable more custom columns', LEVEL_MANAGER),
                       ),
@@ -287,7 +287,7 @@ if ($sCurrSymbol && $sCurrGene) {
     if ($sCurators) {
         print('  <TR>' . "\n" .
               '    <TD width="150">&nbsp;</TD>' . "\n" .
-              '    <TD valign="top" colspan="2" style="padding-bottom : 2px;"><B>' . ($nCurators > 1 ? 'Curators: ' : 'Curator: ') . $sCurators . '</B></TD>' . "\n" .
+              '    <TD valign="top" colspan="2" style="padding-bottom : 2px;"><B>Curator' . ($nCurators > 1 ? 's' : '') . ': ' . $sCurators . '</B></TD>' . "\n" .
               '  </TR>' . "\n");
     }
 }
@@ -306,9 +306,9 @@ $n         = 0;
 $bSel      = false;
 $bPrevSel  = false;
 $aMenus    = array();
-foreach ($_MENU as $sPrefix => $sTitle) {
+foreach ($_MENU as $sPrefix => $Title) {
     // Arrays (children links of parent tabs) can only be processed if we still have the $sFile from the previous run.
-    if (is_array($sTitle)) {
+    if (is_array($Title)) {
         if (empty($sFile)) {
             continue;
         }
@@ -317,11 +317,12 @@ foreach ($_MENU as $sPrefix => $sTitle) {
         // Menu will be built in an UL, that will be transformed into a dropdown menu by using the Jeegocontext script by www.planitworks.nl.
         $sUL = '<UL id="menu_' . $sFile . '" class="jeegoocontext">' . "\n";
 
-        foreach ($sTitle as $sURL => $aItem) {
+        $bHr = false;
+        foreach ($Title as $sURL => $aItem) {
             if (!is_array($aItem)) {
                 if ($aItem == 'hr') {
                     // Not using the "separator" class from the original code, since it's not compatible to our changes.
-                    $sUL .= '  <LI class="hr"><HR></LI>' . "\n";
+                    $bHr = true;
                 }
                 continue;
             }
@@ -344,9 +345,10 @@ foreach ($_MENU as $sPrefix => $sTitle) {
 
             if (!$bDisabled) {
                 // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
-                $sUL .= '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A href="' . lovd_getInstallURL(false) . $sURL . '">' .
+                $sUL .= ($bHr? '  <LI class="hr"><HR></LI>' . "\n" : '') . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A href="' . lovd_getInstallURL(false) . $sURL . '">' .
                     (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
                     '</A></LI>' . "\n";
+                $bHr = false;
             }
 // class disabled, disabled. Nu gewoon maar even weggehaald.
 //            $sUL .= '  <LI' . ($bDisabled? ' class="disabled">' : (!$sIMG? '' : ' class="icon"') . '><A href="' . $sURL . '">') .
@@ -385,7 +387,7 @@ foreach ($_MENU as $sPrefix => $sTitle) {
             $sURL = $sPrefix . '?search_genes_=' . $_SESSION['currdb'];
         }
     }
-    print('      <A href="' . $sURL . '"><IMG src="' . $sFileName . '" alt="' . $sTitle . '" id="' . $sFile . '" ' . $sSize . ' align="left"></A>' . "\n");
+    print('      <A href="' . $sURL . '"><IMG src="' . $sFileName . '" alt="' . $Title . '" id="' . $sFile . '" ' . $sSize . ' align="left"></A>' . "\n");
 
     $bPrevSel = $bSel;
     $n ++;

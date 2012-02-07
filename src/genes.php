@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-01-27
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-06
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -35,33 +35,6 @@ require ROOT_PATH . 'inc-init.php';
 if ($_AUTH) {
     // If authorized, check for updates.
     require ROOT_PATH . 'inc-upgrade.php';
-}
-
-
-
-
-
-function lovd_getLRGbyGeneSymbol ($sGeneSymbol)
-{
-    // Get LRG reference sequence 
-    preg_match('/(LRG_\d+)\s+' . $sGeneSymbol . '/', implode(' ', lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt')), $aMatches);
-    if(!empty($aMatches)) {
-        return $aMatches[1];
-    }
-    return false;
-}
-
-
-
-
-
-function lovd_getNGbyGeneSymbol ($sGeneSymbol)
-{
-    preg_match('/' . $sGeneSymbol . '\s+(NG_\d+\.\d+)/', implode(' ', lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt')), $aMatches);
-    if (!empty($aMatches)) {
-        return $aMatches[1];
-    }
-    return false;
 }
 
 
@@ -192,7 +165,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $sSQL = 'SELECT id FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?';
                 $aSQL = array($_POST['hgnc_id'], $_POST['hgnc_id']);
                 
-                if (mysql_num_rows(lovd_queryDB_Old($sSQL, $aSQL))) {
+                if ($_DB->query($sSQL, $aSQL)->rowCount()) {
                     lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation.');
                 } else {
                     if (ctype_digit($_POST['hgnc_id'])) {
@@ -221,6 +194,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if (!lovd_error()) {
                 require ROOT_PATH . 'inc-top.php';
                 require ROOT_PATH . 'class/progress_bar.php';
+                require ROOT_PATH . 'inc-lib-genes.php';
                 
                 $sFormNextPage = '<FORM action="' . CURRENT_PATH . '?' . ACTION . '" id="createGene" method="post">' . "\n" .
                                  '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
@@ -548,6 +522,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     $sPath = $_PATH_ELEMENTS[0] . '?' . ACTION;
     if (GET) {
+        require ROOT_PATH . 'inc-lib-genes.php';
+
         $aRefseqGenomic = array();
         // Get LRG if it exists
         if ($sLRG = getLrgByGeneSymbol($sID)) {

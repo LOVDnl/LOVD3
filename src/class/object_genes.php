@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2011-11-23
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-02-07
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *     
@@ -188,7 +188,7 @@ class LOVD_Gene extends LOVD_Object {
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
-        global $zData; // FIXME; this could be done more elegantly.
+        global $zData, $_DB; // FIXME; this could be done more elegantly.
 
         // No mandatory fields, since all the gene data is in $_SESSION.
 
@@ -197,6 +197,12 @@ class LOVD_Gene extends LOVD_Object {
         }
 
         parent::checkFields($aData);
+
+        if (ACTION == 'create') {
+            if ($_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($zData['id']))->rowCount()) {
+                lovd_errorAdd('', 'Unable to add gene. This gene symbol already exists in the database!');
+            }
+        }
 
         if (!in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
             lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');

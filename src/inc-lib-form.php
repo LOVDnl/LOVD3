@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-01-31
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-01
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -38,7 +38,7 @@ function lovd_checkDBID ($aData)
     // All checks ignore the current variant, if the ID is given.
     global $_DB;
 
-    // GENE_000000 is always allowed.
+    // <chr||GENE>_000000 is always allowed.
     $sSymbol = substr($aData['VariantOnGenome/DBID'], 0, strpos($aData['VariantOnGenome/DBID'], '_'));
     $sGenomeVariant = '';
     if (!empty($aData['VariantOnGenome/DNA'])) {
@@ -48,16 +48,14 @@ function lovd_checkDBID ($aData)
         $aData['aTranscripts'] = array();
     }
     $aTranscriptVariants = array();
-    foreach ($aData['aTranscripts'] as $nTranscriptID => $aTranscript) {
-        if (!empty($aData[$nTranscriptID . '_VariantOnTranscript/DNA'])) {
-            $aTranscriptVariants[$nTranscriptID] = str_replace(array('(', ')', '?'), '', $aData[$nTranscriptID . '_VariantOnTranscript/DNA']);
-        }
-    }
-
     if (!empty($aData['aTranscripts'])) {
         $aGenes = array();
         foreach ($aData['aTranscripts'] as $nTranscriptID => $aTranscript) {
+            // Check for non-empty VariantOnTranscript/DNA fields for each transcript and return true immediately when GENE_000000 is used.
             $aGenes[] = $aTranscript[1];
+            if (!empty($aData[$nTranscriptID . '_VariantOnTranscript/DNA'])) {
+                $aTranscriptVariants[$nTranscriptID] = str_replace(array('(', ')', '?'), '', $aData[$nTranscriptID . '_VariantOnTranscript/DNA']);
+            }
             if (!isset($aData['ignore_' . $nTranscriptID]) && $aData['VariantOnGenome/DBID'] == $aTranscript[1] . '_000000') {
                 return true;
             }
@@ -65,16 +63,16 @@ function lovd_checkDBID ($aData)
     }
 
     if ($aData['VariantOnGenome/DBID'] == 'chr' . $aData['chromosome'] . '_000000') {
+        // Check if chr_000000 is used and return true if this is the case.
         return true;
     }
 
-    $nIDtoIgnore = 0;
-    if (!empty($aData['id'])) {
-        $nIDtoIgnore = $aData['id'];
-    }
+    $nIDtoIgnore = (!empty($aData['id'])? $aData['id'] : 0);
 
+    // Check if the DBID entered is already in use by a variant entry excluding the current one.
     $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ? AND id != ?', array($aData['VariantOnGenome/DBID'], $nIDtoIgnore))->fetchColumn();
     if ($nHasDBID && !empty($aData) && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
+        // This is the standard query that will be used to determine if the DBID given is correct.
         $sSQL = 'SELECT DISTINCT t.geneid, ' .
                 'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
                 'vog.`VariantOnGenome/DBID` ' .
@@ -84,18 +82,22 @@ function lovd_checkDBID ($aData)
         $aArgs = array();
         $sWhere = '';
         if (!empty($sGenomeVariant)) {
+            // SQL addition to check the genomic notation-chromosome combination.
             $sWhere .= '(REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?) ';
             $aArgs = array_merge($aArgs, array($sGenomeVariant, $aData['chromosome']));
         }
         foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
+            // SQL addition to check the transcript notation-transcript combination.
             $sWhere .= (!empty($sWhere)? 'OR ' : '') . '(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?) ';
             $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
         }
         if (!empty($aData['VariantOnGenome/DBID'])) {
+            // SQL addition to check if the above combinations are found with the given DBID.
             $sWhere .= ') AND vog.`VariantOnGenome/DBID` LIKE BINARY ? ';
             $aArgs = array_merge($aArgs, array($aData['VariantOnGenome/DBID']));
         }
         if ($nIDtoIgnore > 0) {
+            // SQL addition to exclude the current variant, where the $aData belongs to.
             $sWhere .= 'AND vog.id != ? ';
             $aArgs[] = sprintf('%010d', $nIDtoIgnore);
         }
@@ -327,13 +329,15 @@ function lovd_fetchDBID ($aData)
     }
     $aTranscriptVariants = array();
     foreach ($aData['aTranscripts'] as $nTranscriptID => $aTranscript) {
+        // Check for non-empty VariantOnTranscript/DNA fields.
         if (!empty($aData[$nTranscriptID . '_VariantOnTranscript/DNA'])) {
             $aTranscriptVariants[$nTranscriptID] = str_replace(array('(', ')', '?'), '', $aData[$nTranscriptID . '_VariantOnTranscript/DNA']);
         }
-        $sGene = $aTranscript[1];
+        $aGenes[] = $aTranscript[1];
     }
 
     if (!empty($aData) && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
+        // This is the standard query that will be used to determine if there are any DBID's already present in the database to use.
         $sSQL = 'SELECT DISTINCT t.geneid, ' .
                 'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
                 'vog.`VariantOnGenome/DBID` ' .
@@ -343,46 +347,52 @@ function lovd_fetchDBID ($aData)
         $aArgs = array();
         $sWhere = '';
         if (!empty($sGenomeVariant)) {
+            // SQL addition to check the genomic notation-chromosome combination.
             $sWhere .= '(REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?) ';
             $aArgs = array_merge($aArgs, array($sGenomeVariant, $aData['chromosome']));
         }
         foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
+            // SQL addition to check the transcript notation-transcript combination.
             $sWhere .= (!empty($sWhere)? 'OR' : '') . ' (REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?) ';
             $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
         }
 
-        $sSQL .= $sWhere . 'GROUP BY vog.id';
+        $sSQL .= $sWhere . ' AND `VariantOnGenome/DBID` IS NOT NULL AND `VariantOnGenome/DBID` != "" GROUP BY vog.id';
         $aOutput = $_DB->query($sSQL, $aArgs)->fetchAllRow();
-        $nOptions = count($aOutput);
 
-        if (!$nOptions) {
-            $sSymbol = (isset($sGene)? $sGene : 'chr' . $aData['chromosome']);
+        // Set the default for the DBID.
+        $sDBID = 'chr' . $aData['chromosome'] . '_999999';
+        foreach($aOutput as $aOption) {
+            // Loop through all the options returned from the database and decide which option to take.
+            preg_match('/^((.+)_(\d{6}))\b/', $sDBID, $aMatches);
+            list($sDBIDnew, $sDBIDnewSymbol, $sDBIDnewNumber) = array($aMatches[1], $aMatches[2], $aMatches[3]);
+
+            if (preg_match('/^((.+)_(\d{6}))\b/', $aOption[2], $aMatches)) {
+                list($sDBIDoptionAll, $sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
+                if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
+                    // If the symbol of the option is the same, but the number is lower(not including 000000), take it.
+                    $sDBID = $sDBIDoptionAll;
+                } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDnewSymbol, $aGenes)) {
+                    // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.
+                    $sDBID = $sDBIDoptionAll;
+                } elseif (substr($sDBIDnewSymbol, 0, 3) == 'chr' && substr($sDBIDoptionSymbol, 0, 3) != 'chr') {
+                    // If the symbol of the option is not a chromosome, but the current DBID is, take it.
+                    $sDBID = $sDBIDoptionAll;
+                }
+            }
+        }
+        if ($sDBID == 'chr' . $aData['chromosome'] . '_999999') {
+            // No entries found with these combinations and a DBID, so we are going to use the gene symbol(or chromosome if there is no gene) and take the first number available to make a DBID.
+            $sSymbol = (!empty($aGenes)? $aGenes[0] : 'chr' . $aData['chromosome']);
             $lID = strlen($sSymbol) + 7;
+            // Query for getting the first available number for the new DBID.
             $sDBID = $_DB->query('SELECT RIGHT(MAX(LEFT(`VariantOnGenome/DBID`, ' . $lID . ')), 6) FROM ' . TABLE_VARIANTS . ' WHERE LEFT(`VariantOnGenome/DBID`, ' . $lID . ') REGEXP "^' . $sSymbol . '_[0-9]{6}"')->fetchColumn();
             if (!$sDBID) {
                 $sDBID = $sSymbol . '_000001';
             } else {
-                $nID = substr($sDBID, -6) + 1;
+                preg_match('/^(.+)_(\d{6})\b/', $sDBID, $aMatches);
+                $nID = $aMatches[2] + 1;
                 $sDBID = $sSymbol . '_' . sprintf('%06d', $nID);
-            }
-        } elseif ($nOptions == 1) {
-            $sDBID = $aOutput[0][2];
-        } else {
-            $sDBID = 'chr' . $aData['chromosome'] . '_999999';
-            foreach($aOutput as $aOption) {
-                if (preg_match('/^((.+)_(\d{6}))\b/', $aOption[2], $aMatches)) {
-                    $sSymbol = substr($sDBID, 0, strpos($sDBID, '_'));
-                    if ($aMatches[2] == $sSymbol && $aMatches[3] < substr($sDBID, -6)) {
-                        $sDBID = $aMatches[1];
-                    } elseif ($aMatches[2] != $sSymbol && isset($sGene) && $aMatches[2] == $sGene) {
-                        $sDBID = $aMatches[1];
-                    } elseif (substr($sSymbol, 0, 3) == 'chr' && substr($aMatches[2], 0, 3) != 'chr') {
-                        $sDBID = $aMatches[1];
-                    }
-                }
-            }
-            if ($sDBID == 'chr' . $aData['chromosome'] . '_999999') {
-                $sDBID = '';
             }
         }
         return $sDBID;
