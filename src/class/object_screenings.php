@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-02-02
+ * Modified    : 2012-02-06
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -98,6 +98,7 @@ class LOVD_Screening extends LOVD_Custom {
                       ),
                  $this->buildViewEntry(),
                  array(
+                        'variants_found_' => 'Variants found?',
                         'owner_' => 'Owner name',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date' => array('Date created', LEVEL_COLLABORATOR),
@@ -175,10 +176,14 @@ class LOVD_Screening extends LOVD_Custom {
 
         $aGenes = lovd_getGeneList();
         if (!empty($aData['genes']) && is_array($aData['genes'])) {
-            foreach ($aData['genes'] as $sGene) {
-                if ($sGene && !in_array($sGene, $aGenes)) {
-                    lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene');
+            if (count($aData['genes']) <= 15) {
+                foreach ($aData['genes'] as $sGene) {
+                    if ($sGene && !in_array($sGene, $aGenes)) {
+                        lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene');
+                    }
                 }
+            } else {
+                lovd_errorAdd('genes', 'Please select no more than 15 genes. For genome-wide analysis, no genes should be selected.');
             }
         }
 
@@ -192,7 +197,7 @@ class LOVD_Screening extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
-        global $_AUTH, $_DB;
+        global $_AUTH, $_DB, $nID;
 
         $aSelectOwner = array();
 
@@ -226,6 +231,7 @@ class LOVD_Screening extends LOVD_Custom {
                  $this->buildForm(),
                  array(
                         array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, true),
+    'variants_found' => array('Have variants been found?', 'Please uncheck this box when no variants have been found using this screening.', 'checkbox', 'variants_found'),
                         'hr',
       'general_skip' => 'skip',
            'general' => array('', '', 'print', '<B>General information</B>'),
@@ -238,6 +244,10 @@ class LOVD_Screening extends LOVD_Custom {
                       
         if (ACTION != 'edit') {
             unset($this->aFormData['authorization']);
+        } else {
+            if ($_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn()) {
+                unset($this->aFormData['variants_found']);
+            };
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['general_hr2']);
@@ -264,6 +274,7 @@ class LOVD_Screening extends LOVD_Custom {
         if ($sView == 'entry') {
             // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
+            $zData['variants_found_'] = '<IMG src="gfx/mark_' . $zData['variants_found'] . '.png" alt="" width="11" height="11">';
             $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner'] . '</A>';
         }
 
@@ -278,6 +289,7 @@ class LOVD_Screening extends LOVD_Custom {
     {
         global $_AUTH;
 
+        $_POST['variants_found'] = '1';
         $_POST['owned_by'] = $_AUTH['id'];
         $this->initDefaultValues();
     }

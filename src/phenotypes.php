@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-01-12
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-07
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -120,17 +120,19 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
     lovd_requireAUTH();
 
     $_GET['target'] = sprintf('%08d', $_GET['target']);
-    if (mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
-        $_POST['individualid'] = $_GET['target'];
-        define('PAGE_TITLE', 'Create a new phenotype information entry for individual #' . $_GET['target']);
-    } else {
-        define('PAGE_TITLE', 'Create a new phenotype information entry');
+    $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
+    if (!$z) {
+        define('PAGE_TITLE', 'Create a new phenotype entry');
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
-        lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add phenotype" button.', 'warning');
+        lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add phenotype" button.', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
+    } elseif (!lovd_isAuthorized('individuals', $_GET['target'], true)) {
+        lovd_requireAUTH(LEVEL_OWNER);
     }
+    $_POST['individualid'] = $_GET['target'];
+    define('PAGE_TITLE', 'Create a new phenotype information entry for individual #' . $_GET['target']);
 
     require ROOT_PATH . 'inc-lib-form.php';
     lovd_errorClean();

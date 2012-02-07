@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-01-09
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-06
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -83,17 +83,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
             $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
             $sNavigation .= ' | <A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
             // You can only add phenotype information to this individual, when there are phenotype columns enabled.
-            // FIXME; num_rows on a SELECT COUNT(*) always returns True.
-            if (mysql_num_rows(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID)))) {
+            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID))->fetchColumn()) {
                 $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype information to individual</A>';
             }
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
             }
-        } elseif ($_AUTH['level'] >= LEVEL_SUBMITTER) {
-            // FIXME; maybe remove these links? Decourage submitters to add info to whatever individual? Or maybe an alert (This is not a record submitted by you, are you sure?)
-            $sNavigation = '<A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
-            $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype to individual</A>';
         }
     }
 

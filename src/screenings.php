@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-01-12
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-07
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -81,13 +81,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if ($_AUTH) {
         if ($_AUTH['level'] >= LEVEL_OWNER) {
             $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
-            $sNavigation .= ' | <A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
+            if ($zData['variants_found']) {
+                $sNavigation .= ' | <A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
+            }
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
             }
-        } elseif ($_AUTH['level'] >= LEVEL_SUBMITTER) {
-            // FIXME; maybe remove these links? Decourage submitters to add info to whatever individual? Or maybe an alert (This is not a record submitted by you, are you sure?)
-            $sNavigation = '<A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
         }
     }
 
@@ -107,13 +106,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         unset($_GET['search_geneid']);
     }
     
-    $_GET['search_screeningids'] = $nID;
-    print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Variants found', 'H4');
-    require ROOT_PATH . 'class/object_genome_variants.php';
-    $_DATA = new LOVD_GenomeVariant();
-    $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, array('id', 'screeningids'), false, false, false);
+    if ($zData['variants_found'] || !empty($zData['variants'])) {
+        $_GET['search_screeningids'] = $nID;
+        print('<BR><BR>' . "\n\n");
+        lovd_printHeader('Variants found', 'H4');
+        require ROOT_PATH . 'class/object_genome_variants.php';
+        $_DATA = new LOVD_GenomeVariant();
+        $_DATA->setSortDefault('id');
+        $_DATA->viewList(false, array('id', 'screeningids'), false, false, false);
+    }
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -130,19 +131,21 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
     define('LOG_EVENT', 'ScreeningCreate');
 
     lovd_requireAUTH();
-    
+
     $_GET['target'] = sprintf('%08d', $_GET['target']);
-    if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target'])))) {
-        $_POST['individualid'] = $_GET['target'];
-        define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
-    } else {
-        define('PAGE_TITLE', 'Create a new screening information entry');
+    $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
+    if (!$z) {
+        define('PAGE_TITLE', 'Create a new screening entry');
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
         lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'stop');
         require ROOT_PATH . 'inc-bot.php';
         exit;
+    } elseif (!lovd_isAuthorized('individuals', $_GET['target'], true)) {
+        lovd_requireAUTH(LEVEL_OWNER);
     }
+    $_POST['individualid'] = $_GET['target'];
+    define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
 
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
@@ -156,7 +159,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('individualid', 'owned_by', 'created_by', 'created_date'),
+                            array('individualid', 'variants_found', 'owned_by', 'created_by', 'created_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
@@ -174,8 +177,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
                 foreach ($_POST['genes'] as $sGene) {
                     // Add disease to gene.
                     if (in_array($sGene, lovd_getGeneList())) {
-                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene));
-                        if (!$q) {
+                        $q = $_DB->query('INSERT INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene));
+                        if (!$q->rowCount()) {
                             // Silent error.
                             // FIXME; maybe better to group the error messages, just like when editing?
                             lovd_writeLog('Error', LOG_EVENT, 'Gene entry ' . $sGene . ' - could not be added to screening ' . $nID);
@@ -222,16 +225,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
             lovd_printHeader(PAGE_TITLE);
             print('      Were there any variants found with this mutation screening?<BR><BR>' . "\n\n" .
                   '      <TABLE border="0" cellpadding="5" cellspacing="1" class="option">' . "\n" .
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $nID . '\'">' . "\n" .
+                  '        <TR ' . (!$_POST['variants_found']? 'class="disabled" onclick="alert(\'You cannot add variants to this screening, because you have unchecked the "Have variants been found?" checkbox!\');"' : 'onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $nID . '\'"') . '>' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>Yes, I want to submit variants found by this mutation screening</B></TD></TR>' . "\n" .
-                /* FIXME; Once we have code to allow the user (and remind them) to continue the unfinished submission, we can enable this part again (although it would be nice to put a warning here, also).
                   '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                   '          <TD><B>No, I want to submit another mutation screening on ' . $sPersons . ' instead</B></TD></TR>' . "\n" .
       (!$bSubmit? '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . ($bSubmit? 'individual/' . $_POST['individualid'] : 'screening/' . $nID) . '\'">' . "\n" .
                   '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '') . '</B></TD></TR>' : '      ')*/ '      </TABLE><BR>' . "\n\n");
+                  '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '') . '</B></TD></TR>' : '      ') .  '</TABLE><BR>' . "\n\n");
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }
@@ -303,10 +305,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('edited_by', 'edited_date'),
+                            array('variants_found', 'edited_by', 'edited_date'),
                             $_DATA->buildFields());
 
             // Prepare values.
+            $_POST['variants_found'] = (!isset($_POST['variants_found'])? '1' : $_POST['variants_found']);
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFieldsGenome[] = 'owned_by';
             }
