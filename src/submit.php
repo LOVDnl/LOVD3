@@ -74,6 +74,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         exit;
     }
 
+    // Try to find the genes and or diseases associated with the submission.
     switch ($_PATH_ELEMENTS[2]) {
         case 'individual':
             $nID = sprintf('%08d', $_PATH_ELEMENTS[3]);
@@ -102,6 +103,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         exit;
     }
 
+    // Making sure we can always refer to the same variables so that it doesn't matter how we enter this submission.
     $aSubmit = array();
     if (in_array($_PATH_ELEMENTS[2], array('individual', 'screening'))) {
         $aSubmit = $_SESSION['work']['submits'][$_PATH_ELEMENTS[2]][$nID];
@@ -111,6 +113,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     }
 
     if ($_AUTH['level'] <= LEVEL_OWNER) {
+        // If the user is not a curator or a higher, then the status will be set from "In Progress" to "Pending".
         $_DB->beginTransaction();
         if (!empty($aSubmit['variants'])) {
             $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET statusid = ? WHERE id IN (?' . str_repeat(', ?', count($aSubmit['variants']) - 1) . ') AND statusid = ?', array_merge(array(STATUS_PENDING), $aSubmit['variants'], array(STATUS_IN_PROGRESS)));
@@ -132,6 +135,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         $_DB->commit();
     }
 
+    // Remove the submission information from $_SESSION and close the session file, so that other scripts can use it without having to wait for this script to finish.
     unset($_SESSION['work']['submits'][$_PATH_ELEMENTS[2]][$nID]);
     session_write_close();
     header('Refresh: 3; url=' . lovd_getInstallURL() . ($_PATH_ELEMENTS[2] == 'upload'? 'variants/upload/' : $_PATH_ELEMENTS[2] . 's/') . $nID);
@@ -142,11 +146,12 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     lovd_printHeader(PAGE_TITLE);
     $aTo = array();
     if (!empty($aGenes)) {
+        // Check if there are any genomic variants without a variant on transcript entry, in which case we would need to mail all managers.
         switch ($_PATH_ELEMENTS[2]) {
             case 'individual':
             case 'screening':
             case 'variant':
-                $nNullTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING(id) WHERE vot.id IS NULL AND v.id IN (?' . str_repeat(', ?', count($aSubmit['variants']) - 1) . ')', $aSubmit['variants'])->fetchColumn();
+                $nNullTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) WHERE vot.id IS NULL AND v.id IN (?' . str_repeat(', ?', count($aSubmit['variants']) - 1) . ')', $aSubmit['variants'])->fetchColumn();
                 break;
             case 'phenotype':
                 $nNullTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s USING (individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) WHERE vot.id IS NULL AND p.id = ?', array($nID))->fetchColumn();
@@ -159,12 +164,14 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         if ($nNullTranscript) {
             $aTo = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
         }
+        // Select all curators that need to be mailed.
         $aTo = array_merge($aTo, $_DB->query('SELECT DISTINCT u.name, u.email FROM ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id ' . (count($aTo)? 'AND u.level != ' . LEVEL_MANAGER . ' ' : '') . 'AND c.geneid ' . (empty($aGenes)? 'NOT ' : '') . 'IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') AND allow_edit = 1 ORDER BY u.level DESC, u.name', $aGenes)->fetchAllRow());
     } else {
+        // If there are no genes then we can only mail managers
         $aTo = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
     }
 
-    // Array containing submitter fields.
+    // Arrays containing submitter & data fields.
     $aSubmitterDetails = array(
                                 '_AUTH',
                                 'id' => 'User ID',
@@ -210,6 +217,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
                                          'effect_concluded' => 'Affects function (concluded)',
                                        );
 
+    // Load the non-shared custom columns and add them to the fields list.
     $qCols = $_DB->query('SELECT c.id, c.head_column FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id NOT LIKE "VariantOnTranscript/%" ' . (empty($aSubmit['screenings'])? 'AND c.id NOT LIKE "Screening/%" ' : '') . ($_PATH_ELEMENTS[2] != 'individual'? 'AND c.id NOT LIKE "Individual/%" ' : '') . 'AND c.id NOT LIKE "Phenotype/%" ORDER BY c.col_order', array());
     if ($_PATH_ELEMENTS[2] != 'screening') {
         unset($aScreeningFields['individualid']);
@@ -220,6 +228,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         ${$sFieldsName}[$aCol['id']] = $aCol['head_column'];
     }
 
+    // Load all VariantOnTranscript custom columns for each gene and put them in seperate variable variables
     foreach ($aGenes as $sGene) {
         $sColNamesVOT = 'VOTCols_' . $sGene;
         $$sColNamesVOT = $aVariantOnTranscriptFields;
@@ -232,6 +241,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     if ($_PATH_ELEMENTS[2] != 'phenotype') {
         unset($aPhenotypeFields['individualid']);
     }
+    // Load all Phenotype custom columns for each disease and put them in separate variable variables
     foreach ($aDiseases as $sDisease) {
         $sColNamesPhen = 'PhenCols_' . $sDisease;
         $$sColNamesPhen = $aPhenotypeFields;
@@ -243,6 +253,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
 
     $_AUTH['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($_AUTH['countryid']))->fetchColumn();
 
+    // Select all data from the database that belong to this submission and put it in a variable.
     $bUnpublished = false;
     if ($_PATH_ELEMENTS[2] == 'individual') {
         $zIndividualDetails = $_DB->query('SELECT i.*, u.name AS owned_by_ FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (i.owned_by = u.id) WHERE i.id = ?', array($nID))->fetchAssoc();
@@ -319,6 +330,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         array_pop($aVariantDetails);
     }
 
+    // Introduction message to curators/managers.
     $sMessage = 'Dear Curator' . (count($aTo) > 1? 's' : '') . ',' . "\n\n" .
                 $_AUTH['name'] . ' has submitted an addition to the LOVD database.' . "\n";
     if ($bUnpublished) {
@@ -332,6 +344,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     $sMessage .= 'Regards,' . "\n" .
                  '    LOVD system at ' . $_CONF['institute'] . "\n\n";
 
+    // Build the mail format.
     $aBody = array($sMessage, 'submitter_details' => $aSubmitterDetails);
     if ($_PATH_ELEMENTS[2] == 'individual') {
         $aBody['individual_details'] = $aIndividualDetails;

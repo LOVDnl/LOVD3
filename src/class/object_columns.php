@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-01-26
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-03
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -288,6 +288,8 @@ class LOVD_Column extends LOVD_Object {
         // Het hele formulier moet anders met het editen... het display gedeelte moet apart denk ik - "edit display settings"; variant en phenotype cols hebben "set defaults for new genes/diseases", alle hebben "edit data types" ofzo.
         if (ACTION == 'edit') {
             unset($this->aFormData['colid'], $this->aFormData['colid_note']);
+        } elseif (ACTION == 'create') {
+            unset($this->aFormData['apply_to_all']);
         }
 
         return parent::getForm();
