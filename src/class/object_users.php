@@ -169,6 +169,7 @@ class LOVD_User extends LOVD_Object {
                                     'view' => array('Level', 150),
                                     'db'   => array('level_', 'DESC', 'TEXT')),
                       );
+        // In safe mode, the status check doesn't work anyway, because we're not allowed to access the session file.
         if (ini_get('safe_mode')) {
             unset($this->aColumnsViewEntry['status_']);
         }

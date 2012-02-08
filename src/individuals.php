@@ -183,7 +183,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                             $_DATA->buildFields());
 
             // Prepare values.
-            $_POST['panelid'] = (!empty($_POST['panelid'])? sprintf('%08d', $_POST['panelid']) : $_POST['panelid']);
             $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
             $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['statusid'] : STATUS_IN_PROGRESS);
             $_POST['created_by'] = $_AUTH['id'];
@@ -319,7 +318,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                             $_DATA->buildFields());
 
             // Prepare values.
-            $_POST['panelid'] = (!empty($_POST['panelid'])? sprintf('%08d', $_POST['panelid']) : $_POST['panelid']);
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFields[] = 'owned_by';
                 $aFields[] = 'statusid';

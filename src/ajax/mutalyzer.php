@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-18
- * Modified    : 2011-09-09
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2012-02-03
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -29,8 +30,8 @@
  *************/
 
 define('ROOT_PATH', '../');
-
 require ROOT_PATH . 'inc-init.php';
+session_write_close();
 
 if (!ACTION || count($_GET) <= 1 ) {
     echo 'Insufficient arguments given.';

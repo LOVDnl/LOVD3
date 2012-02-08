@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-02
+ * Modified    : 2012-02-06
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -187,12 +187,14 @@ class LOVD_Individual extends LOVD_Custom {
         }
         parent::checkFields($aData);
 
-        if (!empty($aData['panelid'])) {
+        if (!empty($aData['panelid']) && ctype_digit($aData['panelid'])) {
             $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ? AND panel_size > 1', array($aData['panelid']))->fetchColumn();
             if (empty($nPanel)) {
-                lovd_errorAdd('panelid', 'No Panel found with this \'Panel ID\'');
+                lovd_errorAdd('panelid', 'No Panel found with this \'Panel ID\'.');
             } elseif ($nPanel <= $aData['panel_size']) {
-                lovd_errorAdd('panel_size', 'The entered \'Panel size\' must be lower than the \'Panel size\' of the panel with the entered \'Panel ID\'');
+                lovd_errorAdd('panel_size', 'The entered \'Panel size\' must be lower than the \'Panel size\' of the panel with the entered \'Panel ID\'.');
+            } elseif ($aData['panelid'] == $this->nID) {
+                lovd_errorAdd('panel_size', 'The \'Panel ID\' should not link to itself.');
             }
         }
 
@@ -207,7 +209,7 @@ class LOVD_Individual extends LOVD_Custom {
         if (!empty($aData['active_diseases'])) {
             foreach ($aData['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $aDiseases)) {
-                    lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease');
+                    lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease.');
                 }
             }
         }

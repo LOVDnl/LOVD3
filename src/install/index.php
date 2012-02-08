@@ -330,7 +330,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
 
 
     // (3) Creating LOVD user & administrator.
-    $aInstallSQL['Creating LOVD user & LOVD database administrator account...'] =
+    $aInstallSQL['Creating LOVD account &amp; LOVD database administrator account...'] =
              array(
                     'INSERT INTO ' . TABLE_USERS . '(name, created_date) VALUES ("LOVD", NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',

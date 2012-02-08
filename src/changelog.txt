@@ -21,11 +21,23 @@
  * When resorting a ViewList, the list will return to the first page.
  * When there is only one user in the database, after creating a gene you are no
    longer forwarded to the "Add curator" page.
- * Fixed display problem with the disease entry form when there are genes with long names.
- * Fixed bug; Searching for !="" still showed entries with empty values in the specified column.
- * Fixed bug; Searching for values in custom columns used the slower HAVING SQL syntax instead of the optimized WHERE syntax.
- * When searching for negative matches (e.g. "!DMD" which means "does not match DMD"), the NULL values were ignored and not returned.
- * Fixed bug; The progress bar shown while upgrading did not calculate the total work correctly, making a weird "jump" at the end.
+ * Fixed display problem with the disease entry form when there are genes with
+   long names.
+ * Fixed bug; Searching for !="" still showed entries with empty values in the
+   specified column.
+ * Fixed bug; Searching for values in custom columns used the slower HAVING SQL
+   syntax instead of the optimized WHERE syntax.
+ * When searching for negative matches (e.g. "!DMD" which means "does not match
+   DMD"), the NULL values were ignored and not returned.
+ * Fixed bug; The progress bar shown while upgrading did not calculate the total
+   work correctly, making a weird "jump" at the end.
+ * Fixed accidentially changed field length for the VariantOnGenome/Frequency
+   field.
+ * Fixed bug; The checks on the Panel ID field were not adequate.
+ * Fixed bug; When running the data type wizard twice on the same form, the pre-
+   vious values were not remembered.
+ * Fixed bug; The data type wizard didn't remember the form type of the Decimal
+   type column.
 
 
 

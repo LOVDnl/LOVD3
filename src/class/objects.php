@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-02
+ * Modified    : 2012-02-06
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -66,6 +66,7 @@ class LOVD_Object {
     var $aColumnsViewEntry = array();
     var $aColumnsViewList = array();
     var $sSortDefault = '';
+    var $nID = 0;
     var $sRowID = ''; // FIXME; needs getter and setter?
     var $sRowLink = ''; // FIXME; needs getter and setter?
     var $nCount = 0;
@@ -382,6 +383,9 @@ class LOVD_Object {
                 require ROOT_PATH . 'inc-bot-clean.php';
             }
             exit;
+
+        } else {
+            $this->nID = $nID;
         }
 
         $zData = $this->autoExplode($zData);
@@ -405,29 +409,27 @@ class LOVD_Object {
 
         // Quote special characters, disallowing HTML and other tricks.
         $zData = lovd_php_htmlspecialchars($zData);
-        $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
-        foreach($aUserColumns as $sUserColumn) {
-            // FIXME; ik krijg hoofdpijn van deze lange regel... wordt dit wel in een viewList toegepast? Links in een viewList verstoren nu de boel. De code kan simpeler. Ook moet er wat commentaar bij..
-            if (!empty($zData[$sUserColumn]) && $zData[$sUserColumn] != '00000') {
-                (isset($zData[$sUserColumn])? $zData[$sUserColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sUserColumn])? '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . ($sView == 'list'? '' : '_')] . '</A>' : 'N/A') : false);
-            }
-        }
 
         $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');
         foreach($aDateColumns as $sDateColumn) {
-            // Ook deze code kan m.i. simpeler..
-            (isset($zData[$sDateColumn])? $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A') : false);
-        }
-
-        // FIXME; hier mist commentaar..
-        if (isset($zData['edited_by_']) && $zData['edited_by_'] == 'N/A') {
-            $zData['edited_date' . ($sView == 'list'? '' : '_')] = 'N/A';
+            $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A');
         }
 
         if ($sView == 'list') {
             // By default, we put an anchor in the id_ field, if present.
             if ($zData['row_link'] && array_key_exists('id_', $this->aColumnsViewList) && $zData['id']) {
                 $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            }
+
+        } else {
+            // Add links to users from *_by fields.
+            $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
+            foreach($aUserColumns as $sUserColumn) {
+                if (empty($zData[$sUserColumn])) {
+                    $zData[$sUserColumn . '_'] = 'N/A';
+                } elseif ($zData[$sUserColumn] != '00000') {
+                    $zData[$sUserColumn . '_'] = '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>';
+                }
             }
         }
 

@@ -148,9 +148,8 @@ class LOVD_Custom extends LOVD_Object {
         } else {
             $sAlias = strtolower($this->sCategory{0});
         }
-        
-        if ($this->sObject != 'Screening' && $_AUTH['level'] < LEVEL_CURATOR) {
-            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '((' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '") OR ' . $sAlias . '.statusid > ' . STATUS_HIDDEN . ')';
+        if ($this->sObject != 'Screening' && $_AUTH['level'] < LEVEL_COLLABORATOR) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . $sAlias . '.statusid > ' . STATUS_HIDDEN . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
         }
     }
 

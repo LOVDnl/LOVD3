@@ -324,7 +324,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $_SESSION['viewlists']['SelectGeneForSubmit']['row_link'] = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
         }
         $_GET['search_transcripts'] = '>0';
-        print('      <DIV id="container">' . "\n");
+        print('      <DIV id="container">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
         $_DATA->viewList('SelectGeneForSubmit', array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
         print('      </DIV>' . "\n" .
               '      <SCRIPT type="text/javascript">' . "\n" .

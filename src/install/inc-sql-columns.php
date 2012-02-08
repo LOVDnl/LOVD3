@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-01-27
+ * Modified    : 2012-02-03
  * For LOVD    : 3.0-beta-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,7 +63,7 @@ DMD_SPECIFIC
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/DBID",                 6,  80, 1, 1, 1, "DB-ID",                "NOTE: This field will be predicted and filled in by LOVD, if left empty.", "DataBase IDentifier.", "DataBase IDentifier, grouping multiple instances of the same variant together.", "VARCHAR(50)", "ID|This ID is used to group multiple instances of the same variant together. The ID starts with the gene symbol of the transcript most influenced by the variant or otherwise the closest gene, followed by an underscore (_) and the 6 digit ID code.|text|20", "", "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf\\\\d+-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf\\\\d+|[A-Z][A-Z0-9]+))_[0-9]{6}\\\\b/", 1, 0, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/DNA",                  2, 200, 1, 1, 1, "DNA change",           "", "Variation at genomic DNA level.", "Variation at genomic DNA level.", "VARCHAR(100)", "Genomic DNA change (HGVS format)||text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/DNA_published",        3, 200, 0, 0, 0, "DNA published",        "What the variant was reported as (e.g. 521delT); listed only when different from \"DNA change\".", "What the variant was reported as.", "What the variant was reported as (e.g. 521delT); listed only when different from \"DNA change\".", "VARCHAR(100)", "DNA published||text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
-                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Frequency",            7,  90, 0, 1, 0, "Frequency",            "", "Frequency if variant is non pathogenic.", "Frequency of non pathogenic variant reported listed as number of variant alleles/number of control alleles tested, like 5/132.", "VARCHAR(15)", "Frequency||text|15", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Frequency",            7,  90, 0, 1, 0, "Frequency",            "", "Frequency if variant is non pathogenic.", "Frequency of non pathogenic variant reported listed as number of variant alleles/number of control alleles tested, like 5/132.", "VARCHAR(15)", "Frequency||text|10", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Reference",            5, 200, 1, 1, 0, "Reference",            "", "Reference describing the variant.", "Literature reference with possible link to publication in PubMed, dbSNP, OMIM entry or other online resource.", "VARCHAR(255)", "Reference||text|50", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 // Add remarks non public? Add remarks column(s) to VariantOnTranscript???
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Remarks",              8, 200, 0, 0, 0, "Variant remarks",      "", "Variant remarks", "Variant remarks", "TEXT", "Remarks||textarea|50|3", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',

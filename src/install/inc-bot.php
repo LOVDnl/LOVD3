@@ -11,7 +11,6 @@
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
- *
  * This file is part of LOVD.
  *
  * LOVD is free software: you can redistribute it and/or modify

@@ -11,7 +11,6 @@
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
- *
  * This file is part of LOVD.
  *
  * LOVD is free software: you can redistribute it and/or modify

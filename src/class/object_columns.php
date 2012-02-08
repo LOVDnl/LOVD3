@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-02-03
+ * Modified    : 2012-02-06
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -197,10 +197,9 @@ class LOVD_Column extends LOVD_Object {
         global $_PATH_ELEMENTS, $_DB;
 
         // Get links list, to connect column to link.
-        $qLinks = $_DB->query('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name');
-        $nLinkSize = $qLinks->rowCount();
+        $aLinks = $_DB->query('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name')->fetchAllCombine();
+        $nLinkSize = count($aLinks);
         $nLinkSize = ($nLinkSize < 10? $nLinkSize : 10);
-        $aLinks = $qLinks->fetchAllCombine();
 
         // Array which will make up the form table.
         $this->aFormData =

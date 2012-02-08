@@ -80,12 +80,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     lovd_isAuthorized('gene', $_AUTH['curates']); // Enables LEVEL_COLLABORATOR and LEVEL_CURATOR for object_users.php.
 
-    // Require manager clearance, if user is not viewing himself.
     if ($nID == '00000') {
-        lovd_showInfoTable('No such ID!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
-        exit;
+        $nID = -1;
     } elseif ($nID != $_AUTH['id']) {
+        // Require manager clearance, if user is not viewing himself.
         lovd_requireAUTH(LEVEL_MANAGER);
     }
 

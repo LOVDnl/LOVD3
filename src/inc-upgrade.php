@@ -192,6 +192,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              ),
                     '3.0-beta-02' =>
                         array(
+                                'UPDATE ' . TABLE_COLS . ' SET form_type = "Frequency||text|10" WHERE id = "VariantOnGenome/Frequency" AND form_type = "Frequency||text|15"',
                                 'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD UNIQUE (id_ncbi)',
                              ),
                   );

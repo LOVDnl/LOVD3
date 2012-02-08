@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-02-02
+ * Modified    : 2012-02-03
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -174,6 +174,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             $this->aCheckMandatory[] = 'effect_concluded';
         }
 
+        parent::checkFields($aData);
+
         // Checks fields before submission of data.
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
@@ -191,8 +193,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 lovd_errorAdd('VariantOnGenome/DBID', 'Please enter a valid ID in the \'ID\' field or leave it blank and LOVD will predict it.');
             }
         }
-
-        parent::checkFields($aData);
 
         if (!isset($aData['allele']) || !array_key_exists($aData['allele'], $_SETT['var_allele'])) {
             lovd_errorAdd('allele', 'Please select a proper allele from the \'Allele\' selection box.');
@@ -243,7 +243,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         global $_AUTH, $_CONF, $_DB, $_SETT, $zData, $_DATA;
 
         if (!empty($_GET['geneid'])) {
-            // Setting chromosome to $_POST so that insertEntry() will get the correct chromosome value as well. checkFields() will run getForm(), so it will always be available.
             $aFormChromosome = array('Chromosome', '', 'print', $_POST['chromosome']);
         } elseif (ACTION == 'edit') {
             $aFormChromosome = array('Chromosome', '', 'print', $zData['chromosome']);

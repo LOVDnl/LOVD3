@@ -1,6 +1,13 @@
 Prioritize:
 ===========
-- LOVD insalleren op een Mac geeft wat problemen m.b.t. PDO support:
+- DEC en DECIMAL worden door elkaar heen gebruikt.
+- (@Ivo) Hernoem alle ViewLists.
+- (@Ivo) Row Link probleem:
+  + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
+    * Currently, Object::prepareData() puts the link in every id_ column it can find.
+  + We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
+  + Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
+- LOVD installeren op een Mac geeft wat problemen m.b.t. PDO support:
   + MySQL heeft geen standaard PDO support voor de mac (Ik run op Mac OSX 10.5.9 met Apache2, PHP 5 en MySQL 4 even uit mijn hoofd)
   + LOVD kan dus niks zonder PDO en wil dus ook niet runnen!
 - (@Ivo) Check_update.php heeft nog rare trucjes m.b.t. het tellen van de varianten.
@@ -9,8 +16,10 @@ Prioritize:
   + objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
   + VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns).
     * OOK IN CUSTOM VIEWLIST
-- Indien er varianten zijn gevonden, moet de submitter bestaande varianten van dit individu kunnen selecteren als "met deze screening bevestigd".
-    * Moet met viewList, plus optie "select all", zoals ook genes/DMD?authorize.
+- (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
+  + Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
+- Indien er varianten zijn gevonden met een screening, moet de submitter na de screening?create bestaande varianten van dit individu kunnen selecteren als "met deze screening bevestigd".
+  + Moet met viewList, plus optie "select all", zoals ook genes/DMD?authorize.
 - Allow to create new VOT with existing VOG
   + Gebruiker selecteert transcript uit ViewList (check op chromosoom), PHP mapt variant op aangegeven NM (gebruik ajax/convert_position.php), insert into DB, forward naar edit variant form, evt. scrollen naar nieuwe VOT.
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
@@ -44,6 +53,7 @@ Prioritize:
     -sporadic, consanguinity unknown
 
 - Beta-03:
+  - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
   - (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
     + Hierna kan de transcript ViewList voor nieuwe VOT op bestaande VOG specifieker worden geselecteerd.
@@ -56,6 +66,16 @@ Prioritize:
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
   - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
 
+- Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
+  maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
+  De reden daarachter is privacy.
+  + Hoe is dit simpel te realiseren ?. Is het mogelijk een button toe te voegen waarmee je aangeeft of in LOVD displays het wel/niet is
+    toegestaan dat bezoekers alle varianten gekoppeld aan een patient krijgen te zien ?. De submitter (of curator) krijgt na inloggen dan
+    wel alle varianten gekoppeld aan een patient te zien.
+    * De ViewList zou dan naar de VOG/VOT ViewEntry moeten wijzen, die zou dan geen link naar individual mogen hebben.
+    * De ViewList zou wel de individu informatie mogen tonen, toch?
+    * De Individual ID zou wel op een bepaalde manier verborgen moeten worden.
+      - De ViewEntry van de Individu zou dan ook niet-public moeten zijn.
 - Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)
   + Ook support mededelingen: voor versies alpha-01 t/m alpha-10 het bericht dat alpha niet meer ondersteund wordt, dus je moet upgraden. Of voor alle installs op onze server (signature check): downtime dan en dan. Op versie of op signature??? Zoiets.
   + Ook instellen per user level (submitter, curator, manager, db admin).
@@ -78,11 +98,7 @@ Prioritize:
 - Delete user verder ontmoedigen?
 - VariantOnGenome/dbSNP column with rsID
   * Beter heel nummer mét rs erbij.
-- Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
-  * Currently, Object::prepareData() puts the link in every id_ column it can find.
-- We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
-- LOVD 3.0 heeft libxml nodig voor REST2SOAP, wordt dat ergens gecontroleerd?!?!?
-  * Als we die toch gebruiken, én nu op PHP >= 5.1.0 zitten, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
+- LOVD 3.0 heeft libxml nodig voor REST2SOAP, én we zitten nu op PHP >= 5.1.0, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - Het is niet duidelijk wat object_id nu precies is (gene symbol of disease id, bedoeld om te bepalen welke cc actief zijn)
   - Ook id is niet echt duidelijk (dit is eigenlijk de foreign key van de entry (variantid, individualid), bedoeld om te bepalen welke cc actief zijn)
@@ -95,7 +111,6 @@ Prioritize:
   * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
   * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
 - Er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
-- Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
 - When disease is created, forward user to select columns for this disease.
 - Veranderingen zoals voorgesteld 2011-06-28?
   * Allele, genetic_origin, Phenotype/Inheritance
@@ -378,7 +393,6 @@ Needed before release
                 Ertussen dan maar? Wacht ff hoor... de speciale variant overview werkt alleen op de Individual cols...
             (...) veel naar gevraagd wordt (Variant_Amino_acid_SIFT, Variant_Amino_acid_PolyPhen, Variant_Amino_acid_AlignGVGD, DNA-reported).
             Er is verwarring en overlap over de onderwerpen Allele, Individual/Occurence, Individual/Mutation/Origin, Individual/Mutation/Origin_De_Novo.
-++  Store submission for later? Dan hoort een ingelogde gebruiker een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
     Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
         Dat moet dan ongelofelijk goed gecontroleerd worden!!!
         Store in session / DB in een col met serialized data?

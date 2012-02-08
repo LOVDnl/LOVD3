@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-02-03
+ * Modified    : 2012-02-06
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -558,8 +558,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
 
     } else {
         // Default values.
-        global $_DB;
-
         $_POST = $_SESSION['data_wizard'][$_GET['workID']];
 
         $aVals = array();
@@ -602,7 +600,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
 
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '&amp;workID=' . $_GET['workID'] . '" method="post">' . "\n" .
           '        <INPUT type="hidden" name="form_type" value="' . $_POST['form_type'] . '">' . "\n");
 
     // Array which will make up the form table.
@@ -1112,11 +1110,10 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
                         'select_all' => '',
                       );
 
-        // Load $_SESSION['form_type'] with current data from form_type and mysql_type.
+        // Load $_SESSION['data_wizard'] with current data from form_type and mysql_type.
         switch ($aFormType[2]) {
             case 'text':
                 // VARCHAR, TEXT or INT columns.
-                
                 $_SESSION['data_wizard'][$_POST['workID']]['size'] = $aFormType[3];
                 if (preg_match('/^VARCHAR\(([0-9]+)\)/', $zData['mysql_type'], $aRegs)) {
                     $_SESSION['data_wizard'][$_POST['workID']]['maxlength'] = $aRegs[1];
@@ -1124,22 +1121,18 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
                     $_SESSION['data_wizard'][$_POST['workID']]['maxlength'] = 65535;
                 } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\(([0-9]+)\) *(UNSIGNED)?/', $zData['mysql_type'], $aRegs)) {
                     $_SESSION['data_wizard'][$_POST['workID']]['form_type'] = 'int';
-                    // 2009-02-16; 2.0-16; Should be $aRegs[2], not [1] of course.
                     $_SESSION['data_wizard'][$_POST['workID']]['maxlength'] = $aRegs[2];
-                    // 2009-02-16; 2.0-16; Should be $aRegs[3], not [2] of course.
                     $_SESSION['data_wizard'][$_POST['workID']]['unsigned']  = (!empty($aRegs[3])? 1 : 0);
-                } elseif (preg_match('/^DEC\(([0-9]+),([0-9]+)\) *(UNSIGNED)?/', $zData['mysql_type'], $aRegs)) {
-                    // 2009-06-11; 2.0-19; Added DEC, DATE and DATETIME types.
-                    $_SESSION['data_wizard'][$_POST['workID']]['form_type'] = 'dec';
+                } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\) *(UNSIGNED)?/', $zData['mysql_type'], $aRegs)) {
+                    $_SESSION['data_wizard'][$_POST['workID']]['form_type'] = 'decimal';
                     $_SESSION['data_wizard'][$_POST['workID']]['maxlength'] = $aRegs[1] - $aRegs[2];
                     $_SESSION['data_wizard'][$_POST['workID']]['scale'] = $aRegs[2];
                     $_SESSION['data_wizard'][$_POST['workID']]['unsigned']  = (!empty($aRegs[3])? 1 : 0);
-                } elseif (preg_match('/^DATE(TIME)?/', $zData['mysql_type'], $aRegs)) {//need $aRegs for the default value
+                } elseif (preg_match('/^DATE(TIME)?/', $zData['mysql_type'], $aRegs)) {
                     $_SESSION['data_wizard'][$_POST['workID']]['form_type'] = 'date';
                     $_SESSION['data_wizard'][$_POST['workID']]['time'] = (!empty($aRegs[1])? 1 : 0);
                 }
 
-                // 2009-02-16; 2.0-16; Introducing default values.
                 if (preg_match('/ DEFAULT ([0-9]+|"[^"]+")/', $zData['mysql_type'], $aRegs)) {
                     // Process default values.
                     $_SESSION['data_wizard'][$_POST['workID']]['default_val'] = trim($aRegs[1], '"');
@@ -1147,15 +1140,15 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
                 break;
             case 'textarea':
                 // TEXT column.
-                $_SESSION['data_wizard'][$_POST['workID']]['cols']      = $aFormType[3];
-                $_SESSION['data_wizard'][$_POST['workID']]['rows']      = $aFormType[4];
+                $_SESSION['data_wizard'][$_POST['workID']]['cols'] = $aFormType[3];
+                $_SESSION['data_wizard'][$_POST['workID']]['rows'] = $aFormType[4];
                 break;
             case 'select':
                 // VARCHAR or TEXT columns.
                 if ($aFormType[5] == 'false') {
-                    $_SESSION['data_wizard'][$_POST['workID']]['select']    = ($aFormType[4] == 'false'? 0 : 1);
+                    $_SESSION['data_wizard'][$_POST['workID']]['select'] = ($aFormType[4] == 'false'? 0 : 1);
                 } else {
-                    $_SESSION['data_wizard'][$_POST['workID']]['form_type']  .= '_multiple';
+                    $_SESSION['data_wizard'][$_POST['workID']]['form_type'] .= '_multiple';
                     $_SESSION['data_wizard'][$_POST['workID']]['rows']       = $aFormType[3];
                     $_SESSION['data_wizard'][$_POST['workID']]['select']     = ($aFormType[4] == 'false'? 0 : 1);
                     $_SESSION['data_wizard'][$_POST['workID']]['select_all'] = ($aFormType[6] == 'false'? 0 : 1);
