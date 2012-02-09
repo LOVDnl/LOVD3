@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-02
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-09
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -137,7 +137,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        global $_AUTH, $_SETT;
+        global $_AUTH, $_DB, $_SETT;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -150,8 +150,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         // FIXME; move to object_custom.php.
         if (!empty($aData['owned_by'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']));
-                if (!mysql_num_rows($q)) {
+                if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this phenotype entry\' selection box.');
                 }

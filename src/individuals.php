@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-06
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-09
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -199,7 +199,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 foreach ($_POST['active_diseases'] as $nDisease) {
                     // Add disease to gene.
                     if ($nDisease) {
-                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease));
+                        $q = $_DB->query('INSERT INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease), false);
                         if (!$q) {
                             // Silent error.
                             lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nDisease . ' - could not be added to individual ' . $nID);
@@ -212,7 +212,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             if (count($aSuccessDiseases)) {
                 lovd_writeLog('Event', LOG_EVENT, 'Disease entries successfully added to individual ' . $nID . ' - (Owner: ' . $_POST['owned_by'] . ')');
-                $nDiseases = mysql_num_rows(lovd_queryDB_Old('SELECT DISTINCT diseaseid FROM ' . TABLE_SHARED_COLS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($_POST['active_diseases']) - 1) . ')', $_POST['active_diseases']));
+                $nDiseases = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($_POST['active_diseases']) - 1) . ') GROUP BY diseaseid', $_POST['active_diseases'])->fetchColumn();
             } else {
                 $nDiseases = 0;
             }
@@ -349,7 +349,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 }
             }
             if ($aToRemove) {
-                $q = lovd_queryDB_Old('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
+                $q = $_DB->query('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove), false);
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from individual ' . $nID);
@@ -364,7 +364,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             foreach ($_POST['active_diseases'] as $nDisease) {
                 if (!in_array($nDisease, $aDiseases)) {
                     // Add disease to gene.
-                    $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease));
+                    $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease), false);
                     if (!$q) {
                         $aFailed[] = $nDisease;
                     } else {

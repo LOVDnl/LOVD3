@@ -5,7 +5,7 @@
  *
  * Created     : 2010-12-15
  * Modified    : 2012-02-09
- * For LOVD    : 3.0-beta-02
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -210,11 +210,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
-        $qDiseases = lovd_queryDB_Old('SELECT id FROM ' . TABLE_DISEASES);
-        $aDiseases = array();
-        while ($r = mysql_fetch_row($qDiseases)) {
-            $aDiseases[] = $r[0];
-        }
+        $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES)->fetchAllColumn();
         if (isset($aData['active_diseases']) && is_array($aData['active_diseases'])) {
             foreach ($aData['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $aDiseases)) {
@@ -278,19 +274,16 @@ class LOVD_Gene extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-        global $_CONF, $zData;
+        global $_CONF, $_DB, $zData;
 
         // Get list of diseases.
-        $aDiseasesForm = array();
-        $qData = lovd_queryDB_Old('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
-        $nData = mysql_num_rows($qData);
-        if (!$nData) {
+        $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id')->fetchAllCombine();
+        $nDiseases = count($aDiseasesForm);
+        $nFieldSize = ($nDiseases < 20? $nDiseases : 20);
+        if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
+            $nFieldSize = 1;
         }
-        while ($r = mysql_fetch_row($qData)) {
-            $aDiseasesForm[$r[0]] = $r[1];
-        }
-        $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
 
         // References sequences (genomic and transcripts).
         $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);

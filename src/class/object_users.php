@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-02
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-09
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -185,7 +185,7 @@ class LOVD_User extends LOVD_Object {
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
-        global $_AUTH, $_PATH_ELEMENTS, $_SETT;
+        global $_AUTH, $_DB, $_PATH_ELEMENTS, $_SETT;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -226,7 +226,7 @@ class LOVD_User extends LOVD_Object {
         if (in_array(ACTION, array('create', 'register'))) {
             // Does the username exist already?
             if ($aData['username']) {
-                if (mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE username = ?', array($aData['username'])))) {
+                if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE username = ?', array($aData['username']))->fetchColumn()) {
                     lovd_errorAdd('username', 'There is already a user with this username. Please choose another one.');
                 }
             }
@@ -288,7 +288,7 @@ class LOVD_User extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-        global $_AUTH, $_SETT, $_PATH_ELEMENTS;
+        global $_AUTH, $_DB, $_SETT, $_PATH_ELEMENTS;
 
         $aUserLevels = $_SETT['user_levels'];
 
@@ -303,7 +303,7 @@ class LOVD_User extends LOVD_Object {
 
         } else {
             // "Normal" user form; create user, edit user.
-            $qCountryList = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_COUNTRIES . ' ORDER BY name');
+            $aCountryList = $_DB->query('SELECT id, name FROM ' . TABLE_COUNTRIES . ' ORDER BY name')->fetchAllCombine();
 
             if ($_AUTH) {
                 // Remove user levels that are higher than or equal to the current user's level IF you are logged in.
@@ -314,11 +314,6 @@ class LOVD_User extends LOVD_Object {
                     }
                 }
             }
-
-            // Get gene list, to select user as curator.
-            $qGenes = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
-            $nGenes = mysql_num_rows($qGenes);
-            $nGeneSize = ($nGenes < 5? $nGenes : 5);
         }
 
         // FIXME; this is a mess...!!!
@@ -342,7 +337,7 @@ class LOVD_User extends LOVD_Object {
                         'skip',
                         array('', '', 'print', '<B>Referencing the lab</B>'),
                         'hr',
-                        array('Country', '', 'select', 'countryid', 1, ($bInstall? $aCountryList : $qCountryList), true, false, false),
+                        array('Country', '', 'select', 'countryid', 1, $aCountryList, true, false, false),
                         array('City', 'Please enter your city, even if it\'s included in your postal address, for sorting purposes.', 'text', 'city', 30),
                         array('Reference (optional)', 'Your submissions will contain a reference to you in the format "Country:City" by default. You may change this to your preferred reference here.', 'text', 'reference', 30),
                         'hr',

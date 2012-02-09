@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-02-03
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-09
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -159,7 +159,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        global $_AUTH, $_SETT, $_CONF;
+        global $_AUTH, $_CONF, $_DB, $_SETT;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -210,13 +210,15 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             lovd_errorAdd('chromosome', 'Please select a proper chromosome from the \'Chromosome\' selection box.');
         }
 
+        // FIXME; move to object_custom.php.
         if (!empty($aData['owned_by'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']));
-                if (!mysql_num_rows($q)) {
+                if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
+                    // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this variant\' selection box.');
                 }
             } else {
+                // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
                 lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this variant\'.');
             }
         }

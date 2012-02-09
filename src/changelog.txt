@@ -7,6 +7,30 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 03
+ * 2012-03-12                                ?????????????????????????????????????????????????
+ *********/
+ * Implemented PDO in all remaining lovd_queryDB() calls in
+   class/object_columns.php, class/object_genes.php,
+   class/object_genome_variants.php, class/object_individuals.php,
+   class/object_phenotypes.php, class/object_screenings.php,
+   class/object_users.php, diseases.php, inc-auth.php and individuals.php.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************
  * 3.0 Beta 02
  * 2012-02-09
  *********/
@@ -43,7 +67,8 @@
    returned false on a failed SOAP request.
  * Fixed bug; Genes were not editable.
  * LOVD 3.0 now requires the PHP mbstring extension to be on.
- * After changing the page size on a viewList, the page number now always resets to 1.
+ * After changing the page size on a viewList, the page number now always resets
+   to 1.
  * Added links in the screenings tab dropdown to the custom columns overviews.
  * Added some icons in the dropdown menus.
  * Fixed bug; Fixed a notice from the custom column create form.

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-02-06
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-09
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -136,7 +136,7 @@ class LOVD_Column extends LOVD_Object {
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
-        global $_AUTH;
+        global $_AUTH, $_DB;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -163,8 +163,7 @@ class LOVD_Column extends LOVD_Object {
 
         // ColID must not exist in the database.
         if (!empty($aData['category']) && !empty($aData['colid'])) {
-            list($n) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid'])));
-            if ($n) {
+            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid']))->fetchColumn()) {
                 lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
             }
         }

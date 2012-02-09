@@ -1,6 +1,5 @@
 Prioritize:
 ===========
-- Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - (@Ivo) Hernoem alle ViewLists.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
@@ -19,7 +18,7 @@ Prioritize:
 - (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
   + Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
 - Indien er varianten zijn gevonden met een screening, moet de submitter na de screening?create bestaande varianten van dit individu kunnen selecteren als "met deze screening bevestigd".
-  + Moet met viewList, plus optie "select all", zoals ook genes/DMD?authorize.
+  + Moet met viewList, zoals ook genes/DMD?authorize, plus optie "select all".
 - Allow to create new VOT with existing VOG
   + Gebruiker selecteert transcript uit ViewList (check op chromosoom), PHP mapt variant op aangegeven NM (gebruik ajax/convert_position.php), insert into DB, forward naar edit variant form, evt. scrollen naar nieuwe VOT.
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
@@ -52,7 +51,18 @@ Prioritize:
     -sporadic, parents not consanguineous
     -sporadic, consanguinity unknown
 
-- Beta-03:
+- Beta-04:
+  - DATA DOWNLOAD.
+    + Info in de header over de filters die gebruikt zijn.
+    + Eerdere suggestie: maybe check out the uniprot download format?
+    + DATA IMPORT
+      * Choose character set!
+        - Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
+          nodig... dat werkt vanaf 4.3.0... Alleen laden met config_import.txt?
+          Testfile heb ik in mijn email, van David Bonthron (Wed, 18 Jun 2008 12:28:46 +0100).
+      * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
+        - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
+        - Store in session / DB in een col met serialized data?
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
   - (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
@@ -85,6 +95,11 @@ Prioritize:
     * Kan popup zo'n hoekje hebben die naar het logo wijst?
 - Vanaf beta moeten bij bugfixes de datum en versie gezet worden..
 - INCORPORATE PDO EVERYWHERE.
+  + Check for lovd_queryDB calls.
+  + When done with this, make sure all the left mysql_query() calls are taken out, too.
+- User curator maken voor >1 gen in 1 keer: nieuw form!
+  + Popup van zijn viewEntry; alleen genen tonen waar hij GEEN curator voor is, geef twee vinkjes: wel/niet edit, wel/niet zichtbaar.
+  + Remove als curator: apart van add, geen vinkjes.
 - (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
 - <OPTGROUP label="groep"><OPTION value="asdf">asdf</OPTION></OPTGROUP> voor custom link active for columns selection?
 - Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
@@ -117,7 +132,6 @@ Prioritize:
     - Current plans:
         Variant/allele -> Variant/Phase?
 - In individual viewList: lijst genen meest gemuteerd?
-- In data download: info in de header over de filters die gebruikt zijn.
 - Als account gelocked wordt, moet er naar de gebruiker die gelocked is, gemailed worden.
 - (Later) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
   * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
@@ -141,6 +155,7 @@ Prioritize:
 - Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
 - Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
 - De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
+- Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 
 
 
@@ -313,7 +328,7 @@ Suggesties:
     Includen van de Setup in de Configuration
     submitters should be able to edit info to whichever individual, but edit only their own data,
     right click on variant -> maybe left click on a small button or mouseover explaining to right-click?,
-    show pathogenicity in color values for the whole line?, skip the download format - people can use the system to edit?, maybe check out the uniprot download format?,
+    show pathogenicity in color values for the whole line?
         The uniprot format by the way has the advantage to use lines for the data, so adding more lines for a individual's phenotype data is just fine, but the file gets so long...
     mouseover column or column header for legend info?
 
@@ -381,10 +396,6 @@ Needed before release
         Standaard mouseover met uitleg? Standaard notes er bij?
         Opsplitsen in twee boxen waar entries heen gesleept kunnen worden?
         Omzetten naar lijst checkboxes?
-    Import: choose character set
-        Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
-        nodig... maar dat werkt pas vanaf 4.3.0... Toch proberen? Alleen laden met config_import.txt, denk ik.
-        Testfile heb ik in mijn email, van David Bonthron (Wed, 18 Jun 2008 12:28:46 +0100).
     Astrid Out en Carli Tops zouden graag de mogelijkheid hebben om een overzicht te krijgen van individuals naar mutaties, i.e.
         in de database van GenX kunnen zoeken op (aanwezigheid van?) varianten in GenY.
     Default list_size moet onthouden worden in COOKIE, net zoals de hidden cols.
@@ -397,9 +408,6 @@ Needed before release
                 Ertussen dan maar? Wacht ff hoor... de speciale variant overview werkt alleen op de Individual cols...
             (...) veel naar gevraagd wordt (Variant_Amino_acid_SIFT, Variant_Amino_acid_PolyPhen, Variant_Amino_acid_AlignGVGD, DNA-reported).
             Er is verwarring en overlap over de onderwerpen Allele, Individual/Occurence, Individual/Mutation/Origin, Individual/Mutation/Origin_De_Novo.
-    Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
-        Dat moet dan ongelofelijk goed gecontroleerd worden!!!
-        Store in session / DB in een col met serialized data?
     Techniek nodig om de database dicht te zetten, tijdens de update.
         Johan wil een installatie dicht kunnen gooien (behalve hem en de DBA ofzo?), om tijdelijk te voorkomen dat submitters iets editen.
     Column type wizard:

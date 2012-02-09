@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-06
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-09
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -198,10 +198,7 @@ class LOVD_Individual extends LOVD_Custom {
             }
         }
 
-        // FIXME; eerst een concat om daarna te exploden????
-        $qDiseases = lovd_queryDB_Old('SELECT GROUP_CONCAT(DISTINCT id) AS diseases FROM ' . TABLE_DISEASES);
-        list($sDiseases) = mysql_fetch_row($qDiseases);
-        $aDiseases = explode(',', $sDiseases);
+        $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES)->fetchAllColumn();
         // FIXME; ik denk dat de query naar binnen deze if moet.
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
@@ -217,8 +214,7 @@ class LOVD_Individual extends LOVD_Custom {
         // FIXME; move to object_custom.php.
         if (!empty($aData['owned_by'])) {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']));
-                if (!mysql_num_rows($q)) {
+                if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
                     lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this individual\' selection box.');
                 }
@@ -251,18 +247,14 @@ class LOVD_Individual extends LOVD_Custom {
         // Build the form.
         global $_AUTH, $_DB, $_SETT;
 
-        // Get list of diseases
-        $aDiseasesForm = array();
-        $qData = lovd_queryDB_Old('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id');
-        $nData = mysql_num_rows($qData);
-
-        if (!$nData) {
+        // Get list of diseases.
+        $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id')->fetchAllCombine();
+        $nDiseases = count($aDiseasesForm);
+        $nFieldSize = ($nDiseases < 20? $nDiseases : 20);
+        if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
-        }    
-        while ($r = mysql_fetch_row($qData)) {
-            $aDiseasesForm[$r[0]] = $r[1];
+            $nFieldSize = 1;
         }
-        $nFieldSize = (count($aDiseasesForm) < 20? count($aDiseasesForm) : 20);
 
         $aSelectOwner = array();
 
@@ -290,7 +282,7 @@ class LOVD_Individual extends LOVD_Custom {
                  array(
                         array('Panel size', '', 'text', 'panel_size', 10),
                         array('', '', 'note', 'Fill in how many individuals this entry will represent.'),
-                        array('Panel ID', 'Fill in the ID to which this individual or group of individuals belong to.', 'text', 'panelid', 10),
+                        array('Panel ID (Optional)', 'Fill in the ID to which this individual or group of individuals belong to.', 'text', 'panelid', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),

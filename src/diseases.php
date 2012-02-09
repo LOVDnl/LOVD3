@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-01-04
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-09
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -114,9 +114,8 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // When we have multiple hits, refer to listView.
 
     $sID = rawurldecode($_PATH_ELEMENTS[1]);
-    $q = lovd_queryDB_Old('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($sID), true);
-    $n = mysql_num_rows($q);
-    @list($nID) = mysql_fetch_row($q);
+    $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($sID))->fetchAllColumn();
+    $n = count($aDiseases);
     if (!$n) {
         define('PAGE_TITLE', 'View disease');
         require ROOT_PATH . 'inc-top.php';
@@ -124,7 +123,7 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showInfoTable('No such ID!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
     } elseif ($n == 1) {
-        header('Location: ' . lovd_getInstallURL() . 'diseases/' . $nID);
+        header('Location: ' . lovd_getInstallURL() . 'diseases/' . $aDiseases[0]);
     } else {
         // Multiple hits. Forward to exact match search.
         header('Location: ' . lovd_getInstallURL() . 'diseases?search_symbol=%3D%22' . rawurlencode($sID) . '%22');
@@ -166,19 +165,16 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
-            // FIXME; add this and next block to a function.
-            $qAddedCustomCols = lovd_queryDB_Old('DESCRIBE ' . TABLE_PHENOTYPES);
-            while ($aCol = mysql_fetch_assoc($qAddedCustomCols)) {
-                $aAdded[] = $aCol['Field'];
-            }
+            // FIXME; add this and next block to a function, just like lovd_addAllDefaultCustomColumnsForGene().
+            $aAdded = $_DB->query('DESCRIBE ' . TABLE_PHENOTYPES)->fetchAllColumn();
             
-            $qStandardCustomCols = lovd_queryDB_Old('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "Phenotype/%" AND (standard = 1 OR hgvs = 1)');
-            while ($aStandard = mysql_fetch_assoc($qStandardCustomCols)) {
-                if (!in_array($aStandard['id'], $aAdded)) {
-                    $q = lovd_queryDB_Old('ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());
-                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $_AUTH['id']));
+            $qStandardCustomCols = $_DB->query('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "Phenotype/%" AND (standard = 1 OR hgvs = 1)');
+            while ($zStandard = $qStandardCustomCols->fetchAssoc()) {
+                if (!in_array($zStandard['id'], $aAdded)) {
+                    $_DB->query('ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `' . $zStandard['id'] . '` ' . $zStandard['mysql_type']);
+                    $_DB->query('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($zStandard['id'], $_AUTH['id']));
                 }
-                $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($nID, $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $_AUTH['id']));
+                $_DB->query('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($nID, $zStandard['id'], $zStandard['col_order'], $zStandard['width'], $zStandard['mandatory'], $zStandard['description_form'], $zStandard['description_legend_short'], $zStandard['description_legend_full'], $zStandard['select_options'], $zStandard['public_view'], $zStandard['public_add'], $_AUTH['id']));
             }
 
             // Write to log...
@@ -190,7 +186,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 foreach ($_POST['genes'] as $sGene) {
                     // Add gene to disease.
                     // FIXME; Nu dat PDO beschikbaar is, doe dit in een prepared statement met multiple executes.
-                    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
+                    $q = $_DB->query('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID), false);
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
@@ -304,7 +300,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 }
             }
             if ($aToRemove) {
-                $q = lovd_queryDB_Old('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
+                $q = $_DB->query('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove), false);
                 if (!$q) {
                     // Silent error.
                     // FIXME; deze log entries zijn precies andersom dan bij create (wat wordt aan wat toegevoegd/verwijderd). Dat moeten we standaardiseren, maar wellicht even overleggen over LOVD-breed.
@@ -317,11 +313,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Add genes.
             $aSuccess = array();
             $aFailed = array();
+            $q = $_DB->prepare('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)');
             foreach ($_POST['genes'] as $sGene) {
                 if (!in_array($sGene, $zData['genes']) && $sGene != 'None') {
-                    // FIXME; Nu dat PDO beschikbaar is, doe dit in een prepared statement met multiple executes.
                     // Add disease to gene.
-                    $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID));
+                    $b = $q->execute(array($sGene, $nID), false);
                     if (!$q) {
                         $aFailed[] = $sGene;
                     } else {
