@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-02-06
+ * Modified    : 2012-02-09
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -135,6 +135,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'class/object_genes.php';
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'class/REST2SOAP.php';
+    require ROOT_PATH . 'inc-lib-genes.php';
     $_DATA = new LOVD_Gene();
 
     $sPath = $_PATH_ELEMENTS[0] . '?' . ACTION;
@@ -162,45 +163,30 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             } else {
                 // Gene Symbol must be unique.
                 // Enforced in the table, but we want to handle this gracefully.
-                $sSQL = 'SELECT id FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?';
+                $sSQL = 'SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?';
                 $aSQL = array($_POST['hgnc_id'], $_POST['hgnc_id']);
-                
-                if ($_DB->query($sSQL, $aSQL)->rowCount()) {
+
+                if ($_DB->query($sSQL, $aSQL)->fetchColumn()) {
                     lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation.');
                 } else {
-                    if (ctype_digit($_POST['hgnc_id'])) {
-                        $sWhere = 'gd_hgnc_id%3D' . $_POST['hgnc_id'];
-                    } else {
-                        $sWhere = 'gd_app_sym%3D%22' . $_POST['hgnc_id'] . '%22';
-                    }
-                    $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_pub_chrom_map&col=gd_pub_eg_id&col=md_mim_id&status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit', false, false);
-                    
-                    if (isset($aHgncFile['1'])) {
-                        list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = explode("\t", $aHgncFile['1']);
+                    // This call already makes the needed lovd_errorAdd() calls.
+                    $aGeneInfo = lovd_getGeneInfoFromHgnc($_POST['hgnc_id'], array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_pub_eg_id', 'md_mim_id'));
+                    if (!empty($aGeneInfo)) {
+                        list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = $aGeneInfo;
                         list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
-                        if ($sGeneName == 'entry withdrawn') {
-                            lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' no longer exists in the HGNC database.');
-                        } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $sGeneName, $aRegs)) {
-                            lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' is deprecated, please use ' . $aRegs[1]);
-                        } elseif ($sChromLocation == 'reserved') {
-                            lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' does not yet have a public association with a chromosomal location');
-                        }
-                    } else {
-                        lovd_errorAdd('hgnc_id', 'Entry was not found in the HGNC database.');
                     }
                 }
             }
-            
+
             if (!lovd_error()) {
                 require ROOT_PATH . 'inc-top.php';
                 require ROOT_PATH . 'class/progress_bar.php';
-                require ROOT_PATH . 'inc-lib-genes.php';
-                
+
                 $sFormNextPage = '<FORM action="' . CURRENT_PATH . '?' . ACTION . '" id="createGene" method="post">' . "\n" .
                                  '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
                                  '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
                                  '        </FORM>';
-                
+
                 $_BAR = new ProgressBar('', 'Collecting gene information...', $sFormNextPage);
 
                 define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
@@ -210,7 +196,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 flush();
 
                 $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
-                
+
                 // Get LRG if it exists
                 $aRefseqGenomic = array();
                 $_BAR->setMessage('Checking for LRG...');
@@ -372,20 +358,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 $_DATA->insertEntry($_POST, $aFields);
 
-                // FIXME; put this block and the next in a function.
-                $qAddedCustomCols = lovd_queryDB_Old('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS);
-                while ($aCol = mysql_fetch_assoc($qAddedCustomCols)) {
-                    $aAdded[] = $aCol['Field'];
-                }
-                
-                $qStandardCustomCols = lovd_queryDB_Old('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)');
-                while ($aStandard = mysql_fetch_assoc($qStandardCustomCols)) {
-                    if (!in_array($aStandard['id'], $aAdded)) {
-                        lovd_queryDB_Old('ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']), array());
-                        lovd_queryDB_Old('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $_AUTH['id']));
-                    }
-                    lovd_queryDB_Old('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($_POST['id'], $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $_AUTH['id']));
-                }
+                // Add the default custom columns to this gene.
+                lovd_addAllDefaultCustomColumnsForGene($_POST['id']);
 
                 // Write to log...
                 lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');
@@ -526,11 +500,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
         $aRefseqGenomic = array();
         // Get LRG if it exists
-        if ($sLRG = getLrgByGeneSymbol($sID)) {
+        if ($sLRG = lovd_getLRGbyGeneSymbol($sID)) {
             $aRefseqGenomic[] = $sLRG;
         }
         // Get NG if it exists
-        if ($sNG = getNgByGeneSymbol($sID)) {
+        if ($sNG = lovd_getNGbyGeneSymbol($sID)) {
             $aRefseqGenomic[] = $sNG;
         }
         // Get NC from LOVD

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-02-06
+ * Modified    : 2012-02-08
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -271,6 +271,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // Create a new entry.
 
+    lovd_requireAUTH(LEVEL_SUBMITTER);
+
     define('LOG_EVENT', 'VariantCreate');
 
     if (isset($_GET['target'])) {
@@ -280,7 +282,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $sMessage = '';
         if (!$z) {
             $sMessage = 'The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.';
-        } elseif (!lovd_isAuthorized('screenings', $_GET['target'], true)) {
+        } elseif (!lovd_isAuthorized('screenings', $_GET['target'])) {
             lovd_requireAUTH(LEVEL_OWNER);
         } elseif (!$z['variants_found']) {
             $sMessage = 'Cannot add variant to the given screening, because the value \'Have variants been found?\' is unchecked.';
@@ -296,8 +298,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $_POST['screeningid'] = $_GET['target'];
             $_GET['search_id_'] = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn(); 
         }
-    } else {
-        lovd_requireAUTH(LEVEL_SUBMITTER);
     }
 
     if (!isset($_GET['reference'])) {

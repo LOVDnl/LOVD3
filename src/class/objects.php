@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-06
+ * Modified    : 2012-02-09
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -868,15 +868,6 @@ class LOVD_Object {
             // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
             $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
             $_DB->commit(); // To end the transaction and the locks that come with it.
-
-            // It is possible, when increasing the page size from a page > 1, that you're ending up in an invalid page with no results.
-            // Catching this error, by redirecting from here. Only Ajax handles this correctly, because in normal requests inc-top.php already executed.
-            // NOTE: if we ever decide to have a page_size change reset page to 1, we can drop this code.
-            if (!$q->rowCount() && $nTotal && !headers_sent()) {
-                // No results retrieved, but there are definitely hits to this query. Limit was wrong!
-                header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?' . preg_replace('/page=[^&]+/', 'page=1', $_SERVER['QUERY_STRING']));
-                exit;
-            }
         }
 
         // If no results are found, quit here.

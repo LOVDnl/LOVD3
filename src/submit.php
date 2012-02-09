@@ -70,7 +70,9 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     // URL: /submit/finish/(variant|individual|screening|phenotype|upload)/00000001
 
     if ($_PATH_ELEMENTS[2] == 'upload') {
-        // FIXME; Implement upload properly before allowing this! Maybe with an upload ID or something similar?
+        // FIXME; Implement upload properly! Maybe with an upload ID or something similar?
+        // Now just sending the user to variants.php -- no e-mail, no nothing!
+        header('Refresh: 0; url=' . lovd_getInstallURL() . 'variants/');
         exit;
     }
 

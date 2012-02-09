@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 02
- * 2012-03-05 ?????????????????????????
+ * 2012-02-09
  *********/
  * Went through the entire 2Do.txt file to resort the new priorities after
    3.0-beta-01.
@@ -38,16 +38,32 @@
    vious values were not remembered.
  * Fixed bug; The data type wizard didn't remember the form type of the Decimal
    type column.
-
-
-
-
-
-
-
-
-
-
+ * Fixed notice when creating two PDO connections.
+ * Fixed bug; SOAP moduleCall()s would produce warnings when lovd_php_file()
+   returned false on a failed SOAP request.
+ * Fixed bug; Genes were not editable.
+ * LOVD 3.0 now requires the PHP mbstring extension to be on.
+ * After changing the page size on a viewList, the page number now always resets to 1.
+ * Added links in the screenings tab dropdown to the custom columns overviews.
+ * Added some icons in the dropdown menus.
+ * Fixed bug; Fixed a notice from the custom column create form.
+ * Added a progress bar in custom column delete.
+ * Fixed bug; Fixed missing permission checks in various parts of LOVD.
+ * Fixed bug; The variant create and edit form would give a notice if a variant
+   could not be recognized/mapped by mutalyzer.
+ * The buttons "Add a variant to this screening", "Add a screening to this
+   individual" & "Add a phenotype to this individual" are now only visible when
+   the user is the owner of the data, curator or higher.
+ * You can now specify that no variants were found with a particular screening.
+ * Now a user is only able to select up to 15 genes that have been screened in
+   the screenings create & edit forms. For genome-wide analysis no genes should 
+   be selected.
+ * Fixed bug; The DBID was not properly predicted in some cases.
+ * Fixed bug; When creating a gene, there were in some specific cases no proper
+   checks if the gene was already present in the database.
+ * Removed the separator line in the tab menu's when there are no items after
+   it.
+ * Added some mod_rewrite rules that we had forgotten to add before.
 
 
 /*******************

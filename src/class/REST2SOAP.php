@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-06
- * Modified    : 2011-04-14
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2012-02-01
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -120,7 +120,14 @@ class REST2SOAP {
             return array('inputXML' => $sInputXML, 'outputXML' => implode("\n", $aOutputSOAP));
         }
         // Parse output
-        $aOutput = $this->parseOutput($sModuleName, implode("\n", $aOutputSOAP));
+        if ($aOutputSOAP) {
+            $aOutput = $this->parseOutput($sModuleName, implode("\n", $aOutputSOAP));
+        } else {
+            // Return false if lovd_php_file returns false. This way calling scripts
+            // can tell the difference between an empty result and a failed connection.
+            $aOutput = false;
+        }
+
         // Check output
         return $aOutput;
     }

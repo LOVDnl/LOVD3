@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-02
+ * Modified    : 2012-02-08
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -657,7 +657,12 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
         fputs($f, $sRequest);
         $bListen = false; // We want to start capturing the output AFTER the headers have ended.
         while (!feof($f)) {
-            $s = rtrim(fgets($f), "\r\n");
+            $s = fgets($f);
+            if ($s === false) {
+                // This mysteriously may happen at the first fgets() call???
+                continue;
+            } 
+            $s = rtrim($s, "\r\n");
             if ($bListen) {
                 $aOutput[] = $s;
             } else {

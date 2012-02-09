@@ -1,6 +1,6 @@
 Prioritize:
 ===========
-- DEC en DECIMAL worden door elkaar heen gebruikt.
+- Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - (@Ivo) Hernoem alle ViewLists.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
@@ -264,6 +264,10 @@ LOVD 3.0
         Idem na disease
     Bij aanmaken disease, controleren of je die disease mogelijk al hebt? Behalve op OMIM ID natuurlijk?
     $_CONF['send_admin_submissions'] splitsen?
+    Als we ooit 'ns invoeren dat je door het gen/transcript kunt scrollen grafisch, kunnen we de optie gebruiken om op de achtergrond het gen in miniatuur ook mee te scollen, maar dan langzamer.
+        Een database gezien waar je door het gen kan scrollen, maar door de enorme intronen is dat bijna niet netjes te doen, je ziet niet waar je scolt.
+        Met een miniatuurgen op de achtergrond die langzaam meescolt (met pixelbreede lijn om aan te geven waar je zit), kun je dat probleem oplossen.
+            Een voorbeeld van deze techniek: http://www.iki.lt/lt.php (de balonnen op de achtergrond)
 
 Overdenkingen / Kleinere dingen om te doen:
 ===========================================

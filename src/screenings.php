@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-02-07
+ * Modified    : 2012-02-08
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -178,6 +178,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
                     // Add disease to gene.
                     if (in_array($sGene, lovd_getGeneList())) {
                         $q = $_DB->query('INSERT INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene));
+                        // FIXME; I think this is not possible without a query error, that by default halts the system. Maybe you want to set $_DB->query()'s third argument to false?
                         if (!$q->rowCount()) {
                             // Silent error.
                             // FIXME; maybe better to group the error messages, just like when editing?
@@ -309,7 +310,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                             $_DATA->buildFields());
 
             // Prepare values.
-            $_POST['variants_found'] = (!isset($_POST['variants_found'])? '1' : $_POST['variants_found']);
+            $_POST['variants_found'] = (empty($_POST['variants_found'])? '1' : $_POST['variants_found']);
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFieldsGenome[] = 'owned_by';
             }

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2011-12-06
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-02-08
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -52,7 +52,10 @@ class LOVD_PDO extends PDO {
             // https://bugs.php.net/bug.php?id=47224                  (other constants were also lost, but we don't use them)
             // Can't define a class' constant, so I'll have to use this one. This can be removed (and MYSQL_ATTR_INIT_COMMAND
             // below restored to PDO::MYSQL_ATTR_INIT_COMMAND) once we're sure they're no other 5.3.0 users left.
-            define('MYSQL_ATTR_INIT_COMMAND', 1002);
+            if (!defined('MYSQL_ATTR_INIT_COMMAND')) {
+                // Still needs check though, in case two PDO connections are opened.
+                define('MYSQL_ATTR_INIT_COMMAND', 1002);
+            }
             $aOptions = array(MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8', PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE);
         } else {
             $aOptions = array();

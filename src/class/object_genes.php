@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-02-07
+ * Modified    : 2012-02-09
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -199,13 +199,13 @@ class LOVD_Gene extends LOVD_Object {
         parent::checkFields($aData);
 
         if (ACTION == 'create') {
-            if ($_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($zData['id']))->rowCount()) {
+            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($zData['id']))->fetchColumn()) {
                 lovd_errorAdd('', 'Unable to add gene. This gene symbol already exists in the database!');
             }
         }
 
         if (!in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
-            lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
+            lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, or LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
         }
 
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.

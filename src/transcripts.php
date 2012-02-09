@@ -482,7 +482,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_printHeader(PAGE_TITLE);
 
     if (!lovd_error()) {
-        print('      To edit this transcript, please complete the form below and press "Edit" at the bottom of the form..<BR>' . "\n" .
+        print('      To edit this transcript, please complete the form below and press "Edit" at the bottom of the form.<BR>' . "\n" .
               '      <BR>' . "\n\n");
     }
 

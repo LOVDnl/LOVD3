@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-02-06
+ * Modified    : 2012-02-08
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1008,7 +1008,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
             $_BAR->setProgress(90);
 
             // Allow to update all active columns as well.
-            if (isset($_POST['apply_to_all']) && $_POST['apply_to_all']) {
+            if (!empty($_POST['apply_to_all'])) {
                 $_BAR->setMessage('Applying new default settings for this column to all ' . $aColumnInfo['unit'] . 's...');
 
                 // Fields to be used.
@@ -2068,11 +2068,11 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
             } else {
                 // Query text; remove column registration first.
                 $sObject = $aTableInfo['unit'] . 'id';
-                $_DB->query('START TRANSACTION');
+                $_DB->beginTransaction();
                 $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (?' . str_repeat(', ?', count($_POST['target'])-1) . ') AND colid = ?';
                 $aQ = array_merge($_POST['target'], array($zData['id']));
                 $q = $_DB->query($sQ, $aQ);
-                $_DB->query('COMMIT');
+                $_DB->commit();
                 $_BAR->setProgress(10);
                 $_BAR->setMessage('Inactivating column...');
 

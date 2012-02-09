@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2012-02-07
+ * Modified    : 2012-02-08
  * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,7 +65,7 @@ function lovd_getNGbyGeneSymbol ($sGeneSymbol)
 
 
 
-function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
+function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = true)
 {
     // Downloads gene information from the HGNC website. The specified columns will be retrieved.
     // If $bRecursion == true, this function automatically handles deprecated HGNC entries.
@@ -96,7 +96,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
     $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
     
     // If the HGNC is having database problems, we get an HTML page.
-    if (empty($aHgncFile) || stripos(implode("\n", $aHgncFile), '</html>') !== FALSE) {
+    if (empty($aHgncFile) || stripos(implode($aHgncFile), '<html') !== FALSE) {
         if (function_exists('lovd_errorAdd')) {
             lovd_errorAdd('', 'Couldn\'t get gene information, probably because the HGNC is having database problems.');
         }
@@ -116,12 +116,12 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
                 return getGeneInfoFromHgnc($aRegs[1], $aCols);
             }
             elseif (function_exists('lovd_errorAdd')) {
-                lovd_errorAdd('', 'Entry ' . $sHgncId . ' is deprecated, please use ' . $aRegs[1]);
+                lovd_errorAdd('', 'Entry ' . $sHgncId . ' is deprecated, please use ' . $aRegs[1] . '.');
             }
             return false;
         } elseif (in_array('gd_pub_chrom_map', $aCols) && $aCols[array_search('gd_pub_chrom_map', $aCols)] == 'reserved') {
             if (function_exists('lovd_errorAdd')) {
-                lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' does not yet have a public association with a chromosomal location');
+                lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' does not yet have a public association with a chromosomal location.');
             }
             return false;
         }

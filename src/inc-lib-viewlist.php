@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2011-10-21
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2012-02-09
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -121,7 +121,7 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
     print('      <TABLE border="0" cellpadding="0" cellspacing="3" class="pagesplit_nav">' . "\n" .
           '        <TR>' . "\n" .
           '          <TD style="border : 0px; cursor : default; padding-right : 10px;">' . "\n" .
-          '            <SELECT onchange="document.forms[\'viewlistForm_' . $sViewListID . '\'].page_size.value = this.value; lovd_AJAX_viewListSubmit(\'' . $sViewListID . '\');">');
+          '            <SELECT onchange="document.forms[\'viewlistForm_' . $sViewListID . '\'].page_size.value = this.value; document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value = 1; lovd_AJAX_viewListSubmit(\'' . $sViewListID . '\');">');
     foreach ($_SETT['list_sizes'] as $nSize) {
         print("\n" .
               '              <OPTION value="' . $nSize . '"' . ($nSize == $_GET['page_size']? ' selected' : '') . '>' . $nSize . ' per page</OPTION>');
