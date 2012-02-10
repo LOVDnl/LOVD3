@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-02-07
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-10
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -58,7 +58,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
             $_DATA = new LOVD_Phenotype($aDisease['id']);
             $_DATA->setSortDefault('phenotypeid');
             print('<B>' . $aDisease['name'] . ' (<A href="diseases/' . $aDisease['id'] . '">' . $aDisease['symbol'] . '</A>)</B>');
-            $_DATA->viewList(false, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
+            $_DATA->viewList('Phenotypes_' . $aDisease['id'], array('phenotypeid', 'individualid', 'diseaseid'), true, true);
         }
     } else {
         print('<BR>' . "\n");

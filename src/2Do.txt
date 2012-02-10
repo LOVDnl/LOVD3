@@ -1,6 +1,5 @@
 Prioritize:
 ===========
-- (@Ivo) Hernoem alle ViewLists.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -75,6 +74,7 @@ Prioritize:
   - /columns/VariantOnTranscript/DMD -> (LINK MOET ANDERS HETEN) viewList kolommen actief op DMD
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
   - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
+  - Begin met manual (eerst alleen nog PDF).
 
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
@@ -133,12 +133,6 @@ Prioritize:
         Variant/allele -> Variant/Phase?
 - In individual viewList: lijst genen meest gemuteerd?
 - Als account gelocked wordt, moet er naar de gebruiker die gelocked is, gemailed worden.
-- (Later) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
-  * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
-  * Probleem: als wij de created_* data in de niet-versioned tabel hebben, MOETEN WE DIE ENTRY BEWAREN BIJ DELETION!!!
-  + History/revision control: misschien max 5 levels terug ofzo? Instellen ergens? Of een bepaalde tijd maar? Auto clean up?
-  + Revisie aanmaken ja/nee is een optie, ik hoef dan niet in de system settings te kiezen om dit aan of uit te zetten?
-    * Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
 - Raar: /genes/DMD?authorize -> click alle users aan -> resort viewList.
 - Use uniqid() ipv lovd functie?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
@@ -153,9 +147,12 @@ Prioritize:
   http://grenada.lumc.nl/LSDB_list/lsdb.php?action=view_all&symbol_start=DHCR7
   (zie email van 9 jan)
 - Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
+- Menu's bij viewLists.
 - Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
 - De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
 - Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
+- API.
+- ORCID integratie.
 
 
 
@@ -184,6 +181,12 @@ Doen voordat LOVD 3.0 online gebruikt kan worden:
 
 
 Ook belangrijk, maar iets minder:
+- (Na beta) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
+  * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
+  * Probleem: als wij de created_* data in de niet-versioned tabel hebben, MOETEN WE DIE ENTRY BEWAREN BIJ DELETION!!!
+  + History/revision control: misschien max 5 levels terug ofzo? Instellen ergens? Of een bepaalde tijd maar? Auto clean up?
+  + Revisie aanmaken ja/nee is een optie, ik hoef dan niet in de system settings te kiezen om dit aan of uit te zetten?
+    * Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
 - lovd_setUpdatedDate() implementeren.
 - Custom viewList heeft nog geen phenotype data.
 - Hash moet ook meegestuurd worden naar login.php zodat de user naar de juiste pagina terug kan worden redirect.

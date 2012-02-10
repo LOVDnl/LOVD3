@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2011-11-07
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-02-10
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -100,7 +100,7 @@ class LOVD_Log extends LOVD_Object {
 
         $zData['row_id'] = $zData['name'] . ',' . $zData['date'] . ',' . $zData['mtime'];
         $zData['user_'] = '<A href="users/' . $zData['userid'] . '">' . $zData['user'] . '</A>';
-        $zData['del'] = '<A href="#" onclick="lovd_AJAX_deleteLogEntry(\'LOVDLogs\', \'' . $zData['row_id'] . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Delete" title="Delete" width="11" height="11" style="margin-top : 3px;"/></A>';
+        $zData['del'] = '<A href="#" onclick="lovd_AJAX_deleteLogEntry(\'Logs\', \'' . $zData['row_id'] . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Delete" title="Delete" width="11" height="11" style="margin-top : 3px;"/></A>';
         $zData['entry'] = str_replace(array("\r\n", "\r", "\n"), '<BR/>', $zData['log']);
         $zData['entry'] = str_replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;", $zData['entry']);
 

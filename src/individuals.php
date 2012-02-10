@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-09
+ * Modified    : 2012-02-10
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,7 +51,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
-    $_DATA->viewList(false, array('panelid', 'diseaseids'));
+    $_DATA->viewList('Individuals', array('panelid', 'diseaseids'));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -105,7 +105,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         $_GET['search_diseaseid'] = implode('|', $zData['diseaseids']);
         require ROOT_PATH . 'class/object_diseases.php';
         $_DATA = new LOVD_Disease();
-        $_DATA->viewList(false, 'diseaseid', true, true);
+        $_DATA->viewList('Diseases_for_I_VE', 'diseaseid', true, true);
         print('<BR><BR>' . "\n\n");
 
         // List of phenotype entries associated with this person, per disease.
@@ -120,7 +120,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
                     $_DATA = new LOVD_Phenotype($nDiseaseID);
                     $_DATA->setSortDefault('phenotypeid');
                     print('<B>' . $sName . ' (<A href="diseases/' . $nDiseaseID . '">' . $sSymbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $nDiseaseID . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
-                    $_DATA->viewList(false, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
+                    $_DATA->viewList('Phenotypes_for_I_VE_' . $nDiseaseID, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
                 }
             }
         } else {
@@ -138,16 +138,16 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
     $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
+    $_DATA->viewList('Screenings_for_I_VE', array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
     unset($_GET['search_individualid']);
 
-    $_GET['search_screeningids'] = (!empty($zData['screeningids'])? $zData['screeningids'] : '="0"');
+    $_GET['search_screeningids'] = (!empty($zData['screeningids'])? $zData['screeningids'] : '="0"'); // ="0" triggers a "No entries found", but it's not very efficient.
     print('<BR><BR>' . "\n\n");
     lovd_printHeader('Variants', 'H4');
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $_DATA->setSortDefault('id');
-    $_DATA->viewList(false, 'screeningids', true);
+    $_DATA->viewList('VOG_for_I_VE', 'screeningids', true);
     unset($_GET['search_screeningids']);
 
     require ROOT_PATH . 'inc-bot.php';

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-10
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,7 +63,7 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     if ($_DATA->getCount()) {
         lovd_showInfoTable('Please note that these are all columns available in this LOVD installation. This is not the list of columns actually added to the system. Also, modifications made to the columns added to the system are not shown.', 'information', 950);
     }
-    $_DATA->viewList();
+    $_DATA->viewList('Columns');
 
     // FIXME; Is there a better way checking if it's a valid category?
     if (!empty($_PATH_ELEMENTS[1]) && $_AUTH['level'] >= LEVEL_MANAGER && in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {

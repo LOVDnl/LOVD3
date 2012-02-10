@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-10
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -51,7 +51,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
-    $_DATA->viewList(false, 'screeningid');
+    $_DATA->viewList('Screenings', 'screeningid');
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -102,7 +102,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_genes.php';
         $_DATA = new LOVD_Gene();
         $_DATA->setSortDefault('id');
-        $_DATA->viewList(false, 'geneid', true, true, false);
+        $_DATA->viewList('Genes_for_S_VE', 'geneid', true, true, false);
         unset($_GET['search_geneid']);
     }
     
@@ -113,7 +113,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_genome_variants.php';
         $_DATA = new LOVD_GenomeVariant();
         $_DATA->setSortDefault('id');
-        $_DATA->viewList(false, array('id', 'screeningids'), false, false, false);
+        $_DATA->viewList('VOG_for_S_VE', array('id', 'screeningids'), false, false, false);
     }
 
     require ROOT_PATH . 'inc-bot.php';

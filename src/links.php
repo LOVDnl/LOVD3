@@ -54,7 +54,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_links.php';
     $_DATA = new LOVD_Link();
-    $_DATA->viewList();
+    $_DATA->viewList('Links');
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

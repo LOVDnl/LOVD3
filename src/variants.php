@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-10
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -63,7 +63,7 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', 
         $_GET['search_chromosome'] = '="' . substr($sChr, 3) . '"';
         $aColsToHide[] = 'chromosome';
     }
-    $_DATA->viewList(false, $aColsToHide);
+    $_DATA->viewList('VOG', $aColsToHide);
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -83,7 +83,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'in_gene') {
 
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
-    $_DATA->viewList(false, array('transcriptid'));
+    $_DATA->viewList('CustomVL_IN_GENE', array('transcriptid'));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -130,7 +130,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
-    $sViewListID = 'LOVDCustomVL_VOT_VOG_' . $sGene;
+    $sViewListID = 'CustomVL_VOT_VOG_' . $sGene;
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
     list($nTranscriptID, $sTranscript) = each($aTranscripts);
@@ -207,7 +207,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_DATA = new LOVD_TranscriptVariant('', $nID);
     $_DATA->sRowID = 'VOT_{{transcriptid}}';
     $_DATA->sRowLink = 'javascript:window.location.hash = \'{{transcriptid}}\'; return false';
-    $_DATA->viewList(false, array('id_', 'transcriptid', 'status'), true, true);
+    $_DATA->viewList('VOT_for_VOG_VE', array('id_', 'transcriptid', 'status'), true, true);
     unset($_GET['search_id_']);
 ?>
 
@@ -258,7 +258,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_printHeader('Screenings', 'H4');
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
-    $_DATA->viewList(false, array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
+    $_DATA->viewList('Screenings_for_VOG_VE', array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -298,6 +298,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $_POST['screeningid'] = $_GET['target'];
             $_GET['search_id_'] = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn(); 
         }
+
+    } else {
+        $_GET['target'] = '';
     }
 
     if (!isset($_GET['reference'])) {
@@ -309,23 +312,25 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         print('      What kind of variant would you like to submit?<BR><BR>' . "\n\n" .
               '      <TABLE border="0" cellpadding="5" cellspacing="1" width="600" class="option">' . "\n" .
-              '        <TR onclick="window.location=\'variants?create&amp;reference=Genome' . (isset($_GET['target'])? '&amp;target=' . $_GET['target'] : '') . '\'">' . "\n" .
+              '        <TR onclick="window.location=\'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'">' . "\n" .
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
               '          <TD><B>I want to create a variant on genomic level &raquo;&raquo;</B></TD></TR>' . "\n" .
               '        <TR onclick="$(\'#container\').toggle();">' . "\n" .
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
               '          <TD><B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B></TD></TR></TABLE><BR>' . "\n\n");
 
+        $sViewListID = 'Genes_SubmitVOT_' . $_GET['target'];
+
         require ROOT_PATH . 'class/object_genes.php';
         $_GET['page_size'] = 10;
         $_DATA = new LOVD_Gene();
-        $_DATA->sRowLink = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
+        $_DATA->sRowLink = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : '');
         if (isset($_SESSION['viewlists'])) {
-            $_SESSION['viewlists']['SelectGeneForSubmit']['row_link'] = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . (isset($_GET['target'])? '&target=' . $_GET['target'] : '');
+            $_SESSION['viewlists'][$sViewListID]['row_link'] = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : '');
         }
         $_GET['search_transcripts'] = '>0';
         print('      <DIV id="container">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
-        $_DATA->viewList('SelectGeneForSubmit', array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
+        $_DATA->viewList($sViewListID, array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
         print('      </DIV>' . "\n" .
               '      <SCRIPT type="text/javascript">' . "\n" .
               '        $("#container").hide();' . "\n" .

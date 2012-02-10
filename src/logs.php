@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-26
- * Modified    : 2011-05-18
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2012-02-10
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -102,7 +102,7 @@ print('</TABLE>' . "\n" .
 lovd_includeJS('inc-js-logs.php');
 
 $_DATA = new LOVD_Log();
-$_DATA->viewList('LOVDLogs'); // Setting known viewListID, such that the log's prepareData() can refer to itself.
+$_DATA->viewList('Logs'); // Setting known viewListID, such that the log's prepareData() can refer to itself.
 // FIXME; is there another solution for this?
 
 require ROOT_PATH . 'inc-bot.php';
