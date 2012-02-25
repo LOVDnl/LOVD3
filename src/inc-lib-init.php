@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-25
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -232,7 +232,7 @@ function lovd_generateRandomID ($l = 10)
 function lovd_getColumnData ($sTable)
 {
     // Gets and returns the column data for a certain table.
-    global $_TABLES;
+    global $_DB, $_TABLES;
     static $aTableCols = array();
 
     // Only for tables that actually exist.
@@ -241,13 +241,13 @@ function lovd_getColumnData ($sTable)
     }
 
     if (empty($aTableCols[$sTable])) {
-        $q = lovd_queryDB_Old('SHOW COLUMNS FROM ' . mysql_real_escape_string($sTable));
+        $q = $_DB->query('SHOW COLUMNS FROM ' . $sTable, false, false); // Safe, since $sTable is already checked with $_TABLES.
         if (!$q) {
-            // Should never happen!
+            // Can happen when table does not exist yet (i.e. during install).
             return false;
         }
         $aTableCols[$sTable] = array();
-        while ($z = @mysql_fetch_assoc($q)) {
+        while ($z = $q->fetchAssoc()) {
             $aTableCols[$sTable][$z['Field']] =
                      array(
                             'type' => $z['Type'],
@@ -418,7 +418,7 @@ function lovd_getGeneList ()
 
     static $aGenes = array();
     if (!count($aGenes)) {
-        $aGenes = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
+        $aGenes = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllColumn();
     }
 
     return $aGenes;
@@ -1040,14 +1040,14 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Writes timestamps and messages to given log in the database.
-    global $_AUTH;
+    global $_AUTH, $_DB;
 
     // Timestamp, serves as an unique identifier.
     $aTime = explode(' ', microtime());
     $sTime = substr($aTime[0], 2, -2);
 
     // Insert new line in logs table.
-    $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage));
+    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage), false);
     return (bool) $q;
 }
 ?>
