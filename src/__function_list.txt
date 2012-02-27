@@ -1,0 +1,131 @@
+4.0.0 array
+4.0.0 array_keys
+4.0.0 array_reverse
+4.0.0 basename
+4.0.4 constant
+4.0.0 count
+4.0.0 define
+4.0.0 defined
+4.0.0 dirname
+4.0.0 empty
+4.0.0 error_reporting
+4.0.0 explode
+4.0.0 file
+4.0.0 file_exists
+4.3.0 file_get_contents
+4.0.0 flush
+4.0.0 function_exists
+4.0.0 get_magic_quotes_gpc
+4.0.0 htmlspecialchars
+4.0.0 implode
+4.0.0 in_array
+4.0.0 ini_get
+4.0.0 ini_set
+4.0.0 isset
+4.0.0 is_array
+4.0.0 is_readable
+4.0.0 list
+4.0.0 md5
+4.0.0 microtime
+4.0.0 mysql_connect
+4.0.0 mysql_error
+4.0.3 mysql_fetch_assoc
+4.0.0 mysql_fetch_row
+4.0.0 mysql_num_rows
+4.0.0 mysql_query
+4.3.0 mysql_real_escape_string
+4.0.0 mysql_select_db
+4.0.0 preg_match
+4.0.0 preg_replace
+4.0.0 round
+4.0.0 rtrim
+4.0.0 session_destroy
+4.0.0 session_start
+4.0.0 setcookie
+4.3.0 sha1
+4.0.0 str_repeat
+4.0.0 str_replace
+4.0.0 stripslashes
+4.0.0 substr
+4.0.0 substr_count
+4.0.0 time
+4.0.0 trim
+4.0.0 unset
+4.0.0 usleep
+
+/* deze data van 2.0
+4.0.0 addslashes
+5.0.0 array_combine (REDEFINED)
+4.1.0 array_key_exists
+4.0.0 array_merge
+4.0.0 array_values
+4.0.0 ceil
+4.0.0 closedir
+4.0.0 date
+4.0.0 die
+4.0.0 ereg_replace
+4.0.0 fclose
+4.0.0 floor
+4.0.0 fopen
+4.0.0 fwrite
+4.0.0 getimagesize
+4.0.0 header
+4.0.0 is_dir
+4.0.0 is_int
+4.0.0 is_numeric
+4.0.0 is_resource
+4.0.0 is_writable
+4.0.0 mail
+4.0.0 max
+4.0.0 mt_rand
+4.0.0 mysql_affected_rows
+4.0.5 mysql_get_server_info
+4.0.0 opendir
+4.0.0 preg_quote
+4.0.0 rawurlencode
+4.0.0 readdir
+4.0.0 readfile
+4.0.0 session_unset (REMOVE??)
+4.2.0 settype (zoals hij nu gebruikt wordt, anders 4.0.0)
+4.0.0 sleep
+4.0.0 split
+4.0.1 str_pad
+4.0.0 strlen
+4.0.0 strpos
+4.0.0 strtolower
+4.0.0 strtotime
+4.0.0 ucfirst
+4.0.0 unlink
+
+4.0.4 preg_replace('...', $1, '...')
+4.1.0 $_GET, $_POST, $_COOKIES, $_SESSION, $_FILES.
+4.2.0 $_FILES error codes
+4.2.0 array_search('dont_find', $aEmpty) === false
+4.3.0 auto_detect_line_endings (ini setting, wil ik gaan gebruiken voor importeren)
+4.3.2 session_regenerate_id (gebruik ik nu alleen, als ie bestaat)
+4.2.0 in_array met array als needle
+5.0.0 As of PHP 5, default values may be passed by reference.
+5.0.0 file() with FILE_IGNORE_NEW_LINES.
+5.1.0 PDO built in.
+*/
+=====-========
+4.3.0 REQUIRED
+
+
+
+MySQL:
+3.23.02 MD5()
+3.23.33 TRUNCATE TABLE ...
+3.23.44 InnoDB foreign key constraints
+4.0.00  SQL_CALC_FOUND_ROWS
+4.0. 2  SHA1()
+4.0.13  ON DELETE SET NULL
+4.1.00  GROUP_CONCAT()
+4.1.00  utf8 character set
+4.1.00  subqueries
+4.1.00  BOOLEAN column type
+4.1. 1  VALUES() in: INSERT INTO ... ON DUPLICATE KEY UPDATE ... VALUES()
+4.1. 2  ENGINE (instead of TYPE) not really necessary but since we're at 4.1.1 already...
+=======-========
+4.1.2   REQUIRED
+

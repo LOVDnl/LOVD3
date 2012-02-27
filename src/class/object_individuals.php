@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-09
+ * Modified    : 2012-02-13
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -187,7 +187,7 @@ class LOVD_Individual extends LOVD_Custom {
         }
         parent::checkFields($aData);
 
-        if (!empty($aData['panelid']) && ctype_digit($aData['panelid'])) {
+        if (isset($aData['panelid']) && ctype_digit($aData['panelid'])) {
             $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ? AND panel_size > 1', array($aData['panelid']))->fetchColumn();
             if (empty($nPanel)) {
                 lovd_errorAdd('panelid', 'No Panel found with this \'Panel ID\'.');
@@ -281,8 +281,8 @@ class LOVD_Individual extends LOVD_Custom {
                  $this->buildForm(),
                  array(
                         array('Panel size', '', 'text', 'panel_size', 10),
-                        array('', '', 'note', 'Fill in how many individuals this entry will represent.'),
-                        array('Panel ID (Optional)', 'Fill in the ID to which this individual or group of individuals belong to.', 'text', 'panelid', 10),
+                        array('', '', 'note', 'Fill in how many individuals this entry represents (default: 1).'),
+                        array('Panel ID (Optional)', 'Fill in the ID of the group to which this individual or group of individuals belong to (Optional).', 'text', 'panelid', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-10-19
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-02-27
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -82,6 +82,36 @@ class LOVD_SystemSetting extends LOVD_Object {
             lovd_errorAdd('refseq_build', 'Please select one of the available Human Builds.');
         }
 
+        // Proxy server checks (valid hostname, valid port number, try connecting.
+        if (!empty($aData['proxy_host'])) {
+            // Pattern taken from lovd_matchURL().
+            if (!preg_match('/^([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-z][-0-9a-z]*[0-9a-z]|[0-9a-z])\.?)+[a-z]{2,6})$/i', $aData['proxy_host'])) {
+                lovd_errorAdd('proxy_host', 'Please fill in a correct host name of the proxy server, if you wish to use one.');
+            } elseif (empty($aData['proxy_port'])) {
+                lovd_errorAdd('proxy_port', 'Please fill in a correct, numeric, port number of the proxy server, if you wish to use a proxy server.');
+            } else {
+                // Alright, let's try and connect.
+                // First: normal connect, direct, no outside connection requested.
+                $f = @fsockopen($aData['proxy_host'], $aData['proxy_port'], $nError, $sError, 5);
+                if ($f === false) {
+                    lovd_errorAdd('proxy_host', 'Could not connect to given proxy server. Please check if the fields are correctly filled in.');
+                } else {
+                    $sRequest = 'GET ' . $_SETT['check_location_URL'] . ' HTTP/1.0' . "\r\n" .
+                                'User-Agent: LOVDv.' . $_SETT['system']['version'] . " Proxy Check\r\n" . // Will be passed on to LOVD.nl.
+                                'Connection: Close' . "\r\n\r\n";
+                    fputs($f, $sRequest);
+                    $s = rtrim(fgets($f));
+                    if (!preg_match('/^HTTP\/1\.. [23]/', $s, $aRegs)) { // Allowing HTTP 2XX and 3XX.
+                        lovd_errorAdd('proxy_host', 'Unexpected answer from proxy when trying to connect upstream: ' . $s);
+                    }
+                }
+            }
+
+        } elseif (!empty($aData['proxy_port'])) {
+            // We have a port number, but no host name.
+            lovd_errorAdd('proxy_host', 'Please fill in a correct host name of the proxy server, if you wish to use one.');
+        }
+
         // Custom logo must exist.
         if (!empty($aData['logo_uri'])) {
             // Determine if file can be read and is an image or not.
@@ -148,6 +178,14 @@ class LOVD_SystemSetting extends LOVD_Object {
       'refseq_build' => array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
                         //array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'select', 'api_feed_history', 1, $aFeedHistory, false, false, false),
                         array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
+                        'hr',
+                        'skip',
+                        'skip',
+                        array('', '', 'print', '<B>Connection settings (optional)</B>'),
+                        array('', '', 'note', 'Some networks have no access to the outside world except through a proxy. If this applies to the network this server is installed on, please fill in the proxy server information here.'),
+                        'hr',
+                        array('Proxy server host name', 'The host name of the proxy server, such as www-cache.institution.edu.', 'text', 'proxy_host', 20),
+                        array('Proxy server port number', 'The post number of the proxy server, such as 3128.', 'text', 'proxy_port', 4),
                         'hr',
                         'skip',
                         'skip',

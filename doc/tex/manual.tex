@@ -1,0 +1,194 @@
+\documentclass[a4paper,oneside,openany,12pt]{memoir}
+\usepackage{graphicx} % For images
+%\usepackage[english]{babel} % For correct word hyphenating.
+\usepackage{color} % For the colored boxes.
+\usepackage{hyperref} % For URLs.
+\usepackage{float} % For custom floats (the info boxes).
+
+% Include all of this in a separate file!
+\newcommand{\HRule}{\rule{\linewidth}{1mm}} % Doet height (zie style) hetzelfde?
+\newcommand{\institute}[1]{\gdef\inst{#1}}  % Beamer supplies \institute. We want that, too.
+\newcommand{\inst}{}                        % Beamer supplies \institute. We want that, too.
+\newcommand{\funding}[1]{\gdef\fund{#1}}    % Provide funding line.
+\newcommand{\fund}{}                        % Provide funding line.
+\newcommand{\setLOVDversion}[1]{\gdef\LOVDversion{#1}} % Provide the current LOVD version.
+\newcommand{\LOVDversion}{}                            % Provide the current LOVD version.
+
+\setlrmarginsandblock{2cm}{2cm}{*} % LEFT-RIGHT
+\setulmarginsandblock{2cm}{2cm}{*} % TOP-BOTTOM
+\checkandfixthelayout % Without this, nothing works. Took me ages before I found out.
+\fixpdflayout % Not sure if we need this, but it was recommended someplace.
+
+%\newcommand{\maketitle}{%
+%  \vspace*{\droptitle}
+%  \maketitlehooka
+%  {\pretitle \title \posttitle}
+%  \maketitlehookb
+%  {\preauthor \author \postauthor}
+%  \maketitlehookc
+%  {\predate \date \postdate}
+%  \maketitlehookd
+%  \thispagestyle{title}
+%}
+
+\setlength{\droptitle}{-3cm} % Moves the title (logo, title, authors etc) 3cm up.
+\pretitle{
+  \begin{center}
+    \includegraphics[width=17cm]{../gfx/logo.jpg}
+    \vskip 4cm
+    \HRule\par\HUGE\bfseries\sffamily} %% Need proper font!
+\posttitle{\par\HRule\end{center}\vskip 3cm}
+\preauthor{\flushright}
+\postauthor{\par\inst\par\vskip 1cm}
+\predate{\hfill Last updated } % \hfill aligns the rest of the line to the right. \flushright would have done the same.
+\postdate{\par\vskip 2cm \noindent \small \fund}
+
+\makechapterstyle{LOVD}{%
+  \setlength\beforechapskip{10pt} % A small distance just above the new Chapter title.
+  \setlength\afterchapskip{10pt} % A small distance between the Chapter title and the text.
+  \renewcommand{\chapterheadstart}{\vspace*{\beforechapskip}\hrule height 2pt \medskip} % Nice ruler above the Capter title.
+  \renewcommand{\chapnamefont}{\normalfont\large\scshape} % CHAPTER
+  \renewcommand{\chapnumfont}{\normalfont\large\scshape} % 1
+  \renewcommand{\chaptitlefont}{\normalfont\huge\bfseries\scshape} % e.g. "Introduction"
+  \renewcommand{\printchaptername}{} % Empty text instead of "Chapter".
+                  \renewcommand{\chapternamenum}{ } % Weet niet wat dit anders doet.
+                  \renewcommand{\printchapternum}{\chapnumfont \thechapter} % Weet niet wat dit anders doet.
+  \renewcommand{\afterchapternum}{. } % Just a dot after the Chapter number, no new line.
+  \renewcommand{\afterchaptertitle}{\par\nobreak\medskip\hrule\vskip\afterchapskip} % Nice ruler below the Capter title.
+}
+\chapterstyle{LOVD}
+
+% For the colored boxes.
+%\definecolor{gray}{rgb}{0.9,0.9,0.9}
+%\definecolor{darkgray}{gray}{0.3}
+\definecolor{linkblue}{rgb}{0.1, 0, 1}
+\hypersetup{
+  colorlinks,
+  citecolor=linkblue,
+  filecolor=linkblue,
+  linkcolor=linkblue,
+  urlcolor=linkblue
+}
+
+% The custom floats.
+\floatstyle{ruled}
+\newfloat{infobox}{h!}{floats}
+\floatname{infobox}{}
+
+\floatstyle{boxed}
+\newfloat{notebox}{h!}{floats}
+\floatname{notebox}{Note:}
+
+
+
+\setLOVDversion{3.0-beta-02}
+\title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
+\author{Ivo F.A.C. Fokkema}
+\institute{Leiden University Medical Center}
+\date{2012-02-17} % I guess it's easier to use this as a "Last modified" column.
+\funding{LOVD has received funding from the European Community's Seventh Framework Programme (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
+
+
+
+
+
+\begin{document}
+
+\begin{titlingpage} % We don't want the front to count as page 1.
+\maketitle
+\end{titlingpage}
+
+
+
+
+
+\tableofcontents
+
+
+
+
+
+\chapter{Introduction}
+This is the manual for the Leiden Open (source) Variation Database (LOVD) version 3.0.
+LOVD 3.0 is a partial rewrite of LOVD 2.0, which first stable release was completed in 2007.
+Also, LOVD 3.0 has a greatly improved database model, and includes lots of new features aimed at making LOVD useful for more research environments.
+\par
+LOVD is designed to provide a flexible, freely available tool for gene-centered collection and display of DNA variations.
+LOVD 3.0 extends this idea to also provide patient-centered data storage and storage of NGS data, even of variants outside of genes.
+\\\par
+LOVD was developed approaching the ``LSDB-in-a-Box'' idea for the easy creation and maintenance of a fully web-based gene sequence variation database,
+that is platform-independent and uses PHP and MySQL open source software only.
+The design of the database follows the recommendations of the \href{http://www.hgvs.org/}{Human Genome Variation Society} (HGVS)
+and focuses on the collection and display of DNA sequence variations, but it has fully implemented methods for storing complete clinical data as well.
+The open LOVD setup also facilitates functional extensions with scripts written by the community.
+\\\par
+The development of (then nameless) LOVD started in late 2002, while it was first officially released in January, 2004.
+Before that LOVD was only in use by the \href{http://www.DMD.nl/}{Leiden Muscular Dystrophy pages},
+as a not-so-modular system with lots of characteristics specific for that website only.
+With the official release of LOVD in 2004 the system had become much more dynamic and customizing LOVD was made easy mostly by editing text-files.
+\par
+In 2004, LOVD became available under the open source license GPL and with the 1.1.0 release most of the text-files had been replaced by online forms
+so customisations can be performed through the web interface.
+Early in 2005 the \href{http://www.ncbi.nlm.nih.gov/pubmed/15977173}{first LOVD article} was published,
+and in 2005 the development of LOVD was more targeted at improving the ease of use of the system.
+\\\par
+In 2006 the development of LOVD 2.0 started after the decision was made to rewrite all of LOVD from scratch
+to be able to include a long list of upgrade suggestions that were hard to implement in LOVD 1.1.0.
+Aimed at modularity and data redundancy, LOVD 2.0 was meant to be a more flexible and more powerful successor of the popular 1.1.0 version
+and soon it received the interest of LOVD users eager to try out the all-new version.
+\par
+With more features being added and bugs fixed rapidly, LOVD 2.0 reached beta stage in April 2007,
+after which more and more users started to upgrade their 1.1.0 databases to 2.0.
+Finally, in October 2007 LOVD 2.0 reached the stable stage, after which LOVD 2.0 was continuously improved with monthly releases for two years,
+after which the releases became less frequent.
+LOVD 2.0 is decribed in the \href{http://www.ncbi.nlm.nih.gov/pubmed/21520333}{second LOVD paper}.
+\\\par
+By 2009 it had became clear that although LOVD 2.0 was a great step forward, there were still key improvements to be made.
+Since the complexity of necessary changes had become to great to gradually upgrade LOVD 2.0 systems to include these options,
+it was again decided to start from scratch writing LOVD 3.0.
+This allowed us to redesign the complete data model in full freedom,
+although it should still be possible for existing LOVD 2.0 databases to have all data transferred to LOVD 3.0.
+\par
+LOVD 3.0 adds even more flexibility, allowing users to focus exclusively on sequence variants,
+whilst also allowing an exclusive focus on individuals and clinical data, and anything in between.
+It will be possible for different submitters to work together cooperatively on the same data.
+Searching through the data is improved extensively,
+and webservices of many different sources are used to automatically retrieve gene and transcript information.
+Also new in 3.0 is full Next Generation Sequencing (NGS) support,
+with the ability to import VCF or SeattleSeq formats.
+For VCF file imports, LOVD allows for automatic annotation of the variants.
+\par
+LOVD 3.0 reached beta stage in January 2012. Currently, the latest release is \LOVDversion.
+Keep an eye on our \href{http://www.lovd.nl/3.0/news}{news page} for the latest information on LOVD 3.0 development.
+
+
+
+
+
+%\chapter{Chapter...}
+
+
+
+%\section{Section...}
+
+%\subsection{Subsection...}
+
+%\subsubsection{Subsubsection...}
+
+
+
+%\begin{infobox}
+%  \caption{\textbf{Caption}}
+%  ...
+%\end{infobox}
+
+%\begin{notebox}
+% FIXME; See http://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions for more options.
+%...
+%\end{notebox}
+
+
+
+
+
+\end{document}

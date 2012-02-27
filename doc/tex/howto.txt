@@ -1,0 +1,14 @@
+LaTeX and SVN
+- Avoid 'ineffective' modifications (diff will pick it up, but no change to the document itself).
+- Do not change line breaks without good reason.
+- Line lengths:
+  + A reasonable convention is to add a line break after each sentence and start each new sentence in a new line. Note that this has an advantage also beyond version control: if you want to find a sentence in your LaTeX code that you have seen in a compiled (DVI, PS, or PDF) file or on a printout, you can easily identify the first few words of this sentence and screen for these words on the left border of your editor window.
+ + Furthermore, we split long sentences into several lines so that each line has at most 80 characters, because it is rather inconvenient to search for (small) differences in long lines. We find it very useful to introduce the additional line breaks at logical breaks of the sentence, e.g. before a relative clause or a new part of the sentence starts.
+- Put only those files under version control that are directly modified by the user, so the tex and maybe the pdf files.
+- Verify that your code can be compiled flawlessly before committing your modifications to the repository.
+
+- Viewing diffs between two tex documents:
+   latexdiff old.tex new.tex > diff.tex               # Files old.tex and new.tex are compared and the file visualizing the changes is written to diff.tex
+   pdflatex diff.tex                                  # Create a PDF showing the changes
+
+

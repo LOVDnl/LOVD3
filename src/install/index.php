@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-01
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-27
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -108,7 +108,7 @@ if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
     $sMySQL = '<IMG src="gfx/mark_' . (int) $bMySQL . '.png" alt="" width="11" height="11">&nbsp;MySQL : ' . $sMySQLVers . ' (' . $aRequired['MySQL'] . ' required)';
 
     // Check for InnoDB support.
-    list(,$sInnoDB) = @mysql_fetch_row(lovd_queryDB_Old('SHOW VARIABLES LIKE "have\_innodb"'));
+    $sInnoDB = @$_DB->query('SHOW VARIABLES LIKE "have\_innodb"')->fetchColumn(1);
     $bInnoDB = ($sInnoDB == 'YES');
     $sInnoDB = '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bInnoDB . '.png" alt="" width="11" height="11">&nbsp;MySQL InnoDB support ' . ($bInnoDB? 'en' : 'dis') . 'abled (required)';
 
@@ -157,6 +157,12 @@ if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
 
 if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
     // Step 1: Administrator account details.
+    if ($_DB->query('SHOW TABLES LIKE ?', array(TABLE_USERS))->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS)->fetchColumn()) {
+        // We already have a database user!
+        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] + 2));
+        exit;
+    }
+
     require 'inc-top.php';
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -231,11 +237,17 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
 
 if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     // Step 2: Install database tables.
-    if (!isset($_POST['username'])) {
+    if ($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn() && !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn()) {
+        // Installed, but not configured yet.
+        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] + 1));
+        exit;
+    } elseif (!isset($_POST['username'])) {
         // Didn't finish previous step correctly.
-        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 1));
+        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
         exit;
     }
+
+    set_time_limit(0); // We don't want the installation to time out in the middle of table creation.
 
     // Start session.
     $sSignature = md5($_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . time());
@@ -257,11 +269,11 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     // Do any of these tables exist yet?
     $aTablesMatched = array();
     $aTablesFound = array();
-    $q = lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
-    while ($r = mysql_fetch_row($q)) {
-        $aTablesMatched[] = $r[0];
-        if (in_array($r[0], $_TABLES)) {
-            $aTablesFound[] = $r[0];
+    $q = $_DB->query('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
+    while ($sTable = $q->fetchColumn()) {
+        $aTablesMatched[] = $sTable;
+        if (in_array($sTable, $_TABLES)) {
+            $aTablesFound[] = $sTable;
         }
     }
     $nTablesMatched = count($aTablesMatched);
@@ -270,7 +282,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     if ($nTablesFound) {
         if ($nTablesFound == $nTables) {
             // Maybe an existing LOVD install... Weird, because then we shouldn't have gotten here... Right?
-            list($sVersion) = @mysql_fetch_row(lovd_queryDB_Old('SELECT version FROM ' . TABLE_STATUS));
+            $sVersion = $_DB->query('SELECT version FROM ' . TABLE_STATUS, false, false)->fetchColumn();
             if ($sVersion) {
                 print('      There seems to be an existing LOVD installation (' . $sVersion . ').<BR>' . "\n" .
                       '      <B>Installation of LOVD can not continue using the current database or table prefix.</B><BR>' . "\n" .
@@ -335,7 +347,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
                     'INSERT INTO ' . TABLE_USERS . '(name, created_date) VALUES ("LOVD", NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
                     'ALTER TABLE ' . TABLE_USERS . ' AUTO_INCREMENT = 1',
-                    'INSERT INTO ' . TABLE_USERS . ' VALUES (NULL, "' . mysql_real_escape_string($_POST['name']) . '", "' . mysql_real_escape_string($_POST['institute']) . '", "' . mysql_real_escape_string($_POST['department']) . '", "' . mysql_real_escape_string($_POST['telephone']) . '", "' . mysql_real_escape_string($_POST['address']) . '", "' . mysql_real_escape_string($_POST['city']) . '", "' . mysql_real_escape_string($_POST['countryid']) . '", "' . mysql_real_escape_string($_POST['email']) . '", "' . mysql_real_escape_string($_POST['reference']) . '", "' . mysql_real_escape_string($_POST['username']) . '", "' . mysql_real_escape_string($_POST['password']) . '", "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', "' . mysql_real_escape_string($_POST['allowed_ip']) . '", 0, NOW(), 1, NOW(), NULL, NULL)',
+                    'INSERT INTO ' . TABLE_USERS . ' VALUES (NULL, ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' . $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW(), NULL, NULL)',
                   );
     $nInstallSQL ++;
 
@@ -424,17 +436,17 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
         $_BAR->setMessage($sMessage);
 
         foreach ($aSQL as $sSQL) {
-            $q = mysql_query($sSQL); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB_Old(). It complains because there are ?s in the queries.
+            $q = $_DB->query($sSQL, false, false); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB_Old(). It complains because there are ?s in the queries.
             if (!$q) {
                 // Error when running query. We will use the Div for the form now.
-                $sMessage = 'Error during install while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', mysql_error()) . '</DIV><BR>' .
+                $sMessage = 'Error during install while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', '[' . implode('] [', $_DB->errorInfo()) . ']') . '</DIV><BR>' .
                             'A failed installation is most likely caused by a bug in LOVD.<BR>' .
                             'Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
                 $_BAR->setMessage($sMessage, 'done');
                 $_BAR->setMessageVisibility('done', true);
                 // LOVD 2.0's lovd_rollback() has been replaced by a two-line piece of code...
                 $aTable = array_reverse($_TABLES);
-                lovd_queryDB_Old('DROP TABLE IF EXISTS ' . implode(', ', $aTable));
+                $_DB->query('DROP TABLE IF EXISTS ' . implode(', ', $aTable), false, false);
                 print('</BODY>' . "\n" .
                       '</HTML>' . "\n");
                 exit;
@@ -463,7 +475,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
           '</HTML>' . "\n");
 
     // Log user in.
-    $_SESSION['auth'] = mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ?', array($_POST['username'], $_POST['password'])));
+    $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ?', array($_POST['username'], $_POST['password']))->fetchAssoc();
     exit;
 } elseif ($_GET['step'] == 2) { $_GET['step'] ++; }
 
@@ -471,11 +483,11 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
 
 
 
-if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_CONFIG))) {
+if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
     // Step 3: Configuring general LOVD system settings.
-    if (@mysql_num_rows(lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLE_CONFIG))) != 1) {
+    if (!$_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn()) {
         // Didn't finish previous step correctly.
-        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 1));
+        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
         exit;
     }
 
@@ -497,11 +509,11 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . T
         if (!lovd_error()) {
             // Store information and go to next page.
             // FIXME; use object::insertEntry()
-            $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']));
+            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false);
             if (!$q) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .
-                      '      I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', mysql_error()) . '</DIV><BR><BR>' . "\n" .
+                      '      I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', '[' . implode('] [', $_DB->errorInfo()) . ']') . '</DIV><BR><BR>' . "\n" .
                       '      A failed installation is most likely caused by a bug in LOVD.<BR>' . "\n" .
                       '      Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.<BR>' . "\n\n");
                 require 'inc-bot.php';
@@ -566,12 +578,12 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . T
     // Step 4: Configuring LOVD modules.
     if (@mysql_num_rows(lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLE_MODULES))) != 1) {
         // Didn't finish previous step correctly.
-        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 2));
+        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 2));
         exit;
     }
     if (!@mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_CONFIG))) {
         // Didn't finish previous step correctly.
-        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 1));
+        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
         exit;
     }
 
@@ -712,10 +724,10 @@ if ($_GET['step'] == 3 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . T
 //if ($_GET['step'] == 5) {
 if ($_GET['step'] == 4) {
     // Step 5: Done.
-    if (!@mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_CONFIG))) {
+    if (!($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
         // Didn't finish previous step correctly.
-        //header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 2));
-        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?step=' . ($_GET['step'] - 1));
+        //header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 2));
+        header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
         exit;
     }
 

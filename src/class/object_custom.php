@@ -157,20 +157,6 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function buildViewEntry ()
-    {
-        // Gathers the columns which are active for the current data type and returns them in a viewEntry format
-        $aViewEntry = array();
-        foreach ($this->aColumns as $sID => $aCol) {
-            $aViewEntry[$sID] = $aCol['head_column'];
-        }
-        return $aViewEntry;
-    }
-
-
-
-
-
     function buildFields ()
     {
         // Gathers the columns to be used for lovd_(insert/update)Entry and returns them
@@ -294,6 +280,20 @@ class LOVD_Custom extends LOVD_Object {
         }
 
         return $aFormData;
+    }
+
+
+
+
+
+    function buildViewEntry ()
+    {
+        // Gathers the columns which are active for the current data type and returns them in a viewEntry format
+        $aViewEntry = array();
+        foreach ($this->aColumns as $sID => $aCol) {
+            $aViewEntry[$sID] = $aCol['head_column'];
+        }
+        return $aViewEntry;
     }
 
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-27
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -87,6 +87,13 @@ define('AJAX_TRUE', '1');
 define('AJAX_NO_AUTH', '8');
 define('AJAX_DATA_ERROR', '9');
 
+define('MAPPING_ALLOW', 1);
+define('MAPPING_ALLOW_CREATE_GENES', 2);
+define('MAPPING_IN_PROGRESS', 4);
+define('MAPPING_NOT_RECOGNIZED', 8);    // FIXME; Create a button in Setup which clears all NOT_RECOGNIZED flags in the database to retry them.
+define('MAPPING_ERROR', 16);            // FIXME; Create a button in Setup which clears all ERROR flags in the database to retry them.
+define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which clears all DONE flags in the database to retry them.
+
 $aRequired =
          array(
                 'PHP'   => '5.1.0',
@@ -101,7 +108,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-beta-02',
+                            'version' => '3.0-beta-02b',
                           ),
                 'user_levels' =>
                      array(
@@ -522,10 +529,18 @@ ini_set('default_charset','UTF-8');
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
 // Read system-wide configuration from the database.
-$_CONF = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_CONFIG));
+$_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false);
+if ($_CONF) {
+    // Must be two-step, since $_CONF can be false and therefore does not have ->fetchAssoc().
+    $_CONF = $_CONF->fetchAssoc();
+}
 
 // Read LOVD status from the database.
-$_STAT = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT * FROM ' . TABLE_STATUS));
+$_STAT = $_DB->query('SELECT * FROM ' . TABLE_STATUS, false, false);
+if ($_STAT) {
+    // Must be two-step, since $_STAT can be false and therefore does not have ->fetchAssoc().
+    $_STAT = $_STAT->fetchAssoc();
+}
 
 
 
@@ -543,10 +558,10 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
 
     // Are we installed properly?
     $aTables = array();
-    $q = lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
-    while ($r = mysql_fetch_row($q)) {
-        if (in_array($r[0], $_TABLES)) {
-            $aTables[] = $r[0];
+    $q = $_DB->query('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
+    while ($sCol = $q->fetchColumn()) {
+        if (in_array($sCol, $_TABLES)) {
+            $aTables[] = $sCol;
         }
     }
     if (count($aTables) < (count($_TABLES) - 1)) {
@@ -566,7 +581,7 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
             require ROOT_PATH . 'install/inc-bot.php';
             exit;
 
-        } else {
+        } elseif (lovd_getProjectFile() != '/uninstall.php') {
             // Can't get the configuration for unknown reason. Bail out.
             lovd_displayError('Init', 'Error retrieving LOVD configuration or status information');
         }

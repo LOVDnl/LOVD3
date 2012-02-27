@@ -1,5 +1,13 @@
 Prioritize:
 ===========
+BUG: Data type Wizard moet velden quoten voordat ze weggeschreven worden.
+Wanneer gaan we delete column implementeren?
+BUG: text search created_by_ in columns overzicht geeft invalid search expression, terwijl de join naar u.name wel gemaakt is in de code?!!???
+- (@Jerry) Na importeren VCF begon hij niet automatisch te mappen.
+- Should we maybe set default_socket_timeout somewhere?
+- Bug: genes?authorize met meerdere users op meerdere pagina's, kies gebruikers, hersorteer, niet onthouden wie al was toegevoegd.
+  + Dit lijkt te maken te hebben met meerdere pagina's.
+- Jerry: Variant DNA wel ingevuld, DBID leeg, geeft foutmelding dat DBID leeg is maar vult 'm wel direct auto in, dus daarna weer submit is meteen OK.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -8,7 +16,6 @@ Prioritize:
 - LOVD installeren op een Mac geeft wat problemen m.b.t. PDO support:
   + MySQL heeft geen standaard PDO support voor de mac (Ik run op Mac OSX 10.5.9 met Apache2, PHP 5 en MySQL 4 even uit mijn hoofd)
   + LOVD kan dus niks zonder PDO en wil dus ook niet runnen!
-- (@Ivo) Check_update.php heeft nog rare trucjes m.b.t. het tellen van de varianten.
 - (@Ivar) viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
 - IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
   + objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
@@ -26,7 +33,44 @@ Prioritize:
 - (BELANGRIJK) Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
   + Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.
-- Verify current status, and include:
+- Verify if anybody has comments, and include:
+    Gene/Imprinting (genes hebben geen custom columns, dus deze staat vast)
+    - Unknown
+    - Not imprinted
+    - Imprinted, maternal (confirmed)
+    - Imprinted, maternal (inferred)
+    - Imprinted, paternal (confirmed)
+    - Imprinted, paternal (inferred)
+
+    Variant/Genetic_origin:
+    - Unknown
+    - Germline (inherited)
+    - Somatic
+    - De novo
+    - Uniparental disomy
+    - Uniparental disomy, maternal allele
+    - Uniparental disomy, paternal allele
+
+    Variant/Segregation:
+    - Unknown
+    - Segregates with disease
+    - Does not segregate with disease
+
+    Patient/Consanguinity
+    - Unknown
+    - Non-consanguineous parents
+    - Consanguineous parents
+
+    Phenotype/Inheritance
+    - Unknown
+    - Familial, dominant
+    - Familial, recessive
+    - Familial, X-linked
+    - Familial, Y-linked
+    - Familial, mitochondrial
+    - Isolated (sporadic)
+
+  How it was before:
     Variant/genetic_origin
     -unknown
     -inherited
@@ -49,6 +93,8 @@ Prioritize:
     -sporadic, parents consanguineous
     -sporadic, parents not consanguineous
     -sporadic, consanguinity unknown
+- Unit tests via Selenium (of alternatief)?
+  * Hebben we OpenSSL ergens voor nodig?
 
 - Beta-04:
   - DATA DOWNLOAD.
@@ -62,6 +108,8 @@ Prioritize:
       * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
         - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
         - Store in session / DB in een col met serialized data?
+  - Submit a variant that has already been reported
+  - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
   - (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
@@ -75,6 +123,15 @@ Prioritize:
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
   - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
   - Begin met manual (eerst alleen nog PDF).
+  - Variant/Times_reported (or similar)
+    + Iedere variant die gevonden wordt in de panel moet dan apart geteld worden, door middel van het "Variant/Times_reported" veld (eventueel
+      "Variant/Chromosomes_reported" of "Variant/Found_on_chromosomes" of ...). Hier moet het aantal chromosomen worden ingevuld, waar de
+      variant is gevonden. De frequentie is dan uit te rekenen volgens: "Variant/Times_reported" ÷ ("Individual/Panel/Size" * 2)
+    + Om aan te geven dat een variant niet gevonden is in een controle groep, kan men de "Variant/Times_reported" op 0 zetten, maar dan alleen als de
+      "Individual/Panel/Size" groter dan 1 is (dus dat mag niet in een individu, alleen een panel).
+    + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
+  - "Does not accept external submissions" setting? Dat moet dan ook worden doorgegeven, zodat de LOVD/LSDB lijst dat kan aangeven.
+    + Apart veld, niet in data.
 
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
@@ -153,6 +210,10 @@ Prioritize:
 - Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - API.
 - ORCID integratie.
+- Proxy server: https://humgenprojects.lumc.nl/trac/LOVD3/ticket/3
+  + To check whether the proxy succeeded in contacting the real target host, you need to look for the http response code
+    in the headers that get returned. Typically, if the proxy was unable to reach the host, you'll find a line containing something like:
+    HTTP/1.0 503 Service Unavailable
 
 
 

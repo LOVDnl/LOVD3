@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-12
- * Modified    : 2011-08-12
- * For LOVD    : 3.0-alpha-04
+ * Modified    : 2012-02-27
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -63,13 +63,19 @@ if (ACTION == 'edit') {
 
         if (!lovd_error()) {
             // Standard fields to be used.
+            // FIXME; we can't use updateEntry() right now, because that needs an ID (and damn right, too). Now this is more manual work. Can we fix/bypass that?
             // FIXME; refseq_build is now just removed. Under certain conditions maybe it should be possible to change this setting, though.
-            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'api_feed_history', 'logo_uri', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
+            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'api_feed_history', 'proxy_host', 'proxy_port', 'logo_uri', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
 
             // Prepare values.
             // Make sure the database URL ends in a /.
             if ($_POST['location_url'] && substr($_POST['location_url'], -1) != '/') {
                 $_POST['location_url'] .= '/';
+            }
+            // This optimalization is normally done in updateEntry().
+            if (empty($_POST['proxy_port'])) {
+                // Empty port number, insert NULL instead of 0.
+                $_POST['proxy_port'] = NULL;
             }
 
             // Query text.
@@ -80,7 +86,7 @@ if (ACTION == 'edit') {
                 $aSQL[] = $_POST[$sField];
             }
 
-            $q = lovd_queryDB_Old($sSQL, $aSQL, true);
+            $q = $_DB->query($sSQL, $aSQL);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited system configuration');

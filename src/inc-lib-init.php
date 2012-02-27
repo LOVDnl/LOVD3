@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-25
+ * Modified    : 2012-02-27
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -384,12 +384,11 @@ function lovd_getColumnType ($sTable, $sCol)
 function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
 {
     // Retrieves URL for external source and returns it, including the ID.
+    global $_DB;
+
     static $aSources = array();
     if (!count($aSources)) {
-        $q = lovd_queryDB_Old('SELECT * FROM ' . TABLE_SOURCES);
-        while ($z = mysql_fetch_assoc($q)) {
-            $aSources[$z['id']] = $z['url'];
-        }
+        $aSources = $_DB->query('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine();
     }
     
     if (array_key_exists($sSource, $aSources)) {
@@ -628,10 +627,10 @@ function lovd_magicUnquoteAll ()
 
 
 function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
-    // LOVD's alternative to file(), in case the fopenwrappers are off...
-    global $_SETT;
+    // LOVD's alternative to file(), not dependent on the fopenwrappers, and can do POST requests.
+    global $_CONF, $_SETT;
 
-    if (substr($sURL, 0, 4) != 'http' || (ini_get('allow_url_fopen') && !$sPOST)) {
+    if (substr($sURL, 0, 4) != 'http') {
         // Normal file() is fine.
         return @file($sURL, FILE_IGNORE_NEW_LINES);
     }
@@ -640,12 +639,12 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
     $aOutput = array();
     $aURL = parse_url($sURL);
     if ($aURL['host']) {
-        $f = @fsockopen($aURL['host'], 80); // Doesn't support SSL without OpenSSL.
+        $f = @fsockopen((!empty($_CONF['proxy_host'])? $_CONF['proxy_host'] : $aURL['host']), (!empty($_CONF['proxy_port'])? $_CONF['proxy_port'] : 80)); // Doesn't support SSL without OpenSSL.
         if ($f === false) {
             // No use continuing - it will only cause errors.
             return false;
         }
-        $sRequest = ($sPOST? 'POST ' : 'GET ') . $aURL['path'] . (empty($aURL['query'])? '' : '?' . $aURL['query']) . ' HTTP/1.0' . "\r\n" .
+        $sRequest = ($sPOST? 'POST ' : 'GET ') . (!empty($_CONF['proxy_host'])? $sURL : $aURL['path'] . (empty($aURL['query'])? '' : '?' . $aURL['query'])) . ' HTTP/1.0' . "\r\n" .
                     'Host: ' . $aURL['host'] . "\r\n" .
                     'User-Agent: LOVDv.' . $_SETT['system']['version'] . "\r\n" .
                     (!$sPOST? '' :
@@ -674,7 +673,15 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
             }
         }
         fclose($f);
+
+        // On some status codes we return false.
+        if (isset($aHeaders[0]) && preg_match('/^HTTP\/1\.. (\d{3}) /', $aHeaders[0], $aRegs)) {
+            if ($aRegs[1] == '404') {
+                return false;
+            }
+        }
     }
+
     if (!$bHeaders) {
         return($aOutput);
     } else {

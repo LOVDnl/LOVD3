@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-13
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -161,6 +161,16 @@ class LOVD_PDO extends PDO {
             }
         }
         return $q;
+    }
+
+
+
+
+
+    function getServerInfo ()
+    {
+        // Command replacing the old mysql_get_server_info().
+        return $this->getAttribute(PDO::ATTR_SERVER_VERSION);
     }
 }
 

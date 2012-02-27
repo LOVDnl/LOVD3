@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-02-02
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-24
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -614,6 +614,8 @@ $aTableSQL =
     send_admin_submissions BOOLEAN NOT NULL,
     api_feed_history TINYINT(2) UNSIGNED NOT NULL,
     refseq_build VARCHAR(4) NOT NULL,
+    proxy_host VARCHAR(255) NOT NULL,
+    proxy_port SMALLINT(5) UNSIGNED,
     logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD_logo130x50.jpg",
     mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "http://www.mutalyzer.nl/2.0/services",
     send_stats BOOLEAN NOT NULL,

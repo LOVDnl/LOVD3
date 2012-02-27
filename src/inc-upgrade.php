@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-02-03
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-24
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -194,6 +194,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         array(
                                 'UPDATE ' . TABLE_COLS . ' SET form_type = "Frequency||text|10" WHERE id = "VariantOnGenome/Frequency" AND form_type = "Frequency||text|15"',
                                 'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD UNIQUE (id_ncbi)',
+                             ),
+                    '3.0-beta-02b' =>
+                        array(
+                                'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_host VARCHAR(255) NOT NULL AFTER refseq_build',
+                                'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_port SMALLINT(5) UNSIGNED AFTER proxy_host',
                              ),
                   );
 

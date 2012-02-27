@@ -10,19 +10,21 @@
  * 3.0 Beta 03
  * 2012-03-12                                ?????????????????????????????????????????????????
  *********/
- * Implemented PDO in all remaining lovd_queryDB() calls in
+ * Implemented PDO in all remaining lovd_queryDB() calls in check_update.php,
    class/object_columns.php, class/object_genes.php,
    class/object_genome_variants.php, class/object_individuals.php,
    class/object_phenotypes.php, class/object_screenings.php,
-   class/object_users.php, diseases.php, inc-auth.php and individuals.php.
+   class/object_users.php, diseases.php, inc-auth.php, inc-init.php,
+   inc-lib-init.php, individuals.php, install/index.php, login.php, settings.php
+   and setup.php.
  * Fixed bug; ViewLists without page controls could not be sorted anymore since
    Beta-02.
-
-
-
-
-
-
+ * Finished correcting the stats calculations in check_update.php.
+ * Fixed bug; When trying to assign Panel ID 0 to an individual, LOVD returned a query error.
+ * Fixed bug; On slower machines, LOVD could run into the maximum execution time during installation.
+ * Fixed bug; LOVDs which were not correctly installed, for instance because the configuration step was skipped, could not be uninstalled.
+ * Fixed bug; LOVD 3.0 could not connect to external sources through a proxy server.
+   Closes #3: "Allow LOVD to work behind a proxy".
 
 
 
