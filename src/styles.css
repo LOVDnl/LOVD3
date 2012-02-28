@@ -3,10 +3,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2011-12-14
- * For LOVD    : 3.0-alpha-07
+ * Modified    : 2012-02-21
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -203,7 +203,7 @@ table.data_red textarea         {font-size : 11px;}
 /* For sortable lists */
 table.sortable_head     {background : #AFC8FA; border-top : 2px solid #AFC8FA; border-bottom : 2px solid #AFC8FA;}
 ul.sortable             {list-style-type: none; padding-left : 0px; border : 1px solid #AFC8FA;}
-ul.sortable li          {margin : 1px; background : #F0F3FF; padding-left : 4px; padding-right : 4px;}
+ul.sortable li          {margin : 1px; background : #F0F3FF; padding-left : 0px; padding-right : 0px;}
 ul.sortable td.handle   {cursor : move;}
 ul.sortable input       {border : 0px;}
 

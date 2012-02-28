@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-02-10
+ * Modified    : 2012-02-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -257,14 +257,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
 
     // Now loop the items in the order given.
     foreach ($aColumns as $sID) {
-        print('        <LI><INPUT type="hidden" name="columns[]" value="' . $sID . '"><TABLE width="100%"><TR><TD class="handle" width="10" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . substr($sID, $lCategory+1) . '</TD></TR></TABLE></LI>' . "\n");
+        print('        <LI><INPUT type="hidden" name="columns[]" value="' . $sID . '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . substr($sID, $lCategory+1) . '</TD></TR></TABLE></LI>' . "\n");
     }
 
     print('        </UL>' . "\n" .
           '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . ($sObject != ''? $aTableInfo['unit'] . 's/' . $sObject : 'columns/' . $sCategory) . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" .
           '      </FORM>' . "\n\n");
 
-    lovd_includeJS('lib/jQuery/jquery-ui-1.8.15.sortable.min.js');
+    lovd_includeJS('lib/jQuery/jquery-ui.sortable.min.js');
 
 ?>
       <SCRIPT type='text/javascript'>
@@ -1194,13 +1194,15 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
 
 ?>
 <SCRIPT type="text/javascript">
-function lovd_checkSubmittedForm () {
+function lovd_checkSubmittedForm ()
+{
     if ($('input[name="mysql_type"]').attr('value') != '<?php echo $zData['mysql_type'] ?>') {
         return window.confirm('<?php echo $sJSMessage ?>');
     }
 }
 
-function lovd_setWidth () {
+function lovd_setWidth ()
+{
     var line = $(this).parent().parent().next().children(':last').children(':first');
     if ($(this).attr('value') > 999) {
         $(this).attr('value', 999);
@@ -1212,7 +1214,8 @@ function lovd_setWidth () {
     return false;
 }
 
-$( function () {
+$( function ()
+{
     $('input[name="width"]').change(lovd_setWidth);
 });
 
