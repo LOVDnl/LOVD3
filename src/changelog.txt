@@ -28,7 +28,17 @@
 
 
 
-
+ * Fixed bug; ViewLists would throw an JavaScript error in some cases.
+ * Fixed bug; DBID would not be predicted correctly in some cases.
+ * Fixed bug; Searching for time on a DATETIME column would result in a Bad
+   Syntax message in viewLists.
+   Closes #8: "Searching a DATETIME column does not accept time input".
+ * Made some layout changes to the list of current curators/collaborators for a
+   gene.
+ * Implemented better messages when a viewList does not return any entries.
+ * Added a button to the viewEntry of variants that links to
+   variants/<variantid>?map, where the user can add/remove transcripts on which
+   the variant gets mapped on.
 
 
 

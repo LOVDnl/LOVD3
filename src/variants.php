@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-02-10
+ * Modified    : 2012-02-28
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -186,6 +186,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
         $sNavigation = '<A href="variants/' . $nID . '?edit">Edit variant entry</A>';
+        $sNavigation .= ' | <A href="variants/' . $nID . '?map">Add variant description to additional transcript</A>';
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $sNavigation .= ' | <A href="variants/' . $nID . '?delete">Delete variant entry</A>';
         }
@@ -205,8 +206,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     lovd_printHeader('Variant on transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant('', $nID);
-    $_DATA->sRowID = 'VOT_{{transcriptid}}';
-    $_DATA->sRowLink = 'javascript:window.location.hash = \'{{transcriptid}}\'; return false';
+    $_DATA->setRowID('VOT_for_VOG_VE', 'VOT_{{transcriptid}}');
+    $_DATA->setRowLink('VOT_for_VOG_VE', 'javascript:window.location.hash = \'{{transcriptid}}\'; return false');
     $_DATA->viewList('VOT_for_VOG_VE', array('id_', 'transcriptid', 'status'), true, true);
     unset($_GET['search_id_']);
 ?>
@@ -253,12 +254,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
       </SCRIPT>
 <?php
 
-    $_GET['search_screeningid'] = (!empty($zData['screeningids'])? $zData['screeningids'] : 0);
-    print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Screenings', 'H4');
-    require ROOT_PATH . 'class/object_screenings.php';
-    $_DATA = new LOVD_Screening();
-    $_DATA->viewList('Screenings_for_VOG_VE', array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
+    if (!empty($zData['screeningids'])) {
+        $_GET['search_screeningid'] = $zData['screeningids'];
+        print('<BR><BR>' . "\n\n");
+        lovd_printHeader('Screenings', 'H4');
+        require ROOT_PATH . 'class/object_screenings.php';
+        $_DATA = new LOVD_Screening();
+        $_DATA->viewList('Screenings_for_VOG_VE', array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
+    }
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -319,15 +322,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
               '          <TD><B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B></TD></TR></TABLE><BR>' . "\n\n");
 
-        $sViewListID = 'Genes_SubmitVOT_' . $_GET['target'];
+        $sViewListID = 'Genes_SubmitVOT' . ($_GET['target']? '_' . $_GET['target'] : '');
 
         require ROOT_PATH . 'class/object_genes.php';
         $_GET['page_size'] = 10;
         $_DATA = new LOVD_Gene();
-        $_DATA->sRowLink = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : '');
-        if (isset($_SESSION['viewlists'])) {
-            $_SESSION['viewlists'][$sViewListID]['row_link'] = 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : '');
-        }
+        $_DATA->setRowLink($sViewListID, 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : ''));
         $_GET['search_transcripts'] = '>0';
         print('      <DIV id="container">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
         $_DATA->viewList($sViewListID, array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
@@ -418,14 +418,26 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if (isset($sGene)) {
                 $_POST['id'] = $nID;
                 foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
-                    if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'])) {
+                    if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
                         $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']));
-                        if (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
+                        if (!is_array($aOutput) && !empty($aOutput)) {
+                            $_MutalyzerWS->soapError('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']), $aOutput);
+                        } elseif (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
                             $_POST[$nTranscriptID . '_position_c_start'] = $aOutput['startmain'][0]['v'];
                             $_POST[$nTranscriptID . '_position_c_start_intron'] = $aOutput['startoffset'][0]['v'];
                             $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
                             $_POST[$nTranscriptID . '_position_c_end_intron'] = $aOutput['endoffset'][0]['v'];
+                        } else {
+                            $_POST[$nTranscriptID . '_position_c_start'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_end'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
                         }
+                    } else {
+                        $_POST[$nTranscriptID . '_position_c_start'] = 0;
+                        $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
+                        $_POST[$nTranscriptID . '_position_c_end'] = 0;
+                        $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
                     }
                 }
                 $aFieldsTranscript = array_merge(
@@ -572,10 +584,12 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             echo '$( \'input[name="ignore_' . substr($key, 7, 5) . '"]\' ).attr(\'checked\', true).trigger(\'click\').attr(\'checked\', true);' . "\n";
         }
     }
+?>
 
-    print("\n" .
-          '      </SCRIPT>' . "\n\n");
+</SCRIPT>
 
+
+<?php
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
@@ -651,7 +665,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
             require ROOT_PATH . 'class/REST2SOAP.php';
             $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
-            if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == 'NULL') {
+            if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
                 $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type'));
                 $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']));
                 if (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
@@ -671,12 +685,26 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             if ($bGene) {
                 foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                     if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA'] || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
-                        $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']));
-                        if (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
-                            $_POST[$nTranscriptID . '_position_c_start'] = $aOutput['startmain'][0]['v'];
-                            $_POST[$nTranscriptID . '_position_c_start_intron'] = $aOutput['startoffset'][0]['v'];
-                            $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
-                            $_POST[$nTranscriptID . '_position_c_end_intron'] = $aOutput['endoffset'][0]['v'];
+                        if (strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) < 6) {
+                            $_POST[$nTranscriptID . '_position_c_start'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_end'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
+                        } else {
+                            $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']));
+                            if (!is_array($aOutput) && !empty($aOutput)) {
+                                $_MutalyzerWS->soapError('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']), $aOutput);
+                            } elseif (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
+                                $_POST[$nTranscriptID . '_position_c_start'] = $aOutput['startmain'][0]['v'];
+                                $_POST[$nTranscriptID . '_position_c_start_intron'] = $aOutput['startoffset'][0]['v'];
+                                $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
+                                $_POST[$nTranscriptID . '_position_c_end_intron'] = $aOutput['endoffset'][0]['v'];
+                            } else {
+                                $_POST[$nTranscriptID . '_position_c_start'] = 0;
+                                $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
+                                $_POST[$nTranscriptID . '_position_c_end'] = 0;
+                                $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
+                            }
                         }
                     } else {
                         $_POST[$nTranscriptID . '_position_c_start'] = $zData[$nTranscriptID . '_position_c_start'];
@@ -776,7 +804,23 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     } else {
         print('false');
     }
-    print(';' . "\n" .
+    print(';' . "\n\n" .
+          '        $( function () {' . "\n" .
+          '          var aNewTranscripts = window.location.hash.substring(1).split(",");' . "\n" .
+          '          for (i in aNewTranscripts) {' . "\n" .
+          '            var oNewTranscript = $(\'.transcript[transcriptid="\' + aNewTranscripts[i] + \'"]\');' . "\n" .
+          '            $(oNewTranscript).html($(oNewTranscript).html() + \'<BR>(<I>Newly added transcript</I>)\');' . "\n" .
+          '            $(oNewTranscript).attr("style", "color:red");' . "\n" .
+          '          }' . "\n" .
+          '          for (i in aTranscripts) {' . "\n" .
+          '            if ($.inArray(i, aNewTranscripts) != -1) {' . "\n" .
+          '              var oNewTranscript = $(\'.transcript[transcriptid="\' + i + \'"]\');' . "\n" .
+          '              newPosition = $(oNewTranscript).offset();' . "\n" .
+          '              window.scrollTo(newPosition.left, newPosition.top);' . "\n" .
+          '              break;' . "\n" .
+          '            }' . "\n" .
+          '          }' . "\n" .
+          '        });' . "\n" .
           '      </SCRIPT>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
@@ -861,6 +905,271 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'map') {
+    // URL: /variants/0000000001?map
+    // Map a variant to additional transcript.
+
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    define('PAGE_TITLE', 'Map variant entry #' . $nID);
+    define('LOG_EVENT', 'VariantMap');
+
+    // Require manager clearance.
+    lovd_isAuthorized('variant', $nID);
+    lovd_requireAUTH(LEVEL_OWNER);
+
+    require ROOT_PATH . 'class/object_genome_variants.php';
+    $_DATA = new LOVD_GenomeVariant();
+    $zData = $_DATA->loadEntry($nID);
+    // Load all transcript ID's that are currently present in the database connected to this variant.
+    $aCurrentTranscripts = $_DB->query('SELECT t.id FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid', array($nID))->fetchAllColumn();
+
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (POST) {
+        lovd_errorClean();
+
+        // Preventing notices...
+        // $_POST['transcripts'] stores the IDs of the transcripts that are supposed to go in TABLE_VARIANTS_ON_TRANSCRIPTS.
+        if (empty($_POST['transcripts']) || !is_array($_POST['transcripts'])) {
+            $_POST['transcripts'] = array();
+        } else {
+            $aTranscripts = $_DB->query('SELECT t.id FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllColumn();
+            foreach ($_POST['transcripts'] as $nTranscript) {
+                if (!in_array($nTranscript, $aTranscripts)) {
+                    // The user tried to fake a $_POST by inserting an ID that did not come from our code.
+                    lovd_errorAdd('', 'Invalid transcript, please select one from the top viewlist!');
+                    break;
+                }
+            }
+        }
+
+        // Mandatory fields.
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        } elseif ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+            // User had to enter his/her password for authorization.
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+            $_DB->beginTransaction();
+
+            $aNewTranscripts = array();
+            $aToRemove = array();
+            $aVariantDescriptions = array();
+            require ROOT_PATH . 'class/REST2SOAP.php';
+            $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+
+            foreach ($_POST['transcripts'] as $nTranscript) {
+                if ($nTranscript && !in_array($nTranscript, $aCurrentTranscripts)) {
+                    // If the transcript is not already present in the database connected to this variant, we will add it now.
+                    $aNewTranscripts[] = $nTranscript;
+                    // Gather all necessary info from this transcript.
+                    $zTranscript = $_DB->query('SELECT id, geneid, name, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscript))->fetchAssoc();
+                    // Call the numberConversion module of mutalyzer to get the VariantOnTranscript/DNA value for this variant on this transcript.
+                    // Check if we already have the converted positions for this gene, if so, we won't have to call mutalyzer again for this information.
+                    if (!array_key_exists($zTranscript['geneid'], $aVariantDescriptions)) {
+                        $aVariantDescriptions[$zTranscript['geneid']] = $_MutalyzerWS->moduleCall('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => 'chr' . $zData['chromosome'] . ':' . $zData['VariantOnGenome/DNA'], 'gene' => $zTranscript['geneid']));
+                    }
+
+                    if (isset($aVariantDescriptions[$zTranscript['geneid']]['string']) && is_array($aVariantDescriptions[$zTranscript['geneid']]['string'])) {
+                        // Loop through the mutalyzer output for this gene.
+                        foreach($aVariantDescriptions[$zTranscript['geneid']]['string'] as $key => $aVariant) {
+                            // Check if our transcript is in the variant description for each value returned by mutalyzer.
+                            if (!empty($aVariant['v']) && preg_match('/^' . preg_quote($zTranscript['id_ncbi']) . ':(c\..+)$/', $aVariant['v'], $aMatches)) {
+                                // Call the mappingInfo module of mutalyzer to get the start & stop positions of this variant on the transcript.
+                                $aMapping = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $zTranscript['id_ncbi'], 'variant' => $aMatches[1]));
+                                if (!empty($aMapping) && !$aMapping['errorcode'][0]['v']) {
+                                    $aMapping['position_c_start'] = $aMapping['startmain'][0]['v'];
+                                    $aMapping['position_c_start_intron'] = $aMapping['startoffset'][0]['v'];
+                                    $aMapping['position_c_end'] = $aMapping['endmain'][0]['v'];
+                                    $aMapping['position_c_end_intron'] = $aMapping['endoffset'][0]['v'];
+                                } else {
+                                    $aMapping['position_c_start'] = 0;
+                                    $aMapping['position_c_start_intron'] = 0;
+                                    $aMapping['position_c_end'] = 0;
+                                    $aMapping['position_c_end_intron'] = 0;
+                                }
+                                // Insert all the gathered information about the variant description into the database.
+                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '(id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], '55', $aMatches[1]));
+                                // Remove this value from the output from mutalyzer, so we will not check this one again with the next transcript that we will add.
+                                unset($aVariantDescriptions[$zTranscript['geneid']]['string'][$key]);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach ($aCurrentTranscripts as $nTranscript) {
+                if (!in_array($nTranscript, $_POST['transcripts'])) {
+                    // If one of the transcripts currently present in the database is not present in $_POST, we will want to remove it.
+                    $aToRemove[] = $nTranscript;
+                }
+            }
+
+            if (!empty($aToRemove)) {
+                // Remove transcript mapping from variant...
+                $_DB->query('DELETE FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
+            }
+
+            // If we get here, it all succeeded.
+            $_DB->commit();
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Updated the transcript list for variant #' . $nID);
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants/' . $nID . (!empty($aNewTranscripts)? '?edit#' . implode(',', $aNewTranscripts) : ''));
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully updated the transcript list!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+    }
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_errorPrint();
+    lovd_showInfoTable('The variant entry is currently NOT mapped to the following transcripts. Click on a transcript to map the variant to it.', 'information');
+
+    if (POST) {
+        // Form has already been sent. We're here because of errors. Use $_POST.
+        // Retrieve data for selected transcripts.
+        if (!empty($_POST['transcripts'])) {
+            $aVOT = $_DB->query('SELECT t.id, t.geneid, t.name, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllAssoc();
+        } else {
+            $aVOT = array();
+        }
+    } else {
+        $aVOT = $_DB->query('SELECT t.id, t.geneid, t.name, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, id_ncbi', array($nID))->fetchAllAssoc();
+    }
+
+    $_GET['page_size'] = 10;
+    $_GET['search_id_'] = '';
+    foreach ($aVOT as $aTranscript) {
+        $_GET['search_id_'] .= '!' . $aTranscript['id'] . ' ';
+    }
+    // FIXME; maybe also check if the variant is close to the transcripts?
+    $_GET['search_id_'] = (!empty($_GET['search_id_'])? rtrim($_GET['search_id_']) : '!0');
+    $_GET['search_chromosome'] = '="' . $zData['chromosome'] . '"';
+    require ROOT_PATH . 'class/object_transcripts.php';
+    $_DATA = new LOVD_Transcript();
+    $_DATA->setRowLink('VOT_map', 'javascript:lovd_addTranscript(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_geneid}}\', \'{{zData_name}}\', \'{{zData_id_ncbi}}\'); return false;');
+    $_DATA->viewList('VOT_map', array('id_', 'chromosome'), true);
+    print('      <BR><BR>' . "\n\n");
+
+    lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');
+
+    print('      <TABLE class="sortable_head" style="width : 552px;"><TR><TH width="100">Gene</TH>' .
+          '<TH style="text-align : left;">Name</TH><TH width="123" style="text-align : left;">Transcript ID</TH><TH width="20">&nbsp;</TH>' .
+          '</TR></TABLE>' . "\n" .
+          '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkSubmittedForm();">' . "\n" .
+          '        <UL id="transcript_list" class="sortable" style="margin-top : 0px; width : 550px;">' . "\n");
+    // Now loop the items in the order given.
+    foreach ($aVOT as $aTranscript) {
+        print('          <LI id="li_' . $aTranscript['id'] . '"><INPUT type="hidden" name="transcripts[]" value="' . $aTranscript['id'] . '"><TABLE width="100%"><TR><TD width="98">' . $aTranscript['geneid'] . '</TD>' .
+              '<TD align="left">' . $aTranscript['name'] . '</TD><TD width="120" align="left">' . $aTranscript['id_ncbi'] . '</TD><TD width="20" align="right"><A href="#" onclick="lovd_removeTranscript(\'VOT_map\', \'' . $aTranscript['id'] . '\', \'' . $aTranscript['id_ncbi'] . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD>' .
+              '</TR></TABLE></LI>' . "\n");
+    }
+    print('        </UL>' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array(
+                    array('POST', '', '', '', '0%', '0', '100%'),
+                    array('', '', 'print', 'Enter your password for authorization'),
+                    array('', '', 'password', 'password', 20),
+                    array('', '', 'print', '<INPUT type="submit" value="Save transcript list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'variants/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                  );
+    lovd_viewForm($aForm);
+?>
+      <SCRIPT type='text/javascript'>
+        function lovd_checkSubmittedForm ()
+        {
+            var aCurrentTranscripts = '<?php echo implode(';', $aCurrentTranscripts) ?>'.split(";");
+            var aTranscriptList = $('#transcript_list').children().map(function(){ return $(this).attr('id').replace('li_', '') }).get();
+            var nCount = 0;
+            for (i in aCurrentTranscripts) {
+                if ($.inArray(aCurrentTranscripts[i], aTranscriptList) == -1) {
+                    nCount ++;
+                }
+            }
+            if (nCount == 1) {
+                return window.confirm('You are about to remove a transcript from this variant and the variant description with it.\nAre you sure you want to continue?');
+            } else if (nCount > 1) {
+                return window.confirm('You are about to remove ' + nCount + ' transcripts from this variant and the variant descriptions with them.\nAre you sure you want to continue?');
+            }
+        }
+
+        function lovd_addTranscript (sViewListID, nID, sGene, sName, sNM)
+        {
+            // Moves the transcript to the variant mapping block and removes the row from the viewList.
+            objViewListF = document.getElementById('viewlistForm_' + sViewListID);
+            objViewListT = document.getElementById('viewlistTable_' + sViewListID);
+            objElement = document.getElementById(nID);
+            objElement.style.cursor = 'progress';
+
+            objUsers = document.getElementById('transcript_list');
+            oLI = document.createElement('LI');
+            oLI.id = 'li_' + nID;
+            oLI.innerHTML = '<INPUT type="hidden" name="transcripts[]" value="' + nID + '"><TABLE width="100%"><TR><TD width="98">' + sGene + '</TD><TD align="left">' + sName + '</TD><TD width="120" align="left">' + sNM + '</TD><TD width="20" align="right"><A href="#" onclick="lovd_removeTranscript(\'VOT_map\', \'' + nID + '\', \'' + sNM + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
+            objUsers.appendChild(oLI);
+
+            // Then, remove this row from the table.
+            objElement.style.cursor = '';
+            lovd_AJAX_viewListHideRow(sViewListID, nID);
+            objViewListF.total.value --;
+            lovd_AJAX_viewListUpdateEntriesString(sViewListID);
+// FIXME; disable for IE or try to fix?
+            // This one doesn't really work in IE 7 and IE 8. Other versions not known.
+            lovd_AJAX_viewListAddNextRow(sViewListID);
+
+            // Also change the search terms in the viewList such that submitting it will not reshow this item.
+            objViewListF.search_id_.value += ' !' + nID;
+            // Does an ltrim, too. But trim() doesn't work in IE < 9.
+            objViewListF.search_id_.value = objViewListF.search_id_.value.replace(/^\s*/, '');
+            return true;
+        }
+
+
+        function lovd_removeTranscript (sViewListID, nID, sNM)
+        {
+            if (window.confirm('You are about to remove the variant description of transcript ' + sNM + ' from this variant.\n\nOk:\t\tRemove variant description of this transcript from the database.\nCancel:\tCancel the removal.')) {
+                // Removes the mapping of the variant from this transcript and reloads the viewList with the transcript back in there.
+                objViewListF = document.getElementById('viewlistForm_' + sViewListID);
+                objLI = document.getElementById('li_' + nID);
+
+                // First remove from block, simply done (no fancy animation).
+                objLI.parentNode.removeChild(objLI);
+
+                // Reset the viewList.
+                // Does an ltrim, too. But trim() doesn't work in IE < 9.
+                objViewListF.search_id_.value = objViewListF.search_id_.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
+                lovd_AJAX_viewListSubmit(sViewListID);
+
+                return true;
+            } else {
+                return false;
+            }
+        }
+      </SCRIPT>
+<?php
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
