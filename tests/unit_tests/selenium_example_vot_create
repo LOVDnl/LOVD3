@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="http://localhost/~lugte098/LOVDv.3.0-dev/" />
+<title>selenium_example_vot_create</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">selenium_example_vot_create</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>/~lugte098/LOVDv.3.0-dev/variants?create&amp;reference=Transcript&amp;geneid=ASL</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>VariantOnGenome/DNA</td>
+	<td>g.73731877del</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=VariantOnGenome/DBID</td>
+	<td>ASL_000009</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>name=ignore_00163</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>name=ignore_00166</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>name=ignore_00165</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>css=button.mapVariant</td>
+	<td></td>
+</tr>
+<tr>
+	<td>pause</td>
+	<td>300</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertValue</td>
+	<td>name=00164_VariantOnTranscript/DNA</td>
+	<td>c.*431+d8173547del</td>
+</tr>
+
+</tbody></table>
+</body>
+</html>

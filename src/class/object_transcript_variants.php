@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-01-31
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-16
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -117,7 +117,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                                     'db'   => array('vot.id', 'ASC', true)),
                         'effect' => array(
                                     'view' => array('Affects function', 70),
-                                    'db'   => array('e.name', 'ASC', 'TEXT')),
+                                    'db'   => array('e.name', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-10
+ * Modified    : 2012-02-27
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -450,6 +450,34 @@ class LOVD_Object {
 
 
 
+    function setRowID ($sViewListID, $sRowID)
+    {
+        // Set the RowID for the specified viewList & set the $_SESSION variable so that it will not keep reloading the previous ID.
+        $this->sRowID = $sRowID;
+        $sViewListID = str_replace('viewlistForm_', '', $sViewListID);
+        if (isset($_SESSION['viewlists'][$sViewListID]['row_id'])) {
+            $_SESSION['viewlists'][$sViewListID]['row_id'] = $sRowID;
+        }
+    }
+
+
+
+
+
+    function setRowLink ($sViewListID, $sRowLink)
+    {
+        // Set the RowLink for the specified viewList & set the $_SESSION variable so that it will not keep reloading the previous link.
+        $this->sRowLink = $sRowLink;
+        $sViewListID = str_replace('viewlistForm_', '', $sViewListID);
+        if (isset($_SESSION['viewlists'][$sViewListID]['row_link'])) {
+            $_SESSION['viewlists'][$sViewListID]['row_link'] = $sRowLink;
+        }
+    }
+
+
+
+
+
     function setSortDefault ($sCol)
     {
         if (!empty($sCol) && array_key_exists($sCol, $this->aColumnsViewList)) {
@@ -661,10 +689,15 @@ class LOVD_Object {
                 }
                 // Allow for searches where the order of words is forced by enclosing the values with double quotes; 
                 // Replace spaces in sentences between double quotes so they don't get exploded.
-                $sSearch = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
+                if ($sColType == 'DATETIME') {
+                    $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($_GET['search_' . $sColumn]));
+                } else {
+                    $sSearch = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
+                }
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
                     if ($sWord !== '') {
+                        $sWord = lovd_escapeSearchTerm($sWord);
                         $aOR = (preg_match('/^[^|]+(\|[^|]+)+$/', $sWord)? explode('|', $sWord) : array($sWord));
                         $$CLAUSE .= ($$CLAUSE? ' AND ' : '') . (!empty($aOR[1])? '(' : '');
                         foreach ($aOR as $nTerm => $sTerm) {
@@ -682,43 +715,49 @@ class LOVD_Object {
                                             $sOperator = '=';
                                         }
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm);
+                                        $aArguments[$CLAUSE][] = $sTerm;
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // INT fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
                                         $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
-                                    } else {
+                                    } elseif ($aCol['view']) {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
                                     break;
                                 case 'DATE':
                                 case 'DATETIME':
-                                    if (preg_match('/^([><]=?|!)?(\d{4})(-\d{2})?(-\d{2})?$/', $sTerm, $aMatches)) {
-                                        if (!checkdate((isset($aMatches[3])? substr($aMatches[3], 1) : '01'), (isset($aMatches[4])? substr($aMatches[4], 1) : '01'), $aMatches[2])) {
+                                    if (preg_match('/^([><]=?|!)?(\d{4})(?:(-\d{2})' . ($sColType == 'DATETIME'? '(?:(-\d{2})(?:( \d{2})(?:(:\d{2})(:\d{2})?)?)?)?)?' : '(-\d{2})?)?') . '$/', $sTerm, $aMatches)) {
+                                        @list(, $sOperator, $nYear, $nMonth, $nDay, $nHour, $nMinute, $nSecond) = $aMatches;
+                                        if (!checkdate(($nMonth? substr($nMonth, 1) : '01'), ($nDay? substr($nDay, 1) : '01'), $nYear) && $aCol['view']) {
                                             $aBadSyntaxColumns[] = $aCol['view'][0];
                                         }
-                                        $sOperator = $aMatches[1];
-                                        $sTerm = $aMatches[2] . (isset($aMatches[3])? $aMatches[3] : '-01') . (isset($aMatches[4])? $aMatches[4] : '-01');
+                                        if (((isset($nHour) && ($nHour < 0 || $nHour > 23)) || (isset($nMinute) && ($nMinute < 0 || $nMinute > 59)) || (isset($nSecond) && ($nSecond < 0 || $nSecond > 59))) && $aCol['view']) {
+                                            $aBadSyntaxColumns[] = $aCol['view'][0];
+                                        }
                                         switch ($sOperator) {
                                             case '>':
                                             case '<=':
-                                                $sTerm = $aMatches[2] . (isset($aMatches[3])? $aMatches[3] : '-12') . (isset($aMatches[4])? $aMatches[4] : '-31') . ' 23:59:59';
+                                                $aTerms = array(3 => '-12', '-31', ' 23', ':59', ':59'); // FIXME; some databases may not like this on DATE columns.
                                                 break;
                                             case '<':
                                             case '>=':
-                                                $sTerm .= ' 00:00:00'; // FIXME; some databases may not like this on DATE columns.
+                                                $aTerms = array(3 => '-01', '-01', ' 00', ':00', ':00'); // FIXME; some databases may not like this on DATE columns.
                                                 break;
                                             case '!':
                                             default:
                                                 $sOperator = ($sOperator == '!'? 'NOT ' : '') . 'LIKE';
-                                                $sTerm = $aMatches[2] . (!isset($aMatches[3])? '' : $aMatches[3] . (!isset($aMatches[4])? '' : $aMatches[4]));
+                                                $aTerms = array(3 => '', '', '', '', '');
                                                 break;
                                         }
+                                        unset($aMatches[0], $aMatches[1]);
+                                        $aTerms = array_replace($aTerms, $aMatches);
+                                        ksort($aTerms);
+                                        $sTerms = implode($aTerms);
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($sTerm) . (substr($sOperator, -4) == 'LIKE'? '%' : '');
+                                        $aArguments[$CLAUSE][] = $sTerms . (substr($sOperator, -4) == 'LIKE'? '%' : '');
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // DATE(TIME) fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
                                         $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
-                                    } else {
+                                    } elseif ($aCol['view']) {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
                                     break;
@@ -726,7 +765,7 @@ class LOVD_Object {
                                     if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'LIKE';
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = '%' . lovd_escapeSearchTerm($aMatches[1]) . '%';
+                                        $aArguments[$CLAUSE][] = '%' . $aMatches[1] . '%';
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         $bNot = (substr($sTerm, 0, 1) == '!');
                                         if ($bNot) {
@@ -737,8 +776,8 @@ class LOVD_Object {
                                     } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = lovd_escapeSearchTerm($aMatches[1]);
-                                    } else {
+                                        $aArguments[$CLAUSE][] = $aMatches[1];
+                                    } elseif ($aCol['view']) {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
                                     break;
@@ -873,12 +912,19 @@ class LOVD_Object {
         // If no results are found, quit here.
         if (!$nTotal) {
             $bSearched = false;
+            $aHiddenSearch = array();
             foreach ($_GET as $key => $value) {
                 if (substr($key, 0, 7) == 'search_') {
                     $sColumn = substr($key, 7);
                     if (!in_array($sColumn, $aColsToSkip)) {
                         $bSearched = true;
-                        break;
+                    } elseif ($this->aColumnsViewList[$sColumn]['view']) {
+                        $sColHeader = $this->aColumnsViewList[$sColumn]['view'][0];
+                        // Make sure all hidden ID columns have "ID" in the header, so we can recognize them.
+                        if (substr(rtrim($sColumn, '_'), -2) == 'id' && substr($sColHeader, -3) != ' ID') {
+                            $sColHeader .= ' ID';
+                        }
+                        $aHiddenSearch[$sColHeader] = $value;
                     }
                 }
             }
@@ -959,13 +1005,35 @@ class LOVD_Object {
                 lovd_showInfoTable($sMessage, 'stop');
                 print('      </DIV></FORM>' . "\n\n");
                 return true;
+
             } else {
                 if ($bOnlyRows) {
                     die('0'); // Silent error.
                 }
 
                 print('      </FORM>' . "\n\n");
-                lovd_showInfoTable('No entries found for this ' . substr($_PATH_ELEMENTS[0], 0, -1) . '!', 'stop');
+
+                if (substr($this->sObject, -7) == 'Variant') {
+                    $sUnit = 'variants' . (substr($this->sObject, 0, 10) == 'Transcript'? ' on transcripts' : '');
+                } elseif ($this->sObject == 'Custom_Viewlist') {
+                    $sUnit = 'entries';
+                } else {
+                    $sUnit = strtolower($this->sObject) . 's';
+                }
+                $sMessage = 'No ' . $sUnit . ' found';
+                if (!empty($aHiddenSearch)) {
+                    $sWhere = '';
+                    foreach ($aHiddenSearch as $sCol => $sValue) {
+                        // If the hidden column has "ID" in its name, it is the primary filter column.
+                        if (substr($sCol, -3) == ' ID') {
+                            $sWhere .= ($sWhere? ' and ' : ' ') . 'for this ' . strtolower(substr($sCol, 0, -3));
+                        } else {
+                            $sWhere .= ($sWhere? ' and ' : ' where ') . $sCol . ' is ' . str_replace('|', ' or ', trim($sValue, '="'));
+                        }
+                    }
+                    $sMessage .= $sWhere;                    
+                }
+                lovd_showInfoTable($sMessage . '!', 'stop');
 
                 return true;
             }
@@ -973,24 +1041,16 @@ class LOVD_Object {
 
         // To make row ids persist when the viewList is refreshed, we must store the row id in $_SESSION.
         if (!empty($_SESSION['viewlists'][$sViewListID]['row_id'])) {
-            // FIXME; code can no longer overwrite the viewList, the first used value always overrides. Create setter!
             $this->sRowID = $_SESSION['viewlists'][$sViewListID]['row_id'];
         } else {
-            // FIXME; incorporate garbage collection?
             $_SESSION['viewlists'][$sViewListID]['row_id'] = $this->sRowID; // Implies array creation.
-            //$_SESSION['viewlists'][$sViewListID]['last_used'] = time(); // For garbage collection (not yet implemented).
-            // ALTERNATIVE: create JS function lovd_restoreRowLink_XXX() (XXX == viewListID) that restores the rowLink, also after an Ajax Call.
         }
 
         // To make row links persist when the viewList is refreshed, we must store the row link in $_SESSION.
         if (!empty($_SESSION['viewlists'][$sViewListID]['row_link'])) {
-            // FIXME; code can no longer overwrite the viewList, the first used value always overrides. Create setter!
             $this->sRowLink = $_SESSION['viewlists'][$sViewListID]['row_link'];
         } else {
-            // FIXME; incorporate garbage collection?
             $_SESSION['viewlists'][$sViewListID]['row_link'] = $this->sRowLink; // Implies array creation.
-            //$_SESSION['viewlists'][$sViewListID]['last_used'] = time(); // For garbage collection (not yet implemented).
-            // ALTERNATIVE: create JS function lovd_restoreRowLink_XXX() (XXX == viewListID) that restores the rowLink, also after an Ajax Call.
         }
 
         while ($zData = $q->fetchAssoc()) {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-10
+ * Modified    : 2012-02-22
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -124,12 +124,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
                 }
             }
         } else {
-            lovd_showInfoTable('No phenotype entries found for this individual', 'stop');
+            lovd_showInfoTable('No phenotypes found for this individual!', 'stop');
         }
         unset($_GET['search_individualid']);
         unset($_GET['search_diseaseid']);
     } else {
-        lovd_showInfoTable('No disease entries found for this individual', 'stop');
+        lovd_showInfoTable('No diseases found for this individual!', 'stop');
     }
 
     $_GET['search_individualid'] = $nID;
@@ -141,14 +141,16 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $_DATA->viewList('Screenings_for_I_VE', array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
     unset($_GET['search_individualid']);
 
-    $_GET['search_screeningids'] = (!empty($zData['screeningids'])? $zData['screeningids'] : '="0"'); // ="0" triggers a "No entries found", but it's not very efficient.
-    print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Variants', 'H4');
-    require ROOT_PATH . 'class/object_genome_variants.php';
-    $_DATA = new LOVD_GenomeVariant();
-    $_DATA->setSortDefault('id');
-    $_DATA->viewList('VOG_for_I_VE', 'screeningids', true);
-    unset($_GET['search_screeningids']);
+    if (!empty($zData['screeningids'])) {
+        $_GET['search_screeningids'] = $zData['screeningids'];
+        print('<BR><BR>' . "\n\n");
+        lovd_printHeader('Variants', 'H4');
+        require ROOT_PATH . 'class/object_genome_variants.php';
+        $_DATA = new LOVD_GenomeVariant();
+        $_DATA->setSortDefault('id');
+        $_DATA->viewList('VOG_for_I_VE', 'screeningids', true);
+        unset($_GET['search_screeningids']);
+    }
 
     require ROOT_PATH . 'inc-bot.php';
     exit;

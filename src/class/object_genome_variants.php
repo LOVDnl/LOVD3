@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-02-09
+ * Modified    : 2012-02-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -174,6 +174,15 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             $this->aCheckMandatory[] = 'effect_concluded';
         }
 
+        // Do this before running checkFields so that we have time to predict the DBID and fill it in.
+        if (isset($this->aColumns['VariantOnGenome/DBID'])) {
+            if (empty($aData['VariantOnGenome/DBID'])) {
+                $aData['VariantOnGenome/DBID'] = $_POST['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
+            } elseif (!lovd_checkDBID($aData)) {
+                lovd_errorAdd('VariantOnGenome/DBID', 'Please enter a valid ID in the \'ID\' field or leave it blank and LOVD will predict it.');
+            }
+        }
+
         parent::checkFields($aData);
 
         // Checks fields before submission of data.
@@ -183,14 +192,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             if ($_AUTH['level'] < LEVEL_CURATOR && $aData['statusid'] > $zData['statusid']) {
                 // FIXME; zullen we deze code in objects_custom doen? 
                 lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
-            }
-        }
-
-        if (isset($this->aColumns['VariantOnGenome/DBID'])) {
-            if (empty($aData['VariantOnGenome/DBID'])) {
-                $aData['VariantOnGenome/DBID'] = $_POST['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
-            } elseif (!lovd_checkDBID($aData)) {
-                lovd_errorAdd('VariantOnGenome/DBID', 'Please enter a valid ID in the \'ID\' field or leave it blank and LOVD will predict it.');
             }
         }
 

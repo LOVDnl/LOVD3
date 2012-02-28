@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-21
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -391,12 +391,11 @@ function lovd_fetchDBID ($aData)
             $sSymbol = (!empty($aGenes)? $aGenes[0] : 'chr' . $aData['chromosome']);
             $lID = strlen($sSymbol) + 7;
             // Query for getting the first available number for the new DBID.
-            $sDBID = $_DB->query('SELECT RIGHT(MAX(LEFT(`VariantOnGenome/DBID`, ' . $lID . ')), 6) FROM ' . TABLE_VARIANTS . ' WHERE LEFT(`VariantOnGenome/DBID`, ' . $lID . ') REGEXP "^' . $sSymbol . '_[0-9]{6}"')->fetchColumn();
-            if (!$sDBID) {
+            $sDBIDlastNumber = $_DB->query('SELECT RIGHT(MAX(LEFT(`VariantOnGenome/DBID`, ' . $lID . ')), 6) FROM ' . TABLE_VARIANTS . ' WHERE LEFT(`VariantOnGenome/DBID`, ' . $lID . ') REGEXP "^' . $sSymbol . '_[0-9]{6}"')->fetchColumn();
+            if (!$sDBIDlastNumber) {
                 $sDBID = $sSymbol . '_000001';
             } else {
-                preg_match('/^(.+)_(\d{6})\b/', $sDBID, $aMatches);
-                $nID = $aMatches[2] + 1;
+                $nID = $sDBIDlastNumber + 1;
                 $sDBID = $sSymbol . '_' . sprintf('%06d', $nID);
             }
         }

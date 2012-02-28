@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2011-11-16
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-02-21
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -73,8 +73,10 @@ class LOVD_Transcript extends LOVD_Object {
 
         // SQL code for viewing the list of transcripts
         $this->aSQLViewList['SELECT']   = 't.*, ' .
+                                          'g.chromosome, ' .
                                           'COUNT(DISTINCT vot.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
+                                          'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
         $this->aSQLViewList['GROUP_BY'] = 't.id';
 
@@ -104,6 +106,9 @@ class LOVD_Transcript extends LOVD_Object {
                         'id_' => array(
                                     'view' => array('ID', 70),
                                     'db'   => array('t.id', 'ASC', true)),
+                        'chromosome' => array(
+                                    'view' => array('Chr', 40),
+                                    'db'   => array('g.chromosome', 'ASC', true)),
                         'geneid' => array(
                                     'view' => array('Gene ID', 70),
                                     'db'   => array('t.geneid', 'ASC', true)),

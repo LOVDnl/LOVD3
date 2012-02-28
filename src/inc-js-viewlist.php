@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2011-11-01
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-02-18
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -55,9 +55,9 @@ function lovd_AJAX_processViewListHash ()
 
             // In case multiple viewList's exist, we choose the first one. In practice, hashing is turned off on pages with multiple viewLists.
             for (var i in document.forms) {
-                if (document.forms[i].id && document.forms[i].id.substring(0, 13) == 'viewlistForm_') {
+                if (document.forms[i].getAttribute('id') && document.forms[i].getAttribute('id').substring(0, 13) == 'viewlistForm_') {
                     oForm = document.forms[i];
-                    sViewListID = document.forms[i].id.substring(13);
+                    sViewListID = document.forms[i].getAttribute('id').substring(13);
                     break;
                 }
             }

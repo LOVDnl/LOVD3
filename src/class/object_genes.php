@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-02-09
+ * Modified    : 2012-02-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -146,16 +146,16 @@ class LOVD_Gene extends LOVD_Object {
                  array(
                         // Copy of the gene's ID for the search terms in the screening's viewEntry.
                         'geneid' => array(
-                                    'view' => array('Symbol', 70),
+                                    'view' => array('Symbol', 100),
                                     'db'   => array('geneid', 'ASC', 'TEXT')),
                         'id_' => array(
-                                    'view' => array('Symbol', 70),
+                                    'view' => array('Symbol', 100),
                                     'db'   => array('g.id', 'ASC', true)),
                         'name' => array(
                                     'view' => array('Gene', 300),
                                     'db'   => array('g.name', 'ASC', true)),
                         'chromosome' => array(
-                                    'view' => array('Chrom.', 70),
+                                    'view' => array('Chr', 50),
                                     'db'   => array('g.chromosome', 'ASC', true)),
                         'chrom_band' => array(
                                     'view' => array('Band', 70),
