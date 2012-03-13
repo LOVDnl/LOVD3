@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-27
+ * Modified    : 2012-03-12
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -108,7 +108,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-beta-02b',
+                            'version' => '3.0-beta-02c',
                           ),
                 'user_levels' =>
                      array(
@@ -120,16 +120,24 @@ $_SETT = array(
                             LEVEL_SUBMITTER    => 'Submitter',
                           ),
 
+                'gene_imprinting' =>
+                     array(
+                            'unknown'  => 'Unknown',
+                            'no'       => 'Not imprinted',
+                            'maternal' => 'Imprinted, maternal',
+                            'paternal' => 'Imprinted, paternal'
+                          ),
+
                 'var_allele' =>
                      array(
-                            0 => 'Unknown',
+                            0  => 'Unknown',
                             11 => 'Paternal (confirmed)',
                             10 => 'Paternal (inferred)',
                             21 => 'Maternal (confirmed)',
                             20 => 'Maternal (inferred)',
-                            1 => 'Parent #1',
-                            2 => 'Parent #2',
-                            3 => 'Both (homozygous)',
+                            1  => 'Parent #1',
+                            2  => 'Parent #2',
+                            3  => 'Both (homozygous)',
                           ),
 
                 'var_effect' =>
@@ -202,8 +210,8 @@ $_SETT = array(
                 'notes_align' =>
                      array(
                             -1 => 'left',
-                            0 => 'center',
-                            1 => 'right',
+                            0  => 'center',
+                            1  => 'right',
                           ),
                 'human_builds' =>
                      array(

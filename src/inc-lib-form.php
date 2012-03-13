@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-21
+ * Modified    : 2012-03-13
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -403,6 +403,35 @@ function lovd_fetchDBID ($aData)
     } else {
         return false;
     }
+}
+
+
+
+
+
+function lovd_buildOptionTable ($aOptionsList = array())
+{
+    // Build the options list that the user encounters after each seperate entry creation within a submission.
+
+    if (empty($aOptionsList) || !is_array($aOptionsList) || empty($aOptionsList['options']) || !is_array($aOptionsList['options'])) {
+        return false;
+    }
+
+    $sOptionsTable = '      <TABLE border="0" cellpadding="5" cellspacing="1" ' . (!empty($aOptionsList['width'])? 'style="width : ' . $aOptionsList['width'] . 'px;" ' : '') . 'class="option">' . "\n";
+    
+    foreach ($aOptionsList['options'] as $aOption) {
+        $sOptionsTable .=  '        <TR ';
+        if (!empty($aOption['disabled'])) {
+            $sOptionsTable .= 'class="disabled" ';
+        }
+        $sOptionsTable .= 'onclick="' . $aOption['onclick'] . '">' . "\n" .
+                         '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                         '          <TD>' . $aOption['option_text'] . '</TD></TR>' . "\n";
+    }
+
+    $sOptionsTable .= '      </TABLE><BR>' . "\n\n";
+
+    return $sOptionsTable;
 }
 
 

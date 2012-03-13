@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-02-28
+ * Modified    : 2012-03-12
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -257,7 +257,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                             $_BAR->setMessage('Collecting ' . $aTranscriptValues['id'] . ' info...');
                             $aTranscripts[] = $aTranscriptValues['id'];
                             $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($sGeneName . ', ', '', $aTranscriptValues['product']);
-                            $aTranscriptsPositions[$aTranscriptValues['id']] = array('gTransStart' => $aTranscriptValues['gTransStart'], 'gTransEnd' => $aTranscriptValues['gTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
+                            $aTranscriptsPositions[$aTranscriptValues['id']] = array('chromTransStart' => $aTranscriptValues['chromTransStart'], 'chromTransEnd' => $aTranscriptValues['chromTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
                             $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getValueFromElement('proteinTranscript/id', $aTranscriptInfo);
                             $_BAR->setProgress(66 + $nProgress);
                         }
@@ -337,7 +337,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if (!lovd_error()) {
                 // Fields to be used.
                 $aFields = array(
-                                'id', 'name', 'chromosome', 'chrom_band', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage',
+                                'id', 'name', 'chromosome', 'chrom_band', 'imprinting', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage',
                                 'url_external', 'allow_download', 'allow_index_wiki', 'id_hgnc', 'id_entrez', 'id_omim', 'show_hgmd',
                                 'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer', 
                                 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date', 
@@ -394,7 +394,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                         $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
 
                         // Add transcript to gene.
-                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($_POST['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['gTransStart'], $aTranscriptPositions['gTransEnd'], $_POST['created_by']));
+                        $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)', array($_POST['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
                         if (!$q) {
                             // Silent error.
                             lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
@@ -532,7 +532,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array(
-                            'name', 'chrom_band', 'refseq_genomic', 'reference', 'url_homepage', 'url_external', 'allow_download',
+                            'name', 'chrom_band', 'imprinting', 'refseq_genomic', 'reference', 'url_homepage', 'url_external', 'allow_download',
                             'allow_index_wiki', 'show_hgmd', 'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq',
                             'refseq_url', 'disclaimer', 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_date',
                             'edited_by', 'edited_date', 
@@ -887,7 +887,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     // Now, build $aCurators, which contains info about the curators currently selected (from DB or, if available, POST!).
     $aCurators = array();
-    if (POST) {
+    if (POST && !empty($_POST['curators'])) {
         // Form has already been sent. We're here because of errors. Use $_POST.
         // Retrieve data for selected curators and collaborators.
         $qCurators = lovd_queryDB_Old('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
@@ -935,7 +935,6 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
         }
         $_GET['page_size'] = 10;
         $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_authorizeUser(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_name}}\', \'{{zData_level}}\'); return false;');
-        // FIXME; if all users have been selected, you get the message "No entries found for this gene!" which is a bit weird, but also I can't reload the viewList because I don't have a DIV.
         $_DATA->viewList('Genes_AuthorizeUser', array('id', 'status_', 'last_login_', 'created_date_'), true); // Create known viewListID for lovd_unauthorizeUser().
 
 
@@ -997,12 +996,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                 });
                 $( '#curator_list' ).disableSelection();
         });
-
+<?php if (ACTION == 'authorize') { ?>
         function lovd_authorizeUser (sViewListID, nID, sName, nLevel)
         {
             // Moves the user to the Authorized Users block and removes the row from the viewList.
             objViewListF = document.getElementById('viewlistForm_' + sViewListID);
-            objViewListT = document.getElementById('viewlistTable_' + sViewListID);
             objElement = document.getElementById(nID);
             objElement.style.cursor = 'progress';
 
@@ -1045,6 +1043,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
             return true;
         }
+<?php } ?>
       </SCRIPT>
 <?php
     require ROOT_PATH . 'inc-bot.php';

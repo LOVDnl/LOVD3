@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-02-21
+ * Modified    : 2012-03-13
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -111,9 +111,11 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
         }
         // Remove column.
         if ($zData['active'] && !$zData['hgvs']) {
-            $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?remove">Remove column</A>';
+            $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?remove">Disable column</A>';
+            $sNavigation .= ' | <A style="color : #999999;">Delete column</A>';
         } else {
-            $sNavigation .= ' | <A style="color : #999999;">Remove column</A>';
+            $sNavigation .= ' | <A style="color : #999999;">Disable column</A>';
+            $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?delete">Delete column</A>';
         }
         $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?edit">Edit custom data column settings</A>';
         $sNavigation .= ' | <A href="columns/' . $zData['category'] . '?order">Re-order all ' . $zData['category'] . ' columns</A>';
@@ -683,39 +685,43 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
+    require ROOT_PATH . 'inc-lib-form.php';
 
     // Let user pick column type first.
     if (empty($_POST['category'])) {
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
+        $aOptionsList = array('width' => 950);
+        $aOptionsList['options'][0]['onclick']     = '$(\'#optionForm input\').attr(\'value\', \'Individual\'); $(\'#optionForm\').submit();';
+        $aOptionsList['options'][0]['option_text'] = '<B>Information on the individual, not related to disease</B>, not changing over time, such as date of birth';
+
+        $aOptionsList['options'][1]['onclick']     = '$(\'#optionForm input\').attr(\'value\', \'Phenotype\'); $(\'#optionForm\').submit();';
+        $aOptionsList['options'][1]['option_text'] = '<B>Information on the phenotype, related to disease</B>, possibly changing over time, such as blood pressure';
+
+        $aOptionsList['options'][2]['onclick']     = '$(\'#optionForm input\').attr(\'value\', \'Screening\'); $(\'#optionForm\').submit();';
+        $aOptionsList['options'][2]['option_text'] = '<B>Information on the detection of new variants</B>, such as detection technique or laboratory conditions';
+
+        $aOptionsList['options'][3]['onclick']     = '$(\'#optionForm input\').attr(\'value\', \'VariantOnGenome\'); $(\'#optionForm\').submit();';
+        $aOptionsList['options'][3]['option_text'] = '<B>Information on the variant(s) found, in general or on the genomic level</B>, such as restriction site change';
+
+        $aOptionsList['options'][4]['onclick']     = '$(\'#optionForm input\').attr(\'value\', \'VariantOnTranscript\'); $(\'#optionForm\').submit();';
+        $aOptionsList['options'][4]['option_text'] = '<B>Information on the variant(s) found, specific for the transcript level</B>, such as predicted effect on protein level';
+
         print('      You\'re about to create a new custom data column. This will allow you to define what kind of information you would like to store in the database. Please note that <I>defining</I> this type of information, does not automatically make LOVD store this information. You will need to <I>enable</I> it after defining it, so it actually gets added to the data entry form.<BR><BR>' . "\n" .
               '      Firstly, please choose what kind of category the new type of data belongs:<BR><BR>' . "\n\n" .
-              '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
-              '        <TABLE border="0" cellpadding="10" cellspacing="1" width="950" class="data" style="font-size : 15px;">' . "\n" .
-              '          <TR>' . "\n" .
-              '            <TD width="30"><INPUT type="radio" name="category" value="Individual"></TD>' . "\n" .
-              '            <TD><B>Information on the individual, not related to disease</B>, not changing over time, such as date of birth</TD></TR>' . "\n" .
-              '          <TR>' . "\n" .
-              '            <TD width="30"><INPUT type="radio" name="category" value="Phenotype"></TD>' . "\n" .
-              '            <TD><B>Information on the phenotype, related to disease</B>, possibly changing over time, such as blood pressure</TD></TR>' . "\n" .
-              '          <TR>' . "\n" .
-              '            <TD width="30"><INPUT type="radio" name="category" value="Screening"></TD>' . "\n" .
-              '            <TD><B>Information on the detection of new variants</B>, such as detection technique or laboratory conditions</TD></TR>' . "\n" .
-              '          <TR>' . "\n" .
-              '            <TD width="30"><INPUT type="radio" name="category" value="VariantOnGenome"></TD>' . "\n" .
-              '            <TD><B>Information on the variant(s) found, in general or on the genomic level</B>, such as restriction site change</TD></TR>' . "\n" .
-              '          <TR>' . "\n" .
-              '            <TD width="30"><INPUT type="radio" name="category" value="VariantOnTranscript"></TD>' . "\n" .
-              '            <TD><B>Information on the variant(s) found, specific for the transcript level</B>, such as predicted effect on protein level</TD></TR></TABLE><BR>' . "\n\n" .
-              '        <INPUT type="submit" value="Next &raquo;"><BR>' . "\n" .
+              '      <FORM id="optionForm" action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+        print(lovd_buildOptionTable($aOptionsList));
+        print('        <INPUT name="category" type="hidden" value="">' . "\n" .
               '      </FORM>' . "\n\n");
+
+
+
         require ROOT_PATH . 'inc-bot.php';
         exit;
     }
 
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
-    require ROOT_PATH . 'inc-lib-form.php';
 
     // Generate a unique workID, that is sortable.
     if (!isset($_POST['workID'])) {
@@ -1973,7 +1979,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
 
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
 
-    define('PAGE_TITLE', 'Drop/remove custom data column ' . $sColumnID);
+    define('PAGE_TITLE', 'Remove custom data column ' . $sColumnID);
     define('LOG_EVENT', 'ColRemove');
 
     if ($aTableInfo['shared'] && POST) {
@@ -2213,6 +2219,119 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sCategory, 3);
                     array('', '', 'submit', 'Remove custom column'),
                   )
                        );
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
+    // URL: /columns/Variant/DNA?delete
+    // Drop specific custom column.
+    
+    $aCol = $_PATH_ELEMENTS;
+    unset($aCol[0]); // 'columns';
+    $sColumnID = implode('/', $aCol);
+    $sCategory = $aCol[1];
+
+    $zData = $_DB->query('SELECT c.id, c.hgvs, c.head_column, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
+
+    $sMessage = '';
+    if (!$zData) {
+        $sMessage = 'No such column!';
+    } elseif ($zData['colid']) {
+        $sMessage = 'Column is still active, disable it first!';
+    } elseif ($zData['hgvs']) {
+        lovd_writeLog('Error', 'HackAttempt', 'Tried to remove HGVS column ' . $zData['id'] . ' (' . $zData['head_column'] . ')');
+        $sMessage = 'Hack Attempt!';
+    }
+    if ($sMessage) {
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        lovd_showInfoTable($sMessage, 'stop');
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    }
+
+    // Require form & column functions.
+    require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'inc-lib-columns.php';
+
+    $aTableInfo = lovd_getTableInfoByCategory($sCategory);
+
+    define('PAGE_TITLE', 'Delete custom data column ' . $sColumnID);
+    define('LOG_EVENT', 'ColDelete');
+
+    if ($aTableInfo['shared']) {
+        lovd_isAuthorized($aTableInfo['unit'], $sColumnID);
+        lovd_requireAUTH(LEVEL_CURATOR);
+    } else {
+        lovd_requireAUTH(LEVEL_MANAGER);
+    }
+
+    require ROOT_PATH . 'class/object_columns.php';
+    $_DATA = new LOVD_Column();
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        // Mandatory fields.
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        }
+
+        // User had to enter his/her password for authorization.
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+            // Query text.
+            $_DATA->deleteEntry($sColumnID);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted column ' . $sColumnID);
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'columns/' . $sCategory);
+
+            require ROOT_PATH . 'inc-top.php';
+            lovd_printHeader(PAGE_TITLE);
+            lovd_showInfoTable('Successfully deleted the column entry!', 'success');
+
+            require ROOT_PATH . 'inc-bot.php';
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password field!
+            unset($_POST['password']);
+        }
+    }
+
+
+
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_errorPrint();
+
+    // Table.
+    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $sColumnID . '?' . ACTION . '" method="post">' . "\n");
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 array(
+                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('Deleting this column', '', 'print', '<B>' . $sColumnID . '</B>'),
+                        'skip',
+                        array('Enter your password for authorization', '', 'password', 'password', 20),
+                        array('', '', 'submit', 'Delete column entry'),
+                      ));
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");

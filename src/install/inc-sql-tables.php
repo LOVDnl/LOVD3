@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-02-24
+ * Modified    : 2012-03-07
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -106,6 +106,7 @@ $aTableSQL =
     name VARCHAR(255) NOT NULL,
     chromosome VARCHAR(2),
     chrom_band VARCHAR(20) NOT NULL,
+    imprinting VARCHAR(10) NOT NULL DEFAULT "unknown",
     refseq_genomic VARCHAR(15) NOT NULL,
     refseq_UD VARCHAR(25) NOT NULL,
     reference VARCHAR(255) NOT NULL,

@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-02-24
+ * Modified    : 2012-03-12
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -199,6 +199,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         array(
                                 'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_host VARCHAR(255) NOT NULL AFTER refseq_build',
                                 'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_port SMALLINT(5) UNSIGNED AFTER proxy_host',
+                             ),
+                    '3.0-beta-02c' =>
+                        array(
+                                'ALTER TABLE ' . TABLE_GENES . ' ADD COLUMN imprinting VARCHAR(10) NOT NULL DEFAULT "unknown" AFTER chrom_band',
                              ),
                   );
 

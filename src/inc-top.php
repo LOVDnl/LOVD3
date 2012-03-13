@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-02-10
+ * Modified    : 2012-02-28
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -324,7 +324,6 @@ foreach ($_MENU as $sPrefix => $Title) {
         foreach ($Title as $sURL => $aItem) {
             if (!is_array($aItem)) {
                 if ($aItem == 'hr') {
-                    // Not using the "separator" class from the original code, since it's not compatible to our changes.
                     $bHR = true;
                 }
                 continue;
@@ -348,7 +347,8 @@ foreach ($_MENU as $sPrefix => $Title) {
 
             if (!$bDisabled) {
                 // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
-                $sUL .= ($bHR? '  <LI class="hr"><HR></LI>' . "\n" : '') .
+                // Not using the "separator" class from the original code, since it's not compatible to our changes.
+                $sUL .= ($bHR? '  <LI class="hr disabled"><HR></LI>' . "\n" : '') .
                         '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A href="' . lovd_getInstallURL(false) . $sURL . '">' .
                         (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
                         '</A></LI>' . "\n";

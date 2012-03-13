@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-02-21
+ * Modified    : 2012-02-29
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -103,6 +103,7 @@ class LOVD_Gene extends LOVD_Object {
                         'name' => 'Gene name',
                         'chromosome' => 'Chromosome',
                         'chrom_band' => 'Chromosomal band',
+                        'imprinting_' => 'Imprinted',
                         'refseq_genomic_' => 'Genomic reference',
                         'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
@@ -274,7 +275,7 @@ class LOVD_Gene extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-        global $_CONF, $_DB, $zData;
+        global $_CONF, $_DB, $zData, $_SETT;
 
         // Get list of diseases.
         $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id')->fetchAllCombine();
@@ -328,6 +329,7 @@ class LOVD_Gene extends LOVD_Object {
                         array('Official gene symbol', '', 'print', $zData['id']),
                         array('Chromosome', '', 'print', $zData['chromosome']),
                         array('Chromosomal band', '', 'text', 'chrom_band', 10),
+                        array('Imprinting', '', 'select', 'imprinting', 1, $_SETT['gene_imprinting'], false, false, false),
                         array('Date of creation (optional)', 'Format: YYYY-MM-DD. If left empty, today\'s date will be used.', 'text', 'created_date', 10),
                         'hr',
                         'skip',
@@ -409,7 +411,7 @@ class LOVD_Gene extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -421,6 +423,7 @@ class LOVD_Gene extends LOVD_Object {
         if ($sView == 'list') {
             $zData['updated_date_'] = substr($zData['updated_date'], 0, 10);
         } else {
+            $zData['imprinting_'] = $_SETT['gene_imprinting'][$zData['imprinting']];
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
             $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
 
