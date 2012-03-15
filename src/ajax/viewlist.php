@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2011-11-15
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-03-13
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -93,5 +93,5 @@ $_GET['object'] = 'LOVD_' . str_replace('_', '', $_GET['object']); // FIXME; tes
 $aColsToSkip = (!empty($_GET['skip'])? $_GET['skip'] : array());
 $_DATA = new $_GET['object']($sObjectID, $nID);
 // Set $bHideNav to false always, since this ajax request could only have been sent if there were navigation buttons.
-$_DATA->viewList($_GET['viewlistid'], $aColsToSkip, (!empty($_GET['nohistory'])? true : false), (!empty($_GET['hidenav'])? true : false), (!empty($_GET['only_rows'])? true : false));
+$_DATA->viewList($_GET['viewlistid'], $aColsToSkip, (!empty($_GET['nohistory'])? true : false), (!empty($_GET['hidenav'])? true : false), (!empty($_GET['options'])? true : false), (!empty($_GET['only_rows'])? true : false));
 ?>

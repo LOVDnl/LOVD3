@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-02-28
+ * Modified    : 2012-03-13
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -313,14 +313,33 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
 
-        print('      What kind of variant would you like to submit?<BR><BR>' . "\n\n" .
-              '      <TABLE border="0" cellpadding="5" cellspacing="1" width="600" class="option">' . "\n" .
-              '        <TR onclick="window.location=\'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'">' . "\n" .
-              '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-              '          <TD><B>I want to create a variant on genomic level &raquo;&raquo;</B></TD></TR>' . "\n" .
-              '        <TR onclick="$(\'#container\').toggle();">' . "\n" .
-              '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-              '          <TD><B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B></TD></TR></TABLE><BR>' . "\n\n");
+        require ROOT_PATH . 'inc-lib-form.php';
+
+        $nIndividual = $_DB->query('SELECT individualid FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target']))->fetchColumn();
+        $aVariants = $_DB->query('SELECT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($nIndividual))->fetchAllColumn();
+
+        if ($_GET['target']) {
+            $aOptionsList = array('width' => 600);
+            if (!count($aVariants)) {
+                $aOptionsList['options'][0]['disabled'] = true;
+                $aOptionsList['options'][0]['onclick'] = 'alert(\'You cannot confirm variants with this screening, because there aren\&#39;t any variants connected to this individual yet!\');';
+            } else {
+                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'screenings/' . $_GET['target'] . '?confirm\'';
+            }
+            $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to confirm variants found using this screening &raquo;&raquo;</B>';
+
+            print('      Do you want to add already submitted variants with this screening?<BR><BR>' . "\n\n");
+            print(lovd_buildOptionTable($aOptionsList));
+        }
+
+        $aOptionsList = array('width' => 600);
+        $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
+        $aOptionsList['options'][0]['option_text'] = '<B>I want to create a variant on genomic level &raquo;&raquo;</B>';
+        $aOptionsList['options'][1]['onclick'] = '$(\'#container\').toggle();';
+        $aOptionsList['options'][1]['option_text'] = '<B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B>';
+
+        print('      What kind of variant would you like to submit?<BR><BR>' . "\n\n");
+        print(lovd_buildOptionTable($aOptionsList));
 
         $sViewListID = 'Genes_SubmitVOT' . ($_GET['target']? '_' . $_GET['target'] : '');
 
@@ -330,7 +349,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $_DATA->setRowLink($sViewListID, 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : ''));
         $_GET['search_transcripts'] = '>0';
         print('      <DIV id="container">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
-        $_DATA->viewList($sViewListID, array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'), false, false, false);
+        $_DATA->viewList($sViewListID, array('geneid', 'transcripts', 'variants', 'diseases_', 'updated_date_'));
         print('      </DIV>' . "\n" .
               '      <SCRIPT type="text/javascript">' . "\n" .
               '        $("#container").hide();' . "\n" .
@@ -488,18 +507,20 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             if ($bSubmit) {
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
-                print('      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n" .
-                      '      <TABLE border="0" cellpadding="5" cellspacing="1" class="option">' . "\n" .
-                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $_POST['screeningid'] . '\'">' . "\n" .
-                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                      '          <TD><B>Yes, I want to submit more variants found by this mutation screening</B></TD></TR>' . "\n" .
-        ($sSubmitType == 'individual'?
-                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
-                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                      '          <TD><B>No, I want to submit another screening instead</B></TD></TR>' . "\n" : '') .
-                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'] . '\'">' . "\n" .
-                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                      '          <TD><B>No, I have finished my submission</B></TD></TR></TABLE><BR>' . "\n\n");
+                print('      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n");
+
+                $aOptionsList = array();
+                $aOptionsList['options'][0]['onclick']     = 'window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $_POST['screeningid'] . '\'';
+                $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more variants found by this mutation screening</B>';
+                if ($sSubmitType == 'individual') {
+                    $aOptionsList['options'][1]['onclick']     = 'window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'';
+                    $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit another screening instead</B>';
+                }
+                $aOptionsList['options'][2]['onclick']     = 'window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'] . '\'';
+                $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
+
+                print(lovd_buildOptionTable($aOptionsList));
+
                 require ROOT_PATH . 'inc-bot.php';
             } else {
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/variant/' . $nID);
@@ -542,7 +563,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                       ));
     lovd_viewForm($aForm);
 
-    print('      </FORM>' . "\n\n");
+    print("\n" .
+          '      </FORM>' . "\n\n");
 
     lovd_includeJS('inc-js-variants.php?chromosome=' . $_POST['chromosome']);
 ?>
@@ -785,7 +807,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                       ));
     lovd_viewForm($aForm);
 
-    print('</FORM>' . "\n\n");
+    print("\n" .
+          '      </FORM>' . "\n\n");
 
     lovd_includeJS('inc-js-variants.php?chromosome=' . $zData['chromosome']);
 
@@ -903,7 +926,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                       ));
     lovd_viewForm($aForm);
 
-    print('</FORM>' . "\n\n");
+    print("\n" .
+          '      </FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -954,7 +978,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         // Mandatory fields.
         if (empty($_POST['password'])) {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-        } elseif ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             // User had to enter his/her password for authorization.
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
@@ -1080,7 +1104,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     print('      <TABLE class="sortable_head" style="width : 552px;"><TR><TH width="100">Gene</TH>' .
           '<TH style="text-align : left;">Name</TH><TH width="123" style="text-align : left;">Transcript ID</TH><TH width="20">&nbsp;</TH>' .
           '</TR></TABLE>' . "\n" .
-          '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkSubmittedForm();">' . "\n" .
+          '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
           '        <UL id="transcript_list" class="sortable" style="margin-top : 0px; width : 550px;">' . "\n");
     // Now loop the items in the order given.
     foreach ($aVOT as $aTranscript) {
@@ -1098,30 +1122,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                     array('', '', 'print', '<INPUT type="submit" value="Save transcript list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'variants/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
+
+    print("\n" .
+          '      </FORM>' . "\n\n");
 ?>
       <SCRIPT type='text/javascript'>
-        function lovd_checkSubmittedForm ()
-        {
-            var aCurrentTranscripts = '<?php echo implode(';', $aCurrentTranscripts) ?>'.split(";");
-            var aTranscriptList = $('#transcript_list').children().map(function(){ return $(this).attr('id').replace('li_', '') }).get();
-            var nCount = 0;
-            for (i in aCurrentTranscripts) {
-                if ($.inArray(aCurrentTranscripts[i], aTranscriptList) == -1) {
-                    nCount ++;
-                }
-            }
-            if (nCount == 1) {
-                return window.confirm('You are about to remove a transcript from this variant and the variant description with it.\nAre you sure you want to continue?');
-            } else if (nCount > 1) {
-                return window.confirm('You are about to remove ' + nCount + ' transcripts from this variant and the variant descriptions with them.\nAre you sure you want to continue?');
-            }
-        }
-
         function lovd_addTranscript (sViewListID, nID, sGene, sName, sNM)
         {
             // Moves the transcript to the variant mapping block and removes the row from the viewList.
             objViewListF = document.getElementById('viewlistForm_' + sViewListID);
-            objViewListT = document.getElementById('viewlistTable_' + sViewListID);
             objElement = document.getElementById(nID);
             objElement.style.cursor = 'progress';
 
@@ -1150,7 +1159,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
         function lovd_removeTranscript (sViewListID, nID, sNM)
         {
-            if (window.confirm('You are about to remove the variant description of transcript ' + sNM + ' from this variant.\n\nOk:\t\tRemove variant description of this transcript from the database.\nCancel:\tCancel the removal.')) {
+            var aCurrentTranscripts = '<?php echo implode(';', $aCurrentTranscripts) ?>'.split(";");
+            if ($.inArray(nID, aCurrentTranscripts) == -1 || window.confirm('You are about to remove the variant description of transcript ' + sNM + ' from this variant.\n\nOk:\t\tRemove variant description of this transcript from the database.\nCancel:\tCancel the removal.')) {
                 // Removes the mapping of the variant from this transcript and reloads the viewList with the transcript back in there.
                 objViewListF = document.getElementById('viewlistForm_' + sViewListID);
                 objLI = document.getElementById('li_' + nID);

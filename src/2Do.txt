@@ -1,13 +1,10 @@
 Prioritize:
 ===========
+Screenings?confirm binnen een submissie moet nog goed geimplementeerd worden.
 BUG: Data type Wizard moet velden quoten voordat ze weggeschreven worden.
-Wanneer gaan we delete column implementeren?
 BUG: text search created_by_ in columns overzicht geeft invalid search expression, terwijl de join naar u.name wel gemaakt is in de code?!!???
 - (@Jerry) Na importeren VCF begon hij niet automatisch te mappen.
 - Should we maybe set default_socket_timeout somewhere?
-- Bug: genes?authorize met meerdere users op meerdere pagina's, kies gebruikers, hersorteer, niet onthouden wie al was toegevoegd.
-  + Dit lijkt te maken te hebben met meerdere pagina's.
-- Jerry: Variant DNA wel ingevuld, DBID leeg, geeft foutmelding dat DBID leeg is maar vult 'm wel direct auto in, dus daarna weer submit is meteen OK.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -23,8 +20,6 @@ BUG: text search created_by_ in columns overzicht geeft invalid search expressio
     * OOK IN CUSTOM VIEWLIST
 - (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
   + Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
-- Indien er varianten zijn gevonden met een screening, moet de submitter na de screening?create bestaande varianten van dit individu kunnen selecteren als "met deze screening bevestigd".
-  + Moet met viewList, zoals ook genes/DMD?authorize, plus optie "select all".
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
 - (@Ivar) Alle variant en/of data views uitbreiden met affects function en andere standaard kolommen die LOVD 2.0 ook toont.
   * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
@@ -32,15 +27,7 @@ BUG: text search created_by_ in columns overzicht geeft invalid search expressio
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
   + Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.
 - Verify if anybody has comments, and include:
-    Gene/Imprinting (genes hebben geen custom columns, dus deze staat vast)
-    - Unknown
-    - Not imprinted
-    - Imprinted, maternal (confirmed)
-    - Imprinted, maternal (inferred)
-    - Imprinted, paternal (confirmed)
-    - Imprinted, paternal (inferred)
-
-    Variant/Genetic_origin:
+    VariantOnGenome/Genetic_origin:
     - Unknown
     - Germline (inherited)
     - Somatic
@@ -49,23 +36,24 @@ BUG: text search created_by_ in columns overzicht geeft invalid search expressio
     - Uniparental disomy, maternal allele
     - Uniparental disomy, paternal allele
 
-    Variant/Segregation:
-    - Unknown
-    - Segregates with disease
-    - Does not segregate with disease
+    VariantOnGenome/Segregation:
+    - ? = Unknown
+    - yes = Segregates with disease
+    - no = Does not segregate with disease
 
-    Patient/Consanguinity
-    - Unknown
-    - Non-consanguineous parents
-    - Consanguineous parents
+    Individual/Consanguinity
+    - ? = Unknown
+    - no = Non-consanguineous parents
+    - yes = Consanguineous parents
 
     Phenotype/Inheritance
     - Unknown
+    - Familial
     - Familial, dominant
     - Familial, recessive
     - Familial, X-linked
-    - Familial, Y-linked
-    - Familial, mitochondrial
+    - Paternal, Y-linked
+    - Maternal, mitochondrial
     - Isolated (sporadic)
 
   How it was before:

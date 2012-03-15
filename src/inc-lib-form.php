@@ -418,7 +418,7 @@ function lovd_buildOptionTable ($aOptionsList = array())
     }
 
     $sOptionsTable = '      <TABLE border="0" cellpadding="5" cellspacing="1" ' . (!empty($aOptionsList['width'])? 'style="width : ' . $aOptionsList['width'] . 'px;" ' : '') . 'class="option">' . "\n";
-    
+
     foreach ($aOptionsList['options'] as $aOption) {
         $sOptionsTable .=  '        <TR ';
         if (!empty($aOption['disabled'])) {
@@ -426,7 +426,7 @@ function lovd_buildOptionTable ($aOptionsList = array())
         }
         $sOptionsTable .= 'onclick="' . $aOption['onclick'] . '">' . "\n" .
                          '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                         '          <TD>' . $aOption['option_text'] . '</TD></TR>' . "\n";
+                         '          <TD>' . (!empty($aOption['disabled'])? '<I>' : '') . $aOption['option_text'] . (!empty($aOption['disabled'])? '</I>' : '') . '</TD></TR>' . "\n";
     }
 
     $sOptionsTable .= '      </TABLE><BR>' . "\n\n";

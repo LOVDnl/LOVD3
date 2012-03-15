@@ -39,7 +39,23 @@
  * Added a button to the viewEntry of variants that links to
    variants/<variantid>?map, where the user can add/remove transcripts on which
    the variant gets mapped on.
-
+ * Fixed bug; Internal transcript start and stop positions that are pulled from
+   mutalyzer were not correct.
+ * Fixed bug; When clicking on a separator line in the tab menu, LOVD woud
+   redirect to /undefined, which would result in a 404 error.
+ * Fixed bug; If LOVD was upgrading to a newer version, when redirecting back
+   to the page where the user came from some pages would throw an error.
+ * Added the "Imprinting" column to the genes pages & forms.
+ * Implemented a delete column feature, that can remove a column from the
+   installation after it has been disabled/removed from all data.
+ * Fixed bug; Page navigation now reverts to the highest possible page, when a
+   page is requested that is too high.
+ * Added the possibility to add checkboxes to all entries in a viewList and a
+   menu that allows you to perform actions to these entries.
+ * Implemented a functionality to confirm ealier found variants with a
+   screening.
+ * When removing a transcript from the variant descriptions LOVD will show a
+   warning when the red cross is clicked.
 
 
 

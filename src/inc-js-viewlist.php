@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2012-02-18
+ * Modified    : 2012-03-13
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,7 +82,8 @@ function lovd_AJAX_processViewListHash ()
             // Values which are NO LONGER in the Hash (added search term, then back button) need to be removed!!!
             $(oForm).find('input[name^="search_"]').each(function (i, o) { if (o.value && !GET[o.name]) { o.value = ""; }});
 
-            lovd_AJAX_viewListSubmit(sViewListID);
+            // GoToPage is used instead of directly calling viewListSubmit, because it has some page navigation optimizations.
+            lovd_AJAX_viewListGoToPage(sViewListID, oForm.page.value);
             prevHash = window.location.hash;
         }
     }
@@ -91,6 +92,9 @@ function lovd_AJAX_processViewListHash ()
 }
 ?>
 
+
+// List for recording checkbox changes in viewLists.
+var check_list = [];
 
 function lovd_AJAX_viewListAddNextRow (sViewListID)
 {
@@ -180,6 +184,10 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
 
 function lovd_AJAX_viewListGoToPage (sViewListID, nPage) {
     oForm = document.forms['viewlistForm_' + sViewListID];
+    nMaxPage = Math.ceil(oForm.total.value / oForm.page_size.value);
+    if (nPage > nMaxPage) {
+        nPage = nMaxPage;
+    }
     oForm.page.value = nPage;
     lovd_AJAX_viewListSubmit(sViewListID);
 }
@@ -215,7 +223,7 @@ function lovd_AJAX_viewListHideRow (sViewListID, sElementID)
 
 
 
-function lovd_AJAX_viewListSubmit (sViewListID) {
+function lovd_AJAX_viewListSubmit (sViewListID, callBack) {
     oForm = document.forms['viewlistForm_' + sViewListID];
     // Used to have a simple loop through oForm, but Google Chrome does not like that.
     aInput = oForm.getElementsByTagName('input');
@@ -261,11 +269,14 @@ if (!isset($_GET['nohistory'])) {
                         }
                         window.location.hash = sHash;
                         // lovd_AJAX_processViewListHash() itself will actually allow that when the back button is pressed, the correct page is loaded.
-                        // The following makes sure this change we just made does not have reload lovd_AJAX_processViewListHash().
+                        // The following makes sure this change we just made does not have to reload lovd_AJAX_processViewListHash().
                         prevHash = window.location.hash;
 <?php
 }
 ?>
+                        if (typeof callBack != 'undefined') {
+                            callBack();
+                        }
                         return true;
                     } else if (objHTTP.responseText == '8') {
                         window.alert('Lost your session. Please log in again.');
@@ -287,9 +298,18 @@ if (!isset($_GET['nohistory'])) {
         var sGET = '';
         aInput = oForm.getElementsByTagName('input');
         for (var i in aInput) {
-            if (!aInput[i].disabled && aInput[i].value) {
+            if (!aInput[i].disabled && aInput[i].value && aInput[i].name.substring(0,6) != 'check_') {
                 sGET = (sGET? sGET + '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
             }
+        }
+        if (!$.isEmptyObject(check_list[sViewListID])) {
+            if ($.isArray(check_list[sViewListID])) {
+                var sIDlist = check_list[sViewListID].join(';');
+            } else {
+                var sIDlist = check_list[sViewListID];
+            }
+            sGET += (sGET? sGET + '&' : '') + 'ids_changed=' + sIDlist;
+            check_list[sViewListID] = [];
         }
         objHTTP.open('GET', '<?php echo lovd_getInstallURL() . 'ajax/viewlist.php?'; ?>' + sGET, true);
         objHTTP.send(null);
@@ -324,11 +344,92 @@ function lovd_stretchInputs (id)
 {
     // Stretches the input fields for search terms on all columns, since the
     // column's size may be stretched because of the data contents.
-
     var aColumns = $("#viewlistTable_"+id+" th");
     var nColumns = aColumns.size();
     for (var i = 0; i < nColumns; i ++) {
         aColumns.eq(i).find("input").css("width", aColumns.eq(i).width() - 6);
+    }
+}
+
+
+
+function cancelParentEvent (event)
+{
+    // Cancels the event from the parent element.
+    if ('bubbles' in event) {   
+        // all browsers except IE before version 9
+        if (event.bubbles) {
+            event.stopPropagation();
+        }
+    }
+    else {  
+        // Internet Explorer before version 9
+        // always cancel bubbling
+        event.cancelBubble = true;
+    }
+}
+
+
+
+function lovd_recordCheckChanges (element, sViewListID)
+{
+    // Record click events on the checkboxes in the viewlist in an array and so that
+    // lovd_AJAX_viewListSubmit() can send it through GET to Objects::viewList().
+    var sID = element.id.substring(6);
+    var nIndex = $.inArray(sID, check_list[sViewListID]);
+
+    if (nIndex != -1) {
+        // If the checked checkbox is already in the check_list array, remove it! 
+        check_list[sViewListID].splice(nIndex,1);
+        return true;
+    } else {
+        // If the checked checkbox is not yet in the check_list array, add it!
+        check_list[sViewListID].push(sID);
+        return true;
+    }
+
+    return false;
+}
+
+
+
+function lovd_showOptions (handle)
+{
+    // Show the options window in the viewlist.
+    var sViewListID = $(handle).attr("id").replace('_option_button', '');
+
+    if ($('#' + sViewListID + '_option_box').attr("id") != 'undefined' || $('#' + sViewListID + '_option_box').css("display") != 'block') {
+        if (typeof $('#' + sViewListID + '_option_box').attr("id") == 'undefined') {
+            // Firstly, create the new tooltop DIV.
+            var oTT = window.document.createElement('div');
+            oTT.setAttribute('id', sViewListID + '_option_box');
+            oTT.className = 'options';
+            oTT.style.display = 'none'; // To prevent whitespace at the end of the page.
+            window.document.body.appendChild(oTT);
+
+            // Icon to close the tooltip.
+            var imgHide = window.document.createElement('img');
+            // In principle, this class name is not necessary. If we're not going to use
+            // more images in the tooltips, we could just adapt the stylesheet to align all
+            // images like this one.
+            imgHide.className = 'tooltip-hide';
+            imgHide.setAttribute('src', 'gfx/mark_0.png');
+            imgHide.setAttribute('onclick', 'this.parentNode.style.display = "none"; return false;');
+        } else {
+            var oTT = document.getElementById(sViewListID + '_option_box');
+            var imgHide = $(oTT).find('.tooltip-hide')[0];
+        }
+
+        // Link tooltip to element.
+        var aPosition = lovd_getPosition(handle);
+        oTT.style.left = aPosition[0]+16+'px';
+        oTT.style.top = aPosition[1]+'px'; // FIXME; can height of element be used here?
+        oTT.style.display = 'block';
+        var nTotal = $('#viewlistForm_' + sViewListID + ' input[name="total"]').eq(0).val();
+        oTT.innerHTML = '<TABLE cellspacing="0" cellpadding="0" border="0" width="100%" class="footer"><TBODY><TR><TD align="center">Options:</TD></TR></TBODY></TABLE><P style="padding : 5px"><A href="#" onclick="check_list[\'' + sViewListID + '\'] = \'all\'; lovd_AJAX_viewListSubmit(\'' + sViewListID + '\'); return false;">Select all ' + nTotal + ' entr' + (nTotal != 1? 'ies' : 'y') + '<A><BR><A href="#" onclick="check_list[\'' + sViewListID + '\'] = \'none\'; lovd_AJAX_viewListSubmit(\'' + sViewListID + '\'); return false;">Unselect all ' + nTotal + ' entr' + (nTotal != 1? 'ies' : 'y') + '<A></P>';
+        oTT.appendChild(imgHide); // Hide icon gets lost when setting innerHTML, re-add it.
+        oTT.style.width = 'auto'; // Adapt size of tooltip to contents.
+        imgHide.style.paddingTop = '20px'; // But leave some space for the image.
     }
 }
 <?php

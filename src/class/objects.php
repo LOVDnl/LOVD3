@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-27
+ * Modified    : 2012-03-13
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -250,6 +250,32 @@ class LOVD_Object {
                 return false;
             }
         }            
+    }
+
+
+
+
+
+    function generateRowID ($zData = false)
+    {
+        // Generates the row_id for the viewList rows.
+        if ($zData && is_array($zData) && !empty($zData)) {
+            if (!isset($zData['row_id'])) {
+                if (isset($zData['id'])) {
+                    if ($this->sRowID !== '') {
+                        $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
+                        foreach ($zData as $key => $val) {
+                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_id']);
+                        }
+                    } else {
+                        $zData['row_id'] = $zData['id'];
+                    }
+                } else {
+                    $zData['row_id'] = '';
+                }
+            }
+        }
+        return $zData;
     }
 
 
@@ -634,7 +660,7 @@ class LOVD_Object {
 
 
 
-    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOnlyRows = false)
+    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOptions = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
         global $_PATH_ELEMENTS, $_DB;
@@ -859,28 +885,24 @@ class LOVD_Object {
             if ($bHideNav) {
                 print('        <INPUT type="hidden" name="hidenav" value="true">' . "\n");
             }
+            if ($bOptions) {
+                print('        <INPUT type="hidden" name="options" value="true">' . "\n");
+            }
             print("\n");
         }
 
-        // Manipulate SELECT to include SQL_CALC_FOUND_ROWS.
-        $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
-        $sSQL = 'SELECT ' . $this->aSQLViewList['SELECT'] .
-               ' FROM ' . $this->aSQLViewList['FROM'] .
-            (!$this->aSQLViewList['WHERE']? '' :
-               ' WHERE ' . $this->aSQLViewList['WHERE']) .
-            (!$this->aSQLViewList['GROUP_BY']? '' :
-               ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
-            (!$this->aSQLViewList['HAVING']? '' :
-               ' HAVING ' . $this->aSQLViewList['HAVING']) .
-               ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
+        // To make row ids persist when the viewList is refreshed, we must store the row id in $_SESSION.
+        if (!empty($_SESSION['viewlists'][$sViewListID]['row_id'])) {
+            $this->sRowID = $_SESSION['viewlists'][$sViewListID]['row_id'];
+        } else {
+            $_SESSION['viewlists'][$sViewListID]['row_id'] = $this->sRowID; // Implies array creation.
+        }
 
-        if (!$bHideNav) {
-            // Implement LIMIT only if navigation is not hidden.
-            // We have a problem here, because we don't know how many hits there are,
-            // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
-            // of hits AFTER we run the whole query. This means we should just assume
-            // the page number is possible.
-            $sSQL .= ' LIMIT ' . lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
+        // To make row links persist when the viewList is refreshed, we must store the row link in $_SESSION.
+        if (!empty($_SESSION['viewlists'][$sViewListID]['row_link'])) {
+            $this->sRowLink = $_SESSION['viewlists'][$sViewListID]['row_link'];
+        } else {
+            $_SESSION['viewlists'][$sViewListID]['row_link'] = $this->sRowLink; // Implies array creation.
         }
 
         $nTotal = 0;
@@ -892,7 +914,7 @@ class LOVD_Object {
             $_DB->query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
             $_DB->beginTransaction();
 
-            // Run the actual query.
+            // Build argument list.
             $aArgs = array();
             foreach ($aArguments['WHERE'] as $aArg) {
                 $aArgs[] = $aArg;
@@ -901,12 +923,88 @@ class LOVD_Object {
                 $aArgs[] = $aArg;
             }
 
+            // Manipulate SELECT to include SQL_CALC_FOUND_ROWS.
+            $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
+            $sSQL = 'SELECT ' . $this->aSQLViewList['SELECT'] .
+                   ' FROM ' . $this->aSQLViewList['FROM'] .
+                (!$this->aSQLViewList['WHERE']? '' :
+                   ' WHERE ' . $this->aSQLViewList['WHERE']) .
+                (!$this->aSQLViewList['GROUP_BY']? '' :
+                   ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
+                (!$this->aSQLViewList['HAVING']? '' :
+                   ' HAVING ' . $this->aSQLViewList['HAVING']);
+
+            if ($bOptions) {
+                // If the session variable does not exist, create it!
+                if (!isset($_SESSION['viewlists'][$sViewListID]['checked'])) {
+                    $_SESSION['viewlists'][$sViewListID]['checked'] = array();
+                    $_SESSION['viewlists'][$sViewListID]['checked_all'] = false;
+                }
+
+                // Make a reference variable of the session for cleaner code.
+                $aSessionViewList =& $_SESSION['viewlists'][$sViewListID];
+                if (isset($_GET['ids_changed']) && $_GET['ids_changed'] == 'all') {
+                    // If the select all button was clicked, set the 'checked_all' to true and fetch all entries and mark them as 'checked' in session.
+                    $aSessionViewList['checked_all'] = true;
+                    // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
+                    // of the query.
+                    $q = $_DB->query($sSQL, $aArgs);
+                    while ($zData = $q->fetchAssoc()) {
+                        $zData = $this->generateRowID($zData);
+                        // We only need the row_id here for knowing which ones we need to check.
+                        $aSessionViewList['checked'][] = $zData['row_id'];
+                    }
+                } elseif (isset($_GET['ids_changed']) && $_GET['ids_changed'] == 'none') {
+                    // If the unselect all button was clicked, set the 'checked_all' to false and reset the 'checked' array.
+                    $aSessionViewList['checked_all'] = false;
+                    $aSessionViewList['checked'] = array();
+                } elseif (isset($_GET['ids_changed'])) {
+                    // Get the changed ids and remove them from or add them to the session.
+                    $_GET['ids_changed'] = explode(';', $_GET['ids_changed']);
+                    // If ids have been changed, then 99% of the case the result will not be 'checked_all'.
+                    // If they ARE all checked, then later in the code 'checked_all' will still be set to true.
+                    $aSessionViewList['checked_all'] = false;
+                    // Flip the keys & values, so that we can do a simple isset() to see if the id is already present.
+                    $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
+                    // Determine the highest key number, so we can use that later when adding new values to the array.
+                    $nIndex = (count($aSessionViewList['checked'])? max($aSessionViewList['checked']) + 1 : 0);
+                    foreach ($_GET['ids_changed'] as $nID) {
+                        if (isset($aSessionViewList['checked'][$nID])) {
+                            // Id is found in the array, but is also in the 'ids_changed' array, so remove it!
+                            unset($aSessionViewList['checked'][$nID]);
+                        } else {
+                            // Id is not found in the array, but IS in the 'ids_changed' array, so add it using the $nIndex as value we determined earlier.
+                            // Also add 1 to the $nIndex so that the next id that needs to be added will not overwrite this one.
+                            $aSessionViewList['checked'][$nID] = ++$nIndex;
+                        }
+                    }
+                    // Flip the array back to its original state.
+                    $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
+                }
+            }
+
+            $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
+
+            if (!$bHideNav) {
+                // Implement LIMIT only if navigation is not hidden.
+                // We have a problem here, because we don't know how many hits there are,
+                // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
+                // of hits AFTER we run the whole query. This means we should just assume
+                // the page number is possible.
+                $sSQL .= ' LIMIT ' . lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
+            }
+
+            // Run the viewList query.
             // FIXME; what if using AJAX? Probably we should generate a number here, if this query fails, telling the system to try once more. If that fails also, the JS should throw a general error, maybe.
             $q = $_DB->query($sSQL, $aArgs);
 
             // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
             $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
             $_DB->commit(); // To end the transaction and the locks that come with it.
+
+            if ($bOptions && count($aSessionViewList['checked']) == $nTotal) {
+                $aSessionViewList['checked_all'] = true;
+            }
         }
 
         // If no results are found, quit here.
@@ -953,7 +1051,9 @@ class LOVD_Object {
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
                       '        <THEAD>' . "\n" .
-                      '        <TR>');
+                      '        <TR>' . 
+   ($bOptions? "\n" . '          <TH valign="center" style="text-align:center;">' . "\n" .
+                      '            <IMG id="' . $sViewListID . '_option_button" src="gfx/options.png" class="custom_link" width="16" height="16" onclick="lovd_showOptions(this);" style="cursor : pointer"></TH>' : ''));
 
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
                     if (in_array($sField, $aColsToSkip)) {
@@ -1039,36 +1139,9 @@ class LOVD_Object {
             }
         }
 
-        // To make row ids persist when the viewList is refreshed, we must store the row id in $_SESSION.
-        if (!empty($_SESSION['viewlists'][$sViewListID]['row_id'])) {
-            $this->sRowID = $_SESSION['viewlists'][$sViewListID]['row_id'];
-        } else {
-            $_SESSION['viewlists'][$sViewListID]['row_id'] = $this->sRowID; // Implies array creation.
-        }
-
-        // To make row links persist when the viewList is refreshed, we must store the row link in $_SESSION.
-        if (!empty($_SESSION['viewlists'][$sViewListID]['row_link'])) {
-            $this->sRowLink = $_SESSION['viewlists'][$sViewListID]['row_link'];
-        } else {
-            $_SESSION['viewlists'][$sViewListID]['row_link'] = $this->sRowLink; // Implies array creation.
-        }
-
         while ($zData = $q->fetchAssoc()) {
             // If row_id is not given by the database, but it should be created according to some format ($this->sRowID), put the data's ID in this format.
-            if (!isset($zData['row_id'])) {
-                if (isset($zData['id'])) {
-                    if ($this->sRowID !== '') {
-                        $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
-                        foreach ($zData as $key => $val) {
-                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_id']);
-                        }
-                    } else {
-                        $zData['row_id'] = $zData['id'];
-                    }
-                } else {
-                    $zData['row_id'] = '';
-                }
-            }
+            $zData = $this->generateRowID($zData);
             // If row_link is not given by the database, but it should be created according to some format ($this->sRowLink), put the data's ID and the viewList's ID in this format.
             if (!isset($zData['row_link'])) {
                 if ($this->sRowLink !== '' && $zData['row_id']) {
@@ -1094,7 +1167,10 @@ class LOVD_Object {
             // FIXME; rawurldecode() in the line below should have a better solution.
             // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
             print("\n" .
-                  '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . lovd_getInstallURL(false) . $zData['row_link'] . '\';') . '"') . '>');
+                   '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . lovd_getInstallURL(false) . $zData['row_link'] . '\';') . '"') . '>');
+            if ($bOptions) {
+                print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . ($_SESSION['viewlists'][$sViewListID]['checked_all'] || in_array($zData['row_id'], $_SESSION['viewlists'][$sViewListID]['checked'])? ' checked' : '') . '></TD>');
+            }
             foreach ($this->aColumnsViewList as $sField => $aCol) {
                 if (in_array($sField, $aColsToSkip)) {
                     continue;
@@ -1119,7 +1195,7 @@ class LOVD_Object {
             }
         }
 
-        print('      <SCRIPT type="text/javascript">lovd_stretchInputs(\'' . $sViewListID . '\');</SCRIPT>' . "\n");
+        print('      <SCRIPT type="text/javascript">lovd_stretchInputs(\'' . $sViewListID . '\'); check_list[\'' . $sViewListID . '\'] = [];</SCRIPT>' . "\n");
 
         return true;
     }
