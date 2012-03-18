@@ -3,6 +3,8 @@ Prioritize:
 Screenings?confirm binnen een submissie moet nog goed geimplementeerd worden.
 BUG: Data type Wizard moet velden quoten voordat ze weggeschreven worden.
 BUG: text search created_by_ in columns overzicht geeft invalid search expression, terwijl de join naar u.name wel gemaakt is in de code?!!???
+- Individu gemaakt, 1 disease gekoppeld zonder phen kolommen, klik op Add phenotype, foutmelding is niet correct: The disease added to this individual do not have phenotype columns enabled yet.
+  + Moet "does" zijn.
 - (@Jerry) Na importeren VCF begon hij niet automatisch te mappen.
 - Should we maybe set default_socket_timeout somewhere?
 - (@Ivo) Row Link probleem:

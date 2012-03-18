@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2012-03-13
+ * Modified    : 2012-03-18
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -255,6 +255,7 @@ function lovd_AJAX_viewListSubmit (sViewListID, callBack) {
                         // Successfully retrieved stuff.
                         oDiv.innerHTML = objHTTP.responseText;
                         lovd_stretchInputs(sViewListID);
+                        lovd_activateMenu(sViewListID);
 <?php
 if (!isset($_GET['nohistory'])) {
 ?>
@@ -393,43 +394,38 @@ function lovd_recordCheckChanges (element, sViewListID)
 
 
 
-function lovd_showOptions (handle)
+function lovd_activateMenu (sViewListID)
 {
-    // Show the options window in the viewlist.
-    var sViewListID = $(handle).attr("id").replace('_option_button', '');
-
-    if ($('#' + sViewListID + '_option_box').attr("id") != 'undefined' || $('#' + sViewListID + '_option_box').css("display") != 'block') {
-        if (typeof $('#' + sViewListID + '_option_box').attr("id") == 'undefined') {
-            // Firstly, create the new tooltop DIV.
-            var oTT = window.document.createElement('div');
-            oTT.setAttribute('id', sViewListID + '_option_box');
-            oTT.className = 'options';
-            oTT.style.display = 'none'; // To prevent whitespace at the end of the page.
-            window.document.body.appendChild(oTT);
-
-            // Icon to close the tooltip.
-            var imgHide = window.document.createElement('img');
-            // In principle, this class name is not necessary. If we're not going to use
-            // more images in the tooltips, we could just adapt the stylesheet to align all
-            // images like this one.
-            imgHide.className = 'tooltip-hide';
-            imgHide.setAttribute('src', 'gfx/mark_0.png');
-            imgHide.setAttribute('onclick', 'this.parentNode.style.display = "none"; return false;');
-        } else {
-            var oTT = document.getElementById(sViewListID + '_option_box');
-            var imgHide = $(oTT).find('.tooltip-hide')[0];
-        }
-
-        // Link tooltip to element.
-        var aPosition = lovd_getPosition(handle);
-        oTT.style.left = aPosition[0]+16+'px';
-        oTT.style.top = aPosition[1]+'px'; // FIXME; can height of element be used here?
-        oTT.style.display = 'block';
-        var nTotal = $('#viewlistForm_' + sViewListID + ' input[name="total"]').eq(0).val();
-        oTT.innerHTML = '<TABLE cellspacing="0" cellpadding="0" border="0" width="100%" class="footer"><TBODY><TR><TD align="center">Options:</TD></TR></TBODY></TABLE><P style="padding : 5px"><A href="#" onclick="check_list[\'' + sViewListID + '\'] = \'all\'; lovd_AJAX_viewListSubmit(\'' + sViewListID + '\'); return false;">Select all ' + nTotal + ' entr' + (nTotal != 1? 'ies' : 'y') + '<A><BR><A href="#" onclick="check_list[\'' + sViewListID + '\'] = \'none\'; lovd_AJAX_viewListSubmit(\'' + sViewListID + '\'); return false;">Unselect all ' + nTotal + ' entr' + (nTotal != 1? 'ies' : 'y') + '<A></P>';
-        oTT.appendChild(imgHide); // Hide icon gets lost when setting innerHTML, re-add it.
-        oTT.style.width = 'auto'; // Adapt size of tooltip to contents.
-        imgHide.style.paddingTop = '20px'; // But leave some space for the image.
+    // Activates the jeegoocontext menu for this viewList, if enabled.
+    if ($('#viewlistOptionsButton_' + sViewListID).attr('id') != undefined) {
+        // Options menu requested.
+        $(function(){
+          var aMenuOptions = {
+            event: "click",
+            openBelowContext: true,
+            autoHide: true,
+            delay: 1000,
+            onSelect: function(e, context) {
+              // e.stopPropagation(); // Doesn't do anything... :(
+              if ($(this).hasClass("disabled")) {
+                return false;
+              } else if ($(this).find('a').attr('href') != undefined) {
+                window.location = $(this).find('a').attr('href');
+                return true; // True closes the menu.
+              } else if ($(this).find('a').attr('click') != undefined) {
+                eval($(this).find('a').attr('click'));
+                return true; // True closes the menu.
+              } else {
+                return false;
+              }
+            },
+          };
+          // Because amount may have changed, reset "Select all" link.
+          var nTotal = $('#viewlistForm_' + sViewListID + ' input[name="total"]').eq(0).val();
+          $('#viewlistMenu_' + sViewListID + ' li').eq(0).find('span').eq(1).html(nTotal + ' entr' + (nTotal != 1? 'ies' : 'y'));
+          // Add menu to options icon.
+          $('#viewlistOptionsButton_' + sViewListID).jeegoocontext('viewlistMenu_' + sViewListID, aMenuOptions);
+        });
     }
 }
 <?php

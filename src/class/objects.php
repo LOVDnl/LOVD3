@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-03-13
+ * Modified    : 2012-03-18
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -241,10 +241,10 @@ class LOVD_Object {
         } else {
             if ($this->getCount($nID)) {
                 $sSQL = 'DELETE FROM ' . constant($this->sTable) . ' WHERE id = ?';
-                $q = lovd_queryDB_Old($sSQL, array($nID));
-                if (!$q) {
-                    lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::deleteEntry()'), $sSQL, mysql_error());
+                if (!defined('LOG_EVENT')) {
+                    define('LOG_EVENT', $this->sObject . '::deleteEntry()');
                 }
+                $q = $_DB->query($sSQL, array($nID));
                 return true;
             } else {
                 return false;
@@ -325,6 +325,7 @@ class LOVD_Object {
     function insertEntry ($aData, $aFields = array())
     {
         // Inserts data in $aData into the database, using only fields defined in $aFields.
+        global $_DB;
 
         if (!is_array($aData) || !count($aData)) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::insertEntry() - Method didn\'t receive data array');
@@ -344,12 +345,12 @@ class LOVD_Object {
         }
         $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
 
-        $q = lovd_queryDB_Old($sSQL, $aSQL);
-        if (!$q) {
-            lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::insertEntry()'), $sSQL, mysql_error());
+        if (!defined('LOG_EVENT')) {
+            define('LOG_EVENT', $this->sObject . '::insertEntry()');
         }
+        $q = $_DB->query($sSQL, $aSQL);
 
-        $nID = mysql_insert_id();
+        $nID = $_DB->lastInsertId();
         if (substr(lovd_getColumnType(constant($this->sTable), 'id'), 0, 3) == 'INT') {
             $nID = sprintf('%0' . lovd_getColumnLength(constant($this->sTable), 'id') . 'd', $nID);
         }
@@ -376,6 +377,7 @@ class LOVD_Object {
         } else {
             $sSQL = 'SELECT * FROM ' . constant($this->sTable) . ' WHERE id = ?';
         }
+        // FIXME: this can't work! If query fails, code will halt here!!!
         $zData = @$_DB->query($sSQL, array($nID))->fetchAssoc();
         // FIXME; check if $zData['status'] exists, if so, check status versus lovd_isAuthorized().
         // Set $zData to false if user should not see this entry.
@@ -537,6 +539,7 @@ class LOVD_Object {
     function updateEntry ($nID, $aData, $aFields = array())
     {
         // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
+        global $_DB;
 
         if (!trim($nID)) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive ID');
@@ -559,12 +562,12 @@ class LOVD_Object {
         $sSQL .= ' WHERE id = ?';
         $aSQL[] = $nID;
 
-        $q = lovd_queryDB_Old($sSQL, $aSQL);
-        if (!$q) {
-            lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::updateEntry()'), $sSQL, mysql_error());
+        if (!defined('LOG_EVENT')) {
+            define('LOG_EVENT', $this->sObject . '::updateEntry()');
         }
+        $q = $_DB->query($sSQL, $aSQL);
 
-        return mysql_affected_rows();
+        return $q->rowCount();
     }
 
 
@@ -1053,7 +1056,7 @@ class LOVD_Object {
                       '        <THEAD>' . "\n" .
                       '        <TR>' . 
    ($bOptions? "\n" . '          <TH valign="center" style="text-align:center;">' . "\n" .
-                      '            <IMG id="' . $sViewListID . '_option_button" src="gfx/options.png" class="custom_link" width="16" height="16" onclick="lovd_showOptions(this);" style="cursor : pointer"></TH>' : ''));
+                      '            <IMG id="viewlistOptionsButton_' . $sViewListID . '" src="gfx/options.png" width="16" height="16" style="cursor : pointer;"></TH>' : ''));
 
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
                     if (in_array($sField, $aColsToSkip)) {
@@ -1195,7 +1198,27 @@ class LOVD_Object {
             }
         }
 
-        print('      <SCRIPT type="text/javascript">lovd_stretchInputs(\'' . $sViewListID . '\'); check_list[\'' . $sViewListID . '\'] = [];</SCRIPT>' . "\n");
+        if (!$bAjax) {
+            // If sent using Ajax, the browser is not going to evaluate this code, anyways.
+            print('      <SCRIPT type="text/javascript">' . "\n" .
+                  '        lovd_stretchInputs(\'' . $sViewListID . '\');' . "\n");
+            if ($bOptions) {
+                print("\n" .
+                      '        // If menu\'s UL doesn\'t exist yet, create it.' . "\n" .
+                      '        if ($(\'#viewlistMenu_' . $sViewListID . '\').attr(\'id\') == undefined) {' . "\n" .
+                      '          var oUL = window.document.createElement(\'ul\');' . "\n" .
+                      '          oUL.setAttribute(\'id\', \'viewlistMenu_' . $sViewListID . '\');' . "\n" .
+                      '          oUL.className = \'jeegoocontext jeegooviewlist\';' . "\n" .
+                      '          window.document.body.appendChild(oUL);' . "\n" .
+                      '        }' . "\n" .
+                      '        // Fix the top border that could not be set through jeegoo\'s style.css.' . "\n" .
+                      '        $(\'#viewlistMenu_' . $sViewListID . '\').attr(\'style\', \'border-top : 1px solid #000;\');' . "\n" .
+                      '        $(\'#viewlistMenu_' . $sViewListID . '\').prepend(\'<LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'all\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>Select all <SPAN>entries</SPAN></A></LI><LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'none\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Unselect all</A></LI>\');' . "\n" .
+                      '        lovd_activateMenu(\'' . $sViewListID . '\');' . "\n\n");
+            }
+            print('        check_list[\'' . $sViewListID . '\'] = [];' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+        }
 
         return true;
     }

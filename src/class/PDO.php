@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2012-02-13
+ * Modified    : 2012-03-17
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -93,6 +93,21 @@ class LOVD_PDO extends PDO {
             }
         }
         return $q;
+    }
+
+
+
+
+
+    function formatError ()
+    {
+        // Formats the error message from PDO::errorInfo() such that is resembles the error message from the Exception Handler.
+
+        $a = $this->errorInfo();
+        if (is_array($a) && !empty($a[2])) {
+            return 'SQLSTATE[' . $a[0] . ']: Syntax error or access violation: ' . $a[1] . ' ' . $a[2];
+        }
+        return '';
     }
 
 

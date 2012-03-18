@@ -3,12 +3,18 @@
 	/* Required settings */
 	top:-1000px; left:-1000px; position:absolute; z-index:999; 
 	/* Possibly inherited values overrides */
-	border-width:0;  float:none; height:auto; margin:0; padding:0; width:auto;	
+	border-width:0; float:none; height:auto; margin:0; padding:0; width:auto;	
 	/* Additional settings */
-	border-top:solid 0px #000000; border-bottom:solid 1px #000000;
+	border-bottom:solid 1px #000000;
 	-moz-box-shadow: 3px 3px 4px #888;
 	-webkit-box-shadow: 3px 3px 4px #888;
 	box-shadow: 3px 3px 4px #888;
+}
+/* FIXME; Anything I put here is completely ignored, and I have no clue why?!!?? */
+﻿body ul.jeegooviewlist, body ul.jeegooviewlist ul
+{
+	/* Additional settings */
+	border-top: solid 1px #000000;
 }
 body ul.jeegoocontext li
 {
@@ -22,6 +28,10 @@ body ul.jeegoocontext li
 	overflow:hidden; cursor:pointer; padding:5px 5px 5px 31px; 
 	border-left:solid 1px #000000; border-right:solid 1px #000000; 
 	background:#FFFFFF
+}
+body ul.jeegooviewlist li
+{
+	background:#F0F3FF
 }
 body ul.jeegoocontext li a {color : #000000; text-decoration : none;}
 body ul.jeegoocontext li.hr{padding:2px 5px 2px 31px; cursor:default;}

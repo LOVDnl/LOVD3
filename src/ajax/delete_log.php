@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-01
- * Modified    : 2012-02-03
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-02-28
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -43,8 +43,8 @@ if (!empty($_GET['id'])) {
     // The easiest thing to do is just run the query, and check if there is an effect.
     $aDel = explode(',', $_GET['id']);
     if (count($aDel) == 3) {
-        lovd_queryDB_Old('DELETE FROM ' . TABLE_LOGS . ' WHERE name = ? AND date = ? AND mtime = ?', $aDel);
-        die((string) mysql_affected_rows());
+        $q = $_DB->query('DELETE FROM ' . TABLE_LOGS . ' WHERE name = ? AND date = ? AND mtime = ?', $aDel, false);
+        die((string) ($q && $q->rowCount()));
     }
 }
 ?>

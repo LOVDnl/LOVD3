@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-27
+ * Modified    : 2012-03-18
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -167,7 +167,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
 
     // Write to log file... if we're not here because we don't have MySQL.
     if (function_exists('mysql_connect')) {
-        $bLog = @lovd_writeLog($sLogFile, $sError, $sMessage);
+        $bLog = lovd_writeLog($sLogFile, $sError, $sMessage);
     } else {
         $bLog = false;
     }
@@ -1048,6 +1048,11 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage)
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Writes timestamps and messages to given log in the database.
     global $_AUTH, $_DB;
+
+    if (!$_DB) {
+        // Don't try to log when we don't have DB connection (such as mysql password incorrect).
+        return false;
+    }
 
     // Timestamp, serves as an unique identifier.
     $aTime = explode(' ', microtime());

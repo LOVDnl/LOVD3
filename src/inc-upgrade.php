@@ -256,6 +256,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     }
 
     require ROOT_PATH . 'class/progress_bar.php';
+    // FIXME; if we're not in post right now, don't send the form in POST either! (GET variables then should be put in input fields then)
     $sFormNextPage = '<FORM action="' . $_SERVER['REQUEST_URI'] . '" method="post" id="upgrade_form">' . "\n";
     foreach ($_POST as $key => $val) {
         // Added htmlspecialchars to prevent XSS and allow values to include quotes.
@@ -286,8 +287,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     $sQ = 'UPDATE ' . TABLE_STATUS . ' SET lock_update = 1 WHERE lock_update = 0';
     $nMax = 3; // FIXME; Should be higher, this value is for dev only
     for ($i = 0; $i < $nMax; $i ++) {
-        lovd_queryDB_Old($sQ);
-        $bLocked = !mysql_affected_rows();
+        $bLocked = !$_DB->exec($sQ);
         if (!$bLocked) {
             break;
         }
@@ -343,11 +343,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
             foreach ($aSQL as $i => $sSQL) {
                 $i ++;
                 if (!$nSQLFailed) {
-                    $q = mysql_query($sSQL); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB_Old(). It complains because there are ?s in the queries.
+                    $q = $_DB->query($sSQL, false, false); // This means that there is no SQL injection check here. But hey - these are our own queries.
                     if (!$q) {
                         $nSQLFailed ++;
                         // Error when running query.
-                        $sError = mysql_error();
+                        $sError = $_DB->formatError();
                         lovd_queryError('RunUpgradeSQL', $sSQL, $sError, false);
                         $sSQLFailed = 'Error!<BR><BR>\n\n' .
                                       'Error while executing query ' . $i . ':\n' .
@@ -398,7 +398,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         }
 
         // Remove update lock.
-        $q = lovd_queryDB_Old('UPDATE ' . TABLE_STATUS . ' SET lock_update = 0');
+        $_DB->query('UPDATE ' . TABLE_STATUS . ' SET lock_update = 0');
     }
 
     // Now that this is over, let the user proceed to whereever they were going!
