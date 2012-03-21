@@ -191,8 +191,9 @@ while ($z = mysql_fetch_assoc($q)) {
     if (substr($z['name'], -3) == '...') {
         $z['name'] .= str_repeat(')', substr_count($z['name'], '('));
     }
-    // The str_replace will translate ' into \' so that it does not disturb the JS code.
-    print('<OPTION value="' . $z['id'] . '"' . ($_SESSION['currdb'] == $z['id']? ' selected' : '') . '>' . str_replace("'", "\'", $z['name']) . '</OPTION>');
+    // Added str_replace which will translate ' into \' so that it does not disturb the JS code.
+    // Of course also \ needs to be replaced by \\...
+    print('<OPTION value="' . $z['id'] . '"' . ($_SESSION['currdb'] == $z['id']? ' selected' : '') . '>' . str_replace(array('\\', "'"), array('\\\\', "\'"), $z['name']) . '</OPTION>');
 }
 print('</SELECT>');
 // Only use the $_GET variables that we have received (and not the ones we created ourselves).

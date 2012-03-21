@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-03-18
+ * Modified    : 2012-03-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -235,6 +235,8 @@ class LOVD_Object {
     function deleteEntry ($nID = false)
     {
         // Delete an entry from the database.
+        global $_DB;
+
         if (!$nID) {
             // We were called, but the class wasn't initiated with an ID. Fail.
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::deleteEntry() - Method didn\'t receive ID');
@@ -451,7 +453,7 @@ class LOVD_Object {
 
         } else {
             // Add links to users from *_by fields.
-            $aUserColumns = array('created_by', 'edited_by', 'updated_by', 'deleted_by');
+            $aUserColumns = array('owned_by', 'created_by', 'edited_by', 'updated_by', 'deleted_by');
             foreach($aUserColumns as $sUserColumn) {
                 if (empty($zData[$sUserColumn])) {
                     $zData[$sUserColumn . '_'] = 'N/A';
@@ -865,9 +867,9 @@ class LOVD_Object {
                   '        <INPUT type="hidden" name="viewlistid" value="' . $sViewListID . '">' . "\n" .
                   '        <INPUT type="hidden" name="object" value="' . $this->sObject . '">' . "\n" .
                   (!isset($this->sObjectID)? '' :
-                  '        <INPUT type="hidden" name="object_id" value="' . $this->sObjectID . '">' . "\n") . // The ID of the gene for VOT viewLists, or the ID of the disease for phenotype viewLists.
+                  '        <INPUT type="hidden" name="object_id" value="' . $this->sObjectID . '">' . "\n") . // The ID of the gene for VOT viewLists, the ID of the disease for phenotype viewLists, the object list for custom viewLists.
                   (!isset($this->nID)? '' :
-                  '        <INPUT type="hidden" name="id" value="' . $this->nID . '">' . "\n") . // The ID of the VOG for VOT viewLists, or the ID of the individual for phenotype viewLists.
+                  '        <INPUT type="hidden" name="id" value="' . $this->nID . '">' . "\n") . // The ID of the VOG for VOT viewLists, the ID of the individual for phenotype viewLists, the (optional) gene for custom viewLists.
 // FIXME; do we ever use ACTION in a ViewList? Wait until we've made variants.php to know for sure.
 // FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
                   (!ACTION? '' :
@@ -880,7 +882,7 @@ class LOVD_Object {
                     // Somebody please tell me it's a bug and nobody's logical thinking. Had to include $sCol to make it work.
                     print('        <INPUT type="hidden" name="skip[' . $sCol . ']" value="' . $sCol . '">' . "\n");
                     // Check if we're skipping columns, that do have a search value. If so, it needs to be sent on like this.
-                    if (!empty($_GET['search_' . $sCol])) {
+                    if (isset($_GET['search_' . $sCol])) {
                         print('        <INPUT type="hidden" name="search_' . $sCol . '" value="' . htmlspecialchars($_GET['search_' . $sCol]) . '">' . "\n");
                     }
                 }
@@ -938,17 +940,16 @@ class LOVD_Object {
                    ' HAVING ' . $this->aSQLViewList['HAVING']);
 
             if ($bOptions) {
-                // If the session variable does not exist, create it!
-                if (!isset($_SESSION['viewlists'][$sViewListID]['checked'])) {
-                    $_SESSION['viewlists'][$sViewListID]['checked'] = array();
-                    $_SESSION['viewlists'][$sViewListID]['checked_all'] = false;
-                }
-
                 // Make a reference variable of the session for cleaner code.
                 $aSessionViewList =& $_SESSION['viewlists'][$sViewListID];
+
+                // If the session variable does not exist, create it!
+                if (!isset($aSessionViewList['checked'])) {
+                    $aSessionViewList['checked'] = array();
+                }
+
                 if (isset($_GET['ids_changed']) && $_GET['ids_changed'] == 'all') {
-                    // If the select all button was clicked, set the 'checked_all' to true and fetch all entries and mark them as 'checked' in session.
-                    $aSessionViewList['checked_all'] = true;
+                    // If the select all button was clicked, fetch all entries and mark them as 'checked' in session.
                     // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
                     // of the query.
                     $q = $_DB->query($sSQL, $aArgs);
@@ -958,25 +959,21 @@ class LOVD_Object {
                         $aSessionViewList['checked'][] = $zData['row_id'];
                     }
                 } elseif (isset($_GET['ids_changed']) && $_GET['ids_changed'] == 'none') {
-                    // If the unselect all button was clicked, set the 'checked_all' to false and reset the 'checked' array.
-                    $aSessionViewList['checked_all'] = false;
+                    // If the unselect all button was clicked, reset the 'checked' array.
                     $aSessionViewList['checked'] = array();
                 } elseif (isset($_GET['ids_changed'])) {
                     // Get the changed ids and remove them from or add them to the session.
-                    $_GET['ids_changed'] = explode(';', $_GET['ids_changed']);
-                    // If ids have been changed, then 99% of the case the result will not be 'checked_all'.
-                    // If they ARE all checked, then later in the code 'checked_all' will still be set to true.
-                    $aSessionViewList['checked_all'] = false;
+                    $aIDsChanged = explode(';', $_GET['ids_changed']);
                     // Flip the keys & values, so that we can do a simple isset() to see if the id is already present.
                     $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
                     // Determine the highest key number, so we can use that later when adding new values to the array.
                     $nIndex = (count($aSessionViewList['checked'])? max($aSessionViewList['checked']) + 1 : 0);
-                    foreach ($_GET['ids_changed'] as $nID) {
+                    foreach ($aIDsChanged as $nID) {
                         if (isset($aSessionViewList['checked'][$nID])) {
-                            // Id is found in the array, but is also in the 'ids_changed' array, so remove it!
+                            // ID is found in the array, but is also in the 'ids_changed' array, so remove it!
                             unset($aSessionViewList['checked'][$nID]);
                         } else {
-                            // Id is not found in the array, but IS in the 'ids_changed' array, so add it using the $nIndex as value we determined earlier.
+                            // ID is not found in the array, but IS in the 'ids_changed' array, so add it using the $nIndex as value we determined earlier.
                             // Also add 1 to the $nIndex so that the next id that needs to be added will not overwrite this one.
                             $aSessionViewList['checked'][$nID] = ++$nIndex;
                         }
@@ -1004,10 +1001,6 @@ class LOVD_Object {
             // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
             $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
             $_DB->commit(); // To end the transaction and the locks that come with it.
-
-            if ($bOptions && count($aSessionViewList['checked']) == $nTotal) {
-                $aSessionViewList['checked_all'] = true;
-            }
         }
 
         // If no results are found, quit here.
@@ -1170,9 +1163,9 @@ class LOVD_Object {
             // FIXME; rawurldecode() in the line below should have a better solution.
             // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
             print("\n" .
-                   '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . lovd_getInstallURL(false) . $zData['row_link'] . '\';') . '"') . '>');
+                  '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . lovd_getInstallURL(false) . $zData['row_link'] . '\';') . '"') . '>');
             if ($bOptions) {
-                print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . ($_SESSION['viewlists'][$sViewListID]['checked_all'] || in_array($zData['row_id'], $_SESSION['viewlists'][$sViewListID]['checked'])? ' checked' : '') . '></TD>');
+                print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . (in_array($zData['row_id'], $aSessionViewList['checked'])? ' checked' : '') . '></TD>');
             }
             foreach ($this->aColumnsViewList as $sField => $aCol) {
                 if (in_array($sField, $aColsToSkip)) {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-03-13
+ * Modified    : 2012-03-19
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -426,7 +426,7 @@ function lovd_buildOptionTable ($aOptionsList = array())
         }
         $sOptionsTable .= 'onclick="' . $aOption['onclick'] . '">' . "\n" .
                          '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                         '          <TD>' . (!empty($aOption['disabled'])? '<I>' : '') . $aOption['option_text'] . (!empty($aOption['disabled'])? '</I>' : '') . '</TD></TR>' . "\n";
+                         '          <TD>' . (!empty($aOption['disabled'])? '<I>' . $aOption['option_text'] . '</I>' : $aOption['option_text']) . '</TD></TR>' . "\n";
     }
 
     $sOptionsTable .= '      </TABLE><BR>' . "\n\n";
@@ -504,7 +504,7 @@ function lovd_matchURL ($s, $bAllowCustomHosts = false)
     // Based on a function provided by Ileos.nl.
     // Matches a string to the standard URL pattern (including those using IP addresses).
     // If $bAllowCustomHosts is true, hosts like "localhost" (hosts without dots) are allowed.
-    return (preg_match('/^(ht|f)tps?:\/\/([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-z][-0-9a-z]*[0-9a-z]|[0-9a-z])' . ($bAllowCustomHosts? '' : '\.') . ')+[a-z]{2,6})\/?[%&=#0-9a-z\/._+-]*\??.*$/i', $s));
+    return (preg_match('/^(ht|f)tps?:\/\/([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-z][-0-9a-z]*[0-9a-z]|[0-9a-z])\.' . ($bAllowCustomHosts? '?' : '') . ')+[a-z]{2,6})(\/[%&=#0-9a-z\/._+-]*\??.*)?$/i', $s));
 }
 
 
@@ -576,7 +576,15 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
                  str_repeat('-', 25) . ' Forwarded  Message ' . str_repeat('-', 25) . "\n\n" .
                  rtrim($sBody) . "\n\n" .
                  str_repeat('-', 22) . ' End of Forwarded Message ' . str_repeat('-', 22) . "\n";
-        return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'], false);
+
+        // The admin should have a proper Reply-to header.
+        $sAdditionalHeaders = '';
+        if (in_array($sSubject, array('LOVD registration'))) {
+            // Reply-to should be original addressees.
+            $sAdditionalHeaders .= ($sAdditionalHeaders? PHP_EOL : '') . 'Reply-To: ' . $sTo;
+        }
+
+        return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
     } elseif (!$bMail) {
         lovd_writeLog('Error', 'SendMail', preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . LOG_EVENT . '.' . "\n" .
                                            'Error : Couldn\'t send a mail with subject ' . $sSubject . ' to ' . $sTo);

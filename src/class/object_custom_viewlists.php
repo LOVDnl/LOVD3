@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-01-27
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-03-15
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -68,7 +68,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     'WHERE ' . ($_AUTH['level'] >= LEVEL_MANAGER? '' : 'c.public_view = 1 AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     (!$sGene? '' :
                       // If gene is given, only shown VOT columns active in the given gene! We'll use an UNION for that, so that we'll get the correct width and order also.
-                      'AND c.id NOT LIKE "VariantOnTranscript/%" ' .
+                      'AND c.id NOT LIKE "VariantOnTranscript/%" ' . // Exclude the VOT columns from the normal set, we'll load them below.
                       'UNION ' .
                       'SELECT c.id, sc.width, c.head_column, c.mysql_type, sc.col_order FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE sc.geneid = ? ' .
                       ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'AND sc.public_view = 1 ')) .
@@ -79,6 +79,7 @@ class LOVD_CustomViewList extends LOVD_Object {
         }
         if ($sGene) {
             $aSQL[] = $sGene;
+            $this->nID = $sGene; // We need the ajax script to have the same restrictions!!!
         }
         $q = $_DB->query($sSQL, $aSQL);
         while ($z = $q->fetchAssoc()) {

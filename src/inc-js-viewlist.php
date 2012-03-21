@@ -303,6 +303,7 @@ if (!isset($_GET['nohistory'])) {
                 sGET = (sGET? sGET + '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
             }
         }
+        // Gather changed checkbox IDs and send, too.
         if (!$.isEmptyObject(check_list[sViewListID])) {
             if ($.isArray(check_list[sViewListID])) {
                 var sIDlist = check_list[sViewListID].join(';');
@@ -345,6 +346,7 @@ function lovd_stretchInputs (id)
 {
     // Stretches the input fields for search terms on all columns, since the
     // column's size may be stretched because of the data contents.
+
     var aColumns = $("#viewlistTable_"+id+" th");
     var nColumns = aColumns.size();
     for (var i = 0; i < nColumns; i ++) {
@@ -358,14 +360,12 @@ function cancelParentEvent (event)
 {
     // Cancels the event from the parent element.
     if ('bubbles' in event) {   
-        // all browsers except IE before version 9
+        // All browsers except IE before version 9.
         if (event.bubbles) {
             event.stopPropagation();
         }
-    }
-    else {  
+    } else {
         // Internet Explorer before version 9
-        // always cancel bubbling
         event.cancelBubble = true;
     }
 }
@@ -399,32 +399,32 @@ function lovd_activateMenu (sViewListID)
     // Activates the jeegoocontext menu for this viewList, if enabled.
     if ($('#viewlistOptionsButton_' + sViewListID).attr('id') != undefined) {
         // Options menu requested.
-        $(function(){
-          var aMenuOptions = {
-            event: "click",
-            openBelowContext: true,
-            autoHide: true,
-            delay: 1000,
-            onSelect: function(e, context) {
-              // e.stopPropagation(); // Doesn't do anything... :(
-              if ($(this).hasClass("disabled")) {
-                return false;
-              } else if ($(this).find('a').attr('href') != undefined) {
-                window.location = $(this).find('a').attr('href');
-                return true; // True closes the menu.
-              } else if ($(this).find('a').attr('click') != undefined) {
-                eval($(this).find('a').attr('click'));
-                return true; // True closes the menu.
-              } else {
-                return false;
-              }
-            },
-          };
-          // Because amount may have changed, reset "Select all" link.
-          var nTotal = $('#viewlistForm_' + sViewListID + ' input[name="total"]').eq(0).val();
-          $('#viewlistMenu_' + sViewListID + ' li').eq(0).find('span').eq(1).html(nTotal + ' entr' + (nTotal != 1? 'ies' : 'y'));
-          // Add menu to options icon.
-          $('#viewlistOptionsButton_' + sViewListID).jeegoocontext('viewlistMenu_' + sViewListID, aMenuOptions);
+        $(function() {
+            var aMenuOptions = {
+                event: "click",
+                openBelowContext: true,
+                autoHide: true,
+                delay: 1000,
+                onSelect: function(e, context) {
+                    // e.stopPropagation(); // Doesn't do anything... :(
+                    if ($(this).hasClass("disabled")) {
+                        return false;
+                    } else if ($(this).find('a').attr('href') != undefined) {
+                        window.location = $(this).find('a').attr('href');
+                        return true; // True closes the menu.
+                    } else if ($(this).find('a').attr('click') != undefined) {
+                        eval($(this).find('a').attr('click'));
+                        return true; // True closes the menu.
+                    } else {
+                        return false;
+                    }
+                },
+            };
+            // Because amount may have changed, reset "Select all" link.
+            var nTotal = $('#viewlistForm_' + sViewListID + ' input[name="total"]').eq(0).val();
+            $('#viewlistMenu_' + sViewListID + ' li').eq(0).find('span').eq(1).html(nTotal + ' entr' + (nTotal != 1? 'ies' : 'y'));
+            // Add menu to options icon.
+            $('#viewlistOptionsButton_' + sViewListID).jeegoocontext('viewlistMenu_' + sViewListID, aMenuOptions);
         });
     }
 }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-02-09
+ * Modified    : 2012-02-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -67,7 +67,7 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
                                            'COUNT(DISTINCT s2v.variantid) AS variants, ' .
-                                           'uo.name AS owner, ' .
+                                           'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_SCREENINGS . ' AS s ' .
@@ -82,7 +82,7 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aSQLViewList['SELECT']   = 's.*, ' .
                                           's.id AS screeningid, ' .
                                           'COUNT(DISTINCT s2v.variantid) AS variants, ' .
-                                          'uo.name AS owner';
+                                          'uo.name AS owned_by_';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id)';
@@ -99,7 +99,7 @@ class LOVD_Screening extends LOVD_Custom {
                  $this->buildViewEntry(),
                  array(
                         'variants_found_' => 'Variants found?',
-                        'owner_' => 'Owner name',
+                        'owned_by_' => 'Owner name',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -127,7 +127,7 @@ class LOVD_Screening extends LOVD_Custom {
                         'variants' => array(
                                     'view' => array('Variants found', 120),
                                     'db'   => array('variants', 'ASC', 'INT_UNSIGNED')),
-                        'owner' => array(
+                        'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
                         'created_date' => array(
@@ -274,7 +274,6 @@ class LOVD_Screening extends LOVD_Custom {
             // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
             $zData['variants_found_'] = '<IMG src="gfx/mark_' . $zData['variants_found'] . '.png" alt="" width="11" height="11">';
-            $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner'] . '</A>';
         }
 
         return $zData;

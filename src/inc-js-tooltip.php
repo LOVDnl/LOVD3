@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-06-25
- * Modified    : 2011-08-03
- * For LOVD    : 3.0-alpha-03
+ * Modified    : 2012-03-14
+ * For LOVD    : 3.0-beta-03
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -81,7 +81,7 @@ function lovd_showToolTip (sText, handle)
         oTT.style.top = aPosition[1]+13+'px'; // FIXME; can height of element be used here?
         oTT.style.display = 'block';
         oTT.innerHTML = sText;
-        oTT.firstChild.innerHTML = oTT.firstChild.href; // Put the href URL in the visible part of the link.
+        oTT.firstChild.innerHTML = $(oTT).children(0).attr('href'); // oTT.firstChild.href; // Put the href URL in the visible part of the link.
         oTT.appendChild(imgHide); // Hide icon gets lost when setting innerHTML, re-add it.
         oTT.style.width = 'auto'; // Adapt size of tooltip to contents.
         oTT.style.paddingRight = '20px'; // But leave some space for the image.

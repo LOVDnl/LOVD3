@@ -887,7 +887,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     // Now, build $aCurators, which contains info about the curators currently selected (from DB or, if available, POST!).
     $aCurators = array();
-    if (POST && !empty($_POST['curators'])) {
+    if (!empty($_POST['curators'])) {
         // Form has already been sent. We're here because of errors. Use $_POST.
         // Retrieve data for selected curators and collaborators.
         $qCurators = lovd_queryDB_Old('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
@@ -996,7 +996,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                 });
                 $( '#curator_list' ).disableSelection();
         });
-<?php if (ACTION == 'authorize') { ?>
+
+
+<?php
+    if (ACTION == 'authorize') {
+?>
         function lovd_authorizeUser (sViewListID, nID, sName, nLevel)
         {
             // Moves the user to the Authorized Users block and removes the row from the viewList.
@@ -1043,9 +1047,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
             return true;
         }
-<?php } ?>
-      </SCRIPT>
 <?php
+    }
+
+    print('      </SCRIPT>' . "\n\n");
+
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-03-13
+ * Modified    : 2012-03-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -450,9 +450,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Confirm variant entries for with screening #' . $nID);
-    define('LOG_EVENT', 'ScreeningConfirm');
+    define('LOG_EVENT', 'VariantConfirm');
 
-    $z = $_DB->query('SELECT id, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
+    $z = $_DB->query('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
     $sMessage = '';
     if (!$z) {
         $sMessage = 'The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.';
@@ -468,7 +468,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         require ROOT_PATH . 'inc-bot.php';
         exit;
     } else {
-        $nIndividual = $_DB->query('SELECT individualid FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchColumn();
+        $nIndividual = $z['individualid'];
         $_GET['search_screeningids'] = $_DB->query('SELECT GROUP_CONCAT(id SEPARATOR "|") FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ? GROUP BY individualid', array($nIndividual))->fetchColumn();
     }
 
@@ -481,9 +481,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         // $_SESSION['viewlists']['Screenings_' . $nID . '_confirm']['checked'] stores the IDs of the variants that are supposed to go in TABLE_SCR2VAR.
         if (isset($_SESSION['viewlists']['Screenings_' . $nID . '_confirm']['checked'])) {
             // Check if all checked variants are actually from this individual.
-            $aVariants = $_DB->query('SELECT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($nIndividual))->fetchAllColumn();
+            $aVariantIDs = $_DB->query('SELECT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($nIndividual))->fetchAllColumn();
             foreach ($_SESSION['viewlists']['Screenings_' . $nID . '_confirm']['checked'] as $nVariant) {
-                if (!in_array($nVariant, $aVariants)) {
+                if (!in_array($nVariant, $aVariantIDs)) {
                     // The user tried to fake a $_POST by inserting an ID that did not come from our code.
                     lovd_errorAdd('', 'Invalid variant, please select the variants from the top viewlist!');
                     break;
@@ -502,11 +502,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         if (!lovd_error()) {
             $_DB->beginTransaction();
 
-            $nNotRemoved = 0;
-            $aToRemove = array();
             $aCurrentVariants = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchAllColumn();
-            $nVariantsChecked = 0;
+            $nVariantsChecked = 0; // Amount of variants checked. Determines which options to show after submit.
 
+            // Insert newly confirmed variants.
             $q = $_DB->prepare('INSERT INTO ' . TABLE_SCR2VAR . '(screeningid, variantid) VALUES (?, ?)');
             foreach ($_SESSION['viewlists']['Screenings_' . $nID . '_confirm']['checked'] as $nVariant) {
                 $nVariantsChecked ++;
@@ -516,6 +515,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 }
             }
 
+            // Build list of deselected variants.
+            $aToRemove = array();
+            $nNotRemoved = 0; // Variants that could not be removed, because they would be orphaned otherwise.
             foreach ($aCurrentVariants as $nVariant) {
                 if (!in_array($nVariant, $_SESSION['viewlists']['Screenings_' . $nID . '_confirm']['checked'])) {
                     // If one of the variants currently present in the database is not present in $_SESSION, we will want to remove it.
@@ -523,20 +525,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 }
             }
 
+            // Now, check if the variants that are to be removed, would not end up without any screenings!
             if (!empty($aToRemove)) {
-                $aToRemoveFinal = array();
-                $aCounts = $_DB->query('SELECT variantid, COUNT(screeningid) AS nCount FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ') GROUP BY variantid HAVING nCount > 1', $aToRemove)->fetchAllCombine();
-                // Remove variant from screening...
-                foreach ($aToRemove as $nVariant) {
-                    if (isset($aCounts[$nVariant])) {
-                        $aToRemoveFinal[] = $nVariant;
-                    } else {
-                        $nNotRemoved ++;
-                    }
-                }
+                $aToRemoveFinal = $_DB->query('SELECT variantid, COUNT(screeningid) AS nCount FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ') GROUP BY variantid HAVING nCount > 1', $aToRemove)->fetchAllColumn();
+                // Remove variants from screening...
                 if (!empty($aToRemoveFinal)) {
                     $_DB->query('DELETE FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (?' . str_repeat(', ?', count($aToRemoveFinal) - 1) . ')', array_merge(array($nID), $aToRemoveFinal));
                 }
+                $nNotRemoved = count($aToRemove) - count($aToRemoveFinal);
             }
 
             // If we get here, it all succeeded.
@@ -544,7 +540,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             unset($_SESSION['viewlists']['Screenings_' . $nID . '_confirm']);
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Updated the variant list for screening #' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Updated the list of variants confirmed with screening #' . $nID);
 
             $bSubmit = false;
             $bSubmitIndividual = false;
@@ -581,18 +577,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             }
 
             // Thank the user...
-            if ($nNotRemoved) {
-                header('Refresh: 10; url=' . lovd_getInstallURL() . 'screenings/' . $nID);
-            } else {
-                header('Refresh: 3; url=' . lovd_getInstallURL() . 'screenings/' . $nID);
-            }
+            header('Refresh: ' . ($nNotRemoved? 10 : 3) . '; url=' . lovd_getInstallURL() . 'screenings/' . $nID);
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
             if ($nNotRemoved) {
-                lovd_showInfoTable('Successfully updated the variant list!<BR>' . $nNotRemoved . ' variants could not be removed, because this is the only screening they are connected to.', 'information');
+                lovd_showInfoTable('Successfully updated the list of variants confirmed with this screening!<BR>' . $nNotRemoved . ' variant' . ($nNotRemoved == 1? '' : 's') . ' could not be removed from this screening, because this is the only screening they are connected to.', 'information');
             } else {
-                lovd_showInfoTable('Successfully updated the variant list!', 'success');
+                lovd_showInfoTable('Successfully updated the list of variants confirmed with this screening!', 'success');
             }
 
             require ROOT_PATH . 'inc-bot.php';
@@ -602,6 +594,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Because we're sending the data back to the form, I need to unset the password fields!
             unset($_POST['password']);
         }
+
     } else {
         // Default session values.
         $_SESSION['viewlists']['Screenings_' . $nID . '_confirm']['checked_all'] = false;
@@ -629,7 +622,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                     array('POST', '', '', '', '0%', '0', '100%'),
                     array('', '', 'print', 'Enter your password for authorization'),
                     array('', '', 'password', 'password', 20),
-                    array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_confirm\', function (){ $(\'#confirmVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'screenings/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                    array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_confirm\', function () { $(\'#confirmVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'screenings/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
 

@@ -1,11 +1,15 @@
 Prioritize:
 ===========
-Screenings?confirm binnen een submissie moet nog goed geimplementeerd worden.
-BUG: Data type Wizard moet velden quoten voordat ze weggeschreven worden.
-BUG: text search created_by_ in columns overzicht geeft invalid search expression, terwijl de join naar u.name wel gemaakt is in de code?!!???
+Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
+- De dbSNP custom link in de uitleg een voorbeeld geven, zoals rs12345678.
+- Screenings?confirm binnen een submissie moet nog goed geimplementeerd worden.
+- BUG: Data type Wizard moet velden quoten voordat ze weggeschreven worden.
+- BUG: text search created_by_ in columns overzicht geeft invalid search expression, terwijl de join naar u.name wel gemaakt is in de code?!!???
 - Individu gemaakt, 1 disease gekoppeld zonder phen kolommen, klik op Add phenotype, foutmelding is niet correct: The disease added to this individual do not have phenotype columns enabled yet.
   + Moet "does" zijn.
 - (@Jerry) Na importeren VCF begon hij niet automatisch te mappen.
+  + VCF import: wordt niet gelogd blijkbaar.
+  + Staat er op de VCF import pagina iets om aan te geven, dat de sample data aan het eind genegeerd wordt?
 - Should we maybe set default_socket_timeout somewhere?
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
@@ -83,6 +87,13 @@ BUG: text search created_by_ in columns overzicht geeft invalid search expressio
     -sporadic, consanguinity unknown
 - Unit tests via Selenium (of alternatief)?
   * Hebben we OpenSSL ergens voor nodig?
+- Gene homepage: variant counts zoals voor LOVD 2.0.
+- Variant effect column bij custom viewlist.
+- Custom column enable (VOG bijv): daarna misschien naar een duidelijker overzicht van ENABLED kolommen?
+  + Als je daarna de zoekterm weg laat, staat de link van hersorteren nog steeds onderaan. Misschien category verbergen, en in de header zetten om welke categorie het gaat?
+- Custom columns:
+  + Nieuw: Phenotype/Date, Variant/Times_reported???
+  + Change: VOG|VOT/DNA_published ->  VOG|BOT/Published_as?
 
 - Beta-04:
   - DATA DOWNLOAD.
@@ -120,6 +131,7 @@ BUG: text search created_by_ in columns overzicht geeft invalid search expressio
     + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
   - "Does not accept external submissions" setting? Dat moet dan ook worden doorgegeven, zodat de LOVD/LSDB lijst dat kan aangeven.
     + Apart veld, niet in data.
+  - Email forwards: staat de Reply-To altijd goed? Regelen in lovd_sendMail()?
 
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
@@ -202,6 +214,9 @@ BUG: text search created_by_ in columns overzicht geeft invalid search expressio
   + To check whether the proxy succeeded in contacting the real target host, you need to look for the http response code
     in the headers that get returned. Typically, if the proxy was unable to reach the host, you'll find a line containing something like:
     HTTP/1.0 503 Service Unavailable
+- lovd_setUpdatedDate() implementeren.
+From LOVD 2.0:
+  + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 
 
 
@@ -236,7 +251,6 @@ Ook belangrijk, maar iets minder:
   + History/revision control: misschien max 5 levels terug ofzo? Instellen ergens? Of een bepaalde tijd maar? Auto clean up?
   + Revisie aanmaken ja/nee is een optie, ik hoef dan niet in de system settings te kiezen om dit aan of uit te zetten?
     * Hmm... anders: die optie kan gebruikt worden om te FORCEN dat er ALTIJD een nieuwe revisie aan gehangen wordt. Je kunt zonder die optie er voor kiezen, maar als het aan staat is het gewoon altijd zo.
-- lovd_setUpdatedDate() implementeren.
 - Custom viewList heeft nog geen phenotype data.
 - Hash moet ook meegestuurd worden naar login.php zodat de user naar de juiste pagina terug kan worden redirect.
 - Curator aanstellen voor aandoeningen? Hebben alleen rechten op phenotype entries van de ziektes waar ze curator van zijn, plus de aansluitende individuen.

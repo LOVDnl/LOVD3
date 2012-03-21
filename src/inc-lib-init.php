@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-03-18
+ * Modified    : 2012-03-19
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -490,7 +490,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     // Returns false, 0 or 1, depending on the authorization level of the user.
     // False: not allowed to view hidden data, not allowed to edit.
     // 0    : allowed to view hidden data, not allowed to edit (LEVEL_COLLABORATOR).
-    // 1    : allowed to view hidden data, allowed to edit (LEVEL_CURATOR).
+    // 1    : allowed to view hidden data, allowed to edit (LEVEL_OWNER || LEVEL_CURATOR).
     // Returns 1 by default for any user with level LEVEL_MANAGER or higher.
     global $_AUTH, $_DB, $_CONF;
 
@@ -536,7 +536,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         $Data = array($Data);
     }
 
-    switch($sType) {
+    switch ($sType) {
         // Queries for every data type.
         case 'transcript':
             $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
@@ -546,20 +546,20 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
             return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
         case 'variant':
             $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
-            $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
             $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
+            break;
         case 'individual':
             $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
-            $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
             $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
+            break;
         case 'phenotype':
             $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (s.individualid = p.individualid) WHERE p.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
-            $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
             $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
+            break;
         case 'screening':
             $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
-            $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
             $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
+            break;
         default:
             return false;
     }
@@ -843,7 +843,7 @@ function lovd_requireAUTH ($nLevel = 0)
 
     // $nLevel is now 0 (just existence of $_AUTH required) or taken from the levels list.
     if ((!$nLevel && !$_AUTH) || ($nLevel && (!$_AUTH || $_AUTH['level'] < $nLevel))) {
-        if (!defined('_INC_TOP_INCLUDED_')) {
+        if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {
             if (is_readable('inc-top.php')) {
                 require 'inc-top.php';
             } else {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-13
+ * Modified    : 2012-03-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -71,7 +71,7 @@ class LOVD_Individual extends LOVD_Custom {
                                            // FIXME; een niet-standaard separator is misschien niet zo handig voor de standaardisatie.
                                            'GROUP_CONCAT(DISTINCT s.id SEPARATOR "|") AS screeningids, ' .
                                            'uo.id AS owner, ' .
-                                           'uo.name AS owner_, ' .
+                                           'uo.name AS owned_by_, ' .
                                            'ds.name AS status, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -93,7 +93,7 @@ class LOVD_Individual extends LOVD_Custom {
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY d.symbol SEPARATOR ", ") AS diseases_, ' .
                                           'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ", ") AS genes_screened_, ' .
                                           '(SELECT COUNT(*) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = s.id) AS variants_, ' . 
-                                          'uo.name AS owner, ' .
+                                          'uo.name AS owned_by_, ' .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) ' .
@@ -113,7 +113,7 @@ class LOVD_Individual extends LOVD_Custom {
                  array(
                         'panelid_' => 'Panel ID',
                         'panel_size' => 'Panel size',
-                        'owner_' => 'Owner name',
+                        'owned_by_' => 'Owner name',
                         'status' => 'Individual data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
@@ -151,7 +151,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'panel_size' => array(
                                     'view' => array('Panel size', 70),
                                     'db'   => array('i.panel_size', 'DESC', true)),
-                        'owner' => array(
+                        'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
                         'status' => array(
@@ -326,7 +326,6 @@ class LOVD_Individual extends LOVD_Custom {
 
         if ($sView == 'entry') {
             $zData['panelid_'] = (!empty($zData['panelid'])? '<A href="individuals/' . $zData['panelid'] . '">' . $zData['panelid'] . '</A>' : '-');
-            $zData['owner_'] = '<A href="users/' . $zData['owner'] . '">' . $zData['owner_'] . '</A>';
         }
 
         return $zData;

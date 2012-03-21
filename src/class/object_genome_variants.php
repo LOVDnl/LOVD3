@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-02-21
+ * Modified    : 2012-03-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -64,7 +64,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aSQLViewEntry['SELECT']   = 'vog.*, ' .
                                            'GROUP_CONCAT(DISTINCT s.individualid SEPARATOR ";") AS _individualids, ' .
                                            'GROUP_CONCAT(s2v.screeningid SEPARATOR "|") AS screeningids, ' .
-                                           'uo.name AS owner_, ' .
+                                           'uo.name AS owned_by_, ' .
                                            'ds.name AS status, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -83,7 +83,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                           // FIXME; de , is niet de standaard.
                                           'GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
                                           'e.name AS effect, ' .
-                                          'uo.name AS owner, ' .
+                                          'uo.name AS owned_by_, ' .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
@@ -105,7 +105,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ),
                  $this->buildViewEntry(),
                  array(
-                        'owner_' => 'Owner',
+                        'owned_by_' => 'Owner',
                         'status' => 'Variant data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
@@ -125,6 +125,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'id_' => array(
                                     'view' => array('Variant ID', 90),
                                     'db'   => array('vog.id', 'ASC', true)),
+                        'effect' => array(
+                                    'view' => array('Effect', 70),
+                                    'db'   => array('e.name', 'ASC', 'TEXT')),
                         'chromosome' => array(
                                     'view' => array('Chr', 50),
                                     'db'   => array('vog.chromosome', 'ASC', true)),
@@ -134,13 +137,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'allele_' => array(
                                     'view' => array('Allele', 120),
                                     'db'   => array('vog.allele', 'ASC', true)),
-                        'effect' => array(
-                                    'view' => array('Affects function', 70),
-                                    'db'   => array('e.name', 'ASC', 'TEXT')),
-                        'type' => array(
-                                    'view' => array('Type', 70),
-                                    'db'   => array('vog.type', 'ASC', true)),
-                        'owner' => array(
+                        'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
                         'status' => array(
@@ -337,7 +334,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             foreach ($zData['individualids'] as $nID) {
                 $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
             }
-            $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner_'] . '</A>';
             $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
             $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
         }

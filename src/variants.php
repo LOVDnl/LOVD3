@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-03-13
+ * Modified    : 2012-03-19
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -155,7 +155,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
 
     if ($nTranscripts > 0) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
-        $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'));
+        $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome'));
     }
@@ -315,10 +315,9 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
         require ROOT_PATH . 'inc-lib-form.php';
 
-        $nIndividual = $_DB->query('SELECT individualid FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target']))->fetchColumn();
-        $aVariants = $_DB->query('SELECT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($nIndividual))->fetchAllColumn();
-
         if ($_GET['target']) {
+            $nIndividual = $_DB->query('SELECT individualid FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target']))->fetchColumn();
+            $aVariants = $_DB->query('SELECT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($nIndividual))->fetchAllColumn();
             $aOptionsList = array('width' => 600);
             if (!count($aVariants)) {
                 $aOptionsList['options'][0]['disabled'] = true;
@@ -328,7 +327,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
             $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to confirm variants found using this screening &raquo;&raquo;</B>';
 
-            print('      Do you want to add already submitted variants with this screening?<BR><BR>' . "\n\n");
+            print('      Do you want to confirm already submitted variants with this screening?<BR><BR>' . "\n\n");
             print(lovd_buildOptionTable($aOptionsList));
         }
 
@@ -447,6 +446,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                             $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
                             $_POST[$nTranscriptID . '_position_c_end_intron'] = $aOutput['endoffset'][0]['v'];
                         } else {
+                            // FIXME; maybe merge this else and the else below, since they contain the same code?
                             $_POST[$nTranscriptID . '_position_c_start'] = 0;
                             $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
                             $_POST[$nTranscriptID . '_position_c_end'] = 0;
@@ -606,12 +606,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             echo '$( \'input[name="ignore_' . substr($key, 7, 5) . '"]\' ).attr(\'checked\', true).trigger(\'click\').attr(\'checked\', true);' . "\n";
         }
     }
-?>
 
-</SCRIPT>
+    print("\n" . 
+          '      </SCRIPT>' . "\n\n");
 
-
-<?php
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
@@ -1126,6 +1124,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     print("\n" .
           '      </FORM>' . "\n\n");
 ?>
+
       <SCRIPT type='text/javascript'>
         function lovd_addTranscript (sViewListID, nID, sGene, sName, sNM)
         {

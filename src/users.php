@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-02-10
+ * Modified    : 2012-03-12
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -737,7 +737,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
             $_DB->query('UPDATE ' . TABLE_USERS . ' SET created_by = id WHERE id = ?', array($nID));
 
             $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
-            $_AUTH &= $_SESSION['auth'];
+            $_AUTH =& $_SESSION['auth'];
+            // To prevent notices in the inc-bot.php for instance...
+            $_AUTH['curates']      = array();
+            $_AUTH['collaborates'] = array();
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
@@ -782,7 +785,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
             $sBody = lovd_formatMail($aBody);
 
             // Set proper subject.
-            $sSubject = 'LOVD registration';
+            $sSubject = 'LOVD registration'; // Don't just change this; lovd_sendMail() is parsing it.
 
             // Send mail.
             $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers']);

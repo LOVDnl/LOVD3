@@ -65,6 +65,10 @@ if (ACTION == 'edit') {
             // Standard fields to be used.
             // FIXME; we can't use updateEntry() right now, because that needs an ID (and damn right, too). Now this is more manual work. Can we fix/bypass that?
             // FIXME; refseq_build is now just removed. Under certain conditions maybe it should be possible to change this setting, though.
+            // FIXME; if you'd want to add stuff here, don't forget that in class/object_system_settings three variables are actively turned off:
+            //$_POST['api_feed_history'] = 0;
+            //$_POST['allow_count_hidden_entries'] = 0;
+            //$_POST['use_versioning'] = 0;
             $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'api_feed_history', 'proxy_host', 'proxy_port', 'logo_uri', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
 
             // Prepare values.

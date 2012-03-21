@@ -29,8 +29,26 @@
  * Fixed bug; LOVD 3.0 could not connect to external sources through a proxy
    server.
    Closes #3: "Allow LOVD to work behind a proxy".
+   (thanks to Susan McCafferty, University of Glasgow, UK, for reporting)
+   (thanks to Chris Watson, St. James's Univ. Hospital, Leeds, UK, for testing)
  * Fixed bug; When incorrect MySQL data was filled in the config.ini, LOVD would
    now show a correct error message on the screen.
+ * Fixed bug; lovd_matchURL() didn't correctly parse the given URLs that could
+   result in false positives or false negatives.
+ * Fixed bug; The email sent after a submitter registers, did not contain a
+   proper link directly to the user's profile.
+ * The email forwarded to the admin after a submitter registers, now has a
+   proper Reply-To header.
+ * Fixed notice directly after a submitter registers.
+ * Fixed bug; "Not authorized" messages would include the header even if the
+   "clean" header was already included before.
+ * Fixed bug; On servers where MySQL had the ONLY_FULL_GROUP_BY setting enabled,
+   custom columns could not be edited nor enabled.
+ * Fixed bug; lovd_isAuthorized() returned false for users lower than managers
+   when authorizing for variants, individuals, phenotypes and screenings.
+ * Slightly optimized lovd_isAuthorized().
+ * Fixed bug; It was not possible to activate the "Forward messages to database
+   admin" or "Enable submitters to change data" settings.
 
 
 
@@ -47,7 +65,7 @@
    the variant gets mapped on.
  * Fixed bug; Internal transcript start and stop positions that are pulled from
    mutalyzer were not correct.
- * Fixed bug; When clicking on a separator line in the tab menu, LOVD woud
+ * Fixed bug; When clicking on a separator line in the tab menu, LOVD would
    redirect to /undefined, which would result in a 404 error.
  * Fixed bug; If LOVD was upgrading to a newer version, when redirecting back
    to the page where the user came from some pages would throw an error.

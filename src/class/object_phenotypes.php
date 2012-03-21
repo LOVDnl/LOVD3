@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-09
+ * Modified    : 2012-03-21
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,7 +63,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
                                            'd.symbol AS disease, ' .
-                                           'uo.name AS owner_, ' .
+                                           'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
@@ -76,7 +76,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         // SQL code for viewing the list of genes
         $this->aSQLViewList['SELECT']   = 'p.*, ' .
                                           'p.id AS phenotypeid, ' .
-                                          'uo.name AS owner';
+                                          'uo.name AS owned_by_';
         $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id)';
 
@@ -94,7 +94,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                       ),
                  $this->buildViewEntry(),
                  array(
-                        'owner_' => 'Owner name',
+                        'owned_by_' => 'Owner name',
                         'status_' => 'Phenotype data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
@@ -117,9 +117,9 @@ class LOVD_Phenotype extends LOVD_Custom {
                       ),
                  $this->buildViewList(),
                  array(
-                        'owner' => array(
+                        'owned_by_' => array(
                                     'view' => array('Owner', 160),
-                                    'db'   => array('owner', 'ASC', true)),
+                                    'db'   => array('uo.name', 'ASC', true)),
                         'individualid' => array(
                                     'view' => array('Individual ID', 70),
                                     'db'   => array('p.individualid', 'ASC', true)),
@@ -252,7 +252,6 @@ class LOVD_Phenotype extends LOVD_Custom {
         if ($sView == 'entry') {
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
             $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';
-            $zData['owner_'] = '<A href="users/' . $zData['owned_by'] . '">' . $zData['owner_'] . '</A>';
             $zData['status_'] = $_SETT['data_status'][$zData['statusid']];
         }
 
