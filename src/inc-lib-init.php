@@ -1062,4 +1062,29 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage)
     $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage), false);
     return (bool) $q;
 }
+
+
+
+
+
+function lovd_convertIniValueToBytes ($sValue)
+{
+    // This function takes output from PHP's ini_get() function like "128M" or
+    // "256k" and converts it to an integer, measured in bytes.
+    // Implementation taken from the example on php.net.
+    // FIXME; Implement proper checks here? Regexp?
+
+    $nValue = (int) $sValue;
+    $sLast = strtolower($sValue[strlen($sValue) - 1]);
+    switch($sLast) {
+        case 'g':
+            $nValue *= 1024;
+        case 'm':
+            $nValue *= 1024;
+        case 'k':
+            $nValue *= 1024;
+    }
+
+    return $nValue;
+}
 ?>

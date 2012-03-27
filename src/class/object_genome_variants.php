@@ -105,6 +105,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ),
                  $this->buildViewEntry(),
                  array(
+                        'mapping_flags_' => array('Automatic mapping', LEVEL_COLLABORATOR),
                         'owned_by_' => 'Owner',
                         'status' => 'Variant data status',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -127,7 +128,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'db'   => array('vog.id', 'ASC', true)),
                         'effect' => array(
                                     'view' => array('Effect', 70),
-                                    'db'   => array('e.name', 'ASC', 'TEXT')),
+                                    'db'   => array('e.name', 'ASC', 'true')),
                         'chromosome' => array(
                                     'view' => array('Chr', 50),
                                     'db'   => array('vog.chromosome', 'ASC', true)),
@@ -143,6 +144,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'status' => array(
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true)),
+                        'created_by' => array(
+                                    'view' => false,
+                                    'db'   => array('vog.created_by', false, true)),
+                        'created_date' => array(
+                                    'view' => false,
+                                    'db'   => array('vog.created_date', 'ASC', 'DATETIME')),
                       ));
 
         $this->sSortDefault = 'VariantOnGenome/DNA';
@@ -317,7 +324,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
 
-        global $_SETT;
+        global $_SETT, $_AUTH;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -336,6 +343,39 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
             $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
             $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
+
+            if ($zData['mapping_flags'] & MAPPING_ALLOW) {
+                $sMappingLinkText  = '';
+                $sMappingLinkTitle = '';
+                if ($zData['mapping_flags'] & MAPPING_NOT_RECOGNIZED) {
+                    $zData['mapping_flags_'] = 'Variant not recognized';
+                    if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
+                        $zData['mapping_flags_'] .= ' (would have created a gene if needed)';
+                    }
+                    $sMappingLinkText = 'Retry';
+                } elseif ($zData['mapping_flags'] & MAPPING_DONE) {
+                    $zData['mapping_flags_'] = 'Done';
+                    if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
+                        $zData['mapping_flags_'] .= ' (created a gene if needed)';
+                    }
+                    $sMappingLinkText  = 'Map again';
+                    $sMappingLinkTitle = 'If new transcripts have been added to LOVD, this will try to map this variant to them.';
+                } else {
+                    $zData['mapping_flags_'] = 'Scheduled';
+                    if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
+                        $zData['mapping_flags_'] .= ', creating a gene if needed';
+                    }
+                    if ($zData['mapping_flags'] & MAPPING_ERROR) {
+                        $zData['mapping_flags_'] .= ' (encountered a problem on the last attempt)';
+                    }
+                    $sMappingLinkText = 'Map now';
+                }
+                if ($_AUTH['level'] >= LEVEL_OWNER) {
+                    $zData['mapping_flags_'] .= ' <SPAN style="float: right" id="mapOnRequest"><A href="#" onclick="return lovd_mapOnRequest();"' . (!$sMappingLinkTitle? '' : ' title="' . $sMappingLinkTitle . '"') . '>' . $sMappingLinkText . '</A></SPAN>';
+                }
+            } else {
+                $zData['mapping_flags_'] = 'Off';
+            }
         }
 
         $zData['allele_'] = $_SETT['var_allele'][$zData['allele']];

@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-15
- * Modified    : 2011-04-14
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2012-02-08
+ * For LOVD    : 3.0-beta-02
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -36,7 +36,7 @@ if (preg_match('/^(\d+)([KM])/', ini_get('memory_limit'), $aMatches) && ($aMatch
 function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
 {
     /*
-        Converts a XML file into an array
+        Converts an XML file into an array
 
         Arguments:
             -$xml                   A string containing the xml, can be with or without newlines/whitespaces
@@ -108,26 +108,57 @@ function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
         exit;
     }
 
-    if (preg_match("/<\?xml(?U:.+)? encoding=[\"|']?([^\"|^']+)[\"|']?\?>/", $sXml, $aMatches)) {
+    // Find out the input character encoding. The pattern matches any XML tag, with or without attributes, with attributes in any order (in $aMatches[0]).
+    // Extracts encodings specified like: [ encoding=UTF-8], [ encoding="UTF-8"] or [ encoding='UTF-8'] (excluding the braces; always in $aMatches[1]).
+    // We'll try to parse the file in the specified encoding, if it fails (because the source specified the wrong encoding) we try UTF-8, then ISO-8859-15.
+    $aEncodings = array('UTF-8', 'ISO-8859-15');
+    if (preg_match("/<\?xml(?:.*?(?: encoding=(?|\"([^\"]+)\"|'([^']+)'|(\S+)).*?)?)?\?>/i", $sXml, $aMatches) && !empty($aMatches[1])) {
+        // We don't want to try the same encoding twice, so if it's ISO-8859-X or UTF-8, don't retry that one.
         $sEncoding = strtoupper($aMatches[1]);
-    } else {
-        $sEncoding = 'UTF-8'; // We want to tell the parser what encoding to use(PHP4) even if we don't know which one is being used.
-    }
-    $rParser = xml_parser_create($sEncoding);
-    xml_parser_set_option($rParser, XML_OPTION_CASE_FOLDING, 0);                             // Don't use case-folding
-    xml_parser_set_option($rParser, XML_OPTION_SKIP_WHITE, 0);                               // Don't skip tags that contain only whitespaces
-    if ($sPrefixSeperator != '') {
-        if (is_int($sPrefixSeperator)) {
-            xml_parser_set_option($rParser, XML_OPTION_SKIP_TAGSTART, $sPrefixSeperator);    // Skips the first n characters from the tag names
-        } elseif (is_string($sPrefixSeperator)) {
-            $sXml = preg_replace('/(<\/?)\w+\\' . $sPrefixSeperator . '/', '$1', $sXml);     // Skips all characters until the prefix seperator
-        } else{
-            echo 'Please provide valid arguments, $sPrefixSeperator should be either and integer or a string!';
-            exit;
+        if ($sEncoding == 'UTF-8') {
+            array_shift($aEncodings);
+        } elseif (preg_match('/^ISO-8859-(?:[1-9]|1[013456])$/', $sEncoding)) {
+            array_pop($aEncodings);
         }
     }
-    xml_parse_into_struct($rParser, $sXml, $aTags);
-    xml_parser_free($rParser);
+    
+    // If no encoding is specified, we should specify it now!
+    else {
+        // We'll try UTF-8 first. If UTF-8 fails, retry with ISO-8859-15.
+        $sXml = preg_replace("/(?<=<\?xml)(?=.*?\?>)/", ' encoding="' . array_shift($aEncodings) . '"', $sXml);
+    }
+    
+    // Trying at most 2 times (once with the original encoding, once with mb_detect_encoding()'s suggestion).
+    $i = 2;
+    do {
+        $rParser = xml_parser_create();
+        xml_parser_set_option($rParser, XML_OPTION_CASE_FOLDING, 0);                             // Don't use case-folding
+        xml_parser_set_option($rParser, XML_OPTION_SKIP_WHITE, 0);                               // Don't skip tags that contain only whitespaces
+        if ($sPrefixSeperator != '') {
+            if (is_int($sPrefixSeperator)) {
+                xml_parser_set_option($rParser, XML_OPTION_SKIP_TAGSTART, $sPrefixSeperator);    // Skips the first n characters from the tag names
+            } elseif (is_string($sPrefixSeperator)) {
+                $sXml = preg_replace('/(<\/?)\w+\\' . $sPrefixSeperator . '/', '$1', $sXml);     // Skips all characters until the prefix seperator
+            } else{
+                echo 'Please provide valid arguments, $sPrefixSeperator should be either an integer or a string!';
+                exit;
+            }
+        }
+        xml_parse_into_struct($rParser, $sXml, $aTags);
+        $nParserErrorCode = xml_get_error_code($rParser);
+        xml_parser_free($rParser);
+
+        // Check if parsing succeeded with this character encoding.
+        if (!$nParserErrorCode) {
+            break;
+        }
+        
+        // Parsing failed. Detect alternative encoding.
+        if (!$sEncoding = mb_detect_encoding($sXml, $aEncodings)) {
+            exit('The provided XML document cannot be parsed because it contains invalid data.');
+        }
+        $sXml = preg_replace("/(?<= encoding=)(?|\"[^\"]+\"|'[^']+'|\S+)(?=.*?\?>)/i", '"' . $sEncoding . '"', $sXml);
+    } while (-- $i);
 
     $aStructure = array();
     $aStack = array();
@@ -239,8 +270,11 @@ function lovd_getAllValuesFromArray ($sPath = '', $aArray = array())
     
     foreach ($aArray as $entity => $index) {
         foreach ($index as $elements) {
-            $aValues[$entity] = $elements['v'];
+            $aValues[$entity][] = $elements['v'];
         } 
+        if (count($aValues[$entity]) == 1) {
+            $aValues[$entity] = $aValues[$entity][0];
+        }
     }
     return $aValues;
 }

@@ -118,7 +118,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['FROM'] = TABLE_VARIANTS . ' AS vog';
                         $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS)->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vog.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
-                        $aSQL['ORDER_BY'] = 'vog.chromosome ASC, vog.position_start';
+                        $aSQL['ORDER_BY'] = 'vog.chromosome ASC, vog.position_g_start';
                     } else {
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS . ' AS vog ON (';
                         $nKeyVOT = array_search('VariantOnTranscript', $aObjects);

@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-01-02
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-22
+ * For LOVD    : 3.0-beta-02
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -97,54 +98,56 @@ if (!defined('_NOT_INSTALLED_')) {
 </TABLE>
 
 </TD></TR></TABLE>
-
-<?php
-lovd_includeJS('inc-js-ajax.php', 0);
-?>
-
 <SCRIPT type="text/javascript">
   <!--
-  objImg = document.getElementById('mapping_progress');
 <?php
-// Map variants to the genome in the background...
-// Define function that will request the mapping of the variants. It will return a gene name, and a percentage (in 6.25% parts).
-// That data is used then by this JS function to reload the image. Almost inmediately, it will repeat itself.
-/*////////////////////////////////////////////////////////////////////////////++
-//////// Please note that the name of the AJAX function and the use of the function have changed.
 print('
-function lovd_mapVariants () {
-    // Request file that will do the actual work.
-    objHTTP = lovd_HTTPRequest("' . lovd_getInstallURL() . 'ajax/map_variants");
+function lovd_mapVariants ()
+{
+    // This function requests the script that will do the actual work.
 
-    if (!objHTTP || objHTTP.status != 200) {
-            // Don\'t try again.
-            objImg.src = "' . ROOT_PATH . 'gfx/lovd_mapping_99.png";
-            objImg.title = "There was a problem with LOVD while mapping variants to the genome.";
-    } else {
-        aResponse = objHTTP.responseText.split("\t");
-        objImg.src = "' . ROOT_PATH . 'gfx/lovd_mapping_" + aResponse[0] + ".png";
-        objImg.title = aResponse[1];
+    // First unbind any onclick handlers on the status image.
+    $("#mapping_progress").unbind();
 
-        if (aResponse[1] != "All done!") {
-            setTimeout("lovd_mapVariants()", 50);
-        } else {
-            objImg.setAttribute("onclick", "lovd_mapVariants();");
+    // Now request the script.
+    $.get("' . ROOT_PATH . 'ajax/map_variants.php", function (sResponse)
+        {
+            // The server responded successfully. Let\'s see what he\'s saying.
+            aResponse = sResponse.split("\t");
+            $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_" + aResponse[1] + ".png", "title": aResponse[2]});
+
+            if (sResponse.indexOf("Notice") >= 0 || sResponse.indexOf("Warning") >= 0 || sResponse.indexOf("Error") >= 0 || sResponse.indexOf("Fatal") >= 0) {
+                // Something went wrong while processing the request, don\'t try again.
+                $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to the genome."});
+            } else if (aResponse[0] == "' . AJAX_TRUE . '") {
+                // More variants to map. Re-call.
+                setTimeout("lovd_mapVariants()", 50);
+            } else {
+                // No more variants to map. But allow the user to try.
+                $("#mapping_progress").click(lovd_mapVariants);
+            }
         }
-    }
+    ).error(function ()
+        {
+            // Something went wrong while contacting the server, don\'t try again.
+            $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to the genome."});
+        }
+    );
 }
-
 ');
 
-// Not every page request should trigger the mapping... if it is longer than one day ago that mapping was complete, we will start again.
-if (empty($_SESSION['mapping']['time_complete']) || $_SESSION['mapping']['time_complete'] < (time() - 60*60*24)) {
-    $_SESSION['mapping']['genes'] = lovd_getGeneList();
-    print('setTimeout("lovd_mapVariants()", 500);' . "\n");
+// Not every page request should trigger the mapping...
+if (!empty($_SESSION['mapping']['time_complete']) && $_SESSION['mapping']['time_complete'] >= (time() - 60 * 60 * 24)) {
+    // If it is less than one day ago that mapping was complete, don't start it automatically.
+    print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
+} elseif (!empty($_SESSION['mapping']['time_error']) && $_SESSION['mapping']['time_error'] >= (time() - 60 * 60)) {
+    // If it is less than one hour ago that an error occurred, don't start it either.
+    print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
+    print('$("#mapping_progress").attr("Title", "Mapping is temporarily suspended because of network problems on the last attempt. Click to retry.");' . "\n");
 } else {
     // If we won't start it, the user should be able to start it himself.
-    // W3C only... Too bad, IE.
-    print('objImg.setAttribute("onclick", "lovd_mapVariants();");' . "\n");
+    print('setTimeout("lovd_mapVariants()", 500);' . "\n");
 }
-*/////////////////////////////////////////////////////////////////////////////--
 ?>
   // -->
 </SCRIPT>

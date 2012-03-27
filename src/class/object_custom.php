@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-01-11
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-02-29
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -305,9 +305,11 @@ class LOVD_Custom extends LOVD_Object {
         // Gathers the columns which are active for the current data type and returns them in a viewList format
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
+            $bAlignRight = preg_match('/^(DEC|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);
+            
             $aViewList[$sID] = 
                             array(
-                                    'view' => array($aCol['head_column'], $aCol['width']),
+                                    'view' => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
                                     'db'   => array('`' . $aCol['colid'] . '`', 'ASC', true),
                                  );
         }

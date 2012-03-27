@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-03-26
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -65,36 +65,49 @@ function lovd_getNGbyGeneSymbol ($sGeneSymbol)
 
 
 
-function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = true)
+function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
 {
     // Downloads gene information from the HGNC website. The specified columns will be retrieved.
+    // The first argument can be an HGNC accession number, an HGNC approved gene symbol, or boolean true to retrieve ALL genes.
+    // The results will be returned as an associative array; in case all genes have been loaded an array of arrays is returned with gene symbols as keys.
     // If $bRecursion == true, this function automatically handles deprecated HGNC entries.
     // On error, this function calls lovd_errorAdd if inc-lib-form.php was included. It always returns false on failure.
     
-    // Process columns. We need the gd_app_name column to check for withdrawn or deprecated entries.
+    // Process columns.
+    $aColumns = $aCols; // $aColumns will be extended with more information, whereas $aCols is used for the return value and as such should not be changed.
     $sColumns = '';
-    $nGdAppNameKey = -1;
-    $bReturnGdAppName = false;
-    foreach (array_values($aCols) as $nKey => $sColumn) {
+    foreach ($aCols as $sColumn) {
         $sColumns .= 'col=' . $sColumn . '&';
-        if ($sColumn == 'gd_app_name') {
-            $nGdAppNameKey = $nKey;
-            $bReturnGdAppName = true;
+    }
+    
+    // Make sure we request the right data.
+    if ($sHgncId === true) {
+        // Boolean true; return bulk data.
+        $sWhere = '';
+
+        // Using approved symbols as array keys, so we need to get them from the HGNC.
+        if (!in_array('gd_app_sym', $aCols)) {
+            $sColumns .= 'col=gd_app_sym&';
+            $aColumns[] = 'gd_app_sym';
+        }
+    } else {
+        if (ctype_digit($sHgncId)) {
+            // HGNC database ID.
+            $sWhere = 'gd_hgnc_id%3D' . $sHgncId;
+        } else {
+            // FIXME; implement proper check on gene symbol.
+            // Gene symbol; also match SYMBOL~withdrawn to be able to use a deprecated symbol as search key.
+            $sWhere = 'gd_app_sym%20IN%28%22' . $sHgncId . '%22%2C%22' . $sHgncId . '%7Ewithdrawn%22%29';
+        }
+
+        // We also surely need gd_app_name to check for and handle withdrawn or deprecated entries.
+        if (!in_array('gd_app_name', $aCols)) {
+            $sColumns .= 'col=gd_app_name&';
+            $aColumns[] = 'gd_app_name';
         }
     }
-    if ($nGdAppNameKey == -1) {
-        $sColumns .= 'col=gd_app_name&';
-        $nGdAppNameKey = $nKey + 1;
-    }
-    
-    // Request the data.
-    if (ctype_digit($sHgncId)) {
-        $sWhere = 'gd_hgnc_id%3D' . $sHgncId;
-    } else {
-        $sWhere = 'gd_app_sym%3D%22' . $sHgncId . '%22';
-    }
     $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
-    
+
     // If the HGNC is having database problems, we get an HTML page.
     if (empty($aHgncFile) || stripos(implode($aHgncFile), '<html') !== FALSE) {
         if (function_exists('lovd_errorAdd')) {
@@ -103,37 +116,57 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = true)
         return false;
     }
     
-    if (isset($aHgncFile['1'])) {
+    if ($sHgncId === true) {
+        // Got bulk data.
+
+        array_shift($aHgncFile);
+        foreach ($aHgncFile as $sGene) {
+            $aGene = array_combine($aColumns, explode("\t", $sGene));
+            $sSymbol = str_replace('~withdrawn', '', $aGene['gd_app_sym']);
+            if (!empty($aHGNCgenes[$sSymbol]) && $sSymbol != $aGene['gd_app_sym']) {
+                // Symbol has been deprecated and then reassigned to another gene, don't overwrite that one.
+                continue;
+            }
+            $aHGNCgenes[$sSymbol] = $aGene;
+            foreach (array_diff($aColumns, $aCols) as $sUnwantedColumn) {
+                // Don't return columns the caller hasn't asked for.
+                unset($aHGNCgenes[$sSymbol][$sUnwantedColumn]);
+            }
+        }
+        return $aHGNCgenes;
+    }
+
+    // Requested single entry.
+    if (isset($aHgncFile[1])) {
         // Looks like we've got valid data here.
-        $aHgncFile['1'] = explode("\t", $aHgncFile['1']);
-        if ($aHgncFile['1'][$nGdAppNameKey] == 'entry withdrawn') {
+        $aGene = array_combine($aColumns, explode("\t", $aHgncFile[1]));
+        if ($aGene['gd_app_name'] == 'entry withdrawn') {
             if (function_exists('lovd_errorAdd')) {
-                lovd_errorAdd('', 'Entry ' . $sHgncId . ' no longer exists in the HGNC database.');
+                lovd_errorAdd('', 'Entry ' . htmlspecialchars($sHgncId) . ' no longer exists in the HGNC database.');
             }
             return false;
-        } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $aHgncFile['1'][$nGdAppNameKey], $aRegs)) {
+        } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $aGene['gd_app_name'], $aRegs)) {
             if ($bRecursion) {
                 return getGeneInfoFromHgnc($aRegs[1], $aCols);
-            }
-            elseif (function_exists('lovd_errorAdd')) {
-                lovd_errorAdd('', 'Entry ' . $sHgncId . ' is deprecated, please use ' . $aRegs[1] . '.');
+            } elseif (function_exists('lovd_errorAdd')) {
+                lovd_errorAdd('', 'Entry ' . htmlspecialchars($sHgncId) . ' is deprecated, please use ' . $aRegs[1] . '.');
             }
             return false;
-        } elseif (in_array('gd_pub_chrom_map', $aCols) && $aCols[array_search('gd_pub_chrom_map', $aCols)] == 'reserved') {
+        } elseif (in_array('gd_pub_chrom_map', $aCols) && $aGene['gd_pub_chrom_map'] == 'reserved') {
             if (function_exists('lovd_errorAdd')) {
-                lovd_errorAdd('hgnc_id', 'Entry ' . $_POST['hgnc_id'] . ' does not yet have a public association with a chromosomal location.');
+                lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' does not yet have a public association with a chromosomal location');
             }
             return false;
         }
         
-        // Unset the gd_app_name column if the caller has not asked for it.
-        if (!$bReturnGdAppName) {
-            unset($aHgncFile['1'][$nGdAppNameKey]);
+        foreach (array_diff($aColumns, $aCols) as $sUnwantedColumn) {
+            // Don't return columns the caller hasn't asked for.
+            unset($aGene[$sUnwantedColumn]);
         }
         
-        return $aHgncFile['1'];
+        return $aGene;
     } elseif (function_exists('lovd_errorAdd')) {
-        lovd_errorAdd('', 'Entry was not found in the HGNC database.');
+        lovd_errorAdd('', 'Entry ' . htmlspecialchars($sHgncId) . ' was not found in the HGNC database.');
     }
     return false;
 }
@@ -142,22 +175,20 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = true)
 
 
 
-function lovd_addAllDefaultCustomColumnsForGene ($sGene, $sUser = 'USE_AUTH')
+function lovd_addAllDefaultCustomColumnsForGene ($sGene, $bUseAuthUser = true)
 {
     // This function enables all custom columns that are standard or HGVS required for the given gene.
-    // The given user will be the creator of the entries in TABLE_SHARED COLS and (if needed) in TABLE_ACTIVE_COLS.
+    // If bUseAuthUser is set to false, user 0 ("LOVD") will be used for the created_by fields in TABLE_SHARED COLS and (if needed) in TABLE_ACTIVE_COLS.
     
-    // Use $_AUTH['id'] as the user by default. This still allows the caller to explicitly use $sUser = null when needed.
     global $_AUTH, $_DB;
-    if ($sUser == 'USE_AUTH') {
+    if ($bUseAuthUser) {
         $sUser = $_AUTH['id'];
+    } else {
+        $sUser = 0;
     }
     
     // Get a list of the columns in TABLE_VARIANTS_ON_TRANSCRIPTS.
-    $qAddedCustomCols = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS);
-    while ($aCol = $qAddedCustomCols->fetchAssoc()) {
-        $aAdded[] = $aCol['Field'];
-    }
+    $aAdded = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
     
     // Get a list of all columns that are standard or HGVS required.
     $qStandardCustomCols = $_DB->query('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)');
@@ -171,102 +202,5 @@ function lovd_addAllDefaultCustomColumnsForGene ($sGene, $sUser = 'USE_AUTH')
         // Add the standard column to the gene.
         $_DB->query('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($sGene, $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $sUser));
     }
-}
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// FIXME; The following two functions (getNgMapping and getGeneMetaByGeneSymbol) are only used by upload.php. They may be removed when upload.php is cleant up.
-
-function getNgMapping()
-{
-	$aLines = lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt');
-	$zNgMapping = array();
-	foreach($aLines as $line)
-	{
-		if (preg_match('/(\w+)\s+(NG_\d+\.\d+)/', $line, $aMatches))
-	    {
-	    	$zNgMapping[$aMatches[1]] = $aMatches[2];
-	    }
-	}
-	
-	return $zNgMapping;
-}
-
-
-
-
-
-function getGeneMetaByGeneSymbol($sGeneSymbol, $sAccession='')
-{
-	// get gene infor from www.genenames.org
-    if (ctype_digit($sGeneSymbol)) 
-    {
-    	$sWhere = 'gd_hgnc_id%3D' . $sGeneSymbol;
-    } 
-    else 
-    {
-    	$sWhere = 'gd_app_sym%3D%22' . $sGeneSymbol . '%22';
-    }
-    
-    $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_pub_chrom_map&col=gd_pub_eg_id&col=md_mim_id&status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit', false, false);
-    
-    if (!isset($aHgncFile['1']) && $sAccession) 
-    {
-        // call mutalyzer for gene name based on accesssion id.
-        global $_MutalyzerWS;
-        $sNewGeneSymbol = $_MutalyzerWS->moduleCall(
-            'getGeneName', 
-            array('accno' => $sAccession, 'build' => 'hg19'));
-        
-        if (!empty($sNewGeneSymbol) && $sNewGeneSymbol != $sGeneSymbol)
-        {
-        	print("Found a different gene symbol from Mutalyzer based on accession number. New = '$sNewGeneSymbol'. Old = '$sGeneSymbol'.<br/>");
-            $sWhere = 'gd_app_sym%3D%22' . $sNewGeneSymbol . '%22';
-            $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_pub_chrom_map&col=gd_pub_eg_id&col=md_mim_id&status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit', false, false);
-        }
-    }
-    
-    if (isset($aHgncFile['1'])) 
-    {
-    	list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = explode("\t", $aHgncFile['1']);
-    	list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
-                        
-        if (preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches))
-        {
-        	$sChromosome = $aMatches[1];
-            $sChromBand = $aMatches[2];
-        }
-        else
-        {
-        	$sChromosome = $sChromLocation;
-            $sChromBand = $sChromLocation;
-        }
-                
-        if ($sGeneName == 'entry withdrawn') 
-        {
-            throw new Exception("Gene \"$sGeneSymbol\" no longer exists in the HGNC database.");
-        } 
-        else if (preg_match('/^symbol withdrawn, see (.+)$/', $sGeneName, $aRegs)) 
-        {
-            throw new Exception("Gene \"$sGeneSymbol\" is deprecated, please use " . $aRegs[1] );
-        }
-    }
-    else
-    {
-        throw new Exception("Gene \"$sGeneSymbol\" was not found in the HGNC database.");
-    }
-    
-    return array(
-        'id' => $sSymbol,
-        'name' => $sGeneName,
-        'chromosome' => $sChromosome,
-        'chrom_band' => $sChromBand,
-        'id_hgnc' => $sHgncID,
-        'id_entrez' => $sEntrez,
-        'id_omim' => $sOmim
-    );
 }
 ?>

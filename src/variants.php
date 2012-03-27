@@ -4,12 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-03-19
+ * Modified    : 2012-03-26
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
+ *               Zuotian Tatum <Z.Tatum@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -84,6 +86,31 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'in_gene') {
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
     $_DATA->viewList('CustomVL_IN_GENE', array('transcriptid'));
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!ACTION && !empty($_PATH_ELEMENTS[2]) && $_PATH_ELEMENTS[1] == 'upload' && ctype_digit($_PATH_ELEMENTS[2])) {
+    // URL: /variants/upload/123451234567890
+    // View all genomic variant entries that were submitted in the given upload.
+
+    $nID = sprintf('%015d', $_PATH_ELEMENTS[2]);
+    define('PAGE_TITLE', 'View genomic variants from upload #' . $nID);
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+    
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_genome_variants.php';
+    $_DATA = new LOVD_GenomeVariant();
+    $_GET['search_created_by'] = substr($nID, 0, 5);
+    $_GET['search_created_date'] = date('Y-m-d H:i:s', substr($nID, 5, 10));
+    $_DATA->viewList(false, array('screeningids', 'allele_'));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -177,10 +204,51 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
 
+
+?>
+      <SCRIPT type="text/javascript">
+        $(function ()
+            {
+                $('#mapOnRequest').prepend('&nbsp;&nbsp;<IMG style="display:none;">&nbsp;&nbsp;');
+            }
+        );
+
+        function lovd_mapOnRequest ()
+        {
+            // Show the loading image.
+            $('#mapOnRequest').children("img:first").attr({
+                src: '<?php echo ROOT_PATH; ?>gfx/lovd_loading.gif',
+                width: '16px',
+                height: '16px',
+                alt: 'Loading...',
+                title: 'Loading...'
+            }).show();
+            
+            // Call the script.
+            $.get('<?php echo ROOT_PATH . 'ajax/map_variants.php?variantid=' . $nID; ?>', function ()
+                {
+                    // Reload the page on success.
+                    window.location.reload();
+                }
+            ).error(function ()
+                {
+                    // Show the error image.
+                    $('#mapOnRequest').children("img:first").attr({
+                        src: '<?php echo ROOT_PATH; ?>gfx/cross.png',
+                        alt: 'Error',
+                        title: 'An error occurred, please try again'
+                    });
+                }
+            );
+            return false;
+        }
+      </SCRIPT>
+<?php
+
     require ROOT_PATH . 'class/object_genome_variants.php';
+    lovd_isAuthorized('variant', $nID);
     $_DATA = new LOVD_GenomeVariant();
     $zData = $_DATA->viewEntry($nID);
-    lovd_isAuthorized('variant', $nID);
 
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
@@ -189,6 +257,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         $sNavigation .= ' | <A href="variants/' . $nID . '?map">Add variant description to additional transcript</A>';
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $sNavigation .= ' | <A href="variants/' . $nID . '?delete">Delete variant entry</A>';
+        }
+        if (!empty($zData['position_g_start'])) {
+            $sNavigation .= ' | <A href="#" onclick="lovd_openWindow(\'variants/' . $nID . '?search_global\', \'global_search\', 900, 450); return false;">Search public LOVDs</A>';
         }
     }
 
@@ -271,12 +342,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
-    // Create a new entry.
+if ((empty($_PATH_ELEMENTS[1]) || $_PATH_ELEMENTS[1] == 'upload') && ACTION == 'create') {
+    // URL: variants?create
+    // URL: variants/upload?create
+    // Detect whether a valid target screening is given. We do this here so we
+    // don't have to duplicate this code for variants?create and variants/upload?create.
 
-    lovd_requireAUTH(LEVEL_SUBMITTER);
-
-    define('LOG_EVENT', 'VariantCreate');
+    // We don't want to show an error message about the screening if the user isn't allowed to come here.
+    lovd_requireAUTH(empty($_PATH_ELEMENTS[1])? LEVEL_SUBMITTER : LEVEL_MANAGER);
 
     if (isset($_GET['target'])) {
         // On purpose not checking for numeric target. If it's not numeric, we'll automatically get to the error message below.
@@ -288,10 +361,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         } elseif (!lovd_isAuthorized('screenings', $_GET['target'])) {
             lovd_requireAUTH(LEVEL_OWNER);
         } elseif (!$z['variants_found']) {
-            $sMessage = 'Cannot add variant to the given screening, because the value \'Have variants been found?\' is unchecked.';
+            $sMessage = 'Cannot add variants to the given screening, because the value \'Have variants been found?\' is unchecked.';
         }
         if ($sMessage) {
-            define('PAGE_TITLE', 'Create a new variant entry');
+            define('PAGE_TITLE', (empty($_PATH_ELEMENTS[1])? 'Create a new variant entry' : 'Upload variant data'));
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
             lovd_showInfoTable($sMessage, 'stop');
@@ -305,10 +378,22 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     } else {
         $_GET['target'] = '';
     }
+}
+
+
+
+
+
+if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+    // Create a new entry.
+
+    // We already called lovd_requireAUTH(LEVEL_SUBMITTER).
+
+    define('LOG_EVENT', 'VariantCreate');
 
     if (!isset($_GET['reference'])) {
         // URL: /variants?create
-        // Select wether the you want to create a variant on the genome or on a transcript.
+        // Select whether you want to create a variant on the genome or on a transcript.
         define('PAGE_TITLE', 'Create a new variant entry');
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
@@ -334,8 +419,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $aOptionsList = array('width' => 600);
         $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
         $aOptionsList['options'][0]['option_text'] = '<B>I want to create a variant on genomic level &raquo;&raquo;</B>';
-        $aOptionsList['options'][1]['onclick'] = '$(\'#container\').toggle();';
-        $aOptionsList['options'][1]['option_text'] = '<B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B>';
+
+        if ($_AUTH['level'] >= LEVEL_MANAGER) {
+	        $aOptionsList['options'][1]['onclick'] = 'window.location.href=\'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
+	        $aOptionsList['options'][1]['option_text'] = '<B>I want to upload a file with genomic variant data &raquo;&raquo;</B>';
+        }
+
+        $aOptionsList['options'][2]['onclick'] = '$(\'#container\').toggle();';
+        $aOptionsList['options'][2]['option_text'] = '<B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B>';
 
         print('      What kind of variant would you like to submit?<BR><BR>' . "\n\n");
         print(lovd_buildOptionTable($aOptionsList));
@@ -618,6 +709,1192 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
+if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'create') {
+    // URL: /variants/upload?create
+    // URL: /variants/upload?create&type=VCF
+    // URL: /variants/upload?create&type=SeattleSeq
+    // Import a VCF or SeattleSeq file.
+
+    // We already called lovd_requireAUTH(LEVEL_MANAGER).
+
+    if (!isset($_GET['type'])) {
+        // URL: /variants/upload?create
+        // Select whether you want to upload a VCF or SeattleSeq file.
+
+        define('PAGE_TITLE', 'Upload variant data');
+        require ROOT_PATH . 'inc-top.php';
+        lovd_printHeader(PAGE_TITLE);
+        require ROOT_PATH . 'inc-lib-form.php';
+
+        print('      What kind of file would you like to upload?<BR><BR>' . "\n\n");
+        print(lovd_buildOptionTable(array('width' => 600,
+                                          'options' => array(array('onclick' => 'window.location.href=\'variants/upload?create&amp;type=VCF' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'',
+                                                                   'option_text' => '<B>I want to upload a Variant Call Format (VCF) file &raquo;&raquo;</B>'),
+                                                             array('onclick' => 'window.location.href=\'variants/upload?create&amp;type=SeattleSeq' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'',
+                                                                   'option_text' => '<B>I want to upload a SeattleSeq Annotation file &raquo;&raquo;</B>')))));
+
+        require ROOT_PATH . 'inc-bot.php';
+        exit;
+    } elseif (!in_array($_GET['type'], array('VCF', 'SeattleSeq'))) {
+        exit;
+    }
+
+    define('LOG_EVENT', 'VariantUpload' . $_GET['type']);
+
+    define('PAGE_TITLE', 'Upload a ' . $_GET['type'] . ' file');
+    require ROOT_PATH . 'inc-top.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    // Maximum number of unsupported variants that will be printed to the user.
+    $nMaxListedUnsupported = 100;
+
+
+
+    // Calculate maximum uploadable file size.
+    // VCF files are approximately 116 bytes per variant, so 50 MB should allow for half a million variants.
+    // SeattleSeq variants may take up as much as 750 bytes per variant because they duplicate a lot of information in cases with several transcripts.
+    // Because of this, SeattleSeq files have a much higher limit of 350 MB.
+    // Still, the server settings are probably much lower.
+    $nMaxSize = ($_GET['type'] == 'VCF'? 50 : 350) * 1024 * 1024;
+    $nMaxPHPUpload = lovd_convertIniValueToBytes(ini_get('upload_max_filesize'));
+    $nMaxPHPPost = lovd_convertIniValueToBytes(ini_get('post_max_size'));
+    $nMaxSize = min($nMaxSize, $nMaxPHPUpload, $nMaxPHPPost);
+
+
+
+
+
+    function lovd_getVCFLine ($fInput)
+    {
+        // This function reads and returns one line in $fInput.
+        // It also updates the progress bar ($_BAR) and automatically skips empty lines. Returns false on EOF.
+        global $_BAR, $_FILES;
+        static $nParsedBytes;
+
+        if (!isset($nParsedBytes)) {
+            $nParsedBytes = 0;
+        }
+
+        // Automatically skip empty lines.
+        do {
+            $sLine = fgets($fInput);
+            $nParsedBytes += strlen($sLine);
+        } while ($sLine !== false && !trim($sLine));
+
+        // Update the progress bar and return the line.
+        $_BAR->setProgress(floor($nParsedBytes / $_FILES['variant_file']['size'] * 100));
+        return rtrim($sLine, "\r\n");
+    }
+
+
+
+
+
+    // FIXME; with so many static functions, perhaps put this in a class?
+    function lovd_getVariantFromSeattleSeq ($fInput)
+    {
+        // This function reads and returns one variant from $fInput. It is returned as an associative array;
+        // the function automatically finds the SeattleSeq header line in the first call. It also updates the
+        // progress bar ($_BAR) and automatically skips empty lines. Returns false on EOF or if no header line is found.
+        global $_BAR, $_FILES;
+        static $nParsedBytes, $sLine, $aHeaders;
+
+        // Initiate static variables at the first call.
+        if (!isset($nParsedBytes)) {
+            $nParsedBytes = 0;
+        }
+        if (!isset($sLine)) {
+            $sLine = '';
+        }
+
+        do {
+            // Variants have a seperate line for each transcript they hit. We read lines
+            // until we've got all data for one genomic position and then exit of the loop.
+
+            do {
+                // Read a line into $sNextLine, automatically skip empty lines.
+                // $sNextLine will be copied to $sLine at the end of the outer loop. $sLine is
+                // declared static, which means it remains available in the next call to this function.
+                $sNextLine = fgets($fInput);
+                $nParsedBytes += strlen($sNextLine);
+            } while ($sNextLine !== false && !trim($sNextLine));
+
+            // If we don't have a header line yet, we keep reading lines until we've got one. Then we enter the if() below.
+            if (empty($aHeaders) && $sNextLine && substr($sNextLine, 0, 2) != '# ') {
+                // We moved past the header line with $sNextLine, so the header was the previous line. $sLine has it.
+                if ($sLine == '') {
+                    // We end up here if the first line in the file doesn't start with '# '.
+                    // This can't be a SeattleSeq file; just return false.
+                    return false;
+                }
+                $aHeaders = explode("\t", substr(rtrim($sLine, "\r\n"), 2));
+            }
+
+            // If we do have a header line, we keep reading lines until we move to the next variant.
+            // If we haven't moved past the last variant line on the previous call to this function, we end up in the if() below.
+            if (!empty($aHeaders) && $sLine && substr($sLine, 0, 2) != '# ') {
+                if (empty($aLine)) {
+                    // $aLine is going to hold the actual variant data that we return.
+                    // Its inital data comes from $sLine (which is the previously-read line; usually even from the previous call to this function).
+                    // This is because we always read one line 'too much'; we only know $sNextLine is not part of the current variant once w've already read it.
+                    $aLine = array_combine($aHeaders, explode("\t", rtrim($sLine, "\r\n")));
+
+                    foreach (array('accession', 'functionGVS', 'functionDBSNP', 'aminoAcids', 'proteinPosition', 'cDNAPosition', 'polyPhen', 'granthamScore', 'proteinSequence', 'distanceToSplice') as $sKey) {
+                        // Making arrays of some transcript-specific columns.
+
+                        if (!isset($aLine[$sKey])) {
+                            // cDNAPosition, polyPhen, granthamScore, proteinSequence and distanceToSplice are optional columns so we should check for their existance.
+                            continue;
+                        }
+                        $aLine[$sKey] = array($aLine[$sKey]);
+                    }
+                }
+
+                if (!$sNextLine || substr($sNextLine, 0, 2) == '# ') {
+                    // We've moved past the last variant line with $sNextLine. Return what we have got in $aLine now.
+                    $sLine = $sNextLine;
+                    break;
+                }
+
+                // Compare the next line with the current variant data.
+                $aNextLine = array_combine($aHeaders, explode("\t", rtrim($sNextLine, "\r\n")));
+                if ($aLine['chromosome'] == $aNextLine['chromosome'] && $aLine['position'] == $aNextLine['position']) {
+                    // The variant in $aNextLine is the same as $aLine, but on another transcript. Add the transcript-specific values.
+                    foreach ($aLine as $sKey => &$value) {
+                        if (is_array($value)) {
+                            $value[] = $aNextLine[$sKey];
+                        }
+                    }
+                } else {
+                    // The variant in $aNextLine is not the same as $aLine. Moving to a different variant, return what we have got in $aLine now.
+                    $sLine = $sNextLine;
+                    break;
+                }
+            }
+
+            // Copy $sNextLine to $sLine and read another line if we haven't reached the end of the file yet.
+            $sLine = $sNextLine;
+        } while($sNextLine);
+
+        // Update progress bar and return the variant (or false if we have none).
+        $_BAR->setProgress(floor($nParsedBytes / $_FILES['variant_file']['size'] * 100));
+        return (empty($aLine)? false : $aLine);
+    }
+
+
+
+
+
+    function lovd_reconstructSeattleSeqLine ($aVariant, $nTranscriptIndex = 0)
+    {
+        // Returns the given variant as a string, like it was in the SeattleSeq file.
+        // This is used to be able to print a SeattleSeq line to the user in case a variant can't be imported.
+
+        foreach (array('accession', 'functionGVS', 'functionDBSNP', 'aminoAcids', 'proteinPosition', 'cDNAPosition', 'polyPhen', 'granthamScore', 'proteinSequence', 'distanceToSplice') as $sKey) {
+            // Getting the selected index from the transcript-dependent fields.
+
+            if (!isset($aVariant[$sKey])) {
+                // cDNAPosition, polyPhen, granthamScore, proteinSequence and distanceToSplice are optional columns so we should check for their existance.
+                continue;
+            }
+            $aVariant[$sKey] = $aVariant[$sKey][$nTranscriptIndex];
+        }
+
+        return implode("\t", $aVariant);
+    }
+
+
+
+
+
+    // If dbSNP custom links are active, find out which columns in TABLE_VARIANTS accept them.
+    $aDbSNPColumns = $_DB->query('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac JOIN ' . TABLE_COLS2LINKS . ' USING(colid) JOIN ' . TABLE_LINKS . ' ON(linkid = id) WHERE name = "DbSNP" AND ac.colid LIKE "VariantOnGenome/%"')->fetchAllColumn();
+    foreach (array('VariantOnGenome/DBID', 'VariantOnGenome/DNA') as $sColumn) {
+        // Don't allow DBID and DNA fields as dbSNP link insertion columns.
+        if (false !== $nKey = array_search($sColumn, $aDbSNPColumns)) {
+            unset($aDbSNPColumns[$nKey]);
+        }
+    }
+    if ($sDbSNPColumn = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = "VariantOnGenome/dbSNP"')->fetchColumn()) {
+        // The dbSNP special column is active, allow to insert dbSNP links in there.
+        array_unshift($aDbSNPColumns, $sDbSNPColumn);
+    }
+    array_unshift($aDbSNPColumns, 'Don\'t import dbSNP links');
+
+    if (POST) {
+        // The form has been submitted. Detect any errors in the file upload.
+        if (empty($_FILES['variant_file']) || ($_FILES['variant_file']['error'] > 0 && $_FILES['variant_file']['error'] < 4)) {
+            lovd_errorAdd('', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB.');
+
+        } elseif ($_FILES['variant_file']['error'] == 4 || !$_FILES['variant_file']['size']) {
+            lovd_errorAdd('', 'Please select a file to upload.');
+
+        } elseif ($_FILES['variant_file']['size'] > $nMaxSize) {
+            lovd_errorAdd('', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB.');
+
+        } elseif ($_FILES['variant_file']['error']) {
+            // Various errors available from 4.3.0 or later.
+            lovd_errorAdd('', 'There was an unknown problem with receiving the file properly, possibly because of the current server settings. If the problem persists, contact the database administrator.');
+        }
+
+        if(!lovd_error()) {
+            // No problems found. Start processing the file.
+
+            // Initiate progress bar.
+            require ROOT_PATH . 'class/progress_bar.php';
+            $_BAR = new ProgressBar('', 'Loading variant data from the ' . $_GET['type'] . ' file...', '&nbsp;');
+            define('_INC_BOT_CLOSE_HTML_', false);
+            require ROOT_PATH . 'inc-bot.php';
+
+            // Parse mapping options.
+            $nMappingFlags = (!empty($_POST['allow_mapping'])? MAPPING_ALLOW : 0) | (!empty($_POST['allow_create_genes'])? MAPPING_ALLOW_CREATE_GENES : 0);
+
+            // Create data array.
+            $nUploadID = sprintf('%05d%010d', $_AUTH['id'], time());
+            $aUploadData = array('tUploadDate' => date('Y-m-d H:i:s', substr($nUploadID, 5, 10)),
+                                 'sFileName' => $_FILES['variant_file']['name'],
+                                 'sFileType' => $_GET['type'],
+                                 'nVariants' => 0,
+                                 'nUnsupportedVariants' => 0,
+                                 'nGenes' => 0,
+                                 'nTranscripts' => 0,
+                                 'nVariantOnTranscripts' => 0,
+                                 'owned_by' => $_POST['owned_by'],
+                                 'statusid' => $_POST['statusid'],
+                                 'mapping_flags' => $nMappingFlags);
+            if (!empty($_POST['screeningid'])) {
+                $aUploadData['screeningid'] = sprintf("%010d", $_POST['screeningid']);
+            }
+
+            // Let's go...
+            $fInput = fopen($_FILES['variant_file']['tmp_name'], 'r');
+            $_DB->beginTransaction();
+
+
+
+
+
+            if ($_GET['type'] == 'VCF') {
+                // VCF specific.
+
+                // Quickly skip the meta lines.
+                do {
+                    $sLine = lovd_getVCFLine($fInput);
+                } while (substr($sLine, 0, 2) == '##');
+
+                // Read out the header line.
+                $aHeaders = explode("\t", $sLine);
+                $bSingleSample = count($aHeaders) == 10;
+
+                // Prepare database queries.
+                if ($_POST['dbSNP_column'] > 0) {
+                    $qInsertVariant = $_DB->prepare('INSERT INTO ' . TABLE_VARIANTS . ' (allele, effectid, chromosome, position_g_start, position_g_end, type, owned_by, statusid, mapping_flags, created_by, created_date, `VariantOnGenome/DNA`, `' . $aDbSNPColumns[$_POST['dbSNP_column']] . '`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                } else {
+                    $qInsertVariant = $_DB->prepare('INSERT INTO ' . TABLE_VARIANTS . ' (allele, effectid, chromosome, position_g_start, position_g_end, type, owned_by, statusid, mapping_flags, created_by, created_date, `VariantOnGenome/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                }
+                $qInsertScr2Var = $_DB->prepare('INSERT INTO ' . TABLE_SCR2VAR . ' (screeningid, variantid) VALUES (?, ?)');
+
+                // Start parsing variants.
+                $aUnsupportedLines = array();
+                while ($sLine = lovd_getVCFLine($fInput)) {
+                    // Read the next variant from the file.
+                    $aLine = array_combine($aHeaders, explode("\t", $sLine));
+
+                    // Check the chromosome number.
+                    //preg_match('/.*?(\d{1,2}|[XYM]).*?/', $aLine['#CHROM'], $aChromosome); // Tries to extract any chromosome number (0-99, XYM)
+                    preg_match('/^(?:c(?:hr)?)?([XYM]|[1-9]|1[0-9]|2[0-2])$/', $aLine['#CHROM'], $aChromosome); // Allows '##', 'c##' and 'chr##' (where ## = 1-22 or XYM)
+                    if (!$aChromosome) {
+                        $aUploadData['nUnsupportedVariants'] += count(explode(',', $aLine['ALT']));
+                        if ($aUploadData['nUnsupportedVariants'] < $nMaxListedUnsupported) {
+                            $aUnsupportedLines[] = $sLine;
+                        }
+                        continue;
+                    }
+
+                    // Extract dbSNP references.
+                    preg_match('/(?:^|;)(rs\d+)(?:$|;)/', $aLine['ID'], $aReference);
+
+                    // Parse sample data.
+                    if ($bSingleSample) {
+                        // If we have a single sample in the VCF file, make it an associative array with the keys from the FORMAT column.
+                        $aLine[$aHeaders[9]] = array_combine(explode(':', $aLine['FORMAT']), explode(':', $aLine[$aHeaders[9]]));
+                    }
+
+                    // Read the alleles.
+                    $aLine['REF'] = strtoupper($aLine['REF']);
+                    $aAlleles = explode(',', strtoupper($aLine['ALT']));
+                    foreach ($aAlleles as $nAlleleNumber => $sAllele) {
+                        $sReference = $aLine['REF'];
+                        $aVariantData = array();
+
+                        // Skip any variants with an 'N'.
+                        if (strpos($sAllele, 'N') !== false || strpos($sReference, 'N') !== false) {
+                            if ($aUploadData['nUnsupportedVariants'] ++ < $nMaxListedUnsupported) {
+                                $aUnsupportedLines[] = $sLine;
+                            }
+                            continue;
+                        }
+
+                        // Enter the chromosome number into the variant data array.
+                        $aVariantData['chromosome'] = $aChromosome[1];
+                        $sHGVSPrefix = 'g.';
+                        if ($aVariantData['chromosome'] == 'M') {
+                            $sHGVSPrefix = 'm.';
+                        }
+
+                        // Enter the dbSNP reference into the variant data array.
+                        $aVariantData['reference'] = null;
+                        if (isset($aReference[1])) {
+                            if ($aDbSNPColumns[$_POST['dbSNP_column']] == 'VariantOnGenome/dbSNP') {
+                                $aVariantData['reference'] = $aReference[1];
+                            } elseif ($_POST['dbSNP_column'] > 0){
+                                $aVariantData['reference'] = '{dbSNP:' . $aReference[1] . '}';
+                            }
+                        }
+
+                        // Define start and end positions on the reference.
+                        $aVariantData['g_start'] = (int) $aLine['POS'];
+                        $aVariantData['g_end'] = (int) $aLine['POS'] + strlen($aLine['REF']) - 1;
+
+                        // Set the allele.
+                        $aVariantData['allele'] = 0;
+                        if ($bSingleSample && !empty($aLine[$aHeaders[9]]['GT'])) {
+                            // If there's sample data, the GT field should be present according to the VCF specs. Still checking, of course.
+                            // FIXME; is there any way we can make special use of phased data?
+                            if (in_array($aLine[$aHeaders[9]]['GT'], array('1/1', '1|1'))) {
+                                $aVariantData['allele'] = 3;
+                            } elseif (in_array($aLine[$aHeaders[9]]['GT'], array('0/1', '0|1'))) {
+                                $aVariantData['allele'] = 1;
+                            } elseif (in_array($aLine[$aHeaders[9]]['GT'], array('1/0', '1|0'))) {
+                                $aVariantData['allele'] = 2;
+                            }
+                        }
+
+                        // 'Eat' letters from either end - first left, then right - to isolate the difference.
+                        while (strlen($sReference) > 0 && strlen($sAllele) > 0 && $sReference[0] == $sAllele[0]) {
+                            $sReference = substr($sReference, 1);
+                            $sAllele = substr($sAllele, 1);
+                            $aVariantData['g_start'] ++;
+                        }
+                        while (strlen($sReference) > 0 && strlen($sAllele) > 0 && $sReference[strlen($sReference) - 1] == $sAllele[strlen($sAllele) - 1]) {
+                            $sReference = substr($sReference, 0, -1);
+                            $sAllele = substr($sAllele, 0, -1);
+                            $aVariantData['g_end'] --;
+                        }
+
+                        // Now find out the variant type.
+                        if ($sReference == strrev($sAllele)) {
+                            // Inversion.
+                            $aVariantData['type'] = 'inv';
+                            $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . '_' . $aVariantData['g_end'] . 'inv';
+                        } elseif (strlen($sReference) > 0 && strlen($sAllele) == 0) {
+                            // Deletion.
+                            $aVariantData['type'] = 'del';
+                            if ($aVariantData['g_start'] == $aVariantData['g_end']) {
+                                $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . 'del';
+                            } else {
+                                $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . '_' . $aVariantData['g_end'] . 'del';
+                            }
+                        } elseif (strlen($sAllele) > 0 && strlen($sReference) == 0) {
+                            // Something has been added... could be an insertion or a duplication.
+                            if (substr($aAlleles[$nAlleleNumber], strrpos($aAlleles[$nAlleleNumber], $sAllele) - strlen($sAllele), strlen($sAllele)) == $sAllele) {
+                                // Duplicaton.
+                                $aVariantData['type'] = 'dup';
+                                $aVariantData['g_start'] -= strlen($sAllele);
+                                if ($aVariantData['g_start'] == $aVariantData['g_end']) {
+                                    $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . 'dup';
+                                } else {
+                                    $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . '_' . $aVariantData['g_end'] . 'dup';
+                                }
+                            } else {
+                                // Insertion.
+                                $aVariantData['type'] = 'ins';
+
+                                // Exchange g_start and g_end; after the 'letter eating' we did, start is actually end + 1!
+                                $aVariantData['g_start'] --;
+                                $aVariantData['g_end'] ++;;
+                                $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . '_' . $aVariantData['g_end'] . 'ins' . $sAllele;
+                            }
+                        } elseif (strlen($sAllele) == 1 && strlen($sReference) == 1) {
+                            // Substitution.
+                            $aVariantData['type'] = 'subst';
+                            $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . $sReference . '>' . $sAllele;
+                        } else {
+                            // Deletion/insertion.
+                            $aVariantData['type'] = 'delins';
+                            if ($aVariantData['g_start'] == $aVariantData['g_end']) {
+                                $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . 'delins' . $sAllele;
+                            } else {
+                                $aVariantData['HGVS'] = $sHGVSPrefix . $aVariantData['g_start'] . '_' . $aVariantData['g_end'] . 'delins' . $sAllele;
+                            }
+                        }
+
+                        // Analysis complete, now enter the variant into the database.
+                        $aInsertValues = array($aVariantData['allele'], '55', $aVariantData['chromosome'], $aVariantData['g_start'], $aVariantData['g_end'], $aVariantData['type'], $_POST['owned_by'], $_POST['statusid'], $nMappingFlags, $_AUTH['id'], $aUploadData['tUploadDate'], $aVariantData['HGVS']);
+                        if ($_POST['dbSNP_column']) {
+                            $aInsertValues[] = $aVariantData['reference'];
+                        }
+                        $qInsertVariant->execute($aInsertValues);
+                        $aUploadData['nVariants'] ++;
+
+                        // Link this variant to the current screening if applicable.
+                        if (isset($_POST['screeningid'])) {
+                            $qInsertScr2Var->execute(array($_POST['screeningid'], $_DB->lastInsertId()));
+                        }
+                    }
+                }
+
+
+
+
+
+            } elseif ($_GET['type'] == 'SeattleSeq') {
+                // SeattleSeq specific.
+
+                // This will take some time, allow the user to browse in other tabs.
+                // FIXME; if the user finishes a screening submission in another tab while the upload
+                // is still working, a seperate e-mail about the upload will be sent once it has finished.
+                // So, other than that it results in two e-mails, it is working just fine actually.
+                // Though maybe we should block submit/finish until we're done here?
+                session_write_close();
+                set_time_limit(0);
+                $tStart = time();
+
+                require ROOT_PATH . 'inc-lib-genes.php';
+                require ROOT_PATH . 'class/REST2SOAP.php';
+                $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+
+                $aIupacTable = array(
+                    'A' => array('A'),
+                    'C' => array('C'),
+                    'G' => array('G'),
+                    'T' => array('T'),
+                    'M' => array('A', 'C'),
+                    'R' => array('A', 'G'),
+                    'W' => array('A', 'T'),
+                    'S' => array('C', 'G'),
+                    'Y' => array('C', 'T'),
+                    'K' => array('G', 'T'),
+                    'V' => array('A', 'C', 'G'),
+                    'H' => array('A', 'C', 'T'),
+                    'D' => array('A', 'G', 'T'),
+                    'B' => array('C', 'G', 'T'),
+                    'N' => array('G', 'A', 'T', 'C'),
+                    'X' => array('G', 'A', 'T', 'C')
+                );
+
+                // Check whether the GERP column is available.
+                $bGERPColumnAvailable = (bool) $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = "VariantOnGenome/Conservation_score/GERP"')->fetchColumn();
+
+                // Define the list of VariantOnTranscript columns once and for all.
+                $aVOTCols = array('VariantOnTranscript/Distance_to_splice_site',
+                                  'VariantOnTranscript/GVS/Function',
+                                  'VariantOnTranscript/PolyPhen',
+                                  'VariantOnTranscript/Position');
+
+                // We also need to get a list of standard VariantOnTranscript columns.
+                $aColsStandard = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE standard = 1 AND id IN("' . implode('", "', $aVOTCols) . '")')->fetchAllColumn();
+
+                $aGenesChecked = array();       // Contains arrays with [refseq_UD], [name] and [columns] for each gene we'll encounter
+                $aAccessionToSymbol = array();  // Contains the gene symbol for each SeattleSeq transcript accession
+                $aAccessionMapping = array();   // Maps SeattleSeq transcript accession numbers to their LOVD and Mutalyzer-compatible versions
+
+                // Prepare the arrays that will hold the data that can be inserted into the database.
+                $aFieldsGene = array();         // [geneSymbol] = values
+                $aFieldsTranscript = array();   // [geneSymbol][transcriptAccession] = values
+
+                $nCount = 0;                    // Number of variants read from the file
+
+                $qInsertScr2Var = $_DB->prepare('INSERT INTO ' . TABLE_SCR2VAR . ' (screeningid, variantid) VALUES (?, ?)');
+
+
+                // When doing slow things, we can provide a more detailed status message in the 'done' message box.
+                $_BAR->setMessageVisibility('done', true);
+
+
+                // Start parsing variants.
+                $aUnsupportedLines = array();
+                while ($aVariant = lovd_getVariantFromSeattleSeq($fInput)) {
+                    // Empty the arrays that will hold the variant data to be inserted into the database.
+                    $aFieldsVariantOnGenome = array();
+                    $aFieldsVariantOnTranscript = array();
+
+                    // lovd_fetchDBID wants to have some additional data in the variant's array which we need to store seperately for now.
+                    $aTranscriptDataForDBID = array();
+
+                    // And we use this just to be able to cache the numberConversion calls.
+                    $aNumberConversion = array();
+
+                    if (($nCount % 10) == 0) {
+                        $_BAR->setMessage('Processed ' . $nCount . ' variants<BR>' .
+                                          'Time working: ' . gmdate('H:i:s', time() - $tStart));
+                    }
+                    $nCount ++;
+
+                    // FIXME; implement INDEL SeattleSeq files!!
+                    if (strlen($aVariant['referenceBase']) != 1 || strlen($aVariant['sampleGenotype']) != 1) {
+                        // Supporting only SNP files.
+                        if ($aUploadData['nUnsupportedVariants'] ++ < $nMaxListedUnsupported) {
+                            $aUnsupportedLines[] = lovd_reconstructSeattleSeqLine($aVariant);
+                        }
+                        continue;
+                    }
+
+
+
+                    // Prepare genomic variant.
+                    $nAllele = 0;
+                    $sGenomicChange = 'g.' . $aVariant['position'] . $aVariant['referenceBase'] . '>';
+
+                    if (strpos('ACGT', $aVariant['sampleGenotype']) !== false) {
+                        // Both alleles have changed (homozygous).
+                        $nAllele = 3;
+                        $sGenomicChange .= $aVariant['sampleGenotype'];
+                        $aAlleles = array();
+                    } elseif (strpos('MRWSYK', $aVariant['sampleGenotype']) !== false) {
+                        // Heterozygous.
+                        // Array_diff returns the values that are in the first array but not in the second.
+                        $aAlleles = array_diff($aIupacTable[$aVariant['sampleGenotype']], $aIupacTable[$aVariant['referenceBase']]);
+                        $nAllele = 1;
+                        $sGenomicChange .= array_shift($aAlleles);
+                    } else {
+                        // Heterozygous trisomy or something? At the very least this is something LOVD can't handle.
+                        if ($aUploadData['nUnsupportedVariants'] ++ < $nMaxListedUnsupported) {
+                            $aUnsupportedLines[] = lovd_reconstructSeattleSeqLine($aVariant);
+                        }
+                        continue;
+                    }
+
+                    // Prepare the variant's data.
+                    $aFieldsVariantOnGenome[0] = array(
+                        'allele' => $nAllele,
+                        'effectid' => 55,
+                        'chromosome' => $aVariant['chromosome'],
+                        'position_g_start' => $aVariant['position'],
+                        'position_g_end' => $aVariant['position'],
+                        'type' => 'subst',
+                        'owned_by' => $_POST['owned_by'],
+                        'statusid' => $_POST['statusid'],
+                        'created_by' => $_AUTH['id'],
+                        'created_date' => date('Y-m-d H:i:s'),
+                        'VariantOnGenome/DNA' => $sGenomicChange,
+                        );
+
+                    if ($bGERPColumnAvailable && !in_array($aVariant['consScoreGERP'], array('NA', 'unknown', 'none'))) {
+                        $aFieldsVariantOnGenome[0]['VariantOnGenome/Conservation_score/GERP'] = $aVariant['consScoreGERP'];
+                    }
+
+                    if ($_POST['dbSNP_column'] > 0 && preg_match('/\d+/', $aVariant['rsID'], $aDbSNP) && $aDbSNP[0] != '0') {
+                        // Include custom link to dbSNP if the user wants that and we have an rsID for this variant.
+                        if ($aDbSNPColumns[$_POST['dbSNP_column']] == 'VariantOnGenome/dbSNP') {
+                            $aFieldsVariantOnGenome[0][$aDbSNPColumns[$_POST['dbSNP_column']]] = 'rs' . $aDbSNP[0];
+                        } else {
+                            $aFieldsVariantOnGenome[0][$aDbSNPColumns[$_POST['dbSNP_column']]] = '{dbSNP:rs' . $aDbSNP[0] . '}';
+                        }
+                    }
+
+                    if (count($aAlleles) > 0) {
+                        // This person is homozygous and both alleles have changed differently.
+                        // We'll insert a second variant with allele = 2 containing the other allele.
+                        $aFieldsVariantOnGenome[1] = $aFieldsVariantOnGenome[0];
+                        $aFieldsVariantOnGenome[1]['allele'] = 2;
+                        $aFieldsVariantOnGenome[1]['VariantOnGenome/DNA'] = 'g.' . $aVariant['position'] . $aVariant['referenceBase'] . '>' . array_shift($aAlleles);
+                    }
+
+
+
+                    // Now up to the VariantOnTranscripts.
+                    foreach ($aVariant['accession'] as $i => &$sAccession) {
+                        // We'll process each transcript accession number for this variant.
+
+                        if (!empty($aAccessionToSymbol[$sAccession])) {
+                            // We've encountered this accession before, so we know its symbol already.
+                            $sSymbol = $aAccessionToSymbol[$sAccession];
+                        } elseif ($sAccession != 'none') {
+                            // We still need to get a gene symbol for this accession.
+                            $sSymbol = $_MutalyzerWS->moduleCall('getGeneName', array('build' => $_CONF['refseq_build'], 'accno' => $sAccession));
+                            if (empty($sSymbol)) {
+                                $sSymbol = 'none';
+                            }
+                            $aAccessionToSymbol[$sAccession] = $sSymbol;
+                        } else {
+                            $sSymbol = 'none';
+                        }
+
+
+
+                        // Now that we've parsed the transcript accession number, let's see if we need to do anything with its gene.
+                        if ($sSymbol != 'none' && empty($aGenesChecked[$sSymbol])) {
+                            // We haven't seen this gene before in this upload.
+
+                            // First try to get this gene from the database.
+                            if ($aGene = $_DB->query('SELECT refseq_UD, name FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchAssoc()) {
+                                // We've got it in the database. Check its columns.
+                                $aGene['columns'] = $_DB->query('SELECT colid FROM ' . TABLE_SHARED_COLS . ' WHERE geneid = ? AND colid IN("' . implode('", "', $aVOTCols) . '")', array($sSymbol))->fetchAllColumn();
+                                $aGenesChecked[$sSymbol] = $aGene;
+
+                            } elseif (strpos($_POST['autocreate'], 'g') !== false) {
+                                // We don't have this gene in the database yet. Try to add it instead.
+                                $_BAR->setMessage('Loading gene information for ' . $sSymbol . '...', 'done');
+
+                                if (empty($aGeneInfo)) {
+                                    // Getting all gene information from the HGNC takes a few seconds.
+                                    $_BAR->setMessage('Loading gene data...', 'done');
+                                    $aGeneInfo = lovd_getGeneInfoFromHgnc(true, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_pub_eg_id', 'md_mim_id'));
+
+                                    if (empty($aGeneInfo)) {
+                                        // We can't gene information from the HGNC, so we can't add them.
+                                        // This is a major problem and we can't just continue; the user will have to give permission not to create new gene entries.
+                                        ob_start();
+                                        lovd_showInfoTable('Could not get any gene information from the HGNC database! If this problem persists, consider importing the file without creating new gene entries. ' .
+                                                           'If this is not an option for you, please try again later.', 'stop');
+                                        $_BAR->setMessage(ob_get_clean(), 'done');
+                                        exit('</BODY></HTML>');
+                                    }
+
+                                    // Remove the Loading gene data...' message again.
+                                    $_BAR->setMessage('Loading gene information for ' . $sSymbol . '...', 'done');
+                                }
+
+                                // Get HGNC data for this gene.
+                                while(true) {
+                                    if (empty($aGeneInfo[$sSymbol]) || $aGeneInfo[$sSymbol]['gd_app_name'] == 'entry withdrawn' || $aGeneInfo[$sSymbol]['gd_pub_chrom_map'] == 'reserved') {
+                                        // Can't use this symbol.
+                                        $sSymbol = $aAccessionToSymbol[$sAccession] = 'none';
+                                    } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $aGeneInfo[$sSymbol]['gd_app_name'], $aNewSym)) {
+                                        // Symbol is deprecated, update the accession to symbol mapping and look up the new symbol.
+                                        $sSymbol = $aAccessionToSymbol[$sAccession] = $aNewSym[1];
+                                        continue;
+                                    }
+                                    break;
+                                }
+
+                                if (!empty($aGeneInfo[$sSymbol])) {
+                                    // Got gene information, prepare to add the gene to the database.
+                                    // Extract gene information.
+                                    list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = array_values($aGeneInfo[$sSymbol]);
+                                    list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
+                                    if ($sChromLocation == 'mitochondria') {
+                                        $sChromosome = 'M';
+                                        $sChromBand = '';
+                                    } else {
+                                        preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches);
+                                        $sChromosome = $aMatches[1];
+                                        $sChromBand = $aMatches[2];
+                                    }
+
+                                    // Get the complete LRG/NG list from LOVD.nl, all at once. Saves us a lot of queries because we need to look up quite some genes.
+                                    if (empty($aNgMapping)) {
+                                        $aNgMapping = array();
+                                        $_BAR->setMessage('Loading genomic reference list...', 'done');
+
+                                        // Get NG's first.
+                                        $aLines = lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt');
+                                        foreach ($aLines as $sLine) {
+                                            if (preg_match('/(\w+)\s+(NG_\d+\.\d+)/', $sLine, $aMatches)) {
+                                                $aNgMapping[$aMatches[1]] = $aMatches[2];
+                                            }
+                                        }
+
+                                        // Overwrite with any existing LRG's.
+                                        $aLines = lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt');
+                                        foreach ($aLines as $sLine) {
+                                            if (preg_match('/(LRG_\d+)\s+(\w+)/', $sLine, $aMatches)) {
+                                                $aNgMapping[$aMatches[2]] = $aMatches[1];
+                                            }
+                                        }
+
+                                        // Remove the 'Loading reference list...' message.
+                                        $_BAR->setMessage('Loading gene information for ' . $sSymbol . '...', 'done');
+                                    }
+
+                                    // Set genomic reference sequence for gene.
+                                    if (!empty($aNgMapping[$sSymbol])) {
+                                        $sRefseqGenomic = $aNgMapping[$sSymbol];
+                                    } else {
+                                        $sRefseqGenomic = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
+                                    }
+
+                                    // Get UDID from Mutalyzer.
+                                    $sRefseqUD = $_MutalyzerWS->moduleCall('sliceChromosomeByGene', array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'));
+
+                                    // Not adding the gene just yet, but we remember its data...
+                                    $aFieldsGene[$sSymbol] = array(
+                                        'id' => $sSymbol,
+                                        'name' => $sGeneName,
+                                        'chromosome' => $sChromosome,
+                                        'chrom_band' => $sChromBand,
+                                        'refseq_genomic' => $sRefseqGenomic,
+                                        'refseq_UD' => $sRefseqUD,
+                                        'id_hgnc' => $sHgncID,
+                                        'id_entrez' => $sEntrez,
+                                        'id_omim' => $sOmim,
+                                        'show_hgmd' => 1,
+                                        'show_genecards' => 1,
+                                        'show_genetests' => 1,
+                                        'disclaimer' => 1,
+                                        'created_by' => 0,
+                                        'created_date' => date('Y-m-d H:i:s'));
+
+                                    // Remember we've got this gene now.
+                                    $aGenesChecked[$sSymbol] = array(
+                                        'refseq_UD' => $sRefseqUD,
+                                        'name' => $sGeneName,
+                                        'columns' => &$aColsStandard    // By reference, this saves memory 7-fold!!
+                                    );
+                                }
+
+                                // Remove the 'Loading gene information...' message.
+                                $_BAR->setMessage('&nbsp;', 'done');
+
+                            } else {
+                                // We don't have this gene in the database and the user requested we won't try to add it.
+                                $sSymbol = $aAccessionToSymbol[$sAccession] = 'none';
+                            }
+                        }
+
+                        if ($sSymbol != 'none') {
+                            // We've got gene information available for this accession. Now we can further process the transcript.
+
+                            if (!empty($aAccessionMapping[$sAccession])) {
+                                // We've seen this transcript before. We have its proper accession number.
+                                $sAccession = $aAccessionMapping[$sAccession];
+
+                            } else {
+                                // Haven't seen this transcript in this upload before, so we still need to get its proper accession number.
+                                // We've got to be sure we have a valid accession without a version number for the next searches.
+                                if (preg_match('/^.._\d+/', $sAccession, $aAccessionClean)) {
+                                    $sAccessionClean = $aAccessionClean[0];
+                                } else {
+                                    // This accession number doesn't look like one.
+                                    $sAccession = $aAccessionMapping[$sAccession] = 'none';
+                                    continue;
+                                }
+
+                                // We'll try to get it from the database first. If we don't have it, we'll try Mutalyzer.
+                                if ($sAccessionDB = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ?', array($sAccessionClean . '%'))->fetchColumn()) {
+                                    // We have this transcript in the database already.
+                                    $sAccession = $aAccessionMapping[$sAccession] = $sAccessionDB;
+
+                                } elseif (strpos($_POST['autocreate'], 't') !== false) {
+                                    // We don't have it in the database, but we are allowed to add it.
+
+                                    if (!isset($aFieldsTranscript[$sSymbol])) {
+                                        // We still need to contact Mutalyzer to find information for the transcripts of this gene.
+
+                                        $aFieldsTranscript[$sSymbol] = array();
+                                        $_BAR->setMessage('Loading transcript information for ' . $sSymbol . '...', 'done');
+                                        $aTranscripts = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $aGenesChecked[$sSymbol]['refseq_UD'], 'geneName' => $sSymbol));
+                                        if (is_array($aTranscripts) && !empty($aTranscripts)) {
+                                            $aTranscripts = lovd_getElementFromArray('TranscriptInfo', $aTranscripts);
+                                            foreach ($aTranscripts as $aTranscript) {
+                                                // Remember the data for each of this gene's transcripts. We may insert them as needed.
+                                                $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscript['c']);
+                                                $aFieldsTranscript[$sSymbol][$aTranscriptValues['id']] = array(
+                                                    'geneid' => $sSymbol,
+                                                    'name' => str_replace($aGenesChecked[$sSymbol]['name'] . ', ', '', $aTranscriptValues['product']),
+                                                    'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscriptValues['name']),
+                                                    'id_ncbi' => $aTranscriptValues['id'],
+                                                    'id_protein_ncbi' => lovd_getValueFromElement('proteinTranscript/id', $aTranscript['c']),
+                                                    'position_c_mrna_start' => $aTranscriptValues['cTransStart'],
+                                                    'position_c_mrna_end' => $aTranscriptValues['sortableTransEnd'],
+                                                    'position_c_cds_end' => $aTranscriptValues['cCDSStop'],
+                                                    'position_g_mrna_start' => $aTranscriptValues['chromTransStart'],
+                                                    'position_g_mrna_end' => $aTranscriptValues['chromTransEnd'],
+                                                    'created_by' => 0,
+                                                    'created_date' => date('Y-m-d H:i:s'));
+                                            }
+                                        }
+
+                                        // Remove the 'Loading transcript information...' message.
+                                        $_BAR->setMessage('&nbsp;', 'done');
+                                    }
+
+                                    // Now we do have all of this gene's transcripts ready for insertion; let's see if its in there.
+                                    $bSuccess = false;
+                                    foreach ($aFieldsTranscript[$sSymbol] as $sAccessionKey => $aFields) {
+                                        if (substr($sAccessionKey, 0, strlen($sAccessionClean)) == $sAccessionClean) {
+                                            // Found it, we have its data.
+                                            $sAccession = $aAccessionMapping[$sAccession] = $sAccessionKey;
+                                            $bSuccess = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!$bSuccess) {
+                                        // We still didn't find it, so Mutalyzer didn't have this transcript either.
+                                        // We ignore this accession from now on by mapping it to 'none'.
+                                        $sAccession = $aAccessionMapping[$sAccession] = 'none';
+                                    }
+
+                                } else {
+                                    // We don't have this transcript in the database and the user requested we won't try to add it.
+                                    $sAccession = $aAccessionMapping[$sAccession] = 'none';
+                                }
+                            }
+
+
+
+                            if ($sAccession != 'none') {
+                                // We've got transcript information available, now we can further process the VariantOnTranscript.
+
+                                // Find out the protein change.
+                                $sProteinChange = 'p.?';
+                                if ($aVariant['proteinPosition'][$i] == 'NA') {
+                                    $sProteinChange = 'p.0';
+
+                                } elseif ($aVariant['aminoAcids'][$i] == 'none') {
+                                    $sProteinChange = 'p.(=)';
+                                } elseif (count($aFieldsVariantOnGenome) == 1) {
+                                    // Because of the way SeattleSeq reports amino acids, we can only reliably define
+                                    // the protein change if we have just one alternate (non-reference) allele.
+
+                                    $aAminoAcids = explode(',', $aVariant['aminoAcids'][$i]);
+                                    $aProteinPositions = explode('/', $aVariant['proteinPosition'][$i]);
+                                    if ($aVariant['functionGVS'][$i] == 'missense') {
+                                        if ($aAminoAcids[0] == 'MET' && $aProteinPositions[0] == 1) {
+                                            $sProteinChange = 'p.Met1?';
+                                        } else {
+                                            $sProteinChange = 'p.(' . ucfirst(strtolower($aAminoAcids[0])) . $aProteinPositions[0] . ucfirst(strtolower($aAminoAcids[1])) . ')';
+                                        }
+                                    } elseif ($aVariant['functionGVS'][$i] == 'nonsense') {
+                                        if ($aAminoAcids[0] == 'stop') {
+                                            $sProteinChange = 'p.(*' . $aProteinPositions[0] . ucfirst(strtolower($aAminoAcids[1])) . ')';
+                                        } elseif ($aAminoAcids[1] == 'stop') {
+                                            $sProteinChange = 'p.(' . ucfirst(strtolower($aAminoAcids[0])) . $aProteinPositions[0] . '*)';
+                                        }
+                                    }
+                                }
+
+
+
+                                foreach ($aFieldsVariantOnGenome as $j => $aFieldsVOG) {
+                                    // Get the c. notation for each of the variants we're about to insert.
+
+                                    if (!isset($aNumberConversion[$j])) {
+                                        // This way, we make just one call for each variant.
+                                        // Of course, we'll unset $aNumberConversion when we load new variants from the file.
+                                        $aNumberConversion[$j] = $_MutalyzerWS->moduleCall('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$aVariant['chromosome']] . ':' . $aFieldsVOG['VariantOnGenome/DNA']));
+                                        if (!empty($aNumberConversion[$j]['string'])) {
+                                            $aNumberConversion[$j] = $aNumberConversion[$j]['string'];
+                                        } else {
+                                            $aNumberConversion[$j] = array();
+                                        }
+                                    }
+
+                                    // We've got the c. notations, now find the notation relative to this transcript.
+                                    foreach ($aNumberConversion[$j] as $x => $aVariantOnTranscript) {
+                                        $sVariantOnTranscript = lovd_getValueFromElement('', $aVariantOnTranscript);
+
+                                        if (substr($sVariantOnTranscript, 0, strlen($sAccession)) == $sAccession) {
+                                            // Got the variant description relative to this transcript.
+                                            $aMappingInfo = lovd_getAllValuesFromArray('', $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $sAccession, 'variant' => $aFieldsVOG['VariantOnGenome/DNA'])));
+
+                                            if (isset($aMappingInfo['startmain']) && $aMappingInfo['startmain'] !== '') {
+                                                // Also got mapping information. Prepare the VariantOnTranscript data for insertion.
+
+                                                $aFieldsVariantOnTranscript[$j][$sAccession] = array(
+                                                    'effectid' => 55,
+                                                    'position_c_start' => $aMappingInfo['startmain'],
+                                                    'position_c_start_intron' => $aMappingInfo['startoffset'],
+                                                    'position_c_end' => $aMappingInfo['endmain'],
+                                                    'position_c_end_intron' => $aMappingInfo['endoffset'],
+                                                    'VariantOnTranscript/DNA' => substr($sVariantOnTranscript, strpos($sVariantOnTranscript, ':') + 1),
+                                                    'VariantOnTranscript/Protein' => $sProteinChange);
+
+                                                if (in_array('VariantOnTranscript/GVS/Function', $aGenesChecked[$sSymbol]['columns'])) {
+                                                    $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/GVS/Function'] = $aVariant['functionGVS'][$i];
+                                                }
+                                                
+                                                // cDNAPosition, polyPhen and distanceToSplice are optional columns so we should check for their existance too.
+                                                if (isset($aVariant['cDNAPosition']) && in_array('VariantOnTranscript/Position', $aGenesChecked[$sSymbol]['columns'])) {
+                                                    $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/Position'] = $aVariant['cDNAPosition'][$i];
+                                                }
+                                                if (isset($aVariant['polyPhen']) && in_array('VariantOnTranscript/PolyPhen', $aGenesChecked[$sSymbol]['columns'])) {
+                                                    $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/PolyPhen'] = $aVariant['polyPhen'][$i];
+                                                }
+                                                if (isset($aVariant['distanceToSplice']) && in_array('VariantOnTranscript/Distance_to_splice', $aGenesChecked[$sSymbol]['columns'])) {
+                                                    $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/Distance_to_splice'] = $aVariant['distanceToSplice'][$i];
+                                                }
+
+                                                // lovd_fetchDBID needs some VariantOnTranscript information too.
+                                                $aTranscriptDataForDBID[$j]['aTranscripts'][$i] = array($sAccession, $sSymbol);
+                                                $aTranscriptDataForDBID[$j][$i . '_VariantOnTranscript/DNA'] = substr($sVariantOnTranscript, strpos($sVariantOnTranscript, ':') + 1);
+                                            }
+                                            continue 2;
+                                        } // End of "we've got the right c. notation"
+                                    } // End of c. loop
+                                } // End of VOG loop
+                            } // End of "we've got transcript information"
+                        } // End of "we've got a gene information"
+                    } // End of accession loop
+
+
+
+                    foreach ($aFieldsVariantOnGenome as $i => $aFieldsVOG) {
+                        // Now that we know the VariantOnTranscript entries, we can
+                        // fetch a DBID for the VariantOnGenome and insert everything.
+
+                        if (empty($aTranscriptDataForDBID[$i])) {
+                            $aTranscriptDataForDBID[$i] = array();
+                        }
+                        $aFieldsVOG['VariantOnGenome/DBID'] = lovd_fetchDBID(array_merge($aFieldsVOG, $aTranscriptDataForDBID[$i]));
+
+                        // Now finally insert the VariantOnGenome!
+                        $_DB->query('INSERT INTO ' . TABLE_VARIANTS . ' (`' . implode('`, `', array_keys($aFieldsVOG)) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsVOG) - 1) . ')', array_values($aFieldsVOG));
+                        $nVariantID = $_DB->lastInsertId();
+                        $aUploadData['nVariants'] ++;
+
+                        // Link this variant to the current screening if applicable.
+                        if (isset($_POST['screeningid'])) {
+                            $qInsertScr2Var->execute(array($_POST['screeningid'], $nVariantID));
+                        }
+                        
+                        if (!empty($aFieldsVariantOnTranscript[$i])) {
+                            // Also got some VariantOnTranscripts.
+
+                            foreach ($aFieldsVariantOnTranscript[$i] as $sAccession => $aFieldsVOT) {
+
+                                if (($nTranscriptID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sAccession))->fetchColumn()) === false) {
+                                    // We don't have the transcript in the database, se we need to insert it first.
+
+                                    foreach ($aFieldsTranscript as $sSymbol => &$aFieldsTranscriptsOfGene) {
+                                        if (!empty($aFieldsTranscriptsOfGene[$sAccession])) {
+                                            // Found the transcript insert data.
+
+                                            if (!empty($aFieldsGene[$sSymbol])) {
+                                                // We need to insert its gene first too.
+                                                $_DB->query('INSERT INTO ' . TABLE_GENES . ' (`' . implode('`, `', array_keys($aFieldsGene[$sSymbol])) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsGene[$sSymbol]) - 1) . ')', array_values($aFieldsGene[$sSymbol]));
+                                                $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $sSymbol, 1, 1));
+                                                lovd_addAllDefaultCustomColumnsForGene($sSymbol, false);
+                                                $aUploadData['nGenes'] ++;
+
+                                                // We have it now, don't insert it again.
+                                                unset($aFieldsGene[$sSymbol]);
+                                            }
+
+                                            // Now we're ready to insert the transcript
+                                            $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . ' (`' . implode('`, `', array_keys($aFieldsTranscriptsOfGene[$sAccession])) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsTranscriptsOfGene[$sAccession]) - 1) . ')', array_values($aFieldsTranscriptsOfGene[$sAccession]));
+                                            $nTranscriptID = $_DB->lastInsertId();
+                                            $aUploadData['nTranscripts'] ++;
+                                            unset($aFieldsTranscriptsOfGene[$sAccession]);
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // Ready to insert the VariantOnTranscript.
+                                $aFieldsVOT['id'] = $nVariantID;
+                                $aFieldsVOT['transcriptid'] = $nTranscriptID;
+                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (`' . implode('`, `', array_keys($aFieldsVOT)) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsVOT) - 1) . ')', array_values($aFieldsVOT));
+                                $aUploadData['nVariantOnTranscripts'] ++;
+                            }
+                        }
+                    }
+                }
+
+                // Done! Reopen the session. Don't show warnings; session_start() is not going
+                // to be able to send another cookie. But session data is written nontheless.
+                @session_start();
+
+            } // End SeattleSeq specific code.
+
+
+
+
+
+            $_BAR->setMessage('Committing changes to the database...');
+            $_DB->commit();
+
+            // Turn on automatic mapping if it is enabled for the imported variants.
+            if ($nMappingFlags & MAPPING_ALLOW) {
+                $_SESSION['mapping']['time_complete'] = 0;
+            }
+            
+            // Saving work information.
+            $bSubmit = false;
+            $sSubmitType = '';
+            if (isset($_POST['screeningid']) && isset($_SESSION['work']['submits']['screening'][$_POST['screeningid']])) {
+                // Got a screening which we've added to an existing individual.
+                $bSubmit = true;
+                $aSubmit = &$_SESSION['work']['submits']['screening'][$_POST['screeningid']];
+                $sSubmitType = 'screening';
+            } elseif (isset($_POST['screeningid']) && isset($_SESSION['work']['submits']['individual'])) {
+                // Got a screening which we've added to a new individual. Let's find out which individual.
+                foreach($_SESSION['work']['submits']['individual'] as $nIndividualID => &$aSubmit) {
+                    if (isset($aSubmit['screenings']) && in_array($_POST['screeningid'], $aSubmit['screenings'])) {
+                        // The screening belongs to this individual, we've found him!
+                        $bSubmit = true;
+                        $sSubmitType = 'individual';
+                        $_POST['individualid'] = $nIndividualID;
+                        break;
+                    }
+                }
+            }
+
+            if ($bSubmit) {
+                if (!isset($aSubmit['uploads'])) {
+                    $aSubmit['uploads'] = array();
+                }
+                $aSubmit['uploads'][$nUploadID] = $aUploadData;
+                
+                // Define the continuation questions now so we can easily ask them in the setMessage calls below.
+                $aOptions = array('width' => 600,
+                                  'options' => array(array('onclick' => 'window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $_POST['screeningid'] . '\'',
+                                                           'option_text' => '<B>Yes, I want to submit more variants found by this mutation screening</B>')));
+                if ($sSubmitType == 'individual') {
+                    $aOptions['options'][] = array('onclick' => 'window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'',
+                                                   'option_text' => '<B>No, I want to submit another screening instead</B>');
+                }
+                $aOptions['options'][] = array('onclick' => 'window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'] . '\'',
+                                               'option_text' => '<B>No, I have finished my submission</B>');
+                $sOptions = '<BR>Were there more variants found with this mutation screening?<BR><BR>' . lovd_buildOptionTable($aOptions);
+            } else {
+                $_SESSION['work']['submits']['upload'][$nUploadID] = $aUploadData;
+            }
+
+
+
+            // Processing finished.
+            $_BAR->setProgress(100);
+            if (!$aUploadData['nUnsupportedVariants']) {
+                if ($bSubmit) {
+                    $_BAR->setMessage('All variants have been loaded successfully!');
+                    $_BAR->setMessage($sOptions, 'done');
+                    $_BAR->setMessageVisibility('done', true);
+                } else {
+                    $_BAR->setMessage('All variants have been loaded successfully. Redirecting...');
+                    $_BAR->redirectTo(lovd_getInstallURL() . 'submit/finish/upload/' . $nUploadID);
+                }
+            } else {
+                $_BAR->setMessage($aUploadData['nUnsupportedVariants'] . ' variant' . ($aUploadData['nUnsupportedVariants'] == 1? '' : 's') . ' could not be imported.' .
+                // If we're in a submission and some variants couldn't be imported, show them the list and replace it with the continuation questions when they click the Continue button.
+                       ($bSubmit? '<P>' .
+                                  '  <INPUT type="button" value="Continue &raquo;" onclick="$(this).parent().toggle();$(\'#continuation_questions\').toggle();$(oPB_' . $_BAR->sID . '_message_done).toggle()">' .
+                                  '</P>' .
+                                  '<DIV id="continuation_questions" style="display: none">' . $sOptions . '</DIV>' :
+                // If we're not in a submission just use the Continue button to forward the user to submit/finish/upload/123.
+                                  '<FORM action="' . ROOT_PATH . 'submit/finish/upload/' . $nUploadID . '" method="GET">' .
+                                  '  <INPUT type="submit" value="Continue &raquo;">' .
+                                  '</FORM>'));
+                $_BAR->setMessage('Below is ' . ($aUploadData['nUnsupportedVariants'] > 1? 'a list of ' : '') . 'the ' . ($aUploadData['nUnsupportedVariants'] > $nMaxListedUnsupported? 'first ' . $nMaxListedUnsupported . ' of ' : '') . ($aUploadData['nUnsupportedVariants'] == 1? 'variant' : $aUploadData['nUnsupportedVariants'] . ' variants') . ' that could not be imported.' .
+                                  '<DIV style="white-space: pre; font-family: monospace; border: 1px solid #224488; overflow: auto; max-height: 300px; max-width: 1000px">' .
+                                      implode("\n", $aUnsupportedLines) .
+                                  '</DIV>', 'done');
+                $_BAR->setMessageVisibility('done', true);
+            }
+
+
+            // Log it!
+            lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $aUploadData['nVariants'] . ' variants from ' . $aUploadData['sFileType'] . ' file ' . $aUploadData['sFileName']);
+
+            // End here, we don't want to show the upload form again after a successful import.
+            exit('    </BODY>' . "\n" . '</HTML>');
+        }
+
+    } else {
+        // Load default values.
+        $_POST['owned_by'] = $_AUTH['id'];
+        $_POST['statusid'] = STATUS_OK;
+        if (($nReferenceColumn = array_search('VariantOnGenome/dbSNP', $aDbSNPColumns)) || ($nReferenceColumn = array_search('VariantOnGenome/Reference', $aDbSNPColumns)) || ($nReferenceColumn = (count($aDbSNPColumns) - 1)) == 1) {
+            // Import dbSNP links in the dbSNP column by default, falling back on Reference.
+            // If both are not active, and there is just one candidate column, use that as a default.
+            $_POST['dbSNP_column'] = $nReferenceColumn;
+        }
+    }
+
+    if ($_GET['type'] == 'VCF') {
+        lovd_showInfoTable('All variants in the uploaded file are assumed to be relative to Human Genome build <B>' . $_CONF['refseq_build'] . '</B>.<BR>' . "\n" .
+                           'Also, please note that VCF import will ignore any sample data. If only a single sample is included, the GT field is used to determine the genotype.');
+    } else {
+        lovd_showInfoTable('All variants in the uploaded file are assumed to be relative to Human Genome build <B>' . $_CONF['refseq_build'] . '</B>.');
+        print('<DIV id="column_check"></DIV>' . "\n" .
+              '<SCRIPT type="text/javascript">' . "\n" .
+              '    function lovd_updateColumnMessage (sMessage) {' . "\n" .
+              '        if (sMessage == "' . AJAX_NO_AUTH . '") {' . "\n" .
+              '            alert("Lost your session. Please log in again.");' . "\n" .
+              '        } else if (sMessage != "' . AJAX_FALSE . '") {' . "\n" .
+              '            $("#column_check").html(sMessage);' . "\n" .
+              '        }' . "\n" .
+              '    }' . "\n" .
+              "\n" .
+              '    function lovd_checkColumns () {' . "\n" .
+              '        $.get("' . ROOT_PATH . 'ajax/check_seattleseq_columns.php", lovd_updateColumnMessage);' . "\n" .
+              '    }' . "\n" .
+              "\n" .
+              '    function lovd_setStandardColumn (sColumn) {' . "\n" .
+              '        $.get("' . ROOT_PATH . 'ajax/edit_column.php?set_standard&amp;colid=" + sColumn, lovd_checkColumns);' . "\n" .
+              '    }' . "\n" .
+              '    $(lovd_checkColumns);' . "\n" .
+              '</SCRIPT>');
+        lovd_showInfoTable('<B>Warning</B>: Importing large SeattleSeq files may take several hours if genes need to be created. As a rule of thumb, it will take about 10 minutes to import 1500 variants when creating genes,' . "\n" .
+                           'as opposed to one minute if no genes are created.', 'warning');
+    }
+
+    // Display any errors.
+    lovd_errorPrint();
+
+    // Prepare the upload form.
+    $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name')->fetchAllCombine();
+    $aSelectStatus = $_SETT['data_status'];
+    unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
+
+    // Display the upload form.
+    lovd_includeJS('inc-js-tooltip.php');
+    print('<FORM action="' . CURRENT_PATH . '?create&amp;type=' . $_GET['type'] . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '" method="POST" enctype="multipart/form-data">');
+    $aForm = array(array('POST', '', '', '', '60%', '14', '40%'),
+                   array('', '', 'print', '<B>File selection</B>'),
+                   'hr',
+                   array('File type', '', 'print', ($_GET['type'] == 'VCF'? 'Variant Call Format (VCF)' : 'SeattleSeq Annotation file (SNP data only)')),
+                   array('Select the file to import', '', 'file', 'variant_file', 25),
+                   array('', '', 'note', 'The maximum file size accepted is ' . round($nMaxSize/pow(1024, 2), 1) . ' MB.'),
+                   'hr',
+                   'skip',
+                   array('', '', 'print', '<B>Import options</B>'),
+                   'hr',
+                   array('Select where to import any dbSNP links',
+                         $_GET['type'] . ' files may contain references to dbSNP. Please choose the column in which you would like LOVD to include such links.<br>' .
+                         '<b>Note:</b> dbSNP custom links need to be active for at least one VariantOnGenome column to be able to store them.', 'select',
+                         'dbSNP_column', 1, $aDbSNPColumns, false, false, false));
+    if ($_GET['type'] == 'VCF') {
+        array_push($aForm,
+                   'hr',
+                   'skip',
+                   array('', '', 'print', '<B>Mapping variants to transcripts</B>'),
+                   'hr',
+                   array('Automatically map these variants to known genes and transcripts', '', 'checkbox', 'allow_mapping'),
+                   array('Add genes when variants cannot be mapped to any known transcripts',
+                         'When checked, LOVD will automatically add a gene and transcript entry in case a variant cannot be mapped on transcripts that are already in the database.', 'checkbox', 'allow_create_genes'),
+                   array('', '', 'note', 'If automatic mapping is disabled, it is still possible to map individual variants using the link on their entry page.'));
+    } else {
+        $_POST['autocreate'] = 'gt';
+        array_push($aForm,
+                   array('Do you want to create new gene and transcript entries automatically?', '', 'select', 'autocreate', 1,
+                         array('' => 'Do not create genes or transcripts', 't' => 'Create transcripts only', 'gt' => 'Create genes and transcripts'), false, false, false));
+    }
+    array_push($aForm,
+                   'hr',
+                   'skip',
+                   array('', '', 'print', '<B>General information</B>'),
+                   'hr',
+                   array('Owner of all imported variants', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false),
+                   array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false),
+                   'hr',
+                   array('','','submit','Upload ' . $_GET['type'] . ' file'));
+    
+    lovd_viewform($aForm);
+    print('</FORM>');
+
+    require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
 if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
     // URL: /variants/0000000001?edit
     // Edit an entry.
@@ -686,12 +1963,36 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             require ROOT_PATH . 'class/REST2SOAP.php';
             $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
             if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
-                $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type'));
+                $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type', 'mapping_flags'));
                 $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']));
                 if (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
                     $_POST['position_g_start'] = $aOutput['start_g'][0]['v'];
                     $_POST['position_g_end'] = $aOutput['end_g'][0]['v'];
                     $_POST['type'] = $aOutput['mutationType'][0]['v'];
+                }
+
+                // Remove the MAPPING_NOT_RECOGNIZED and MAPPING_DONE flags if the VariantOnGenome/DNA field changes.
+                $_POST['mapping_flags'] = $zData['mapping_flags'] & ~(MAPPING_NOT_RECOGNIZED | MAPPING_DONE);
+                if ($_POST['position_g_start'] === null) {
+                    // We couldn't get a position, mapping will fail.
+                    $_POST['mapping_flags'] |= MAPPING_NOT_RECOGNIZED;
+                }
+            }
+
+            foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA'] || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
+                    $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']));
+                    if (!empty($aOutput) && empty($aOutput['messages'][0]['v'])) {
+                        $_POST[$nTranscriptID . '_position_c_start'] = $aOutput['startmain'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_start_intron'] = $aOutput['startoffset'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
+                        $_POST[$nTranscriptID . '_position_c_end_intron'] = $aOutput['endoffset'][0]['v'];
+                    }
+                } else {
+                    $_POST[$nTranscriptID . '_position_c_start'] = $zData[$nTranscriptID . '_position_c_start'];
+                    $_POST[$nTranscriptID . '_position_c_start_intron'] = $zData[$nTranscriptID . '_position_c_start_intron'];
+                    $_POST[$nTranscriptID . '_position_c_end'] = $zData[$nTranscriptID . '_position_c_end'];
+                    $_POST[$nTranscriptID . '_position_c_end_intron'] = $zData[$nTranscriptID . '_position_c_end_intron'];
                 }
             }
 
@@ -928,6 +2229,85 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
           '      </FORM>' . "\n\n");
 
     require ROOT_PATH . 'inc-bot.php';
+    exit;
+}
+
+
+
+
+
+if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'search_global') {
+    // URL: /variants/0000000001?search_global
+    // Search an entry in other public LOVDs.
+
+    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    define('PAGE_TITLE', 'Search other public LOVDs for variant #' . $nID);
+    define('LOG_EVENT', 'VariantGlobalSearch');
+    require ROOT_PATH . 'inc-top-clean.php';
+    lovd_printHeader(PAGE_TITLE);
+
+    lovd_isAuthorized('variant', $nID);
+    lovd_requireAUTH(LEVEL_OWNER);
+    
+    require ROOT_PATH . 'class/object_genome_variants.php';
+    $zData = new LOVD_GenomeVariant();
+    $zData = $zData->loadEntry($nID);
+
+    // Request data.
+    $sSearchPosition = 'chr' . $zData['chromosome'] . ':' . $zData['position_g_start'];
+    if ($zData['position_g_end'] != $zData['position_g_start']) {
+        $sSearchPosition .= '_' . $zData['position_g_end'];
+    }
+    $sSignature = $_DB->query('SELECT signature FROM ' . TABLE_STATUS)->fetchColumn();
+    $aData = lovd_php_file($_SETT['upstream_URL'] . 'search.php?position=' . $sSearchPosition . '&build=' . $_CONF['refseq_build'] . '&ignore_signature=' . md5($sSignature));
+    if (empty($aData)) {
+        // No data found.
+        lovd_showInfoTable('This variant was not found in any other public LOVDs.');
+        require ROOT_PATH . 'inc-bot-clean.php';
+        exit;
+    }
+    
+    print('The variant has been found in the following public LOVDs. Click the entry for which you want to see more information.<BR><BR>' . "\n");
+    
+    print('<TABLE class="data" cellpadding="0" cellspacing="1" width="100%">' . "\n" .
+          '  <TR>' . "\n" .
+          '    <TH>Genome&nbsp;build</TH>' . "\n" .
+          '    <TH>Gene</TH>' . "\n" .
+          '    <TH>Transcript</TH>' . "\n" .
+          '    <TH>Position</TH>' . "\n" .
+          '    <TH>DNA&nbsp;change</TH>' . "\n" .
+          '    <TH>DB-ID</TH>' . "\n" .
+          '    <TH>LOVD&nbsp;location</TH>' . "\n" .
+          '  </TR>' . "\n");
+    $aHeaders = explode("\"\t\"", trim(array_shift($aData), '"'));
+    
+    // Remove all-zero DBIDs from the array.
+    $aDataCleaned = array();
+    foreach ($aData as $sHit) {
+        $aHit = array_combine($aHeaders, explode("\"\t\"", trim($sHit, '"')));
+        if (!preg_match('/_0?00000$/', $aHit['variant_id'])) {
+            $aDataCleaned[] = $sHit;
+        }
+    }
+    if (!empty($aDataCleaned)) {
+        // We've still got variants left, so let's use the cleaned array. We wouldn't want to use a 'cleaned' array if that means we cleared it!
+        $aData = $aDataCleaned;
+    }
+    
+    foreach ($aData as $sHit) {
+        $aHit = array_combine($aHeaders, explode("\"\t\"", trim($sHit, '"')));
+        print('  <TR class="data" style="cursor : pointer;" onclick="window.open(\'' . $aHit['url'] . '\', \'_blank\');">' . "\n" .
+              '    <TD>' . $aHit['hg_build'] . '</TD>' . "\n" .
+              '    <TD>' . $aHit['gene_id'] . '</TD>' . "\n" .
+              '    <TD>' . $aHit['nm_accession'] . '</TD>' . "\n" .
+              '    <TD>' . $aHit['g_position'] . '</TD>' . "\n" .
+              '    <TD>' . $aHit['DNA'] . '</TD>' . "\n" .
+              '    <TD>' . $aHit['variant_id'] . '</TD>' . "\n" .
+              '    <TD>' . substr($aHit['url'], 0, strpos($aHit['url'], '/variants.php')) . '</TD>' . "\n" .
+              '  </TR>' . "\n");
+    }
+    print('</TABLE>');
+    require ROOT_PATH . 'inc-bot-clean.php';
     exit;
 }
 

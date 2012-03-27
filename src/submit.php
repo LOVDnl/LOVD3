@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-01-12
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-03-26
+ * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *
+ *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -69,13 +69,6 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_PATH_ELEMENTS[2], array('individual', 'screening', 'variant', 'phenotype', 'upload')) && isset($_PATH_ELEMENTS[3]) && ctype_digit($_PATH_ELEMENTS[3])) {
     // URL: /submit/finish/(variant|individual|screening|phenotype|upload)/00000001
 
-    if ($_PATH_ELEMENTS[2] == 'upload') {
-        // FIXME; Implement upload properly! Maybe with an upload ID or something similar?
-        // Now just sending the user to variants.php -- no e-mail, no nothing!
-        header('Refresh: 0; url=' . lovd_getInstallURL() . 'variants/');
-        exit;
-    }
-
     // Try to find the genes and or diseases associated with the submission.
     switch ($_PATH_ELEMENTS[2]) {
         case 'individual':
@@ -95,8 +88,9 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
             $zData = $_DB->query('SELECT p.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_PHENOTYPES . ' AS p LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s USING (individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE p.id = ? AND p.created_by = ? GROUP BY p.id ORDER BY t.geneid ASC', array($nID, $_AUTH['id']))->fetchAssoc();
             break;
         case 'upload':
-            $nID = sprintf('%02d', $_PATH_ELEMENTS[3]);
-            $zData = array(); //FIXME; When we made some kind of lookup table of the variants of the upload.
+            $nID = sprintf('%015d', $_PATH_ELEMENTS[3]);
+            // Setting zData to a valid, non-empty array, yet without any data because there is none.
+            $zData = array('geneids' => '', 'diseaseids' => '');
             break;
     }
     $aGenes = (!empty($zData['geneids'])? explode(';', $zData['geneids']) : array());
@@ -107,10 +101,12 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
 
     // Making sure we can always refer to the same variables so that it doesn't matter how we enter this submission.
     $aSubmit = array();
-    if (in_array($_PATH_ELEMENTS[2], array('individual', 'screening'))) {
+    if (in_array($_PATH_ELEMENTS[2], array('individual', 'screening', 'upload'))) {
         $aSubmit = $_SESSION['work']['submits'][$_PATH_ELEMENTS[2]][$nID];
     }
-    if ($_PATH_ELEMENTS[2] != 'individual') {
+    if ($_PATH_ELEMENTS[2] == 'upload') {
+        $aSubmit['uploads'] = $_SESSION['work']['submits']['upload'];
+    } elseif ($_PATH_ELEMENTS[2] != 'individual') {
         $aSubmit[$_PATH_ELEMENTS[2] . 's'] = array($nID);
     }
 
@@ -140,9 +136,10 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     // Remove the submission information from $_SESSION and close the session file, so that other scripts can use it without having to wait for this script to finish.
     unset($_SESSION['work']['submits'][$_PATH_ELEMENTS[2]][$nID]);
     session_write_close();
+
     header('Refresh: 3; url=' . lovd_getInstallURL() . ($_PATH_ELEMENTS[2] == 'upload'? 'variants/upload/' : $_PATH_ELEMENTS[2] . 's/') . $nID);
     define('LOG_EVENT', 'Submit' . ucfirst($_PATH_ELEMENTS[2]));
-    define('PAGE_TITLE', 'Submit a' . ($_PATH_ELEMENTS[2] == 'individual'? 'n ' : ' ') . $_PATH_ELEMENTS[2]);
+    define('PAGE_TITLE', 'Submit a' . (in_array($_PATH_ELEMENTS[2], array('individual', 'upload'))? 'n ' : ' ') . $_PATH_ELEMENTS[2]);
 
     require ROOT_PATH . 'inc-top.php';
     lovd_printHeader(PAGE_TITLE);
@@ -153,13 +150,17 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
             case 'individual':
             case 'screening':
             case 'variant':
-                $nNullTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) WHERE vot.id IS NULL AND v.id IN (?' . str_repeat(', ?', count($aSubmit['variants']) - 1) . ')', $aSubmit['variants'])->fetchColumn();
+                $nNullTranscript = 0;
+                if (!empty($aSubmit['variants'])) {
+                    // $aSubmit['variants'] does not exist if the screening only consists of one or more uploads.
+                    $nNullTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) WHERE vot.id IS NULL AND v.id IN (?' . str_repeat(', ?', count($aSubmit['variants']) - 1) . ')', $aSubmit['variants'])->fetchColumn();
+                }
                 break;
             case 'phenotype':
                 $nNullTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s USING (individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) WHERE vot.id IS NULL AND p.id = ?', array($nID))->fetchColumn();
                 break;
             case 'upload':
-                //$nNullTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING(id) WHERE vot.id IS NULL AND v.id IN (?' . str_repeat(', ?', count($aSubmit['variants']) - 1) . ')', $aSubmit['variants'])->fetchColumn();
+                $nNullTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING(id) WHERE vot.id IS NULL AND v.created_date = ? AND v.created_by = ?', array($aSubmit['tCreatedDate'], $_AUTH['id']))->fetchColumn();
                 break;
         }
 
@@ -174,50 +175,71 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     }
 
     // Arrays containing submitter & data fields.
-    $aSubmitterDetails = array(
-                                '_AUTH',
-                                'id' => 'User ID',
-                                'name' => 'Name',
-                                'institute' => 'Institute',
-                                'department' => 'Department',
-                                'address' => 'Address',
-                                'city' => 'City',
-                                'country_' => 'Country',
-                                'email' => 'Email address',
-                                'telephone' => 'Telephone',
-                                'reference' => 'Reference',
-                              );
-    $aIndividualFields = array(
-                                'zIndividualDetails',
-                                'id' => 'Individual ID',
-                                'panel_' => 'Panel?',
-                                'panel_size' => 'Panel size',
-                              );
-    $aPhenotypeFields = array(
-                               '',
-                               'individualid' => 'Individual ID',
-                               'diseaseid_' => 'Disease',
-                               'id' => 'Phenotype ID',
-                             );
-    $aScreeningFields = array(
-                               '',
-                               'individualid' => 'Individual ID',
-                               'id' => 'Screening ID',
-                             );
-    $aVariantOnGenomeFields = array(
-                                     '',
-                                     'id' => 'Variant ID',
-                                     'allele_' => 'Allele',
-                                     'effect_reported' => 'Affects function (reported)',
-                                     'effect_concluded' => 'Affects function (concluded)',
-                                     'chromosome' => 'Chromosome',
-                                   );
-    $aVariantOnTranscriptFields = array(
-                                         '',
-                                         'id_ncbi_' => 'On transcript',
-                                         'effect_reported' => 'Affects function (reported)',
-                                         'effect_concluded' => 'Affects function (concluded)',
-                                       );
+    $aSubmitterDetails =
+     array(
+            '_AUTH',
+            'id' => 'User ID',
+            'name' => 'Name',
+            'institute' => 'Institute',
+            'department' => 'Department',
+            'address' => 'Address',
+            'city' => 'City',
+            'country_' => 'Country',
+            'email' => 'Email address',
+            'telephone' => 'Telephone',
+            'reference' => 'Reference',
+          );
+    $aIndividualFields =
+     array(
+            'zIndividualDetails',
+            'id' => 'Individual ID',
+            'panel_' => 'Panel?',
+            'panel_size' => 'Panel size',
+          );
+    $aPhenotypeFields =
+     array(
+            '',
+            'individualid' => 'Individual ID',
+            'diseaseid_' => 'Disease',
+            'id' => 'Phenotype ID',
+          );
+    $aScreeningFields =
+     array(
+            '',
+            'individualid' => 'Individual ID',
+            'id' => 'Screening ID',
+          );
+    $aVariantOnGenomeFields =
+     array(
+            '',
+            'screeningid' => 'Screening ID',
+            'id' => 'Variant ID',
+            'allele_' => 'Allele',
+            'effect_reported' => 'Affects function (reported)',
+            'effect_concluded' => 'Affects function (concluded)',
+            'chromosome' => 'Chromosome',
+          );
+    $aVariantOnTranscriptFields =
+     array(
+            '',
+            'id_ncbi_' => 'On transcript',
+            'effect_reported' => 'Affects function (reported)',
+            'effect_concluded' => 'Affects function (concluded)',
+          );
+    $aUploadFields =
+     array(
+            '',
+            'screeningid' => 'Screening ID',
+            'sFileName' => 'File name',
+            'sFileType' => 'File type',
+            'tUploadDate' => 'Timestamp',
+            'nVariants' => 'Variants imported',
+            'nUnsupportedVariants' => 'Variants not imported',
+            'nGenes' => 'Genes created',
+            'nTranscripts' => 'Transcripts created',
+            'nVariantOnTranscripts' => 'Transcript variants imported',
+            'mapping_flags_' => 'Automatic mapping',
+          );
 
     // Load the non-shared custom columns and add them to the fields list.
     $qCols = $_DB->query('SELECT c.id, c.head_column FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id NOT LIKE "VariantOnTranscript/%" ' . (empty($aSubmit['screenings'])? 'AND c.id NOT LIKE "Screening/%" ' : '') . ($_PATH_ELEMENTS[2] != 'individual'? 'AND c.id NOT LIKE "Individual/%" ' : '') . 'AND c.id NOT LIKE "Phenotype/%" ORDER BY c.col_order', array());
@@ -243,7 +265,13 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     if ($_PATH_ELEMENTS[2] != 'phenotype') {
         unset($aPhenotypeFields['individualid']);
     }
-    // Load all Phenotype custom columns for each disease and put them in separate variable variables
+    if ($_PATH_ELEMENTS[2] == 'individual' && (empty($aSubmit['screenings']) || count($aSubmit['screenings']) < 2)) {
+        // Only showing the screening ID if several screenings for the same individual have been submitted at once.
+        // If a variant or upload is added to an existing screening, the field is unset later.
+        unset($aVariantOnGenomeFields['screeningid']);
+        unset($aUploadFields['screeningid']);
+    }
+    // Load all Phenotype custom columns for each disease and put them in separate variable variables.
     foreach ($aDiseases as $sDisease) {
         $sColNamesPhen = 'PhenCols_' . $sDisease;
         $$sColNamesPhen = $aPhenotypeFields;
@@ -305,7 +333,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
             $sVariableNameVOG = 'zVariantOnGenomeDetails_' . $nVariantID;
             $a = $aVariantOnGenomeFields;
             $a[0] = $sVariableNameVOG;
-            $$sVariableNameVOG = $_DB->query('SELECT v.*, u.name AS owned_by_ FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (v.owned_by = u.id) WHERE v.id = ?', array($nVariantID))->fetchAssoc();
+            $$sVariableNameVOG = $_DB->query('SELECT v.*, u.name AS owned_by_, s2v.screeningid FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (v.owned_by = u.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON(v.id = s2v.variantid) WHERE v.id = ?', array($nVariantID))->fetchAssoc();
             ${$sVariableNameVOG}['allele_'] = $_SETT['var_allele'][${$sVariableNameVOG}['allele']];
             ${$sVariableNameVOG}['effect_reported'] = (!empty(${$sVariableNameVOG}['effectid'])? $_SETT['var_effect'][${$sVariableNameVOG}['effectid']{0}] : '');
             ${$sVariableNameVOG}['effect_concluded'] = (!empty(${$sVariableNameVOG}['effectid'])? $_SETT['var_effect'][${$sVariableNameVOG}['effectid']{1}] : '');
@@ -313,6 +341,12 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
             ${$sVariableNameVOG}['statusid_'] = $_SETT['data_status'][${$sVariableNameVOG}['statusid']];
             $bUnpublished = ($bUnpublished || ${$sVariableNameVOG}['statusid'] < STATUS_MARKED);
             $a['statusid_'] = 'Data status';
+
+            if (!isset(${$sVariableNameVOG}['screeningid'])) {
+                // Hide the screening ID field if the variant is not added to an existing screening.
+                unset($a['screeningid']);
+            }
+
             $aVariantDetails[] = $a;
 
             $q = $_DB->query('SELECT vot.*, CONCAT(t.id_ncbi, " (", t.geneid, ")") AS id_ncbi_, t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ?', array($nVariantID));
@@ -330,6 +364,45 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         }
         array_pop($aVariantDetails);
         array_pop($aVariantDetails);
+    }
+
+    if (!empty($aSubmit['uploads'])) {
+        $aUploadDetails = array();
+        foreach ($aSubmit['uploads'] as $nUploadID => $zUploadDetails) {
+            $sVariableNameUpload = 'zUploadDetails_' . $nUploadID;
+            $a = $aUploadFields;
+            $a[0] = $sVariableNameUpload;
+            $$sVariableNameUpload = $zUploadDetails;
+            foreach (array('nUnsupportedVariants', 'nGenes', 'nTranscripts') as $sKey) {
+                if ($zUploadDetails[$sKey] == 0) {
+                    // Don't show the 'Variants not imported', 'Genes created' and/or 'Transcripts created' fields if they are 0.
+                    // Note that the Genes and Transcripts counters are always zero for VCF files.
+                    unset($a[$sKey]);
+                }
+            }
+            if ($zUploadDetails['sFileType'] == 'VCF') {
+                // Also don't show the VOT counter for VCF files.
+                unset($a['nVariantOnTranscripts']);
+            } else {
+                // And don't show the mapping flags field for SeattleSeq files.
+                unset($a['mapping_flags_']);
+            }
+            if (!isset($zUploadDetails['screeningid'])) {
+                // Hide the screening ID field if the upload is not added to an existing screening.
+                unset($a['screeningid']);
+            }
+            if ($zUploadDetails['owned_by'] != $_AUTH['id']) {
+                // Include 'Data owner' field if owner is not the submitter.
+                $a['owned_by_'] = 'Data owner';
+                ${$sVariableNameUpload}['owned_by_'] = $_DB->query('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($zUploadDetails['owned_by']))->fetchColumn();
+            }
+            ${$sVariableNameUpload}['mapping_flags_'] = (($zUploadDetails['mapping_flags'] & MAPPING_ALLOW)? 'On' . (($zUploadDetails['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES)? ', creating genes as needed' : '') : 'Off');
+            
+            // Include 'Data status' as the very last field.
+            $a['statusid_'] = 'Data status';
+            ${$sVariableNameUpload}['statusid_'] = $_SETT['data_status'][$zUploadDetails['statusid']];
+            $aUploadDetails[] = $a;
+        }
     }
 
     // Introduction message to curators/managers.
@@ -360,6 +433,9 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     if (!empty($aSubmit['variants'])) {
         $aBody['variant_details'] = $aVariantDetails;
     }
+    if (!empty($aSubmit['uploads'])) {
+        $aBody['upload_details'] = $aUploadDetails;
+    }
     require ROOT_PATH . 'inc-lib-form.php';
     $sBody = lovd_formatMail($aBody);
 
@@ -373,7 +449,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         if ($sName == $_AUTH['name']) {
             $aSubmitter = array();
         }
-    }    
+    }
 
     // Send mail.
     $bMail = lovd_sendMail($aTo, $sSubject, $sBody, 

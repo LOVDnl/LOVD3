@@ -69,7 +69,7 @@ class LOVD_Object {
     var $nID = 0;
     var $sRowID = ''; // FIXME; needs getter and setter?
     var $sRowLink = ''; // FIXME; needs getter and setter?
-    var $nCount = 0;
+    var $nCount = '';
 
 
 
@@ -292,7 +292,7 @@ class LOVD_Object {
         if ($nID) {
             $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE id = ?', array($nID))->fetchColumn();
         } else {
-            if ($this->nCount) {
+            if ($this->nCount !== '') {
                 return $this->nCount;
             }
             $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable))->fetchColumn();
@@ -685,6 +685,11 @@ class LOVD_Object {
 
         if (!is_array($aColsToSkip)) {
             $aColsToSkip = array($aColsToSkip);
+        }
+        foreach ($this->aColumnsViewList as $sCol => $aCol) {
+            if (!$aCol['view']) {
+                $aColsToSkip[] = $sCol;
+            }
         }
 
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
