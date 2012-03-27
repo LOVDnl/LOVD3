@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-03-12
+ * Modified    : 2012-03-27
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,7 +56,7 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
 
 
 
-// Initiate $_SETT array.
+// Define constants needed throughout LOVD.
 // Find out whether or not we're using SSL.
 if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['SSL_PROTOCOL'])) {
     // We're using SSL!
@@ -67,6 +67,14 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
     define('SSL', false);
     define('SSL_PROTOCOL', '');
     define('PROTOCOL', 'http://');
+}
+
+// Our output format: text/html by default.
+$aFormats = array('text/html'); // Key [0] is default.
+if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
+    define('FORMAT', $_GET['format']);
+} else {
+    define('FORMAT', $aFormats[0]);
 }
 
 define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorization is depending on assignments, not user levels anymore.
@@ -94,6 +102,7 @@ define('MAPPING_NOT_RECOGNIZED', 8);    // FIXME; Create a button in Setup which
 define('MAPPING_ERROR', 16);            // FIXME; Create a button in Setup which clears all ERROR flags in the database to retry them.
 define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which clears all DONE flags in the database to retry them.
 
+// For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
                 'PHP'   => '5.1.0',
@@ -105,10 +114,11 @@ $aRequired =
                 'MySQL' => '4.1.2',
               );
 
+// Initiate $_SETT array.
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-beta-02c',
+                            'version' => '3.0-beta-02d',
                           ),
                 'user_levels' =>
                      array(
@@ -289,6 +299,10 @@ $_SETT = array(
 list($_SETT['system']['tree'], $_SETT['system']['build']) = explode('-', $_SETT['system']['version'], 2);
 $_SETT['update_URL'] = $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/package_update.php';
 $_SETT['check_location_URL'] = $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/check_location.php';
+
+// Before we have any output, initiate the template class which takes care of headers and such.
+require ROOT_PATH . 'class/template.php';
+$_T = new LOVD_Template();
 
 
 

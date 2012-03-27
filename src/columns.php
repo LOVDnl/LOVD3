@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-03-19
+ * Modified    : 2012-03-27
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,8 +52,8 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     }
 
     define('PAGE_TITLE', 'Browse custom data columns');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
@@ -71,7 +71,7 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
         lovd_showNavigation('<A href="columns/' . $_PATH_ELEMENTS[1] . '?order">Re-order all ' . $_PATH_ELEMENTS[1] . ' columns</A>');
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -88,8 +88,8 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
     $sColumnID = implode('/', $aCol);
 
     define('PAGE_TITLE', 'View custom data column ' . $sColumnID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
@@ -138,7 +138,7 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -160,10 +160,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
 
     if (!$aTableInfo) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('Re-order columns');
+        $_T->printHeader();
+        $_T->printTitle('Re-order columns');
         lovd_showInfoTable('The specified category does not exist!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -212,17 +212,17 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
         // Thank the user...
         header('Refresh: 3; url=' . lovd_getInstallURL() . ($sObject != ''? $aTableInfo['unit'] . 's/' . $sObject : 'columns/' . $sCategory));
 
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_showInfoTable('Successfully updated the ' . $aTableInfo['table_name'] . ' column order' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : '') . '!', 'success');
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
-    require ROOT_PATH . 'inc-top.php';
+    $_T->printHeader();
 
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printTitle(PAGE_TITLE);
 
     // Retrieve column IDs in current order.
     $aColumns = array();
@@ -266,7 +266,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
       </SCRIPT>
 <?php
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -290,8 +290,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
     if (empty($_POST['form_type'])) {
         // Choose from the form types, and continue.
 
-        require ROOT_PATH . 'inc-top-clean.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader(false);
+        $_T->printTitle(PAGE_TITLE);
 
         if (isset($_SERVER['HTTP_REFERER']) && substr($_SERVER['HTTP_REFERER'], -4) == 'edit') {
             lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of losing data!', 'warning');
@@ -330,7 +330,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
 
         print('</FORM>' . "\n\n");
 
-        require ROOT_PATH . 'inc-bot-clean.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -516,8 +516,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             }
 
             // Thank the user...
-            require ROOT_PATH . 'inc-top-clean.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader(false);
+            $_T->printTitle(PAGE_TITLE);
             lovd_showInfoTable('Done! Created MySQL data type and form definition.', 'success');
 
             // Pass it on to the opener...
@@ -535,7 +535,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             // Script up there should suffice actually...
             print('      <BUTTON onclick="javascript:self.close();">Close window</BUTTON><BR>' . "\n\n");
 
-            require ROOT_PATH . 'inc-bot-clean.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -579,8 +579,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
 
 
 
-    require ROOT_PATH . 'inc-top-clean.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader(false);
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_errorPrint();
 
@@ -653,7 +653,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot-clean.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -674,8 +674,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     // Let user pick column type first.
     if (empty($_POST['category'])) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
 
         $aOptionsList =
              array(
@@ -712,7 +712,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '        <INPUT name="category" type="hidden" value="">' . "\n" .
               '      </FORM>' . "\n\n");
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -777,15 +777,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             // Thank the user...
             header('Refresh: ' . (!$bFailedLinks? 3 : 10) . '; url=' . lovd_getInstallURL() . 'columns/' . $_POST['id']);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
             lovd_showInfoTable('Successfully created the new "' . $_POST['id'] . '" column!', 'success');
 
             if ($bFailedLinks) {
                 lovd_showInfoTable('One or more custom links could not be added to the newly created column. More information can be found in the system logs.', 'warning');
             }
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -810,8 +810,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_errorPrint();
 
@@ -858,7 +858,7 @@ $( function () {
 </SCRIPT>
 <?php
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -915,8 +915,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
         $_DATA->checkFields($_POST);
 
         if (!lovd_error()) {
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
 
             // Fields to be used.
             $aFields = array('width', 'standard', 'mandatory', 'head_column', 'description_form', 'description_legend_short', 'description_legend_full', 'mysql_type', 'form_type', 'select_options', 'preg_pattern', 'public_view', 'public_add', 'allow_count_all', 'edited_by', 'edited_date');
@@ -937,8 +937,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
             // This already puts the progress bar on the screen.
             $_BAR = new ProgressBar('', $sMessage);
 
-            define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
             // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
             flush();
 
@@ -1164,8 +1163,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_errorPrint();
 
@@ -1224,7 +1223,7 @@ $( function ()
 </SCRIPT>
 <?php
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -1238,10 +1237,10 @@ lovd_requireAUTH(LEVEL_MANAGER);
     $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"'));
     if (!$zData) {
         // Wrong ID, apparently.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
+        $_T->printHeader();
+        $_T->printTitle('LOVD Setup - Manage custom column defaults');
         lovd_showInfoTable('No such ID!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -1262,10 +1261,10 @@ lovd_requireAUTH(LEVEL_MANAGER);
     }
 
     if (!$zData['created_by'] || $bSelected) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
+        $_T->printHeader();
+        $_T->printTitle('LOVD Setup - Manage custom column defaults');
         lovd_showInfoTable('Column has been selected, cannot be renamed!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -1314,8 +1313,8 @@ lovd_requireAUTH(LEVEL_MANAGER);
             $q = mysql_query($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
+                $_T->printHeader();
+                $_T->printTitle('LOVD Setup - Manage custom column defaults');
                 lovd_dbFout('ColEditColID', $sQ, $sError);
             }
 
@@ -1335,11 +1334,11 @@ lovd_requireAUTH(LEVEL_MANAGER);
             // Thank the user...
             header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view&view=' . rawurlencode($_POST['colid']));
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
+            $_T->printHeader();
+            $_T->printTitle('LOVD Setup - Manage custom column defaults');
             print('      Successfully changed column ID \'' . $zData['colid'] . '\' to \'' . $_POST['colid'] . '\'!<BR><BR>' . "\n\n");
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -1362,8 +1361,8 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader('setup_columns_manage_defaults', 'LOVD Setup - Manage custom column defaults');
+    $_T->printHeader();
+    $_T->printTitle('LOVD Setup - Manage custom column defaults');
 
     lovd_errorPrint();
 
@@ -1385,7 +1384,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 */
@@ -1433,12 +1432,12 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 // I don't seem to be able to find a better way of doing this.
                 // I need this data in GET, but I have it in POST (and can't use a
                 // GET form with the current URL setup for ACTION in LOVD 3.0).
-                header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '&target=' . rawurlencode(implode(',', $_POST['target'])));
+                header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '&target=' . rawurlencode(implode(',', $_POST['target'])) . (isset($_GET['in_window'])? '&in_window' : ''));
                 exit;
             }
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
 
             if ($sCategory == 'VariantOnTranscript') {
                 // Add column to a certain gene.
@@ -1458,7 +1457,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                     print('      Please select the gene(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
                 } else {
                     lovd_showInfoTable('There are no genes available that you can add this column to. Possibly all configured genes already have this column enabled, or you do not have the rights to edit the gene you wish to add this column to.', 'stop');
-                    require ROOT_PATH . 'inc-bot.php';
+                    $_T->printFooter();
                     exit;
                 }
 
@@ -1480,12 +1479,12 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                     print('      Please select the disease(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
                 } else {
                     lovd_showInfoTable('There are no diseases available that you can add this column to. Possibly all configured diseases already have this column enabled, or you do not have the rights to edit the disease you wish to add this column to; make sure it\'s connected to a gene you are a curator of.', 'stop');
-                    require ROOT_PATH . 'inc-bot.php';
+                    $_T->printFooter();
                     exit;
                 }
             }
 
-            print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+            print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
             $nTargets = ($nTargets > 15? 15 : $nTargets);
 
@@ -1500,7 +1499,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
 
             print('</FORM>' . "\n\n");
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
 
@@ -1514,10 +1513,10 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 $aAvailableGenes = ($_AUTH['level'] < LEVEL_MANAGER? $_AUTH['curates'] : lovd_getGeneList());
                 foreach ($aTargets as $sSymbol) {
                     if (!in_array($sSymbol, $aAvailableGenes)) {
-                        require ROOT_PATH . 'inc-top.php';
-                        lovd_printHeader(PAGE_TITLE);
+                        $_T->printHeader();
+                        $_T->printTitle(PAGE_TITLE);
                         lovd_showInfoTable('Gene ' . htmlspecialchars($sSymbol) . ' does not exist or you do not have permission to edit it.', 'stop');
-                        require ROOT_PATH . 'inc-bot.php';
+                        $_T->printFooter();
                         exit;
                     }
                 }
@@ -1544,10 +1543,10 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
 
                 foreach ($aTargets as $nID) {
                     if (!array_key_exists($nID, $aDiseases)) {
-                        require ROOT_PATH . 'inc-top.php';
-                        lovd_printHeader(PAGE_TITLE);
+                        $_T->printHeader();
+                        $_T->printTitle(PAGE_TITLE);
                         lovd_showInfoTable('Disease ' . htmlspecialchars($nID) . ' does not exist or you do not have the rights to edit it.', 'stop');
-                        require ROOT_PATH . 'inc-bot.php';
+                        $_T->printFooter();
                         exit;
                     }
                 }
@@ -1570,19 +1569,19 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
     // If already active and this is not a shared table, adding it again is useless!
     if ($zData['active'] && $zData['active_checked']) {
         if (!$aTableInfo['shared']) {
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
             lovd_showInfoTable('This column has already been added to the ' . $aTableInfo['table_name'] . ' table!', 'stop');
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         } else {
             list($nError) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ? AND ' . ($sCategory == 'VariantOnTranscript'? 'geneid' : 'diseaseid') . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ')', array_merge(array($zData['id']), $aTargets)));
             if ($nError) {
                 // Target already has this column enabled!
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
+                $_T->printHeader();
+                $_T->printTitle(PAGE_TITLE);
                 lovd_showInfoTable('This column has already been added to ' . ($nError == 1? 'the ' . $aTableInfo['unit'] : $nError . ' of the ' . $aTableInfo['unit'] . 's') . ' you selected!', 'stop');
-                require ROOT_PATH . 'inc-bot.php';
+                $_T->printFooter();
                 exit;
             }
         }
@@ -1620,8 +1619,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
 
         if (!lovd_error()) {
             // Start with inc-top.php and text, because we want to show a progress bar...
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
 
             if (!$zData['active_checked']) {
                 $sMessage = 'Adding column to data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
@@ -1638,8 +1637,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             // This already puts the progress bar on the screen.
             $_BAR = new ProgressBar('', $sMessage);
 
-            define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
             // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
             flush();
 
@@ -1736,7 +1734,17 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true));
 */
 // TMP:
-$_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
+if (!isset($_GET['in_window'])) {
+    $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
+} else {
+    print('<SCRIPT type="text/javascript">' . "\n" .
+          '    if (opener.lovd_checkColumns) {' . "\n" .
+          '        opener.lovd_checkColumns();' . "\n" .
+          '    }' . "\n" .
+          '    window.close();' . "\n" .
+          '</SCRIPT>');
+    
+}
 /*
             }
 
@@ -1760,8 +1768,8 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     // If ALTER time is large enough, mention something about it.
     if ($tAlter > $tAlterMax) {
@@ -1773,7 +1781,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
 
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (empty($_GET['target'])? '' : '&target=' . htmlspecialchars($_GET['target'])) . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (empty($_GET['target'])? '' : '&amp;target=' . htmlspecialchars($_GET['target'])) . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -1801,7 +1809,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
                            '&nbsp;&nbsp;Unit=' . $aTableInfo['unit'] . '</I><BR>' .                          
                            'Such failure is most likely caused by a bug in LOVD.<BR>' .
                            'Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">file a bug</A> and include the above messages to help us solve the problem.', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -1816,7 +1824,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -1867,10 +1875,10 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         $sMessage = 'Hack Attempt!';
     }
     if ($sMessage) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_showInfoTable($sMessage, 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -1898,8 +1906,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
         }
 
         if (!lovd_error()) {
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
             
             $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
 
@@ -1912,8 +1920,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
             // This already puts the progress bar on the screen.
             $_BAR = new ProgressBar('', $sMessage);
 
-            define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
             // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
             flush();
 
@@ -2011,8 +2018,8 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sCategory, 3);
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_errorPrint();
 
@@ -2051,7 +2058,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sCategory, 3);
                                   );
         } else {
             lovd_showInfoTable('There are no ' . $aTableInfo['unit'] . 's available that you can remove this column from. Possibly all configured ' . $aTableInfo['unit'] . 's already have this column removed, or you do not have the rights to edit the ' . $aTableInfo['unit'] . ' you wish to remove this column from.', 'stop');
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
     } else {
@@ -2084,7 +2091,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sCategory, 3);
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -2115,10 +2122,10 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
         $sMessage = 'Hack Attempt!';
     }
     if ($sMessage) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_showInfoTable($sMessage, 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -2164,11 +2171,11 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'columns/' . $sCategory);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
             lovd_showInfoTable('Successfully deleted the column ' . $sColumnID . '!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -2179,8 +2186,8 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_errorPrint();
 
@@ -2199,7 +2206,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

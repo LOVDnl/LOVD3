@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-03-12
+ * Modified    : 2012-03-26
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -203,6 +203,15 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                     '3.0-beta-02c' =>
                         array(
                                 'ALTER TABLE ' . TABLE_GENES . ' ADD COLUMN imprinting VARCHAR(10) NOT NULL DEFAULT "unknown" AFTER chrom_band',
+                             ),
+                    '3.0-beta-02d' =>
+                        array(
+                                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Conservation_score/GERP",      4, 100, 0, 0, 0, "GERP conservation",    "", "Conservation score as calculated by GERP.", "The Conservation score as calculated by GERP.", "DECIMAL(5,3)", "GERP conservation score||text|6", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/dbSNP",                        8, 120, 0, 0, 0, "dbSNP ID",             "", "The dbSNP ID.", "The dbSNP ID.", "VARCHAR(15)", "dbSNP ID|If available, please fill in the dbSNP ID, such as rs12345678.|text|10", "", "/^[rs]s\d+$/", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Distance_to_splice_site", 10, 150, 0, 0, 0, "Splice distance",      "", "The distance to the nearest splice site.", "The distance to the nearest splice site.", "MEDIUMINT(8) UNSIGNED", "Distance to splice site||text|8", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/GVS/Function",             9, 200, 0, 0, 0, "GVS function",         "", "Functional annotation of this position by GVS.", "The functional annotation of this position from the Genome Variation Server.", "VARCHAR(30)", "GVS function|Whether the variant is missense, nonsense, in an intron, UTR, etc.|text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/PolyPhen",                 8, 200, 0, 0, 0, "PolyPhen prediction",  "", "The effect predicted by PolyPhen.", "The effect predicted by PolyPhen.", "VARCHAR(20)", "PolyPhen prediction||select|1|true|false|false", "benign = Benign\r\npossiblyDamaging = Possably damaging\r\nprobablyDamaging = Probably damaging\r\nnoPrediction = No prediction", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Position",                 5, 100, 0, 0, 0, "Position",             "", "Position in cDNA sequence.", "The position of this variant in the cDNA sequence.", "MEDIUMINT(5)", "cDNA Position||text|5", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                              ),
                   );
 

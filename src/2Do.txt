@@ -1,15 +1,16 @@
 Prioritize:
 ===========
 Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
+- Apply the $_T->printHeader(), printTitle() and printFooter() everywhere. Don't forget that the Footer sometimes needs false as an argument!!!
+  + $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
+    // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
+- Submissie: check of $bMail wel true is, en reageer daar op.
 - De dbSNP custom link in de uitleg een voorbeeld geven, zoals rs12345678.
 - Screenings?confirm binnen een submissie moet nog goed geimplementeerd worden.
 - BUG: Data type Wizard moet velden quoten voordat ze weggeschreven worden.
 - BUG: text search created_by_ in columns overzicht geeft invalid search expression, terwijl de join naar u.name wel gemaakt is in de code?!!???
 - Individu gemaakt, 1 disease gekoppeld zonder phen kolommen, klik op Add phenotype, foutmelding is niet correct: The disease added to this individual do not have phenotype columns enabled yet.
   + Moet "does" zijn.
-- (@Jerry) Na importeren VCF begon hij niet automatisch te mappen.
-  + VCF import: wordt niet gelogd blijkbaar.
-  + Staat er op de VCF import pagina iets om aan te geven, dat de sample data aan het eind genegeerd wordt?
 - Should we maybe set default_socket_timeout somewhere?
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
@@ -93,7 +94,7 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
   + Als je daarna de zoekterm weg laat, staat de link van hersorteren nog steeds onderaan. Misschien category verbergen, en in de header zetten om welke categorie het gaat?
 - Custom columns:
   + Nieuw: Phenotype/Date, Variant/Times_reported???
-  + Change: VOG|VOT/DNA_published ->  VOG|BOT/Published_as?
+  + Change: VOG|VOT/DNA_published -> VOG|VOT/Published_as?
 
 - Beta-04:
   - DATA DOWNLOAD.
@@ -215,6 +216,7 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
     in the headers that get returned. Typically, if the proxy was unable to reach the host, you'll find a line containing something like:
     HTTP/1.0 503 Service Unavailable
 - lovd_setUpdatedDate() implementeren.
+- Since Objects::checkFields() is running getForm(), can't that code take care of invalid values in selection lists? Now that code is all over the place; object_custom for custom columns and lots of object_* files for each data type.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 

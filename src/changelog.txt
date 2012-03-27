@@ -49,6 +49,9 @@
  * Slightly optimized lovd_isAuthorized().
  * Fixed bug; It was not possible to activate the "Forward messages to database
    admin" or "Enable submitters to change data" settings.
+ * Include the new Template class, that will soon replace inc-top.php,
+   inc-top-clean.php, inc-bot.php and inc-bot-clean.php.
+ * Implemented it in columns.php.
 
 
 
