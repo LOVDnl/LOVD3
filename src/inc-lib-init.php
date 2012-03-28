@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-03-19
+ * Modified    : 2012-03-28
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -832,9 +832,8 @@ function lovd_requireAUTH ($nLevel = 0)
 {
     // Creates friendly output message if $_AUTH does not exist (or level too
     // low), and exits.
-    // $_AUTH is for authorization; $_SETT is needed for the user levels;
-    // $_CONF and $_STAT are for the top and bottom includes.
-    global $_AUTH, $_DB, $_SETT, $_CONF, $_STAT;
+    // $_AUTH is for authorization; $_SETT is needed for the user levels.
+    global $_AUTH, $_DB, $_SETT, $_T;
 
     $aKeys = array_keys($_SETT['user_levels']);
     if ($nLevel !== 0 && !in_array($nLevel, $aKeys)) {
@@ -843,15 +842,14 @@ function lovd_requireAUTH ($nLevel = 0)
 
     // $nLevel is now 0 (just existence of $_AUTH required) or taken from the levels list.
     if ((!$nLevel && !$_AUTH) || ($nLevel && (!$_AUTH || $_AUTH['level'] < $nLevel))) {
-        if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {
-            if (is_readable('inc-top.php')) {
-                require 'inc-top.php';
-            } else {
-                require ROOT_PATH . 'inc-top.php';
-            }
+        if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_') && !$_T->bTopIncluded) {
+            $_T->printHeader();
+
             if (defined('PAGE_TITLE')) {
                 lovd_printHeader(PAGE_TITLE);
             }
+        } else {
+            $_T->bTopIncluded = true;
         }
 
         $sMessage = 'To access this area, you need ' . (!$nLevel? 'to <A href="login">log in</A>.' : ($nLevel == max($aKeys)? '' : 'at least ') . $_SETT['user_levels'][$nLevel] . ' clearance.');
@@ -860,19 +858,7 @@ function lovd_requireAUTH ($nLevel = 0)
         }
         lovd_showInfoTable($sMessage, 'stop');
 
-        if (defined('_INC_TOP_INCLUDED_')) {
-            if (is_readable('inc-bot.php')) {
-                require 'inc-bot.php';
-            } else {
-                require ROOT_PATH . 'inc-bot.php';
-            }
-        } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
-            if (is_readable('inc-bot-clean.php')) {
-                require 'inc-bot-clean.php';
-            } else {
-                require ROOT_PATH . 'inc-bot-clean.php';
-            }
-        }
+        $_T->printFooter();
         exit;
     }
 }

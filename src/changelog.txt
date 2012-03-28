@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 03
- * 2012-03-12                                ?????????????????????????????????????????????????
+ * 2012-03-28
  *********/
  * Implemented PDO in all remaining lovd_queryDB() calls in check_update.php,
    class/object_columns.php, class/object_genes.php,
@@ -52,9 +52,6 @@
  * Include the new Template class, that will soon replace inc-top.php,
    inc-top-clean.php, inc-bot.php and inc-bot-clean.php.
  * Implemented it in columns.php.
-
-
-
  * Fixed bug; ViewLists would throw an JavaScript error in some cases.
  * Fixed bug; DBID would not be predicted correctly in some cases.
  * Fixed bug; Searching for time on a DATETIME column would result in a Bad
@@ -83,8 +80,6 @@
    screening.
  * When removing a transcript from the variant descriptions LOVD will show a
    warning when the red cross is clicked.
-
-
 
 
 /*******************

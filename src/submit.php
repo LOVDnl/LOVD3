@@ -243,8 +243,14 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
 
     // Load the non-shared custom columns and add them to the fields list.
     $qCols = $_DB->query('SELECT c.id, c.head_column FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id NOT LIKE "VariantOnTranscript/%" ' . (empty($aSubmit['screenings'])? 'AND c.id NOT LIKE "Screening/%" ' : '') . ($_PATH_ELEMENTS[2] != 'individual'? 'AND c.id NOT LIKE "Individual/%" ' : '') . 'AND c.id NOT LIKE "Phenotype/%" ORDER BY c.col_order', array());
-    if ($_PATH_ELEMENTS[2] != 'screening') {
+    if ($_PATH_ELEMENTS[2] == 'individual') {
         unset($aScreeningFields['individualid']);
+        unset($aPhenotypeFields['individualid']);
+        unset($aVariantOnGenomeFields['screeningid']);
+        unset($aUploadFields['screeningid']);
+    } elseif ($_PATH_ELEMENTS[2] == 'screening') {
+        unset($aVariantOnGenomeFields['screeningid']);
+        unset($aUploadFields['screeningid']);
     }
     while ($aCol = $qCols->fetchAssoc()) {
         $aFieldsName = explode('/', $aCol['id']);
@@ -262,15 +268,6 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         }
     }
 
-    if ($_PATH_ELEMENTS[2] != 'phenotype') {
-        unset($aPhenotypeFields['individualid']);
-    }
-    if ($_PATH_ELEMENTS[2] == 'individual' && (empty($aSubmit['screenings']) || count($aSubmit['screenings']) < 2)) {
-        // Only showing the screening ID if several screenings for the same individual have been submitted at once.
-        // If a variant or upload is added to an existing screening, the field is unset later.
-        unset($aVariantOnGenomeFields['screeningid']);
-        unset($aUploadFields['screeningid']);
-    }
     // Load all Phenotype custom columns for each disease and put them in separate variable variables.
     foreach ($aDiseases as $sDisease) {
         $sColNamesPhen = 'PhenCols_' . $sDisease;

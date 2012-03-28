@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-03-27
+ * Modified    : 2012-03-28
  * For LOVD    : 3.0-beta-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1938,9 +1938,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
                 // Alter data table.
                 $sQ = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' DROP COLUMN `' . $zData['id'] . '`';
                 $q = $_DB->query($sQ);
-
-                // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')');
+                $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')';
 
             } else {
                 // Query text; remove column registration first.
