@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-03-12
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-03-29
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -46,8 +46,8 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // View all entries.
 
     define('PAGE_TITLE', 'View user accounts');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
@@ -56,7 +56,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     $_DATA = new LOVD_User();
     $_DATA->viewList('Users');
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -70,8 +70,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View user account #' . $nID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     // FIXME; we need to think about this. To create a public submitters list, will we have a modified viewList() without viewEntry() or what?
     // Allow everybody to see certain details, but only managers to view all? Hide username, certain info from others?
@@ -110,7 +110,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -155,11 +155,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
             lovd_showInfoTable('Successfully created the user account!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -174,8 +174,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     if (GET) {
         print('      To create a new user, please fill out the form below.<BR>' . "\n" .
@@ -200,7 +200,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -229,11 +229,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
         lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -268,8 +268,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'users/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
             lovd_showInfoTable('Successfully edited the user account!', 'success');
 
             // Change password, if requested.
@@ -278,7 +278,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 $_SESSION['auth']['password'] = $_POST['password'];
             }
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -294,8 +294,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_errorPrint();
 
@@ -315,7 +315,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -344,11 +344,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
         lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -376,8 +376,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'users/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
             lovd_showInfoTable('Successfully changed the password!', 'success');
 
             // Change password, if requested.
@@ -386,7 +386,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 $_SESSION['auth']['password'] = $_POST['password'];
             }
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -397,8 +397,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_errorPrint();
 
@@ -415,7 +415,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -443,11 +443,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     if ($zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_writeLog('Error', 'HackAttempt', 'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
         lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -511,11 +511,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                     // Thank the user...
                     header('Refresh: 3; url=' . lovd_getInstallURL() . 'users');
 
-                    require ROOT_PATH . 'inc-top.php';
-                    lovd_printHeader(PAGE_TITLE);
+                    $_T->printHeader();
+                    $_T->printTitle(PAGE_TITLE);
                     lovd_showInfoTable('Successfully deleted the user account!', 'success');
 
-                    require ROOT_PATH . 'inc-bot.php';
+                    $_T->printFooter();
                     exit;
 
                 } else {
@@ -529,8 +529,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
 
             // FIXME; extend this later.
             list($nLogs) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID)));
@@ -565,7 +565,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
             print('</FORM>' . "\n\n");
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -576,8 +576,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     lovd_showInfoTable('<B>Warning!</B> If you delete this user, all log entries related to this person will be deleted and all references to this person in the data will be removed! Such references include data ownership and information about who created or edited certain content.', 'warning');
     lovd_errorPrint();
@@ -593,7 +593,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -614,11 +614,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $zData = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader('Boot user #' . $nID);
+        $_T->printHeader();
+        $_T->printTitle('Boot user #' . $nID);
 
         lovd_showInfoTable('No such ID!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -653,18 +653,18 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     $zData = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_showInfoTable('No such ID!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
 
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
         // Can't unlock someone that is not locked or lock someone that is already locked.
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_showInfoTable('User is already ' . ACTION . 'ed!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -691,10 +691,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
     define('LOG_EVENT', 'UserRegister');
 
     if ($_AUTH) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle(PAGE_TITLE);
         lovd_showInfoTable('You are already a registered user.', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -793,14 +793,14 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
             // Thank the user...
             header('Refresh: ' . ($bMail? '3' : '5') . '; url=' . lovd_getInstallURL() . 'genes');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle(PAGE_TITLE);
             lovd_showInfoTable('Your account has successfully been created!<BR>' . "\n" .
                                ($bMail? 'We\'ve sent you an email containing your account information.' : 
                                'Due to an error, we couldn\'t send you an email containing your account information. Our apologies for the inconvenience.'),
                                ($bMail? 'success' : 'information'));
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -815,8 +815,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle(PAGE_TITLE);
 
     if (GET) {
         print('      To register as a new submitter, please fill out the form below.<BR>' . "\n" .
@@ -848,7 +848,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2012-02-09
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-03-29
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -110,10 +110,13 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
         print('      <SPAN class="S11" id="viewlistPageSplitText_' . $sViewListID . '">' . "\n" .
               '        ' . $total . ' entr' . ($total == 1? 'y' : 'ies') . ' on ' . $nPages . ' page' . ($nPages == 1? '' : 's') . '.');
 
-        if ($first_entry == $last_entry) {
-            print(' Showing entry ' . $first_entry . ".\n");
-        } elseif ($first_entry <= $total) {
-            print(' Showing entries ' . $first_entry . ' - ' . $last_entry . ".\n");
+        // lovd_pagesplitInit() is not run, when we have a BadSyntax error message.
+        if (isset($first_entry)) {
+            if ($first_entry == $last_entry) {
+                print(' Showing entry ' . $first_entry . ".\n");
+            } elseif ($first_entry <= $total) {
+                print(' Showing entries ' . $first_entry . ' - ' . $last_entry . ".\n");
+            }
         }
         print('      </SPAN>' . "\n");
     }

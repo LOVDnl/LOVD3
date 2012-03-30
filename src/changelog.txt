@@ -7,6 +7,21 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 04
+ * 2012-04-?? /////////////////////////////////////////////////////////////////
+ *********/
+
+
+
+
+
+
+
+
+
+
+
+/*******************
  * 3.0 Beta 03
  * 2012-03-28
  *********/
@@ -80,6 +95,12 @@
    screening.
  * When removing a transcript from the variant descriptions LOVD will show a
    warning when the red cross is clicked.
+ * Added the option to import VCF files and SeattleSeq annotated files.
+ * Variants on genomic level, such as variants imported with VCF files, can be
+   mapped automatically to the genes in the database. Also, the uploader can
+   choose to have LOVD create genes automatically, if imported variants are in
+   a gene region.
+ * Added an option to search for a certain variant in other LOVD databases.
 
 
 /*******************
