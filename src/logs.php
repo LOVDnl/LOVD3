@@ -102,8 +102,7 @@ print('</TABLE>' . "\n" .
 lovd_includeJS('inc-js-logs.php');
 
 $_DATA = new LOVD_Log();
-$_DATA->viewList('Logs'); // Setting known viewListID, such that the log's prepareData() can refer to itself.
-// FIXME; is there another solution for this?
+$_DATA->viewList('Logs'); // Don't change viewListID, the log's prepareData() is referring to it.
 
 require ROOT_PATH . 'inc-bot.php';
 ?>

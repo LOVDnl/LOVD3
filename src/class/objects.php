@@ -668,10 +668,13 @@ class LOVD_Object {
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOptions = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
-        global $_PATH_ELEMENTS, $_DB;
+        global $_DB, $_PATH_ELEMENTS, $_SETT;
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
+        }
+        if (!defined('FORMAT')) {
+           define('FORMAT', 'text/html');
         }
 
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
@@ -696,7 +699,7 @@ class LOVD_Object {
 
         // First, check if entries are in the database at all.
         $nTotal = $this->getCount();
-        if (!$nTotal) {
+        if (!$nTotal && FORMAT == 'text/html') {
             $sMessage = 'No entries in the database yet!';
             if ($bOnlyRows) {
                 die('0'); // Silent error.
@@ -861,7 +864,7 @@ class LOVD_Object {
 
 
         // Only print stuff if we're not in Ajax right now.
-        if (!$bAjax) {
+        if (!$bAjax && FORMAT == 'text/html') {
             // Keep the URL clean; disable any fields that are not used.
             lovd_includeJS('inc-js-viewlist.php' . (!$bNoHistory? '' : '?nohistory'));
             lovd_includeJS('inc-js-tooltip.php');
@@ -990,7 +993,7 @@ class LOVD_Object {
 
             $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
 
-            if (!$bHideNav) {
+            if (!$bHideNav && FORMAT == 'text/html') {
                 // Implement LIMIT only if navigation is not hidden.
                 // We have a problem here, because we don't know how many hits there are,
                 // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
@@ -1038,7 +1041,7 @@ class LOVD_Object {
             $bSearched = true; // This will trigger the creation of the viewList table.
         }
 
-        if ($nTotal || $bSearched) {
+        if (FORMAT == 'text/html' && ($nTotal || $bSearched)) {
             // Only print stuff if we're not just loading one entry right now.
             if (!$bOnlyRows) {
                 if (!$bAjax) {
@@ -1084,9 +1087,22 @@ class LOVD_Object {
                 }
                 print('</TR></THEAD>');
             }
+
+        } elseif (FORMAT == 'text/plain') {
+            // Download format: show headers.
+            print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . ($this->sObject == 'Custom_ViewList'? $this->sObjectID : $this->sObject . 's') . ' Quick Download format ### This file can not be imported ###' . "\n");
+            $i = 0;
+            foreach ($this->aColumnsViewList as $sField => $aCol) {
+                if (in_array($sField, $aColsToSkip)) {
+                    continue;
+                }
+
+                print(($i ++? "\t" : '') . '"{{' . $sField . '}}"');
+            }
+            print("\n");
         }
 
-        if (!$nTotal) {
+        if (!$nTotal && FORMAT == 'text/html') {
             if ($bSearched) {
                 // Searched, but no results. FIXME: link to the proper documentation entry about search expressions
                 $sBadSyntaxColumns = implode(', ', array_unique($aBadSyntaxColumns));
@@ -1163,26 +1179,39 @@ class LOVD_Object {
 
             $zData = $this->autoExplode($zData);
 
-            $zData = $this->prepareData($zData);
+            if (FORMAT == 'text/html') {
+                $zData = $this->prepareData($zData);
 
-            // FIXME; rawurldecode() in the line below should have a better solution.
-            // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
-            print("\n" .
-                  '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . lovd_getInstallURL(false) . $zData['row_link'] . '\';') . '"') . '>');
-            if ($bOptions) {
-                print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . (in_array($zData['row_id'], $aSessionViewList['checked'])? ' checked' : '') . '></TD>');
-            }
-            foreach ($this->aColumnsViewList as $sField => $aCol) {
-                if (in_array($sField, $aColsToSkip)) {
-                    continue;
+                // FIXME; rawurldecode() in the line below should have a better solution.
+                // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
+                print("\n" .
+                      '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . lovd_getInstallURL(false) . $zData['row_link'] . '\';') . '"') . '>');
+                if ($bOptions) {
+                    print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . (in_array($zData['row_id'], $aSessionViewList['checked'])? ' checked' : '') . '></TD>');
                 }
-                print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($aOrder[0] == $sField? ' class="ordered"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
+                foreach ($this->aColumnsViewList as $sField => $aCol) {
+                    if (in_array($sField, $aColsToSkip)) {
+                        continue;
+                    }
+                    print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($aOrder[0] == $sField? ' class="ordered"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
+                }
+                print('</TR>');
+
+            } elseif (FORMAT == 'text/plain') {
+                // Download format: print contents.
+                $i = 0;
+                foreach ($this->aColumnsViewList as $sField => $aCol) {
+                    if (in_array($sField, $aColsToSkip)) {
+                        continue;
+                    }
+                    print(($i ++? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes($zData[$sField])) . '"');
+                }
+                print("\n");
             }
-            print('</TR>');
         }
 
         // Only print stuff if we're not just loading one entry right now.
-        if (!$bOnlyRows) {
+        if (!$bOnlyRows && FORMAT == 'text/html') {
             print('</TABLE>' . "\n");
             if (!$bHideNav) {
                 print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
@@ -1196,7 +1225,7 @@ class LOVD_Object {
             }
         }
 
-        if (!$bAjax) {
+        if (!$bAjax && FORMAT == 'text/html') {
             // If sent using Ajax, the browser is not going to evaluate this code, anyways.
             print('      <SCRIPT type="text/javascript">' . "\n" .
                   '        lovd_stretchInputs(\'' . $sViewListID . '\');' . "\n");

@@ -10,7 +10,8 @@
  * 3.0 Beta 04
  * 2012-04-?? /////////////////////////////////////////////////////////////////
  *********/
-
+ * On the bottom of the user's ViewEntries, visible for managers and up, we have
+   added a log entry ViewList with log entries linked to the user.
 
 
 

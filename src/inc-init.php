@@ -739,12 +739,17 @@ if (!defined('_NOT_INSTALLED_')) {
             define('ON_WINDOWS', false);
         }
 
+        $_SETT['email_mime_boundary'] = md5('PHP_MIME');
         $_SETT['email_headers'] = 'MIME-Version: 1.0' . PHP_EOL .
                                   'Content-Type: text/plain; charset=UTF-8' . PHP_EOL .
                                   'X-Priority: 3' . PHP_EOL .
                                   'X-MSMail-Priority: Normal' . PHP_EOL .
                                   'X-Mailer: PHP/' . phpversion() . PHP_EOL .
                                   'From: ' . (ON_WINDOWS? '' : '"LOVD (' . lovd_shortenString($_CONF['system_title'], 50) . ')" ') . '<' . $_CONF['email_address'] . '>';
+        $_SETT['email_mime_headers'] =
+             preg_replace('/^Content-Type.+$/m',
+                          'Content-Type: multipart/mixed; boundary="' . $_SETT['email_mime_boundary'] . '"' . PHP_EOL .
+                          'Content-Transfer-Encoding: 7bit', $_SETT['email_headers']);
     }
 
 
