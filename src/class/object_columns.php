@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-03-15
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-02
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -54,16 +54,39 @@ class LOVD_Column extends LOVD_Object {
         // Default constructor.
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT c.*, SUBSTRING_INDEX(c.id, "/", 1) AS category, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, (a.created_by > 0) AS active, GROUP_CONCAT(c2l.linkid SEPARATOR ";") AS _active_links FROM ' . TABLE_COLS . ' AS c LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) LEFT OUTER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (c.id = c2l.colid) WHERE c.id = ? GROUP BY c.id';
+        $this->sSQLLoadEntry = 'SELECT c.*, ' .
+                               'SUBSTRING_INDEX(c.id, "/", 1) AS category, ' .
+                               'SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, ' .
+                               '(a.created_by > 0) AS active, ' .
+                               'GROUP_CONCAT(c2l.linkid SEPARATOR ";") AS _active_links ' .
+                               'FROM ' . TABLE_COLS . ' AS c ' .
+                               'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
+                               'LEFT OUTER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (c.id = c2l.colid) ' .
+                               'WHERE c.id = ? ' .
+                               'GROUP BY c.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'c.*, SUBSTRING_INDEX(c.id, "/", 1) AS category, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, (a.created_by > 0) AS active, uc.name AS created_by_, ue.name AS edited_by_';
-        $this->aSQLViewEntry['FROM']     = TABLE_COLS . ' AS c LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) LEFT JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) LEFT JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id)';
+        $this->aSQLViewEntry['SELECT']   = 'c.*, ' .
+                                           'SUBSTRING_INDEX(c.id, "/", 1) AS category, ' .
+                                           'SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, ' .
+                                           '(a.created_by > 0) AS active, ' .
+                                           'uc.name AS created_by_, ' .
+                                           'ue.name AS edited_by_';
+        $this->aSQLViewEntry['FROM']     = TABLE_COLS . ' AS c ' .
+                                           'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
+                                           'LEFT JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) ' .
+                                           'LEFT JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id)';
 
         // SQL code for viewing a list of entries.
-        $this->aSQLViewList['SELECT']   = 'c.*, SUBSTRING_INDEX(c.id, "/", 1) AS category, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, IFNULL((a.created_by > 0), 0) AS active, u.name AS created_by_';
-        $this->aSQLViewList['FROM']     = TABLE_COLS . ' AS c LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) LEFT JOIN ' . TABLE_USERS . ' AS u ON (c.created_by = u.id)';
-        $this->aSQLViewList['ORDER_BY'] = 'category, colid';
+        $this->aSQLViewList['SELECT']   = 'c.*, ' .
+                                          'SUBSTRING_INDEX(c.id, "/", 1) AS category, ' .
+                                          'SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, ' .
+                                          'IFNULL((a.created_by > 0), 0) AS active, ' .
+                                          'u.name AS created_by_';
+        $this->aSQLViewList['FROM']     = TABLE_COLS . ' AS c ' .
+                                          'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
+                                          'LEFT JOIN ' . TABLE_USERS . ' AS u ON (c.created_by = u.id)';
+        $this->aSQLViewList['ORDER_BY'] = 'category, col_order, colid';
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =

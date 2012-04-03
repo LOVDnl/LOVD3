@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-03-07
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-02
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -170,11 +170,11 @@ $aTableSQL =
     id_protein_ncbi VARCHAR(255) NOT NULL,
     id_protein_ensembl VARCHAR(255) NOT NULL,
     id_protein_uniprot VARCHAR(8) NOT NULL,
-    position_c_mrna_start SMALLINT NOT NULL,
-    position_c_mrna_end MEDIUMINT UNSIGNED NOT NULL,
-    position_c_cds_end MEDIUMINT UNSIGNED NOT NULL,
-    position_g_mrna_start INT UNSIGNED NOT NULL,
-    position_g_mrna_end INT UNSIGNED NOT NULL,
+    position_c_mrna_start SMALLINT(5) NOT NULL,
+    position_c_mrna_end MEDIUMINT(8) UNSIGNED NOT NULL,
+    position_c_cds_end MEDIUMINT(8) UNSIGNED NOT NULL,
+    position_g_mrna_start INT(10) UNSIGNED NOT NULL,
+    position_g_mrna_end INT(10) UNSIGNED NOT NULL,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -235,7 +235,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_INDIVIDUALS . ' (
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     panelid MEDIUMINT(8) UNSIGNED ZEROFILL,
-    panel_size MEDIUMINT UNSIGNED NOT NULL DEFAULT 1,
+    panel_size MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 1,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -292,10 +292,10 @@ $aTableSQL =
     allele TINYINT(2) UNSIGNED NOT NULL,
     effectid TINYINT(2) UNSIGNED ZEROFILL,
     chromosome VARCHAR(2),
-    position_g_start INT UNSIGNED,
-    position_g_end INT UNSIGNED,
+    position_g_start INT(10) UNSIGNED,
+    position_g_end INT(10) UNSIGNED,
     type VARCHAR(10),
-    mapping_flags TINYINT UNSIGNED NOT NULL,
+    mapping_flags TINYINT(3) UNSIGNED NOT NULL,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -324,8 +324,8 @@ $aTableSQL =
 //    allele TINYINT(2) UNSIGNED NOT NULL,
 //    pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
 //    chromosome VARCHAR(2) NOT NULL,
-//    position_g_start INT UNSIGNED,
-//    position_g_end INT UNSIGNED,
+//    position_g_start INT(10) UNSIGNED,
+//    position_g_end INT(10) UNSIGNED,
 //    type VARCHAR(10),
 //    owned_by SMALLINT(5) UNSIGNED ZEROFILL,
 //    statusid TINYINT(1) UNSIGNED,
@@ -374,10 +374,10 @@ $aTableSQL =
 //    id INT(10) UNSIGNED ZEROFILL NOT NULL,
 //    transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
 //    pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
-//    position_c_start MEDIUMINT,
-//    position_c_start_intron INT,
-//    position_c_end MEDIUMINT,
-//    position_c_end_intron INT,
+//    position_c_start MEDIUMINT(8),
+//    position_c_start_intron INT(10),
+//    position_c_end MEDIUMINT(8),
+//    position_c_end_intron INT(10),
 //    valid_from DATETIME NOT NULL,
 //    PRIMARY KEY (id, valid_from, transcriptid),
 //    INDEX (transcriptid),

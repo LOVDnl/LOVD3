@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-03-19
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-03-26
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -284,7 +284,7 @@ function lovd_formatMail ($aBody)
         foreach ($aContent as $aSubContent) {
             if (!is_array($aSubContent)) {
                 if ($aSubContent == 'skip') {
-                    $sBody .= "\n\n";
+                    $sBody .= "\n";
                 } elseif ($aSubContent == 'hr') {
                     $sBody .= str_repeat('-', 70) . "\n";
                 }
@@ -307,7 +307,7 @@ function lovd_formatMail ($aBody)
             }
             $sBody .= str_repeat('-', 70) . "\n";
         }
-        $sBody .= "\n";
+        $sBody .= "\n\n";
     }
 
     return $sBody;

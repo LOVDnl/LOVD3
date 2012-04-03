@@ -16,7 +16,24 @@
 
 
 
-
+ * Fixed bug; Fixed the bug that searching in a
+   (created|edited|updated|owned)_by column would result in an invalid search
+   syntax error.
+ * Fixed bug; Sometimes the footer would not be included when an error occurred.
+ * Fixed bug; Now preventing javascript injection in the custom columns data
+   type wizard.
+ * Implemented confirmed variants into the submission mail process.
+ * Now writing to log if the mail to the curator(s) failed at the end of a
+   submission and also added a notification of the error to the user.
+ * Added some checks to screenings?confirm so that users cannot confirm variants
+   when they are not allowed.
+ * Now screenings?confirm can only CONFIRM variants and it is currently
+   impossible to UNconfirm variants. A separate section will be made for this.
+ * Added some examples to the standard custom link descriptions.
+ * Renamed `VariantOnGenome/DNA_published` to `VariantOnGenome/Published_as` &
+   `VariantOnTranscript/DNA_published` to `VariantOnTranscript/Published_as`.
+ * Changed the page the user goes to when a column is enabled or
+   removed/disabled.
 
 
 

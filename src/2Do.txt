@@ -4,13 +4,6 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
 - Apply the $_T->printHeader(), printTitle() and printFooter() everywhere. Don't forget that the Footer sometimes needs false as an argument!!!
   + $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
     // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
-- Submissie: check of $bMail wel true is, en reageer daar op.
-- De dbSNP custom link in de uitleg een voorbeeld geven, zoals rs12345678.
-- Screenings?confirm binnen een submissie moet nog goed geimplementeerd worden.
-- BUG: Data type Wizard moet velden quoten voordat ze weggeschreven worden.
-- BUG: text search created_by_ in columns overzicht geeft invalid search expression, terwijl de join naar u.name wel gemaakt is in de code?!!???
-- Individu gemaakt, 1 disease gekoppeld zonder phen kolommen, klik op Add phenotype, foutmelding is niet correct: The disease added to this individual do not have phenotype columns enabled yet.
-  + Moet "does" zijn.
 - Should we maybe set default_socket_timeout somewhere?
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
@@ -76,7 +69,7 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
     -in vitro (cloned)
     -non-human (model organism)
 
-    Phenotype/Inheritance
+    Patient/Phenotype/Inheritance
     -familial
     -familial, autosomal dominant
     -familial, autosomal recessive
@@ -90,11 +83,8 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
   * Hebben we OpenSSL ergens voor nodig?
 - Gene homepage: variant counts zoals voor LOVD 2.0.
 - Variant effect column bij custom viewlist.
-- Custom column enable (VOG bijv): daarna misschien naar een duidelijker overzicht van ENABLED kolommen?
-  + Als je daarna de zoekterm weg laat, staat de link van hersorteren nog steeds onderaan. Misschien category verbergen, en in de header zetten om welke categorie het gaat?
 - Custom columns:
-  + Nieuw: Phenotype/Date, Variant/Times_reported???
-  + Change: VOG|VOT/DNA_published -> VOG|VOT/Published_as?
+  + Nieuw: Phenotype/Date, VariantOnGenome/Times_reported???
 
 - Beta-04:
   - DATA DOWNLOAD.

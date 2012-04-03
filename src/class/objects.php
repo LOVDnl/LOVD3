@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-03-21
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-02
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -724,7 +724,16 @@ class LOVD_Object {
                     // Column type of an alias is given by LOVD.
                     $sColType = $aCol['db'][2];
                 } else {
-                    $sColType = lovd_getColumnType(constant($this->sTable), rtrim($sColumn, '_'));
+                    if (preg_match('/^[a-z]{1,3}\.[a-zA-Z]+$/', $aCol['db'][0])) {
+                        list($sAlias, $sColName) = explode('.', $aCol['db'][0]);
+                        var_dump('/(' . TABLEPREFIX . '_[a-z]+) AS ' . $sAlias . '\b/');
+                        preg_match('/(' . TABLEPREFIX . '_[a-z]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches);
+                        $sTable = $aMatches[1];
+                    } else {
+                        $sColName = $aCol['db'][0];
+                        $sTable = constant($this->sTable);
+                    }
+                    $sColType = lovd_getColumnType($sTable, $sColName);
                 }
                 // Allow for searches where the order of words is forced by enclosing the values with double quotes; 
                 // Replace spaces in sentences between double quotes so they don't get exploded.

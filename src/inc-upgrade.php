@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-03-26
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-02
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -175,7 +175,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              ),
                     '3.0-alpha-07c' =>
                         array(
-                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN mapping_flags TINYINT UNSIGNED NOT NULL AFTER type',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN mapping_flags TINYINT(3) UNSIGNED NOT NULL AFTER type',
                                 'ALTER TABLE ' . TABLE_USERS . ' AUTO_INCREMENT = 1',
                                 'UPDATE ' . TABLE_COLS . ' SET edited_by = 0 WHERE id = "VariantOnGenome/DBID"',
                                 'UPDATE ' . TABLE_COLS . ' SET width = 80 WHERE id = "VariantOnGenome/DBID"',
@@ -212,6 +212,15 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/GVS/Function",             9, 200, 0, 0, 0, "GVS function",         "", "Functional annotation of this position by GVS.", "The functional annotation of this position from the Genome Variation Server.", "VARCHAR(30)", "GVS function|Whether the variant is missense, nonsense, in an intron, UTR, etc.|text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/PolyPhen",                 8, 200, 0, 0, 0, "PolyPhen prediction",  "", "The effect predicted by PolyPhen.", "The effect predicted by PolyPhen.", "VARCHAR(20)", "PolyPhen prediction||select|1|true|false|false", "benign = Benign\r\npossiblyDamaging = Possably damaging\r\nprobablyDamaging = Probably damaging\r\nnoPrediction = No prediction", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Position",                 5, 100, 0, 0, 0, "Position",             "", "Position in cDNA sequence.", "The position of this variant in the cDNA sequence.", "MEDIUMINT(5)", "cDNA Position||text|5", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                             ),
+                    '3.0-beta-03b' =>
+                        array(
+                                'UPDATE ' . TABLE_LINKS . ' SET description=CONCAT(description, "\r\n\r\nExamples:\r\n{PMID:Fokkema et. al.:15977173}\r\n{PMID:Fokkema et. al.:21520333}") WHERE name="PubMed" AND description="Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s).\r\n[2] = The PubMed ID."',
+                                'UPDATE ' . TABLE_LINKS . ' SET description=CONCAT(description, "\r\n\r\nExamples:\r\n{dbSNP:rs193143796}\r\n{dbSNP:193143796}") WHERE name="DbSNP" AND description="Links to the DbSNP database.\r\n[1] = The DbSNP ID."',
+                                'UPDATE ' . TABLE_LINKS . ' SET description=CONCAT(description, "\r\n\r\nExamples:\r\n{GenBank:NG_012232.1}\r\n{GenBank:NC_000001.10}") WHERE name="GenBank" AND description="Links to GenBank sequences.\r\n[1] = The GenBank ID."',
+                                'UPDATE ' . TABLE_LINKS . ' SET description=CONCAT(description, "\r\n\r\nExamples:\r\n{OMIM:300377:0021}\r\n{OMIM:188840:0003}") WHERE name="OMIM" AND description="Links to an allelic variant on the gene\'s OMIM page.\r\n[1] = The OMIM gene ID.\r\n[2] = The number of the OMIM allelic variant on that page."',
+                                'UPDATE ' . TABLE_COLS . ' SET id="VariantOnGenome/Published_as", head_column="Published as", form_type=REPLACE(form_type, "DNA published", "Published as") WHERE id="VariantOnGenome/DNA_published"',
+                                'UPDATE ' . TABLE_COLS . ' SET id="VariantOnTranscript/Published_as", head_column="Published as", form_type=REPLACE(form_type, "DNA published", "Published as") WHERE id="VariantOnTranscript/DNA_published"',
                              ),
                   );
 
@@ -257,6 +266,18 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         // INSERT chromosome in the new TABLE_CHROMOSOMES.
         require ROOT_PATH . 'install/inc-sql-chromosomes.php';
         $aUpdates['3.0-alpha-07d']['chr_values'] = $aChromosomeSQL[0];
+    }
+
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-beta-03b')) {
+        // CHANGE DNA_published to Published as in TABLE_VARIANTS & TABLE_VARIANTS_ON_TRANSCRIPTS if exists.
+        $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS)->fetchAllColumn();
+        if (in_array('VariantOnGenome/DNA_published', $aColumns)) {
+            $aUpdates['3.0-beta-03b'][] = 'ALTER TABLE ' . TABLE_VARIANTS . ' CHANGE `VariantOnGenome/DNA_Published` `VariantOnGenome/Published_as` VARCHAR(100)';
+        }
+        $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
+        if (in_array('VariantOnTranscript/DNA_published', $aColumns)) {
+            $aUpdates['3.0-beta-03b'][] = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' CHANGE `VariantOnTranscript/DNA_Published` `VariantOnTranscript/Published_as` VARCHAR(100)';
+        }
     }
 
     // To make sure we upgrade the database correctly, we add the current version to the list...

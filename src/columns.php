@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-03-28
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-02
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -46,9 +46,12 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     // URL: /columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
     // View all columns.
 
-    if (!empty($_PATH_ELEMENTS[1])) {
+    if (!empty($_PATH_ELEMENTS[1]) && in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
         // Category given.
         $_GET['search_category'] = $_PATH_ELEMENTS[1];
+    } elseif (!empty($_PATH_ELEMENTS[1])) {
+        header('Location:' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '?search_category=' . $_PATH_ELEMENTS[1]);
+        exit;
     }
 
     define('PAGE_TITLE', 'Browse custom data columns');
@@ -63,10 +66,15 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     if ($_DATA->getCount()) {
         lovd_showInfoTable('Please note that these are all columns available in this LOVD installation. This is not the list of columns actually added to the system. Also, modifications made to the columns added to the system are not shown.', 'information', 950);
     }
-    $_DATA->viewList('Columns');
+    $aSkip = array();
+    if (!empty($_PATH_ELEMENTS[1]) && in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
+        $_DATA->sSortDefault = 'col_order';
+        $aSkip = array('category');
+    }
+    $_DATA->viewList('Columns', $aSkip);
 
     // FIXME; Is there a better way checking if it's a valid category?
-    if (!empty($_PATH_ELEMENTS[1]) && $_AUTH['level'] >= LEVEL_MANAGER && in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
+    if (!empty($_PATH_ELEMENTS[1]) && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Add link to change default sorting order.
         lovd_showNavigation('<A href="columns/' . $_PATH_ELEMENTS[1] . '?order">Re-order all ' . $_PATH_ELEMENTS[1] . ' columns</A>');
     }
@@ -523,11 +531,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
             // Pass it on to the opener...
             print('      <SCRIPT type="text/javascript">' . "\n" .
                   '        <!--' . "\n" .
-                  '        opener.document.forms[0][\'mysql_type\'].value = \'' . $sMySQLType . '\';' . "\n" .
-                  '        opener.document.forms[0][\'form_type\'].value = \'' . $sFormType . '\';' . "\n" .
-                  '        opener.document.forms[0][\'description_form\'].value = \'' . $_POST['description_form'] . '\';' . "\n" .
-                  '        opener.document.forms[0][\'preg_pattern\'].value = \'' . $sPregPattern . '\';' . "\n" .
-                  '        opener.document.forms[0][\'select_options\'].value = \'' . (empty($_POST['select_options'])? '' : str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), $_POST['select_options'])) . '\';' . "\n" .
+                  '        opener.document.forms[0][\'mysql_type\'].value = \'' . addslashes($sMySQLType) . '\';' . "\n" .
+                  '        opener.document.forms[0][\'form_type\'].value = \'' . addslashes($sFormType) . '\';' . "\n" .
+                  '        opener.document.forms[0][\'description_form\'].value = \'' . addslashes($_POST['description_form']) . '\';' . "\n" .
+                  '        opener.document.forms[0][\'preg_pattern\'].value = \'' . addslashes($sPregPattern) . '\';' . "\n" .
+                  '        opener.document.forms[0][\'select_options\'].value = \'' . (empty($_POST['select_options'])? '' : str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes($_POST['select_options']))) . '\';' . "\n" .
                   '        window.close();' . "\n" .
                   '        // -->' . "\n" .
                   '      </SCRIPT>' . "\n\n");
