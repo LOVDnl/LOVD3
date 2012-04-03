@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-02-22
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-03-23
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -148,7 +148,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_genome_variants.php';
         $_DATA = new LOVD_GenomeVariant();
         $_DATA->setSortDefault('id');
-        $_DATA->viewList('VOG_for_I_VE', 'screeningids', true);
+        $_DATA->viewList('VOG_for_I_VE', 'screeningids', true, false, false, false);
         unset($_GET['search_screeningids']);
     }
 
@@ -229,22 +229,35 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $_SESSION['work']['submits']['individual'][$nID] = array('id' => $nID, 'panel_size' => $_POST['panel_size']);
             
             $sPersons = ($_POST['panel_size'] > 1? 'this group of individuals' : 'this individual');
-            $sMessage = (empty($_POST['active_diseases'])? 'No diseases were selected for ' . $sPersons . '.\nThe phenotype information that can be submitted depends on the selected diseases.' : 'The disease' . (count($_POST['active_diseases']) > 1? 's' : '') . ' added to ' . $sPersons . ' do not have phenotype columns enabled yet.');
+            $sMessage = (empty($_POST['active_diseases'])? 'No diseases were selected for ' . $sPersons . '.\nThe phenotype information that can be submitted depends on the selected diseases.' : 'The disease' . (count($_POST['active_diseases']) > 1? 's' : '') . ' added to ' . $sPersons . ' do' . (count($_POST['active_diseases']) > 1? '' : 'es') . ' not have phenotype columns enabled yet.');
 
             require ROOT_PATH . 'inc-top.php';
             lovd_printHeader(PAGE_TITLE);
-            print('      Do you have any phenotype information available for ' . $sPersons . '?<BR><BR>' . "\n\n" .
-                  '      <TABLE border="0" cellpadding="5" cellspacing="1" class="option">' . "\n" .
-                  '        <TR ' . (!$nDiseases? 'class="disabled" onclick="alert(\'' . $sMessage . '\');"' : 'onclick="window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $nID . '\'"') . '>' . "\n" .
-                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD>' . (!$nDiseases? '<I>' : '<B>') . 'Yes, I want to submit phenotype information on ' . $sPersons . (!$nDiseases? '</I>' : '</B>') . '</TD></TR>' . "\n" .
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $nID . '\'">' . "\n" .
-                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" .
-                /* FIXME; Once we have code to allow the user (and remind them) to continue the unfinished submission, we can enable this part again (although it would be nice to put a warning here, also).
-                  '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $nID . '\'">' . "\n" .
-                  '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                  '          <TD><B>No, I have finished my submission</B></TD></TR>'*/'      </TABLE><BR>' . "\n\n");
+            print('      Do you have any phenotype information available for ' . $sPersons . '?<BR><BR>' . "\n\n");
+            
+            $aOptionsList = array();
+            if (!$nDiseases) {
+                $aOptionsList['options'][0]['disabled'] = true;
+                $aOptionsList['options'][0]['onclick']  = 'alert(\'' . $sMessage . '\');';
+            } else {
+                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $nID . '\'';
+            }
+            $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit phenotype information on ' . $sPersons . '</B>';
+
+            $aOptionsList['options'][1]['onclick']     = 'window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $nID . '\'';
+            $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit mutation screening information instead</B>';
+            // FIXME; Once we have code to allow the user (and remind them) to continue the unfinished submission, we can enable this part again
+            // (although it would be nice to put a warning here, also).
+            if (true) {
+                $aOptionsList['options'][2]['disabled'] = true;
+                $aOptionsList['options'][2]['onclick']  = 'alert(\'You cannot finish your submission, because no screenings have been added to ' . $sPersons . ' yet!\')';
+            } else {
+                $aOptionsList['options'][2]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $nID . '\'';
+            }
+            $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
+
+            print(lovd_buildOptionTable($aOptionsList));
+
             require ROOT_PATH . 'inc-bot.php';
             exit;
         }

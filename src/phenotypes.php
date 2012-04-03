@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-02-10
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-03-30
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -223,6 +223,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID . ' for individual ' . $_POST['individualid'] . ' related to disease ' . $_POST['diseaseid']);
 
+            $bSubmit = false;
             if (isset($_SESSION['work']['submits']['individual'][$_POST['individualid']])) {
                 $bSubmit = true;
 
@@ -245,8 +246,6 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
                 }
 
                 $_SESSION['work']['submits']['phenotype'][$nID] = $nID;
-
-                $bSubmit = false;
             }
 
             $sPersons = ($nPanel > 1? 'this group of individuals' : 'this individual');
@@ -254,18 +253,21 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
             if ($bSubmit) {
                 require ROOT_PATH . 'inc-top.php';
                 lovd_printHeader(PAGE_TITLE);
-                print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n" .
-                      '      <TABLE border="0" cellpadding="5" cellspacing="1" class="option">' . "\n" .
-                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
-                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                      '          <TD><B>Yes, I want to submit more phenotype information</B></TD></TR>' . "\n" .
-                      '        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'">' . "\n" .
-                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                      '          <TD><B>No, I want to submit mutation screening information instead</B></TD></TR>' . "\n" .
-          // FIXME; Remove this when it is possible to finish a submission half-way and continue later.
-                    /*'        <TR onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . ($bSubmit? 'individual/' . $_POST['individualid'] : 'phenotype/' . $nID) . '\'">' . "\n" .
-                      '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
-                      '          <TD><B>No, I have finished' . ($bSubmit? ' my submission' : '') : '') . '</B></TD></TR>*/ '      </TABLE><BR>' . "\n\n");
+                
+                print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n");
+
+                $aOptionsList = array();
+                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $_POST['individualid'] . '\'';
+                $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more phenotype information</B>';
+                $aOptionsList['options'][1]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'';
+                $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit mutation screening information instead</B>';
+                if (true) {
+                    $aOptionsList['options'][2]['disabled'] = true;
+                    $aOptionsList['options'][2]['onclick'] = 'alert(\'You cannot finish your submission, because no screenings have been added to ' . $sPersons . ' yet!\');';
+                }
+                $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
+
+                print(lovd_buildOptionTable($aOptionsList));
                 require ROOT_PATH . 'inc-bot.php';
             } else {
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/phenotype/' . $nID);
