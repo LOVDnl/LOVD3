@@ -34,6 +34,12 @@
    `VariantOnTranscript/DNA_published` to `VariantOnTranscript/Published_as`.
  * Changed the page the user goes to when a column is enabled or
    removed/disabled.
+ * Fixed bug; No longer able to view data that you are not authorized for in
+   viewEntries.
+ * Fixed bug; Fixed minor bug in the search code for a viewList.
+ * Changed screenings?confirm to screenings?confirmVariants.
+ * Implemented a screenings?removeVariants.
+
 
 
 

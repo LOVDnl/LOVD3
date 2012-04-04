@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-02-29
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-03
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -143,13 +143,14 @@ class LOVD_Custom extends LOVD_Object {
         parent::__construct();
 
         // Hide entries that are not marked or public.
-        if (in_array($this->sCategory, array('VariantOnGenome', 'VariantOnTranscript'))) {
-            $sAlias = 'vog';
-        } else {
-            $sAlias = strtolower($this->sCategory{0});
-        }
-        if ($this->sObject != 'Screening' && $_AUTH['level'] < LEVEL_COLLABORATOR) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
-            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . $sAlias . '.statusid > ' . STATUS_HIDDEN . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
+        if ($_AUTH['level'] < LEVEL_COLLABORATOR) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+            if (in_array($this->sCategory, array('VariantOnGenome', 'VariantOnTranscript'))) {
+                $sAlias = 'vog';
+            } else {
+                $sAlias = strtolower($this->sCategory{0});
+            }
+            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid > ' . STATUS_HIDDEN . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
+            $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid > ' . STATUS_HIDDEN . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
         }
     }
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-03-29
+ * Modified    : 2012-04-03
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -413,7 +413,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 $aOptionsList['options'][0]['disabled'] = true;
                 $aOptionsList['options'][0]['onclick'] = 'alert(\'You cannot confirm any more variants with this screening, because all this individual\&#39;s variants have already been found/confirmed by this screening!\');';
             } else {
-                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'screenings/' . $_GET['target'] . '?confirm\'';
+                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'screenings/' . $_GET['target'] . '?confirmVariants\'';
             }
             $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to confirm variants found using this screening &raquo;&raquo;</B>';
 

@@ -10,10 +10,6 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
   + We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
   + Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
-- LOVD installeren op een Mac geeft wat problemen m.b.t. PDO support:
-  + Ivar: MySQL heeft geen standaard PDO support voor de mac (Ik run op Mac OSX 10.5.9 met Apache2, PHP 5 en MySQL 4 even uit mijn hoofd)
-  + LOVD kan dus niks zonder PDO en wil dus ook niet runnen!
-- (@Ivar) viewEntry moet nog een bescherming krijgen zodat entries die niet publiek zijn, ook niet worden getoond als je niet bent ingelogd.
 - IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
   + objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
   + VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns).

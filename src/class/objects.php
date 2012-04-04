@@ -631,6 +631,17 @@ class LOVD_Object {
         // Run the actual query.
         $zData = $_DB->query($sSQL, array($nID))->fetchAssoc();
 
+        if (!$zData) {
+            global $_SETT, $_STAT, $_AUTH;
+            lovd_showInfoTable('No such ID!', 'stop');
+            if (defined('_INC_TOP_INCLUDED_')) {
+                require ROOT_PATH . 'inc-bot.php';
+            } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
+                require ROOT_PATH . 'inc-bot-clean.php';
+            }
+            exit;
+        }
+
         $zData = $this->autoExplode($zData);
 
         $zData = $this->prepareData($zData, 'entry');
@@ -726,7 +737,7 @@ class LOVD_Object {
                 } else {
                     if (preg_match('/^[a-z]{1,3}\.[a-zA-Z]+$/', $aCol['db'][0])) {
                         list($sAlias, $sColName) = explode('.', $aCol['db'][0]);
-                        preg_match('/(' . TABLEPREFIX . '_[a-z]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches);
+                        preg_match('/(' . TABLEPREFIX . '_[a-z_]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches);
                         $sTable = $aMatches[1];
                     } else {
                         $sColName = $aCol['db'][0];
