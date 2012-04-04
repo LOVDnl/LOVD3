@@ -215,12 +215,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              ),
                     '3.0-beta-03b' =>
                         array(
-                                'UPDATE ' . TABLE_LINKS . ' SET description=CONCAT(description, "\r\n\r\nExamples:\r\n{PMID:Fokkema et. al.:15977173}\r\n{PMID:Fokkema et. al.:21520333}") WHERE name="PubMed" AND description="Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s).\r\n[2] = The PubMed ID."',
-                                'UPDATE ' . TABLE_LINKS . ' SET description=CONCAT(description, "\r\n\r\nExamples:\r\n{dbSNP:rs193143796}\r\n{dbSNP:193143796}") WHERE name="DbSNP" AND description="Links to the DbSNP database.\r\n[1] = The DbSNP ID."',
-                                'UPDATE ' . TABLE_LINKS . ' SET description=CONCAT(description, "\r\n\r\nExamples:\r\n{GenBank:NG_012232.1}\r\n{GenBank:NC_000001.10}") WHERE name="GenBank" AND description="Links to GenBank sequences.\r\n[1] = The GenBank ID."',
-                                'UPDATE ' . TABLE_LINKS . ' SET description=CONCAT(description, "\r\n\r\nExamples:\r\n{OMIM:300377:0021}\r\n{OMIM:188840:0003}") WHERE name="OMIM" AND description="Links to an allelic variant on the gene\'s OMIM page.\r\n[1] = The OMIM gene ID.\r\n[2] = The number of the OMIM allelic variant on that page."',
-                                'UPDATE ' . TABLE_COLS . ' SET id="VariantOnGenome/Published_as", head_column="Published as", form_type=REPLACE(form_type, "DNA published", "Published as") WHERE id="VariantOnGenome/DNA_published"',
-                                'UPDATE ' . TABLE_COLS . ' SET id="VariantOnTranscript/Published_as", head_column="Published as", form_type=REPLACE(form_type, "DNA published", "Published as") WHERE id="VariantOnTranscript/DNA_published"',
+                                'UPDATE ' . TABLE_LINKS . ' SET description = CONCAT(description, "\r\n\r\nExamples:\r\n{PMID:Fokkema et. al.:15977173}\r\n{PMID:Fokkema et. al.:21520333}") WHERE name = "PubMed" AND description = "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s).\r\n[2] = The PubMed ID."',
+                                'UPDATE ' . TABLE_LINKS . ' SET description = CONCAT(description, "\r\n\r\nExamples:\r\n{dbSNP:rs193143796}\r\n{dbSNP:193143796}") WHERE name = "DbSNP" AND description = "Links to the DbSNP database.\r\n[1] = The DbSNP ID."',
+                                'UPDATE ' . TABLE_LINKS . ' SET description = CONCAT(description, "\r\n\r\nExamples:\r\n{GenBank:NG_012232.1}\r\n{GenBank:NC_000001.10}") WHERE name = "GenBank" AND description = "Links to GenBank sequences.\r\n[1] = The GenBank ID."',
+                                'UPDATE ' . TABLE_LINKS . ' SET description = CONCAT(description, "\r\n\r\nExamples:\r\n{OMIM:300377:0021}\r\n{OMIM:188840:0003}") WHERE name = "OMIM" AND description = "Links to an allelic variant on the gene\'s OMIM page.\r\n[1] = The OMIM gene ID.\r\n[2] = The number of the OMIM allelic variant on that page."',
+                                // This should cascade to ACTIVE_COLS and SHARED_COLS.
+                                'UPDATE ' . TABLE_COLS . ' SET id = "VariantOnGenome/Published_as", head_column = "Published as", form_type = REPLACE(form_type, "DNA published", "Published as") WHERE id = "VariantOnGenome/DNA_published"',
+                                'UPDATE ' . TABLE_COLS . ' SET id = "VariantOnTranscript/Published_as", head_column = "Published as", form_type = REPLACE(form_type, "DNA published", "Published as") WHERE id = "VariantOnTranscript/DNA_published"',
                              ),
                   );
 
@@ -279,6 +280,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
             $aUpdates['3.0-beta-03b'][] = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' CHANGE `VariantOnTranscript/DNA_Published` `VariantOnTranscript/Published_as` VARCHAR(100)';
         }
     }
+
+
+
+
+
 
     // To make sure we upgrade the database correctly, we add the current version to the list...
     if (!isset($aUpdates[$_SETT['system']['version']])) {

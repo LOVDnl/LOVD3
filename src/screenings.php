@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-04-03
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -83,14 +83,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
             $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
             if ($zData['variants_found']) {
                 $sNavigation .= ' | <A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
-            }
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $nVariants = $_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
-                if ($zData['variants_found'] && $nVariants) {
+                if ($zData['variants']) {
                     $sNavigation .= ' | <A href="screenings/' . $nID . '?removeVariants">Remove variants from screening</A>';
                 } else {
                     $sNavigation .= ' | <A style="color : #999999;">Remove variants from screening</A>';
                 }
+            }
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
             }
         }
@@ -459,8 +458,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     define('LOG_EVENT', 'VariantConfirm');
 
     $z = $_DB->query('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
-    $aVariants = $_DB->query('SELECT DISTINCT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($z['individualid']))->fetchAllColumn();
-    $aCurrentVariants = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchAllColumn();
+    $aVariantsIndividual = $_DB->query('SELECT DISTINCT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($z['individualid']))->fetchAllColumn();
+    $aVariantsScreening = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchAllColumn();
 
     $sMessage = '';
     if (!$z) {
@@ -469,9 +468,9 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         lovd_requireAUTH(LEVEL_OWNER);
     } elseif (!$z['variants_found']) {
         $sMessage = 'Cannot confirm variants with the given screening, because the value \'Have variants been found?\' is unchecked.';
-    } elseif (!count($aVariants)) {
+    } elseif (!count($aVariantsIndividual)) {
         $sMessage = 'You cannot confirm variants with this screening, because there aren\'t any variants connected to this individual yet!';
-    } elseif (count($aCurrentVariants) == count($aVariants)) {
+    } elseif (count($aVariantsScreening) == count($aVariantsIndividual)) {
         $sMessage = 'You cannot confirm any more variants with this screening, because all this individual\'s variants have already been found/confirmed by this screening!';
     }
     if ($sMessage) {
@@ -482,7 +481,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         exit;
     } else {
         $nIndividual = $z['individualid'];
-        $_GET['search_screeningids'] = $_DB->query('SELECT GROUP_CONCAT(id SEPARATOR "|") FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ? GROUP BY individualid', array($nIndividual))->fetchColumn();
+        $_GET['search_screeningids'] = $_DB->query('SELECT GROUP_CONCAT(id SEPARATOR "|") FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ? AND id != ? GROUP BY individualid', array($nIndividual, $nID))->fetchColumn();
     }
 
     require ROOT_PATH . 'inc-lib-form.php';
@@ -494,11 +493,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         // $_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'] stores the IDs of the variants that are supposed to be present in TABLE_SCR2VAR.
         if (isset($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'])) {
             // Check if all checked variants are actually from this individual.
-            $aDiff = array_diff($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'], $aVariants);
+            $aDiff = array_diff($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'], $aVariantsIndividual);
             if (!empty($aDiff)) {
                 // The user tried to fake a $_POST by inserting an ID that did not come from our code.
                 lovd_errorAdd('', 'Invalid variant, please select the variants from the top viewlist!');
-                break;
             }
         }
 
@@ -514,13 +512,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $_DB->beginTransaction();
 
             $nVariantsChecked = 0; // Amount of variants checked. Determines which options to show after submit.
-            $aNewVariant = array();
+            $aNewVariants = array();
 
             // Insert newly confirmed variants.
             $q = $_DB->prepare('INSERT INTO ' . TABLE_SCR2VAR . '(screeningid, variantid) VALUES (?, ?)');
             foreach ($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'] as $nVariant) {
                 $nVariantsChecked ++;
-                if (!in_array($nVariant, $aCurrentVariants)) {
+                if (!in_array($nVariant, $aVariantsScreening)) {
                     // If the variant is not already connected to this screening, we will add it now.
                     $aNewVariants[] = $nVariant;
                     $q->execute(array($nID, $nVariant));
@@ -607,7 +605,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_printHeader(PAGE_TITLE);
 
     lovd_errorPrint();
-    lovd_showInfoTable('The variant entries below are all variants found in this individual and that are not yet confirmed by/added to this screening.', 'information');
+    lovd_showInfoTable('The variant entries below are all variants found in this individual, not yet confirmed by/added to this screening.', 'information');
 
     $_GET['page_size'] = 10;
     $_GET['search_screeningids'] .= ' !' . $nID;
@@ -648,7 +646,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $z = $_DB->query('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
     $aVariants = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchAllColumn();
     if ($aVariants) {
-        $aValidVariants = $_DB->query('SELECT variantid, COUNT(screeningid) AS nCount FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($aVariants) - 1) . ') GROUP BY variantid HAVING nCount > 1', $aVariants)->fetchAllColumn(0);
+        $aValidVariants = $_DB->query('SELECT variantid, COUNT(screeningid) AS nCount FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($aVariants) - 1) . ') GROUP BY variantid HAVING nCount > 1', $aVariants)->fetchAllColumn();
         $aInvalidVariants = array_diff($aVariants, $aValidVariants);
     }
 
@@ -685,7 +683,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             if (!empty($aDiff)) {
                 // The user tried to fake a $_POST by inserting an ID that did not come from our code.
                 lovd_errorAdd('', 'Invalid variant, please select the variants from the top viewlist!');
-                break;
             }
         }
 

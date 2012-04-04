@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-04-03
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -66,7 +66,7 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
-                                           'COUNT(DISTINCT s2v.variantid) AS variants, ' .
+                                           'COUNT(s2v.variantid) AS variants, ' .
                                            'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -115,8 +115,8 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aColumnsViewList = array_merge(
                  array(
                         'screeningid' => array(
-                                    'view' => array('Screening ID', 110),
-                                    'db' => array('s.id', 'ASC', 'INT_UNSIGNED')),
+                                    'view' => false,
+                                    'db'   => array('s.id', 'ASC', true)),
                         'id_' => array(
                                     'view' => array('Screening ID', 110),
                                     'db'   => array('s.id', 'ASC', true)),

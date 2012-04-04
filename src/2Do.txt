@@ -1,6 +1,9 @@
 Prioritize:
 ===========
-Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
+- Overal altijd een TRIM() inbouwen, voordat iets de database in gaat?
+- Controle in submit.php op email moet met lovd_emailError(), ook lovd_sendMail gebruikt 'm niet.
+- Key zetten op id_hgnc in TABLE_GENES
+- Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
 - Apply the $_T->printHeader(), printTitle() and printFooter() everywhere. Don't forget that the Footer sometimes needs false as an argument!!!
   + $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
     // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
@@ -10,7 +13,7 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
   + We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
   + Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
-- IVAR: ALLE DATA DIE NIET PUBLIEK IS, MAG NIET GETOOND WORDEN AAN DE GEBRUIKERS. VIEWLIST() EN VIEWENTRY(). Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
+- IVAR: Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
   + objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
   + VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns).
     * OOK IN CUSTOM VIEWLIST
@@ -81,8 +84,9 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
 - Variant effect column bij custom viewlist.
 - Custom columns:
   + Nieuw: Phenotype/Date, VariantOnGenome/Times_reported???
+- Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 
-- Beta-04:
+- Beta-05:
   - DATA DOWNLOAD.
     + Info in de header over de filters die gebruikt zijn.
     + Eerdere suggestie: maybe check out the uniprot download format?
@@ -203,6 +207,7 @@ Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. 
     HTTP/1.0 503 Service Unavailable
 - lovd_setUpdatedDate() implementeren.
 - Since Objects::checkFields() is running getForm(), can't that code take care of invalid values in selection lists? Now that code is all over the place; object_custom for custom columns and lots of object_* files for each data type.
+- Floating header? Anders: eerst de hele tabel inladen, daarna nieuwe table maken, de TR moven naar de andere tabel met behoud van breedte, en laten floaten.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 
@@ -227,6 +232,21 @@ Doen voordat LOVD 3.0 online gebruikt kan worden:
   * Concurrent users testen! Normale overviews, hoeveel users kan het aan? Is dit wel LOVD specifiek of misschien teveel op de hardware?
   * Gebruik om dit te testen Apache benchmarks? Wordt gebruikt om Apache aan te roepen, schijnt heel handig te zijn.
   * Waarom is de interface traag maar een simpele query niet? Top? Query incl.  joins in MySQL runnen?
+
+
+
+
+
+Data transfer LOVD 2.0 -> LOVD 3.0:
+===================================
+- Submitters and users should be imported separately. Their IDs will change.
+- Genes and transcripts need to be imported, or regenarated, in LOVD 3.0 separately.
+- Idem diseases?
+- The rest of the data then should go in a LOVD 3.0 format.
+- To make life easier for the users:
+  + Can the new LOVD 3.0 install not ask for the LOVD 2.0 install location, download gene, disease and transcript info, then possibly ask for its admin account, and download the rest of the data?
+  + Alternatively, from LOVD 2.0 you could have the user generate an ID, LOVD 3.0 then somehow receives this ID, and logs into the LOVD 2.0 installation to retrieve data (or LOVD 2.0 sends it).
+  + For all of this, the LOVD 2.0 does need to be accessible for the LOVD 3.0 install.
 
 
 

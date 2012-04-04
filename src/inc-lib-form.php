@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-03-26
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -532,12 +532,16 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
     global $_SETT, $_CONF;
 
+    $aEmailsUsed = array(); // Make sure no email address is used more than once.
     $sTo = '';
     foreach ($aTo as $aRecipient) {
         list($sName, $sEmails) = array_values($aRecipient);
         $aEmails = explode("\r\n", $sEmails);
         foreach ($aEmails as $sEmail) {
-            $sTo .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+            if (!in_array($sEmail, $aEmailsUsed)) {
+                $sTo .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+                $aEmailsUsed[] = $sEmail;
+            }
         }
     }
     $sTo = rtrim($sTo, ', ');
@@ -546,7 +550,10 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
         list($sName, $sEmails) = array_values($aRecipient);
         $aEmails = explode("\r\n", $sEmails);
         foreach ($aEmails as $sEmail) {
-            $sCc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+            if (!in_array($sEmail, $aEmailsUsed)) {
+                $sCc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+                $aEmailsUsed[] = $sEmail;
+            }
         }
     }
     $sCc = rtrim($sCc, ', ');
@@ -555,7 +562,10 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
         list($sName, $sEmails) = array_values($aRecipient);
         $aEmails = explode("\r\n", $sEmails);
         foreach ($aEmails as $sEmail) {
-            $sBcc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+            if (!in_array($sEmail, $aEmailsUsed)) {
+                $sBcc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+                $aEmailsUsed[] = $sEmail;
+            }
         }
     }
     $sBcc = rtrim($sBcc, ', ');

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-03-15
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-04
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -255,10 +255,10 @@ class LOVD_CustomViewList extends LOVD_Object {
                          array(
                                 'geneid' => array(
                                         'view' => array('Gene', 70),
-                                        'db'   => array('t.geneid', 'ASC', 'TEXT')),
+                                        'db'   => array('t.geneid', 'ASC', true)),
                                 'id_ncbi' => array(
                                         'view' => array('Transcript', 120),
-                                        'db'   => array('t.id_ncbi', 'ASC', 'TEXT')),
+                                        'db'   => array('t.id_ncbi', 'ASC', true)),
                               ));
                     if (!$this->sSortDefault) {
                         // First data table in view.
@@ -273,7 +273,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                          array(
                                 'chromosome' => array(
                                         'view' => array('Chr', 50),
-                                        'db'   => array('vog.chromosome', 'ASC', 'TEXT')),
+                                        'db'   => array('vog.chromosome', 'ASC', true)),
                               ));
                     if (!$this->sSortDefault) {
                         // First data table in view.
@@ -289,7 +289,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                          array(
                                 'transcriptid' => array(
                                         'view' => array('TranscriptID', 50),
-                                        'db'   => array('vot.transcriptid', 'ASC', 'INT_UNSIGNED')),
+                                        'db'   => array('vot.transcriptid', 'ASC', true)),
                               ));
                     if (!$this->sSortDefault) {
                         // First data table in view.
@@ -307,7 +307,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                              array(
                                     'id' => array(
                                             'view' => array('Screening ID', 110),
-                                            'db'   => array('s.id', 'ASC', 'INT_UNSIGNED')),
+                                            'db'   => array('s.id', 'ASC', true)),
                                   ));
                         $this->sSortDefault = 'id';
                     }

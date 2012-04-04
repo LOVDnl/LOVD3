@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2012-02-10
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-04
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -65,7 +65,7 @@ class LOVD_Log extends LOVD_Object {
                                     'db'   => array('l.name', 'ASC', true)),
                         'date' => array(
                                     'view' => array('Date', 130),
-                                    'db'   => array('CONCAT(l.date, " ", l.mtime)', 'DESC', 'DATETIME')),
+                                    'db'   => array('l.date', 'DESC', 'DATETIME')),
                         'userid' => array(
                                     'view' => false,
                                     'db'   => array('l.userid', 'ASC', true)),

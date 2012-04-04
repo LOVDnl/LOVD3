@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-02
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,13 +55,13 @@ class LOVD_Column extends LOVD_Object {
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT c.*, ' .
-                               'SUBSTRING_INDEX(c.id, "/", 1) AS category, ' .
-                               'SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, ' .
-                               '(a.created_by > 0) AS active, ' .
-                               'GROUP_CONCAT(c2l.linkid SEPARATOR ";") AS _active_links ' .
+                                 'SUBSTRING_INDEX(c.id, "/", 1) AS category, ' .
+                                 'SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, ' .
+                                 '(a.created_by > 0) AS active, ' .
+                                 'GROUP_CONCAT(c2l.linkid SEPARATOR ";") AS _active_links ' .
                                'FROM ' . TABLE_COLS . ' AS c ' .
-                               'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
-                               'LEFT OUTER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (c.id = c2l.colid) ' .
+                                 'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
+                                 'LEFT OUTER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (c.id = c2l.colid) ' .
                                'WHERE c.id = ? ' .
                                'GROUP BY c.id';
 
@@ -128,7 +128,7 @@ class LOVD_Column extends LOVD_Object {
                                     'db'   => array('c.head_column', 'ASC', true)),
                         'active_' => array(
                                     'view' => array('Active', 60, 'style="text-align : center;"'),
-                                    'db'   => array('IFNULL((a.created_by > 0), 0)', 'DESC', true)),
+                                    'db'   => array('IFNULL((a.created_by > 0), 0)', 'DESC', 'INT')),
                         'hgvs_' => array(
                                     'view' => array('HGVS', 50, 'style="text-align : center;"'),
                                     'db'   => array('c.hgvs', 'DESC', true)),

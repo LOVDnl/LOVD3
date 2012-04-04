@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-03-23
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -118,7 +118,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
                 if (in_array($nDiseaseID, $zData['phenotypes'])) {
                     $_GET['search_diseaseid'] = $nDiseaseID;
                     $_DATA = new LOVD_Phenotype($nDiseaseID);
-                    $_DATA->setSortDefault('phenotypeid');
                     print('<B>' . $sName . ' (<A href="diseases/' . $nDiseaseID . '">' . $sSymbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $nDiseaseID . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
                     $_DATA->viewList('Phenotypes_for_I_VE_' . $nDiseaseID, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
                 }
@@ -148,7 +147,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_genome_variants.php';
         $_DATA = new LOVD_GenomeVariant();
         $_DATA->setSortDefault('id');
-        $_DATA->viewList('VOG_for_I_VE', 'screeningids', true, false, false, false);
+        $_DATA->viewList('VOG_for_I_VE', 'screeningids', true);
         unset($_GET['search_screeningids']);
     }
 

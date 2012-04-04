@@ -155,7 +155,7 @@ class LOVD_User extends LOVD_Object {
 /*
                         'submits' => array(
                                     'view' => array('Submits', 75, 'style="text-align : right;"'),
-                                    'db'   => array('submits', 'DESC')),
+                                    'db'   => array('submits', 'DESC', 'INT_UNSIGNED')),
 */
                         'status_' => array(
                                     'view' => array('Status', 50, 'style="text-align : center;"')),

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-02
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,12 +46,14 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
     // URL: /columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
     // View all columns.
 
-    if (!empty($_PATH_ELEMENTS[1]) && in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
-        // Category given.
-        $_GET['search_category'] = $_PATH_ELEMENTS[1];
-    } elseif (!empty($_PATH_ELEMENTS[1])) {
-        header('Location:' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '?search_category=' . $_PATH_ELEMENTS[1]);
-        exit;
+    if (!empty($_PATH_ELEMENTS[1])) {
+        if (in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
+            // Category given.
+            $_GET['search_category'] = $_PATH_ELEMENTS[1];
+        } else {
+            header('Location:' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '?search_category=' . $_PATH_ELEMENTS[1]);
+            exit;
+        }
     }
 
     define('PAGE_TITLE', 'Browse custom data columns');
@@ -67,8 +69,8 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
         lovd_showInfoTable('Please note that these are all columns available in this LOVD installation. This is not the list of columns actually added to the system. Also, modifications made to the columns added to the system are not shown.', 'information', 950);
     }
     $aSkip = array();
-    if (!empty($_PATH_ELEMENTS[1]) && in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
-        $_DATA->sSortDefault = 'col_order';
+    if (!empty($_PATH_ELEMENTS[1])) {
+        $_DATA->setSortDefault('col_order'); // To show the user we're now sorting on this (the ViewList does so by default, anyway).
         $aSkip = array('category');
     }
     $_DATA->viewList('Columns', $aSkip);

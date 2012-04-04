@@ -386,6 +386,7 @@ function lovd_mapVariants ()
         // Print the LOVD header, including the menu (if $bFull == true).
         global $_AUTH, $_CONF, $_DB, $_SETT, $_STAT;
 
+        // FIXME; remove once all inc-top and inc-bot calls have been replaced by the template.
         if ($bFull) {
             @define('_INC_TOP_INCLUDED_', true);
         } else {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-04-03
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -507,25 +507,20 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     // Set proper subject.
     $sSubject = 'LOVD submission' . (!empty($aGenes)? ' (' . implode(', ', array_slice($aGenes, 0, 20)) . (count($aGenes) > 20? ', ...' : '') . ')' : '');
 
-    // Remove the submitter from the CC if he is already mailed as curator.
+    // Set submitter address.
     $aSubmitter = array(array($_AUTH['name'], $_AUTH['email']));
-    foreach ($aTo as $aRecipient) {
-        list($sName, $sEmails) = array_values($aRecipient);
-        if ($sName == $_AUTH['name']) {
-            $aSubmitter = array();
-        }
-    }
 
     // Send mail.
     $bMail = lovd_sendMail($aTo, $sSubject, $sBody, 
                            $_SETT['email_headers'] . PHP_EOL .
-                           'Reply-To: ' . $_AUTH['email'], $_CONF['send_admin_submissions'], $aSubmitter);
+                           'Reply-To: ' . str_replace("\r\n", ', ', $_AUTH['email']), $_CONF['send_admin_submissions'], $aSubmitter);
 
+    // FIXME; When messaging system is built in, maybe queue message for curators?
     if ($bMail) {
-        lovd_showInfoTable('Successfully processed your submission and sent an e-mail notification to the relevant curator(s)!', 'success');
+        lovd_showInfoTable('Successfully processed your submission and sent an email notification to the relevant curator(s)!', 'success');
     } else {
-        lovd_writeLog(LOG_EVENT, 'Failed e-mail delivery for the submission of ' . $sURI . $nID);
-        lovd_showInfoTable('Successfully processed your submission, but LOVD wasn\'t able to send an e-mail notification to the relevant curator(s)!\nContact a curator and notify them of your submission so that they can curate your data!', 'warning');
+        lovd_writeLog(LOG_EVENT, 'Failed email delivery for the submission of ' . $sURI . $nID);
+        lovd_showInfoTable('Successfully processed your submission, but LOVD wasn\'t able to send an email notification to the relevant curator(s)!\nPlease contact one of the relevant curators and notify them of your submission so that they can curate your data!', 'warning');
     }
 
     require ROOT_PATH . 'inc-bot.php';

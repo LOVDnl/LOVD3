@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-03-02
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-04
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -50,7 +50,7 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i'
         $sGene = '';
     } else {
         $sGene = rawurldecode($_PATH_ELEMENTS[1]);
-        $_GET['search_geneid'] = $sGene;
+        $_GET['search_geneid'] = '="' . $sGene . '"';
     }
     define('PAGE_TITLE', 'View transcripts' . ($sGene? ' of gene ' . $sGene : ''));
     require ROOT_PATH . 'inc-top.php';

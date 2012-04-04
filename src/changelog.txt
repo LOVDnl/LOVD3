@@ -12,6 +12,12 @@
  *********/
  * On the bottom of the user's ViewEntries, visible for managers and up, we have
    added a log entry ViewList with log entries linked to the user.
+ * Fixed bug; The "make standard" AJAX call made from the SeattleSeq import form
+   did not actually make the column standard because of a problem in the call.
+ * Fixed bug; Submission emails sent out by LOVD by users with more than one
+   email address, had the additional addresses in the body of the email.
+ * Fixed bug; The /transcripts/GENE URL also showed transcripts for genes with
+   symbols starting with the requested gene symbol.
 
 
 
@@ -27,8 +33,6 @@
    submission and also added a notification of the error to the user.
  * Added some checks to screenings?confirm so that users cannot confirm variants
    when they are not allowed.
- * Now screenings?confirm can only CONFIRM variants and it is currently
-   impossible to UNconfirm variants. A separate section will be made for this.
  * Added some examples to the standard custom link descriptions.
  * Renamed `VariantOnGenome/DNA_published` to `VariantOnGenome/Published_as` &
    `VariantOnTranscript/DNA_published` to `VariantOnTranscript/Published_as`.
@@ -36,9 +40,8 @@
    removed/disabled.
  * Fixed bug; No longer able to view data that you are not authorized for in
    viewEntries.
- * Fixed bug; Fixed minor bug in the search code for a viewList.
- * Changed screenings?confirm to screenings?confirmVariants.
- * Implemented a screenings?removeVariants.
+ * Split screenings?confirm in screenings?confirmVariants and
+   screenings?removeVariants.
 
 
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-03
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -630,8 +630,9 @@ class LOVD_Object {
 
         // Run the actual query.
         $zData = $_DB->query($sSQL, array($nID))->fetchAssoc();
-
+        // If the user has no rights based on the statusid column, we don't have a $zData.
         if (!$zData) {
+            // Don't give away information about the ID: just pretend the entry does not exist.
             global $_SETT, $_STAT, $_AUTH;
             lovd_showInfoTable('No such ID!', 'stop');
             if (defined('_INC_TOP_INCLUDED_')) {
@@ -735,10 +736,14 @@ class LOVD_Object {
                     // Column type of an alias is given by LOVD.
                     $sColType = $aCol['db'][2];
                 } else {
-                    if (preg_match('/^[a-z]{1,3}\.[a-zA-Z]+$/', $aCol['db'][0])) {
+                    if (preg_match('/^[a-z]{1,3}\.[a-z_]+$/i', $aCol['db'][0])) {
                         list($sAlias, $sColName) = explode('.', $aCol['db'][0]);
-                        preg_match('/(' . TABLEPREFIX . '_[a-z_]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches);
-                        $sTable = $aMatches[1];
+                        if (preg_match('/(' . TABLEPREFIX . '_[a-z_]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches)) {
+                            $sTable = $aMatches[1];
+                        } else {
+                            // Alias was not valid, default col type to TEXT.
+                            $sTable = '';
+                        }
                     } else {
                         $sColName = $aCol['db'][0];
                         $sTable = constant($this->sTable);
@@ -791,6 +796,7 @@ class LOVD_Object {
                                         if (((isset($nHour) && ($nHour < 0 || $nHour > 23)) || (isset($nMinute) && ($nMinute < 0 || $nMinute > 59)) || (isset($nSecond) && ($nSecond < 0 || $nSecond > 59))) && $aCol['view']) {
                                             $aBadSyntaxColumns[] = $aCol['view'][0];
                                         }
+                                        // Create $aTerms arrays, pre-filled with date components. These components will be overwritten later by $aMatches, if they are given by the user.
                                         switch ($sOperator) {
                                             case '>':
                                             case '<=':
@@ -802,11 +808,16 @@ class LOVD_Object {
                                                 break;
                                             case '!':
                                             default:
-                                                $sOperator = ($sOperator == '!'? 'NOT ' : '') . 'LIKE';
+                                                if (($sColType == 'DATE' && isset($nDay)) || ($sColType == 'DATETIME' && isset($nSecond))) {
+                                                    $sOperator .= '='; // != or =
+                                                } else {
+                                                    $sOperator = ($sOperator == '!'? 'NOT ' : '') . 'LIKE';
+                                                }
                                                 $aTerms = array(3 => '', '', '', '', '');
                                                 break;
                                         }
                                         unset($aMatches[0], $aMatches[1]);
+                                        // Replace our default date components by the ones given by the user.
                                         $aTerms = array_replace($aTerms, $aMatches);
                                         ksort($aTerms);
                                         $sTerms = implode($aTerms);

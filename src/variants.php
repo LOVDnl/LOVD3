@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-04-03
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -110,7 +110,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[2]) && $_PATH_ELEMENTS[1] == 'upload' && c
     $_DATA = new LOVD_GenomeVariant();
     $_GET['search_created_by'] = substr($nID, 0, 5);
     $_GET['search_created_date'] = date('Y-m-d H:i:s', substr($nID, 5, 10));
-    $_DATA->viewList(false, array('screeningids', 'allele_'));
+    $_DATA->viewList('VOG_uploads', array('screeningids', 'allele_'));
 
     require ROOT_PATH . 'inc-bot.php';
     exit;
@@ -331,7 +331,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_printHeader('Screenings', 'H4');
         require ROOT_PATH . 'class/object_screenings.php';
         $_DATA = new LOVD_Screening();
-        $_DATA->viewList('Screenings_for_VOG_VE', array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
+        $_DATA->viewList('Screenings_for_VOG_VE', array('individualid', 'created_date', 'edited_date'), true, true);
     }
 
     require ROOT_PATH . 'inc-bot.php';
@@ -702,12 +702,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             echo '$( \'input[name="ignore_' . substr($key, 7, 5) . '"]\' ).attr(\'checked\', true).trigger(\'click\').attr(\'checked\', true);' . "\n";
         }
     }
-?>
 
-</SCRIPT>
+    print("\n" .  
+          '      </SCRIPT>' . "\n\n");
 
-
-<?php
     require ROOT_PATH . 'inc-bot.php';
     exit;
 }
@@ -1837,7 +1835,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
               '    }' . "\n" .
               "\n" .
               '    function lovd_setStandardColumn (sColumn) {' . "\n" .
-              '        $.get("' . ROOT_PATH . 'ajax/edit_column.php?set_standard&amp;colid=" + sColumn, lovd_checkColumns);' . "\n" .
+              '        $.post("' . ROOT_PATH . 'ajax/edit_column.php?set_standard", "colid=" + sColumn, lovd_checkColumns);' . "\n" .
               '    }' . "\n" .
               '    $(lovd_checkColumns);' . "\n" .
               '</SCRIPT>');

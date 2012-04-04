@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-04-03
+ * Modified    : 2012-04-04
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -149,8 +149,8 @@ class LOVD_Custom extends LOVD_Object {
             } else {
                 $sAlias = strtolower($this->sCategory{0});
             }
-            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid > ' . STATUS_HIDDEN . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
-            $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid > ' . STATUS_HIDDEN . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
+            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
+            $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
         }
     }
 
