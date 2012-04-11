@@ -184,7 +184,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
         $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
-        $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome'));
+        $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome', 'allele_'));
     }
 
     require ROOT_PATH . 'inc-bot.php';

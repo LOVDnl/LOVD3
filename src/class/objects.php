@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-11
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -350,7 +350,7 @@ class LOVD_Object {
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::insertEntry()');
         }
-        $q = $_DB->query($sSQL, $aSQL);
+        $q = $_DB->query($sSQL, $aSQL, true, true);
 
         $nID = $_DB->lastInsertId();
         if (substr(lovd_getColumnType(constant($this->sTable), 'id'), 0, 3) == 'INT') {
@@ -567,7 +567,7 @@ class LOVD_Object {
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::updateEntry()');
         }
-        $q = $_DB->query($sSQL, $aSQL);
+        $q = $_DB->query($sSQL, $aSQL, true, true);
 
         return $q->rowCount();
     }

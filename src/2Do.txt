@@ -1,90 +1,31 @@
 Prioritize:
 ===========
-- Overal altijd een TRIM() inbouwen, voordat iets de database in gaat?
-- Controle in submit.php op email moet met lovd_emailError(), ook lovd_sendMail gebruikt 'm niet.
-- Key zetten op id_hgnc in TABLE_GENES
 - Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
 - Apply the $_T->printHeader(), printTitle() and printFooter() everywhere. Don't forget that the Footer sometimes needs false as an argument!!!
   + $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
     // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
-- Should we maybe set default_socket_timeout somewhere?
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
   + We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
   + Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
-- IVAR: Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
-  + objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
-  + VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns).
-    * OOK IN CUSTOM VIEWLIST
-- (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
-  + Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
-- (@Ivar) Alle variant en/of data views uitbreiden met affects function en andere standaard kolommen die LOVD 2.0 ook toont.
+- (@Ivar) Alle variant en/of data views uitbreiden met andere standaard kolommen die LOVD 2.0 ook toont.
   * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
-- (BELANGRIJK) Testen wat public / curator wel en niet mag.
+- (BELANGRIJK) Van alles moet bepaald worden wat de minimale level is die benodigd is.
+  + (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
+    * Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
+  + IVAR: Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
+    * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
+    * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns). OOK IN CUSTOM VIEWLIST.
+  + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
-  + Van alle overzichten moet bepaald worden wat de minimale level is die benodigd is.
-- Verify if anybody has comments, and include:
-    VariantOnGenome/Genetic_origin:
-    - Unknown
-    - Germline (inherited)
-    - Somatic
-    - De novo
-    - Uniparental disomy
-    - Uniparental disomy, maternal allele
-    - Uniparental disomy, paternal allele
-
-    VariantOnGenome/Segregation:
-    - ? = Unknown
-    - yes = Segregates with disease
-    - no = Does not segregate with disease
-
-    Individual/Consanguinity
-    - ? = Unknown
-    - no = Non-consanguineous parents
-    - yes = Consanguineous parents
-
-    Phenotype/Inheritance
-    - Unknown
-    - Familial
-    - Familial, dominant
-    - Familial, recessive
-    - Familial, X-linked
-    - Paternal, Y-linked
-    - Maternal, mitochondrial
-    - Isolated (sporadic)
-
-  How it was before:
-    Variant/genetic_origin
-    -unknown
-    -inherited
-    -de novo
-    -de novo, germline
-    -de novo, somatic
-    -uniparental disomy
-    -uniparental disomy, maternal allele
-    -uniparental disomy, paternal allele
-    -in vitro (cloned)
-    -non-human (model organism)
-
-    Patient/Phenotype/Inheritance
-    -familial
-    -familial, autosomal dominant
-    -familial, autosomal recessive
-    -familial, autosomal recessive, consanguineous
-    -familial, X-linked
-    -sporadic
-    -sporadic, parents consanguineous
-    -sporadic, parents not consanguineous
-    -sporadic, consanguinity unknown
 - Unit tests via Selenium (of alternatief)?
   * Hebben we OpenSSL ergens voor nodig?
 - Gene homepage: variant counts zoals voor LOVD 2.0.
-- Variant effect column bij custom viewlist.
-- Custom columns:
-  + Nieuw: Phenotype/Date, VariantOnGenome/Times_reported???
 - Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
+- Should we maybe set default_socket_timeout somewhere?
+- VariantOnGenome/Times_reported???
 
 - Beta-05:
   - DATA DOWNLOAD.
@@ -98,7 +39,6 @@ Prioritize:
       * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
         - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
         - Store in session / DB in een col met serialized data?
-  - Submit a variant that has already been reported
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
@@ -107,18 +47,17 @@ Prioritize:
   - Johan wil dat we bij de redirect("Successfully created *****") een knop zetten. Er moet dan een tekst staan met "You are being redirected, if not you can click here". Schijnbaar werkt de redirect soms niet.
     + Redirect: zouden we dan misschien een functie moeten maken? Code voor een knopje met redirect (JS lijkt me het handigst?) in een lovd_showInfoTable() is dan best wel weer lang.
   - Ook moeten we ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
-    + Submit: zou ik in de 2Do zetten en nog niet in de code, aangezien de curator nog niet kan importeren :)
   - HGNC niet te bereiken? Nette foutmelding of mirror gebruiken?
   - /columns/VariantOnTranscript/DMD -> (LINK MOET ANDERS HETEN) viewList kolommen actief op DMD
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
   - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
   - Begin met manual (eerst alleen nog PDF).
   - Variant/Times_reported (or similar)
-    + Iedere variant die gevonden wordt in de panel moet dan apart geteld worden, door middel van het "Variant/Times_reported" veld (eventueel
-      "Variant/Chromosomes_reported" of "Variant/Found_on_chromosomes" of ...). Hier moet het aantal chromosomen worden ingevuld, waar de
-      variant is gevonden. De frequentie is dan uit te rekenen volgens: "Variant/Times_reported" ÷ ("Individual/Panel/Size" * 2)
+    + Iedere variant die gevonden wordt in de panel moet dan apart geteld worden, door middel van het "VariantOnGenome/Times_reported" veld (eventueel
+      "VariantOnGenome/Chromosomes_reported" of "VariantOnGenome/Found_on_chromosomes" of ...). Hier moet het aantal chromosomen worden ingevuld, waar de
+      variant is gevonden. De frequentie is dan uit te rekenen volgens: "VariantOnGenome/Times_reported" ÷ (Individuals "panel_size" * 2)
     + Om aan te geven dat een variant niet gevonden is in een controle groep, kan men de "Variant/Times_reported" op 0 zetten, maar dan alleen als de
-      "Individual/Panel/Size" groter dan 1 is (dus dat mag niet in een individu, alleen een panel).
+      Individuals "panel_size" groter dan 1 is (dus dat mag niet in een individu, alleen een panel).
     + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
   - "Does not accept external submissions" setting? Dat moet dan ook worden doorgegeven, zodat de LOVD/LSDB lijst dat kan aangeven.
     + Apart veld, niet in data.
@@ -295,15 +234,6 @@ Lifestyle columns? Smoker yes/no? Where/how to store?
 
 
 
-Kán later, maar VOOR dat er externe gebruikers actief worden:
-=============================================================
-- In commit #40 is er bij diseases viewEntry() van alles veranderd, maar het werkt niet goed (notices) en volgens mij is de query te uitgebreid. Ik moet hier later nog naar kijken.
-- Tabs instellen?
-
-
-
-
-
 LOVD 3.0
 ====================
     Als Find & Replace wordt ingebouwd, moet de opzet anders worden:
@@ -324,7 +254,6 @@ LOVD 3.0
         Mummi had een mooie quote die curators kan waarschuwen voor de effecten, als ze die uit zetten:
             You (and some curators) probably won't agree with me fully on the above, I'm sure. But there could still be a useful compromise to be made here: have an on/off switch for the WS/feed access methods so curators can disable these if they wish, but at the same time 'educate' them in what I argued above about data accessibility. They can then balance this against their desire to, for one reason or other, limit accessibility options to HTML only.
             NB The accessibility issue will become especially relevant in the future when we will have the various distributed search tools: curators need to be informed that if they disable the WS/feed access methods, their LSDB will not be included alongside with all the other datasources in the federation, and so they will be less visible to potential users, get less traffic, and (ultimately) fewer citations than they might otherwise receive, and overall less peer recognition at the end of the day.
-    Raymond Dalgleish wil beta-tester zijn.
     Het hele HTML/XSS probleem. Nu hebben we nog overal XSS checks, behalve in de custom link script, toch? Deny HTML input voor column data?
         Het hele probleem is dat alle output moet ge-htmlspecialchar()ed worden om normaal getoond te worden als er een < in zit. Maar echte HTML gaat dan verloren.
         Toch overal maar htmlspecialchars invoeren? Dan moet bij de custom links worden uitgekeken dat het niet twee keer gebeurt, en daarnaast moeten de custom links later worden toegepast.
@@ -425,6 +354,7 @@ Wat moet ik onthouden tijdens het coden?
 * User levels:
     Submitter
     Colaborator (kan SOMMIGE extra velden zien van publieke entries) -> extra niveau kolom publiek ja/nee, maar collaborators wel/nee (public, collaborators, private)?
+    Owner
     Curator
     Manager
     Database administrator

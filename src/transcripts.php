@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-10
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -102,6 +102,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
     $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
+    $_DATA->setRowLink('VOT_for_T_VE', 'javascript:window.location.href = \'variants/{{ID}}#{{transcriptid}}\'; return false');
     $_DATA->viewList('VOT_for_T_VE', array('geneid', 'transcriptid', 'id_ncbi', 'id_'));
 
     require ROOT_PATH . 'inc-bot.php';
@@ -118,19 +119,14 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     // When we have multiple hits, refer to listView.
 
     $sID = rawurldecode($_PATH_ELEMENTS[1]);
-    $aIDs = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchAllColumn();
-    $n = count($aIDs);
-    /*if (!$n) {
+    if ($nID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchColumn()) {
+        header('Location: ' . lovd_getInstallURL() . 'transcripts/' . $nID);
+    } else {
         define('PAGE_TITLE', 'View transcript');
         require ROOT_PATH . 'inc-top.php';
         lovd_printHeader(PAGE_TITLE);
         lovd_showInfoTable('No such ID!', 'stop');
         require ROOT_PATH . 'inc-bot.php';
-    } else*/if ($n == 1) {
-        header('Location: ' . lovd_getInstallURL() . 'transcripts/' . $aIDs[0]);
-    } else {
-        // Multiple hits. Forward to exact match search.
-        header('Location: ' . lovd_getInstallURL() . 'transcripts?search_id_ncbi=%3D%22' . rawurlencode($sID) . '%22');
     }
     exit;
 }

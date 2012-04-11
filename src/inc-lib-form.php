@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-10
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -596,6 +596,8 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
         return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
     } elseif (!$bMail) {
+        // $sSubject is used here as it can always be used to describe the email type.
+        lovd_emailError('SendMail', $sSubject);
         lovd_writeLog('Error', 'SendMail', preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . LOG_EVENT . '.' . "\n" .
                                            'Error : Couldn\'t send a mail with subject ' . $sSubject . ' to ' . $sTo);
     }

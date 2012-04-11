@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-02-16
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-11
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -412,11 +412,11 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             $aSQL[] = $nID;
             $aSQL[] = $nTranscriptID;
 
-            $q = lovd_queryDB_Old($sSQL, $aSQL);
-            if (!$q) {
-                lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : $this->sObject . '::updateEntry()'), $sSQL, mysql_error());
+            if (!defined('LOG_EVENT')) {
+                define('LOG_EVENT', $this->sObject . '::updateEntry()');
             }
 
+            $q = $_DB->query($sSQL, $aSQL, true, true);
             $nAffected += mysql_affected_rows();
         }
         return $nAffected;

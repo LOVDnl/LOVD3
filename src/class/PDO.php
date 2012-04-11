@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2012-03-17
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-10
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -140,7 +140,7 @@ class LOVD_PDO extends PDO {
 
 
 
-    function query ($sSQL, $aSQL = '', $bHalt = true)
+    function query ($sSQL, $aSQL = '', $bHalt = true, $bTrim = false)
     {
         // Wrapper around PDO::query() or PDO::prepare()->execute(), if arguments are passed.
         // THIS WRAPPER DOES NOT SUPPORT ANY OF THE MODES!
@@ -150,7 +150,7 @@ class LOVD_PDO extends PDO {
             // We'll do an prepare() and execute(), not a query()!
             $q = $this->prepare($sSQL, $bHalt); // Error handling by our own PDO class.
             if ($q) {
-                $b = $q->execute($aSQL, $bHalt); // Error handling by our own PDOStatement class.
+                $b = $q->execute($aSQL, $bHalt, $bTrim); // Error handling by our own PDOStatement class.
                 if (!$b) {
                     // We should actually return true||false now, but the user of this function probably wants to do a
                     // fetch() if the execute was successful, so return the PDOStatement object just like PDO::query().
@@ -197,7 +197,7 @@ class LOVD_PDOStatement extends PDOStatement {
     // This class provides a wrapper around PDOStatement such that database errors are handled automatically by LOVD and LOVD can use fetch() features more easily.
     // FIXME; apparently we don't need to call parent::__construct()? I can't get that to work, and this wrapper seems to work without it anyway...
 
-    function execute ($aSQL = array(), $bHalt = true) // Somebody tell me why I need the "= array()" to prevent a strict error?
+    function execute ($aSQL = array(), $bHalt = true, $bTrim = false) // Somebody tell me why I need the "= array()" to prevent a strict error?
     {
         // Wrapper around PDOStatement::execute().
         global $_DB;
@@ -208,7 +208,9 @@ class LOVD_PDOStatement extends PDOStatement {
                 foreach ($aSQL as $nKey => $Arg) {
                     if (is_array($Arg)) {
                         // We handle arrays gracefully.
-                        $aSQL[$nKey] = implode(';', $Arg);
+                        $aSQL[$nKey] = implode(';', array_map('trim', $Arg));
+                    } else {
+                        $aSQL[$nKey] = trim($aSQL[$nKey]);
                     }
                 }
             } // There is no else, we will catch the exception thrown by parent::execute().

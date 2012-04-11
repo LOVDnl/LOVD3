@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-05
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -111,7 +111,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnGenome':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '');
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['SELECT'] .= ', vog.id AS row_id'; // To ensure other table's id columns don't interfere.
@@ -128,6 +128,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
                     }
+                    if (!in_array('VariantOnTranscript', $aObjects)) {
+                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS eg ON (vog.effectid = eg.id)';
+                    }
                     // If no collaborator, hide lines with hidden variants!
                     if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
                         $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vog.statusid >= ' . STATUS_MARKED;
@@ -135,7 +138,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscript':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.*';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.*, et.name as vot_effect';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['SELECT'] .= ', vot.id AS row_id'; // To ensure other table's id columns don't interfere.
@@ -157,6 +160,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
                     }
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS et ON (vot.effectid = et.id)';
                     break;
 
                 case 'Screening':
@@ -274,7 +278,16 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'chromosome' => array(
                                         'view' => array('Chr', 50),
                                         'db'   => array('vog.chromosome', 'ASC', true)),
+                                'allele_' => array(
+                                        'view' => array('Allele', 120),
+                                        'db'   => array('vog.allele', 'ASC', true)),
+                                'vog_effect' => array(
+                                        'view' => array('Effect', 70),
+                                        'db'   => array('eg.name', 'ASC', true)),
                               ));
+                    if (in_array('VariantOnTranscript', $aObjects)) {
+                        unset($this->aColumnsViewList['vog_effect']);
+                    }
                     if (!$this->sSortDefault) {
                         // First data table in view.
                         $this->sSortDefault = 'VariantOnGenome/DNA';
@@ -290,6 +303,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'transcriptid' => array(
                                         'view' => array('TranscriptID', 50),
                                         'db'   => array('vot.transcriptid', 'ASC', true)),
+                                'vot_effect' => array(
+                                        'view' => array('Effect', 70),
+                                        'db'   => array('et.name', 'ASC', true)),
                               ));
                     if (!$this->sSortDefault) {
                         // First data table in view.
@@ -368,6 +384,7 @@ class LOVD_CustomViewList extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        global $_SETT;
 
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
@@ -393,6 +410,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                 }
             }
         }
+
+        $zData['allele_'] = $_SETT['var_allele'][$zData['allele']];
+
         return $zData;
     }
 }

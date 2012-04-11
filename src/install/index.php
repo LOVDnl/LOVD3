@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-02-27
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-11
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -436,7 +436,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
         $_BAR->setMessage($sMessage);
 
         foreach ($aSQL as $sSQL) {
-            $q = $_DB->query($sSQL, false, false); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB_Old(). It complains because there are ?s in the queries.
+            $q = $_DB->query($sSQL, false, false, true); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB_Old(). It complains because there are ?s in the queries.
             if (!$q) {
                 // Error when running query. We will use the Div for the form now.
                 $sMessage = 'Error during install while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', '[' . implode('] [', $_DB->errorInfo()) . ']') . '</DIV><BR>' .
@@ -509,7 +509,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
         if (!lovd_error()) {
             // Store information and go to next page.
             // FIXME; use object::insertEntry()
-            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false);
+            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false, true);
             if (!$q) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .

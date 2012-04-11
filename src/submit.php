@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-10
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -519,7 +519,6 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     if ($bMail) {
         lovd_showInfoTable('Successfully processed your submission and sent an email notification to the relevant curator(s)!', 'success');
     } else {
-        lovd_writeLog(LOG_EVENT, 'Failed email delivery for the submission of ' . $sURI . $nID);
         lovd_showInfoTable('Successfully processed your submission, but LOVD wasn\'t able to send an email notification to the relevant curator(s)!\nPlease contact one of the relevant curators and notify them of your submission so that they can curate your data!', 'warning');
     }
 

@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-02
+ * Modified    : 2012-04-10
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -223,6 +223,15 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'UPDATE ' . TABLE_COLS . ' SET id = "VariantOnGenome/Published_as", head_column = "Published as", form_type = REPLACE(form_type, "DNA published", "Published as") WHERE id = "VariantOnGenome/DNA_published"',
                                 'UPDATE ' . TABLE_COLS . ' SET id = "VariantOnTranscript/Published_as", head_column = "Published as", form_type = REPLACE(form_type, "DNA published", "Published as") WHERE id = "VariantOnTranscript/DNA_published"',
                              ),
+                    '3.0-beta-03c' =>
+                        array(
+                                'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("Individual/Consanguinity",           249,  40, 0, 0, 0, "Consanguinity",        "Indicates whether the parents are related (consanguineous), not related (non-consanguineous) or whether consanguinity is not known (unknown)", "Indicates whether the parents are related (consanguineous), not related (non-consanguineous) or whether consanguinity is not known (unknown)", "Indicates whether the parents are related (consanguineous), not related (non-consanguineous) or whether consanguinity is not known (unknown)", "VARCHAR(5)", "Consanguinity||select|1|--Not specified--|false|false", "? = Unknown\r\nno = Non-consanguineous parents\r\nyes = Consanguineous parents", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("Phenotype/Date",                     255,  80, 0, 0, 0, "Date",                 "Format: YYYY-MM-DD.", "Date the phenotype was observed.", "Date the phenotype was observed, in YYYY-MM-DD format.", "DATE", "Date||text|10", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("Phenotype/Inheritance",              254, 200, 0, 0, 0, "Inheritance",          "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)", "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)", "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)", "VARCHAR(25)", "Inheritance||select|1|--Not specified--|false|false", "Unknown\r\nFamilial\r\nFamilial, autosomal dominant\r\nFamilial, autosomal recessive\r\nFamilial, X-linked dominant\r\nFamilial, X-linked dominant, male sparing\r\nFamilial, X-linked recessive\r\nPaternal, Y-linked\r\nMaternal, mitochondrial\r\nIsolated (sporadic)", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Genetic_origin",      11, 200, 0, 0, 0, "Genetic origin",       "Origin of variant; unknown, germline (i.e. inherited), somatic, de novo, from parental disomy (maternal or paternal) or in vitro (cloned)", "Origin of variant; unknown, germline (i.e. inherited), somatic, de novo, from parental disomy (maternal or paternal) or in vitro (cloned)", "Origin of variant; unknown, germline (i.e. inherited), somatic, de novo, from parental disomy (maternal or paternal) or in vitro (cloned)", "VARCHAR(40)", "Genetic origin||select|1|--Not specified--|false|false", "Unknown\r\n\r\nGermline (inherited)\r\nSomatic\r\nDe novo\r\nUniparental disomy\r\nUniparental disomy, maternal allele\r\nUniparental disomy, paternal allele", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Segregation",         12,  40, 0, 0, 0, "Segregation",          "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)", "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)", "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)", "VARCHAR(5)", "Segregation||select|1|--Not specified--|false|false", "? = Unknown\r\nyes = Segregates with disease\r\nno = Does not segregate with disease", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'ALTER TABLE ' . TABLE_GENES . ' ADD INDEX (id_hgnc)',
+                             ),
                   );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -270,7 +279,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     }
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-beta-03b')) {
-        // CHANGE DNA_published to Published as in TABLE_VARIANTS & TABLE_VARIANTS_ON_TRANSCRIPTS if exists.
+        // CHANGE DNA_published to Published_as in TABLE_VARIANTS & TABLE_VARIANTS_ON_TRANSCRIPTS if exists.
         $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS)->fetchAllColumn();
         if (in_array('VariantOnGenome/DNA_published', $aColumns)) {
             $aUpdates['3.0-beta-03b'][] = 'ALTER TABLE ' . TABLE_VARIANTS . ' CHANGE `VariantOnGenome/DNA_Published` `VariantOnGenome/Published_as` VARCHAR(100)';
