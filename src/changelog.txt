@@ -42,7 +42,12 @@
    viewEntries.
  * Split screenings?confirm in screenings?confirmVariants and
    screenings?removeVariants.
-
+ * Added automatic trimming of whitespaces in some SQL queries.
+ * Implemented a proper error handling for emails.
+ * Added the custom columns `Individual/Consanguinity`, `Phenotype/Date`,
+   `Phenotype/Inheritance`, `VariantOnGenome/Genetic_origin` and
+   `VariantOnGenome/Segregation` to the standard available set of columns.
+ * Added allele and variant effect columns to some of the variant views.
 
 
 

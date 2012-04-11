@@ -373,7 +373,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     {
         // Edit all VariantOnTranscript entries.
         // FIXME; We need a cleaner solution than globalizing zData.
-        global $zData, $_AUTH;
+        global $zData, $_AUTH, $_DB;
 
         $nAffected = 0;
         foreach ($this->aTranscripts as $nTranscriptID => $aTranscript) {
