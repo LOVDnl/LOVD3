@@ -169,6 +169,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
 
     } elseif (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*([1-9]\.[0-9](\.[0-9])?(\-[0-9a-z-]{2,11})?)(\nReleased\s*:\s*[0-9]{4}\-[0-9]{2}\-[0-9]{2})?$/', $sUpdates, $aUpdates) && is_array($aUpdates)) {
         // Weird version conflict?
+        // FIXME; shouldn't we check maybe if the given version *IS* actually newer? Maybe it's just a non-registered release?
         lovd_writeLog('Error', 'CheckUpdate', 'Version conflict while parsing upstream server output: current version (' . $_SETT['system']['version'] . ') > ' . $aUpdates[1]);
         $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
         $_STAT['update_checked_date'] = $sNow;

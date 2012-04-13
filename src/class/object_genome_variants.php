@@ -121,7 +121,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aColumnsViewList = array_merge(
                  array(
                         'screeningids' => array(
-                                    'view' => array('Screening ID', 90),
+                                    'view' => false,
                                     'db'   => array('screeningids', 'ASC', 'TEXT')),
                         'id_' => array(
                                     'view' => array('Variant ID', 90),
@@ -350,20 +350,20 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 if ($zData['mapping_flags'] & MAPPING_NOT_RECOGNIZED) {
                     $zData['mapping_flags_'] = 'Variant not recognized';
                     if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
-                        $zData['mapping_flags_'] .= ' (would have created a gene if needed)';
+                        $zData['mapping_flags_'] .= ' (would have created genes as needed)';
                     }
                     $sMappingLinkText = 'Retry';
                 } elseif ($zData['mapping_flags'] & MAPPING_DONE) {
                     $zData['mapping_flags_'] = 'Done';
                     if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
-                        $zData['mapping_flags_'] .= ' (created a gene if needed)';
+                        $zData['mapping_flags_'] .= ' (created genes as needed)';
                     }
                     $sMappingLinkText  = 'Map again';
                     $sMappingLinkTitle = 'If new transcripts have been added to LOVD, this will try to map this variant to them.';
                 } else {
                     $zData['mapping_flags_'] = 'Scheduled';
                     if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
-                        $zData['mapping_flags_'] .= ', creating a gene if needed';
+                        $zData['mapping_flags_'] .= ', creating genes as needed';
                     }
                     if ($zData['mapping_flags'] & MAPPING_ERROR) {
                         $zData['mapping_flags_'] .= ' (encountered a problem on the last attempt)';

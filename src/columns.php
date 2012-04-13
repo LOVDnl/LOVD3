@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-12
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1089,6 +1089,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
             // Because we're sending the data back to the form, I need to unset the password fields!
             unset($_POST['password']);
         }
+
     } else {
         // Default values.
         if (!isset($_SESSION['data_wizard'])) {
@@ -1114,7 +1115,6 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
                         'preg_pattern' => $zData['preg_pattern'],
                         'unsigned' => '',
                         'default_val' => '',
-                        'cols' => '',
                         'rows' => '',
                         'select' => '',
                         'select_options' => $zData['select_options'],
@@ -1151,7 +1151,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
                 break;
             case 'textarea':
                 // TEXT column.
-                $_SESSION['data_wizard'][$_POST['workID']]['cols'] = $aFormType[3];
+                $_SESSION['data_wizard'][$_POST['workID']]['size'] = $aFormType[3];
                 $_SESSION['data_wizard'][$_POST['workID']]['rows'] = $aFormType[4];
                 break;
             case 'select':

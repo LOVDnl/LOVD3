@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-04-10
+ * Modified    : 2012-04-12
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -138,7 +138,7 @@ $aTableSQL =
     updated_date DATETIME,
     PRIMARY KEY (id),
     INDEX (chromosome),
-    INDEX (id_hgnc),
+    UNIQUE (id_hgnc),
     INDEX (created_by),
     INDEX (edited_by),
     INDEX (updated_by),

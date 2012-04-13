@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2012-03-26
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-10
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -147,7 +147,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
             return false;
         } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $aGene['gd_app_name'], $aRegs)) {
             if ($bRecursion) {
-                return getGeneInfoFromHgnc($aRegs[1], $aCols);
+                return lovd_getGeneInfoFromHgnc($aRegs[1], $aCols);
             } elseif (function_exists('lovd_errorAdd')) {
                 lovd_errorAdd('', 'Entry ' . htmlspecialchars($sHgncId) . ' is deprecated, please use ' . $aRegs[1] . '.');
             }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-04-02
+ * Modified    : 2012-04-05
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -305,7 +305,7 @@ function lovd_mapVariants ()
 
             if (sResponse.indexOf("Notice") >= 0 || sResponse.indexOf("Warning") >= 0 || sResponse.indexOf("Error") >= 0 || sResponse.indexOf("Fatal") >= 0) {
                 // Something went wrong while processing the request, don\'t try again.
-                $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to the genome."});
+                $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to transcripts."});
             } else if (aResponse[0] == "' . AJAX_TRUE . '") {
                 // More variants to map. Re-call.
                 setTimeout("lovd_mapVariants()", 50);
@@ -317,7 +317,7 @@ function lovd_mapVariants ()
     ).error(function ()
         {
             // Something went wrong while contacting the server, don\'t try again.
-            $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to the genome."});
+            $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to transcripts."});
         }
     );
 }

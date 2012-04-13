@@ -19,6 +19,41 @@
 \checkandfixthelayout % Without this, nothing works. Took me ages before I found out.
 \fixpdflayout % Not sure if we need this, but it was recommended someplace.
 
+
+
+\makepagestyle{LOVD}
+
+% Because we don't have odd or even pages, we only need to define odd pages.
+\makeoddhead{LOVD}{\normalfont\leftmark}{}{\normalfont\rightmark}
+\makeheadrule{LOVD}{\textwidth}{\normalrulethickness}
+\makeoddfoot{LOVD}{}{\normalfont\thepage}{}
+\makefootrule{LOVD}{\textwidth}{\normalrulethickness}{\footruleskip}
+
+% Style "plain" is called from chapters. We want chapters to have a footer as well.
+\makeoddfoot{plain}{}{\normalfont\thepage}{}
+\makefootrule{plain}{\textwidth}{\normalrulethickness}{\footruleskip}
+
+% Additional changes:
+\makepsmarks{LOVD}{%
+  \nouppercaseheads
+
+  \createmark{chapter}{left}{shownumber}{}{.\space} % (\leftmark) number, followed by a . and a space.
+  \createmark{section}{right}{nonumber}{}{.\space} % (\rightmark) no number, (useless: followed by a . and a space).
+  % Change "shownumber" to "nonumber" if you don't want the chapter/section number displayed at the header.
+
+%  \createplainmark{toc}{both}{\contentsname}
+%  \createplainmark{lof}{both}{\listfigurename}
+%  \createplainmark{lot}{both}{\listtablename}
+%  \createplainmark{bib}{both}{\bibname}
+%  \createplainmark{index}{both}{\indexname}
+%  \createplainmark{glossary}{both}{\glossaryname}
+  % Might want to keep those, see the manual for further information.
+}
+% Activate your new pagestyle
+\pagestyle{LOVD}
+
+
+
 %\newcommand{\maketitle}{%
 %  \vspace*{\droptitle}
 %  \maketitlehooka
@@ -48,7 +83,7 @@
   \setlength\afterchapskip{20pt} % A small distance between the Chapter title and the text.
   \renewcommand{\chapterheadstart}{\vspace*{\beforechapskip}\hrule height 2pt \medskip} % Nice ruler above the Capter title.
   \renewcommand{\chapnamefont}{\normalfont\large\scshape} % CHAPTER
-  \renewcommand{\chapnumfont}{\normalfont\large\scshape} % 1
+  \renewcommand{\chapnumfont}{\normalfont\LARGE\scshape} % 1
   \renewcommand{\chaptitlefont}{\normalfont\huge\bfseries\scshape} % e.g. "Introduction"
   \renewcommand{\printchaptername}{} % Empty text instead of "Chapter".
                   \renewcommand{\chapternamenum}{ } % Weet niet wat dit anders doet.

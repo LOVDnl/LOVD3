@@ -597,7 +597,7 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
         return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
     } elseif (!$bMail) {
         // $sSubject is used here as it can always be used to describe the email type.
-        lovd_emailError('SendMail', $sSubject);
+        lovd_emailError(LOG_EVENT, $sSubject);
         lovd_writeLog('Error', 'SendMail', preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . LOG_EVENT . '.' . "\n" .
                                            'Error : Couldn\'t send a mail with subject ' . $sSubject . ' to ' . $sTo);
     }

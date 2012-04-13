@@ -197,7 +197,7 @@ class LOVD_PDOStatement extends PDOStatement {
     // This class provides a wrapper around PDOStatement such that database errors are handled automatically by LOVD and LOVD can use fetch() features more easily.
     // FIXME; apparently we don't need to call parent::__construct()? I can't get that to work, and this wrapper seems to work without it anyway...
 
-    function execute ($aSQL = array(), $bHalt = true, $bTrim = false) // Somebody tell me why I need the "= array()" to prevent a strict error?
+    function execute ($aSQL = array(), $bHalt = true, $bTrim = false) // Needs first argument as optional because the original function has it as optional.
     {
         // Wrapper around PDOStatement::execute().
         global $_DB;

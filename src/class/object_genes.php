@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-12
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -202,6 +202,8 @@ class LOVD_Gene extends LOVD_Object {
         if (ACTION == 'create') {
             if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($zData['id']))->fetchColumn()) {
                 lovd_errorAdd('', 'Unable to add gene. This gene symbol already exists in the database!');
+            } elseif ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($zData['id_hgnc']))->fetchColumn()) {
+                lovd_errorAdd('', 'Unable to add gene. A gene with this HGNC ID already exists in the database!');
             }
         }
 

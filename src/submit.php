@@ -274,14 +274,14 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
      array(
             '',
             'screeningid' => 'Screening ID',
-            'sFileName' => 'File name',
-            'sFileType' => 'File type',
-            'tUploadDate' => 'Timestamp',
-            'nVariants' => 'Variants imported',
-            'nUnsupportedVariants' => 'Variants not imported',
-            'nGenes' => 'Genes created',
-            'nTranscripts' => 'Transcripts created',
-            'nVariantOnTranscripts' => 'Transcript variants imported',
+            'file_name' => 'File name',
+            'file_type' => 'File type',
+            'upload_date' => 'Timestamp',
+            'num_variants' => 'Variants imported',
+            'num_variants_unsupported' => 'Variants not imported',
+            'num_genes' => 'Genes created',
+            'num_transcripts' => 'Transcripts created',
+            'num_variants_on_transcripts' => 'Transcript variants imported',
             'mapping_flags_' => 'Automatic mapping',
           );
 
@@ -438,16 +438,16 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
             $a = $aUploadFields;
             $a[0] = $sVariableNameUpload;
             $$sVariableNameUpload = $zUploadDetails;
-            foreach (array('nUnsupportedVariants', 'nGenes', 'nTranscripts') as $sKey) {
+            foreach (array('num_variants_unsupported', 'num_genes', 'num_transcripts') as $sKey) {
                 if ($zUploadDetails[$sKey] == 0) {
                     // Don't show the 'Variants not imported', 'Genes created' and/or 'Transcripts created' fields if they are 0.
                     // Note that the Genes and Transcripts counters are always zero for VCF files.
                     unset($a[$sKey]);
                 }
             }
-            if ($zUploadDetails['sFileType'] == 'VCF') {
+            if ($zUploadDetails['file_type'] == 'VCF') {
                 // Also don't show the VOT counter for VCF files.
-                unset($a['nVariantOnTranscripts']);
+                unset($a['num_variants_on_transcripts']);
             } else {
                 // And don't show the mapping flags field for SeattleSeq files.
                 unset($a['mapping_flags_']);

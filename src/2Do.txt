@@ -1,6 +1,12 @@
 Prioritize:
 ===========
+- Allele moet in een aparte tabel, zodat in de custom viewlist de kolom zoekbaar is.
+- Array_replace() herimplementeren.
+- No VOT -> Variants of gene XXX -> "No custom_viewlist" ???? -> Moet objecten binnen de CustomViewList analyseren.
+- IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
+  + Reported by Christopher Watson.
 - Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
+  + Overal waar er counts worden gedaan van de varianten, moeten we daarna checken of dat (nog) goed gaat.
 - Apply the $_T->printHeader(), printTitle() and printFooter() everywhere. Don't forget that the Footer sometimes needs false as an argument!!!
   + $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
     // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
@@ -22,6 +28,7 @@ Prioritize:
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - Unit tests via Selenium (of alternatief)?
   * Hebben we OpenSSL ergens voor nodig?
+    + http mutalyzer contact als zelf in https???
 - Gene homepage: variant counts zoals voor LOVD 2.0.
 - Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - Should we maybe set default_socket_timeout somewhere?
@@ -39,6 +46,7 @@ Prioritize:
       * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
         - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
         - Store in session / DB in een col met serialized data?
+  - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
@@ -62,6 +70,7 @@ Prioritize:
   - "Does not accept external submissions" setting? Dat moet dan ook worden doorgegeven, zodat de LOVD/LSDB lijst dat kan aangeven.
     + Apart veld, niet in data.
   - Email forwards: staat de Reply-To altijd goed? Regelen in lovd_sendMail()?
+  - All trim() calls in checkFields() calls can be removed, since data is automatically trimmed in Object::checkFields() anyway.
 
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
@@ -140,13 +149,10 @@ Prioritize:
 - Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - API.
 - ORCID integratie.
-- Proxy server: https://humgenprojects.lumc.nl/trac/LOVD3/ticket/3
-  + To check whether the proxy succeeded in contacting the real target host, you need to look for the http response code
-    in the headers that get returned. Typically, if the proxy was unable to reach the host, you'll find a line containing something like:
-    HTTP/1.0 503 Service Unavailable
 - lovd_setUpdatedDate() implementeren.
 - Since Objects::checkFields() is running getForm(), can't that code take care of invalid values in selection lists? Now that code is all over the place; object_custom for custom columns and lots of object_* files for each data type.
 - Floating header? Anders: eerst de hele tabel inladen, daarna nieuwe table maken, de TR moven naar de andere tabel met behoud van breedte, en laten floaten.
+  + Eventueel code gebruiken gesuggereerd door Ivar (november 2011)
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 
@@ -192,6 +198,7 @@ Data transfer LOVD 2.0 -> LOVD 3.0:
 
 
 Ook belangrijk, maar iets minder:
+- Tabs instelbaar maken voor gebruikers?
 - (Na beta) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
   * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.
   * Probleem: als wij de created_* data in de niet-versioned tabel hebben, MOETEN WE DIE ENTRY BEWAREN BIJ DELETION!!!

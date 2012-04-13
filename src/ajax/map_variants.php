@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-03-22
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-10
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -80,6 +80,7 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
     // $aTranscripts is a two-dimensional array; each transcript is an array with keys 'id' (optional) and 'id_ncbi' (mandatory).
     // Returns an associative array of the same length as $aTranscripts with the 'id_ncbi' values as keys, or FALSE on failure.
     // On success, each element contains an array with a ?-filled SQL query and an array of values. If the transcript ID is not given, the value array's element [1] contains NULL.
+    // The value array's element [7], for the VariantOnTranscript/Protein column, contains an empty string and is to be overwritten by runMutalyzer output.
     // On failure of a single transcript, the corresponding element contains FALSE.
     global $_MutalyzerWS, $_CONF, $_SETT;
     static $aVariantsOnTranscripts = array();
@@ -119,7 +120,6 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
                 $aReturn[$aTranscript['id_ncbi']] = false;
                 continue;
             }
-
             $aMappingInfo = lovd_getAllValuesFromArray('', $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript['id_ncbi'], 'variant' => $aVariant['VariantOnGenome/DNA'])));
             if (!isset($aMappingInfo['startmain']) || $aMappingInfo['startmain'] === '') {
                 if ($aMappingInfo['errorcode']) {
@@ -135,8 +135,8 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
                     // Got the variant description relative to this transcript.
                     $aReturn[$aTranscript['id_ncbi']] =
                          array(
-                                'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`) VALUES (?, ?, 55, ?, ?, ?, ?, ?)',
-                                array($aVariant['id'], isset($aTranscript['id'])? $aTranscript['id'] : NULL, $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], substr($sVariantOnTranscript, strpos($sVariantOnTranscript, ':') + 1))
+                                'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, 55, ?, ?, ?, ?, ?, ?)',
+                                array($aVariant['id'], isset($aTranscript['id'])? $aTranscript['id'] : NULL, $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], substr($sVariantOnTranscript, strpos($sVariantOnTranscript, ':c.') + 1), '')
                               );
                     continue 2;
                 }
@@ -325,10 +325,29 @@ if (!empty($aVariants)) {
                     if(!isset($aMappedToGenesInLOVD[$aTranscript['gene']])) {
                         // But only try it once. (NOTE: don't merge these if's because that breaks the elseif below!)
 
+                        $sRefseqUD = $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($aTranscript['gene']))->fetchColumn();
                         $aVariantOnTranscriptSQL = lovd_mapVariantToTranscripts($aVariant, $aTranscriptsInLOVD[$aTranscript['gene']]);
                         if (!empty($aVariantOnTranscriptSQL)) {
                             foreach ($aVariantOnTranscriptSQL as $sTranscriptNM => $aSQL) {
-                                if (!empty($aSQL) && $_DB->query($aSQL[0], $aSQL[1], false)) {
+                                if (empty($aSQL)) {
+                                    continue;
+                                }
+
+                                // Get the p. description too.
+                                $sTranscriptNum = $_DB->query('SELECT id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sTranscriptNM))->fetchColumn();
+                                $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][6])));
+                                if (!empty($aVariantsOnProtein['string'])) {
+                                    if (!is_array($aVariantsOnProtein['string'])) {
+                                        $aVariantsOnProtein['string'] = array($aVariantsOnProtein['string']);
+                                    }
+                                    foreach ($aVariantsOnProtein['string'] as $sVariantOnProtein) {
+                                        if (($nPos = strpos($sVariantOnProtein, '_i' . $sTranscriptNum . '):p.')) !== false) {
+                                            $aSQL[1][7] = substr($sVariantOnProtein, $nPos + strlen('_i' . $sTranscriptNum . '):'));
+                                            break;
+                                        }
+                                    }
+                                }
+                                if ($_DB->query($aSQL[0], $aSQL[1], false)) {
                                     // If the insert succeeded, save some data in the variant array for lovd_fetchDBID().
                                     $aVariant['aTranscripts'][$aSQL[1][1]] = array($sTranscriptNM, $aTranscript['gene']);
                                     $aVariant[$aSQL[1][1] . '_VariantOnTranscript/DNA'] = $aSQL[1][6];
@@ -350,18 +369,12 @@ if (!empty($aVariants)) {
             }
         }
 
-        if (empty($aVariant['aTranscripts']) && ($aVariant['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) && count($aGenes)) {
-            // The variant hasn't been mapped to a gene that exists in LOVD, let's add one if we may.
-            
-            // Add the most often seen gene and map the variant to one of its transcripts.
-            // FIXME; why the most often seen gene? Is there a better choice?
-            asort($aGenes);
-            end($aGenes);
+        if (($aVariant['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) && count($aGenes)) {
+            // We may add extra genes to map this variant on.
 
-            // Try the genes one by one. We'll break out of the loop on success.
-            while ($sGene = key($aGenes)) {
-                prev($aGenes);
-                
+            // Try the genes one by one.
+            foreach (array_keys($aGenes) as $sGene) {
+
                 // Get information from HGNC.
                 $aGeneInfoFromHgnc = lovd_getGeneInfoFromHgnc($sGene, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_pub_eg_id', 'md_mim_id', 'gd_pub_refseq_ids', 'md_refseq_id'), true);
                 if (empty($aGeneInfoFromHgnc)) {
@@ -426,7 +439,6 @@ if (!empty($aVariants)) {
                     continue;
                 }
 
-
                 // Get LRG if it exists.
                 if (!$sRefseqGenomic = lovd_getLRGbyGeneSymbol($sSymbol)) {
                     // No LRG, get NG if it exists.
@@ -480,7 +492,7 @@ if (!empty($aVariants)) {
                         }
                     }
                 }
-                
+
                 // If we've got a transcript, see if we can map the variant onto it.
                 if (!empty($aFieldsTranscript)) {
                     // Mapping is going to succeed! Let's add this gene and transcript.
@@ -518,7 +530,7 @@ if (!empty($aVariants)) {
                     }
                     
                     // Now insert the transcript.
-                    $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' (' . implode(', ', array_keys($aFieldsTranscript)) . ') VALUES(?' . str_repeat(', ?', count($aFieldsTranscript) - 1) . ')', array_values($aFieldsTranscript));
+                    $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' (' . implode(', ', array_keys($aFieldsTranscript)) . ') VALUES (?' . str_repeat(', ?', count($aFieldsTranscript) - 1) . ')', array_values($aFieldsTranscript));
                                 
                     if ($q->rowCount()) {
                         // Get the ID of the newly inserted transcript.
@@ -527,22 +539,31 @@ if (!empty($aVariants)) {
                         // This transcript was just added by a concurrent call to the mapping script. Get its ID and map on.
                         $nID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($aFieldsTranscript['id_ncbi']))->fetchColumn();
                     }
-                    
+
+                    // Get the p. description too.
+                    $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $sRefseqUD . '(' . $sSymbol . '_v' . $aFieldsTranscript['id_mutalyzer'] . '):' . $aVariantOnTranscriptSQL[1][6])));
+                    if (!empty($aVariantsOnProtein['string'])) {
+                        if (!is_array($aVariantsOnProtein['string'])) {
+                            $aVariantsOnProtein['string'] = array($aVariantsOnProtein['string']);
+                        }
+                        foreach ($aVariantsOnProtein['string'] as $sVariantOnProtein) {
+                            if (($nPos = strpos($sVariantOnProtein, '_i' . $aFieldsTranscript['id_mutalyzer'] . '):p.')) !== false) {
+                                $aVariantOnTranscriptSQL[1][7] = substr($sVariantOnProtein, $nPos + strlen('_i' . $aFieldsTranscript['id_mutalyzer'] . '):'));
+                            }
+                        }
+                    }
+
                     // Map the variant to the newly inserted transcript.
                     $aVariantOnTranscriptSQL[1][1] = $nID;
                     if ($_DB->query($aVariantOnTranscriptSQL[0], $aVariantOnTranscriptSQL[1], false)) {
                         $aVariant['aTranscripts'][$nID] = array($aFieldsTranscript['id_ncbi'], $sSymbol);
                         $aVariant[$nID . '_VariantOnTranscript/DNA'] = $aVariantOnTranscriptSQL[1][6];
                     }
-                    
+
                     // Also remember that we've got this gene and transcript now.
                     $aTranscriptsInLOVD[$sSymbol][$nID] = array('id' => $nID, 'id_ncbi' => $aFieldsTranscript['id_ncbi']);
-                    
-                    // We can now stop looping genes.
-                    break;
-                }
-                
-                else {
+
+                } else {
                     // Mutalyzer does not have the transcript we're looking for. Don't retry this gene!
                     $aFailedGenes[$sGene] = true;
                 }
@@ -602,7 +623,7 @@ if ($nTotalVariants == 0) {
 }
 
 // Output the current progress.
-if ($nMappedVariants >= $nTotalVariants || (!isset($_GET['variantid']) && $nVariants == 0)) {
+if ($nMappedVariants >= $nTotalVariants || (!isset($_GET['variantid']) && !defined('MAPPING_NO_RESTART') && $nVariants == 0)) {
     // Mapped all variants, or the last ones were IN_PROGRESS in a different instance of the script.
     // To prevent a flood of AJAX requests in the latter case, we'll just report them as finished.
 

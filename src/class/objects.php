@@ -147,6 +147,11 @@ class LOVD_Object {
             @list($sHeader, $sHelp, $sType, $sName) = $aField;
             $sNameClean = preg_replace('/^\d{5}_/', '', $sName); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
 
+            // Trim() all fields. We don't want those spaces in the database anyway.
+            if (isset($aData[$sName]) && !is_array($aData[$sName])) {
+                $GLOBALS['_' . $aFormInfo[0]][$sName] = $aData[$sName] = trim($aData[$sName]);
+            }
+
             // Mandatory fields, as defined by child object.
             if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');

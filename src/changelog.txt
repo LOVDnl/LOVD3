@@ -12,12 +12,28 @@
  *********/
  * On the bottom of the user's ViewEntries, visible for managers and up, we have
    added a log entry ViewList with log entries linked to the user.
+ * Fixed bug; Variants imported from VCF and SeattleSeq files were sometimes
+   incorrectly described as inversions.
+ * Automatic mapping will now create several gene entries if a single variant
+   can be mapped onto more than one gene.
+ * Automatically mapped variants now get a VariantOnTranscript/Protein
+   description.
+ * Variants imported from VCF files will now get DB-ID's even if automatic
+   mapping has been turned off.
+ * Fixed bug; the automatic mapping script would crash with a PHP fatal error if
+   it tries to get gene information from the HGNC for a deprecated gene symbol.
  * Fixed bug; The "make standard" AJAX call made from the SeattleSeq import form
    did not actually make the column standard because of a problem in the call.
  * Fixed bug; Submission emails sent out by LOVD by users with more than one
    email address, had the additional addresses in the body of the email.
  * Fixed bug; The /transcripts/GENE URL also showed transcripts for genes with
    symbols starting with the requested gene symbol.
+ * Fixed bug; The number of variants shown in the individuals listing, showed
+   the number of variants found in the first screening instead of the total
+   number of variants found.
+   (thanks to Chris Watson, St. James's Univ Hospital, Leeds, UK, for reporting)
+ * Fixed bug; The custom column data type wizard was resetting a textarea's size
+   to 40 every time the wizard ran.
 
 
 

@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-10
+ * Modified    : 2012-04-12
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -231,6 +231,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Genetic_origin",      11, 200, 0, 0, 0, "Genetic origin",       "Origin of variant; unknown, germline (i.e. inherited), somatic, de novo, from parental disomy (maternal or paternal) or in vitro (cloned)", "Origin of variant; unknown, germline (i.e. inherited), somatic, de novo, from parental disomy (maternal or paternal) or in vitro (cloned)", "Origin of variant; unknown, germline (i.e. inherited), somatic, de novo, from parental disomy (maternal or paternal) or in vitro (cloned)", "VARCHAR(40)", "Genetic origin||select|1|--Not specified--|false|false", "Unknown\r\n\r\nGermline (inherited)\r\nSomatic\r\nDe novo\r\nUniparental disomy\r\nUniparental disomy, maternal allele\r\nUniparental disomy, paternal allele", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Segregation",         12,  40, 0, 0, 0, "Segregation",          "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)", "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)", "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)", "VARCHAR(5)", "Segregation||select|1|--Not specified--|false|false", "? = Unknown\r\nyes = Segregates with disease\r\nno = Does not segregate with disease", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'ALTER TABLE ' . TABLE_GENES . ' ADD INDEX (id_hgnc)',
+                             ),
+                    '3.0-beta-03d' =>
+                        array(
+                             ),
+                    '3.0-beta-04' =>
+                        array(
+                                'ALTER TABLE ' . TABLE_GENES . ' DROP INDEX id_hgnc',
+                                'ALTER TABLE ' . TABLE_GENES . ' ADD UNIQUE (id_hgnc)',
                              ),
                   );
 
