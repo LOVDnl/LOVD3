@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-04-05
+ * Modified    : 2012-04-13
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -111,7 +111,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnGenome':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '');
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '');
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['SELECT'] .= ', vog.id AS row_id'; // To ensure other table's id columns don't interfere.
@@ -128,6 +128,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
                     }
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id)';
                     if (!in_array('VariantOnTranscript', $aObjects)) {
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS eg ON (vog.effectid = eg.id)';
                     }
@@ -280,7 +281,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                         'db'   => array('vog.chromosome', 'ASC', true)),
                                 'allele_' => array(
                                         'view' => array('Allele', 120),
-                                        'db'   => array('vog.allele', 'ASC', true)),
+                                        'db'   => array('a.name', 'ASC', true)),
                                 'vog_effect' => array(
                                         'view' => array('Effect', 70),
                                         'db'   => array('eg.name', 'ASC', true)),
@@ -410,8 +411,6 @@ class LOVD_CustomViewList extends LOVD_Object {
                 }
             }
         }
-
-        $zData['allele_'] = $_SETT['var_allele'][$zData['allele']];
 
         return $zData;
     }

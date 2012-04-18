@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-10
+ * Modified    : 2012-04-17
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,10 +40,7 @@ function lovd_checkDBID ($aData)
 
     // <chr||GENE>_000000 is always allowed.
     $sSymbol = substr($aData['VariantOnGenome/DBID'], 0, strpos($aData['VariantOnGenome/DBID'], '_'));
-    $sGenomeVariant = '';
-    if (!empty($aData['VariantOnGenome/DNA'])) {
-        $sGenomeVariant = str_replace(array('(', ')', '?'), '', $aData['VariantOnGenome/DNA']);
-    }
+    $sGenomeVariant = str_replace(array('(', ')', '?'), '', $aData['VariantOnGenome/DNA']);
     if (!isset($aData['aTranscripts'])) {
         $aData['aTranscripts'] = array();
     }
@@ -71,7 +68,7 @@ function lovd_checkDBID ($aData)
 
     // Check if the DBID entered is already in use by a variant entry excluding the current one.
     $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ? AND id != ?', array($aData['VariantOnGenome/DBID'], $nIDtoIgnore))->fetchColumn();
-    if ($nHasDBID && !empty($aData) && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
+    if ($nHasDBID && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
         // This is the standard query that will be used to determine if the DBID given is correct.
         $sSQL = 'SELECT DISTINCT t.geneid, ' .
                 'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
@@ -91,11 +88,9 @@ function lovd_checkDBID ($aData)
             $sWhere .= (!empty($sWhere)? 'OR ' : '') . '(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?) ';
             $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
         }
-        if (!empty($aData['VariantOnGenome/DBID'])) {
-            // SQL addition to check if the above combinations are found with the given DBID.
-            $sWhere .= ') AND vog.`VariantOnGenome/DBID` LIKE BINARY ? ';
-            $aArgs = array_merge($aArgs, array($aData['VariantOnGenome/DBID']));
-        }
+        // SQL addition to check if the above combinations are found with the given DBID.
+        $sWhere .= ') AND vog.`VariantOnGenome/DBID` = ? ';
+        $aArgs = array_merge($aArgs, array($aData['VariantOnGenome/DBID']));
         if ($nIDtoIgnore > 0) {
             // SQL addition to exclude the current variant, where the $aData belongs to.
             $sWhere .= 'AND vog.id != ? ';
@@ -369,10 +364,10 @@ function lovd_fetchDBID ($aData)
         $sDBID = 'chr' . $aData['chromosome'] . '_999999';
         foreach($aOutput as $aOption) {
             // Loop through all the options returned from the database and decide which option to take.
-            preg_match('/^((.+)_(\d{6}))\b/', $sDBID, $aMatches);
+            preg_match('/^((.+)_(\d{6}))$/', $sDBID, $aMatches);
             list($sDBIDnew, $sDBIDnewSymbol, $sDBIDnewNumber) = array($aMatches[1], $aMatches[2], $aMatches[3]);
 
-            if (preg_match('/^((.+)_(\d{6}))\b/', $aOption[2], $aMatches)) {
+            if (preg_match('/^((.+)_(\d{6}))$/', $aOption[2], $aMatches)) {
                 list($sDBIDoptionAll, $sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
                     // If the symbol of the option is the same, but the number is lower(not including 000000), take it.
@@ -386,18 +381,14 @@ function lovd_fetchDBID ($aData)
                 }
             }
         }
-        if ($sDBID == 'chr' . $aData['chromosome'] . '_999999') {
-            // No entries found with these combinations and a DBID, so we are going to use the gene symbol(or chromosome if there is no gene) and take the first number available to make a DBID.
+        if ((substr($sDBID, 0, 3) == 'chr' && !empty($aGenes)) || $sDBID == 'chr' . $aData['chromosome'] . '_999999') {
+            // Either this variant has a DBID with chr, but also a VOT that we want to change to, or
+            // no entries found with these combinations and a DBID, so we are going to use the gene symbol
+            // (or chromosome if there is no gene) and take the first number available to make a DBID.
             $sSymbol = (!empty($aGenes)? $aGenes[0] : 'chr' . $aData['chromosome']);
-            $lID = strlen($sSymbol) + 7;
             // Query for getting the first available number for the new DBID.
-            $sDBIDlastNumber = $_DB->query('SELECT RIGHT(MAX(LEFT(`VariantOnGenome/DBID`, ' . $lID . ')), 6) FROM ' . TABLE_VARIANTS . ' WHERE LEFT(`VariantOnGenome/DBID`, ' . $lID . ') REGEXP "^' . $sSymbol . '_[0-9]{6}"')->fetchColumn();
-            if (!$sDBIDlastNumber) {
-                $sDBID = $sSymbol . '_000001';
-            } else {
-                $nID = $sDBIDlastNumber + 1;
-                $sDBID = $sSymbol . '_' . sprintf('%06d', $nID);
-            }
+            $nDBIDnewNumber = $_DB->query('SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` REGEXP "^' . $sSymbol . '_[0-9]{6}$"')->fetchColumn();
+            $sDBID = $sSymbol . '_' . sprintf('%06d', $nDBIDnewNumber);
         }
         return $sDBID;
     } else {

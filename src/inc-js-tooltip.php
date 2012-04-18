@@ -67,7 +67,7 @@ function lovd_showToolTip (sText, handle)
             var x = oEvent.pageX;
             var y = oEvent.pageY;
         }
-        
+
         x = eval(x + 20); // Move it a little bit to the right.
         oTT.style.left = x + 'px';
         oTT.style.top = y + 'px';

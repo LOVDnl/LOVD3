@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2012-04-10
+ * Modified    : 2012-04-16
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -46,6 +47,7 @@ class LOVD_PDO extends PDO {
         // Initiate database connection.
 
         $sDSN = $sBackend . ':' . $sDSN;
+        $aOptions = array();
         if ($sBackend == 'mysql') {
             // This method for setting the charset works also before 5.3.6, when "charset" was introduced in the DSN.
             // Fix #4; Implement fix for PHP 5.3.0 on Windows, where PDO::MYSQL_ATTR_INIT_COMMAND by accident is not available.
@@ -57,8 +59,6 @@ class LOVD_PDO extends PDO {
                 define('MYSQL_ATTR_INIT_COMMAND', 1002);
             }
             $aOptions = array(MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8', PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE);
-        } else {
-            $aOptions = array();
         }
         try {
             parent::__construct($sDSN, $sUsername, $sPassword, $aOptions);
@@ -208,9 +208,11 @@ class LOVD_PDOStatement extends PDOStatement {
                 foreach ($aSQL as $nKey => $Arg) {
                     if (is_array($Arg)) {
                         // We handle arrays gracefully.
-                        $aSQL[$nKey] = implode(';', array_map('trim', $Arg));
+                        $aSQL[$nKey] = implode(';', ($bTrim? array_map('trim', $Arg) : $Arg));
+                    } elseif ($Arg === NULL) {
+                        $this->bindValue($nKey + 1, $Arg, PDO::PARAM_INT);
                     } else {
-                        $aSQL[$nKey] = trim($aSQL[$nKey]);
+                        $aSQL[$nKey] = ($bTrim? trim($aSQL[$nKey]) : $aSQL[$nKey]);
                     }
                 }
             } // There is no else, we will catch the exception thrown by parent::execute().

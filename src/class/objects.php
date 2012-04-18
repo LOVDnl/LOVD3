@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-11
+ * Modified    : 2012-04-16
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -823,7 +823,7 @@ class LOVD_Object {
                                         }
                                         unset($aMatches[0], $aMatches[1]);
                                         // Replace our default date components by the ones given by the user.
-                                        $aTerms = array_replace($aTerms, $aMatches);
+                                        $aTerms = $aMatches + $aTerms;
                                         ksort($aTerms);
                                         $sTerms = implode($aTerms);
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');

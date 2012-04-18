@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-04-05
+ * Modified    : 2012-04-17
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -62,6 +62,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vog.*, ' .
+                                           'a.name AS allele_, ' .
                                            'GROUP_CONCAT(DISTINCT s.individualid SEPARATOR ";") AS _individualids, ' .
                                            'GROUP_CONCAT(s2v.screeningid SEPARATOR "|") AS screeningids, ' .
                                            'uo.name AS owned_by_, ' .
@@ -71,6 +72,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS vog ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id) ' .
@@ -82,11 +84,13 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aSQLViewList['SELECT']   = 'vog.*, ' .
                                           // FIXME; de , is niet de standaard.
                                           'GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
+                                          'a.name AS allele_, ' .
                                           'e.name AS effect, ' .
                                           'uo.name AS owned_by_, ' .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
@@ -137,7 +141,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                  array(
                         'allele_' => array(
                                     'view' => array('Allele', 120),
-                                    'db'   => array('vog.allele', 'ASC', true)),
+                                    'db'   => array('a.name', 'ASC', true)),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
@@ -180,6 +184,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         // Do this before running checkFields so that we have time to predict the DBID and fill it in.
         if (isset($this->aColumns['VariantOnGenome/DBID'])) {
+            if (!empty($aData['aTranscripts']) && !empty($aData['VariantOnGenome/DBID']) && strpos($aData['VariantOnGenome/DBID'], 'chr' . $aData['chromosome'] . '_') !== false) {
+                $aData['VariantOnGenome/DBID'] = '';
+            }
             if (empty($aData['VariantOnGenome/DBID'])) {
                 $aData['VariantOnGenome/DBID'] = $_POST['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
             } elseif (!lovd_checkDBID($aData)) {
@@ -199,7 +206,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
         }
 
-        if (!isset($aData['allele']) || !array_key_exists($aData['allele'], $_SETT['var_allele'])) {
+        $aAlleles = $_DB->query('SELECT id FROM ' . TABLE_ALLELES)->fetchAllColumn();
+        if (!isset($aData['allele']) || !in_array($aData['allele'], $aAlleles)) {
             lovd_errorAdd('allele', 'Please select a proper allele from the \'Allele\' selection box.');
         }
 
@@ -249,6 +257,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // Build the form.
         global $_AUTH, $_CONF, $_DB, $_SETT, $zData, $_DATA;
 
+        $aSelectAllele = $_DB->query('SELECT id, name FROM ' . TABLE_ALLELES . ' ORDER BY display_order')->fetchAllCombine();
+
         if (!empty($_GET['geneid'])) {
             $aFormChromosome = array('Chromosome', '', 'print', $_POST['chromosome']);
         } elseif (ACTION == 'edit') {
@@ -285,7 +295,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         array('POST', '', '', '', '50%', '14', '50%'),
                         array('', '', 'print', '<B>Genomic variant information</B>'),
                         'hr',
-                        array('Allele', '', 'select', 'allele', 1, $_SETT['var_allele'], false, false, false),
+                        array('Allele', '', 'select', 'allele', 1, $aSelectAllele, false, false, false),
                         array('', '', 'note', 'If you wish to report an homozygous variant, please select "Both (homozygous)" here.'),
                         $aFormChromosome,
                       ),
@@ -333,9 +343,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
 
-        if ($sView == 'list') {
-            $zData['effect'] = $_SETT['var_effect_short'][$zData['effectid']];
-        } else {
+        if ($sView == 'entry') {
             $zData['individualid_'] = '';
             // While in principle a variant should only be connected to one patient, due to database model limitations, through several screenings, one could link a variant to more individuals.
             foreach ($zData['individualids'] as $nID) {
@@ -377,8 +385,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 $zData['mapping_flags_'] = 'Off';
             }
         }
-
-        $zData['allele_'] = $_SETT['var_allele'][$zData['allele']];
 
         return $zData;
     }

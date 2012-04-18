@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-04-10
+ * Modified    : 2012-04-13
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -398,14 +398,13 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
             $a = $aVariantOnGenomeFields;
             $a[0] = $sVariableNameVOG;
             if ($_PATH_ELEMENTS[2] == 'variant') {
-                $$sVariableNameVOG = $_DB->query('SELECT v.*, u.name AS owned_by_, IFNULL(s2v.screeningid, "") AS screeningid FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (v.owned_by = u.id) WHERE v.id = ?', array($nVariantID))->fetchAssoc();
+                $$sVariableNameVOG = $_DB->query('SELECT v.*, a.name AS allele_, u.name AS owned_by_, IFNULL(s2v.screeningid, "") AS screeningid FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (v.owned_by = u.id) LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (v.allele = a.id) WHERE v.id = ?', array($nVariantID))->fetchAssoc();
             } else {
-                $$sVariableNameVOG = $_DB->query('SELECT v.*, u.name AS owned_by_ FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (v.owned_by = u.id) WHERE v.id = ?', array($nVariantID))->fetchAssoc();
+                $$sVariableNameVOG = $_DB->query('SELECT v.*, a.name AS allele_, u.name AS owned_by_ FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (v.owned_by = u.id) LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (v.allele = a.id) WHERE v.id = ?', array($nVariantID))->fetchAssoc();
             }
             if (empty(${$sVariableNameVOG}['screeningid'])) {
                 unset($a['screeningid']);
             }
-            ${$sVariableNameVOG}['allele_'] = $_SETT['var_allele'][${$sVariableNameVOG}['allele']];
             ${$sVariableNameVOG}['effect_reported'] = $_SETT['var_effect'][${$sVariableNameVOG}['effectid']{0}];
             ${$sVariableNameVOG}['effect_concluded'] = $_SETT['var_effect'][${$sVariableNameVOG}['effectid']{1}];
             (${$sVariableNameVOG}['owned_by'] != $_AUTH['id']? $a['owned_by_'] = 'Data owner' : false);

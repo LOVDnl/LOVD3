@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-04-12
+ * Modified    : 2012-04-13
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -225,9 +225,17 @@ $aTableSQL =
     PRIMARY KEY (id))
     ' . $sSettings
 
+             , 'TABLE_ALLELES' =>
+   'CREATE TABLE ' . TABLE_ALLELES . ' (
+    id TINYINT(2) UNSIGNED NOT NULL,
+    name VARCHAR(20) NOT NULL,
+    display_order TINYINT(1) UNSIGNED NOT NULL,
+    PRIMARY KEY (id))
+    ' . $sSettings
+
          , 'TABLE_EFFECT' =>
    'CREATE TABLE ' . TABLE_EFFECT . ' (
-    id TINYINT(2) UNSIGNED ZEROFILL NOT NULL,
+    id TINYINT(2) UNSIGNED NOT NULL,
     name VARCHAR(5) NOT NULL,
     PRIMARY KEY (id))
     ' . $sSettings
@@ -291,7 +299,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_VARIANTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     allele TINYINT(2) UNSIGNED NOT NULL,
-    effectid TINYINT(2) UNSIGNED ZEROFILL,
+    effectid TINYINT(2) UNSIGNED,
     chromosome VARCHAR(2),
     position_g_start INT(10) UNSIGNED,
     position_g_end INT(10) UNSIGNED,
@@ -311,6 +319,7 @@ $aTableSQL =
     INDEX (statusid),
     INDEX (created_by),
     INDEX (edited_by),
+    CONSTRAINT ' . TABLE_VARIANTS . '_fk_allele FOREIGN KEY (allele) REFERENCES ' . TABLE_ALLELES . ' (id) ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_chromosome FOREIGN KEY (chromosome) REFERENCES ' . TABLE_CHROMOSOMES . ' (name) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_VARIANTS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -355,7 +364,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL,
     transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    effectid TINYINT(2) UNSIGNED ZEROFILL,
+    effectid TINYINT(2) UNSIGNED,
     position_c_start MEDIUMINT,
     position_c_start_intron INT,
     position_c_end MEDIUMINT,

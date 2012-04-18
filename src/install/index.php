@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-11
+ * Modified    : 2012-04-13
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -346,8 +346,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
              array(
                     'INSERT INTO ' . TABLE_USERS . '(name, created_date) VALUES ("LOVD", NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
-                    'ALTER TABLE ' . TABLE_USERS . ' AUTO_INCREMENT = 1',
-                    'INSERT INTO ' . TABLE_USERS . ' VALUES (NULL, ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' . $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW(), NULL, NULL)',
+                    'INSERT INTO ' . TABLE_USERS . ' VALUES ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' . $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW(), NULL, NULL)',
                   );
     $nInstallSQL ++;
 
@@ -366,22 +365,26 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     $nInstallSQL += $nStatuses;
 
 
-    // (6) Registering LOVD variant functional effects.
-    $nFunctionalEffects = count($_SETT['var_effect_short']);
-    foreach ($_SETT['var_effect_short'] as $nPath => $sPath) {
-        $aInstallSQL['Registering LOVD variant functional effects...'][] = 'INSERT INTO ' . TABLE_EFFECT . ' VALUES (' . $nPath . ', "' . $sPath . '")';
-    }
-    $nInstallSQL += $nFunctionalEffects;
+    // (6) Registering LOVD allele values.
+    require ROOT_PATH . 'install/inc-sql-alleles.php';
+    $aInstallSQL['Registering LOVD allele values...'][] = $aAlleleSQL[0];
+    $nInstallSQL ++;
 
 
-    // (7) Creating standard LOVD custom columns.
+    // (7) Registering LOVD variant functional effects.
+    require ROOT_PATH . 'install/inc-sql-variant_effect.php';
+    $aInstallSQL['Registering LOVD variant functional effects...'][] = $aVariantEffectSQL[0];
+    $nInstallSQL ++;
+
+
+    // (8) Creating standard LOVD custom columns.
     require 'inc-sql-columns.php';
     $nCols = count($aColSQL);
     $aInstallSQL['Creating LOVD custom columns...'] = $aColSQL;
     $nInstallSQL += $nCols;
 
 
-    // (8) Activating standard custom columns.
+    // (9) Activating standard custom columns.
     foreach ($aColSQL as $sCol) {
         $sCol = str_replace('INSERT INTO ' . TABLE_COLS . ' VALUES ', '', $sCol);
         // FIXME; add some comments here, I can't follow this code.
@@ -404,21 +407,21 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     }
 
 
-    // (9) Creating standard custom links.
+    // (10) Creating standard custom links.
     require 'inc-sql-links.php';
     $nLinks = count($aLinkSQL);
     $aInstallSQL['Creating LOVD custom links...'] = $aLinkSQL;
     $nInstallSQL += $nLinks;
 
 
-    // (10) Creating LOVD status.
+    // (11) Creating LOVD status.
     $aInstallSQL['Registering LOVD system status...'] =
              array(
                     'INSERT INTO ' . TABLE_STATUS . ' VALUES (0, "' . $_SETT['system']['version'] . '", "' . $sSignature . '", NULL, NULL, NULL, NULL, NULL, NOW(), NULL)');
     $nInstallSQL ++;
 
 
-    // (11) Creating standard external sources.
+    // (12) Creating standard external sources.
     require 'inc-sql-sources.php';
     $nSources = count($aSourceSQL);
     $aInstallSQL['Creating external sources...'] = $aSourceSQL;
@@ -509,6 +512,10 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
         if (!lovd_error()) {
             // Store information and go to next page.
             // FIXME; use object::insertEntry()
+            if (empty($_POST['proxy_port'])) {
+                // Empty port number, insert NULL instead of 0.
+                $_POST['proxy_port'] = NULL;
+            }
             $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false, true);
             if (!$q) {
                 // Error when running query.

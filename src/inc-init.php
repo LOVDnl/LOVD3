@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-11
+ * Modified    : 2012-04-13
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -118,7 +118,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-beta-03c',
+                            'version' => '3.0-beta-03d',
                           ),
                 'user_levels' =>
                      array(
@@ -129,7 +129,6 @@ $_SETT = array(
                             LEVEL_COLLABORATOR => 'Collaborator',
                             LEVEL_SUBMITTER    => 'Submitter',
                           ),
-
                 'gene_imprinting' =>
                      array(
                             'unknown'  => 'Unknown',
@@ -137,19 +136,6 @@ $_SETT = array(
                             'maternal' => 'Imprinted, maternal',
                             'paternal' => 'Imprinted, paternal'
                           ),
-
-                'var_allele' =>
-                     array(
-                            0  => 'Unknown',
-                            11 => 'Paternal (confirmed)',
-                            10 => 'Paternal (inferred)',
-                            21 => 'Maternal (confirmed)',
-                            20 => 'Maternal (inferred)',
-                            1  => 'Parent #1',
-                            2  => 'Parent #2',
-                            3  => 'Both (homozygous)',
-                          ),
-
                 'var_effect' =>
                      array(
                             5 => 'Effect unknown',
@@ -157,34 +143,6 @@ $_SETT = array(
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
-                          ),
-                'var_effect_short' =>
-                     array(
-                            '11' => '-/-',
-                            '13' => '-/-?',
-                            '15' => '-/?',
-                            '17' => '-/+?',
-                            '19' => '-/+',
-                            '31' => '-?/-',
-                            '33' => '-?/-?',
-                            '35' => '-?/?',
-                            '37' => '-?/+?',
-                            '39' => '-?/+',
-                            '51' => '?/-',
-                            '53' => '?/-?',
-                            '55' => '?/?',
-                            '57' => '?/+?',
-                            '59' => '?/+',
-                            '71' => '+?/-',
-                            '73' => '+?/-?',
-                            '75' => '+?/?',
-                            '77' => '+?/+?',
-                            '79' => '+?/+',
-                            '91' => '+/-',
-                            '93' => '+/-?',
-                            '95' => '+/?',
-                            '97' => '+/+?',
-                            '99' => '+/+',
                           ),
                 'data_status' =>
                      array(
@@ -455,6 +413,7 @@ $_TABLES =
                 'TABLE_DISEASES' => TABLEPREFIX . '_diseases',
                 'TABLE_GEN2DIS' => TABLEPREFIX . '_genes2diseases',
                 'TABLE_DATA_STATUS' => TABLEPREFIX . '_data_status',
+                'TABLE_ALLELES' => TABLEPREFIX . '_alleles',
                 'TABLE_EFFECT' => TABLEPREFIX . '_variant_effect',
                 'TABLE_INDIVIDUALS' => TABLEPREFIX . '_individuals',
                 'TABLE_IND2DIS' => TABLEPREFIX . '_individuals2diseases',

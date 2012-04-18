@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-12
+ * Modified    : 2012-04-17
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -234,6 +234,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                              ),
                     '3.0-beta-03d' =>
                         array(
+                                'ALTER TABLE ' . TABLE_EFFECT . ' MODIFY COLUMN id TINYINT(2) UNSIGNED',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN effectid TINYINT(2) UNSIGNED',
+                                'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN effectid TINYINT(2) UNSIGNED',
+                                'CREATE TABLE ' . TABLE_ALLELES . ' (id TINYINT(2) UNSIGNED NOT NULL, name VARCHAR(20) NOT NULL, display_order TINYINT(1) UNSIGNED NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB, DEFAULT CHARACTER SET utf8',
+             'allele_values' => 'Reserved for the insert query of the new allele table. This will be added later in this script.',
+                                'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_allele FOREIGN KEY (allele) REFERENCES ' . TABLE_ALLELES . ' (id) ON UPDATE CASCADE',
+                                'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\d{1,2}|[XYM])|(C(\d{1,2}|[XYM])orf\d+-|[A-Z][A-Z0-9]+-)?(C(\d{1,2}|[XYM])orf\d+|[A-Z][A-Z0-9]+))_[0-9]{6}$/" WHERE id = "VariantOnGenome/DBID"',
                              ),
                     '3.0-beta-04' =>
                         array(
@@ -281,7 +288,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     }
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-07d')) {
-        // INSERT chromosome in the new TABLE_CHROMOSOMES.
+        // INSERT chromosomes in the new TABLE_CHROMOSOMES.
         require ROOT_PATH . 'install/inc-sql-chromosomes.php';
         $aUpdates['3.0-alpha-07d']['chr_values'] = $aChromosomeSQL[0];
     }
@@ -296,6 +303,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         if (in_array('VariantOnTranscript/DNA_published', $aColumns)) {
             $aUpdates['3.0-beta-03b'][] = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' CHANGE `VariantOnTranscript/DNA_Published` `VariantOnTranscript/Published_as` VARCHAR(100)';
         }
+    }
+
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-beta-03d')) {
+        // INSERT allele values in the new TABLE_ALLELES.
+        require ROOT_PATH . 'install/inc-sql-alleles.php';
+        $aUpdates['3.0-beta-03d']['allele_values'] = $aAlleleSQL[0];
     }
 
 

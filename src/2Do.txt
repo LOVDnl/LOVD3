@@ -1,7 +1,5 @@
 Prioritize:
 ===========
-- Allele moet in een aparte tabel, zodat in de custom viewlist de kolom zoekbaar is.
-- Array_replace() herimplementeren.
 - No VOT -> Variants of gene XXX -> "No custom_viewlist" ???? -> Moet objecten binnen de CustomViewList analyseren.
 - IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
   + Reported by Christopher Watson.
@@ -16,8 +14,7 @@ Prioritize:
   + We NEED to have a better way to get the row_id & row_link to work. It has become quite a mess and often difficult to work with or debug!!!
   + Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
-- (@Ivar) Alle variant en/of data views uitbreiden met andere standaard kolommen die LOVD 2.0 ook toont.
-  * Daarna combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
+- (@Ivar) Combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
 - (BELANGRIJK) Van alles moet bepaald worden wat de minimale level is die benodigd is.
   + (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
     * Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.

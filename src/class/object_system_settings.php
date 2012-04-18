@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-03-21
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-13
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -109,7 +109,7 @@ class LOVD_SystemSetting extends LOVD_Object {
 
         } elseif (!empty($aData['proxy_port'])) {
             // We have a port number, but no host name.
-            lovd_errorAdd('proxy_host', 'Please fill in a correct host name of the proxy server, if you wish to use one.');
+            lovd_errorAdd('proxy_host', 'Please also fill in a host name of the proxy server.');
         }
 
         // Custom logo must exist.
@@ -183,7 +183,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('', '', 'note', 'Some networks have no access to the outside world except through a proxy. If this applies to the network this server is installed on, please fill in the proxy server information here.'),
                         'hr',
                         array('Proxy server host name', 'The host name of the proxy server, such as www-cache.institution.edu.', 'text', 'proxy_host', 20),
-                        array('Proxy server port number', 'The post number of the proxy server, such as 3128.', 'text', 'proxy_port', 4),
+                        array('Proxy server port number', 'The port number of the proxy server, such as 3128.', 'text', 'proxy_port', 4),
                         'hr',
                         'skip',
                         'skip',
