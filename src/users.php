@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-03-31
+ * Modified    : 2012-04-16
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -466,12 +466,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
     // Find curated genes and see if they're alone.
-    $q = lovd_queryDB_Old('SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE geneid NOT IN (SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE userid != ? AND allow_edit = 1)', array($nID), true);
-    $aCuratedGenes = array();
-    while ($r = mysql_fetch_row($q)) {
-        // Gene has no curator, and user is going to be deleted!
-        $aCuratedGenes[] = $r[0];
-    }
+    $aCuratedGenes = $_DB->query('SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE geneid NOT IN (SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE userid != ? AND allow_edit = 1)', array($nID))->fetchAllColumn();
 
     // Define this here, since it's repeated.
     // Array which will make up the form table.
@@ -508,15 +503,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
                 if (!lovd_error()) {
                     // First, make the current user curator for the genes about to be abandoned by this user.
-                    lovd_queryDB_Old('START TRANSACTION');
+                    $_DB->beginTransaction();
                     if ($aCuratedGenes) {
-                        lovd_queryDB_Old('UPDATE ' . TABLE_CURATES . ' SET userid = ? WHERE userid = ? AND geneid IN (?' . str_repeat(', ?', count($aCuratedGenes) - 1) . ')', array_merge(array($_AUTH['id'], $nID), $aCuratedGenes), true);
+                        $_DB->query('UPDATE ' . TABLE_CURATES . ' SET userid = ? WHERE userid = ? AND geneid IN (?' . str_repeat(', ?', count($aCuratedGenes) - 1) . ')', array_merge(array($_AUTH['id'], $nID), $aCuratedGenes));
                     }
 
                     // Query text.
                     // This also deletes the entries in TABLE_CURATES.
                     $_DATA->deleteEntry($nID);
-                    lovd_queryDB_Old('COMMIT');
+                    $_DB->commit();
 
                     // Write to log...
                     lovd_writeLog('Event', LOG_EVENT, 'Deleted user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
@@ -546,12 +541,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             $_T->printTitle(PAGE_TITLE);
 
             // FIXME; extend this later.
-            list($nLogs) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID)));
-            list($nCurates) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($nID)));
-            list($nIndividuals) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
-            list($nScreenings) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
-            list($nVars) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID)));
-            list($nGenes) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE created_by = ? OR edited_by = ?', array($nID, $nID)));
+            $nLogs = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID))->fetchColumn();
+            $nCurates = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($nID))->fetchColumn();
+            $nIndividuals = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
+            $nScreenings = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
+            $nVars = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
+            $nGenes = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE created_by = ? OR edited_by = ?', array($nID, $nID))->fetchColumn();
 
             lovd_showInfoTable('<B>The user you are about to delete has the following references to data in this installation:</B><BR>' .
                                $nLogs . ' log entr' . ($nLogs == 1? 'y' : 'ies') . ' will be deleted,<BR>' .
@@ -624,7 +619,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
+    $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         $_T->printHeader();
@@ -663,7 +658,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(lovd_queryDB_Old('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID)));
+    $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         $_T->printHeader();
@@ -682,7 +677,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     }
 
     // The actual query.
-    lovd_queryDB_Old('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID), true);
+    $_DB->query('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID));
 
     // Write to log...
     lovd_writeLog('Event', LOG_EVENT, ucfirst(ACTION) . 'ed user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);

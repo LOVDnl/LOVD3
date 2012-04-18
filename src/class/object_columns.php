@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-17
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,7 @@ class LOVD_Column extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'c.*, ' .
                                           'SUBSTRING_INDEX(c.id, "/", 1) AS category, ' .
                                           'SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, ' .
-                                          'IFNULL((a.created_by > 0), 0) AS active, ' .
+                                          'IF(a.colid IS NULL, 0, 1) AS active, ' .
                                           'u.name AS created_by_';
         $this->aSQLViewList['FROM']     = TABLE_COLS . ' AS c ' .
                                           'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .

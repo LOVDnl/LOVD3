@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-17
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -246,6 +246,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         array(
                                 'ALTER TABLE ' . TABLE_GENES . ' DROP INDEX id_hgnc',
                                 'ALTER TABLE ' . TABLE_GENES . ' ADD UNIQUE (id_hgnc)',
+                                'ALTER TABLE ' . TABLE_EFFECT . ' MODIFY COLUMN id TINYINT(2) UNSIGNED NOT NULL',
+                                'UPDATE ' . TABLE_CONFIG . ' SET proxy_port = NULL WHERE proxy_port = 0',
                              ),
                   );
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-04-17
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -995,13 +995,8 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
 
 
     // If dbSNP custom links are active, find out which columns in TABLE_VARIANTS accept them.
-    $aDbSNPColumns = $_DB->query('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac JOIN ' . TABLE_COLS2LINKS . ' USING(colid) JOIN ' . TABLE_LINKS . ' ON(linkid = id) WHERE name = "DbSNP" AND ac.colid LIKE "VariantOnGenome/%"')->fetchAllColumn();
-    foreach (array('VariantOnGenome/DBID', 'VariantOnGenome/DNA') as $sColumn) {
-        // Don't allow DBID and DNA fields as dbSNP link insertion columns.
-        if (false !== $nKey = array_search($sColumn, $aDbSNPColumns)) {
-            unset($aDbSNPColumns[$nKey]);
-        }
-    }
+    $aDbSNPColumns = $_DB->query('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac JOIN ' . TABLE_COLS2LINKS . ' USING (colid) JOIN ' . TABLE_LINKS . ' ON (linkid = id) WHERE name = "DbSNP" AND ac.colid LIKE "VariantOnGenome/%" AND ac.colid NOT IN ("VariantOnGenome/DBID", "VariantOnGenome/DNA")')->fetchAllColumn();
+    // FIXME: dbSNP wordt dubbel included this way.
     if ($sDbSNPColumn = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = "VariantOnGenome/dbSNP"')->fetchColumn()) {
         // The dbSNP special column is active, allow to insert dbSNP links in there.
         array_unshift($aDbSNPColumns, $sDbSNPColumn);
@@ -1298,7 +1293,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
                         'owned_by' => $_POST['owned_by'],
                         'statusid' => $_POST['statusid'],
                         'created_by' => $_AUTH['id'],
-                        'created_date' => date('Y-m-d H:i:s'),
+                        'created_date' => $aUploadData['upload_date'],
                         );
 
                     if ($bGERPColumnAvailable && !in_array($aVariant['consScoreGERP'], array('NA', 'unknown', 'none'))) {

@@ -97,9 +97,6 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                       ),
                  $this->buildViewEntry());
 
-        // Because the disease information is publicly available, remove some columns for the public.
-        $this->unsetColsByAuthLevel();
-
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
@@ -127,6 +124,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                       ));
 
         $this->sSortDefault = 'id_ncbi';
+
+        // Because the disease information is publicly available, remove some columns for the public.
+        $this->unsetColsByAuthLevel();
 
         if (ACTION == 'create') {
             $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN(?' . str_repeat(', ?', substr_count(',', $sObjectID)) . ') ORDER BY id_ncbi', array($sObjectID))->fetchAllRow();

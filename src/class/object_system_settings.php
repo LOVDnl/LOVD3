@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-04-13
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -109,7 +109,7 @@ class LOVD_SystemSetting extends LOVD_Object {
 
         } elseif (!empty($aData['proxy_port'])) {
             // We have a port number, but no host name.
-            lovd_errorAdd('proxy_host', 'Please also fill in a host name of the proxy server.');
+            lovd_errorAdd('proxy_host', 'Please also fill in a correct host name of the proxy server, if you wish to use one.');
         }
 
         // Custom logo must exist.

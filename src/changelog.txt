@@ -34,6 +34,12 @@
    (thanks to Chris Watson, St. James's Univ Hospital, Leeds, UK, for reporting)
  * Fixed bug; The custom column data type wizard was resetting a textarea's size
    to 40 every time the wizard ran.
+ * Implemented PDO in all remaining lovd_queryDB() calls in genes.php,
+   logout.php and users.php.
+ * Fixed bug; LOVD's REST2SOAP library was throwing errors on older PHP versions
+   while parsing XML files.
+ * Fixed bug; After a SeattleSeq import, the final overview given didn't show
+   all imported variants (although import was successful).
 
 
 
@@ -64,8 +70,8 @@
    `Phenotype/Inheritance`, `VariantOnGenome/Genetic_origin` and
    `VariantOnGenome/Segregation` to the standard available set of columns.
  * Added allele and variant effect columns to some of the variant views.
- * Fixed bug; Fixed a notice saying the function called array_replace does not
-   exist, because it is not available before PHP 5.3.0.
+ * Fixed bug; Fixed a fatal error saying the function called array_replace does
+   not exist, because it is not available before PHP 5.3.0.
  * Fixed bug; Fixed an issue where NULL values would not be stored properly in
    the database.
  * Fixed bug; The check on DBID would, in some cases, throw an error on a DBID

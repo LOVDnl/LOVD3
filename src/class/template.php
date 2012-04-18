@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-04-05
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,6 +42,8 @@ class LOVD_Template {
     // It's replacing inc-top.php, inc-top-clean.php, inc-bot.php, inc-bot-clean.php,
     //   and the lovd_printHeader() function from inc-lib-init.php.
     var $bTopIncluded = false; // Will become true if header has been included already.
+    var $bBotIncluded = false; // Will become true if bottom has been included already.
+    var $aTitlesPrinted = array(); // Makes sure we don't print the same title twice.
     var $bFull = true; // Will become false if the "clean" header has been requested.
     var $aMenu = array(); // Contains the menu with all its links. Built up in buildMenu().
 
@@ -188,8 +190,12 @@ class LOVD_Template {
         if (!$this->bTopIncluded) {
             // Never got header included! Forget it then, don't include the bot. Bug in LOVD.
             return false;
+        } elseif ($this->bBotIncluded) {
+            // Bottom has already been included! Forget it then, don't include the bot. Bug in LOVD.
+            return false;
         }
 
+        $this->bBotIncluded = true;
         switch (FORMAT) {
             case 'text/plain':
                 return false;
@@ -198,6 +204,7 @@ class LOVD_Template {
                 return $this->printFooterHTML($Arg1);
                 break;
         }
+        $this->bBotIncluded = false;
         return false;
     }
 
@@ -728,9 +735,19 @@ function lovd_mapVariants ()
 
 
 
-    function printTitle ($sTitle, $sStyle = 'H2')
+    function printTitle ($sTitle = '', $sStyle = 'H2')
     {
         // Check which title we're supposed to print, and forward.
+
+        if (!$sTitle && defined('PAGE_TITLE')) {
+            $sTitle = PAGE_TITLE;
+        }
+
+        if (in_array($sTitle, $this->aTitlesPrinted)) {
+            return false;
+        } else {
+            $this->aTitlesPrinted[] = $sTitle;
+        }
 
         switch (FORMAT) {
             case 'text/plain':

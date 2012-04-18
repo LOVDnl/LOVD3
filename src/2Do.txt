@@ -30,6 +30,8 @@ Prioritize:
 - Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - Should we maybe set default_socket_timeout somewhere?
 - VariantOnGenome/Times_reported???
+- Handmatige variant mapper: ook p. description ophalen bij Mutalyzer?
+- Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
 
 - Beta-05:
   - DATA DOWNLOAD.

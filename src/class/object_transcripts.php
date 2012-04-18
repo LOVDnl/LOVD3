@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-02-21
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-16
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -97,9 +97,6 @@ class LOVD_Transcript extends LOVD_Object {
                         'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
                       );
 
-        // Because the disease information is publicly available, remove some columns for the public.
-        $this->unsetColsByAuthLevel();
-
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
@@ -126,6 +123,9 @@ class LOVD_Transcript extends LOVD_Object {
                                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
                       );
         $this->sSortDefault = 'geneid';
+
+        // Because the disease information is publicly available, remove some columns for the public.
+        $this->unsetColsByAuthLevel();
 
         parent::__construct();
     }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2012-04-16
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -211,8 +211,8 @@ class LOVD_PDOStatement extends PDOStatement {
                         $aSQL[$nKey] = implode(';', ($bTrim? array_map('trim', $Arg) : $Arg));
                     } elseif ($Arg === NULL) {
                         $this->bindValue($nKey + 1, $Arg, PDO::PARAM_INT);
-                    } else {
-                        $aSQL[$nKey] = ($bTrim? trim($aSQL[$nKey]) : $aSQL[$nKey]);
+                    } elseif ($bTrim) {
+                        $aSQL[$nKey] = trim($aSQL[$nKey]);
                     }
                 }
             } // There is no else, we will catch the exception thrown by parent::execute().

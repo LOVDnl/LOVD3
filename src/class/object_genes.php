@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-04-12
+ * Modified    : 2012-04-16
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -142,9 +142,6 @@ class LOVD_Gene extends LOVD_Object {
                         'show_genetests_' => 'GeneTests',
                       );
 
-        // Because the gene information is publicly available, remove some columns for the public.
-        $this->unsetColsByAuthLevel();
-
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
@@ -181,6 +178,9 @@ class LOVD_Gene extends LOVD_Object {
                                     'db'   => array('diseases_', false, 'TEXT')),
                       );
         $this->sSortDefault = 'id_';
+
+        // Because the gene information is publicly available, remove some columns for the public.
+        $this->unsetColsByAuthLevel();
 
         parent::__construct();
     }

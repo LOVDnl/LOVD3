@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-17
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -89,7 +89,7 @@ function lovd_checkDBID ($aData)
             $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
         }
         // SQL addition to check if the above combinations are found with the given DBID.
-        $sWhere .= ') AND vog.`VariantOnGenome/DBID` = ? ';
+        $sWhere .= ') AND BINARY vog.`VariantOnGenome/DBID` = ? ';
         $aArgs = array_merge($aArgs, array($aData['VariantOnGenome/DBID']));
         if ($nIDtoIgnore > 0) {
             // SQL addition to exclude the current variant, where the $aData belongs to.

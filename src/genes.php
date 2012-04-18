@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-03-22
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-16
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -365,7 +365,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                 lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');
 
                 // Make current user curator of this gene.
-                lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1), true);
+                $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
 
                 // Add diseases.
                 $aSuccessDiseases = array();
@@ -373,7 +373,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     foreach ($_POST['active_diseases'] as $nDisease) {
                         // Add disease to gene.
                         if ($nDisease) {
-                            $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $nDisease));
+                            $q = $_DB->query('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $nDisease), false);
                             if (!$q) {
                                 // Silent error.
                                 lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nDisease . ' - could not be added to gene ' . $_POST['id']);
@@ -427,7 +427,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
                 // Add current user as the curator. This should also be in the transaction.
-                @lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
+                $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1), false);
 
                 unset($_SESSION['work'][$sPath][$_POST['workID']]);
 
@@ -586,7 +586,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             }
 
             if ($aToRemove) {
-                $q = lovd_queryDB_Old('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove));
+                $q = $_DB->query('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove), false);
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from gene ' . $sID);
@@ -601,7 +601,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             foreach ($_POST['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $zData['active_diseases'])) {
                     // Add disease to gene.
-                    $q = lovd_queryDB_Old('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease));
+                    $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease), false);
                     if (!$q) {
                         $aFailed[] = $nDisease;
                     } else {
@@ -842,7 +842,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
         if (!lovd_error()) {
             // What's by far the most efficient code-wise is just insert/update all we've got and delete everything else.
-            lovd_queryDB_Old('START TRANSACTION', array(), true);
+            $_DB->beginTransaction();
 
             foreach ($_POST['curators'] as $nOrder => $nUserID) {
                 $nOrder ++; // Since 0 is the first key in the array.
@@ -852,22 +852,22 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                 //   I'm being lazy, I'm not implementing the check here now. However, it *is* a bug and should be fixed later.
                 if (ACTION == 'authorize') {
                     // FIXME; Is using REPLACE not a lot easier?
-                    lovd_queryDB_Old('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)), true);
+                    $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)));
                     // FIXME; Without detailed user info we can't include elaborate logging. Would we want that anyway?
                     //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
                 } else {
                     // Just sort and update visibility!
-                    lovd_queryDB_Old('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $nUserID), true);
+                    $_DB->query('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $nUserID));
                 }
             }
 
             if (ACTION == 'authorize') {
                 // Now everybody should be updated. Remove whoever should no longer be in there.
-                lovd_queryDB_Old('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])), true);
+                $_DB->query('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])));
             }
 
             // If we get here, it all succeeded.
-            lovd_queryDB_Old('COMMIT', array(), true);
+            $_DB->commit();
 
             // Write to log...
             if (ACTION == 'authorize') {
@@ -903,9 +903,9 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     if (!empty($_POST['curators'])) {
         // Form has already been sent. We're here because of errors. Use $_POST.
         // Retrieve data for selected curators and collaborators.
-        $qCurators = lovd_queryDB_Old('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
+        $qCurators = $_DB->query('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
         $zCurators = array();
-        while ($z = mysql_fetch_assoc($qCurators)) {
+        while ($z = $qCurators->fetchAssoc()) {
             // FIXME; Do we need to change all IDs to integers because of possibly loosing the prepended zero's? Cross-browser check to verify?
             $zCurators[$z['id']] = $z;
         }
@@ -924,8 +924,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
         // Retrieve current curators and collaborators, order by current order.
         // Special ORDER BY statement makes sure show_order value of 0 is sent to the bottom of the list.
-        $qCurators = lovd_queryDB_Old('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
-        while ($z = mysql_fetch_assoc($qCurators)) {
+        $qCurators = $_DB->query('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
+        while ($z = $qCurators->fetchAssoc()) {
             $aCurators[$z['id']] = $z;
         }
     }

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-02-09
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-16
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -126,11 +126,6 @@ class LOVD_User extends LOVD_Object {
                         'edited_date_' => array('Date last edited', LEVEL_CURATOR),
                       );
 
-        // Because the user information is publicly available, remove some columns for the public.
-        // FIXME; Dit moet eigenlijk per user anders; curatoren mogen deze info wel van submitters zien.
-        // Dus eigenlijk if ($_AUTH['level'] <= $zData['level']) maar we hebben hier geen $zData...
-        $this->unsetColsByAuthLevel();
-
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
@@ -174,6 +169,11 @@ class LOVD_User extends LOVD_Object {
             unset($this->aColumnsViewEntry['status_']);
         }
         $this->sSortDefault = 'level_';
+
+        // Because the user information is publicly available, remove some columns for the public.
+        // FIXME; Dit moet eigenlijk per user anders; curatoren mogen deze info wel van submitters zien.
+        // Dus eigenlijk if ($_AUTH['level'] <= $zData['level']) maar we hebben hier geen $zData...
+        $this->unsetColsByAuthLevel();
 
         parent::__construct();
     }
@@ -330,7 +330,7 @@ class LOVD_User extends LOVD_Object {
                         array('Email address(es), one per line', '', 'textarea', 'email', 30, 3),
                         array('Telephone (optional)', '', 'text', 'telephone', 20),
           'username' => array('Username', '', 'text', 'username', 20),
-            'passwd' => array('Password', '', 'password', 'password_1', 20),
+            'passwd' => array('Password', 'A proper password is at least 4 characters long and contains at least one number or special character.', 'password', 'password_1', 20),
     'passwd_confirm' => array('Password (confirm)', '', 'password', 'password_2', 20),
      'passwd_change' => array('Must change password at next logon', '', 'checkbox', 'password_force_change'),
                         'hr',

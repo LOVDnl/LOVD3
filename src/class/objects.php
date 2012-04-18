@@ -537,6 +537,12 @@ class LOVD_Object {
                 unset($this->aColumnsViewEntry[$sCol]);
             }
         }
+
+        foreach($this->aColumnsViewList as $sCol => $aCol) {
+            if (isset($aCol['auth']) && (!$_AUTH || $_AUTH['level'] < $aCol['auth'])) {
+                unset($this->aColumnsViewList[$sCol]);
+            }
+        }
     }
 
 

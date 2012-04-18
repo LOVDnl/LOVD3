@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-15
- * Modified    : 2012-02-08
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-04-18
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -112,7 +112,7 @@ function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
     // Extracts encodings specified like: [ encoding=UTF-8], [ encoding="UTF-8"] or [ encoding='UTF-8'] (excluding the braces; always in $aMatches[1]).
     // We'll try to parse the file in the specified encoding, if it fails (because the source specified the wrong encoding) we try UTF-8, then ISO-8859-15.
     $aEncodings = array('UTF-8', 'ISO-8859-15');
-    if (preg_match("/<\?xml(?:.*?(?: encoding=(?|\"([^\"]+)\"|'([^']+)'|(\S+)).*?)?)?\?>/i", $sXml, $aMatches) && !empty($aMatches[1])) {
+    if (preg_match("/<\?xml(?:.*?(?: encoding=(?:\"([^\"]+)\"|'([^']+)'|(\S+)).*?)?)?\?>/i", $sXml, $aMatches) && !empty($aMatches[1])) {
         // We don't want to try the same encoding twice, so if it's ISO-8859-X or UTF-8, don't retry that one.
         $sEncoding = strtoupper($aMatches[1]);
         if ($sEncoding == 'UTF-8') {
@@ -157,7 +157,7 @@ function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
         if (!$sEncoding = mb_detect_encoding($sXml, $aEncodings)) {
             exit('The provided XML document cannot be parsed because it contains invalid data.');
         }
-        $sXml = preg_replace("/(?<= encoding=)(?|\"[^\"]+\"|'[^']+'|\S+)(?=.*?\?>)/i", '"' . $sEncoding . '"', $sXml);
+        $sXml = preg_replace("/(?<= encoding=)(?:\"[^\"]+\"|'[^']+'|\S+)(?=.*?\?>)/i", '"' . $sEncoding . '"', $sXml);
     } while (-- $i);
 
     $aStructure = array();
