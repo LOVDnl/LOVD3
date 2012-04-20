@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-02-13
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-18
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -234,7 +234,7 @@ if (isset($_GET['icon'])) {
 
 } else {
     // Print what we know about new versions...
-    require ROOT_PATH . 'inc-top-clean.php';
+    $_T->printHeader(false);
     
     print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="100%" class="info" style="font-size : 11px;">' . "\n" .
           '        <TR>' . "\n" .
@@ -242,6 +242,6 @@ if (isset($_GET['icon'])) {
           '          <TD valign="middle">Last checked for updates ' . date('Y-m-d H:i:s', strtotime($_STAT['update_checked_date'])) . ' (<A href="check_update?force_check=' . md5($_STAT['update_checked_date']) . '">check now</A>)<BR>' . "\n" .
           '            ' . str_replace("\n", "\n" . '            ', $sMessage) . '</TD></TR></TABLE>' . "\n\n");
     
-    require ROOT_PATH . 'inc-bot-clean.php';
+    $_T->printFooter();
 }
 ?>

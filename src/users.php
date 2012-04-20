@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-16
+ * Modified    : 2012-04-20
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -47,7 +47,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     define('PAGE_TITLE', 'View user accounts');
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
@@ -71,7 +71,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View user account #' . $nID);
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     // FIXME; we need to think about this. To create a public submitters list, will we have a modified viewList() without viewEntry() or what?
     // Allow everybody to see certain details, but only managers to view all? Hide username, certain info from others?
@@ -114,7 +114,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     if ($_AUTH['level'] >= LEVEL_MANAGER) {
         print('<BR><BR>' . "\n\n");
-        lovd_printHeader('Log entries by this user', 'H4');
+        $_T->printTitle('Log entries by this user', 'H4');
 
         require ROOT_PATH . 'class/object_logs.php';
         $_DATA = new LOVD_Log();
@@ -169,7 +169,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             lovd_showInfoTable('Successfully created the user account!', 'success');
 
             $_T->printFooter();
@@ -188,7 +188,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     if (GET) {
         print('      To create a new user, please fill out the form below.<BR>' . "\n" .
@@ -243,7 +243,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
         lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
         $_T->printFooter();
@@ -282,7 +282,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'users/' . $nID);
 
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the user account!', 'success');
 
             // Change password, if requested.
@@ -308,7 +308,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -358,7 +358,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
         lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
         $_T->printFooter();
@@ -390,7 +390,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'users/' . $nID);
 
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             lovd_showInfoTable('Successfully changed the password!', 'success');
 
             // Change password, if requested.
@@ -411,7 +411,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -457,7 +457,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_writeLog('Error', 'HackAttempt', 'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
         lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
         $_T->printFooter();
@@ -520,7 +520,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                     header('Refresh: 3; url=' . lovd_getInstallURL() . 'users');
 
                     $_T->printHeader();
-                    $_T->printTitle(PAGE_TITLE);
+                    $_T->printTitle();
                     lovd_showInfoTable('Successfully deleted the user account!', 'success');
 
                     $_T->printFooter();
@@ -538,7 +538,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
 
             // FIXME; extend this later.
             $nLogs = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID))->fetchColumn();
@@ -585,7 +585,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_showInfoTable('<B>Warning!</B> If you delete this user, all log entries related to this person will be deleted and all references to this person in the data will be removed! Such references include data ownership and information about who created or edited certain content.', 'warning');
     lovd_errorPrint();
@@ -662,7 +662,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
         $_T->printFooter();
         exit;
@@ -670,7 +670,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
         // Can't unlock someone that is not locked or lock someone that is already locked.
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_showInfoTable('User is already ' . ACTION . 'ed!', 'stop');
         $_T->printFooter();
         exit;
@@ -700,7 +700,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
 
     if ($_AUTH) {
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_showInfoTable('You are already a registered user.', 'stop');
         $_T->printFooter();
         exit;
@@ -746,7 +746,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
 
             $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
             $_AUTH =& $_SESSION['auth'];
-            // To prevent notices in the inc-bot.php for instance...
+            // To prevent notices in the header for instance...
             $_AUTH['curates']      = array();
             $_AUTH['collaborates'] = array();
 
@@ -802,7 +802,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
             header('Refresh: ' . ($bMail? '3' : '5') . '; url=' . lovd_getInstallURL() . 'genes');
 
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             lovd_showInfoTable('Your account has successfully been created!<BR>' . "\n" .
                                ($bMail? 'We\'ve sent you an email containing your account information.' : 
                                'Due to an error, we couldn\'t send you an email containing your account information. Our apologies for the inconvenience.'),
@@ -824,7 +824,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     if (GET) {
         print('      To register as a new submitter, please fill out the form below.<BR>' . "\n" .

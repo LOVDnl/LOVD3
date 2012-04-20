@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-13
+ * Modified    : 2012-04-20
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,13 +50,6 @@ if (empty($_GET['step']) || !preg_match('/^[0-5]$/', $_GET['step'])) {
 
 
 
-function lovd_printInstallForm ($bPassPost = true)
-{
-    print(lovd_getInstallForm($bPassPost));
-}
-
-
-
 function lovd_getInstallForm ($bPassPost = true)
 {
     // Prints FORM tag providing the 'Next' button.
@@ -76,9 +69,63 @@ function lovd_getInstallForm ($bPassPost = true)
 
 
 
+function lovd_printInstallForm ($bPassPost = true)
+{
+    print(lovd_getInstallForm($bPassPost));
+}
+
+
+
+
+
+function lovd_printSideBar ($aInstallSteps)
+{
+    // Shows sidebar with installation steps and the installation progress bar.
+    // Sidebar with the steps laid out.
+    if (ROOT_PATH == '../') { // Basically, when installing!
+        print('<BR>' . "\n\n" .
+              '<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" style="padding : 0px 10px;">' . "\n" .
+              '  <TR valign="top">' . "\n" .
+              '    <TD width="190">' . "\n" .
+              '      <TABLE border="0" cellpadding="5" cellspacing="0" align="left" width="100%" class="S11">' . "\n" .
+              '        <TR align="center" class="S13">' . "\n" .
+              '          <TH style="background : #224488; color : #FFFFFF; height : 20px; border : 1px solid #002266;"><IMG src="gfx/trans.png" alt="" width="178" height="1"><BR><I>Installation steps</I></TH></TR>');
+
+        foreach ($aInstallSteps as $nStep => $aStep) {
+            // Loop through install steps.
+            print("\n" .
+                  '        <TR align="center">' . "\n" .
+                  '          <TD style="height : 60px; border : 1px solid #002266; border-top : 0px; background : #' . ($nStep == $_GET['step']? 'CCE0FF; font-weight : bold' : ($nStep < $_GET['step']? 'F0F0F0; color : #666666' : 'FFFFFF')) . ';">' . $aStep[1] . '</TD></TR>');
+        }
+
+        // Close table.
+        print('</TABLE></TD>' . "\n" .
+              '    <TD style="padding-left : 10px;">' . "\n\n");
+
+
+
+        // Top progress bar.
+        print("\n" .
+              '      <TABLE border="0" cellpadding="0" cellspacing="0" class="S11" width="100%">' . "\n" .
+              '        <TR>' . "\n" .
+              '          <TD colspan="2">Installation progress</TD></TR>' . "\n" .
+              '        <TR>' . "\n" .
+              '          <TD colspan="2" style="border : 1px solid black; height : 5px;">' . "\n" .
+              '            <IMG src="gfx/trans.png" alt="" title="' . $aInstallSteps[$_GET['step']][0] . '%" width="' . $aInstallSteps[$_GET['step']][0] . '%" height="5" id="lovd_install_bar" style="background : #99EE66;"></TD></TR>' . "\n" .
+              '        <TR>' . "\n" .
+              '          <TD align="left">0%</TD>' . "\n" .
+              '          <TD align="right">100%</TD></TR></TABLE><BR>' . "\n\n");
+    }
+}
+
+
+
+
+
 if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
     // Show some intro.
     require 'inc-top.php'; // Install dir's own top include.
+    lovd_printSideBar($aInstallSteps);
 
     print('      <B>Welcome to the LOVD v.' . $_STAT['tree'] . '-' . $_STAT['build'] . ' installer</B><BR>
       <BR>' . "\n\n");
@@ -164,6 +211,7 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
     }
 
     require 'inc-top.php';
+    lovd_printSideBar($aInstallSteps);
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Load User class.
@@ -247,7 +295,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
         exit;
     }
 
-    set_time_limit(0); // We don't want the installation to time out in the middle of table creation.
+    @set_time_limit(0); // We don't want the installation to time out in the middle of table creation.
 
     // Start session.
     $sSignature = md5($_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . time());
@@ -258,6 +306,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
     session_start();
 
     require 'inc-top.php';
+    lovd_printSideBar($aInstallSteps);
 
     print('      <B>Installing LOVD...</B><BR>' . "\n" .
           '      <BR>' . "\n\n");
@@ -495,6 +544,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
     }
 
     require 'inc-top.php';
+    lovd_printSideBar($aInstallSteps);
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Load System Settings class.
@@ -595,6 +645,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
     }
 
     require 'inc-top.php';
+    lovd_printSideBar($aInstallSteps);
 
     print('      <B>Configuring LOVD modules</B><BR>' . "\n" .
           '      <BR>' . "\n\n" .
@@ -739,6 +790,7 @@ if ($_GET['step'] == 4) {
     }
 
     require 'inc-top.php';
+    lovd_printSideBar($aInstallSteps);
 
     lovd_writeLog('Install', 'Installation', 'Installation of LOVD ' . $_STAT['version'] . ' complete');
 

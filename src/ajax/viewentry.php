@@ -63,8 +63,8 @@ if (!file_exists($sFile)) {
     exit;
 }
 
-// We assume here that inc-top.php has been included but we can't see that from here.
-// Having a double inc-top & bot when a queryerror shows up, is so ugly, so...
+// We assume here that header has been included but we can't see that from here.
+// Having a double header & footer when a queryerror shows up, is so ugly, so...
 define('_INC_TOP_INCLUDED_', 'ajax');
 
 

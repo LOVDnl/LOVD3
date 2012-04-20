@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,14 +46,14 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // View all entries.
 
     define('PAGE_TITLE', 'View screenings');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
     $_DATA->viewList('Screenings', 'screeningid');
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -67,8 +67,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View screening #' . $nID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     // Load appropiate user level for this screening entry.
     lovd_isAuthorized('screening', $nID);
@@ -103,7 +103,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if (!empty($zData['search_geneid'])) {
         $_GET['search_geneid'] = html_entity_decode(rawurldecode($zData['search_geneid']));
         print('<BR><BR>' . "\n\n");
-        lovd_printHeader('Genes screened', 'H4');
+        $_T->printTitle('Genes screened', 'H4');
         require ROOT_PATH . 'class/object_genes.php';
         $_DATA = new LOVD_Gene();
         $_DATA->setSortDefault('id');
@@ -114,14 +114,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if ($zData['variants_found'] || !empty($zData['variants'])) {
         $_GET['search_screeningids'] = $nID;
         print('<BR><BR>' . "\n\n");
-        lovd_printHeader('Variants found', 'H4');
+        $_T->printTitle('Variants found', 'H4');
         require ROOT_PATH . 'class/object_genome_variants.php';
         $_DATA = new LOVD_GenomeVariant();
         $_DATA->setSortDefault('id');
         $_DATA->viewList('VOG_for_S_VE', array('id', 'screeningids'));
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -141,10 +141,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
     $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
     if (!$z) {
         define('PAGE_TITLE', 'Create a new screening entry');
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
         lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     } elseif (!lovd_isAuthorized('individuals', $_GET['target'], true)) {
         lovd_requireAUTH(LEVEL_OWNER);
@@ -232,8 +232,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/screening/' . $nID);
                 exit;
             } else {
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
+                $_T->printHeader();
+                $_T->printTitle();
                 $aOptionsList = array();
                 print('      Were there any variants found with this mutation screening?<BR><BR>' . "\n\n");
                 if (!$_POST['variants_found']) {
@@ -258,7 +258,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
                 print(lovd_buildOptionTable($aOptionsList));
             }
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
 
@@ -269,8 +269,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To create a new screening information entry, please fill out the form below.<BR>' . "\n" .
@@ -297,7 +297,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
     print("\n" .
           '      </FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -393,11 +393,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the screening information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -413,8 +413,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To edit an screening information entry, please fill out the form below.<BR>' . "\n" .
@@ -441,7 +441,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     print("\n" .
           '      </FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -474,10 +474,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         $sMessage = 'You cannot confirm any more variants with this screening, because all this individual\'s variants have already been found/confirmed by this screening!';
     }
     if ($sMessage) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
         lovd_showInfoTable($sMessage, 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     } else {
         $nIndividual = $z['individualid'];
@@ -554,8 +554,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 }
                 $aSubmit['confirmedVariants'][$nID] = array_merge($aNewVariants, $aSubmit['confirmedVariants'][$nID]);
 
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
+                $_T->printHeader();
+                $_T->printTitle();
 
                 $sPersons = ($nPanel > 1? 'this group of individuals' : 'this individual');
                 print('      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n");
@@ -581,7 +581,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                 $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
                 print(lovd_buildOptionTable($aOptionsList));
 
-                require ROOT_PATH . 'inc-bot.php';
+                $_T->printFooter();
 
             } else {
                 if (!isset($_SESSION['work']['submits']['confirmedVariants'][$nID])) {
@@ -601,8 +601,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         $_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'] = array();
     }
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
     lovd_showInfoTable('The variant entries below are all variants found in this individual, not yet confirmed by/added to this screening.', 'information');
@@ -627,7 +627,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                   );
     lovd_viewForm($aForm);
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -663,10 +663,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         $sMessage = 'You cannot remove any more variants with this screening, because this is the only screening these variants are connected to!';
     }
     if ($sMessage) {
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
         lovd_showInfoTable($sMessage, 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -712,13 +712,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'screenings/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
 
             // Thank the user...
             lovd_showInfoTable('Successfully updated the variant list!', 'success');
 
-            require 'inc-bot.php';
+            $_T->printFooter();
 
             exit;
         } else {
@@ -730,8 +730,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         $_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']['checked'] = array();
     }
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
     lovd_showInfoTable('The variant entries below are all variants that can be removed from this screening. Variants that are not also added to another screening can not be removed.', 'information');
@@ -757,7 +757,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                   );
     lovd_viewForm($aForm);
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -805,11 +805,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'screenings');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully deleted the screening information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -820,8 +820,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -841,7 +841,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 

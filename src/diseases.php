@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-02-10
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-18
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -46,14 +46,14 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // View all entries.
 
     define('PAGE_TITLE', 'View diseases');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
     $_DATA->viewList('Diseases', 'individualid');
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -67,8 +67,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View disease #' . $nID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     // Load appropiate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
@@ -94,13 +94,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     
     $_GET['search_diseaseids'] = $nID;
     print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Individuals', 'H4');
+    $_T->printTitle('Individuals', 'H4');
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
     $_DATA->setSortDefault('id');
     $_DATA->viewList('Individuals_for_D_VE', array('panelid', 'diseaseids'), true, true);
     
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -118,10 +118,10 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $n = count($aDiseases);
     if (!$n) {
         define('PAGE_TITLE', 'View disease');
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
     } elseif ($n == 1) {
         header('Location: ' . lovd_getInstallURL() . 'diseases/' . $aDiseases[0]);
     } else {
@@ -202,11 +202,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully created the disease information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -221,8 +221,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To create a new disease information entry, please fill out the form below.<BR>' . "\n" .
@@ -247,7 +247,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -336,11 +336,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the disease information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -355,8 +355,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -376,7 +376,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -425,11 +425,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'diseases');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully deleted the disease information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -440,8 +440,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -460,7 +460,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

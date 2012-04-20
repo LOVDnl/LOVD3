@@ -510,15 +510,13 @@ ini_set('default_charset','UTF-8');
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
 // Read system-wide configuration from the database.
-$_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false);
-if ($_CONF) {
+if ($_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
     // Must be two-step, since $_CONF can be false and therefore does not have ->fetchAssoc().
     $_CONF = $_CONF->fetchAssoc();
 }
 
 // Read LOVD status from the database.
-$_STAT = $_DB->query('SELECT * FROM ' . TABLE_STATUS, false, false);
-if ($_STAT) {
+if ($_STAT = $_DB->query('SELECT * FROM ' . TABLE_STATUS, false, false)) {
     // Must be two-step, since $_STAT can be false and therefore does not have ->fetchAssoc().
     $_STAT = $_STAT->fetchAssoc();
 }

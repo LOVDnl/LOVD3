@@ -8,7 +8,8 @@
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -46,6 +47,20 @@ class LOVD_Template {
     var $aTitlesPrinted = array(); // Makes sure we don't print the same title twice.
     var $bFull = true; // Will become false if the "clean" header has been requested.
     var $aMenu = array(); // Contains the menu with all its links. Built up in buildMenu().
+
+
+
+
+
+    function __construct ()
+    {
+        // Constructor.
+        if (substr(lovd_getProjectFile(), 0, 6) == '/ajax/') {
+            // We are in an AJAX call right now, so never include the header or footer.
+            $this->bTopIncluded = true;
+            $this->bBotIncluded = true;
+        }
+    }
 
 
 
@@ -202,7 +217,6 @@ class LOVD_Template {
             case 'text/html':
             default:
                 return $this->printFooterHTML($Arg1);
-                break;
         }
         $this->bBotIncluded = false;
         return false;
@@ -378,7 +392,6 @@ function lovd_mapVariants ()
             case 'text/html':
             default:
                 return $this->printHeaderHTML($this->bFull);
-                break;
         }
         $this->bTopIncluded = false;
         return false;
@@ -755,7 +768,6 @@ function lovd_mapVariants ()
             case 'text/html':
             default:
                 return $this->printTitleHTML($sTitle, $sStyle);
-                break;
         }
         return false;
     }

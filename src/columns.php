@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-12
+ * Modified    : 2012-04-19
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,7 +58,7 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
 
     define('PAGE_TITLE', 'Browse custom data columns');
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
@@ -99,7 +99,7 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
 
     define('PAGE_TITLE', 'View custom data column ' . $sColumnID);
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
@@ -223,7 +223,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
         header('Refresh: 3; url=' . lovd_getInstallURL() . ($sObject != ''? $aTableInfo['unit'] . 's/' . $sObject : 'columns/' . $sCategory));
 
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_showInfoTable('Successfully updated the ' . $aTableInfo['table_name'] . ' column order' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : '') . '!', 'success');
 
         $_T->printFooter();
@@ -232,7 +232,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
 
     $_T->printHeader();
 
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     // Retrieve column IDs in current order.
     $aColumns = array();
@@ -301,7 +301,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
         // Choose from the form types, and continue.
 
         $_T->printHeader(false);
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
 
         if (isset($_SERVER['HTTP_REFERER']) && substr($_SERVER['HTTP_REFERER'], -4) == 'edit') {
             lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of losing data!', 'warning');
@@ -527,7 +527,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
 
             // Thank the user...
             $_T->printHeader(false);
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             lovd_showInfoTable('Done! Created MySQL data type and form definition.', 'success');
 
             // Pass it on to the opener...
@@ -590,7 +590,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
 
 
     $_T->printHeader(false);
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -685,7 +685,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     // Let user pick column type first.
     if (empty($_POST['category'])) {
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
 
         $aOptionsList =
              array(
@@ -788,7 +788,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             header('Refresh: ' . (!$bFailedLinks? 3 : 10) . '; url=' . lovd_getInstallURL() . 'columns/' . $_POST['id']);
 
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             lovd_showInfoTable('Successfully created the new "' . $_POST['id'] . '" column!', 'success');
 
             if ($bFailedLinks) {
@@ -821,7 +821,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -926,7 +926,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
 
         if (!lovd_error()) {
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
 
             // Fields to be used.
             $aFields = array('width', 'standard', 'mandatory', 'head_column', 'description_form', 'description_legend_short', 'description_legend_full', 'mysql_type', 'form_type', 'select_options', 'preg_pattern', 'public_view', 'public_add', 'allow_count_all', 'edited_by', 'edited_date');
@@ -1055,7 +1055,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
             $_BAR->setMessage('Successfully edited column "' . $zData['head_column'] . '"!', 'done');
             $_BAR->setMessageVisibility('done', true);
 
-                // When printing stuff on the page, NOTE that inc-bot.php has already been closed!!!!!!!!!!!!!!
+                // When printing stuff on the page, NOTE that footer has already been closed!!!!!!!!!!!!!!
         /**************************************
                 // 2010-07-26; 2.0-28; In case the column is mandatory, check for existing patient entries that cause problems importing downloaded data.
                 $nEmptyValues = 0;
@@ -1174,7 +1174,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -1447,7 +1447,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             }
 
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
 
             if ($sCategory == 'VariantOnTranscript') {
                 // Add column to a certain gene.
@@ -1524,7 +1524,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 foreach ($aTargets as $sSymbol) {
                     if (!in_array($sSymbol, $aAvailableGenes)) {
                         $_T->printHeader();
-                        $_T->printTitle(PAGE_TITLE);
+                        $_T->printTitle();
                         lovd_showInfoTable('Gene ' . htmlspecialchars($sSymbol) . ' does not exist or you do not have permission to edit it.', 'stop');
                         $_T->printFooter();
                         exit;
@@ -1554,7 +1554,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
                 foreach ($aTargets as $nID) {
                     if (!array_key_exists($nID, $aDiseases)) {
                         $_T->printHeader();
-                        $_T->printTitle(PAGE_TITLE);
+                        $_T->printTitle();
                         lovd_showInfoTable('Disease ' . htmlspecialchars($nID) . ' does not exist or you do not have the rights to edit it.', 'stop');
                         $_T->printFooter();
                         exit;
@@ -1580,7 +1580,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
     if ($zData['active'] && $zData['active_checked']) {
         if (!$aTableInfo['shared']) {
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             lovd_showInfoTable('This column has already been added to the ' . $aTableInfo['table_name'] . ' table!', 'stop');
             $_T->printFooter();
             exit;
@@ -1589,7 +1589,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             if ($nError) {
                 // Target already has this column enabled!
                 $_T->printHeader();
-                $_T->printTitle(PAGE_TITLE);
+                $_T->printTitle();
                 lovd_showInfoTable('This column has already been added to ' . ($nError == 1? 'the ' . $aTableInfo['unit'] : $nError . ' of the ' . $aTableInfo['unit'] . 's') . ' you selected!', 'stop');
                 $_T->printFooter();
                 exit;
@@ -1628,9 +1628,9 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
         }
 
         if (!lovd_error()) {
-            // Start with inc-top.php and text, because we want to show a progress bar...
+            // Start with header and text, because we want to show a progress bar...
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
 
             if (!$zData['active_checked']) {
                 $sMessage = 'Adding column to data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
@@ -1729,7 +1729,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
             $_BAR->setMessage('Successfully added column "' . $zData['head_column'] . '"!', 'done');
             $_BAR->setMessageVisibility('done', true);
 
-            // When printing stuff on the page, NOTE that inc-bot.php has already been closed!!!!!!!!!!!!!!
+            // When printing stuff on the page, NOTE that footer has already been closed!!!!!!!!!!!!!!
 /**************************************
             // 2010-07-26; 2.0-28; In case the column is mandatory, check for existing patient entries that cause problems importing downloaded data.
             $nEmptyValues = 0;
@@ -1779,7 +1779,7 @@ if (!isset($_GET['in_window'])) {
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     // If ALTER time is large enough, mention something about it.
     if ($tAlter > $tAlterMax) {
@@ -1886,7 +1886,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
     }
     if ($sMessage) {
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_showInfoTable($sMessage, 'stop');
         $_T->printFooter();
         exit;
@@ -1917,7 +1917,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
 
         if (!lovd_error()) {
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             
             $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
 
@@ -1989,7 +1989,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
             $_BAR->setMessage('Successfully removed column "' . $zData['head_column'] . '"!', 'done');
             $_BAR->setMessageVisibility('done', true);
 
-            // When printing stuff on the page, NOTE that inc-bot.php has already been closed!!!!!!!!!!!!!!
+            // When printing stuff on the page, NOTE that footer has already been closed!!!!!!!!!!!!!!
 /**************************************
             // 2010-07-26; 2.0-28; In case the column is mandatory, check for existing patient entries that cause problems importing downloaded data.
             $nEmptyValues = 0;
@@ -2027,7 +2027,7 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sCategory, 3);
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -2131,7 +2131,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
     }
     if ($sMessage) {
         $_T->printHeader();
-        $_T->printTitle(PAGE_TITLE);
+        $_T->printTitle();
         lovd_showInfoTable($sMessage, 'stop');
         $_T->printFooter();
         exit;
@@ -2180,7 +2180,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'columns/' . $sCategory);
 
             $_T->printHeader();
-            $_T->printTitle(PAGE_TITLE);
+            $_T->printTitle();
             lovd_showInfoTable('Successfully deleted the column ' . $sColumnID . '!', 'success');
 
             $_T->printFooter();
@@ -2195,7 +2195,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
 
 
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     lovd_errorPrint();
 

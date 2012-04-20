@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-03-30
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,8 +46,8 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // View all entries.
 
     define('PAGE_TITLE', 'View phenotypes');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'class/object_phenotypes.php';
 
@@ -65,7 +65,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showInfoTable('No disease entries found.', 'stop');
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -79,8 +79,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View phenotype #' . $nID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     // Load appropiate user level for this phenotype entry.
     lovd_isAuthorized('phenotype', $nID);
@@ -100,7 +100,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showNavigation($sNavigation);
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -123,10 +123,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
     $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
     if (!$z) {
         define('PAGE_TITLE', 'Create a new phenotype entry');
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
         lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add phenotype" button.', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     } elseif (!lovd_isAuthorized('individuals', $_GET['target'], true)) {
         lovd_requireAUTH(LEVEL_OWNER);
@@ -164,15 +164,15 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
             }
         } else {
             // Wrong individual ID, individual without diseases, or diseases without phenotype columns.
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('The individual #' . $_POST['individualid'] . ' does not have any disease entries yet, or none of the diseases have data fields enabled. Please go <A href="individuals/' . $_POST['individualid'] . '?edit">here</A> and add the disease(s) first' . ($_AUTH['level'] < LEVEL_CURATOR? '.' : ' or <A href="columns/Phenotype">here</A> and enable phenotype columns.'), 'warning');
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
 
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
 
         if (!lovd_error()) {
             print('      Please select the disease to which the phenotype information is related.<BR>' . "\n" .
@@ -197,7 +197,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
               '  if ($(\'#phenotypeCreate option\').size() == 2) { $(\'#phenotypeCreate select\')[0].selectedIndex = 1; $(\'#phenotypeCreate\').submit(); }' . "\n" .
               '</SCRIPT>' . "\n\n");
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -251,8 +251,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
             $sPersons = ($nPanel > 1? 'this group of individuals' : 'this individual');
 
             if ($bSubmit) {
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
+                $_T->printHeader();
+                $_T->printTitle();
                 
                 print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n");
 
@@ -268,7 +268,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
                 $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
 
                 print(lovd_buildOptionTable($aOptionsList));
-                require ROOT_PATH . 'inc-bot.php';
+                $_T->printFooter();
             } else {
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/phenotype/' . $nID);
             }
@@ -282,8 +282,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To create a new phenotype information entry, please fill out the form below.<BR>' . "\n" .
@@ -311,7 +311,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
           '        <INPUT type="hidden" name="diseaseid" value="' . $_POST['diseaseid'] . '">' . "\n" .
           '      </FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -367,11 +367,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the phenotype information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         } else {
             // Because we're sending the data back to the form, I need to unset the password field!
@@ -385,8 +385,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To edit an phenotype information entry, please fill out the form below.<BR>' . "\n" .
@@ -412,7 +412,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -459,11 +459,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'phenotypes');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully deleted the phenotype information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -474,8 +474,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -495,7 +495,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

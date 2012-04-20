@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-04-13
+ * Modified    : 2012-04-19
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,9 +48,9 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // Submission process 
 
     define('PAGE_TITLE', 'Submit new information to this database');
-    require ROOT_PATH . 'inc-top.php';
+    $_T->printHeader();
+    $_T->printTitle();
     require ROOT_PATH . 'inc-lib-form.php';
-    lovd_printHeader(PAGE_TITLE);
     print('      Do you have any information available regarding an individual or a group of individuals?<BR><BR>' . "\n\n");
 
     $aOptionsList = array();
@@ -62,7 +62,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
     print(lovd_buildOptionTable($aOptionsList));
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -153,10 +153,10 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         }
         if (!$q->rowCount()) {
             // This can only happen if a LEVEL_ADMIN deletes(or changes the status of) the entry before the submitter gets here
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Submission entry not found!', 'stop');
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
         $_DB->commit();
@@ -169,8 +169,8 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     define('LOG_EVENT', 'Submit' . ucfirst($_PATH_ELEMENTS[2]));
     define('PAGE_TITLE', 'Submit ' . $sTitle);
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
     $aTo = array();
     if (!empty($aGenes)) {
         // Check if there are any genomic variants without a variant on transcript entry, in which case we would need to mail all managers.
@@ -518,10 +518,10 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     if ($bMail) {
         lovd_showInfoTable('Successfully processed your submission and sent an email notification to the relevant curator(s)!', 'success');
     } else {
-        lovd_showInfoTable('Successfully processed your submission, but LOVD wasn\'t able to send an email notification to the relevant curator(s)!\nPlease contact one of the relevant curators and notify them of your submission so that they can curate your data!', 'warning');
+        lovd_showInfoTable('Successfully processed your submission, but LOVD wasn\'t able to send an email notification to the relevant curator(s)!<BR>Please contact one of the relevant curators and notify them of your submission so that they can curate your data!', 'warning');
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-02-09
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-18
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -63,30 +64,14 @@ if ($_AUTH && $_AUTH['allowed_ip']) {
         // Log the user out.
         session_destroy();
         $_AUTH = false;
+        $_SESSION['currdb'] = false;
 
-        if (!defined('_INC_TOP_INCLUDED_')) {
-            if (is_readable('inc-top.php')) {
-                require 'inc-top.php';
-            } else {
-                require ROOT_PATH . 'inc-top.php';
-            }
-        }
+        $_T->printHeader();
 
+        $_T->printTitle('Access denied');
         lovd_showInfoTable('Your current IP address does not allow you access using this username.', 'stop');
 
-        if (defined('_INC_TOP_INCLUDED_')) {
-            if (is_readable('inc-bot.php')) {
-                require 'inc-bot.php';
-            } else {
-                require ROOT_PATH . 'inc-bot.php';
-            }
-        } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
-            if (is_readable('inc-bot-clean.php')) {
-                require 'inc-bot-clean.php';
-            } else {
-                require ROOT_PATH . 'inc-bot-clean.php';
-            }
-        }
+        $_T->printFooter();
         exit;
     }
 }

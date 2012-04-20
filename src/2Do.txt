@@ -152,6 +152,7 @@ Prioritize:
 - Since Objects::checkFields() is running getForm(), can't that code take care of invalid values in selection lists? Now that code is all over the place; object_custom for custom columns and lots of object_* files for each data type.
 - Floating header? Anders: eerst de hele tabel inladen, daarna nieuwe table maken, de TR moven naar de andere tabel met behoud van breedte, en laten floaten.
   + Eventueel code gebruiken gesuggereerd door Ivar (november 2011)
+  - Implement lovd_getColumnMaxValue() in inc-lib-init.php.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 

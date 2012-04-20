@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-04-16
+ * Modified    : 2012-04-19
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,14 +46,14 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // View all entries.
 
     define('PAGE_TITLE', 'View genes');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
     $_DATA->viewList('Genes', 'geneid');
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -67,8 +67,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     $sID = rawurldecode($_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View gene ' . $sID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     // Load appropiate user level for this gene.
     lovd_isAuthorized('gene', $sID);
@@ -108,13 +108,13 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     $_GET['search_geneid'] = '="' . $sID . '"';
     print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Active transcripts', 'H4');
+    $_T->printTitle('Active transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $_DATA->setSortDefault('variants');
     $_DATA->viewList('Transcripts_for_G_VE', 'geneid', true, true);
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -179,7 +179,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             if (!lovd_error()) {
-                require ROOT_PATH . 'inc-top.php';
+                $_T->printHeader();
                 require ROOT_PATH . 'class/progress_bar.php';
 
                 $sFormNextPage = '<FORM action="' . CURRENT_PATH . '?' . ACTION . '" id="createGene" method="post">' . "\n" .
@@ -189,8 +189,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 $_BAR = new ProgressBar('', 'Collecting gene information...', $sFormNextPage);
 
-                define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
-                require ROOT_PATH . 'inc-bot.php';
+                $_T->printFooter(false);
 
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
@@ -292,8 +291,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
         }
 
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
 
         if (GET) {
             print('      Please fill in the HGNC ID or Gene Symbol for the gene database you wish to create.<BR>' . "\n" .
@@ -320,7 +319,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '  // -->' . "\n" .
               '</SCRIPT>' . "\n");
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -440,11 +439,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $_POST['id']);
                 }
 
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
+                $_T->printHeader();
+                $_T->printTitle();
                 lovd_showInfoTable('Successfully created the gene information entry!', 'success');
 
-                require ROOT_PATH . 'inc-bot.php';
+                $_T->printFooter();
                 exit;
             }
         } else {
@@ -452,8 +451,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $_DATA->setDefaultValues();
         }
 
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
 
         if (!lovd_error()) {
             print('      To create a new gene database, please complete the form below and press "Create" at the bottom of the form.<BR>' . "\n" .
@@ -480,7 +479,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
         print('</FORM>' . "\n\n");
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 }
@@ -621,11 +620,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1]);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the gene information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
 
@@ -638,8 +637,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
         $_POST['created_date'] = substr($_POST['created_date'], 0, 10);
     }
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (!lovd_error()) {
         print('      To edit this gene database, please complete the form below and press "Edit" at the bottom of the form.<BR>' . "\n" .
@@ -666,7 +665,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 
 }
@@ -714,11 +713,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully deleted the gene information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -729,8 +728,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -750,7 +749,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -880,11 +879,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $_PATH_ELEMENTS[1]);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully updated the curator list!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -895,8 +894,8 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     // Now, build $aCurators, which contains info about the curators currently selected (from DB or, if available, POST!).
     $aCurators = array();
@@ -1065,7 +1064,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
     print('      </SCRIPT>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -1195,8 +1194,8 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
             $q = mysql_query($sQ);
             if (!$q) {
                 $sError = mysql_error(); // Save the mysql_error before it disappears.
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
+                $_T->printHeader();
+                $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
                 lovd_dbFout('GeneCreate_A', $sQ, $sError);
             }
 
@@ -1212,8 +1211,8 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
                 } else {
                     @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
                 }
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
+                $_T->printHeader();
+                $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
                 lovd_dbFout('GeneCreate_B', $sQ, $sError);
             }
 
@@ -1236,8 +1235,8 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
                 @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
                 @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
 
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
+                $_T->printHeader();
+                $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
                 lovd_dbFout('GeneCreate_C', $sQ, $sError);
             }
 
@@ -1294,8 +1293,8 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
                     @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
                     @mysql_query('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
 
-                    require ROOT_PATH . 'inc-top.php';
-                    lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
+                    $_T->printHeader();
+                    $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
                     lovd_dbFout('GeneCreate_D', $sQ, $sError);
                 }
             }
@@ -1343,8 +1342,8 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
                 @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
                 @mysql_query('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
 
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
+                $_T->printHeader();
+                $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
                 lovd_dbFout('GeneCreate_E', $sQ, $sError);
             }
 
@@ -1365,18 +1364,18 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
 
             // Set currdb.
             $_SESSION['currdb'] = $_POST['symbol'];
-            // These just to have inc-top.php what it needs.
+            // These just to have the header what it needs.
             $_SETT['currdb'] = array(
                     'gene' => $_POST['gene'],
                     'symbol' => $_POST['symbol']);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
+            $_T->printHeader();
+            $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
             print('      Successfully created the ' . $_POST['symbol'] . ' gene!<BR>' . "\n" .
                   '      <BR>' . "\n\n");
             print('      <BUTTON onclick="window.location.href=\'' . ROOT_PATH . 'config.php?select_db=' . $_POST['symbol'] . lovd_showSID(true, true) . '\';" style="font-weight : bold; font-size : 11px;">Continue &gt;&gt;</BUTTON>' . "\n\n");
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -1397,8 +1396,8 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader('setup_genes_create', 'LOVD Setup - Create new gene');
+    $_T->printHeader();
+    $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
 
     if (!isset($_GET['sent'])) {
         print('      To create a new gene database, please complete the form below and press \'Create\' at the bottom of the form.<BR>' . "\n" .
@@ -1550,7 +1549,7 @@ LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality i
 
     print('</TABLE></FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 
 

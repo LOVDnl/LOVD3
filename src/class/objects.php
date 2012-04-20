@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-16
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -393,17 +393,10 @@ class LOVD_Object {
 
             $sError = mysql_error(); // Save the mysql_error before it disappears.
 
-            // Check if, and which, top include has been used.
-            if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {
-                if (is_readable(ROOT_PATH . 'inc-top.php')) {
-                    require ROOT_PATH . 'inc-top.php';
-                } else {
-                    require ROOT_PATH . 'inc-top-clean.php';
-                }
-            }
+            $_T->printHeader();
 
-            if (defined('PAGE_TITLE') && defined('_INC_TOP_INCLUDED_')) {
-                lovd_printHeader(PAGE_TITLE);
+            if (defined('PAGE_TITLE')) {
+                $_T->printTitle();
             }
 
             if ($sError) {
@@ -412,11 +405,7 @@ class LOVD_Object {
 
             lovd_showInfoTable('No such ID!', 'stop');
 
-            if (defined('_INC_TOP_INCLUDED_')) {
-                require ROOT_PATH . 'inc-bot.php';
-            } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
-                require ROOT_PATH . 'inc-bot-clean.php';
-            }
+            $_T->printFooter();
             exit;
 
         } else {
@@ -605,11 +594,7 @@ class LOVD_Object {
             global $_SETT, $_STAT, $_AUTH;
             lovd_showInfoTable('No such ID!', 'stop');
             if (!$bAjax) {
-                if (defined('_INC_TOP_INCLUDED_')) {
-                    require ROOT_PATH . 'inc-bot.php';
-                } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
-                    require ROOT_PATH . 'inc-bot-clean.php';
-                }
+                $_T->printHeader();
             }
             exit;
         }
@@ -646,11 +631,7 @@ class LOVD_Object {
             // Don't give away information about the ID: just pretend the entry does not exist.
             global $_SETT, $_STAT, $_AUTH;
             lovd_showInfoTable('No such ID!', 'stop');
-            if (defined('_INC_TOP_INCLUDED_')) {
-                require ROOT_PATH . 'inc-bot.php';
-            } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
-                require ROOT_PATH . 'inc-bot-clean.php';
-            }
+            $_T->printFooter();
             exit;
         }
 

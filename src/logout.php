@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-19
- * Modified    : 2012-04-16
+ * Modified    : 2012-04-19
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -52,8 +53,8 @@ session_start(); // Reinitiate... Otherwise the next line will do nothing.
 $_SESSION['currdb'] = $sCurrDB; // Put it back.
 header('Refresh: 5; url=' . lovd_getInstallURL());
 define('PAGE_TITLE', 'Log out');
-require ROOT_PATH . 'inc-top.php';
-lovd_printHeader(PAGE_TITLE);
+$_T->printHeader();
+$_T->printTitle();
 
 print('      You have been logged out successfully.<BR>' . "\n");
 
@@ -83,5 +84,5 @@ foreach ($aTimes as $n => $aTime) {
 
 print('      You\'ve been online for ' . $sPrint . '.' . "\n\n");
 
-require ROOT_PATH . 'inc-bot.php';
+$_T->printFooter();
 ?>

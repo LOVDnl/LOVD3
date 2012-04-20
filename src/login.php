@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2012-03-29
+ * Modified    : 2012-04-19
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -180,7 +180,7 @@ if (!empty($_POST)) {
 if (!$_AUTH) {
     define('PAGE_TITLE', 'Log in');
     $_T->printHeader();
-    $_T->printTitle(PAGE_TITLE);
+    $_T->printTitle();
 
     // Security check will be performed when actually logging in.
     if (empty($_POST['referer'])) {

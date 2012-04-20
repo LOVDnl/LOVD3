@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-26
- * Modified    : 2012-02-10
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-19
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -44,8 +44,8 @@ if ($_AUTH) {
 lovd_requireAUTH(LEVEL_MANAGER);
 
 define('PAGE_TITLE', 'View system log entries');
-require ROOT_PATH . 'inc-top.php';
-lovd_printHeader(PAGE_TITLE);
+$_T->printHeader();
+$_T->printTitle();
 //require ROOT_PATH . 'inc-lib-form.php';
 require ROOT_PATH . 'class/object_logs.php';
 
@@ -104,5 +104,5 @@ lovd_includeJS('inc-js-logs.php');
 $_DATA = new LOVD_Log();
 $_DATA->viewList('Logs'); // Don't change viewListID, the log's prepareData() is referring to it.
 
-require ROOT_PATH . 'inc-bot.php';
+$_T->printFooter();
 ?>

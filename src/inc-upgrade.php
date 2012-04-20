@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-19
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -53,8 +53,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     }
 
     define('PAGE_TITLE', 'Upgrading LOVD...');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     print('      Please wait while LOVD is upgrading the database backend from ' . $_STAT['version'] . ' to ' . $_SETT['system']['version'] . '.<BR><BR>' . "\n");
 
@@ -341,8 +341,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     // This already puts the progress bar on the screen.
     $_BAR = new ProgressBar('', 'Checking upgrade lock...', $sFormNextPage);
 
-    define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter(false);
 
 
 

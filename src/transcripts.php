@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-04-10
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -53,15 +53,15 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i'
         $_GET['search_geneid'] = '="' . $sGene . '"';
     }
     define('PAGE_TITLE', 'View transcripts' . ($sGene? ' of gene ' . $sGene : ''));
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $_DATA->sSortDefault = ($sGene? 'variants' : 'geneid');
     $_DATA->viewList('Transcripts', ($sGene? 'geneid' : ''));
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -75,8 +75,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View transcript #' . $nID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     // Load appropiate user level for this transcript.
     lovd_isAuthorized('transcript', $nID); // This call will make database queries if necessary.
@@ -98,14 +98,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $_GET['search_transcriptid'] = $nID;
     print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Variants', 'H4');
+    $_T->printTitle('Variants', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
     $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
     $_DATA->setRowLink('VOT_for_T_VE', 'javascript:window.location.href = \'variants/{{ID}}#{{transcriptid}}\'; return false');
     $_DATA->viewList('VOT_for_T_VE', array('geneid', 'transcriptid', 'id_ncbi', 'id_'));
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -123,10 +123,10 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         header('Location: ' . lovd_getInstallURL() . 'transcripts/' . $nID);
     } else {
         define('PAGE_TITLE', 'View transcript');
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
     }
     exit;
 }
@@ -150,9 +150,9 @@ if (ACTION == 'create') {
         lovd_isAuthorized('gene', $_AUTH['curates']);
         lovd_requireAUTH(LEVEL_CURATOR);
 
-        require ROOT_PATH . 'inc-top.php';
+        $_T->printHeader();
+        $_T->printTitle();
         require ROOT_PATH . 'inc-lib-form.php';
-        lovd_printHeader(PAGE_TITLE);
 
         print('      Please select the gene on which you wish to add a transcript.<BR>' . "\n" .
               '      <BR>' . "\n\n" .
@@ -181,7 +181,7 @@ if (ACTION == 'create') {
         lovd_viewForm($aFormData);
         print('</TABLE></FORM>' . "\n\n");
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -191,11 +191,11 @@ if (ACTION == 'create') {
     if (!in_array($_PATH_ELEMENTS[1], lovd_getGeneList())) {
         header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '?' . ACTION);
 
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
         lovd_showInfoTable('Invalid gene symbol. Redirecting to gene selection...', 'warning');
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -223,7 +223,7 @@ if (ACTION == 'create') {
 
         $zGene = mysql_fetch_assoc(lovd_queryDB_Old('SELECT id, name, chromosome, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PATH_ELEMENTS[1])));
 
-        require ROOT_PATH . 'inc-top.php';
+        $_T->printHeader();
         require ROOT_PATH . 'class/progress_bar.php';
         require ROOT_PATH . 'inc-lib-form.php';
 
@@ -238,8 +238,7 @@ if (ACTION == 'create') {
 
         $_BAR = new ProgressBar('', 'Collecting transcript information...', $sFormNextPage);
 
-        define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter(false);
 
         // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
         flush();
@@ -373,22 +372,21 @@ if (ACTION == 'create') {
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . rawurlencode($zData['gene']['id']));
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully added the transcript(s) to gene ' . $zData['gene']['id'], 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
     }
 
-    require ROOT_PATH . 'inc-top.php';
-
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (empty($zData['transcripts'])) {
         lovd_showInfoTable('No more transcripts available that have not been added yet!', 'warning');
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -427,7 +425,7 @@ if (ACTION == 'create') {
     print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -475,11 +473,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the gene information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
     } else {
@@ -487,8 +485,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         $_POST = array_merge($_POST, $zData);
     }
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (!lovd_error()) {
         print('      To edit this transcript, please complete the form below and press "Edit" at the bottom of the form.<BR>' . "\n" .
@@ -513,7 +511,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -562,11 +560,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'transcripts');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully deleted the transcript information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -577,8 +575,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -598,7 +596,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

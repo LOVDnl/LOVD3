@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2012-03-15
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-18
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -53,7 +53,6 @@ $aNeededLevel =
                 'Transcript' => 0,
                 'Transcript_Variant' => 0,
                 'User' => LEVEL_MANAGER,
-                'Variant' => 0, // FIXME; Remove later when object Variant no longer exists.
               );
 if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = $aNeededLevel[$_GET['object']];
@@ -74,8 +73,8 @@ if (!file_exists($sFile)) {
     exit;
 }
 
-// We assume here that inc-top.php has been included but we can't see that from here.
-// Having a double inc-top & bot when a queryerror shows up, is so ugly, so...
+// We assume here that the header has been included but we can't see that from here.
+// Having a double header & footer when a queryerror shows up, is so ugly, so...
 define('_INC_TOP_INCLUDED_', 'ajax');
 
 

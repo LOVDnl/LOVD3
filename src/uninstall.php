@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2012-02-01
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-04-20
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -30,14 +30,14 @@
  *************/
 
 define('ROOT_PATH', './');
-require ROOT_PATH . 'inc-lib-form.php';
 require ROOT_PATH . 'inc-init.php';
+require ROOT_PATH . 'inc-lib-form.php';
 
 require ROOT_PATH . 'install/inc-top.php'; // Install dir's own top include.
 print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" style="padding : 0px 10px;">' . "\n" .
       '  <TR valign="top">' . "\n" .
       '    <TD>' . "\n");
-lovd_printHeader('Uninstall LOVD');
+$_T->printTitle('Uninstall LOVD');
 
 // Require DB admin clearance.
 lovd_requireAUTH(LEVEL_ADMIN);
@@ -50,7 +50,7 @@ lovd_requireAUTH(LEVEL_ADMIN);
 if (isset($_CONF['lock_uninstall']) && $_CONF['lock_uninstall']) {
     // Sorry, can't remove LOVD...
     lovd_showInfoTable('Can\'t uninstall LOVD - Uninstall lock in place.', 'warning');
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -84,7 +84,7 @@ if (!empty($_POST)) {
                 // This already puts the progress bar on the screen.
                 $_BAR = new ProgressBar('', 'Initiating removal of LOVD...');
 
-                define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
+                define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the footer to actually close the <BODY> and <HTML> tags.
                 require ROOT_PATH . 'install/inc-bot.php';
 
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.

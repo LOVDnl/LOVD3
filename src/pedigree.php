@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-22
- * Modified    : 2011-12-27
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-04-19
+ * For LOVD    : 3.0-beta-04
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -48,8 +48,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1])) {
 
     $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View pedigree for individual #' . $nID);
-    require ROOT_PATH . 'inc-top-clean.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader(false);
+    $_T->printTitle();
 
     lovd_includeJS('inc-js-tooltip.php'); // For the mouseover.
     require ROOT_PATH . 'class/pedigree.php';
@@ -57,6 +57,6 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1])) {
     // FIXME; call new function to highlight the individual called?
     $_PED->drawHTML();
 
-    require ROOT_PATH . 'inc-bot-clean.php';
+    $_T->printFooter();
     exit;
 }

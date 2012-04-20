@@ -55,8 +55,8 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', 
     }
 
     define('PAGE_TITLE', 'View genomic variants' . (!$sChr? '' : ' on chromosome ' . substr($sChr, 3)));
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
@@ -67,7 +67,7 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', 
     }
     $_DATA->viewList('VOG', $aColsToHide);
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -80,14 +80,14 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'in_gene') {
     // View all entries effecting a transcript.
 
     define('PAGE_TITLE', 'View transcript variants');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
     $_DATA->viewList('CustomVL_IN_GENE', array('transcriptid'));
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -101,8 +101,8 @@ if (!ACTION && !empty($_PATH_ELEMENTS[2]) && $_PATH_ELEMENTS[1] == 'upload' && c
 
     $nID = sprintf('%015d', $_PATH_ELEMENTS[2]);
     define('PAGE_TITLE', 'View genomic variants from upload #' . $nID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
     
     lovd_requireAUTH(LEVEL_MANAGER);
 
@@ -112,7 +112,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[2]) && $_PATH_ELEMENTS[1] == 'upload' && c
     $_GET['search_created_date'] = date('Y-m-d H:i:s', substr($nID, 5, 10));
     $_DATA->viewList('VOG_uploads', array('allele_'));
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -154,8 +154,8 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
     }
 
     define('PAGE_TITLE', 'View transcript variants in ' . $sGene);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     $sViewListID = 'CustomVL_VOT_VOG_' . $sGene;
 
@@ -187,7 +187,7 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
         $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome', 'allele_'));
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -201,8 +201,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View genomic variant #' . $nID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
 
 ?>
@@ -274,7 +274,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $_GET['search_id_'] = $nID;
     print('      <BR><BR>' . "\n\n");
-    lovd_printHeader('Variant on transcripts', 'H4');
+    $_T->printTitle('Variant on transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant('', $nID);
     $_DATA->setRowID('VOT_for_VOG_VE', 'VOT_{{transcriptid}}');
@@ -328,13 +328,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if (!empty($zData['screeningids'])) {
         $_GET['search_screeningid'] = $zData['screeningids'];
         print('<BR><BR>' . "\n\n");
-        lovd_printHeader('Screenings', 'H4');
+        $_T->printTitle('Screenings', 'H4');
         require ROOT_PATH . 'class/object_screenings.php';
         $_DATA = new LOVD_Screening();
         $_DATA->viewList('Screenings_for_VOG_VE', array('individualid', 'created_date', 'edited_date'), true, true);
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -365,10 +365,10 @@ if ((empty($_PATH_ELEMENTS[1]) || $_PATH_ELEMENTS[1] == 'upload') && ACTION == '
         }
         if ($sMessage) {
             define('PAGE_TITLE', (empty($_PATH_ELEMENTS[1])? 'Create a new variant entry' : 'Upload variant data'));
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable($sMessage, 'stop');
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         } else {
             $_POST['screeningid'] = $_GET['target'];
@@ -395,8 +395,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         // URL: /variants?create
         // Select whether you want to create a variant on the genome or on a transcript.
         define('PAGE_TITLE', 'Create a new variant entry');
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
 
         require ROOT_PATH . 'inc-lib-form.php';
 
@@ -450,7 +450,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
               '        $("#container").hide();' . "\n" .
               '      </SCRIPT>' . "\n");
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
 
 
@@ -469,10 +469,10 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         $sGene = $_GET['geneid'];
         if (!in_array($sGene, lovd_getGeneList())) {
             define('PAGE_TITLE', 'Create a new variant entry');
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('The gene symbol given is not valid, please go to the create variant page and select the desired gene entry.', 'warning');
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         } else {
             define('PAGE_TITLE', 'Create a new variant entry for gene ' . $_GET['geneid']);
@@ -601,8 +601,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             if ($bSubmit) {
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader(PAGE_TITLE);
+                $_T->printHeader();
+                $_T->printTitle();
                 print('      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n");
 
                 $aOptionsList = array();
@@ -617,7 +617,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
                 print(lovd_buildOptionTable($aOptionsList));
 
-                require ROOT_PATH . 'inc-bot.php';
+                $_T->printFooter();
             } else {
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/variant/' . $nID);
             }
@@ -634,8 +634,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To create a new variant entry, please fill out the form below.<BR>' . "\n" .
@@ -706,7 +706,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     print("\n" .  
           '      </SCRIPT>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -727,8 +727,8 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
         // Select whether you want to upload a VCF or SeattleSeq file.
 
         define('PAGE_TITLE', 'Upload variant data');
-        require ROOT_PATH . 'inc-top.php';
-        lovd_printHeader(PAGE_TITLE);
+        $_T->printHeader();
+        $_T->printTitle();
         require ROOT_PATH . 'inc-lib-form.php';
 
         print('      What kind of file would you like to upload?<BR><BR>' . "\n\n");
@@ -741,7 +741,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
 
         print(lovd_buildOptionTable($aOptionsList));
 
-        require ROOT_PATH . 'inc-bot.php';
+        $_T->printFooter();
         exit;
     } elseif (!in_array($_GET['type'], array('VCF', 'SeattleSeq'))) {
         exit;
@@ -750,8 +750,8 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
     define('LOG_EVENT', 'VariantUpload' . $_GET['type']);
 
     define('PAGE_TITLE', 'Upload a ' . $_GET['type'] . ' file');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -1025,8 +1025,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
             // Initiate progress bar.
             require ROOT_PATH . 'class/progress_bar.php';
             $_BAR = new ProgressBar('', 'Loading variant data from the ' . $_GET['type'] . ' file...', '&nbsp;');
-            define('_INC_BOT_CLOSE_HTML_', false);
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter(false);
 
             // Parse mapping options.
             $nMappingFlags = (!empty($_POST['allow_mapping'])? MAPPING_ALLOW : 0) | (!empty($_POST['allow_create_genes'])? MAPPING_ALLOW_CREATE_GENES : 0);
@@ -2033,7 +2032,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
     lovd_viewform($aForm);
     print('</FORM>');
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -2196,11 +2195,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the variant entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -2229,8 +2228,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To edit a variant entry, please fill out the form below.<BR>' . "\n" .
@@ -2294,7 +2293,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
           '        });' . "\n" .
           '      </SCRIPT>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -2341,11 +2340,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully deleted the variant entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -2356,8 +2355,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -2377,7 +2376,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     print("\n" .
           '      </FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -2392,8 +2391,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'Search other public LOVDs for variant #' . $nID);
     define('LOG_EVENT', 'VariantGlobalSearch');
-    require ROOT_PATH . 'inc-top-clean.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader(false);
+    $_T->printTitle();
 
     lovd_isAuthorized('variant', $nID);
     lovd_requireAUTH(LEVEL_OWNER);
@@ -2412,7 +2411,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     if (empty($aData)) {
         // No data found.
         lovd_showInfoTable('This variant was not found in any other public LOVDs.');
-        require ROOT_PATH . 'inc-bot-clean.php';
+        $_T->printFooter();
         exit;
     }
     
@@ -2456,7 +2455,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
               '  </TR>' . "\n");
     }
     print('</TABLE>');
-    require ROOT_PATH . 'inc-bot-clean.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -2581,11 +2580,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants/' . $nID . (!empty($aNewTranscripts)? '?edit#' . implode(',', $aNewTranscripts) : ''));
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully updated the transcript list!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -2594,8 +2593,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         }
     }
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
     lovd_showInfoTable('The variant entry is currently NOT mapped to the following transcripts. Click on a transcript to map the variant to it.', 'information');
@@ -2708,7 +2707,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
         }
       </SCRIPT>
 <?php
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

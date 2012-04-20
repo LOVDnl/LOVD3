@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-04-04
+ * Modified    : 2012-04-18
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,14 +46,14 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // View all entries.
 
     define('PAGE_TITLE', 'View individuals');
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
     $_DATA->viewList('Individuals', array('panelid', 'diseaseids'));
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -67,8 +67,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
     define('PAGE_TITLE', 'View individual #' . $nID);
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     // Load appropiate user level for this individual.
     lovd_isAuthorized('individual', $nID);
@@ -98,7 +98,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     }
 
     print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Diseases', 'H4');
+    $_T->printTitle('Diseases', 'H4');
 
     if (!empty($zData['diseases'])) {
         // List of diseases associated with this person.
@@ -110,7 +110,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
         // List of phenotype entries associated with this person, per disease.
         $_GET['search_individualid'] = $nID;
-        lovd_printHeader('Phenotypes', 'H4');
+        $_T->printTitle('Phenotypes', 'H4');
         if (!empty($zData['phenotypes'])) {
             require ROOT_PATH . 'class/object_phenotypes.php';
             foreach($zData['diseases'] as $aDisease) {
@@ -133,7 +133,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $_GET['search_individualid'] = $nID;
     print('<BR><BR>' . "\n\n");
-    lovd_printHeader('Screenings', 'H4');
+    $_T->printTitle('Screenings', 'H4');
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
     $_DATA->setSortDefault('id');
@@ -143,7 +143,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     if (!empty($zData['screeningids'])) {
         $_GET['search_screeningids'] = $zData['screeningids'];
         print('<BR><BR>' . "\n\n");
-        lovd_printHeader('Variants', 'H4');
+        $_T->printTitle('Variants', 'H4');
         require ROOT_PATH . 'class/object_genome_variants.php';
         $_DATA = new LOVD_GenomeVariant();
         $_DATA->setSortDefault('id');
@@ -151,7 +151,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         unset($_GET['search_screeningids']);
     }
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -230,8 +230,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             $sPersons = ($_POST['panel_size'] > 1? 'this group of individuals' : 'this individual');
             $sMessage = (empty($_POST['active_diseases'])? 'No diseases were selected for ' . $sPersons . '.\nThe phenotype information that can be submitted depends on the selected diseases.' : 'The disease' . (count($_POST['active_diseases']) > 1? 's' : '') . ' added to ' . $sPersons . ' do' . (count($_POST['active_diseases']) > 1? '' : 'es') . ' not have phenotype columns enabled yet.');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             print('      Do you have any phenotype information available for ' . $sPersons . '?<BR><BR>' . "\n\n");
             
             $aOptionsList = array();
@@ -257,7 +257,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
             print(lovd_buildOptionTable($aOptionsList));
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
 
@@ -268,8 +268,8 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To create a new individual information entry, please fill out the form below.<BR>' . "\n" .
@@ -295,7 +295,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -397,11 +397,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the individual information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -418,8 +418,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     if (GET) {
         print('      To edit an individual information entry, please fill out the form below.<BR>' . "\n" .
@@ -445,7 +445,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 
@@ -493,11 +493,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'individuals');
 
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             lovd_showInfoTable('Successfully deleted the individual information entry!', 'success');
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -508,8 +508,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -529,7 +529,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

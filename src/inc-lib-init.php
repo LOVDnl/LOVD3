@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-03-28
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-20
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -143,25 +143,17 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Writes an error message to the errorlog and displays the same message on
     // screen for the user. This function halts PHP processing in all cases.
-    global $_AUTH, $_DB, $_SETT, $_CONF, $_STAT;
+    global $_AUTH, $_DB, $_SETT, $_CONF, $_STAT, $_T;
 
     // Check if, and which, top include has been used.
-    if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_')) {
-        if ($sError == 'Init') {
-            // We can't load the normal inc-top.php and inc-bot.php now, because that will result in more errors on the screen.
-            $sFile = ROOT_PATH . 'install/inc-top.php';
-        } elseif (is_readable('inc-top.php')) {
-            $sFile = 'inc-top.php';
-        } else {
-            $sFile = ROOT_PATH . 'inc-top.php';
-        }
-        require $sFile;
-        if ($sFile == ROOT_PATH . 'install/inc-top.php') {
-            print('<BR>' . "\n");
-        }
-
+    if ($sError == 'Init' && !defined('_INC_TOP_INCLUDED_')) {
+        // We can't load the normal header and footer now, because that will result in more errors on the screen.
+        require ROOT_PATH . 'install/inc-top.php';
+        print('<BR>' . "\n");
+    } else {
+        $_T->printHeader();
         if (defined('PAGE_TITLE')) {
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printTitle();
         }
     }
 
@@ -172,7 +164,8 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
         $bLog = false;
     }
 
-    if (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false) {
+    // FIXME; _INC_BOT_CLOSE_HTML_ part can be removed when the install has the $_T implemented properly.
+    if ($_T->bBotIncluded || (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false)) {
         print('<BR>' . "\n\n");
     }
     $sMessage = htmlspecialchars($sMessage);
@@ -192,17 +185,14 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
           <TD>' . str_replace(array("\n", "\t"), array('<BR>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $sMessage) . '</TD></TR></TABLE>' . "\n\n");
 
     // If fatal, get bottom and exit.
-    if (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false) {
+    // FIXME; _INC_BOT_CLOSE_HTML_ part can be removed when the install has the $_T implemented properly.
+    if ($_T->bBotIncluded || (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false)) {
         die('</BODY>' . "\n" . '</HTML>' . "\n\n");
-    } elseif (defined('_INC_TOP_INCLUDED_') && _INC_TOP_INCLUDED_ === true) {
-        if ($sError == 'Init') {
-            // We can't load the normal inc-top.php and inc-bot.php now, because that will result in more errors on the screen.
+    } elseif ($sError == 'Init') {
+            // We can't load the normal header and footer now, because that will result in more errors on the screen.
             require ROOT_PATH . 'install/inc-bot.php';
-        } else {
-            require ROOT_PATH . 'inc-bot.php';
-        }
-    } elseif (defined('_INC_TOP_CLEAN_INCLUDED_')) {
-        require ROOT_PATH . 'inc-bot-clean.php';
+    } else {
+        $_T->printFooter();
     }
     exit;
 }
@@ -473,7 +463,7 @@ function lovd_includeJS ($sFile, $nPrefix = 3)
     }
 
     $sPrefix = str_repeat('  ', $nPrefix);
-    print($sPrefix . '<SCRIPT type="text/javascript" src="' . $sFile . (empty($sArg)? '' : '?' . $sArg) . '"></SCRIPT>' . "\n");
+    print($sPrefix . '<SCRIPT type="text/javascript" src="' . $sFile . (empty($sArg)? '' : '?' . $sArg) . '"> </SCRIPT>' . "\n");
     return true;
 }
 
@@ -841,15 +831,11 @@ function lovd_requireAUTH ($nLevel = 0)
     }
 
     // $nLevel is now 0 (just existence of $_AUTH required) or taken from the levels list.
-    if ((!$nLevel && !$_AUTH) || ($nLevel && (!$_AUTH || $_AUTH['level'] < $nLevel))) {
-        if (!defined('_INC_TOP_INCLUDED_') && !defined('_INC_TOP_CLEAN_INCLUDED_') && !$_T->bTopIncluded) {
-            $_T->printHeader();
+    if (!$_AUTH || ($nLevel && $_AUTH['level'] < $nLevel)) {
+        $_T->printHeader();
 
-            if (defined('PAGE_TITLE')) {
-                lovd_printHeader(PAGE_TITLE);
-            }
-        } else {
-            $_T->bTopIncluded = true;
+        if (defined('PAGE_TITLE')) {
+            $_T->printTitle();
         }
 
         $sMessage = 'To access this area, you need ' . (!$nLevel? 'to <A href="login">log in</A>.' : ($nLevel == max($aKeys)? '' : 'at least ') . $_SETT['user_levels'][$nLevel] . ' clearance.');

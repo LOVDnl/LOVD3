@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2012-01-26
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-04-19
+ * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -55,11 +55,11 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
         $zData = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username']))->fetchAssoc();
         if (!$zData) {
             // If username does not exist, we don't want to let the user know. So this message in entire incorrect.
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
             print('      Successfully reset your password.<BR>' . "\n" .
                   '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login.php">unlock your account</A> and choose a new password.<BR><BR>' . "\n\n");
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
 
@@ -126,8 +126,8 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers']);
 
             // Thank the user...
-            require ROOT_PATH . 'inc-top.php';
-            lovd_printHeader(PAGE_TITLE);
+            $_T->printHeader();
+            $_T->printTitle();
 
             if ($bMail) {
                 print('      Successfully reset your password.<BR>' . "\n" .
@@ -138,7 +138,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
                 print('      Due to an error, we couldn\'t send you an email containing your new password. Our apologies for the inconvenience.<BR><BR>' . "\n\n");
             }
 
-            require ROOT_PATH . 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -149,8 +149,8 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
 
 
-    require ROOT_PATH . 'inc-top.php';
-    lovd_printHeader(PAGE_TITLE);
+    $_T->printHeader();
+    $_T->printTitle();
 
     print('      If you forgot your password, please fill in your username here. A new random password will be generated and emailed to the known email address. You need this new password to unlock your account and choose a new password.<BR>' . "\n" .
           '      <BR>' . "\n\n");
@@ -170,7 +170,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     lovd_viewForm($aForm);
     print('</FORM>' . "\n\n");
 
-    require ROOT_PATH . 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>
