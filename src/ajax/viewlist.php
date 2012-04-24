@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -73,9 +73,6 @@ if (!file_exists($sFile)) {
     exit;
 }
 
-// We assume here that the header has been included but we can't see that from here.
-// Having a double header & footer when a queryerror shows up, is so ugly, so...
-define('_INC_TOP_INCLUDED_', 'ajax');
 
 
 $sObjectID = '';

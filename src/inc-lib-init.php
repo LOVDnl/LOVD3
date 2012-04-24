@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-20
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -145,16 +145,9 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     // screen for the user. This function halts PHP processing in all cases.
     global $_AUTH, $_DB, $_SETT, $_CONF, $_STAT, $_T;
 
-    // Check if, and which, top include has been used.
-    if ($sError == 'Init' && !defined('_INC_TOP_INCLUDED_')) {
-        // We can't load the normal header and footer now, because that will result in more errors on the screen.
-        require ROOT_PATH . 'install/inc-top.php';
-        print('<BR>' . "\n");
-    } else {
-        $_T->printHeader();
-        if (defined('PAGE_TITLE')) {
-            $_T->printTitle();
-        }
+    $_T->printHeader(!($sError == 'Init'));
+    if (defined('PAGE_TITLE')) {
+        $_T->printTitle();
     }
 
     // Write to log file... if we're not here because we don't have MySQL.
@@ -164,8 +157,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
         $bLog = false;
     }
 
-    // FIXME; _INC_BOT_CLOSE_HTML_ part can be removed when the install has the $_T implemented properly.
-    if ($_T->bBotIncluded || (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false)) {
+    if ($_T->bBotIncluded) {
         print('<BR>' . "\n\n");
     }
     $sMessage = htmlspecialchars($sMessage);
@@ -185,12 +177,8 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
           <TD>' . str_replace(array("\n", "\t"), array('<BR>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $sMessage) . '</TD></TR></TABLE>' . "\n\n");
 
     // If fatal, get bottom and exit.
-    // FIXME; _INC_BOT_CLOSE_HTML_ part can be removed when the install has the $_T implemented properly.
-    if ($_T->bBotIncluded || (defined('_INC_BOT_CLOSE_HTML_') && _INC_BOT_CLOSE_HTML_ === false)) {
+    if ($_T->bBotIncluded) {
         die('</BODY>' . "\n" . '</HTML>' . "\n\n");
-    } elseif ($sError == 'Init') {
-            // We can't load the normal header and footer now, because that will result in more errors on the screen.
-            require ROOT_PATH . 'install/inc-bot.php';
     } else {
         $_T->printFooter();
     }
@@ -839,6 +827,7 @@ function lovd_requireAUTH ($nLevel = 0)
         }
 
         $sMessage = 'To access this area, you need ' . (!$nLevel? 'to <A href="login">log in</A>.' : ($nLevel == max($aKeys)? '' : 'at least ') . $_SETT['user_levels'][$nLevel] . ' clearance.');
+        // FIXME; extend this list?
         if (lovd_getProjectFile() == '/submit.php') {
             $sMessage .= '<BR>If you are not registered as a submitter, please <A href="users?register">do so here</A>.';
         }

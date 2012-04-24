@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-15
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-20
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -112,9 +113,9 @@ function lovd_xml2array ($sXml = '', $nSkipTags = 0, $sPrefixSeperator = '')
     // Extracts encodings specified like: [ encoding=UTF-8], [ encoding="UTF-8"] or [ encoding='UTF-8'] (excluding the braces; always in $aMatches[1]).
     // We'll try to parse the file in the specified encoding, if it fails (because the source specified the wrong encoding) we try UTF-8, then ISO-8859-15.
     $aEncodings = array('UTF-8', 'ISO-8859-15');
-    if (preg_match("/<\?xml(?:.*?(?: encoding=(?:\"([^\"]+)\"|'([^']+)'|(\S+)).*?)?)?\?>/i", $sXml, $aMatches) && !empty($aMatches[1])) {
+    if (preg_match("/<\?xml(?:.*?(?: encoding=(?:\"([^\"]+)\"|'([^']+)'|(\S+)).*?)?)?\?>/i", $sXml, $aMatches) && (!empty($aMatches[1]) || !empty($aMatches[2]) || !empty($aMatches[3]))) {
         // We don't want to try the same encoding twice, so if it's ISO-8859-X or UTF-8, don't retry that one.
-        $sEncoding = strtoupper($aMatches[1]);
+        $sEncoding = strtoupper(implode('', array_slice($aMatches, 1)));
         if ($sEncoding == 'UTF-8') {
             array_shift($aEncodings);
         } elseif (preg_match('/^ISO-8859-(?:[1-9]|1[013456])$/', $sEncoding)) {

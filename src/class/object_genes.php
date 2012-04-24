@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-04-16
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -110,19 +110,12 @@ class LOVD_Gene extends LOVD_Object {
                         'refseq_genomic_' => 'Genomic reference',
                         'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
-                        'url_homepage' => 'Homepage URL',
-                        'url_external' => 'External URL',
-                        'allow_download_' => 'Allow public to download all variant entries',
-                        'allow_index_wiki_' => 'Allow data to be indexed by WikiProfessional',
-                        'note_index' => 'Notes for the LOVD gene homepage',
-                        'note_listing' => 'Notes for the variant listings',
-                        'refseq' => 'Refseq',
+                        'allow_download_' => array('Allow public to download all variant entries', LEVEL_COLLABORATOR),
+                        'allow_index_wiki_' => array('Allow data to be indexed by WikiProfessional', LEVEL_COLLABORATOR),
                         'refseq_url' => 'Refseq URL',
-                        'disclaimer_' => array('Disclaimer', LEVEL_COLLABORATOR),
-                        'header_' => 'Header',
-                        'footer_' => 'Footer',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
+                        'note_index' => 'Notes',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -133,6 +126,8 @@ class LOVD_Gene extends LOVD_Object {
                         'HR_1' => '',
                         'TableStart_Links' => '',
                         'TableHeader_Links' => 'Links to other resources',
+                        'url_homepage' => 'Homepage URL',
+                        'url_external' => 'External URL',
                         'id_hgnc_' => 'HGNC',
                         'id_entrez_' => 'Entrez Gene',
                         'id_omim_' => 'OMIM - Gene',
@@ -270,7 +265,9 @@ class LOVD_Gene extends LOVD_Object {
         }
 
         // XSS attack prevention. Deny input of HTML.
-        lovd_checkXSS();
+        // Ignore the 'External links' field.
+        unset($aData['url_external']);
+        lovd_checkXSS($aData);
     }
 
 
@@ -359,7 +356,7 @@ class LOVD_Gene extends LOVD_Object {
                         array('Homepage URL', '', 'text', 'url_homepage', 40),
                         array('', '', 'note', 'If you have a separate homepage about this gene, you can specify the URL here. Format: complete URL, including "http://".'),
                         array('External links', '', 'textarea', 'url_external', 55, 3),
-                        array('', '', 'note', 'Here you can provide links to other resources on the internet that you would like to link to. One link per line, format: complete URLs or "Description <URL>".'),
+                        array('', '', 'note', 'Here you can provide links to other resources on the internet that you would like to link to. One link per line, format: complete URLs or "Description &lt;URL&gt;".'),
                         array('HGNC ID', '', 'print', $zData['id_hgnc']),
                         array('Entrez Gene (Locuslink) ID', '', 'print', ($zData['id_entrez']? $zData['id_entrez'] : 'Not Available')),
                         array('OMIM Gene ID', '', 'print', ($zData['id_omim']? $zData['id_omim'] : 'Not Available')),
@@ -442,13 +439,6 @@ class LOVD_Gene extends LOVD_Object {
             $zData['disclaimer_text_'] = (!$zData['disclaimer']? '' : ($zData['disclaimer'] == 2? $zData['disclaimer_text'] :
                 'The contents of this LOVD database are the intellectual property of the respective curator(s). Any unauthorised use, copying, storage or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising out of any inaccuracies or omissions. Individuals, organisations and companies which use this database do so on the understanding that no liability whatsoever either direct or indirect shall rest upon the curator(s) or any of their employees or agents for the effects of any product, process or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
             
-            // FIXME; Voor zover ik weet doen de header en de footer nog niks.    
-            $aAlign = array(-1 => 'left', 0 => 'center', 1 => 'right');
-            $this->aColumnsViewEntry['header_'] = 'Header (aligned to the ' . $aAlign[$zData['header_align']] . ')';
-            $this->aColumnsViewEntry['footer_'] = 'Footer (aligned to the ' . $aAlign[$zData['footer_align']] . ')';
-            $zData['header_'] = $zData['header'];
-            $zData['footer_'] = $zData['footer'];
-
             $zData['diseases_'] = '';
             $zData['disease_omim_'] = '';
             foreach($zData['diseases'] as $aDisease) {

@@ -1,6 +1,9 @@
 Prioritize:
 ===========
-- No VOT -> Variants of gene XXX -> "No custom_viewlist" ???? -> Moet objecten binnen de CustomViewList analyseren.
+IE7 @ LUMC heeft geen pagineren, net als dropdowns en andere dingen. We moeten een IE 7 vinden om mee te kunnen gaan debuggen.
+- VOT DNA, RNA, Protein worden bij install niet actief gemaakt, moet wel (hoeft natuurlijk niet in shared!!!)
+- Mapping script moet geen p.(=) opslaan, als Mutalyzer een WSPLICE foutmelding geeft.
+- DBID mag geen custom links meer hebben (mag ook niet gekozen worden).
 - IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
   + Reported by Christopher Watson.
 - Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
@@ -32,6 +35,8 @@ Prioritize:
 - VariantOnGenome/Times_reported???
 - Handmatige variant mapper: ook p. description ophalen bij Mutalyzer?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
+- Referer from login moet pagina zijn met alleen een action? Om te voorkomen dat er geredirect wordt naar een del action zonder dat dat de bedoeling is?
+- Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
 
 - Beta-05:
   - DATA DOWNLOAD.
@@ -70,6 +75,8 @@ Prioritize:
     + Apart veld, niet in data.
   - Email forwards: staat de Reply-To altijd goed? Regelen in lovd_sendMail()?
   - All trim() calls in checkFields() calls can be removed, since data is automatically trimmed in Object::checkFields() anyway.
+  - Gene notes for variant listings implementeren?
+  - Gene headers & footers implementeren?
 
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
@@ -153,6 +160,8 @@ Prioritize:
 - Floating header? Anders: eerst de hele tabel inladen, daarna nieuwe table maken, de TR moven naar de andere tabel met behoud van breedte, en laten floaten.
   + Eventueel code gebruiken gesuggereerd door Ivar (november 2011)
   - Implement lovd_getColumnMaxValue() in inc-lib-init.php.
+- SeattleSeq import: in welke kolom worden de dbSNP links geladen? Is nu nummerieke select, moet text values worden.
+- Mapper geeft query error als VOT DNA veld niet actief is: ondervangen?
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 

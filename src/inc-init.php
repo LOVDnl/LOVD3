@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-13
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -514,24 +514,36 @@ if ($_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
     // Must be two-step, since $_CONF can be false and therefore does not have ->fetchAssoc().
     $_CONF = $_CONF->fetchAssoc();
 }
+if (!$_CONF) {
+    // Basic configuration, in case we're not installed properly.
+    define('MISSING_CONF', true);
+    $_CONF =
+         array(
+                'system_title' => 'LOVD 3.0 - Leiden Open Variation Database',
+                'logo_uri' => 'gfx/LOVD_logo130x50.jpg',
+              );
+}
 
 // Read LOVD status from the database.
 if ($_STAT = $_DB->query('SELECT * FROM ' . TABLE_STATUS, false, false)) {
     // Must be two-step, since $_STAT can be false and therefore does not have ->fetchAssoc().
     $_STAT = $_STAT->fetchAssoc();
 }
+if (!$_STAT) {
+    // Basic status, in case we're not installed properly.
+    define('MISSING_STAT', true);
+    $_STAT =
+         array(
+                'version' => $_SETT['system']['version'],
+              );
+}
 
 
 
-if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) || !isset($_STAT['version']) || !preg_match('/^([1-9]\.[0-9](\.[0-9])?)\-([0-9a-z-]{2,11})$/', $_STAT['version'], $aRegsVersion)) {
+if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\.[0-9](\.[0-9])?)\-([0-9a-z-]{2,11})$/', $_STAT['version'], $aRegsVersion)) {
     // We couldn't get the installation's configuration or status. Are we properly installed, then?
 
     // Copying information that is required for the includes, but can't be read from the database.
-    $_CONF = array('system_title' => 'LOVD 3.0 - Leiden Open Variation Database');
-    if (!is_array($_STAT) || !count($_STAT)) {
-        // Check availability of $_STAT first before overwriting it, since it may exist - TABLE_STATUS is filled earlier than TABLE_CONFIG during installation.
-        $_STAT = array();
-    }
     $_STAT['tree'] = $_SETT['system']['tree'];
     $_STAT['build'] = $_SETT['system']['build'];
 
@@ -545,19 +557,19 @@ if (!is_array($_CONF) || !count($_CONF) || !is_array($_STAT) || !count($_STAT) |
     }
     if (count($aTables) < (count($_TABLES) - 1)) {
         // We're not completely installed.
-        define('_NOT_INSTALLED_', true);
+        define('NOT_INSTALLED', true);
     }
 
     // inc-js-submit-settings.php check is necessary because it gets included in the install directory.
     if (dirname(lovd_getProjectFile()) != '/install' && lovd_getProjectFile() != '/inc-js-submit-settings.php') {
         // We're not installing, so throwing an error.
 
-        if (defined('_NOT_INSTALLED_')) {
+        if (defined('NOT_INSTALLED')) {
             // We're not completely installed.
-            require ROOT_PATH . 'install/inc-top.php';
+            $_T->printHeader();
             print('      <BR>' . "\n" .
                   '      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LOVD was not installed yet. Please <A href="' . ROOT_PATH . 'install">install</A> LOVD first.<BR>' . "\n");
-            require ROOT_PATH . 'install/inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } elseif (lovd_getProjectFile() != '/uninstall.php') {
@@ -614,7 +626,7 @@ header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version
 
 
 // The following applies only if the system is fully installed.
-if (!defined('_NOT_INSTALLED_')) {
+if (!defined('NOT_INSTALLED')) {
     // Load session data.
     require ROOT_PATH . 'inc-auth.php';
 
@@ -629,6 +641,8 @@ if (!defined('_NOT_INSTALLED_')) {
         }
     }
     define('CURRENT_PATH', implode('/', $_PATH_ELEMENTS));
+    $_PE =& $_PATH_ELEMENTS; // Shorthand, less typing.
+    define('PATH_COUNT', count($_PE)); // So you don't need !empty($_PATH_ELEMENTS[1]) && ...
 
     // Define ACTION.
     if ($_SERVER['QUERY_STRING'] && preg_match('/^(\w+)(&.*)?$/', $_SERVER['QUERY_STRING'], $aRegs)) {

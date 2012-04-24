@@ -40,6 +40,14 @@
    while parsing XML files.
  * Fixed bug; After a SeattleSeq import, the final overview given didn't show
    all imported variants (although import was successful).
+ * Fixed bug; When not logged in, no variant descriptions on transcripts could
+   be viewed.
+ * SeattleSeq import will now describe variants as p.(=) only if they are more
+   than 10 bases away from the nearest splice site.
+ * Fixed bug; the "External links" field could not be filled in with link
+   descriptions, because the XSS security check didn't allow it.
+ * Fixed bug; lovd_checkXSS() was not properly protected against XSS itself.
+ * Cleaned up the gene homepage, which had way too many columns enabled.
 
 
 

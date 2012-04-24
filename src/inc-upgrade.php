@@ -341,7 +341,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     // This already puts the progress bar on the screen.
     $_BAR = new ProgressBar('', 'Checking upgrade lock...', $sFormNextPage);
 
-    $_T->printFooter(false);
+    $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
 
 
 

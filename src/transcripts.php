@@ -238,7 +238,7 @@ if (ACTION == 'create') {
 
         $_BAR = new ProgressBar('', 'Collecting transcript information...', $sFormNextPage);
 
-        $_T->printFooter(false);
+        $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags. 
 
         // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
         flush();

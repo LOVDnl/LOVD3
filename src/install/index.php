@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-20
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -78,13 +78,14 @@ function lovd_printInstallForm ($bPassPost = true)
 
 
 
-function lovd_printSideBar ($aInstallSteps)
+function lovd_printSideBar ()
 {
     // Shows sidebar with installation steps and the installation progress bar.
     // Sidebar with the steps laid out.
+    global $aInstallSteps;
+
     if (ROOT_PATH == '../') { // Basically, when installing!
-        print('<BR>' . "\n\n" .
-              '<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" style="padding : 0px 10px;">' . "\n" .
+        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . "\n" .
               '  <TR valign="top">' . "\n" .
               '    <TD width="190">' . "\n" .
               '      <TABLE border="0" cellpadding="5" cellspacing="0" align="left" width="100%" class="S11">' . "\n" .
@@ -122,10 +123,10 @@ function lovd_printSideBar ($aInstallSteps)
 
 
 
-if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
+if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     // Show some intro.
-    require 'inc-top.php'; // Install dir's own top include.
-    lovd_printSideBar($aInstallSteps);
+    $_T->printHeader();
+    lovd_printSideBar();
 
     print('      <B>Welcome to the LOVD v.' . $_STAT['tree'] . '-' . $_STAT['build'] . ' installer</B><BR>
       <BR>' . "\n\n");
@@ -174,7 +175,7 @@ if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
                            $sMySQL . '<BR>' .
                            $sInnoDB . '<BR>' .
                            $sMultiViews, 'stop');
-        require 'inc-bot.php';
+        $_T->printFooter();
         exit;
     } else {
         // Success!
@@ -194,7 +195,7 @@ if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
 
     lovd_printInstallForm();
 
-    require 'inc-bot.php';
+    $_T->printFooter();
     exit;
 } elseif ($_GET['step'] == 0) { $_GET['step'] ++; }
 
@@ -202,7 +203,7 @@ if ($_GET['step'] == 0 && defined('_NOT_INSTALLED_')) {
 
 
 
-if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
+if ($_GET['step'] == 1 && defined('NOT_INSTALLED')) {
     // Step 1: Administrator account details.
     if ($_DB->query('SHOW TABLES LIKE ?', array(TABLE_USERS))->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS)->fetchColumn()) {
         // We already have a database user!
@@ -210,8 +211,8 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
         exit;
     }
 
-    require 'inc-top.php';
-    lovd_printSideBar($aInstallSteps);
+    $_T->printHeader();
+    lovd_printSideBar();
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Load User class.
@@ -238,7 +239,7 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
 
             lovd_printInstallForm();
 
-            require 'inc-bot.php';
+            $_T->printFooter();
             exit;
 
         } else {
@@ -275,7 +276,7 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
 
     print('</FORM>' . "\n\n");
 
-    require 'inc-bot.php';
+    $_T->printFooter();
     exit;
 } elseif ($_GET['step'] == 1) { $_GET['step'] ++; }
 
@@ -283,7 +284,7 @@ if ($_GET['step'] == 1 && defined('_NOT_INSTALLED_')) {
 
 
 
-if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
+if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // Step 2: Install database tables.
     if ($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn() && !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn()) {
         // Installed, but not configured yet.
@@ -305,8 +306,8 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
 
     session_start();
 
-    require 'inc-top.php';
-    lovd_printSideBar($aInstallSteps);
+    $_T->printHeader();
+    lovd_printSideBar();
 
     print('      <B>Installing LOVD...</B><BR>' . "\n" .
           '      <BR>' . "\n\n");
@@ -336,7 +337,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
                 print('      There seems to be an existing LOVD installation (' . $sVersion . ').<BR>' . "\n" .
                       '      <B>Installation of LOVD can not continue using the current database or table prefix.</B><BR>' . "\n" .
                       '      Please change the database settings in the config.ini or remove the existing LOVD install, and re-run the installation.<BR>' . "\n\n");
-                require 'inc-bot.php';
+                $_T->printFooter();
                 exit;
             }
         }
@@ -346,7 +347,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
               '      I found:<BR>' . "\n" .
               '      - ' . implode("<BR>\n" . '      - ', $aTablesFound) . "<BR>\n" .
               '      Please remove th' . ($nTablesFound == 1? 'is table' : 'ese tables') . ' and re-run the installation.<BR>' . "\n\n");
-        require 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -367,8 +368,7 @@ if ($_GET['step'] == 2 && defined('_NOT_INSTALLED_')) {
           '        var bar = document.getElementById(\'lovd_install_bar\');' . "\n" .
           '      </SCRIPT>' . "\n\n\n");
 
-    define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the inc-bot to actually close the <BODY> and <HTML> tags.
-    require 'inc-bot.php';
+    $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
 
     // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
     flush();
@@ -543,8 +543,8 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
         exit;
     }
 
-    require 'inc-top.php';
-    lovd_printSideBar($aInstallSteps);
+    $_T->printHeader();
+    lovd_printSideBar();
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Load System Settings class.
@@ -573,7 +573,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
                       '      I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', '[' . implode('] [', $_DB->errorInfo()) . ']') . '</DIV><BR><BR>' . "\n" .
                       '      A failed installation is most likely caused by a bug in LOVD.<BR>' . "\n" .
                       '      Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.<BR>' . "\n\n");
-                require 'inc-bot.php';
+                $_T->printFooter();
                 exit;
             }
 
@@ -588,7 +588,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
 
             lovd_printInstallForm(false);
 
-            require 'inc-bot.php';
+            $_T->printFooter();
             exit;
         }
 
@@ -623,7 +623,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
 
     print('</FORM>' . "\n\n");
 
-    require 'inc-bot.php';
+    $_T->printFooter();
     exit;
 } elseif ($_GET['step'] == 3) { $_GET['step'] ++; }
 
@@ -644,8 +644,8 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
         exit;
     }
 
-    require 'inc-top.php';
-    lovd_printSideBar($aInstallSteps);
+    $_T->printHeader();
+    lovd_printSideBar();
 
     print('      <B>Configuring LOVD modules</B><BR>' . "\n" .
           '      <BR>' . "\n\n" .
@@ -669,7 +669,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
         lovd_printInstallForm(false);
         // FIXME; TEMPORARY CODE.
 
-        require 'inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 
@@ -771,7 +771,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
 
     lovd_printInstallForm(false);
 
-    require 'inc-bot.php';
+    $_T->printFooter();
     exit;
 } elseif ($_GET['step'] == 4) { $_GET['step'] ++; }*/
 
@@ -789,8 +789,8 @@ if ($_GET['step'] == 4) {
         exit;
     }
 
-    require 'inc-top.php';
-    lovd_printSideBar($aInstallSteps);
+    $_T->printHeader();
+    lovd_printSideBar();
 
     lovd_writeLog('Install', 'Installation', 'Installation of LOVD ' . $_STAT['version'] . ' complete');
 
@@ -800,7 +800,7 @@ if ($_GET['step'] == 4) {
           '      <BR>' . "\n\n" .
           '      <BUTTON onclick="window.location.href=\'setup?newly_installed\';" style="font-weight : bold; font-size : 11px;">Continue to Setup area &gt;&gt;</BUTTON>' . "\n\n");
 
-    require 'inc-bot.php';
+    $_T->printFooter();
     exit;
 }
 ?>

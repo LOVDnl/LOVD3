@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,8 +72,14 @@ class LOVD_Template {
         // Can't be in the constructor, because that one is called before we have $_SESSION.
         global $_AUTH;
 
+        if (ROOT_PATH == '../' || defined('NOT_INSTALLED')) {
+            // In install directory.
+            $this->aMenu = array();
+            return true;
+        }
+
         $this->aMenu = array(
-                        'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'Home'),
+                        'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'View all genes'),
                         'genes_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all genes', 0),
@@ -186,13 +192,13 @@ class LOVD_Template {
         }
 
         if (!defined('PAGE_TITLE')) {
-            $sFile = substr(lovd_getProjectFile(), 1, strrpos(lovd_getProjectFile(), '.') - 1);
+            $sFile = substr(lovd_getProjectFile(), 1, strrpos(lovd_getProjectFile(), '.') - 1); // Isolate "genes" out of "/genes.php".
             if (array_key_exists($sFile, $this->aMenu)) {
                 define('PAGE_TITLE', $this->aMenu[$sFile]);
-            } else {
-                define('PAGE_TITLE', '');
             }
         }
+
+        return true;
     }
 
 
@@ -231,6 +237,13 @@ class LOVD_Template {
         // Print the LOVD footer, including the update checker and mapper (if $bFull == true).
         global $_AUTH, $_SETT, $_STAT;
 
+        if (ROOT_PATH == '../') {
+            // In the install directory, closing the tables opened by /install/index.php that /install/inc-bot.php used to close.
+            print("\n\n" .
+                  '    </TD>' . "\n" .
+                  '  </TR>' . "\n" .
+                  '</TABLE>' . "\n");
+        }
         ?>
 
 
@@ -275,11 +288,11 @@ class LOVD_Template {
 ?>
     </TD>
     <TD width="42" align="right">
-      <IMG src="<?php echo ROOT_PATH; ?>gfx/lovd_mapping_99.png" alt="" title="" width="32" height="32" id="mapping_progress" style="margin : 5px;">
+      <IMG src="gfx/lovd_mapping_99.png" alt="" title="" width="32" height="32" id="mapping_progress" style="margin : 5px;">
     </TD>
     <TD width="42" align="right">
 <?php
-        if (!defined('_NOT_INSTALLED_')) {
+        if (!(defined('NOT_INSTALLED') || defined('MISSING_CONF') || defined('MISSING_STAT'))) {
             if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
                 // Check for updates!
                 $sImgURL = 'check_update?icon';
@@ -309,7 +322,9 @@ class LOVD_Template {
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        print('
+        if (!(ROOT_PATH == '../' || defined('NOT_INSTALLED'))) {
+            // In install directory.
+            print('
 function lovd_mapVariants ()
 {
     // This function requests the script that will do the actual work.
@@ -322,11 +337,11 @@ function lovd_mapVariants ()
         {
             // The server responded successfully. Let\'s see what he\'s saying.
             aResponse = sResponse.split("\t");
-            $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_" + aResponse[1] + ".png", "title": aResponse[2]});
+            $("#mapping_progress").attr({"src": "gfx/lovd_mapping_" + aResponse[1] + ".png", "title": aResponse[2]});
 
             if (sResponse.indexOf("Notice") >= 0 || sResponse.indexOf("Warning") >= 0 || sResponse.indexOf("Error") >= 0 || sResponse.indexOf("Fatal") >= 0) {
                 // Something went wrong while processing the request, don\'t try again.
-                $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to transcripts."});
+                $("#mapping_progress").attr({"src": "gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to transcripts."});
             } else if (aResponse[0] == "' . AJAX_TRUE . '") {
                 // More variants to map. Re-call.
                 setTimeout("lovd_mapVariants()", 50);
@@ -338,23 +353,24 @@ function lovd_mapVariants ()
     ).error(function ()
         {
             // Something went wrong while contacting the server, don\'t try again.
-            $("#mapping_progress").attr({"src": "' . ROOT_PATH . 'gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to transcripts."});
+            $("#mapping_progress").attr({"src": "gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to transcripts."});
         }
     );
 }
 ');
 
-        // Not every page request should trigger the mapping...
-        if (!empty($_SESSION['mapping']['time_complete']) && $_SESSION['mapping']['time_complete'] >= (time() - 60 * 60 * 24)) {
-            // If it is less than one day ago that mapping was complete, don't start it automatically.
-            print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
-        } elseif (!empty($_SESSION['mapping']['time_error']) && $_SESSION['mapping']['time_error'] >= (time() - 60 * 60)) {
-            // If it is less than one hour ago that an error occurred, don't start it either.
-            print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
-            print('$("#mapping_progress").attr("Title", "Mapping is temporarily suspended because of network problems on the last attempt. Click to retry.");' . "\n");
-        } else {
-            // If we won't start it, the user should be able to start it himself.
-            print('setTimeout("lovd_mapVariants()", 500);' . "\n");
+            // Not every page request should trigger the mapping...
+            if (!empty($_SESSION['mapping']['time_complete']) && $_SESSION['mapping']['time_complete'] >= (time() - 60 * 60 * 24)) {
+                // If it is less than one day ago that mapping was complete, don't start it automatically.
+                print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
+            } elseif (!empty($_SESSION['mapping']['time_error']) && $_SESSION['mapping']['time_error'] >= (time() - 60 * 60)) {
+                // If it is less than one hour ago that an error occurred, don't start it either.
+                print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
+                print('$("#mapping_progress").attr("Title", "Mapping is temporarily suspended because of network problems on the last attempt. Click to retry.");' . "\n");
+            } else {
+                // If we won't start it, the user should be able to start it himself.
+                print('setTimeout("lovd_mapVariants()", 500);' . "\n");
+            }
         }
 ?>
   // -->
@@ -406,15 +422,8 @@ function lovd_mapVariants ()
         // Print the LOVD header, including the menu (if $bFull == true).
         global $_AUTH, $_CONF, $_DB, $_SETT, $_STAT;
 
-        // FIXME; remove once all inc-top and inc-bot calls have been replaced by the template.
+        // Build menu, if tabs are shown.
         if ($bFull) {
-            @define('_INC_TOP_INCLUDED_', true);
-        } else {
-            @define('_INC_TOP_CLEAN_INCLUDED_', true);
-        }
-
-        // Build menu, if not available yet.
-        if (!$this->aMenu) {
             $this->buildMenu();
         }
 
@@ -423,7 +432,7 @@ function lovd_mapVariants ()
         "http://www.w3.org/TR/html4/loose.dtd">
 <HTML lang="en_US">
 <HEAD>
-  <TITLE><?php echo (!PAGE_TITLE? '' : PAGE_TITLE . ' - ') . $_CONF['system_title']; ?></TITLE>
+  <TITLE><?php echo (!defined('PAGE_TITLE')? '' : PAGE_TITLE . ' - ') . $_CONF['system_title']; ?></TITLE>
   <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <META name="author" content="LOVD development team, LUMC, Netherlands">
   <META name="generator" content="gPHPEdit / GIMP @ GNU/Linux (Ubuntu)">
@@ -511,6 +520,7 @@ function lovd_mapVariants ()
         lovd_includeJS('lib/jeegoocontext/jquery.jeegoocontext.min.js', 1);
 ?>
   <LINK rel="stylesheet" type="text/css" href="lib/jeegoocontext/style.css">
+  <LINK rel="stylesheet" type="text/css" href="lib/jQuery/css/cupertino/jquery-ui.custom.css">
 </HEAD>
 
 <BODY style="margin : 0px;">
@@ -551,13 +561,17 @@ function lovd_mapVariants ()
           ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')</H5>' . "\n" : '') .
           '    </TD>' . "\n" .
           '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
-// 2012-02-01; 3.0-beta-02; Disable link to status page for now.
-              '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] . '<!-- [ <A href="status">Current LOVD status</A> ]--><BR>' . "\n");
-        if ($_AUTH) {
-            print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
-                  '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
-        } else {
-            print('      <A href="users?register"><B>Register as submitter</B></A> | <A href="login"><B>Log in</B></A>' . "\n");
+              '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] .
+              // 2012-02-01; 3.0-beta-02; Disable link to status page for now.
+              (false && !defined('NOT_INSTALLED')? ' [ <A href="status">Current LOVD status</A> ]' : '') .
+              '<BR>' . "\n");
+        if (!(ROOT_PATH == '../' || defined('NOT_INSTALLED'))) {
+            if ($_AUTH) {
+                print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
+                      '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
+            } else {
+                print('      <A href="users?register"><B>Register as submitter</B></A> | <A href="login"><B>Log in</B></A>' . "\n");
+            }
         }
 
         print('    </TD>' . "\n" .
@@ -586,7 +600,7 @@ function lovd_mapVariants ()
 
 
         // Build menu tabs...
-        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">' . "\n" .
+        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo"' . (count($this->aMenu)? '' : ' style="border-bottom : 2px solid #000000;"') . '>' . "\n" .
               '  <TR>' . "\n" .
               '    <TD align="left" style="background : url(\'gfx/tab_fill.png\'); background-repeat : repeat-x;">' . "\n");
 
@@ -683,9 +697,12 @@ function lovd_mapVariants ()
             $n ++;
         }
 
-        // Closing transition and close TR.
-        print('      <IMG src="gfx/tab_' . ($bPrevSel? 'F' : 'B') . '0.png" alt="" width="25" height="25" align="left">' . "\n" .
-              '    </TD>' . "\n" .
+        // If we've had tabs at all, close the transition.
+        if (count($this->aMenu)) {
+            print('      <IMG src="gfx/tab_' . ($bPrevSel? 'F' : 'B') . '0.png" alt="" width="25" height="25" align="left">' . "\n");
+        }
+        // Close menu table.
+        print('    </TD>' . "\n" .
               '  </TR>' . "\n" .
               '</TABLE>' . "\n\n");
 
@@ -695,29 +712,29 @@ function lovd_mapVariants ()
             print($sUL . "\n");
         }
         print('
-        <SCRIPT type="text/javascript">
-          $(function(){
-            var aMenuOptions = {
-                widthOverflowOffset: 0,
-                heightOverflowOffset: 1,' .
+<SCRIPT type="text/javascript">
+  $(function(){
+    var aMenuOptions = {
+        widthOverflowOffset: 0,
+        heightOverflowOffset: 1,' .
 //                submenuLeftOffset: -4,
 //                submenuTopOffset: -2,
 '
-                startLeftOffset: -20,
-                event: "mouseover",
-                openBelowContext: true,
-                autoHide: true,
-                delay: 100,
-                onSelect: function(e, context){
-                    if($(this).hasClass("disabled"))
-                    {              
-                        return false;
-                    } else {
-                        window.location = $(this).find("a").attr("href");
-                        return false;
-                    }
-                },
-            };' . "\n");
+        startLeftOffset: -20,
+        event: "mouseover",
+        openBelowContext: true,
+        autoHide: true,
+        delay: 100,
+        onSelect: function(e, context){
+            if($(this).hasClass("disabled"))
+            {              
+                return false;
+            } else {
+                window.location = $(this).find("a").attr("href");
+                return false;
+            }
+        },
+    };' . "\n");
 
         foreach (array_keys($aMenus) as $sTabID) {
             print('    $(\'#' . $sTabID . '\').jeegoocontext(\'menu_' . $sTabID . '\', aMenuOptions);' . "\n");

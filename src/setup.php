@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-23
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -105,8 +105,8 @@ $aItems =
                       ),
             'Authorized users' =>
                  array(
-                        array('users?create', 'lovd_users_create.png', 'Create new authorized user', 'Create a new authorized user.'),
-                        array('users', 'lovd_users_edit.png', 'View all users', 'Manage authorized users.'),
+                        array('users?create', 'lovd_users_create.png', 'Create new authorized user', 'Create a new authorized user or submitter.'),
+                        array('users', 'lovd_users_edit.png', 'View all users', 'Manage authorized users and submitters.'),
                       ),
 /*
 // Custom individual columns.
@@ -191,20 +191,6 @@ $aItems =
                         array('genes?create', 'lovd_genes_create.png', 'Create new gene database', 'Create a new gene database.'),
                         array('genes', 'lovd_genes_edit.png', 'View all gene databases', 'Manage configured gene databases.'),
                       ),
-/*
-print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
-      '              <TR>' . "\n" .
-      '                <TD colspan="2"><B>Gene databases</B></TD></TR>' . "\n" .
-      '              <TR class="pointer" id="create_gene" onclick="window.location.href=\'setup_genes.php?action=create\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_database_create.png" alt="Create new gene database" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Create a new gene database.</TD></TR>' .
-      (!$nGenes? '' :
-      "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'setup_genes.php?action=view_all\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_database_edit.png" alt="Manage gene databases" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Manage configured gene databases.</TD></TR>') .
-      '</TABLE><BR>' . "\n");
-*/
             'Transcripts' =>
                  array(
                         array('transcripts?create', 'lovd_transcripts_create.png', 'Create new transcript', 'Create a new transcript.'),
@@ -226,15 +212,6 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                         array('variants', 'lovd_variants.png', 'View all variants', 'Manage variants.'),
                       ),
 /*
-print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
-      '              <TR>' . "\n" .
-      '                <TH colspan="2">Authorized users</TH></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'users?create\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_users_create.png" alt="Create new user" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Create a new authorized user or submitter.</TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'users\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_users_edit.png" alt="View all users" width="32" height="32"></TD>' . "\n" .
-      '                <TD>View all users.</TD></TR></TABLE><BR>' . "\n");
 // Export central repository format.
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
@@ -242,14 +219,6 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '              <TR class="pointer" onclick="window.location.href=\'export_data.php?all_genes\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_save.png" alt="Download variant data" width="32" height="32"></TD>' . "\n" .
       '                <TD>Download the variant data for central repositories. This format includes the gene name, DNA change, DB ID, and possible OMIM and DbSNP IDs.</TD></TR></TABLE><BR>' . "\n");
-*/
-/*
-print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
-      '              <TR>' . "\n" .
-      '                <TH colspan="2">System logs</TH></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'logs\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_logs.png" alt="System logs" width="32" height="32"></TD>' . "\n" .
-      '                <TD>View, search and delete system logs.</TD></TR></TABLE>' . "\n");
 */
           );
 

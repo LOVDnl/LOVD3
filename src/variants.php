@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-20
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -703,7 +703,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
         }
     }
 
-    print("\n" .  
+    print("\n" .
           '      </SCRIPT>' . "\n\n");
 
     $_T->printFooter();
@@ -1211,7 +1211,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
                 // So, other than that it results in two e-mails, it is working just fine actually.
                 // Though maybe we should block submit/finish until we're done here?
                 session_write_close();
-                set_time_limit(0);
+                @set_time_limit(0);
                 $tStart = time();
 
                 require ROOT_PATH . 'inc-lib-genes.php';
@@ -1675,11 +1675,13 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
 
                                 // Find out the protein change.
                                 $sProteinChange = 'p.?';
-                                if ($aVariant['proteinPosition'][$i] == 'NA') {
-                                    $sProteinChange = 'p.0';
-
-                                } elseif ($aVariant['aminoAcids'][$i] == 'none') {
-                                    $sProteinChange = 'p.(=)';
+                                if ($aVariant['aminoAcids'][$i] == 'none') {
+                                    if (ctype_digit($aVariant['distanceToSplice'][$i]) && $aVariant['distanceToSplice'][$i] > 10) {
+                                        $sProteinChange = 'p.(=)';
+                                    } else {
+                                        // Intronic but close to splice site.
+                                        $sProteinChange = 'p.?';
+                                    }
                                 } elseif (count($aFieldsVariantOnGenome) == 1) {
                                     // Because of the way SeattleSeq reports amino acids, we can only reliably define
                                     // the protein change if we have just one alternate (non-reference) allele.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2012-04-20
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,10 +33,7 @@ define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
 require ROOT_PATH . 'inc-lib-form.php';
 
-require ROOT_PATH . 'install/inc-top.php'; // Install dir's own top include.
-print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" style="padding : 0px 10px;">' . "\n" .
-      '  <TR valign="top">' . "\n" .
-      '    <TD>' . "\n");
+$_T->printHeader();
 $_T->printTitle('Uninstall LOVD');
 
 // Require DB admin clearance.
@@ -84,8 +81,7 @@ if (!empty($_POST)) {
                 // This already puts the progress bar on the screen.
                 $_BAR = new ProgressBar('', 'Initiating removal of LOVD...');
 
-                define('_INC_BOT_CLOSE_HTML_', false); // Sounds kind of stupid, but this prevents the footer to actually close the <BODY> and <HTML> tags.
-                require ROOT_PATH . 'install/inc-bot.php';
+                $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
 
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
@@ -195,7 +191,7 @@ if (!empty($_POST)) {
               '            <TD width="125">&nbsp;</TD>' . "\n" .
               '            <TD width="175"><INPUT type="submit" value="Uninstall LOVD" style="font-weight : bold; font-size : 11px; width : 110px;"></TD></TR></TABLE></FORM>' . "\n\n");
 
-        require ROOT_PATH . 'install/inc-bot.php';
+        $_T->printFooter();
         exit;
     }
 }
@@ -222,6 +218,6 @@ print('      <FORM action="uninstall" method="post">' . "\n" .
       '                  <TD align="left"><INPUT type="button" value="&lt;&lt; Cancel" onclick="window.location.href=\'' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/' . ROOT_PATH . 'setup\';" style="font-weight : bold; font-size : 11px; width : 80px;"></TD>' . "\n" .
       '                  <TD align="right"><INPUT type="submit" value="Next &gt;&gt;" style="font-weight : bold; font-size : 11px; width : 70px;"></TD></TR></TABLE></TD></TR></TABLE></FORM>' . "\n\n");
 
-require ROOT_PATH . 'install/inc-bot.php';
+$_T->printFooter();
 exit;
 ?>

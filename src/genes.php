@@ -45,7 +45,7 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
     // URL: /genes
     // View all entries.
 
-    define('PAGE_TITLE', 'View genes');
+    define('PAGE_TITLE', 'View all genes');
     $_T->printHeader();
     $_T->printTitle();
 

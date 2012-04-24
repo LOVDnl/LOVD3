@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -138,7 +138,7 @@ function lovd_checkXSS ($aInput = '')
         } elseif (!empty($val) && preg_match('/<.*>/s', $val)) {
             // Disallowed tag found.
             $bSuccess = false;
-            lovd_errorAdd($key, 'Disallowed tag found in form field' . (is_numeric($key)? '.' : ' "' . $key . '".') . ' XSS attack?');
+            lovd_errorAdd($key, 'Disallowed tag found in form field' . (is_numeric($key)? '.' : ' "' . htmlspecialchars($key) . '".') . ' XSS attack?');
         }
     }
     return $bSuccess;
