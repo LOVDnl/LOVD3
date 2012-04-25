@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-04-24
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,7 +69,10 @@ class LOVD_Gene extends LOVD_Object {
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
-                                           'COUNT(DISTINCT vot.id) AS variants';
+                                           'COUNT(DISTINCT vog.id) AS variants, ' .
+                                           'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants, ' .
+                                           'COUNT(DISTINCT s.individualid) AS count_individuals, ' .
+                                           'COUNT(DISTINCT hidden_vog.id) AS hidden_variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
@@ -79,7 +82,11 @@ class LOVD_Gene extends LOVD_Object {
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
+                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id AND vog.statusid >= ' . STATUS_MARKED . ') ' .
+                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS hidden_vog ON (vot.id = hidden_vog.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'g.id';
 
         // SQL code for viewing the list of genes
@@ -87,13 +94,13 @@ class LOVD_Gene extends LOVD_Object {
                                           'g.id AS geneid, ' .
                                           'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
                                           'COUNT(DISTINCT t.id) AS transcripts, ' .
-                                          'COUNT(DISTINCT vot.id) AS variants, ' .
+                                          'COUNT(DISTINCT vog.id) AS variants, ' .
                                           'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants';
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id AND vog.statusid >= ' . STATUS_MARKED . ') ' .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
@@ -116,6 +123,10 @@ class LOVD_Gene extends LOVD_Object {
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
                         'note_index' => 'Notes',
+                        'variants' => 'Total number of public variants reported',
+                        'uniq_variants' => 'Unique public DNA variants reported',
+                        'count_individuals' => 'Individuals with public variants',
+                        'hidden_variants' => 'Hidden variants',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -126,8 +137,8 @@ class LOVD_Gene extends LOVD_Object {
                         'HR_1' => '',
                         'TableStart_Links' => '',
                         'TableHeader_Links' => 'Links to other resources',
-                        'url_homepage' => 'Homepage URL',
-                        'url_external' => 'External URL',
+                        'url_homepage_' => 'Homepage URL',
+                        'url_external_' => 'External URL',
                         'id_hgnc_' => 'HGNC',
                         'id_entrez_' => 'Entrez Gene',
                         'id_omim_' => 'OMIM - Gene',
@@ -413,7 +424,7 @@ class LOVD_Gene extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
-        global $_AUTH, $_SETT;
+        global $_AUTH, $_SETT, $_DB;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -438,7 +449,7 @@ class LOVD_Gene extends LOVD_Object {
             $zData['disclaimer_']      = $aDisclaimer[$zData['disclaimer']];
             $zData['disclaimer_text_'] = (!$zData['disclaimer']? '' : ($zData['disclaimer'] == 2? $zData['disclaimer_text'] :
                 'The contents of this LOVD database are the intellectual property of the respective curator(s). Any unauthorised use, copying, storage or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising out of any inaccuracies or omissions. Individuals, organisations and companies which use this database do so on the understanding that no liability whatsoever either direct or indirect shall rest upon the curator(s) or any of their employees or agents for the effects of any product, process or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
-            
+
             $zData['diseases_'] = '';
             $zData['disease_omim_'] = '';
             foreach($zData['diseases'] as $aDisease) {
@@ -452,6 +463,20 @@ class LOVD_Gene extends LOVD_Object {
             if (isset($zData['reference'])) {
                 // FIXME; is 't niet beter de PubMed custom link data uit de database te halen? Als ie ooit wordt aangepast, gaat dit fout.
                 $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="http://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+            }
+
+            $zData['url_homepage_'] = ($zData['url_homepage']? '<A href="' . $zData['url_homepage'] . '" target="_blank">' . $zData['url_homepage'] . '</A>' : '');
+
+            if ($zData['url_external']) {
+                $aLinks = explode("\r\n", $zData['url_external']);
+
+                foreach ($aLinks as $sLink) {
+                    if (preg_match('/^(.+) &lt;(.+)&gt;$/', $sLink, $aRegs)) {
+                        $zData['url_external_'] = (isset($zData['url_external_'])? $zData['url_external_'] . '<BR>' : '') . '<A href="' . $aRegs[2] . '" target="_blank">' . $aRegs[1] . '</A>';
+                    } else {
+                        $zData['url_external_'] = (isset($zData['url_external_'])? $zData['url_external_'] . '<BR>' : '') . '<A href="' . $sLink . '" target="_blank">' . $sLink . '</A>';
+                    }
+                }
             }
 
             $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'show_hgmd', 'show_genecards', 'show_genetests');
@@ -500,6 +525,13 @@ class LOVD_Gene extends LOVD_Object {
                 }
                 $this->aColumnsViewEntry['collaborators_'][0] .= ' (' . $nCollaborators . ')';
             }
+
+            foreach (array('note_index', 'refseq_url', 'url_homepage_', 'url_external_' , 'id_entrez_', 'id_omim_', 'disease_omim_', 'show_hgmd_', 'show_genecards_', 'show_genetests_') as $key) {
+                if (empty($zData[$key])) {
+                    unset($this->aColumnsViewEntry[$key]);
+                }
+            }
+
         }
 
         return $zData;

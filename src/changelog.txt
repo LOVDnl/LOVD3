@@ -96,7 +96,14 @@
    instead of NULL in the database, this is now fixed.
  * Changed all implementations of `VariantOnGenome/DBID` so that it can only
    contain the DBID itself and nothing extra.
-
+ * Changed the column order on the gene homepage and changed the homepage url
+   & external url fields to actual clickable links.
+ * Now does not show some columns in the gene homepage when they are empty or
+   when the users level is not high enough.
+ * Activated the Phenotype & VariantOnTranscript standard custom columns during 
+   installation.
+ * Added a few variant statistics to the gene homepage and fixed the variant
+   statistics on the gene viewList.
 
 
 

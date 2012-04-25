@@ -715,20 +715,6 @@ function lovd_printGeneHeader ()
 
 
 
-function lovd_printHeader ($sTitle, $sStyle = 'H2')
-{
-    // Prints the page's header.
-    $aStyles = array('H2', 'H3', 'H4');
-    if (!in_array($sStyle, $aStyles)) {
-        $sStyle = $aStyles[0];
-    }
-    print('      <' . $sStyle . ' class="LOVD">' . $sTitle . '</' . $sStyle . '>' . "\n\n");
-}
-
-
-
-
-
 function lovd_queryDB_Old ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = false)
 {
     // Queries the database and protects against SQL injection with

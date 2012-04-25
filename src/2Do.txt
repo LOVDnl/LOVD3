@@ -1,6 +1,5 @@
 Prioritize:
 ===========
-- VOT DNA, RNA, Protein worden bij install niet actief gemaakt, moet wel (hoeft natuurlijk niet in shared!!!)
 - Mapping script moet geen p.(=) opslaan, als Mutalyzer een WSPLICE foutmelding geeft.
 - DBID mag geen custom links meer hebben (mag ook niet gekozen worden).
 - IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
@@ -25,7 +24,6 @@ Prioritize:
 - Unit tests via Selenium (of alternatief)?
   * Hebben we OpenSSL ergens voor nodig?
     + http mutalyzer contact als zelf in https???
-- Gene homepage: variant counts zoals voor LOVD 2.0.
 - Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - VariantOnGenome/Times_reported???
 - Handmatige variant mapper: ook p. description ophalen bij Mutalyzer?
@@ -36,7 +34,7 @@ Prioritize:
   + Daarnaast: als je een screening verwijdert, blijven de varianten die nergens anders aan verbonden zijn, los hangen in het systeem.
   + Als je een screening verwijderd, moet er een waarschuwing bij komen, dat er X varianten worden verwijderd uit het systeem, omdat die alleen aan deze screening vast zitten.
   + Als je een individu verwijderd, moet het een optie worden om de X varianten ook te verwijderen, of de varianten los te koppelen en vrij te laten in het systeem.
-- IE7 @ LUMC heeft geen pagineren, net als dropdowns en andere dingen. We moeten een IE 7 vinden om mee te kunnen gaan debuggen.
+- IE7 @ LUMC heeft geen pagineren, net als dropdowns en andere dingen.
 
 - Beta-05:
   - DATA DOWNLOAD.

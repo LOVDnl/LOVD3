@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-24
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -442,16 +442,16 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
         $aCol = array_map('preg_replace', array_fill(0, count($aCol[1]), '/^"(.*)"$/'), array_fill(0, count($aCol[1]), '$1'), $aCol[1]);
         if ($aCol[3] == '1' || $aCol[4] == '1') {
             $sCategory = preg_replace('/\/.*$/', '', $aCol[0]);
-            if (!in_array($sCategory, array('Phenotype', 'VariantOnTranscript'))) {
-                if ($sCategory == 'VariantOnGenome') {
-                    $sTable = 'TABLE_VARIANTS';
-                } else {
-                    $sTable = 'TABLE_' . strtoupper($sCategory) . 'S';
-                }
-
-                $aInstallSQL['Activating LOVD standard custom columns'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
-                $aInstallSQL['Activating LOVD standard custom columns'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aCol[0] . '", "00001", NOW())';
+            if ($sCategory == 'VariantOnGenome') {
+                $sTable = 'TABLE_VARIANTS';
+            } elseif ($sCategory == 'VariantOnTranscript') {
+                $sTable = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
+            } else {
+                $sTable = 'TABLE_' . strtoupper($sCategory) . 'S';
             }
+
+            $aInstallSQL['Activating LOVD standard custom columns'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
+            $aInstallSQL['Activating LOVD standard custom columns'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aCol[0] . '", "00000", NOW())';
         }
     }
 
