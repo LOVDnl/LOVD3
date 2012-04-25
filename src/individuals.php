@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 1 && !ACTION) {
     // URL: /individuals
     // View all entries.
 
@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /individuals/00000001
     // View specific entry.
 
-    $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'View individual #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -80,14 +80,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $sNavigation = '';
     if ($_AUTH) {
         if ($_AUTH['level'] >= LEVEL_OWNER) {
-            $sNavigation = '<A href="individuals/' . $nID . '?edit">Edit individual information</A>';
+            $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit individual information</A>';
             $sNavigation .= ' | <A href="screenings?create&amp;target=' . $nID . '">Add screening to individual</A>';
             // You can only add phenotype information to this individual, when there are phenotype columns enabled.
             if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID))->fetchColumn()) {
                 $sNavigation .= ' | <A href="phenotypes?create&amp;target=' . $nID . '">Add phenotype information to individual</A>';
             }
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $sNavigation .= ' | <A href="individuals/' . $nID . '?delete">Delete individual entry</A>';
+                $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete individual entry</A>';
             }
         }
     }
@@ -159,7 +159,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /individuals?create
     // Create a new entry.
 
@@ -283,7 +283,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -303,11 +303,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /individuals/00000001?edit
     // Edit an entry.
 
-    $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'Edit individual #' . $nID);
     define('LOG_EVENT', 'IndividualEdit');
 
@@ -395,7 +395,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -433,7 +433,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -453,11 +453,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /individuals/00000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'Delete individual information entry ' . $nID);
     define('LOG_EVENT', 'IndividualDelete');
 
@@ -491,7 +491,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Deleted individual information entry ' . $nID . ' (Owner: ' . $zData['owner'] . ')');
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'individuals');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -514,7 +514,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

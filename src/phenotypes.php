@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 1 && !ACTION) {
     // URL: /phenotypes
     // View all entries.
 
@@ -73,11 +73,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /phenotypes/0000000001
     // View specific entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'View phenotype #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -91,8 +91,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
-        $sNavigation = '<A href="phenotypes/' . $nID . '?edit">Edit phenotype information</A>';
-        $sNavigation .= ' | <A href="phenotypes/' . $nID . '?delete">Delete phenotype entry</A>';
+        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit phenotype information</A>';
+        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete phenotype entry</A>';
     }
 
     if ($sNavigation) {
@@ -108,7 +108,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) && ctype_digit($_GET['target'])) {
+if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_digit($_GET['target'])) {
     // URL: /phenotypes?create
     // Create a new entry.
 
@@ -319,11 +319,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && !empty($_GET['target']) &
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /phenotypes/0000000001?edit
     // Edit an entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Edit phenotype #' . $nID);
     define('LOG_EVENT', 'PhenotypeEdit');
 
@@ -365,7 +365,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Edited phenotype information entry ' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -400,7 +400,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -420,11 +420,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /phenotypes/0000000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Delete phenotype #' . $nID);
     define('LOG_EVENT', 'PhenotypeDelete');
 
@@ -457,7 +457,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Deleted phenotype information entry ' . $nID . ' (Owner: ' . $zData['owner'] . ')');
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'phenotypes');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -480,7 +480,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

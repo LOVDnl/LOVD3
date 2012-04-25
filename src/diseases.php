@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 1 && !ACTION) {
     // URL: /diseases
     // View all entries.
 
@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /diseases/00001
     // View specific entry.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'View disease #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -82,8 +82,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         $sNavigation .= '<A href="columns/Phenotype/' . $nID . '?order">Re-order all ' . $zData['symbol'] . ' phenotype columns';
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
             // Authorized user (admin or manager) is logged in. Provide tools.
-            $sNavigation .= ' | <A href="diseases/' . $nID . '?edit">Edit disease information</A>';
-            $sNavigation .= ' | <A href="diseases/' . $nID . '?delete">Delete disease entry</A>';
+            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?edit">Edit disease information</A>';
+            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete disease entry</A>';
         }
     }
 
@@ -108,12 +108,12 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     // URL: /diseases/DMD
     // Try to find a disease by its abbreviation and forward.
     // When we have multiple hits, refer to listView.
 
-    $sID = rawurldecode($_PATH_ELEMENTS[1]);
+    $sID = rawurldecode($_PE[1]);
     $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($sID))->fetchAllColumn();
     $n = count($aDiseases);
     if (!$n) {
@@ -123,10 +123,10 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
         lovd_showInfoTable('No such ID!', 'stop');
         $_T->printFooter();
     } elseif ($n == 1) {
-        header('Location: ' . lovd_getInstallURL() . 'diseases/' . $aDiseases[0]);
+        header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $aDiseases[0]);
     } else {
         // Multiple hits. Forward to exact match search.
-        header('Location: ' . lovd_getInstallURL() . 'diseases?search_symbol=%3D%22' . rawurlencode($sID) . '%22');
+        header('Location: ' . lovd_getInstallURL() . $_PE[0] . '?search_symbol=%3D%22' . rawurlencode($sID) . '%22');
     }
     exit;
 }
@@ -135,7 +135,7 @@ if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /diseases?create
     // Create a new entry.
 
@@ -200,7 +200,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $nID);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -255,11 +255,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /diseases/00001?edit
     // Edit a specific entry.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'Edit disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseEdit');
 
@@ -334,7 +334,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -364,7 +364,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -384,11 +384,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /diseases/00001?delete
     // Delete specific entry.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'Delete disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseDelete');
 
@@ -446,7 +446,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(

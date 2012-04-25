@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2012-04-19
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 1 && !ACTION) {
     // URL: /links
     // View all entries.
 
@@ -64,11 +64,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /links/001
     // View specific entry.
 
-    $nID = sprintf('%03d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%03d', $_PE[1]);
     define('PAGE_TITLE', 'View custom link #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -82,8 +82,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
     $sNavigation = '';
     // Authorized user (admin or manager) is logged in. Provide tools.
-    $sNavigation = '<A href="links/' . $nID . '?edit">Edit custom link</A>';
-    $sNavigation .= ' | <A href="links/' . $nID . '?delete">Delete custom link</A>';
+    $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit custom link</A>';
+    $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete custom link</A>';
 
     if ($sNavigation) {
         print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
@@ -98,7 +98,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /links?create
     // Create a new entry.
 
@@ -151,7 +151,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'links/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -206,11 +206,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /links/001?edit
     // Edit specific entry.
 
-    $nID = sprintf('%03d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%03d', $_PE[1]);
     define('PAGE_TITLE', 'Edit custom link #' . $nID);
     define('LOG_EVENT', 'LinkEdit');
 
@@ -285,7 +285,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'links/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -319,7 +319,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -339,11 +339,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /links/001?delete
     // Delete specific entry.
 
-    $nID = sprintf('%03d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%03d', $_PE[1]);
     define('PAGE_TITLE', 'Delete custom link #' . $nID);
     define('LOG_EVENT', 'LinkDelete');
 
@@ -377,7 +377,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Deleted custom link ' . $nID . ' - ' . $zData['name'] . ' (' . $zData['pattern_text'] . ')');
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'links');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -400,7 +400,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(

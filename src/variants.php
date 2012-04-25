@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-04-20
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -43,13 +43,13 @@ if ($_AUTH) {
 
 
 
-if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PATH_ELEMENTS[1]))) {
+if (!ACTION && (empty($_PE[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PE[1]))) {
     // URL: /variants
     // URL: /variants/chrX
     // View all genomic variant entries, optionally restricted by chromosome.
 
-    if (!empty($_PATH_ELEMENTS[1])) {
-        $sChr = $_PATH_ELEMENTS[1];
+    if (!empty($_PE[1])) {
+        $sChr = $_PE[1];
     } else {
         $sChr = '';
     }
@@ -75,7 +75,7 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', 
 
 
 
-if (!ACTION && !empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'in_gene') {
+if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
     // URL: /variants/in_gene
     // View all entries effecting a transcript.
 
@@ -95,11 +95,11 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'in_gene') {
 
 
 
-if (!ACTION && !empty($_PATH_ELEMENTS[2]) && $_PATH_ELEMENTS[1] == 'upload' && ctype_digit($_PATH_ELEMENTS[2])) {
+if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     // URL: /variants/upload/123451234567890
     // View all genomic variant entries that were submitted in the given upload.
 
-    $nID = sprintf('%015d', $_PATH_ELEMENTS[2]);
+    $nID = sprintf('%015d', $_PE[2]);
     define('PAGE_TITLE', 'View genomic variants from upload #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -120,13 +120,13 @@ if (!ACTION && !empty($_PATH_ELEMENTS[2]) && $_PATH_ELEMENTS[1] == 'upload' && c
 
 
 
-if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
+if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     // URL: /variants/DMD
     // URL: /variants/DMD/NM_004006.2
     // View all entries in a specific gene, affecting a specific trancript.
 
-    if (in_array(rawurldecode($_PATH_ELEMENTS[1]), lovd_getGeneList())) {
-        $sGene = rawurldecode($_PATH_ELEMENTS[1]);
+    if (in_array(rawurldecode($_PE[1]), lovd_getGeneList())) {
+        $sGene = rawurldecode($_PE[1]);
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
         // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
@@ -134,11 +134,11 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
         $nTranscripts = count($aTranscripts);
 
         // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscripts.
-        if (!empty($_PATH_ELEMENTS[2])) {
-            $nTranscript = array_search($_PATH_ELEMENTS[2], $aTranscripts);
+        if (!empty($_PE[2])) {
+            $nTranscript = array_search($_PE[2], $aTranscripts);
             if ($nTranscript === false) {
                 // NM does not exist. Throw error or just simply redirect?
-                header('Location: ' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1]);
+                header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1]);
                 exit;
             } else {
                 $aTranscripts = array($nTranscript => $aTranscripts[$nTranscript]);
@@ -195,11 +195,11 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /variants/0000000001
     // View specific entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'View genomic variant #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -253,13 +253,13 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="variants/' . $nID . '?edit">Edit variant entry</A>';
-        $sNavigation .= ' | <A href="variants/' . $nID . '?map">Add variant description to additional transcript</A>';
+        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit variant entry</A>';
+        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?map">Add variant description to additional transcript</A>';
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $sNavigation .= ' | <A href="variants/' . $nID . '?delete">Delete variant entry</A>';
+            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete variant entry</A>';
         }
         if (!empty($zData['position_g_start'])) {
-            $sNavigation .= ' | <A href="#" onclick="lovd_openWindow(\'variants/' . $nID . '?search_global\', \'global_search\', 900, 450); return false;">Search public LOVDs</A>';
+            $sNavigation .= ' | <A href="#" onclick="lovd_openWindow(\'' . CURRENT_PATH . '?search_global\', \'global_search\', 900, 450); return false;">Search public LOVDs</A>';
         }
     }
 
@@ -342,14 +342,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if ((empty($_PATH_ELEMENTS[1]) || $_PATH_ELEMENTS[1] == 'upload') && ACTION == 'create') {
+if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     // URL: variants?create
     // URL: variants/upload?create
     // Detect whether a valid target screening is given. We do this here so we
     // don't have to duplicate this code for variants?create and variants/upload?create.
 
     // We don't want to show an error message about the screening if the user isn't allowed to come here.
-    lovd_requireAUTH(empty($_PATH_ELEMENTS[1])? LEVEL_SUBMITTER : LEVEL_MANAGER);
+    lovd_requireAUTH(empty($_PE[1])? LEVEL_SUBMITTER : LEVEL_MANAGER);
 
     if (isset($_GET['target'])) {
         // On purpose not checking for numeric target. If it's not numeric, we'll automatically get to the error message below.
@@ -364,7 +364,7 @@ if ((empty($_PATH_ELEMENTS[1]) || $_PATH_ELEMENTS[1] == 'upload') && ACTION == '
             $sMessage = 'Cannot add variants to the given screening, because the value \'Have variants been found?\' is unchecked.';
         }
         if ($sMessage) {
-            define('PAGE_TITLE', (empty($_PATH_ELEMENTS[1])? 'Create a new variant entry' : 'Upload variant data'));
+            define('PAGE_TITLE', (empty($_PE[1])? 'Create a new variant entry' : 'Upload variant data'));
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable($sMessage, 'stop');
@@ -378,13 +378,15 @@ if ((empty($_PATH_ELEMENTS[1]) || $_PATH_ELEMENTS[1] == 'upload') && ACTION == '
     } else {
         $_GET['target'] = '';
     }
+    // NO EXIT, so the rest of the code is in either one of the code blocks below.
 }
 
 
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (PATH_COUNT == 1 && ACTION == 'create') {
+    // URL: variants?create
     // Create a new entry.
 
     // We already called lovd_requireAUTH(LEVEL_SUBMITTER).
@@ -714,7 +716,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'create') {
+if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     // URL: /variants/upload?create
     // URL: /variants/upload?create&type=VCF
     // URL: /variants/upload?create&type=SeattleSeq
@@ -2042,11 +2044,11 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'upload' && ACTION == 'c
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /variants/0000000001?edit
     // Edit an entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Edit variant entry #' . $nID);
     define('LOG_EVENT', 'VariantEdit');
 
@@ -2195,7 +2197,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Edited variant entry ' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -2245,7 +2247,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM id="variantForm" action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -2303,11 +2305,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /variants/0000000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Delete variant entry #' . $nID);
     define('LOG_EVENT', 'VariantDelete');
 
@@ -2340,7 +2342,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -2363,7 +2365,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
     // Array which will make up the form table.
     $aForm = array_merge(
                  array(
@@ -2386,11 +2388,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'search_global') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
     // URL: /variants/0000000001?search_global
     // Search an entry in other public LOVDs.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Search other public LOVDs for variant #' . $nID);
     define('LOG_EVENT', 'VariantGlobalSearch');
     $_T->printHeader(false);
@@ -2465,11 +2467,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'map') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     // URL: /variants/0000000001?map
     // Map a variant to additional transcript.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Map variant entry #' . $nID);
     define('LOG_EVENT', 'VariantMap');
 
@@ -2580,7 +2582,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Updated the transcript list for variant #' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'variants/' . $nID . (!empty($aNewTranscripts)? '?edit#' . implode(',', $aNewTranscripts) : ''));
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . (!empty($aNewTranscripts)? '?edit#' . implode(',', $aNewTranscripts) : ''));
 
             $_T->printHeader();
             $_T->printTitle();
@@ -2647,7 +2649,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                     array('POST', '', '', '', '0%', '0', '100%'),
                     array('', '', 'print', 'Enter your password for authorization'),
                     array('', '', 'password', 'password', 20),
-                    array('', '', 'print', '<INPUT type="submit" value="Save transcript list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'variants/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                    array('', '', 'print', '<INPUT type="submit" value="Save transcript list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
 

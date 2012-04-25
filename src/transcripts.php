@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,15 +41,15 @@ if ($_AUTH) {
 
 
 
-if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])))) {
+if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])))) {
     // URL: /transcripts
     // URL: /transcripts/DMD
     // View all entries.
 
-    if (empty($_PATH_ELEMENTS[1])) {
+    if (empty($_PE[1])) {
         $sGene = '';
     } else {
-        $sGene = rawurldecode($_PATH_ELEMENTS[1]);
+        $sGene = rawurldecode($_PE[1]);
         $_GET['search_geneid'] = '="' . $sGene . '"';
     }
     define('PAGE_TITLE', 'View transcripts' . ($sGene? ' of gene ' . $sGene : ''));
@@ -69,11 +69,11 @@ if (!ACTION && (empty($_PATH_ELEMENTS[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i'
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /transcripts/00001
     // View specific entry.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'View transcript #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -87,8 +87,8 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
-        $sNavigation = '<A href="transcripts/' . $nID . '?edit">Edit transcript information</A>';
-        $sNavigation .= ' | <A href="transcripts/' . $nID . '?delete">Delete transcript entry</A>';
+        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit transcript information</A>';
+        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete transcript entry</A>';
     }
 
     if ($sNavigation) {
@@ -113,14 +113,14 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     // URL: /transcripts/NM_004006.2
     // Try to find a transcripts by its NCBI ID and forward.
     // When we have multiple hits, refer to listView.
 
-    $sID = rawurldecode($_PATH_ELEMENTS[1]);
+    $sID = rawurldecode($_PE[1]);
     if ($nID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchColumn()) {
-        header('Location: ' . lovd_getInstallURL() . 'transcripts/' . $nID);
+        header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
     } else {
         define('PAGE_TITLE', 'View transcript');
         $_T->printHeader();
@@ -143,7 +143,7 @@ if (ACTION == 'create') {
     define('LOG_EVENT', 'TranscriptCreate');
 
     // If no gene given, ask for it and forward user.
-    if (!isset($_PATH_ELEMENTS[1])) {
+    if (!isset($_PE[1])) {
         define('PAGE_TITLE', 'Add transcript to a gene');
 
         // Is user authorized in any gene?
@@ -156,7 +156,7 @@ if (ACTION == 'create') {
 
         print('      Please select the gene on which you wish to add a transcript.<BR>' . "\n" .
               '      <BR>' . "\n\n" .
-              '      <FORM name="transcriptsCreate" method="post" onsubmit="window.location = \'' . $_PATH_ELEMENTS[0] . '/\' + this.geneSymbol.options[this.geneSymbol.selectedIndex].value + \'?' . ACTION . '\'; return false;">' . "\n" .
+              '      <FORM name="transcriptsCreate" method="post" onsubmit="window.location = \'' . $_PE[0] . '/\' + this.geneSymbol.options[this.geneSymbol.selectedIndex].value + \'?' . ACTION . '\'; return false;">' . "\n" .
               '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
 
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
@@ -188,8 +188,8 @@ if (ACTION == 'create') {
 
 
     // Gene given, check validity.
-    if (!in_array($_PATH_ELEMENTS[1], lovd_getGeneList())) {
-        header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '?' . ACTION);
+    if (!in_array($_PE[1], lovd_getGeneList())) {
+        header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '?' . ACTION);
 
         $_T->printHeader();
         $_T->printTitle();
@@ -202,7 +202,7 @@ if (ACTION == 'create') {
 
 
     // Is user authorized for the selected gene?
-    lovd_isAuthorized('gene', $_PATH_ELEMENTS[1]);
+    lovd_isAuthorized('gene', $_PE[1]);
     lovd_requireAUTH(LEVEL_CURATOR);
 
 
@@ -211,17 +211,17 @@ if (ACTION == 'create') {
 
     // Form has not been submitted yet, build $_SESSION array with transcript data for this gene.
     if (!POST) {
-        if (!isset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
-            $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION] = array();
+        if (!isset($_SESSION['work'][$_PE[0] . '?' . ACTION])) {
+            $_SESSION['work'][$_PE[0] . '?' . ACTION] = array();
         }
 
-        while (count($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]) >= 5) {
-            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][min(array_keys($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION]))]);
+        while (count($_SESSION['work'][$_PE[0] . '?' . ACTION]) >= 5) {
+            unset($_SESSION['work'][$_PE[0] . '?' . ACTION][min(array_keys($_SESSION['work'][$_PE[0] . '?' . ACTION]))]);
         }
 
-        define('PAGE_TITLE', 'Add transcript to gene ' . $_PATH_ELEMENTS[1]);
+        define('PAGE_TITLE', 'Add transcript to gene ' . $_PE[1]);
 
-        $zGene = mysql_fetch_assoc(lovd_queryDB_Old('SELECT id, name, chromosome, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PATH_ELEMENTS[1])));
+        $zGene = mysql_fetch_assoc(lovd_queryDB_Old('SELECT id, name, chromosome, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1])));
 
         $_T->printHeader();
         require ROOT_PATH . 'class/progress_bar.php';
@@ -285,7 +285,7 @@ if (ACTION == 'create') {
             }
         }
 
-        $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values'] = array(
+        $_SESSION['work'][$_PE[0] . '?' . ACTION][$_POST['workID']]['values'] = array(
                                                           'gene' => $zGene, 
                                                           'transcripts' => $aTranscripts,
                                                           'transcriptsProtein' => $aTranscriptsProtein,
@@ -307,7 +307,7 @@ if (ACTION == 'create') {
     }
 
     // Now make sure we have a valid workID.
-    if (!isset($_POST['workID']) || !array_key_exists($_POST['workID'], $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION])) {
+    if (!isset($_POST['workID']) || !array_key_exists($_POST['workID'], $_SESSION['work'][$_PE[0] . '?' . ACTION])) {
         exit;
     }
 
@@ -317,7 +317,7 @@ if (ACTION == 'create') {
 
     require ROOT_PATH . 'inc-lib-form.php';
     // FIXME; $aData would have been a better name.
-    $zData = $_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]['values'];
+    $zData = $_SESSION['work'][$_PE[0] . '?' . ACTION][$_POST['workID']]['values'];
     if (count($_POST) > 1) {
         // Transcripts have been selected.
         lovd_errorClean();
@@ -367,7 +367,7 @@ if (ACTION == 'create') {
                 }
             }
 
-            unset($_SESSION['work'][$_PATH_ELEMENTS[0] . '?' . ACTION][$_POST['workID']]);
+            unset($_SESSION['work'][$_PE[0] . '?' . ACTION][$_POST['workID']]);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . rawurlencode($zData['gene']['id']));
@@ -433,11 +433,11 @@ if (ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /transcripts/00001?edit
     // Edit a transcript
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'Edit transcript #' . $nID);
     define('LOG_EVENT', 'TranscriptEdit');
 
@@ -471,7 +471,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Edited transcript information entry #' . $nID . ' (' . $zData['geneid'] . ')');
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -499,7 +499,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-tooltip.php');   
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -519,11 +519,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /transcripts/00001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
     define('LOG_EVENT', 'TranscriptDelete');
 
@@ -558,7 +558,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Deleted transcript information entry ' . $nID . ' - ' . $zData['geneid'] . ' (' . $zData['name'] . ')');
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'transcripts');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -581,7 +581,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-19
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,17 +41,17 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
+if (PATH_COUNT < 3 && !ACTION) {
     // URL: /columns
     // URL: /columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
     // View all columns.
 
-    if (!empty($_PATH_ELEMENTS[1])) {
-        if (in_array($_PATH_ELEMENTS[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
+    if (!empty($_PE[1])) {
+        if (in_array($_PE[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
             // Category given.
-            $_GET['search_category'] = $_PATH_ELEMENTS[1];
+            $_GET['search_category'] = $_PE[1];
         } else {
-            header('Location:' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '?search_category=' . $_PATH_ELEMENTS[1]);
+            header('Location:' . lovd_getInstallURL() . $_PE[0] . '?search_category=' . $_PE[1]);
             exit;
         }
     }
@@ -69,16 +69,16 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
         lovd_showInfoTable('Please note that these are all columns available in this LOVD installation. This is not the list of columns actually added to the system. Also, modifications made to the columns added to the system are not shown.', 'information', 950);
     }
     $aSkip = array();
-    if (!empty($_PATH_ELEMENTS[1])) {
+    if (!empty($_PE[1])) {
         $_DATA->setSortDefault('col_order'); // To show the user we're now sorting on this (the ViewList does so by default, anyway).
         $aSkip = array('category');
     }
     $_DATA->viewList('Columns', $aSkip);
 
     // FIXME; Is there a better way checking if it's a valid category?
-    if (!empty($_PATH_ELEMENTS[1]) && $_AUTH['level'] >= LEVEL_MANAGER) {
+    if (!empty($_PE[1]) && $_AUTH['level'] >= LEVEL_MANAGER) {
         // Add link to change default sorting order.
-        lovd_showNavigation('<A href="columns/' . $_PATH_ELEMENTS[1] . '?order">Re-order all ' . $_PATH_ELEMENTS[1] . ' columns</A>');
+        lovd_showNavigation('<A href="' . CURRENT_PATH . '?order">Re-order all ' . $_PE[1] . ' columns</A>');
     }
 
     $_T->printFooter();
@@ -89,11 +89,12 @@ if (empty($_PATH_ELEMENTS[2]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
-    // URL: /columns/Variant/DNA
+if (PATH_COUNT > 2 && !ACTION) {
+    // URL: /columns/VariantOnGenome/DNA
+    // URL: /columns/Phenotype/Blood_pressure/Systolic
     // View specific column.
 
-    $aCol = $_PATH_ELEMENTS;
+    $aCol = $_PE;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
 
@@ -115,24 +116,24 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
         if (!$zData['active'] || $aTableInfo['shared']) {
             // FIXME; needs exact check if there are genes/diseases left that do not have this column.
             // A check on 'active' is way too simple and does not work for shared columns.
-            $sNavigation = '<A href="columns/' . $zData['id'] . '?add">Enable column</A>';
+            $sNavigation = '<A href="' . CURRENT_PATH . '?add">Enable column</A>';
         } else {
             $sNavigation = '<A style="color : #999999;">Enable column</A>';
         }
         // Disable column.
         if ($zData['active'] && !$zData['hgvs']) {
-            $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?remove">Disable column</A>';
+            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?remove">Disable column</A>';
         } else {
             $sNavigation .= ' | <A style="color : #999999;">Disable column</A>';
         }
         // Delete column.
         if (!$zData['active'] && !$zData['hgvs'] && (int) $zData['created_by']) {
-            $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?delete">Delete column</A>';
+            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete column</A>';
         } else {
             $sNavigation .= ' | <A style="color : #999999;">Delete column</A>';
         }
-        $sNavigation .= ' | <A href="columns/' . $zData['id'] . '?edit">Edit custom data column settings</A>';
-        $sNavigation .= ' | <A href="columns/' . $zData['category'] . '?order">Re-order all ' . $zData['category'] . ' columns</A>';
+        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?edit">Edit custom data column settings</A>';
+        $sNavigation .= ' | <A href="' . $_PE[0] . '/' . $zData['category'] . '?order">Re-order all ' . $zData['category'] . ' columns</A>';
 /*
 
         if ($zData['created_by'] && !$bSelected) {
@@ -156,11 +157,12 @@ if (!empty($_PATH_ELEMENTS[2]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
+if (PATH_COUNT > 1 && ACTION == 'order') {
     // URL: /columns/Individual?order
+    // URL: /columns/VariantOnTranscript/DMD?order
     // Change in what order the columns will be shown in a viewList/viewEntry.
 
-    $sCategory = $_PATH_ELEMENTS[1];
+    $sCategory = $_PE[1];
 
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
@@ -177,10 +179,10 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
         exit;
     }
 
-    if (empty($_PATH_ELEMENTS[2]) || !$aTableInfo['shared']) {
+    if (empty($_PE[2]) || !$aTableInfo['shared']) {
         $sObject = '';
     } else {
-        $sObject = rawurldecode(($aTableInfo['unit'] == 'disease'? sprintf('%05d', $_PATH_ELEMENTS[2]) : $_PATH_ELEMENTS[2]));
+        $sObject = rawurldecode(($aTableInfo['unit'] == 'disease'? sprintf('%05d', $_PE[2]) : $_PE[2]));
         if (!mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . constant('TABLE_' . strtoupper($aTableInfo['unit']) . 'S') . ' WHERE id = ?', array($sObject)))) {
             exit;
         }
@@ -284,7 +286,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ACTION == 'order') {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
+if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
     // URL: /columns?data_type_wizard
     // Show form type forms and send info back.
 
@@ -671,7 +673,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'data_type_wizard') {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /columns?create
     // Create a new column.
 
@@ -785,7 +787,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             lovd_writeLog('Event', LOG_EVENT, 'Created column ' . $_POST['id'] . ' (' . $_POST['head_column'] . ')');
 
             // Thank the user...
-            header('Refresh: ' . (!$bFailedLinks? 3 : 10) . '; url=' . lovd_getInstallURL() . 'columns/' . $_POST['id']);
+            header('Refresh: ' . (!$bFailedLinks? 3 : 10) . '; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id']);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -876,11 +878,12 @@ $( function () {
 
 
 
-if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
-    // URL: /columns/Variant/DNA?edit
+if (PATH_COUNT > 2 && ACTION == 'edit') {
+    // URL: /columns/VariantOnGenome/DNA?edit
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?edit
     // Edit specific column.
 
-    $aCol = $_PATH_ELEMENTS;
+    $aCol = $_PE;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
     $sCategory = substr($sColumnID, 0, strpos($sColumnID, '/'));
@@ -1070,7 +1073,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'edit') {
                     header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true));
         */
         // TMP:
-        $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sColumnID, 3);
+        $_BAR->redirectTo(lovd_getInstallURL() . CURRENT_PATH, 3);
         /*
                 }
 
@@ -1403,11 +1406,12 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
-if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
-    // URL: /columns/Variant/DNA?add
+if (PATH_COUNT > 2 && ACTION == 'add') {
+    // URL: /columns/VariantOnGenome/DNA?add
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?add
     // Add specific column to the data table, and enable.
 
-    $aCol = $_PATH_ELEMENTS;
+    $aCol = $_PE;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
     $sCategory = $aCol[1];
@@ -1745,7 +1749,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'add') {
 */
 // TMP:
 if (!isset($_GET['in_window'])) {
-    $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $zData['category'], 3);
+    $_BAR->redirectTo(lovd_getInstallURL() . $_PE[0] . '/' . $zData['category'], 3);
 } else {
     print('<SCRIPT type="text/javascript">' . "\n" .
           '    if (opener.lovd_checkColumns) {' . "\n" .
@@ -1843,11 +1847,12 @@ if (!isset($_GET['in_window'])) {
 
 
 
-if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
-    // URL: /columns/Variant/DNA?remove
+if (PATH_COUNT > 2 && ACTION == 'remove') {
+    // URL: /columns/VariantOnGenome/DNA?remove
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?remove
     // Disable specific custom column.
     
-    $aCol = $_PATH_ELEMENTS;
+    $aCol = $_PE;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
     $sCategory = $aCol[1];
@@ -2004,7 +2009,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'remove') {
                 header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true));
 */
 // TMP:
-$_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sCategory, 3);
+$_BAR->redirectTo(lovd_getInstallURL() . $_PE[0] . '/' . $sCategory, 3);
 /*
             }
 
@@ -2107,11 +2112,12 @@ $_BAR->redirectTo(lovd_getInstallURL() . 'columns/' . $sCategory, 3);
 
 
 
-if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
-    // URL: /columns/Variant/DNA?delete
+if (PATH_COUNT > 2 && ACTION == 'delete') {
+    // URL: /columns/VariantOnGenome/DNA?delete
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?delete
     // Drop specific custom column.
     
-    $aCol = $_PATH_ELEMENTS;
+    $aCol = $_PE;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
     $sCategory = $aCol[1];
@@ -2177,7 +2183,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
             lovd_writeLog('Event', LOG_EVENT, 'Deleted column ' . $sColumnID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'columns/' . $sCategory);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $sCategory);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -2200,7 +2206,7 @@ if (!empty($_PATH_ELEMENTS[2]) && ACTION == 'delete') {
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $sColumnID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
     // Array which will make up the form table.
     $aForm = array_merge(
                  array(

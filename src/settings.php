@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-12
- * Modified    : 2012-04-19
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -44,7 +44,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
-if (ACTION == 'edit') {
+if (PATH_COUNT == 1 && ACTION == 'edit') {
     // URL: /settings?edit
     // Edit system settings.
 
@@ -123,7 +123,7 @@ if (ACTION == 'edit') {
     // Allow checking the database URL.
     lovd_includeJS('inc-js-submit-settings.php');
 
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

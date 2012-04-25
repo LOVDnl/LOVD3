@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2012-04-24
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -182,7 +182,7 @@ if (!empty($_POST)) {
 
         lovd_errorPrint();
 
-        print('      <FORM action="uninstall?confirm" method="post">' . "\n" .
+        print('      <FORM action="' . $_PE[0] . '?confirm" method="post">' . "\n" .
               '        <TABLE border="0" cellpadding="0" cellspacing="0" width="300">' . "\n" .
               '          <TR align="right">' . "\n" .
               '            <TD width="125" style="padding-right : 5px;">Password</TD>' . "\n" .
@@ -205,7 +205,7 @@ if (empty($_POST)) {
 
 lovd_errorPrint();
 
-print('      <FORM action="uninstall" method="post">' . "\n" .
+print('      <FORM action="' . $_PE[0] . '" method="post">' . "\n" .
       '        <TABLE border="0" cellpadding="0" cellspacing="0" width="300">' . "\n" .
       '          <TR align="right">' . "\n" .
       '            <TD width="125" style="padding-right : 5px;">Password</TD>' . "\n" .

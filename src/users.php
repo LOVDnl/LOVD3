@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-20
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 1 && !ACTION) {
     // URL: /users
     // View all entries.
 
@@ -64,11 +64,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /users/00001
     // View specific entry.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'View user account #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -94,15 +94,15 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $sNavigation = '';
     if ($_AUTH['level'] > $zData['level']) {
         // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="users/' . $nID . '?edit">Edit user</A>';
+        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit user</A>';
         if ($zData['active']) {
-            $sNavigation .= ' | <A href="users/' . $nID . '?boot">Force user log out</A>';
+            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?boot">Force user log out</A>';
         }
-        $sNavigation .= ' | <A href="users/' . $nID . '?' . ($zData['locked']? 'un' : '') . 'lock">' . ($zData['locked']? 'Unl' : 'L') . 'ock user</A>';
-        $sNavigation .= ' | <A href="users/' . $nID . '?delete">Delete user</A>';
+        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?' . ($zData['locked']? 'un' : '') . 'lock">' . ($zData['locked']? 'Unl' : 'L') . 'ock user</A>';
+        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete user</A>';
     } elseif ($_AUTH['id'] == $nID) {
         // Viewing himself!
-        $sNavigation = '<A href="users/' . $nID . '?edit">Update your registration</A>';
+        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Update your registration</A>';
     }
 
     if ($sNavigation) {
@@ -131,7 +131,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /users?create
     // Create a new entry.
 
@@ -166,7 +166,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
             lovd_writeLog('Event', LOG_EVENT, 'Created user ' . $nID . ' - ' . $_POST['username'] . ' (' . $_POST['name'] . ') - with level ' . $_SETT['user_levels'][$_POST['level']]);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -221,11 +221,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /users/00001?edit
     // Edit specific entry.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'Edit user account #' . $nID);
     define('LOG_EVENT', 'UserEdit');
 
@@ -279,7 +279,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Edited user ' . $nID . ' - ' . $zData['username'] . ' (' . $_POST['name'] . ') - with level ' . $_SETT['user_levels'][(!empty($_POST['level'])? $_POST['level'] : $zData['level'])]);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'users/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -316,7 +316,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -336,11 +336,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'change_password') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     // URL: /users/00001?change_password
     // Change a user's password.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'Change password for user account #' . $nID);
     define('LOG_EVENT', 'UserResetPassword');
 
@@ -387,7 +387,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Changed password for user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'users/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -416,7 +416,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -436,11 +436,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /users/00001?delete
     // Delete a specific user.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 
@@ -517,7 +517,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                     lovd_writeLog('Event', LOG_EVENT, 'Deleted user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
 
                     // Thank the user...
-                    header('Refresh: 3; url=' . lovd_getInstallURL() . 'users');
+                    header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
                     $_T->printHeader();
                     $_T->printTitle();
@@ -566,7 +566,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_includeJS('inc-js-tooltip.php');
 
             // Table.
-            print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '&confirm" method="post">' . "\n");
+            print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '&confirm" method="post">' . "\n");
 
             // $aForm is repeated, and therefore defined in the beginning of this code block.
             lovd_viewForm($aForm);
@@ -594,7 +594,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // $aForm is repeated, and therefore defined in the beginning of this code block.
     lovd_viewForm($aForm);
@@ -609,11 +609,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'boot') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     // users/00001?boot
     // Throw a user out of the system.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('LOG_EVENT', 'UserBoot');
 
     // Require manager clearance.
@@ -639,7 +639,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_writeLog('Event', LOG_EVENT, 'Booted user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
 
     // Return the user where they came from.
-    header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);
+    header('Refresh: 0; url=' . lovd_getInstallURL() . CURRENT_PATH);
     exit;
 }
 
@@ -647,11 +647,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(ACTION, array('lock', 'unlock'))) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'unlock'))) {
     // users/00001?lock || users/00001?unlock
     // Lock / unlock a user.
 
-    $nID = sprintf('%05d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', ucfirst(ACTION) . ' user account #' . $nID);
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
 
@@ -683,7 +683,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
     lovd_writeLog('Event', LOG_EVENT, ucfirst(ACTION) . 'ed user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
 
     // Return the user where they came from.
-    header('Refresh: 0; url=' . lovd_getInstallURL() . 'users/' . $nID);
+    header('Refresh: 0; url=' . lovd_getInstallURL() . CURRENT_PATH);
     exit;
 }
 
@@ -691,7 +691,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && in_array(AC
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
+if (PATH_COUNT == 1 && ACTION == 'register') {
     // URL: users?register
     // Register a new submitter
 
@@ -763,7 +763,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'register') {
                 $sMessage .= 'To log in to LOVD, click this link:' . "\n" .
                              $_CONF['location_url'] . 'login' . "\n\n" .
                              'You can also go straight to your account using the following link:' . "\n" .
-                             $_CONF['location_url'] . 'users/' . $_AUTH['id'] . "\n\n";
+                             $_CONF['location_url'] . $_PE[0] . '/' . $_AUTH['id'] . "\n\n";
             }
             $sMessage .= 'Regards,' . "\n" .
                          '    LOVD system at ' . $_CONF['institute'] . "\n\n";

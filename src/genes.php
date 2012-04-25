@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-04-19
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 1 && !ACTION) {
     // URL: /genes
     // View all entries.
 
@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])) && !ACTION) {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && !ACTION) {
     // URL: /genes/DMD
     // View specific entry.
 
-    $sID = rawurldecode($_PATH_ELEMENTS[1]);
+    $sID = rawurldecode($_PE[1]);
     define('PAGE_TITLE', 'View gene ' . $sID);
     $_T->printHeader();
     $_T->printTitle();
@@ -80,15 +80,15 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         // Authorized user is logged in. Provide tools.
-        $sNavigation = '<A href="genes/' . $_PATH_ELEMENTS[1] . '?edit">Edit gene information</A>' .
-                       ' | <A href="transcripts/' . $_PATH_ELEMENTS[1] . '?create">Add transcript(s) to gene</A>';
+        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit gene information</A>' .
+                       ' | <A href="transcripts/' . $sID . '?create">Add transcript(s) to gene</A>';
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $sNavigation .= ' | <A href="genes/' . $_PATH_ELEMENTS[1] . '?delete">Delete gene entry</A>' .
-                            ' | <A href="genes/' . $_PATH_ELEMENTS[1] . '?authorize">Add/remove curators/collaborators</A>';
+            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete gene entry</A>' .
+                            ' | <A href="' . CURRENT_PATH . '?authorize">Add/remove curators/collaborators</A>';
         } else {
-            $sNavigation .= ' | <A href="genes/' . $_PATH_ELEMENTS[1] . '?sortCurators">Sort/hide curators/collaborators names</A>';
+            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?sortCurators">Sort/hide curators/collaborators names</A>';
         }
-        $sNavigation .= ' | <A href="columns/VariantOnTranscript/' . $_PATH_ELEMENTS[1] . '?order">Re-order all ' . $sID . ' variant columns';
+        $sNavigation .= ' | <A href="columns/VariantOnTranscript/' . $sID . '?order">Re-order all ' . $sID . ' variant columns';
     }
 
     if ($sNavigation) {
@@ -122,7 +122,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
+if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /genes?create
     // Create a new entry.
 
@@ -138,7 +138,7 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
     require ROOT_PATH . 'inc-lib-genes.php';
     $_DATA = new LOVD_Gene();
 
-    $sPath = $_PATH_ELEMENTS[0] . '?' . ACTION;
+    $sPath = CURRENT_PATH . '?' . ACTION;
     if (GET) {
         if (!isset($_SESSION['work'][$sPath])) {
             $_SESSION['work'][$sPath] = array();
@@ -424,19 +424,20 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
                     lovd_writeLog('Event', LOG_EVENT, 'Transcript entr' . (count($aSuccessTranscripts) > 1? 'ies' : 'y') . ' successfully added to gene ' . $_POST['id'] . ' - ' . $_POST['name']);
                 }
 
-
-                // Add current user as the curator. This should also be in the transaction.
-                $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1), false);
-
                 unset($_SESSION['work'][$sPath][$_POST['workID']]);
+
+                // Set currdb.
+                $_SESSION['currdb'] = $_POST['id'];
+                // These just to have the header what it needs.
+                $_SETT['currdb'] = array('id' => $_POST['id'], 'name' => $_POST['name']);
 
                 // Thank the user...
                 // 2012-02-01; 3.0-beta-02; If there is only one user, don't forward to the Add curators page.
                 if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
-                    header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_POST['id'] . '?authorize');
+                    header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id'] . '?authorize');
                 } else {
                     // FIXME; should be sent to list of columns for this gene, but that page does not exist yet.
-                    header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $_POST['id']);
+                    header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id']);
                 }
 
                 $_T->printHeader();
@@ -488,11 +489,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create') {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && ACTION == 'edit') {
     // URL: /genes/DMD?edit
     // Edit an entry.
 
-    $sID = rawurldecode($_PATH_ELEMENTS[1]);
+    $sID = rawurldecode($_PE[1]);
     define('PAGE_TITLE', 'Edit gene information entry');
     define('LOG_EVENT', 'GeneEdit');
 
@@ -506,7 +507,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     $_DATA = new LOVD_Gene();
     $zData = $_DATA->loadEntry($sID);
 
-    $sPath = $_PATH_ELEMENTS[0] . '?' . ACTION;
+    $sPath = $_PE[0] . '?' . ACTION;
     if (GET) {
         require ROOT_PATH . 'inc-lib-genes.php';
 
@@ -618,7 +619,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             unset($_SESSION['work'][$sPath][$_POST['workID']]);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1]);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -652,7 +653,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1] . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -674,11 +675,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && ACTION == 'delete') {
     // URL: /genes/DMD?delete
     // Drop specific entry.
 
-    $sID = rawurldecode($_PATH_ELEMENTS[1]);
+    $sID = rawurldecode($_PE[1]);
     define('PAGE_TITLE', 'Delete gene information entry ' . $sID);
     define('LOG_EVENT', 'GeneDelete');
 
@@ -711,7 +712,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -734,7 +735,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1] . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -757,11 +758,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PATH_ELEMENTS[1])) && in_array(ACTION, array('authorize', 'sortCurators'))) {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && in_array(ACTION, array('authorize', 'sortCurators'))) {
     // URL: /genes/DMD?authorize or /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
-    $sID = rawurldecode($_PATH_ELEMENTS[1]);
+    $sID = rawurldecode($_PE[1]);
 
     // Load appropiate user level for this gene.
     lovd_isAuthorized('gene', $sID);
@@ -877,7 +878,7 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
             lovd_writeLog('Event', LOG_EVENT, $sMessage);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'genes/' . $_PATH_ELEMENTS[1]);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -987,11 +988,11 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
                         array('POST', '', '', '', '0%', '0', '100%'),
                         array('', '', 'print', 'Enter your password for authorization'),
                         array('', '', 'password', 'password', 20),
-                        array('', '', 'print', '<INPUT type="submit" value="Save curator list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $_PATH_ELEMENTS[1] . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                        array('', '', 'print', '<INPUT type="submit" value="Save curator list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '\'; return false;" style="border : 1px solid #FF4422;">'),
                       );
         lovd_viewForm($aForm);
     } else {
-        print('        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'genes/' . $_PATH_ELEMENTS[1] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n");
+        print('        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n");
     }
     print("\n" .
           '      </FORM>' . "\n\n");
@@ -1067,499 +1068,4 @@ if (!empty($_PATH_ELEMENTS[1]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     $_T->printFooter();
     exit;
 }
-
-
-
-
-
-/*
-LOVD 2.0 code from setup_genes.php. Remove only if SURE that all functionality is included in LOVD 3.0 as well.
-
-} elseif ($_GET['action'] == 'create') {
-    // Create new gene.
-
-    // Require form functions.
-    require ROOT_PATH . 'inc-lib-form.php';
-
-    if (isset($_GET['sent'])) {
-        lovd_errorClean();
-
-        // 2010-01-13; 2.0-24; Added proper check on chromosome information because we need this to map to the genome!
-        if (!empty($_POST['chrom_location']) && !empty($_POST['refseq_build']) && substr($_POST['refseq_build'], 0, 2) == 'hg' && !preg_match('/^([0-9]{1,2}|[XY])([pqtercen0-9.-]+)?$/', $_POST['chrom_location'])) {
-            lovd_errorAdd('Incorrect chromosome location. Chromosome locations have to start with the chromosome number or name (X,Y), possibly followed by the chromosome band location.');
-        }
-
-        // Date of creation.
-        if ($_POST['created_date'] && !lovd_matchDate($_POST['created_date'])) {
-            lovd_errorAdd('The \'Date of creation\' field does not seem to contain a correct date format. Allowed formats: YYYY-MM-DD, YYYY.MM.DD, YYYY/MM/DD or YYYY\MM\DD.');
-        }
-
-        // GenBank file or ID.
-        if ($_POST['genbank']) {
-            if (empty($_POST['genbank_uri'])) {
-                lovd_errorAdd('If you wish to use a GenBank file, please fill in the "GenBank file name or ID" field. Otherwise, clear the "Has a GenBank file" field.');
-            } else {
-                if (basename($_POST['genbank_uri']) != $_POST['genbank_uri']) {
-                    // 2008-03-06; 2.0-05; Disallow Directory Traversal Attack.
-                    lovd_errorAdd('Illegal GenBank file name or ID.');
-                } elseif ($_POST['genbank'] == 1 && !is_readable(ROOT_PATH . 'genbank/' . $_POST['genbank_uri'])) {
-                    // 2008-09-18; 2.0-12; If a proper GenBank filename has been selected, check if it's there.
-                    lovd_errorAdd('Could not find the given GenBank file in the genbank directory. Are you sure it\'s in the right location?');
-                }
-            }
-
-            // 2009-11-11; 2.0-23; The c. -> g. mapping fields are mandatory if the database is using a GenBank file.
-            // FIXME; maybe before these checks, check if the field is empty but $_POST['genbank_uri'] contains useful information... then copy, instead of complain.
-            if (empty($_POST['refseq_genomic'])) {
-                lovd_errorAdd('Please fill in the \'NCBI accession number for the genomic reference sequence\' field.');
-            } elseif (!preg_match('/^N(G|C)_[0-9]{6,9}\.[0-9]{1,2}$/', $_POST['refseq_genomic'])) {
-                lovd_errorAdd('Please fill in a proper NG or NC accession number in the \'NCBI accession number for the genomic reference sequence\' field, like \'NG_012232.1\'.');
-            }
-            if (empty($_POST['refseq_mrna'])) {
-                lovd_errorAdd('Please fill in the \'NCBI accession number for the transcript reference sequence\' field.');
-            } elseif (!preg_match('/^N[MR]_[0-9]{6,9}\.[0-9]{1,2}$/', $_POST['refseq_mrna'])) {
-                lovd_errorAdd('Please fill in a proper NM/NR accession number in the \'NCBI accession number for the transcript reference sequence\' field, like \'NM_004006.2\'.');
-            }
-            if (empty($_POST['refseq_build']) || !isset($_SETT['human_builds'][$_POST['refseq_build']])) {
-                lovd_errorAdd('Please fill in the \'Human Build to map to (UCSC/NCBI)\' field.');
-            }
-        }
-
-        // 2010-01-13; 2.0-24; When refseq is filled in, we need an URL!
-        if (!empty($_POST['refseq']) && empty($_POST['refseq_url'])) {
-            lovd_errorAdd('You have selected that there is a human-readable reference sequence. Please fill in the "Human-readable reference sequence location" field. Otherwise, select \'No\' for the "This gene has a human-readable reference sequence" field.');
-        }
-
-        // Disclaimer text.
-        if ($_POST['disclaimer'] == 2 && empty($_POST['disclaimer_text'])) {
-            lovd_errorAdd('If you wish to use an own disclaimer, please fill in the "Text for own disclaimer" field. Otherwise, select \'No\' for the "Include disclaimer" field.');
-        }
-
-        // URLs.
-        $aCheck =
-                 array(
-                        'url_homepage' => 'Homepage URL',
-                        'refseq_url' => 'Human-readable reference sequence location',
-                      );
-
-        foreach ($aCheck as $key => $val) {
-            if ($_POST[$key] && !lovd_matchURL($_POST[$key])) {
-                lovd_errorAdd('The \'' . $val . '\' field does not seem to contain a correct URL.');
-            }
-        }
-
-        // List of external links.
-        if ($_POST['url_external']) {
-            $aExternalLinks = explode("\r\n", trim($_POST['url_external']));
-            foreach ($aExternalLinks as $n => $sLink) {
-                if (!lovd_matchURL($sLink) && (!preg_match('/^[^<>]+ <?([^< >]+)>?$/', $sLink, $aRegs) || !lovd_matchURL($aRegs[1]))) {
-                    lovd_errorAdd('External link #' . ($n + 1) . ' (' . htmlspecialchars($sLink) . ') not understood.');
-                }
-            }
-        }
-
-        if (!lovd_error()) {
-            require ROOT_PATH . 'class/currdb.php';
-            $_CURRDB = new CurrDB(false);
-
-            // Query text.
-            $sQ = 'INSERT INTO ' . TABLE_DBS . ' VALUES (';
-
-            $_POST['reference'] = $_POST['Gene/Reference'];
-
-            // Standard fields to be used.
-            // 2009-08-18; 2.0-21; added by Gerard: id_uniprot, show_genecards.
-            $aQ = array('symbol', 'gene', 'chrom_location', 'refseq_genomic', 'refseq_mrna', 'refseq_build', 'c_position_mrna_start', 'c_position_mrna_end', 'c_position_cds_end', 'g_position_mrna_start', 'g_position_mrna_end', 'reference', 'url_homepage', 'url_external', 'allow_download', 'allow_index_wiki', 'id_hgnc', 'id_entrez', 'id_omim_gene', 'id_omim_disease', 'id_uniprot', 'show_hgmd', 'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'genbank', 'genbank_uri', 'refseq', 'refseq_url', 'disclaimer', 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align');
-
-            foreach ($aQ as $key => $val) {
-                $sQ .= ($key? ', ' : '') . '"' . $_POST[$val] . '"';
-            }
-
-            if ($_POST['created_date']) {
-                $_POST['created_date'] = '"' . $_POST['created_date'] . '"';
-            } else {
-                $_POST['created_date'] = 'NOW()';
-            }
-
-            $sQ .= ', "' . $_AUTH['id'] . '", ' . $_POST['created_date'] . ', NULL, NULL, "' . $_AUTH['id'] . '", NOW())';
-
-            // If using transactional tables; begin transaction.
-            if ($_INI['database']['engine'] == 'InnoDB') {
-                // FIXME; It's better to use 'START TRANSACTION', but that's only available from 4.0.11.
-                //   This works from the introduction of InnoDB in 3.23
-                @lovd_queryDB_Old('BEGIN WORK');
-            }
-
-            // Run query to create entry in DBS table.
-            $q = mysql_query($sQ);
-            if (!$q) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
-                $_T->printHeader();
-                $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
-                lovd_dbFout('GeneCreate_A', $sQ, $sError);
-            }
-
-            // Make current user curator of this gene.
-            $sQ = 'INSERT INTO ' . TABLE_CURATES . ' VALUES ("' . $_AUTH['id'] . '", "' . $_POST['symbol'] . '", 1)';
-            $q = @mysql_query($sQ);
-            if (!$q) {
-                // Save the mysql_error before it disappears.
-                $sError = mysql_error();
-
-                if ($_INI['database']['engine'] == 'InnoDB') {
-                    @lovd_queryDB_Old('ROLLBACK');
-                } else {
-                    @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                }
-                $_T->printHeader();
-                $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
-                lovd_dbFout('GeneCreate_B', $sQ, $sError);
-            }
-
-            // Commit, since a CREATE TABLE will commit either way (MySQL 5.0, too?).
-            if ($_INI['database']['engine'] == 'InnoDB') {
-                @lovd_queryDB_Old('COMMIT');
-            }
-
-
-
-            // Create table for column information, based on the patient_columns table.
-            require ROOT_PATH . 'install/inc-sql-tables.php';
-            $sQ = str_replace(TABLE_PATIENTS_COLS, TABLEPREFIX . '_' . $_POST['symbol'] . '_columns', $aTableSQL['TABLE_PATIENTS_COLS']);
-            $q = @mysql_query($sQ);
-            if (!$q) {
-                // Save the mysql_error before it disappears.
-                $sError = mysql_error();
-
-                // Rollback;
-                @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-
-                $_T->printHeader();
-                $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
-                lovd_dbFout('GeneCreate_C', $sQ, $sError);
-            }
-
-
-
-            // Gather info on standard custom variant columns.
-            $aColsToCopy = array('colid', 'col_order', 'width', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public', 'public_form', 'created_by', 'created_date');
-            $qCols = mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE (hgvs = 1 OR standard = 1) AND colid LIKE "Variant/%"');
-
-            while ($z = mysql_fetch_assoc($qCols)) {
-                // $z comes from the database, and is therefore not quoted.
-                lovd_magicQuote($z);
-
-                // Calculate the standard width of the column based on the maximum number of characters.
-                $nHeadLength = strlen($z['head_column']);
-                $nColLength = $_CURRDB->getFieldLength($z['colid']) / 2;
-                $nColLength = ($nColLength < $nHeadLength? $nHeadLength : $nColLength);
-                // Compensate for small/large fields.
-                $nColLength = ($nColLength < 5? 5 : ($nColLength > 35? 35 : $nColLength));
-                if ($nColLength < 10) {
-                    $z['width'] = 10*$nColLength;
-                } else {
-                    $z['width'] = 8*$nColLength;
-                }
-                $z['width'] = ($z['width'] > 200? 200 : $z['width']);
-
-                // Created_* columns...
-                $z['created_by'] = 0; // 'LOVD'
-                $z['created_date'] = date('Y-m-d H:i:s');
-
-                $sQ = 'INSERT INTO ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns (';
-                $aCol = array();
-                foreach ($aColsToCopy as $sCol) {
-                    if (isset($z[$sCol])) {
-                        $sQ .= (substr($sQ, -1) == '('? '' : ', ') . $sCol;
-                        $aCol[] = $z[$sCol];
-                    }
-                }
-                $sQ .= ') VALUES (';
-
-                foreach ($aCol as $key => $val) {
-                    $sQ .= ($key? ', ' : '') . '"' . $aCol[$key] . '"';
-                }
-                $sQ .= ')';
-
-                // Insert default LOVD custom column.
-                $q = @mysql_query($sQ);
-                if (!$q) {
-                    // Save the mysql_error before it disappears.
-                    $sError = mysql_error();
-
-                    // Rollback;
-                    @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                    @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                    @mysql_query('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
-
-                    $_T->printHeader();
-                    $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
-                    lovd_dbFout('GeneCreate_D', $sQ, $sError);
-                }
-            }
-
-
-
-            // Create variant table.
-            // 2009-06-11; 2.0-19; Added 5 chars to sort column length because of new codes.
-            // 2009-07-09; 2.0-19 update; Added another 16 chars.
-            // 2009-11-11; 2.0-23; Add columns for c and g position calculation and variant type.
-            $sQ = 'CREATE TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_variants (
-                    variantid MEDIUMINT(7) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                    c_position_start MEDIUMINT,
-                    c_position_start_intron MEDIUMINT,
-                    c_position_end MEDIUMINT,
-                    c_position_end_intron MEDIUMINT,
-                    g_position_start INT UNSIGNED,
-                    g_position_end INT UNSIGNED,
-                    type VARCHAR(10),
-                    sort VARCHAR(52) NOT NULL';
-
-            // Load standard columns.
-            $q = mysql_query('SELECT t1.colid, t2.mysql_type FROM ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns AS t1 LEFT JOIN ' . TABLE_COLS . ' AS t2 USING (colid)');
-            while ($z = mysql_fetch_assoc($q)) {
-                // Fetch cols for this gene and insert them into the query.
-                $sQ .= ',' . "\n" . 
-                       '`' . $z['colid'] . '` ' . $z['mysql_type'] . ' NOT NULL';
-            }
-
-            // 2009-11-11; 2.0-23; Add indexes on the columns for c and g position calculation.
-            $sQ .= ',' . "\n" .
-                   'INDEX (c_position_start, c_position_end),' . "\n" .
-                   'INDEX (c_position_start, c_position_start_intron, c_position_end, c_position_end_intron),' . "\n" .
-                   'INDEX (g_position_start, g_position_end)';
-
-            $sQ .= ') TYPE=' . $_INI['database']['engine'];
-
-            $q = @mysql_query($sQ);
-            if (!$q) {
-                // Save the mysql_error before it disappears.
-                $sError = mysql_error();
-
-                // Rollback;
-                @mysql_query('DELETE FROM ' . TABLE_DBS . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @mysql_query('DELETE FROM ' . TABLE_CURATES . ' WHERE symbol = "' . $_POST['symbol'] . '"');
-                @mysql_query('DROP TABLE ' . TABLEPREFIX . '_' . $_POST['symbol'] . '_columns');
-
-                $_T->printHeader();
-                $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
-                lovd_dbFout('GeneCreate_E', $sQ, $sError);
-            }
-
-
-
-            // Gene successfully created!
-            // Write to log...
-            lovd_writeLog('MySQL:Event', 'GeneCreate', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully created gene ' . $_POST['symbol'] . ' (' . $_POST['gene'] . ')');
-
-            // 2008-09-19; 2.0-12; Reload Mutalyzer module, if present, if GenBank file has been added.
-            if ($_POST['genbank'] == 1 && $_POST['genbank_uri'] && $_MODULES->isLoaded('mutalyzer')) {
-                $_MODULES->disable('mutalyzer');
-                $_MODULES->enable('mutalyzer');
-            }
-
-            // Thank the user...
-            header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/config.php?select_db=' . $_POST['symbol'] . lovd_showSID(true));
-
-            // Set currdb.
-            $_SESSION['currdb'] = $_POST['symbol'];
-            // These just to have the header what it needs.
-            $_SETT['currdb'] = array(
-                    'gene' => $_POST['gene'],
-                    'symbol' => $_POST['symbol']);
-
-            $_T->printHeader();
-            $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
-            print('      Successfully created the ' . $_POST['symbol'] . ' gene!<BR>' . "\n" .
-                  '      <BR>' . "\n\n");
-            print('      <BUTTON onclick="window.location.href=\'' . ROOT_PATH . 'config.php?select_db=' . $_POST['symbol'] . lovd_showSID(true, true) . '\';" style="font-weight : bold; font-size : 11px;">Continue &gt;&gt;</BUTTON>' . "\n\n");
-
-            $_T->printFooter();
-            exit;
-
-        } else {
-            // Errors, thus we must return to the form.
-            lovd_magicUnquoteAll();
-        }
-
-    } else {
-        // Default values.
-        $_POST['c_position_mrna_start'] = '';
-        $_POST['c_position_mrna_end'] = '';
-        $_POST['c_position_cds_end'] = '';
-        $_POST['g_position_mrna_start'] = '';
-        $_POST['g_position_mrna_end'] = '';
-        $_POST['genbank'] = 2;
-        $_POST['refseq_build'] = 'hg19';
-    }
-
-
-
-    $_T->printHeader();
-    $_T->printTitle('setup_genes_create', 'LOVD Setup - Create new gene');
-
-    if (!isset($_GET['sent'])) {
-        print('      To create a new gene database, please complete the form below and press \'Create\' at the bottom of the form.<BR>' . "\n" .
-              '      <BR>' . "\n\n");
-    }
-
-    lovd_errorPrint();
-
-    // 2009-11-11; 2.0-23; We want to try and force people to use a proper reference sequence.
-    lovd_includeJS('inc-js-submit_geneform.php');
-
-    // Table.
-    // 2009-11-11; 2.0-23; Added the JS; we want to try and force people to use a proper reference sequence.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;sent" method="post" onsubmit="return lovd_checkSubmittedForm();">' . "\n" .
-          '        <INPUT type="hidden" name="c_position_mrna_start" value="' . $_POST['c_position_mrna_start'] . '">' . "\n" .
-          '        <INPUT type="hidden" name="c_position_mrna_end" value="' . $_POST['c_position_mrna_end'] . '">' . "\n" .
-          '        <INPUT type="hidden" name="c_position_cds_end" value="' . $_POST['c_position_cds_end'] . '">' . "\n" .
-          '        <INPUT type="hidden" name="g_position_mrna_start" value="' . $_POST['g_position_mrna_start'] . '">' . "\n" .
-          '        <INPUT type="hidden" name="g_position_mrna_end" value="' . $_POST['g_position_mrna_end'] . '">' . "\n" .
-          '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
-
-    $aHumanBuilds = array();
-    foreach ($_SETT['human_builds'] as $sCode => $aBuild) {
-        $aHumanBuilds[$sCode] = $sCode . ' / ' . $aBuild['ncbi_name'];
-    }
-
-    // Array which will make up the form table.
-    $aForm = array(
-                    array('POST', '', '', '40%', '60%'),
-                    array('', 'print', '<B>General information</B>'),
-                    'hr',
-                    array('Full gene name', 'text', 'gene', 40),
-                    'hr',
-                    array('Official gene symbol', 'text', 'symbol', 10),
-                    array('', 'print', '<SPAN class="form_note">The gene symbol is used by LOVD to reference to this gene and can\'t be changed later on. To create multiple databases for one gene, append \'_\' and an indentifier, i.e. \'DMD_point\' and \'DMD_deldup\' for the DMD gene.</SPAN>'),
-                    'hr',
-                    array('Chromosome location', 'text', 'chrom_location', 15),
-                    array('', 'print', '<SPAN class="form_note">Example: Xp21.2</SPAN>'),
-                    'hr',
-                    array('Date of creation (optional)', 'text', 'created_date', 10),
-                    array('', 'print', '<SPAN class="form_note">Format: YYYY-MM-DD. If left empty, today\'s date will be used.</SPAN>'),
-                    'hr',
-                    'skip',
-                    'skip',
-                    array('', 'print', '<B>Reference sequences</B>'),
-                    array('', 'print', '<SPAN class="form_note">Collecting variants requires a proper reference sequence.</SPAN>'),
-                    'hr',
-                    array('This gene has a GenBank file', 'select', 'genbank', 1, array(1 => 'Uploaded own GenBank file', 2 => 'NCBI GenBank record', 3 => 'Mutalyzer UD identifier'), 'No', false, false),
-                    array('', 'print', '<SPAN class="form_note">Without a (genomic) reference sequence the variants in this LOVD database cannot be interpreted properly. A valid genomic GenBank file can be used to map your variants to a genomic location, as well as creating a human-readable reference sequence format and linking to the mutation check Mutalyzer module. Select this option if you have a GenBank file uploaded to the genbank directory, if you want to use a GenBank record at the NCBI or if you have uploaded your GenBank file to Mutalyzer.</SPAN>'),
-                    'hr',
-                    array('GenBank file name or ID', 'text', 'genbank_uri', 30),
-                    array('', 'print', '<SPAN class="form_note">If you have a GenBank file uploaded to the genbank directory, fill in the filename. If you wish to use a NCBI GenBank record, fill in the GenBank accession number. If you have uploaded your GenBank file to Mutalyzer and have received a Mutalyzer UD identifier, fill in this identifier.</SPAN>'),
-                    'hr',
-                    'skip',
-                    array('', 'print', '<SPAN class="form_note"><B>The following three fields are for the mapping of the variants to the genomic reference sequence. They are mandatory if you have a GenBank file, and highly recommended otherwise.</B></SPAN>'),
-                    'hr',
-                    array('NCBI accession number for the genomic reference sequence', 'text', 'refseq_genomic', 15),
-                    array('', 'print', '<SPAN class="form_note">Fill in the NCBI GenBank ID of the genomic reference sequence (NG or NC accession numbers), such as "NG_012232.1" or "NC_000023.10". If you have already provided an NG or NC accession number above, please copy that value to this field. Always include the version number as well!</SPAN>'),
-                    'hr',
-                    array('NCBI accession number for the transcript reference sequence', 'text', 'refseq_mrna', 15),
-                    array('', 'print', '<SPAN class="form_note">Fill in the NCBI GenBank ID of the transcript reference sequence (NM/NR accession numbers), such as "NM_004006.2". If you have already provided an NM/NR accession number above, please copy that value to this field. Always include the version number as well!</SPAN>'),
-                    'hr',
-                    array('Human Build to map to (UCSC/NCBI)', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
-                    array('', 'print', '<SPAN class="form_note">We need to know which version of the Human Build we need to map to.</SPAN>'),
-                    'hr',
-                    'skip',
-                    'skip',
-                    array('', 'print', '<B>Links to information sources (optional)</B>'),
-                    array('', 'print', '<SPAN class="form_note">Here you can add links that will be displayed on the gene\'s LOVD gene homepage.</SPAN>'),
-                    'hr',
-                    array('Homepage URL', 'text', 'url_homepage', 40),
-                    array('', 'print', '<SPAN class="form_note">If you have a separate homepage about this gene, you can specify the URL here.<BR>Format: complete URL, including &quot;http://&quot;.</SPAN>'),
-                    'hr',
-                    array('External links', 'textarea', 'url_external', 55, 3),
-                    array('', 'print', '<SPAN class="form_note">Here you can provide links to other resources on the internet that you would like to link to.<BR>One link per line, format: complete URLs or &quot;Description &lt;URL&gt;&quot;.</SPAN>'),
-                    'hr',
-                    array('HGNC ID', 'text', 'id_hgnc', 10),
-                    'hr',
-                    array('Entrez Gene (Locuslink) ID', 'text', 'id_entrez', 10),
-                    'hr',
-                    array('OMIM Gene ID', 'text', 'id_omim_gene', 10),
-                    'hr',
-                    array('OMIM Disease IDs', 'textarea', 'id_omim_disease', 40, 3),
-                    array('', 'print', '<SPAN class="form_note">One line per OMIM ID, format : &quot;OMIM_ID Disease_name&quot;.<BR>Example : &quot;310200 Duchenne Muscular Dystrophy (DMD)&quot;.</SPAN>'),
-                    'hr',
-                    // 2009-08-17; 2.0-21; added link to UniProtKB/Swiss-Prot.
-                    array('UniProt (SwissProt/TrEMBL) ID', 'text', 'id_uniprot', 10),
-                    array('', 'print', '<SPAN class="form_note">This will add a link to the UniProtKB (SwissProt/TrEMBL) database from the gene\'s homepage.</SPAN>'),
-                    'hr',
-                    array('Provide link to HGMD', 'checkbox', 'show_hgmd', 1),
-                    array('', 'print', '<SPAN class="form_note">Do you want a link to this gene\'s entry in the Human Gene Mutation Database added to the homepage?</SPAN>'),
-                    'hr',
-                    // 2009-08-17; 2.0-21; added link to GeneCards
-                    array('Provide link to GeneCards', 'checkbox', 'show_genecards', 1),
-                    array('', 'print', '<SPAN class="form_note">Do you want a link to this gene\'s entry in the GeneCards database added to the homepage?</SPAN>'),
-                    'hr',
-                    array('Provide link to GeneTests', 'checkbox', 'show_genetests', 1),
-                    array('', 'print', '<SPAN class="form_note">Do you want a link to this gene\'s entry in the GeneTests database added to the homepage?</SPAN>'),
-                    'hr',
-                    array('This gene has a human-readable reference sequence', 'select', 'refseq', 1, array('c' => 'Coding DNA', 'g' => 'Genomic'), 'No', false, false),
-                    array('', 'print', '<SPAN class="form_note">Although GenBank files are the official reference sequence, they are not very readable for humans. If you have a human-readable format of your reference sequence online, please select the type here.</SPAN>'),
-                    'hr',
-                    array('Human-readable reference sequence location', 'text', 'refseq_url', 40),
-                    array('', 'print', '<SPAN class="form_note">If you used our Reference Sequence Parser to create a human-readable reference sequence, the result is located at<BR>&quot;' . (!empty($_CONF['location_url'])? $_CONF['location_url'] : PROTOCOL . $_SERVER['HTTP_HOST'] . lovd_cleanDirName(dirname($_SERVER['PHP_SELF']) . '/' . ROOT_PATH)) . 'refseq/GENESYMBOL_codingDNA.html&quot;.</SPAN>'),
-                    'hr',
-                    'skip',
-                    'skip',
-                    array('', 'print', '<B>Customizations (optional)</B>'),
-                    array('', 'print', '<SPAN class="form_note">You can use the following fields to customize the gene\'s LOVD gene homepage.</SPAN>'),
-                    'hr',
-                    array('Citation reference(s)', 'textarea', 'Gene/Reference', 30, 3),
-                    // FIXME; this is hard-coded... do this gracefully, add links if applicable and remove this if it's deactivated
-                    array('', 'print', '<SPAN class="S11">(Active custom link : <A href="#" onclick="javascript:lovd_openWindow(\'' . ROOT_PATH . 'links.php?view=1&amp;col=Gene/Reference\', \'LinkView\', \'800\', \'200\'); return false;">PubMed</A>)</SPAN>'),
-                    'hr',
-                    array('Include disclaimer', 'select', 'disclaimer', 1, array(1 => 'Use standard LOVD disclaimer', 2 => 'Use own disclaimer (enter below)'), 'No', false, false),
-                    array('', 'print', '<SPAN class="form_note">If you want a disclaimer added to the gene\'s LOVD gene homepage, select your preferred option here.</SPAN>'),
-                    'hr',
-                    array('Text for own disclaimer', 'textarea', 'disclaimer_text', 55, 3),
-                    array('', 'print', '<SPAN class="form_note">Only applicable if you choose to use your own disclaimer (see option above).</SPAN>'),
-                    'hr',
-                    array('Page header', 'textarea', 'header', 55, 3),
-                    array('', 'print', '<SPAN class="form_note">Text entered here will appear above all public gene-specific pages.</SPAN>'),
-                    array('Header aligned to', 'select', 'header_align', 1, $_SETT['notes_align'], false, false, false),
-                    'hr',
-                    array('Page footer', 'textarea', 'footer', 55, 3),
-                    array('', 'print', '<SPAN class="form_note">Text entered here will appear below all public gene-specific pages.</SPAN>'),
-                    array('Footer aligned to', 'select', 'footer_align', 1, $_SETT['notes_align'], false, false, false),
-                    'hr',
-                    array('Notes for the LOVD gene homepage', 'textarea', 'note_index', 55, 3),
-                    array('', 'print', '<SPAN class="form_note">Text entered here will appear in the General Information box on the gene\'s LOVD gene homepage.</SPAN>'),
-                    'hr',
-                    array('Notes for the variant listings', 'textarea', 'note_listing', 55, 3),
-                    array('', 'print', '<SPAN class="form_note">Text entered here will appear below the gene\'s variant listings.</SPAN>'),
-                    'hr',
-                    'skip',
-                    'skip',
-                    array('', 'print', '<B>Security settings</B>'),
-                    array('', 'print', '<SPAN class="form_note">Using the following settings you can control some security settings of LOVD.</SPAN>'),
-                    'hr',
-                    array('Allow public to download variant entries', 'checkbox', 'allow_download', 1),
-                    'hr',
-                    array('Allow my public variant and patient data to be indexed by WikiProfessional', 'checkbox', 'allow_index_wiki', 1),
-                    'hr',
-                    'skip',
-                    array('', 'submit', 'Create'),
-                  );
-    $_MODULES->processForm('SetupGenesCreate', $aForm);
-    lovd_viewForm($aForm);
-
-    print('</TABLE></FORM>' . "\n\n");
-
-    $_T->printFooter();
-    exit;
-
-
-
-
-
-} else {
-    // Default action:
-    header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true));
-    exit;
-}
-*/
 ?>

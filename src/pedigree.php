@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-22
- * Modified    : 2012-04-19
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,13 +40,13 @@ if ($_AUTH) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1])) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1])) {
     // URL: /pedigree/00000001
     // View pedigree tree of a certain individual.
 
     // FIXME; should check for the existence of the correct needed custom columns.
 
-    $nID = sprintf('%08d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'View pedigree for individual #' . $nID);
     $_T->printHeader(false);
     $_T->printTitle();

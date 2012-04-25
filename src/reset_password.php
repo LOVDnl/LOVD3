@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2012-04-19
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -158,7 +158,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(

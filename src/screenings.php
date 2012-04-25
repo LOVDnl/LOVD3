@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-04-18
+ * Modified    : 2012-04-25
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ if ($_AUTH) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 1 && !ACTION) {
     // URL: /screenings
     // View all entries.
 
@@ -61,11 +61,11 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /screenings/0000000001
     // View specific entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'View screening #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -80,17 +80,17 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
     $sNavigation = '';
     if ($_AUTH) {
         if ($_AUTH['level'] >= LEVEL_OWNER) {
-            $sNavigation = '<A href="screenings/' . $nID . '?edit">Edit screening information</A>';
+            $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit screening information</A>';
             if ($zData['variants_found']) {
                 $sNavigation .= ' | <A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
                 if ($zData['variants']) {
-                    $sNavigation .= ' | <A href="screenings/' . $nID . '?removeVariants">Remove variants from screening</A>';
+                    $sNavigation .= ' | <A href="' . CURRENT_PATH . '?removeVariants">Remove variants from screening</A>';
                 } else {
                     $sNavigation .= ' | <A style="color : #999999;">Remove variants from screening</A>';
                 }
             }
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $sNavigation .= ' | <A href="screenings/' . $nID . '?delete">Delete screening entry</A>';
+                $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete screening entry</A>';
             }
         }
     }
@@ -129,7 +129,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) && ctype_digit($_GET['target'])) {
+if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_digit($_GET['target'])) {
     // URL: /screenings?create
     // Create a new entry.
 
@@ -305,11 +305,11 @@ if (empty($_PATH_ELEMENTS[1]) && ACTION == 'create' && isset($_GET['target']) &&
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /screenings/0000000001?edit
     // Edit an entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Edit an screening information entry');
     define('LOG_EVENT', 'ScreeningEdit');
 
@@ -391,7 +391,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -428,7 +428,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -449,11 +449,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'confirmVariants') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     // URL: /screenings/0000000001?confirmVariants
     // Confirm existing variant entries within the same individual.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Confirm variant entries for with screening #' . $nID);
     define('LOG_EVENT', 'VariantConfirm');
 
@@ -635,11 +635,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'removeVariants') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     // URL: /screenings/0000000001?removeVariants
     // Remove variants from a screening entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Remove variant entries from screening #' . $nID);
     define('LOG_EVENT', 'VariantRemove');
 
@@ -710,7 +710,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Updated the list of variants confirmed with screening #' . $nID);
 
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'screenings/' . $nID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -753,7 +753,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
                     array('POST', '', '', '', '0%', '0', '100%'),
                     array('', '', 'print', 'Enter your password for authorization'),
                     array('', '', 'password', 'password', 20),
-                    array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_removeVariants\', function () { $(\'#removeVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . 'screenings/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                    array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_removeVariants\', function () { $(\'#removeVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
 
@@ -765,11 +765,11 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /screenings/0000000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%010d', $_PATH_ELEMENTS[1]);
+    $nID = sprintf('%010d', $_PE[1]);
     define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
     define('LOG_EVENT', 'ScreeningDelete');
 
@@ -803,7 +803,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
             lovd_writeLog('Event', LOG_EVENT, 'Deleted screening information entry ' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'screenings');
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -826,7 +826,7 @@ if (!empty($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1]) && ACTION == '
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PATH_ELEMENTS[0] . '/' . $nID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

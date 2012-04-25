@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-04-19
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -44,7 +44,7 @@ lovd_requireAUTH(LEVEL_SUBMITTER);
 
 
 
-if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
+if (PATH_COUNT == 1 && !ACTION) {
     // URL: /submit
     // Submission process 
 
@@ -71,22 +71,22 @@ if (empty($_PATH_ELEMENTS[1]) && !ACTION) {
 
 
 
-if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_PATH_ELEMENTS[2], array('individual', 'screening', 'variant', 'phenotype', 'upload', 'confirmedVariants')) && isset($_PATH_ELEMENTS[3]) && ctype_digit($_PATH_ELEMENTS[3])) {
+if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individual', 'screening', 'variant', 'phenotype', 'upload', 'confirmedVariants')) && ctype_digit($_PE[3])) {
     // URL: /submit/finish/(variant|individual|screening|phenotype|upload)/00000001
 
     // Try to find the genes and or diseases associated with the submission.
-    switch ($_PATH_ELEMENTS[2]) {
+    switch ($_PE[2]) {
         case 'individual':
             $sURI = 'individuals/';
             $sTitle = 'an individual';
-            $nID = sprintf('%08d', $_PATH_ELEMENTS[3]);
+            $nID = sprintf('%08d', $_PE[3]);
             $zData = $_DB->query('SELECT i.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT i2d.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.id = ? AND i.created_by = ? GROUP BY i.id ORDER BY t.geneid ASC', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('individual', $nID);
             break;
         case 'confirmedVariants':
             $sURI = 'screenings/';
             $sTitle = 'confirmed variants';
-            $nID = sprintf('%010d', $_PATH_ELEMENTS[3]);
+            $nID = sprintf('%010d', $_PE[3]);
             $aConfirmedVariants = $_SESSION['work']['submits']['confirmedVariants'][$nID];
             $zData = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($aConfirmedVariants) - 1) . ') ORDER BY t.geneid ASC', $aConfirmedVariants)->fetchAllColumn();
             $zData = array('geneids' => implode(';', $zData));
@@ -95,49 +95,49 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         case 'screening':
             $sURI = 'screenings/';
             $sTitle = 'a screening';
-            $nID = sprintf('%010d', $_PATH_ELEMENTS[3]);
+            $nID = sprintf('%010d', $_PE[3]);
             $zData = $_DB->query('SELECT s.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.id = ? AND s.created_by = ? GROUP BY s.id ORDER BY t.geneid ASC', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('screening', $nID);
             break;
         case 'variant':
             $sURI = 'variants/';
             $sTitle = 'a variant';
-            $nID = sprintf('%010d', $_PATH_ELEMENTS[3]);
+            $nID = sprintf('%010d', $_PE[3]);
             $zData = $_DB->query('SELECT v.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE v.id = ? AND v.created_by = ? GROUP BY v.id ORDER BY t.geneid ASC', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('variant', $nID);
             break;
         case 'phenotype':
             $sURI = 'phenotypes/';
             $sTitle = 'a phenotype';
-            $nID = sprintf('%010d', $_PATH_ELEMENTS[3]);
+            $nID = sprintf('%010d', $_PE[3]);
             $zData = $_DB->query('SELECT p.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_PHENOTYPES . ' AS p LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s USING (individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE p.id = ? AND p.created_by = ? GROUP BY p.id ORDER BY t.geneid ASC', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('phenotype', $nID);
             break;
         case 'upload':
             $sURI = 'variants/upload/';
             $sTitle = 'an upload';
-            $nID = sprintf('%015d', $_PATH_ELEMENTS[3]);
+            $nID = sprintf('%015d', $_PE[3]);
             // Setting zData to a valid, non-empty array, yet without any data because there is none.
             $zData = array('geneids' => '', 'diseaseids' => '');
             break;
     }
     $aGenes = (!empty($zData['geneids'])? explode(';', $zData['geneids']) : array());
     $aDiseases = (!empty($zData['diseaseids'])? explode(';', $zData['diseaseids']) : array());
-    if (!$zData || !isset($_SESSION['work']['submits'][$_PATH_ELEMENTS[2]][$nID])) {
+    if (!$zData || !isset($_SESSION['work']['submits'][$_PE[2]][$nID])) {
         exit;
     }
 
     // Making sure we can always refer to the same variables so that it doesn't matter how we enter this submission.
     $aSubmit = array();
-    if (in_array($_PATH_ELEMENTS[2], array('individual', 'screening'))) {
-        $aSubmit = $_SESSION['work']['submits'][$_PATH_ELEMENTS[2]][$nID];
+    if (in_array($_PE[2], array('individual', 'screening'))) {
+        $aSubmit = $_SESSION['work']['submits'][$_PE[2]][$nID];
     }
-    if ($_PATH_ELEMENTS[2] == 'upload') {
+    if ($_PE[2] == 'upload') {
         $aSubmit['uploads'][$nID] = $_SESSION['work']['submits']['upload'][$nID];
-    } elseif ($_PATH_ELEMENTS[2] == 'confirmedVariants') {
+    } elseif ($_PE[2] == 'confirmedVariants') {
         $aSubmit['confirmedVariants'][$nID] = $_SESSION['work']['submits']['confirmedVariants'][$nID];
-    } elseif ($_PATH_ELEMENTS[2] != 'individual') {
-        $aSubmit[$_PATH_ELEMENTS[2] . 's'] = array($nID);
+    } elseif ($_PE[2] != 'individual') {
+        $aSubmit[$_PE[2] . 's'] = array($nID);
     }
 
     if ($_AUTH['level'] <= LEVEL_OWNER) {
@@ -149,7 +149,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
         if (!empty($aSubmit['phenotypes'])) {
             $q = $_DB->query('UPDATE ' . TABLE_PHENOTYPES . ' SET statusid = ? WHERE id IN (?' . str_repeat(', ?', count($aSubmit['phenotypes']) - 1) . ') AND statusid = ?', array_merge(array(STATUS_PENDING), $aSubmit['phenotypes'], array(STATUS_IN_PROGRESS)));
         }
-        if ($_PATH_ELEMENTS[2] == 'individual') {
+        if ($_PE[2] == 'individual') {
             $q = $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET statusid = ? WHERE id = ? AND statusid = ?', array(STATUS_PENDING, $nID, STATUS_IN_PROGRESS));
         }
         if (!$q->rowCount()) {
@@ -164,10 +164,10 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     }
 
     // Remove the submission information from $_SESSION and close the session file, so that other scripts can use it without having to wait for this script to finish.
-    unset($_SESSION['work']['submits'][$_PATH_ELEMENTS[2]][$nID]);
+    unset($_SESSION['work']['submits'][$_PE[2]][$nID]);
     session_write_close();
     header('Refresh: 3; url=' . lovd_getInstallURL() . $sURI . $nID);
-    define('LOG_EVENT', 'Submit' . ucfirst($_PATH_ELEMENTS[2]));
+    define('LOG_EVENT', 'Submit' . ucfirst($_PE[2]));
     define('PAGE_TITLE', 'Submit ' . $sTitle);
 
     $_T->printHeader();
@@ -175,7 +175,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
     $aTo = array();
     if (!empty($aGenes)) {
         // Check if there are any genomic variants without a variant on transcript entry, in which case we would need to mail all managers.
-        switch ($_PATH_ELEMENTS[2]) {
+        switch ($_PE[2]) {
             case 'individual':
             case 'screening':
             case 'variant':
@@ -287,16 +287,16 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
           );
 
     // Load the non-shared custom columns and add them to the fields list.
-    $qCols = $_DB->query('SELECT c.id, c.head_column FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id NOT LIKE "VariantOnTranscript/%" ' . (empty($aSubmit['screenings']) && $_PATH_ELEMENTS[2] != 'confirmedVariants'? 'AND c.id NOT LIKE "Screening/%" ' : '') . ($_PATH_ELEMENTS[2] != 'individual'? 'AND c.id NOT LIKE "Individual/%" ' : '') . 'AND c.id NOT LIKE "Phenotype/%" ORDER BY c.col_order', array());
-    if ($_PATH_ELEMENTS[2] == 'individual') {
+    $qCols = $_DB->query('SELECT c.id, c.head_column FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id NOT LIKE "VariantOnTranscript/%" ' . (empty($aSubmit['screenings']) && $_PE[2] != 'confirmedVariants'? 'AND c.id NOT LIKE "Screening/%" ' : '') . ($_PE[2] != 'individual'? 'AND c.id NOT LIKE "Individual/%" ' : '') . 'AND c.id NOT LIKE "Phenotype/%" ORDER BY c.col_order', array());
+    if ($_PE[2] == 'individual') {
         unset($aScreeningFields['individualid']);
         unset($aPhenotypeFields['individualid']);
         unset($aVariantOnGenomeFields['screeningid']);
         unset($aUploadFields['screeningid']);
-    } elseif ($_PATH_ELEMENTS[2] == 'screening') {
+    } elseif ($_PE[2] == 'screening') {
         unset($aVariantOnGenomeFields['screeningid']);
         unset($aUploadFields['screeningid']);
-    } elseif ($_PATH_ELEMENTS[2] == 'confirmedVariants') {
+    } elseif ($_PE[2] == 'confirmedVariants') {
         unset($aScreeningFields['individualid']);
     }
 
@@ -330,7 +330,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
 
     // Select all data from the database that belong to this submission and put it in a variable.
     $bUnpublished = false;
-    if ($_PATH_ELEMENTS[2] == 'individual') {
+    if ($_PE[2] == 'individual') {
         $zIndividualDetails = $_DB->query('SELECT i.*, u.name AS owned_by_ FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (i.owned_by = u.id) WHERE i.id = ?', array($nID))->fetchAssoc();
         $zIndividualDetails['panel_'] = ($zIndividualDetails['panel_size'] <= 1? 'No' : 'Yes');
         ($zIndividualDetails['owned_by'] != $_AUTH['id']? $zIndividualDetails['owned_by_'] = 'Data owner' : false);
@@ -380,7 +380,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
             (${$sVariableNameSCR}['owned_by'] != $_AUTH['id']? $a['owned_by_'] = 'Data owner' : false);
             $aScreeningDetails[] = $a;
         }
-    } elseif (!empty($aSubmit['confirmedVariants']) && $_PATH_ELEMENTS[2] == 'confirmedVariants') {
+    } elseif (!empty($aSubmit['confirmedVariants']) && $_PE[2] == 'confirmedVariants') {
         $aScreeningDetails = array();
         $sVariableNameSCR = 'zScreeningsDetails_' . $nID;
         $a = $aScreeningFields;
@@ -398,7 +398,7 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
             $sVariableNameVOG = 'zVariantOnGenomeDetails_' . $nVariantID;
             $a = $aVariantOnGenomeFields;
             $a[0] = $sVariableNameVOG;
-            if ($_PATH_ELEMENTS[2] == 'variant') {
+            if ($_PE[2] == 'variant') {
                 $$sVariableNameVOG = $_DB->query('SELECT v.*, a.name AS allele_, u.name AS owned_by_, IFNULL(s2v.screeningid, "") AS screeningid FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (v.owned_by = u.id) LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (v.allele = a.id) WHERE v.id = ?', array($nVariantID))->fetchAssoc();
             } else {
                 $$sVariableNameVOG = $_DB->query('SELECT v.*, a.name AS allele_, u.name AS owned_by_ FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (v.owned_by = u.id) LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (v.allele = a.id) WHERE v.id = ?', array($nVariantID))->fetchAssoc();
@@ -472,13 +472,13 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
 
     // Introduction message to curators/managers.
     $sMessage = 'Dear Curator' . (count($aTo) > 1? 's' : '') . ',' . "\n\n" .
-                $_AUTH['name'] . ($_PATH_ELEMENTS[2] == 'confirmedVariants'? ' has indicated that additional variants were also confirmed by an existing screening.' : ' has submitted an addition to the LOVD database.') . "\n";
+                $_AUTH['name'] . ($_PE[2] == 'confirmedVariants'? ' has indicated that additional variants were also confirmed by an existing screening.' : ' has submitted an addition to the LOVD database.') . "\n";
     if ($bUnpublished) {
         $sMessage .= '(Part of) this submission won\'t be viewable to the public until you as curator agree with the additions. Below is a copy of the submission.' . "\n\n";
     }
 
     if ($_CONF['location_url']) {
-        $sMessage .= 'To view the ' . ($_PATH_ELEMENTS[2] == 'confirmedVariants'? 'screening' : 'new') . ' entry, click this link (you may need to log in first):' . "\n" .
+        $sMessage .= 'To view the ' . ($_PE[2] == 'confirmedVariants'? 'screening' : 'new') . ' entry, click this link (you may need to log in first):' . "\n" .
                      $_CONF['location_url'] . $sURI . $nID . "\n\n";
     }
     $sMessage .= 'Regards,' . "\n" .
@@ -486,13 +486,13 @@ if (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == 'finish' && in_array($_P
 
     // Build the mail format.
     $aBody = array($sMessage, 'submitter_details' => $aSubmitterDetails);
-    if ($_PATH_ELEMENTS[2] == 'individual') {
+    if ($_PE[2] == 'individual') {
         $aBody['individual_details'] = $aIndividualDetails;
     }
     if (!empty($aSubmit['phenotypes'])) {
         $aBody['phenotype_details'] = $aPhenotypeDetails;
     }
-    if (!empty($aSubmit['screenings']) || $_PATH_ELEMENTS[2] == 'confirmedVariants') {
+    if (!empty($aSubmit['screenings']) || $_PE[2] == 'confirmedVariants') {
         $aBody['screening_details'] = $aScreeningDetails;
     }
     if (!empty($aSubmit['variants'])) {

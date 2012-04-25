@@ -48,6 +48,9 @@
    descriptions, because the XSS security check didn't allow it.
  * Fixed bug; lovd_checkXSS() was not properly protected against XSS itself.
  * Cleaned up the gene homepage, which had way too many columns enabled.
+// Implemented PATH_COUNT, CURRENT_PATH and $_PE everywhere.
+// Removed old commented LOVD 2.0 code for creating genes, after making sure we have all the functionality.
+// * When creating a new gene, it will now automatically get selected as the CurrDB.
 
 
 

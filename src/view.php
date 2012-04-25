@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2012-04-19
+ * Modified    : 2012-04-24
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,13 +41,13 @@ if ($_AUTH) {
 
 
 
-if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
+if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     // URL: /view/DMD
     // URL: /view/DMD/NM_004006.2
     // View all entries in a specific gene, affecting a specific trancript, with all joinable data.
 
-    if (in_array(rawurldecode($_PATH_ELEMENTS[1]), lovd_getGeneList())) {
-        $sGene = rawurldecode($_PATH_ELEMENTS[1]);
+    if (in_array(rawurldecode($_PE[1]), lovd_getGeneList())) {
+        $sGene = rawurldecode($_PE[1]);
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
         // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
@@ -55,11 +55,11 @@ if (!ACTION && !empty($_PATH_ELEMENTS[1]) && !ctype_digit($_PATH_ELEMENTS[1])) {
         $nTranscripts = count($aTranscripts);
 
         // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscripts.
-        if (!empty($_PATH_ELEMENTS[2])) {
-            $nTranscript = array_search($_PATH_ELEMENTS[2], $aTranscripts);
+        if (!empty($_PE[2])) {
+            $nTranscript = array_search($_PE[2], $aTranscripts);
             if ($nTranscript === false) {
                 // NM does not exist. Throw error or just simply redirect?
-                header('Location: ' . lovd_getInstallURL() . $_PATH_ELEMENTS[0] . '/' . $_PATH_ELEMENTS[1]);
+                header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1]);
                 exit;
             } else {
                 $aTranscripts = array($nTranscript => $aTranscripts[$nTranscript]);
