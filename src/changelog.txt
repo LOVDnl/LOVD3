@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 04
- * 2012-04-?? /////////////////////////////////////////////////////////////////
+ * 2012-04-25
  *********/
  * On the bottom of the user's ViewEntries, visible for managers and up, we have
    added a log entry ViewList with log entries linked to the user.
@@ -48,13 +48,6 @@
    descriptions, because the XSS security check didn't allow it.
  * Fixed bug; lovd_checkXSS() was not properly protected against XSS itself.
  * Cleaned up the gene homepage, which had way too many columns enabled.
-// Implemented PATH_COUNT, CURRENT_PATH and $_PE everywhere.
-// Removed old commented LOVD 2.0 code for creating genes, after making sure we have all the functionality.
-// * When creating a new gene, it will now automatically get selected as the CurrDB.
-
-
-
-
  * Fixed bug; Fixed the bug that searching in a
    (created|edited|updated|owned)_by column would result in an invalid search
    syntax error.
@@ -99,12 +92,11 @@
  * Changed the column order on the gene homepage and changed the homepage url
    & external url fields to actual clickable links.
  * Now does not show some columns in the gene homepage when they are empty or
-   when the users level is not high enough.
+   when the user's level is not high enough.
  * Activated the Phenotype & VariantOnTranscript standard custom columns during 
    installation.
  * Added a few variant statistics to the gene homepage and fixed the variant
    statistics on the gene viewList.
-
 
 
 /*******************

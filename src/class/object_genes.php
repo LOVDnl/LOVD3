@@ -466,15 +466,15 @@ class LOVD_Gene extends LOVD_Object {
             }
 
             $zData['url_homepage_'] = ($zData['url_homepage']? '<A href="' . $zData['url_homepage'] . '" target="_blank">' . $zData['url_homepage'] . '</A>' : '');
-
+            $zData['url_external_'] = '';
             if ($zData['url_external']) {
                 $aLinks = explode("\r\n", $zData['url_external']);
 
                 foreach ($aLinks as $sLink) {
                     if (preg_match('/^(.+) &lt;(.+)&gt;$/', $sLink, $aRegs)) {
-                        $zData['url_external_'] = (isset($zData['url_external_'])? $zData['url_external_'] . '<BR>' : '') . '<A href="' . $aRegs[2] . '" target="_blank">' . $aRegs[1] . '</A>';
+                        $zData['url_external_'] .= ($zData['url_external_']? '<BR>' : '') . '<A href="' . $aRegs[2] . '" target="_blank">' . $aRegs[1] . '</A>';
                     } else {
-                        $zData['url_external_'] = (isset($zData['url_external_'])? $zData['url_external_'] . '<BR>' : '') . '<A href="' . $sLink . '" target="_blank">' . $sLink . '</A>';
+                        $zData['url_external_'] .= ($zData['url_external_']? '<BR>' : '') . '<A href="' . $sLink . '" target="_blank">' . $sLink . '</A>';
                     }
                 }
             }
@@ -531,7 +531,6 @@ class LOVD_Gene extends LOVD_Object {
                     unset($this->aColumnsViewEntry[$key]);
                 }
             }
-
         }
 
         return $zData;
