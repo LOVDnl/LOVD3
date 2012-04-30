@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-04-30
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1112,7 +1112,22 @@ class LOVD_Object {
 
         } elseif (FORMAT == 'text/plain') {
             // Download format: show headers.
-            print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . ($this->sObject == 'Custom_ViewList'? $this->sObjectID : $this->sObject . 's') . ' Quick Download format ### This file can not be imported ###' . "\n");
+            $sObject = ($this->sObject == 'Custom_ViewList'? $this->sObjectID : $this->sObject . 's');
+            header('Content-type: text/plain; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="LOVD_' . $sObject . '_' . date('Y-m-d_H.i.s') . '.txt"');
+            header('Pragma: public');
+            print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sObject . ' Quick Download format ### This file can not be imported ###' . "\n");
+            // FIXME: this has to be done better, we can't see what we're filtering for, because it's in the arguments!
+            if ($WHERE) {
+                print('## Filter ' . $WHERE . "\n");
+            }
+            if ($HAVING) {
+                print('## Filter ' . $HAVING . "\n");
+            }
+            if (ACTION == 'downloadSelected') {
+                print('## Filter selected ' . implode(',', $_SESSION['viewlists'][$sViewListID]['checked']) . "\n");
+            }
+            print('# charset=UTF-8' . "\n");
             $i = 0;
             foreach ($this->aColumnsViewList as $sField => $aCol) {
                 if (in_array($sField, $aColsToSkip)) {
@@ -1201,9 +1216,9 @@ class LOVD_Object {
 
             $zData = $this->autoExplode($zData);
 
-            if (FORMAT == 'text/html') {
-                $zData = $this->prepareData($zData);
+            $zData = $this->prepareData($zData);
 
+            if (FORMAT == 'text/html') {
                 // FIXME; rawurldecode() in the line below should have a better solution.
                 // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
                 print("\n" .
@@ -1221,6 +1236,11 @@ class LOVD_Object {
 
             } elseif (FORMAT == 'text/plain') {
                 // Download format: print contents.
+                if (ACTION == 'downloadSelected' && !in_array($zData['row_id'], $_SESSION['viewlists'][$sViewListID]['checked'])) {
+                    // Only selected entries should be downloaded. And this one is not selected.
+                    continue;
+                }
+
                 $i = 0;
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
                     if (in_array($sField, $aColsToSkip)) {
@@ -1262,7 +1282,7 @@ class LOVD_Object {
                       '        }' . "\n" .
                       '        // Fix the top border that could not be set through jeegoo\'s style.css.' . "\n" .
                       '        $(\'#viewlistMenu_' . $sViewListID . '\').attr(\'style\', \'border-top : 1px solid #000;\');' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').prepend(\'<LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'all\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>Select all <SPAN>entries</SPAN></A></LI><LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'none\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Unselect all</A></LI>\');' . "\n" .
+                      '        $(\'#viewlistMenu_' . $sViewListID . '\').prepend(\'<LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'all\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>Select all <SPAN>entries</SPAN></A></LI><LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'none\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Unselect all</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', true);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', false);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download selected entries</A></LI>\');' . "\n" .
                       '        lovd_activateMenu(\'' . $sViewListID . '\');' . "\n\n");
             }
             print('        check_list[\'' . $sViewListID . '\'] = [];' . "\n" .

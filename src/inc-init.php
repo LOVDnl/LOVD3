@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-04-30
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -70,7 +70,7 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
 }
 
 // Our output format: text/html by default.
-$aFormats = array('text/html'); // Key [0] is default.
+$aFormats = array('text/html', 'text/plain'); // Key [0] is default.
 if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
     define('FORMAT', $_GET['format']);
 } else {

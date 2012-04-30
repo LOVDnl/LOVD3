@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2012-03-18
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-04-30
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -190,6 +190,30 @@ function lovd_AJAX_viewListGoToPage (sViewListID, nPage) {
     }
     oForm.page.value = nPage;
     lovd_AJAX_viewListSubmit(sViewListID);
+}
+
+
+
+function lovd_AJAX_viewListDownload (sViewListID, bAll)
+{
+    // Triggers a download of the given viewList.
+    // We'll have to use a hidden IFrame for it.
+    var oIFrame = document.createElement('iframe');
+    oIFrame.style.display = 'none';
+
+    // Build URL.
+    var sURL = 'ajax/viewlist.php?download' + (bAll? '' : 'Selected') + '&format=text/plain';
+    oForm = document.forms['viewlistForm_' + sViewListID];
+    aInput = oForm.getElementsByTagName('input');
+    for (var i in aInput) {
+        // We actually don't need everything, but it's too difficult to manually add viewListID, object, order and skip.
+        if (!aInput[i].disabled && aInput[i].value && aInput[i].name.substring(0,6) != 'check_') {
+            sURL +=  '&' + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
+        }
+    }
+    //oIFrame.src = 'ajax/viewlist.php?viewlistid=' + sViewListID + '&object=' + $('#viewlistForm_' + sViewListID + ' :input[name="object"]').val() + '&download';
+    oIFrame.src = sURL;
+    $('#viewlistDiv_' + sViewListID).append(oIFrame);
 }
 
 
@@ -418,7 +442,7 @@ function lovd_activateMenu (sViewListID)
                     } else {
                         return false;
                     }
-                },
+                }
             };
             // Because amount may have changed, reset "Select all" link.
             var nTotal = $('#viewlistForm_' + sViewListID + ' input[name="total"]').eq(0).val();
