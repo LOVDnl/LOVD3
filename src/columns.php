@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-25
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-04-30
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -183,7 +183,7 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
         $sObject = '';
     } else {
         $sObject = rawurldecode(($aTableInfo['unit'] == 'disease'? sprintf('%05d', $_PE[2]) : $_PE[2]));
-        if (!mysql_num_rows(lovd_queryDB_Old('SELECT id FROM ' . constant('TABLE_' . strtoupper($aTableInfo['unit']) . 'S') . ' WHERE id = ?', array($sObject)))) {
+        if (!$_DB->query('SELECT id FROM ' . constant('TABLE_' . strtoupper($aTableInfo['unit']) . 'S') . ' WHERE id = ?', array($sObject))->fetchColumn()) {
             exit;
         }
     }
@@ -201,7 +201,7 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
     $lCategory = strlen($sCategory);
 
     if (POST) {
-        lovd_queryDB_Old('START TRANSACTION', array(), true);
+        $_DB->beginTransaction();
 
         foreach ($_POST['columns'] as $nOrder => $sID) {
             if (strpos($sID, $sCategory . '/') !== 0) {
@@ -209,14 +209,14 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
             }
             $nOrder ++; // Since 0 is the first key in the array.
             if (!$sObject) {
-                lovd_queryDB_Old('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID), true);
+                $_DB->query('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID));
             } else {
-                lovd_queryDB_Old('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $aTableInfo['unit'] . 'id = ? AND colid = ?', array($nOrder, $sObject, $sID), true);
+                $_DB->query('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $aTableInfo['unit'] . 'id = ? AND colid = ?', array($nOrder, $sObject, $sID));
             }
         }
 
         // If we get here, it all succeeded.
-        lovd_queryDB_Old('COMMIT', array(), true);
+        $_DB->commit();
 
         // Write to log...
         lovd_writeLog('Event', LOG_EVENT, 'Updated the ' . $aTableInfo['table_name'] . ' column order' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : ''));
@@ -237,17 +237,13 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
     $_T->printTitle();
 
     // Retrieve column IDs in current order.
-    $aColumns = array();
     if (!$sObject) {
-        $qColumns = lovd_queryDB_Old('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'));
+        $aColumns = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'))->fetchAllColumn();
     } else {
-        $qColumns = lovd_queryDB_Old('SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $aTableInfo['unit'] . 'id = ? ORDER BY col_order ASC', array($sCategory . '/%', $sObject));
-    }
-    while ($z = mysql_fetch_assoc($qColumns)) {
-        $aColumns[] = $z['id'];
+        $aColumns = $_DB->query('SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $aTableInfo['unit'] . 'id = ? ORDER BY col_order ASC', array($sCategory . '/%', $sObject))->fetchAllColumn();
     }
 
-    lovd_showInfoTable('Below is a sorting list of all ' . ($sObject? 'active columns' : 'available columns (active & inactive)') . '. By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect viewLists/viewEntries in the same way.', 'information');
+    lovd_showInfoTable('Below is a sorting list of all ' . ($sObject? 'active columns' : 'available columns (active & inactive)') . '. By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect listings, detailed views and data entry forms in the same way.', 'information');
 
     // Form & table.
     print('      <TABLE cellpadding="0" cellspacing="0" class="sortable_head" style="width : 302px;"><TR><TH width="20">&nbsp;</TH><TH>Column ID ("' . $sCategory . '")</TH></TR></TABLE>' . "\n" .
@@ -268,12 +264,12 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
 ?>
       <SCRIPT type='text/javascript'>
         $(function() {
-                $( '#column_list' ).sortable({
+                $('#column_list').sortable({
                         containment: 'parent',
                         tolerance: 'pointer',
                         handle: 'TD.handle',
                 });
-                $( '#column_list' ).disableSelection();
+                $('#column_list').disableSelection();
         });
       </SCRIPT>
 <?php
@@ -1026,7 +1022,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                 $_BAR->setMessage('Applying new default settings for this column to all ' . $aColumnInfo['unit'] . 's...');
 
                 // Fields to be used.
-                $aColsToCopy = array('width', 'col_order', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public_view', 'public_add');
+                $aColsToCopy = array('width', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public_view', 'public_add');
 
                 if ($aColumnInfo['shared']) {
                     $sSQL = 'UPDATE ' . TABLE_SHARED_COLS . ' SET ';
@@ -1197,7 +1193,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
-                        array('', '', 'submit', PAGE_TITLE),
+                        array('', '', 'submit', 'Edit custom data column'),
                       ));
     lovd_viewForm($aForm);
 
@@ -1228,7 +1224,7 @@ function lovd_setWidth ()
     return false;
 }
 
-$( function ()
+$(function ()
 {
     $('input[name="width"]').change(lovd_setWidth);
 });
@@ -1240,7 +1236,11 @@ $( function ()
     exit;
 }
 
-/*
+
+
+
+
+/*******************************************************************************
 if ($_GET['action'] == 'edit_colid' && !empty($_GET['edit_colid'])) {
     // Edit specific custom colid.
 
@@ -1400,7 +1400,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
     $_T->printFooter();
     exit;
 }
-*/
+*///////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -1426,7 +1426,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
-        // FIXME; there is some code missing here, to gather info to run lovd_isAuthorized() first (see code for sorting columns).
+        // FIXME; there is some code missing here, to gather info to run lovd_isAuthorized() first (see code for sorting columns)..
         lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -1465,8 +1465,8 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                     $aSQL = array_merge($aSQL, $_AUTH['curates']);
                 }
                 $sSQL .= ' ORDER BY g.id';
-                $qTargets = lovd_queryDB_Old($sSQL, $aSQL);
-                $nTargets = mysql_num_rows($qTargets);
+                $aTargets = $_DB->query($sSQL, $aSQL)->fetchAllCombine();
+                $nTargets = count($aTargets);
                 if ($nTargets) {
                     print('      Please select the gene(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
                 } else {
@@ -1487,8 +1487,8 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                     $aSQL = array_merge($aSQL, $_AUTH['curates']);
                 }
                 $sSQL .= ' ORDER BY d.symbol';
-                $qTargets = lovd_queryDB_Old($sSQL, $aSQL);
-                $nTargets = mysql_num_rows($qTargets);
+                $aTargets = $_DB->query($sSQL, $aSQL)->fetchAllCombine();
+                $nTargets = count($aTargets);
                 if ($nTargets) {
                     print('      Please select the disease(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
                 } else {
@@ -1505,7 +1505,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             // Array which will make up the form table.
             $aForm = array(
                             array('POST', '', '', '', '50%', '14', '50%'),
-                            array('Add this column to', '', 'select', 'target', $nTargets, $qTargets, false, true, true),
+                            array('Add this column to', '', 'select', 'target', $nTargets, $aTargets, false, true, true),
                             'skip',
                             array('', '', 'submit', 'Next &gt;'),
                           );
@@ -1572,12 +1572,9 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
     // Verify in the data table if column is already active or not.
     $zData['active_checked'] = false;
-    $q = lovd_queryDB_Old('DESCRIBE ' . $aTableInfo['table_sql']);
-    while (list($sCol) = mysql_fetch_row($q)) {
-        if ($sCol == $zData['id']) {
-            $zData['active_checked'] = true;
-            break;
-        }
+    $aActiveColumns = $_DB->query('DESCRIBE ' . $aTableInfo['table_sql'])->fetchAllColumn();
+    if (in_array($zData['id'], $aActiveColumns)) {
+        $zData['active_checked'] = true;
     }
 
     // If already active and this is not a shared table, adding it again is useless!
@@ -1589,7 +1586,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $_T->printFooter();
             exit;
         } else {
-            list($nError) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ? AND ' . ($sCategory == 'VariantOnTranscript'? 'geneid' : 'diseaseid') . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ')', array_merge(array($zData['id']), $aTargets)));
+            $nError = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ? AND ' . ($sCategory == 'VariantOnTranscript'? 'geneid' : 'diseaseid') . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ')', array_merge(array($zData['id']), $aTargets))->fetchColumn();
             if ($nError) {
                 // Target already has this column enabled!
                 $_T->printHeader();
@@ -1606,7 +1603,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     if ($zData['active_checked']) {
         $tAlter = 0;
     } else {
-        $zStatus = mysql_fetch_assoc(lovd_queryDB_Old('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"'));
+        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE ?', array($aTableInfo['table_sql']))->fetchAssoc();
         $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
         $nSizeIndexes = $zStatus['Index_length'];
         // Calculating time it could take to rebuild the table. This is just an estimate and it depends
@@ -1662,7 +1659,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             if (!$zData['active_checked']) {
                 $sSQL = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' ADD COLUMN `' . $zData['id'] . '` ' . $zData['mysql_type'];
                 $dStart = time();
-                $q = lovd_queryDB_Old($sSQL);
+                $q = $_DB->exec($sSQL);
                 if (!$q) {
                     $tPassed = time() - $dStart;
                     $sMessage = ($tPassed < 2? '' : ' (fail after ' . $tPassed . ' seconds - disk full maybe?)');
@@ -1673,10 +1670,10 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $_BAR->setProgress(80);
             $_BAR->setMessage('Enabling column...');
 
-            lovd_queryDB_Old('START TRANSACTION');
+            $_DB->beginTransaction();
             if (!$zData['active']) {
                 $sSQL = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES (?, ?, NOW())';
-                $q = lovd_queryDB_Old($sSQL, array($zData['id'], $_AUTH['id']), true);
+                $_DB->query($sSQL, array($zData['id'], $_AUTH['id']));
             }
 
             // Write to log...
@@ -1687,7 +1684,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $_BAR->setProgress(90);
             $_BAR->setMessage('Registering column settings...');
 
-            // If this is a VARIANT_ON_TRANSCRIPT or PHENOTYPE column, report in specific tables. So, check $sCategory.
+            // If this is a shared (VARIANT_ON_TRANSCRIPT or PHENOTYPE) column, report in specific tables. So, check column info.
             if ($aTableInfo['shared']) {
                 // Register default settings in TABLE_SHARED_COLS.
                 $aFields = array($aTableInfo['unit'] . 'id', 'colid', 'col_order', 'width', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'select_options', 'public_view', 'public_add', 'created_by', 'created_date');
@@ -1713,14 +1710,14 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                     }
                     $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
 
-                    $q = lovd_queryDB_Old($sSQL, $aSQL, true);
+                    $_DB->query($sSQL, $aSQL);
                     // FIXME; individual messages?
                     $_BAR->setProgress(90 + round(($i/$nTargets)*10));
                     $i ++;
                 }
             }
 
-            lovd_queryDB_Old('COMMIT');
+            $_DB->commit();
             $_BAR->setProgress(100);
             $_BAR->setMessage('Done!');
 
@@ -1791,9 +1788,6 @@ if (!isset($_GET['in_window'])) {
     }
 
     lovd_errorPrint();
-
-    // Tooltip JS code.
-    lovd_includeJS('inc-js-tooltip.php');
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (empty($_GET['target'])? '' : '&amp;target=' . htmlspecialchars($_GET['target'])) . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
@@ -1867,9 +1861,9 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     define('LOG_EVENT', 'ColRemove');
 
     if ($aTableInfo['shared'] && POST) {
-        // FIXME; Er mist nog veel meer code die wel in 'add' aanwezig is; een voortgangs balk en berekening hoeveel tijd de ALTER TABLE nodig heeft.
-        //   Pak de VOLLEDIGE code van 'add' er bij, en ga regel voor regel checken of alle functionaliteit die in 'add' zit, hier ook in zit.
-        //   Controles, manier van loggen, manier van data ophalen, voortgangsbalk, etc.
+        // FIXME; Mist er nog code die wel in 'add' aanwezig is?
+        //   Met de code van 'add' er bij checken of alle functionaliteit die in 'add' zit, hier ook in zit?
+        //   Controles, manier van loggen, manier van data ophalen, etc..
         foreach ($_POST['target'] as $sColumn) {
             lovd_isAuthorized($aTableInfo['unit'], $sColumn);
             lovd_requireAUTH(LEVEL_CURATOR);
@@ -1945,14 +1939,14 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             if (!$aTableInfo['shared']) {
                 // Query text; remove column registration first.
                 $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
-                $q = $_DB->query($sQ, array($zData['id']));
+                $_DB->query($sQ, array($zData['id']));
                 $_BAR->setProgress(20);
                 $_BAR->setMessage('Removing column...');
                 // The whole transaction stuff is useless here; alter table will commit and there's just one query before that.
 
                 // Alter data table.
                 $sQ = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' DROP COLUMN `' . $zData['id'] . '`';
-                $q = $_DB->query($sQ);
+                $_DB->query($sQ);
                 $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')';
 
             } else {
@@ -1961,7 +1955,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                 $_DB->beginTransaction();
                 $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (?' . str_repeat(', ?', count($_POST['target'])-1) . ') AND colid = ?';
                 $aQ = array_merge($_POST['target'], array($zData['id']));
-                $q = $_DB->query($sQ, $aQ);
+                $_DB->query($sQ, $aQ);
                 $_DB->commit();
                 $_BAR->setProgress(10);
                 $_BAR->setMessage('Inactivating column...');
@@ -1977,7 +1971,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
                     // Alter data table.
                     $sQ = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' DROP COLUMN `' . $zData['id'] . '`';
-                    $q = $_DB->query($sQ);
+                    $_DB->query($sQ);
                     $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')';
                 } else {
                     $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $_POST['target']);
@@ -2147,17 +2141,10 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'inc-lib-columns.php';
 
-    $aTableInfo = lovd_getTableInfoByCategory($sCategory);
-
     define('PAGE_TITLE', 'Delete custom data column ' . $sColumnID);
     define('LOG_EVENT', 'ColDelete');
 
-    if ($aTableInfo['shared']) {
-        lovd_isAuthorized($aTableInfo['unit'], $sColumnID);
-        lovd_requireAUTH(LEVEL_CURATOR);
-    } else {
-        lovd_requireAUTH(LEVEL_MANAGER);
-    }
+    lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();

@@ -41,6 +41,8 @@ Prioritize:
     + Info in de header over de filters die gebruikt zijn.
     + Ook charset noemen, in de header zelf?
     + Eerdere suggestie: maybe check out the uniprot download format?
+    + prepareData() *must* be ran, to enable some of the columns (in case columns are only filled in prepareData()), but this means you'll get HTML crap also, and values where you want IDs.
+      * Perhaps for the quick download this is exactly what we want, but for the main download not. Maybe the main download will do something completely different, anyway?
     + DATA IMPORT
       * Choose character set!
         - Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings

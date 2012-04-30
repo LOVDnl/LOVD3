@@ -79,7 +79,7 @@ class LOVD_Custom extends LOVD_Object {
                             'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
                             'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
                             'AND sc.diseaseid = ? ' .
-                            'ORDER BY sc.col_order';
+                            'ORDER BY sc.col_order, sc.colid';
                     $aArgs[] = $this->sObjectID;
                 } elseif ($this->sObject == 'Transcript_Variant') {
                     $aArgs = explode(',', $this->sObjectID);
@@ -92,11 +92,12 @@ class LOVD_Custom extends LOVD_Object {
                 }
             } else {
                 // FIXME; kan er niet wat specifieke info in de objects (e.g. object_phenotypes) worden opgehaald, zodat dit stukje hier niet nodig is?
+                // FIXME; don't we need a way to fetch all active custom column info, so we can make a general phenotype overview?
                 if ($this->sObject == 'Phenotype') {
                     $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
                             'FROM ' . TABLE_COLS . ' AS c ' .
                             'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
-                            'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (sc.diseaseid = p.diseaseid) ' .
+                            'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p USING (diseaseid) ' .
                             'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
                             'AND p.id = ? ' .
                             'ORDER BY sc.col_order';
@@ -113,8 +114,8 @@ class LOVD_Custom extends LOVD_Object {
                 $aArgs[] = $this->nID;
             }
         }
-        $q = lovd_queryDB_Old($sSQL, $aArgs);
-        while ($z = mysql_fetch_assoc($q)) {
+        $q = $_DB->query($sSQL, $aArgs);
+        while ($z = $q->fetchAssoc()) {
             $z['custom_links'] = array();
             $z['form_type'] = explode('|', $z['form_type']);
             $z['select_options'] = explode("\r\n", $z['select_options']);
