@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-30
+ * Modified    : 2012-05-02
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -371,7 +371,7 @@ class LOVD_Object {
     function loadEntry ($nID = false)
     {
         // Loads and returns an entry from the database.
-        global $_DB;
+        global $_DB, $_T;
 
         if (empty($nID)) {
             // We were called, but the class wasn't initiated with an ID. Fail.
@@ -384,17 +384,14 @@ class LOVD_Object {
         } else {
             $sSQL = 'SELECT * FROM ' . constant($this->sTable) . ' WHERE id = ?';
         }
-        // FIXME: this can't work! If query fails, code will halt here!!!
-        $zData = @$_DB->query($sSQL, array($nID))->fetchAssoc();
-        // FIXME; check if $zData['status'] exists, if so, check status versus lovd_isAuthorized().
-        // Set $zData to false if user should not see this entry.
-        if (!$zData) {
-            global $_CONF, $_SETT, $_STAT, $_AUTH;
-
-            $sError = mysql_error(); // Save the mysql_error before it disappears.
+        $q = $_DB->query($sSQL, array($nID), false);
+        if ($q) {
+            $zData = $q->fetchAssoc();
+        }
+        if (!$q || !$zData) {
+            $sError = $_DB->formatError(); // Save the PDO error before it disappears.
 
             $_T->printHeader();
-
             if (defined('PAGE_TITLE')) {
                 $_T->printTitle();
             }
@@ -579,7 +576,7 @@ class LOVD_Object {
     function viewEntry ($nID = false)
     {
         // Views just one entry from the database.
-        global $_DB;
+        global $_DB, $_T;
 
         if (empty($nID)) {
             // We were called, but the class wasn't initiated with an ID. Fail.
@@ -704,12 +701,11 @@ class LOVD_Object {
         // First, check if entries are in the database at all.
         $nTotal = $this->getCount();
         if (!$nTotal && FORMAT == 'text/html') {
-            $sMessage = 'No entries in the database yet!';
             if ($bOnlyRows) {
                 die('0'); // Silent error.
             }
-            lovd_showInfoTable($sMessage, 'stop');
-            return true;
+            lovd_showInfoTable('No entries in the database yet!', 'stop');
+            return 0;
         }
 
         // SEARCH: Advanced text search.
@@ -1158,7 +1154,7 @@ class LOVD_Object {
                 }
                 lovd_showInfoTable($sMessage, 'stop');
                 print('      </DIV></FORM>' . "\n\n");
-                return true;
+                return 0;
 
             } else {
                 if ($bOnlyRows) {
@@ -1182,14 +1178,14 @@ class LOVD_Object {
                         if (substr($sCol, -3) == ' ID') {
                             $sWhere .= ($sWhere? ' and ' : ' ') . 'for this ' . strtolower(substr($sCol, 0, -3));
                         } else {
-                            $sWhere .= ($sWhere? ' and ' : ' where ') . $sCol . ' is ' . str_replace('|', ' or ', trim($sValue, '="'));
+                            $sWhere .= ($sWhere? ' and ' : ' where ') . strtolower($sCol) . ' is "' . str_replace('|', '" or "', trim($sValue, '="') . '"');
                         }
                     }
                     $sMessage .= $sWhere;                    
                 }
                 lovd_showInfoTable($sMessage . '!', 'stop');
 
-                return true;
+                return 0;
             }
         }
 
@@ -1289,7 +1285,7 @@ class LOVD_Object {
                   '      </SCRIPT>' . "\n\n");
         }
 
-        return true;
+        return $nTotal;
     }
 }
 ?>

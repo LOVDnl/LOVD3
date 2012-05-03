@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-17
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-02
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -93,7 +93,7 @@ class LOVD_Column extends LOVD_Object {
                  array(
                         'category' => 'Data category',
                         'colid' => 'Column ID',
-                        'head_column' => '(Default) column heading',
+                        'head_column' => 'Column heading',
                         'active_' => 'Active in LOVD?',
                         'hgvs_' => 'HGVS required column',
                         'standard_' => 'Standard/Enabled by default',
@@ -124,7 +124,7 @@ class LOVD_Column extends LOVD_Object {
                                     'view' => array('ID', 175),
                                     'db'   => array('SUBSTRING(c.id, LOCATE("/", c.id)+1)', 'ASC', true)),
                         'head_column' => array(
-                                    'view' => array('(Default) heading', 150),
+                                    'view' => array('Heading', 150),
                                     'db'   => array('c.head_column', 'ASC', true)),
                         'active_' => array(
                                     'view' => array('Active', 60, 'style="text-align : center;"'),
@@ -366,7 +366,6 @@ class LOVD_Column extends LOVD_Object {
         $zData['hgvs_']        = '<IMG src="gfx/mark_' . $zData['hgvs'] . '.png" alt="" title="This column is ' . ($zData['hgvs']? '' : 'not ') . 'required by the HGVS standards for sequence variant databases" width="11" height="11">';
         $zData['standard_']    = '<IMG src="gfx/mark_' . $zData['standard'] . '.png" alt="" title="This column is ' . ($zData['standard']? '' : 'not ') . 'enabled by default" width="11" height="11">';
         $zData['public_view_'] = '<IMG src="gfx/mark_' . $zData['public_view'] . '.png" alt="" width="11" height="11">';
-        $zData['created_by_']  = ($zData['created_by_']? $zData['created_by_'] : 'LOVD');
 
         return $zData;
     }

@@ -1,5 +1,10 @@
 Prioritize:
 ===========
+No cols for gene? "No shared_columns found!"
+- Custom columns need to be able to be edited per gene!
+  + URL: /gene/GENE/columns/VariantOnTranscript/DNA (viewentry)
+  + URL: /gene/GENE/columns/VariantOnTranscript/DNA?edit
+- Bug: VOT/Protein edit: Disallowed tag found in form field "description_legend_full". XSS attack?
 - Mapping script moet geen p.(=) opslaan, als Mutalyzer een WSPLICE foutmelding geeft.
 - DBID mag geen custom links meer hebben (mag ook niet gekozen worden).
 - IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
@@ -24,7 +29,6 @@ Prioritize:
 - Unit tests via Selenium (of alternatief)?
   * Hebben we OpenSSL ergens voor nodig?
     + http mutalyzer contact als zelf in https???
-- Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - VariantOnGenome/Times_reported???
 - Handmatige variant mapper: ook p. description ophalen bij Mutalyzer?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
@@ -38,11 +42,7 @@ Prioritize:
 
 - Beta-05:
   - DATA DOWNLOAD.
-    + Info in de header over de filters die gebruikt zijn.
-    + Ook charset noemen, in de header zelf?
-    + Eerdere suggestie: maybe check out the uniprot download format?
-    + prepareData() *must* be ran, to enable some of the columns (in case columns are only filled in prepareData()), but this means you'll get HTML crap also, and values where you want IDs.
-      * Perhaps for the quick download this is exactly what we want, but for the main download not. Maybe the main download will do something completely different, anyway?
+    + Improve info in de header over de filters die gebruikt zijn.
     + DATA IMPORT
       * Choose character set!
         - Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
@@ -61,7 +61,6 @@ Prioritize:
     + Redirect: zouden we dan misschien een functie moeten maken? Code voor een knopje met redirect (JS lijkt me het handigst?) in een lovd_showInfoTable() is dan best wel weer lang.
   - Ook moeten we ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
   - HGNC niet te bereiken? Nette foutmelding of mirror gebruiken?
-  - /columns/VariantOnTranscript/DMD -> (LINK MOET ANDERS HETEN) viewList kolommen actief op DMD
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
   - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
   - Begin met manual (eerst alleen nog PDF).
@@ -78,13 +77,9 @@ Prioritize:
   - All trim() calls in checkFields() calls can be removed, since data is automatically trimmed in Object::checkFields() anyway.
   - Gene notes for variant listings implementeren?
   - Gene headers & footers implementeren?
-  - Nieuwe URL nodig voor tonen gene's columns: /columns/VariantOnTranscript/GENE kan storen met volledige column ID link.
-    + Wat denken we van:
-      * /columns/VariantOnTranscript/gene=GENE
-      * /columns/gene/GENE
-    + Voor het sorteren van de kolommen van een gen, kun je vertrouwen op de ACTION, order, die toch nooit in combinatie kan worden gebruikt met een volledige column ID.
   - Should we maybe set default_socket_timeout somewhere?
 
+- Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
   De reden daarachter is privacy.
@@ -202,7 +197,7 @@ Doen voordat LOVD 3.0 online gebruikt kan worden:
 
 Data transfer LOVD 2.0 -> LOVD 3.0:
 ===================================
-- Submitters and users should be imported separately. Their IDs will change.
+- Submitters and users should be imported separately. Their IDs will change, and multiple LOVD 2.0 installs can come together in one LOVD 3.0.
 - Genes and transcripts need to be imported, or regenarated, in LOVD 3.0 separately.
 - Idem diseases?
 - The rest of the data then should go in a LOVD 3.0 format.

@@ -7,6 +7,38 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 05
+ * 2012-05-????????
+ *********/
+ * Implemented PDO in lovd_queryDB() calls in columns.php.
+ * Fixed bug; The gene's external link field accepted input that did not result
+   in a proper link.
+ * Implemented a dropdown menu at the gene's and disease's detailed views,
+   instead of one long row of links.
+ * Fixed bug; The new template class was not activated correctly in objects.php
+   and object_transcript_variants.php.
+ * Fixed bug; PDO was not implemented completely in LOVD_Objects::loadEntry()
+   and LOVD_Transcript_Variants::loadEntry().
+ * From a gene's or disease's detailed view, you can now view a list of its
+   active columns. From there you can also change the order in which the columns
+   are shown in the system.
+ * From the custom column's list, you can now easily select only a specific
+   category of columns.
+ * Fixed bug; One of the changes made in 3.0-beta-04 to the dropdown menu script
+   had adverse side effects, so it was reverted.
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************
  * 3.0 Beta 04
  * 2012-04-25
  *********/

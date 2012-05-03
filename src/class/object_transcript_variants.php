@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-04-19
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-02
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -260,24 +260,21 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     function loadAll ($nID = false)
     {
         // Loads all variantOnTranscript entries from the database.
+        global $_DB, $_T;
+
         if (empty($nID)) {
             // We were called, but the class wasn't initiated with an ID. Fail.
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::loadEntry() - Method didn\'t receive ID');
         }
 
-        global $_DB;
+        $q = $_DB->query($this->sSQLLoadEntry, array($nID, $this->sObjectID), false);
+        if ($q) {
+            $z = $q->fetchAllAssoc();
+        }
+        if (!$q || !$z) {
+            $sError = $_DB->formatError(); // Save the PDO error before it disappears.
 
-        $z = @$_DB->query($this->sSQLLoadEntry, array($nID, $this->sObjectID))->fetchAllAssoc();
-        // FIXME; check if $zData['status'] exists, if so, check status versus lovd_isAuthorized().
-        // Set $zData to false if user should not see this entry.
-        if (!$z) {
-            global $_CONF, $_SETT, $_STAT, $_AUTH;
-
-            $sError = mysql_error(); // Save the mysql_error before it disappears.
-
-            // Check if, and which, top include has been used.
             $_T->printHeader();
-
             if (defined('PAGE_TITLE')) {
                 $_T->printTitle();
             }

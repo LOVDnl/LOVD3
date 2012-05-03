@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-03
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -893,6 +893,62 @@ function lovd_showNavigation ($sBody, $nPrefix = 3)
     print($sPrefix . '<TABLE border="0" cellpadding="0" cellspacing="0" class="navigation">' . "\n" .
           $sPrefix . '  <TR align="center">' . "\n" .
           $sPrefix . '    <TD>' . $sBody . '</TD></TR></TABLE>'. "\n\n");
+}
+
+
+
+
+
+function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
+{
+    // Prints a navigation dropdown menu to the screen with given contents.
+
+    if (!is_array($aOptions) || !count($aOptions)) {
+        return false;
+    }
+
+    // Spaces prepended to HTML code for proper alignment.
+    $sPrefix = str_repeat('  ', $nPrefix);
+
+    print($sPrefix . '<IMG src="gfx/options_button.png" alt="Options" width="82" height="20" id="viewentryOptionsButton_' . $sID . '" style="margin-top : 5px; cursor : pointer;"><BR>' . "\n" .
+          $sPrefix . '<UL id="viewentryMenu_' . $sID . '" class="jeegoocontext jeegooviewlist">' . "\n");
+    foreach ($aOptions as $sURL => $aLink) {
+        list($sIMG, $sName, $bShown) = $aLink;
+        if ($bShown) {
+            // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
+            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . lovd_getInstallURL(false)) . ltrim($sURL, '/') . '">' .
+                                (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
+                                '</A></LI>' . "\n");
+        } else {
+            print($sPrefix . '  <LI class="disabled' . (!$sIMG? '' : ' icon') . '">' . (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName . '</LI>' . "\n");
+        }
+    }
+    print($sPrefix . '</UL>' . "\n\n" .
+          $sPrefix . '<SCRIPT type="text/javascript">' . "\n" .
+          $sPrefix . '  $(function() {' . "\n" .
+          $sPrefix . '    var aMenuOptions = {' . "\n" .
+          $sPrefix . '      event: "click",' . "\n" .
+          $sPrefix . '      openBelowContext: true,' . "\n" .
+          $sPrefix . '      autoHide: true,' . "\n" .
+          $sPrefix . '      delay: 1000,' . "\n" .
+          $sPrefix . '      onSelect: function(e, context) {' . "\n" .
+          $sPrefix . '        if ($(this).hasClass("disabled")) {' . "\n" .
+          $sPrefix . '          return false;' . "\n" .
+          $sPrefix . '        } else if ($(this).find(\'a\').attr(\'href\') != undefined) {' . "\n" .
+          $sPrefix . '          window.location = $(this).find(\'a\').attr(\'href\');' . "\n" .
+          $sPrefix . '          return true; // True closes the menu.' . "\n" .
+          $sPrefix . '        } else if ($(this).find(\'a\').attr(\'click\') != undefined) {' . "\n" .
+          $sPrefix . '          eval($(this).find(\'a\').attr(\'click\'));' . "\n" .
+          $sPrefix . '          return true; // True closes the menu.' . "\n" .
+          $sPrefix . '        } else {' . "\n" .
+          $sPrefix . '          return false;' . "\n" .
+          $sPrefix . '        }' . "\n" .
+          $sPrefix . '      }' . "\n" .
+          $sPrefix . '    };' . "\n" .
+          $sPrefix . '    // Add menu to options icon.' . "\n" .
+          $sPrefix . '    $(\'#viewentryOptionsButton_' . $sID . '\').jeegoocontext(\'viewentryMenu_' . $sID . '\', aMenuOptions);' . "\n" .
+          $sPrefix . '  });' . "\n" .
+          $sPrefix . '</SCRIPT>' . "\n\n");
 }
 
 

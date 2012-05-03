@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-04-30
+ * Modified    : 2012-05-03
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -47,16 +47,22 @@ if (PATH_COUNT < 3 && !ACTION) {
     // View all columns.
 
     if (!empty($_PE[1])) {
+        // FIXME; Is there a better way checking if it's a valid category?
         if (in_array($_PE[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
             // Category given.
             $_GET['search_category'] = $_PE[1];
+            define('PAGE_TITLE', 'Browse ' . $_PE[1] . ' custom data columns');
+
+            require ROOT_PATH . 'inc-lib-columns.php';
+            $aTableInfo = lovd_getTableInfoByCategory($_PE[1]);
         } else {
             header('Location:' . lovd_getInstallURL() . $_PE[0] . '?search_category=' . $_PE[1]);
             exit;
         }
+    } else {
+        define('PAGE_TITLE', 'Browse custom data columns');
     }
 
-    define('PAGE_TITLE', 'Browse custom data columns');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -66,19 +72,28 @@ if (PATH_COUNT < 3 && !ACTION) {
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
     if ($_DATA->getCount()) {
-        lovd_showInfoTable('Please note that these are all columns available in this LOVD installation. This is not the list of columns actually added to the system. Also, modifications made to the columns added to the system are not shown.', 'information', 950);
+        lovd_showInfoTable('Please note that these are all ' . (empty($_PE[1])? '' : $_PE[1]) . ' columns available in this LOVD installation. This is not the list of columns actually added to the system.' .
+                           (!empty($_PE[1]) && !$aTableInfo['shared']? '' :
+                            ' Also, modifications made to the columns added to ' . (empty($_PE[1])? 'the system' : 'a certain ' . $aTableInfo['unit']) . ' are not shown.'), 'information', 950);
     }
     $aSkip = array();
     if (!empty($_PE[1])) {
         $_DATA->setSortDefault('col_order'); // To show the user we're now sorting on this (the ViewList does so by default, anyway).
         $aSkip = array('category');
+    } else {
+        // Let users restrict their choices.
+        $aCategories = array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript');
+        $aNavigation = array();
+        foreach ($aCategories as $sCategory) {
+            $aNavigation[CURRENT_PATH . '/' . $sCategory] = array('', 'Show only ' . $sCategory . ' columns', 1);
+        }
+        lovd_showJGNavigation($aNavigation, 'RestrictColumns');
+        print('      <BR>' . "\n\n");
     }
-    $_DATA->viewList('Columns', $aSkip);
+    $n = $_DATA->viewList('Columns', $aSkip);
 
-    // FIXME; Is there a better way checking if it's a valid category?
-    if (!empty($_PE[1]) && $_AUTH['level'] >= LEVEL_MANAGER) {
-        // Add link to change default sorting order.
-        lovd_showNavigation('<A href="' . CURRENT_PATH . '?order">Re-order all ' . $_PE[1] . ' columns</A>');
+    if ($n && !empty($_PE[1]) && $_AUTH['level'] >= LEVEL_MANAGER) {
+        lovd_showJGNavigation(array('javascript:lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $_PE[1] . '\', 800, 500);' => array('', 'Change ' . ($aTableInfo['shared']? 'default ' : '') . 'order of columns', 1)), 'Columns');
     }
 
     $_T->printFooter();
@@ -157,20 +172,14 @@ if (PATH_COUNT > 2 && !ACTION) {
 
 
 
-if (PATH_COUNT > 1 && ACTION == 'order') {
+if (PATH_COUNT == 2 && ACTION == 'order') {
     // URL: /columns/Individual?order
-    // URL: /columns/VariantOnTranscript/DMD?order
     // Change in what order the columns will be shown in a viewList/viewEntry.
 
     $sCategory = $_PE[1];
 
-    // Require form & column functions.
-    require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'inc-lib-columns.php';
-
-    // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
-
     if (!$aTableInfo) {
         $_T->printHeader();
         $_T->printTitle('Re-order columns');
@@ -179,24 +188,10 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
         exit;
     }
 
-    if (empty($_PE[2]) || !$aTableInfo['shared']) {
-        $sObject = '';
-    } else {
-        $sObject = rawurldecode(($aTableInfo['unit'] == 'disease'? sprintf('%05d', $_PE[2]) : $_PE[2]));
-        if (!$_DB->query('SELECT id FROM ' . constant('TABLE_' . strtoupper($aTableInfo['unit']) . 'S') . ' WHERE id = ?', array($sObject))->fetchColumn()) {
-            exit;
-        }
-    }
-
-    define('PAGE_TITLE', 'Re-order ' . $aTableInfo['table_name'] . ' columns' . ($sObject? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : ''));
+    define('PAGE_TITLE', 'Re-order ' . $aTableInfo['table_name'] . ' columns');
     define('LOG_EVENT', 'ColumnOrder');
 
-    if ($sObject != '') {
-        lovd_isAuthorized($aTableInfo['unit'], $sObject);
-        lovd_requireAUTH(LEVEL_CURATOR);
-    } else {
-        lovd_requireAUTH(LEVEL_MANAGER);
-    }
+    lovd_requireAUTH(LEVEL_MANAGER);
 
     $lCategory = strlen($sCategory);
 
@@ -208,46 +203,44 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
                 continue; // Column not in category we're working in (hack attempt, however quite innocent)
             }
             $nOrder ++; // Since 0 is the first key in the array.
-            if (!$sObject) {
-                $_DB->query('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID));
-            } else {
-                $_DB->query('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $aTableInfo['unit'] . 'id = ? AND colid = ?', array($nOrder, $sObject, $sID));
-            }
+            $_DB->query('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID));
         }
 
         // If we get here, it all succeeded.
         $_DB->commit();
 
         // Write to log...
-        lovd_writeLog('Event', LOG_EVENT, 'Updated the ' . $aTableInfo['table_name'] . ' column order' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : ''));
+        lovd_writeLog('Event', LOG_EVENT, 'Updated the ' . $aTableInfo['table_name'] . ' column order');
 
         // Thank the user...
-        header('Refresh: 3; url=' . lovd_getInstallURL() . ($sObject != ''? $aTableInfo['unit'] . 's/' . $sObject : 'columns/' . $sCategory));
-
         $_T->printHeader();
         $_T->printTitle();
-        lovd_showInfoTable('Successfully updated the ' . $aTableInfo['table_name'] . ' column order' . ($sObject != ''? ' for ' . $aTableInfo['unit'] . ' ' . $sObject : '') . '!', 'success');
+        lovd_showInfoTable('Successfully updated the ' . $aTableInfo['table_name'] . ' column order!', 'success');
+
+        if (isset($_GET['in_window'])) {
+            // We're in a new window, refresh opener en close window.
+            print('      <SCRIPT type="text/javascript">setTimeout(\'opener.location.reload();self.close();\', 1000);</SCRIPT>' . "\n\n");
+        } else {
+            print('      <SCRIPT type="text/javascript">setTimeout(\'window.location.href=\\\'' . lovd_getInstallURL() . $_PE[0] . '/' . $sID . '\\\';\', 1000);</SCRIPT>' . "\n\n");
+        }
 
         $_T->printFooter();
         exit;
     }
 
     $_T->printHeader();
-
     $_T->printTitle();
 
     // Retrieve column IDs in current order.
-    if (!$sObject) {
-        $aColumns = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'))->fetchAllColumn();
-    } else {
-        $aColumns = $_DB->query('SELECT colid AS id FROM ' . TABLE_SHARED_COLS . ' WHERE colid LIKE ? AND ' . $aTableInfo['unit'] . 'id = ? ORDER BY col_order ASC', array($sCategory . '/%', $sObject))->fetchAllColumn();
-    }
+    $aColumns = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'))->fetchAllColumn();
 
-    lovd_showInfoTable('Below is a sorting list of all ' . ($sObject? 'active columns' : 'available columns (active & inactive)') . '. By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect listings, detailed views and data entry forms in the same way.', 'information');
+    lovd_showInfoTable('Below is a sorting list of all available columns (active & inactive). By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect listings, detailed views and data entry forms in the same way.' .
+                       (!$aTableInfo['shared']? '' :
+                        '<BR>Please note that this will change the <B>default</B> order of the columns only. You can change the order of the enabled columns per ' . $aTableInfo['unit'] . ' from the detailed view.'), 'information');
 
     // Form & table.
     print('      <TABLE cellpadding="0" cellspacing="0" class="sortable_head" style="width : 302px;"><TR><TH width="20">&nbsp;</TH><TH>Column ID ("' . $sCategory . '")</TH></TR></TABLE>' . "\n" .
-          '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+          '      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n" .
           '        <UL id="column_list" class="sortable" style="width : 300px; margin-top : 0px;">' . "\n");
 
     // Now loop the items in the order given.
@@ -256,7 +249,7 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
     }
 
     print('        </UL>' . "\n" .
-          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . ($sObject != ''? $aTableInfo['unit'] . 's/' . $sObject : 'columns/' . $sCategory) . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" .
+          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="' . (isset($_GET['in_window'])? 'self.close(); return false;' : 'document.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . '\'; return false;') . '" style="border : 1px solid #FF4422;">' . "\n" .
           '      </FORM>' . "\n\n");
 
     lovd_includeJS('lib/jQuery/jquery-ui.sortable.min.js');
@@ -264,12 +257,12 @@ if (PATH_COUNT > 1 && ACTION == 'order') {
 ?>
       <SCRIPT type='text/javascript'>
         $(function() {
-                $('#column_list').sortable({
-                        containment: 'parent',
-                        tolerance: 'pointer',
-                        handle: 'TD.handle',
-                });
-                $('#column_list').disableSelection();
+          $('#column_list').sortable({
+            containment: 'parent',
+            tolerance: 'pointer',
+            handle: 'TD.handle',
+          });
+          $('#column_list').disableSelection();
         });
       </SCRIPT>
 <?php

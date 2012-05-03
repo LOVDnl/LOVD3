@@ -42,6 +42,7 @@ body ul.jeegoocontext li span.submenu{display:block; width:4px; height:11px; flo
 body ul.jeegoocontext li.disabled span.submenu{background-image:url(lib/jeegoocontext/skins/images/submenu_dis.gif)}
 body ul.jeegoocontext li.hover{background-color:#C8DCFA}
 body ul.jeegoocontext li.hover.disabled, body ul.jeegoocontext li.hover.hr{background-color:#FFFFFF}
+body ul.jeegooviewlist li.hover.disabled{background-color:#F0F3FF}
 /*icons*/
 body ul.jeegoocontext li.icon{width:276px; padding:5px}
 body ul.jeegoocontext span.icon{display:block; float:left; width:26px; height:16px; background-repeat:no-repeat}

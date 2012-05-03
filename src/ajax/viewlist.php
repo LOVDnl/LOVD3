@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-02
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -50,6 +50,7 @@ $aNeededLevel =
                 'Log' => LEVEL_MANAGER,
                 'Phenotype' => 0,
                 'Screening' => 0,
+                'Shared_Column' => LEVEL_CURATOR,
                 'Transcript' => 0,
                 'Transcript_Variant' => 0,
                 'User' => LEVEL_MANAGER,
@@ -77,7 +78,7 @@ if (!file_exists($sFile)) {
 
 $sObjectID = '';
 $nID = '';
-if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant', 'Custom_ViewList'))) {
+if (in_array($_GET['object'], array('Custom_ViewList', 'Phenotype', 'Shared_Column', 'Transcript_Variant'))) {
     if (isset($_GET['object_id'])) {
         $sObjectID = $_GET['object_id'];
     }

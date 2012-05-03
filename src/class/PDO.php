@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2012-04-18
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-02
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -41,6 +41,7 @@ if (!defined('ROOT_PATH')) {
 class LOVD_PDO extends PDO {
     // This class provides a wrapper around PDO such that database errors are handled automatically by LOVD.
     // FIXME; lovd_queryDB() provided a $bDebug argument. How to implement that now?
+    private $aLastError = array();
 
     function __construct ($sBackend, $sDSN, $sUsername, $sPassword)
     {
@@ -106,6 +107,12 @@ class LOVD_PDO extends PDO {
         $a = $this->errorInfo();
         if (is_array($a) && !empty($a[2])) {
             return 'SQLSTATE[' . $a[0] . ']: Syntax error or access violation: ' . $a[1] . ' ' . $a[2];
+        } else {
+            // No error now, but we have a stored error maybe from a LOVD_PDO::query() call that had to store the error.
+            $a = $this->aLastError;
+            if (is_array($a) && !empty($a[2])) {
+                return 'Error in PDOStatement::execute() while executing prepared query: SQLSTATE[' . $a[0] . ']: Syntax error or access violation: ' . $a[1] . ' ' . $a[2];
+            }
         }
         return '';
     }
@@ -152,8 +159,11 @@ class LOVD_PDO extends PDO {
             if ($q) {
                 $b = $q->execute($aSQL, $bHalt, $bTrim); // Error handling by our own PDOStatement class.
                 if (!$b) {
-                    // We should actually return true||false now, but the user of this function probably wants to do a
-                    // fetch() if the execute was successful, so return the PDOStatement object just like PDO::query().
+                    // If the query was successful, we return the PDOStatement such that fetch() calls can be made.
+                    // Now that the query was *not* successful, we'll return a false to indicate an error occured.
+                    // However, this means we'll loose the ability to reach the error from outside of this function call,
+                    // since the error lies within $q. Therefore, store the error in the global database handler.
+                    $this->aLastError = $q->errorInfo();
                     return false;
                 }
             }
@@ -310,6 +320,21 @@ class LOVD_PDOStatement extends PDOStatement {
         // Wrapper around PDOStatement::fetch(PDO::FETCH_NUM).
         // THIS WRAPPER DOES NOT SUPPORT THE cursor_orientation OR offset ARGUMENTS!
         return $this->fetch(PDO::FETCH_NUM);
+    }
+
+
+
+
+
+    function formatError ()
+    {
+        // Formats the error message from PDOStatement::errorInfo() such that is resembles the error message from the Exception Handler.
+
+        $a = $this->errorInfo();
+        if (is_array($a) && !empty($a[2])) {
+            return 'SQLSTATE[' . $a[0] . ']: Syntax error or access violation: ' . $a[1] . ' ' . $a[2];
+        }
+        return '';
     }
 }
 ?>

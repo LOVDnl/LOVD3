@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-04-25
+ * Modified    : 2012-04-27
  * For LOVD    : 3.0-beta-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -269,7 +269,7 @@ class LOVD_Gene extends LOVD_Object {
         if ($aData['url_external']) {
             $aExternalLinks = explode("\r\n", trim($aData['url_external']));
             foreach ($aExternalLinks as $n => $sLink) {
-                if (!lovd_matchURL($sLink) && (!preg_match('/^[^<>]+ <?([^< >]+)>?$/', $sLink, $aRegs) || !lovd_matchURL($aRegs[1]))) {
+                if (!lovd_matchURL($sLink) && (!preg_match('/^[^<>]+ <([^< >]+)>$/', $sLink, $aRegs) || !lovd_matchURL($aRegs[1]))) {
                     lovd_errorAdd('url_external', 'External link #' . ($n + 1) . ' (' . htmlspecialchars($sLink) . ') not understood.');
                 }
             }

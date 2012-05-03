@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-04-25
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-03
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -77,21 +77,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_Disease();
     $zData = $_DATA->viewEntry($nID);
 
-    $sNavigation = '';
+    $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
-        $sNavigation .= '<A href="columns/Phenotype/' . $nID . '?order">Re-order all ' . $zData['symbol'] . ' phenotype columns';
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            // Authorized user (admin or manager) is logged in. Provide tools.
-            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?edit">Edit disease information</A>';
-            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete disease entry</A>';
+            $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit disease information</A>', 1);
+            $aNavigation[CURRENT_PATH . '?delete']    = array('cross.png', 'Delete disease entry', 1);
         }
+        $aNavigation[CURRENT_PATH . '/columns']       = array('menu_columns.png', 'View enabled phenotype columns', 1);
+        $aNavigation[CURRENT_PATH . '/columns?order'] = array('menu_columns.png', 'Re-order enabled phenotype columns', 1);
     }
+    lovd_showJGNavigation($aNavigation, 'Genes');
 
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
-    
     $_GET['search_diseaseids'] = $nID;
     print('<BR><BR>' . "\n\n");
     $_T->printTitle('Individuals', 'H4');
@@ -459,6 +455,130 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
+    // URL: /diseases/00001/columns
+    // View enabled columns for this disease.
+
+    $nID = sprintf('%05d', $_PE[1]);
+    define('PAGE_TITLE', 'View enabled custom data columns for disease #' . $nID);
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Load appropiate user level for this disease.
+    lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
+    lovd_requireAUTH(LEVEL_CURATOR);
+
+    require ROOT_PATH . 'class/object_shared_columns.php';
+    $_DATA = new LOVD_SharedColumn($nID);
+    $n = $_DATA->viewList('Columns');
+
+    if ($n) {
+        lovd_showJGNavigation(array('javascript:lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $nID . '\', 800, 350);' => array('', 'Change order of columns', 1)), 'Columns');
+    }
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 'order') {
+    // URL: /diseases/00001/columns?order
+    // Change order of enabled columns for this disease.
+
+    $nID = sprintf('%05d', $_PE[1]);
+    define('PAGE_TITLE', 'Change order of enabled custom data columns for disease #' . $nID);
+    define('LOG_EVENT', 'ColumnOrder');
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Load appropiate user level for this disease.
+    lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
+    lovd_requireAUTH(LEVEL_CURATOR);
+
+    $sUnit = 'disease';
+    $sCategory = 'Phenotype';
+
+    if (POST) {
+        $_DB->beginTransaction();
+        foreach ($_POST['columns'] as $nOrder => $sColID) {
+            $nOrder ++; // Since 0 is the first key in the array.
+            $_DB->query('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sUnit . 'id = ? AND colid = ?', array($nOrder, $nID, $sCategory . '/' . $sColID));
+        }
+        $_DB->commit();
+
+        // Write to log...
+        lovd_writeLog('Event', LOG_EVENT, 'Updated the column order for ' . $sUnit . ' ' . $nID);
+
+        // Thank the user...
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Successfully updated the column order for ' . $sUnit . ' ' . $nID . '!', 'success');
+
+        if (isset($_GET['in_window'])) {
+            // We're in a new window, refresh opener en close window.
+            print('      <SCRIPT type="text/javascript">setTimeout(\'opener.location.reload();self.close();\', 1000);</SCRIPT>' . "\n\n");
+        } else {
+            print('      <SCRIPT type="text/javascript">setTimeout(\'window.location.href=\\\'' . lovd_getInstallURL() . $_PE[0] . '/' . $nID . '\\\';\', 1000);</SCRIPT>' . "\n\n");
+        }
+
+        $_T->printFooter();
+        exit;
+    }
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Retrieve column IDs in current order.
+    $aColumns = $_DB->query('SELECT SUBSTRING(colid, LOCATE("/", colid)+1) FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sUnit . 'id = ? ORDER BY col_order ASC', array($nID))->fetchAllColumn();
+
+    if (!count($aColumns)) {
+        lovd_showInfoTable('No columns found!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
+    lovd_showInfoTable('Below is a sorting list of all active columns. By clicking &amp; dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect listings, detailed views and data entry forms in the same way.', 'information');
+
+    // Form & table.
+    print('      <TABLE cellpadding="0" cellspacing="0" class="sortable_head" style="width : 302px;"><TR><TH width="20">&nbsp;</TH><TH>Column ID</TH></TR></TABLE>' . "\n" .
+          '      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n" .
+          '        <UL id="column_list" class="sortable" style="width : 300px; margin-top : 0px;">' . "\n");
+
+    // Now loop the items in the order given.
+    foreach ($aColumns as $sID) {
+        print('        <LI><INPUT type="hidden" name="columns[]" value="' . $sID . '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . $sID . '</TD></TR></TABLE></LI>' . "\n");
+    }
+
+    print('        </UL>' . "\n" .
+          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="' . (isset($_GET['in_window'])? 'self.close(); return false;' : 'document.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . '\'; return false;') . '" style="border : 1px solid #FF4422;">' . "\n" .
+          '      </FORM>' . "\n\n");
+
+    lovd_includeJS('lib/jQuery/jquery-ui.sortable.min.js');
+
+?>
+      <SCRIPT type='text/javascript'>
+        $(function() {
+          $('#column_list').sortable({
+            containment: 'parent',
+            tolerance: 'pointer',
+            handle: 'TD.handle',
+          });
+          $('#column_list').disableSelection();
+        });
+      </SCRIPT>
+<?php
 
     $_T->printFooter();
     exit;
