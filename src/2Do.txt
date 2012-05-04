@@ -1,7 +1,12 @@
 Prioritize:
 ===========
-On all multiple selection lists, voeg meer uitleg toe aan het veld hoe dingen te selecteren/deselecteren, onder ?.
+On all multiple selection lists, voeg meer uitleg toe aan het veld hoe dingen te selecteren/deselecteren, onder "?".
 No cols for gene? "No shared_columns found!"
+- Add en remove custom column moet goed geschreven worden, hun structuur verschilt en remove custom column heeft issues.
+  + Gebruik $_GET['target'] moet mogelijk zijn, om binnen te komen.
+  + Maar formulier moet in $_POST verzenden (omdat $_GET limitaties heeft).
+  + Goede controles op aanwezigheid target!
+  + Zie FIXME's columns.php:1863.
 - Custom columns need to be able to be edited per gene!
   + URL: /gene/GENE/columns/VariantOnTranscript/DNA (viewentry)
   + URL: /gene/GENE/columns/VariantOnTranscript/DNA?edit
@@ -165,6 +170,7 @@ No cols for gene? "No shared_columns found!"
 - Mapper geeft query error als VOT DNA veld niet actief is: ondervangen?
 - CURRENT_PATH is mooier in de code dan $_PE[0] . '/' . $nID, maar CURRENT_PATH mist de str_pad die $nID wel heeft. Is hier een mooie oplossing voor?
   + Kan CURRENT_PATH afhankelijk worden gemaakt van een bepaalde predefined set, dat <object>/<numeriek> automatisch een str_pad/sprintf ontvangt, afhankelijk van <object>?
+- Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 

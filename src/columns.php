@@ -120,6 +120,7 @@ if (PATH_COUNT > 2 && !ACTION) {
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
 
+    require ROOT_PATH . 'inc-lib-columns.php';
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
     $zData = $_DATA->viewEntry($sColumnID);
@@ -1652,11 +1653,12 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             if (!$zData['active_checked']) {
                 $sSQL = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' ADD COLUMN `' . $zData['id'] . '` ' . $zData['mysql_type'];
                 $dStart = time();
-                $q = $_DB->exec($sSQL);
-                if (!$q) {
+                $q = $_DB->exec($sSQL, false);
+                if ($q === false) {
+                    $sError = $_DB->formatError(); // Save the PDO error before it disappears.
                     $tPassed = time() - $dStart;
                     $sMessage = ($tPassed < 2? '' : ' (fail after ' . $tPassed . ' seconds - disk full maybe?)');
-                    lovd_queryError(LOG_EVENT . $sMessage, $sSQL, mysql_error());
+                    lovd_queryError(LOG_EVENT . $sMessage, $sSQL, $sError);
                 }
             }
 
@@ -1853,10 +1855,15 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     define('PAGE_TITLE', 'Remove custom data column ' . $sColumnID);
     define('LOG_EVENT', 'ColRemove');
 
-    if ($aTableInfo['shared'] && POST) {
+    // FIXME; This code means that a curator can never remove a custom column from his gene!!!
+    if ($aTableInfo['shared'] && POST && !empty($_POST['target']) && is_array($_POST['target'])) {
         // FIXME; Mist er nog code die wel in 'add' aanwezig is?
         //   Met de code van 'add' er bij checken of alle functionaliteit die in 'add' zit, hier ook in zit?
         //   Controles, manier van loggen, manier van data ophalen, etc..
+        // FIXME; target wordt helemaal niet correct gecontroleerd; add en remove hebben verschillende manieren van het opvragen van target. Gelijk trekken!
+        //    Code should be able to receive a $_GET['target'], that we can link to from the enabled shared cols viewentry, to directly remove the column from a given gene.
+        //    However, normally the form should work with POST, since $_GET is limited for large numbers of columns.
+        //    It's also nice to have only one form, but this is of less importance.
         foreach ($_POST['target'] as $sColumn) {
             lovd_isAuthorized($aTableInfo['unit'], $sColumn);
             lovd_requireAUTH(LEVEL_CURATOR);
@@ -1905,6 +1912,12 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         // User had to enter his/her password for authorization.
         if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        // Fixed Bug; Target was not mandatory! // FIXME; Perhaps this is a temporary fix, since this code needs to be structured differently, maybe.
+        if (empty($_POST['target']) || !is_array($_POST['target'])) {
+            // Throw error message, before we get a query error below...
+            lovd_errorAdd('target', 'Please select at least one ' . $aTableInfo['unit'] . ' to remove this column from.');
         }
 
         if (!lovd_error()) {

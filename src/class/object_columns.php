@@ -171,6 +171,7 @@ class LOVD_Column extends LOVD_Object {
                         'description_legend_full',
                         'mysql_type',
                         'form_type',
+                        'width',
                       );
 
         if (ACTION == 'edit') {

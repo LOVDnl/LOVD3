@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-05-03
+ * Modified    : 2012-05-04
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -775,6 +775,173 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     if ($n) {
         lovd_showJGNavigation(array('javascript:lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $sID . '\', 800, 350);' => array('', 'Change order of columns', 1)), 'Columns');
     }
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && !ACTION) {
+    // URL: /genes/DMD/columns/DNA
+    // URL: /genes/DMD/columns/GVS/Function
+    // View specific enabled column for this gene.
+
+    $sUnit = 'gene';
+    $sCategory = 'VariantOnTranscript';
+
+    $sParentID = rawurldecode($_PE[1]);
+    $aCol = $_PE;
+    unset($aCol[0], $aCol[1], $aCol[2]); // 'genes/DMD/columns';
+    $sColumnID = implode('/', $aCol);
+    define('PAGE_TITLE', 'View settings for custom data column ' . $sColumnID . ' for ' . $sUnit . ' ' . $sParentID);
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Load appropiate user level for this gene.
+    lovd_isAuthorized($sUnit, $sParentID);
+    lovd_requireAUTH(LEVEL_CURATOR); // Will also stop user if gene given is fake.
+
+    require ROOT_PATH . 'class/object_shared_columns.php';
+    $_DATA = new LOVD_SharedColumn($sParentID, $sCategory . '/' . $sColumnID);
+    $zData = $_DATA->viewEntry($sCategory . '/' . $sColumnID);
+
+    $aNavigation =
+         array(
+                CURRENT_PATH . '?edit' => array('menu_edit.png', 'Edit settings for this ' . $sUnit . ' only', 1),
+                // FIXME; Can we redirect inmediately to the correct page? And in a new window!
+                'columns/' . $sCategory . '/' . $sColumnID . '?remove' => array('cross.png', 'Remove column from this ' . $sUnit, 0),
+              );
+    lovd_showJGNavigation($aNavigation, 'ColumnEdit');
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && ACTION == 'edit') {
+    // URL: /genes/DMD/columns/DNA?edit
+    // URL: /genes/DMD/columns/GVS/Function?edit
+    // Edit specific enabled column for this gene.
+
+    $sUnit = 'gene';
+    $sCategory = 'VariantOnTranscript';
+
+    $sParentID = rawurldecode($_PE[1]);
+    $aCol = $_PE;
+    unset($aCol[0], $aCol[1], $aCol[2]); // 'genes/DMD/columns';
+    $sColumnID = implode('/', $aCol);
+    define('PAGE_TITLE', 'Edit settings for custom data column ' . $sColumnID . ' for ' . $sUnit . ' ' . $sParentID);
+    define('LOG_EVENT', 'SharedColEdit');
+
+    // Load appropiate user level for this gene.
+    lovd_isAuthorized($sUnit, $sParentID);
+    lovd_requireAUTH(LEVEL_CURATOR); // Will also stop user if gene given is fake.
+
+    require ROOT_PATH . 'class/object_shared_columns.php';
+    $_DATA = new LOVD_SharedColumn($sParentID, $sCategory . '/' . $sColumnID);
+    $zData = $_DATA->loadEntry($sCategory . '/' . $sColumnID);
+    // Remove columns based on form type?
+    $aFormType = explode('|', $zData['form_type']);
+
+    // Require form functions.
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (POST) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array('width', 'mandatory', 'description_form', 'description_legend_short', 'description_legend_full', 'public_view', 'public_add', 'edited_by', 'edited_date');
+            if ($aFormType[2] == 'select') {
+                $aFields[] = 'select_options';
+            }
+
+            // Prepare values.
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
+
+            // Update entry.
+            $_DATA->updateEntry($sCategory . '/' . $sColumnID, $_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Edited column ' . $sColumnID . ' for ' . $sUnit . ' ' . $sParentID);
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
+
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('Successfully edited column "' . $sColumnID . '" for ' . $sUnit . ' ' . $sParentID . '!', 'success');
+
+            $_T->printFooter();
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+
+    } else {
+        // Default values.
+        $_POST = array_merge($_POST, $zData);
+    }
+
+
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        array('', '', 'submit', 'Edit custom data column'),
+                      ));
+    if ($aFormType[2] != 'select') {
+        unset($aForm['options'], $aForm['options_note']);
+    }
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+    
+?>
+<SCRIPT type="text/javascript">
+function lovd_setWidth ()
+{
+    var line = $(this).parent().parent().next().children(':last').children(':first');
+    if ($(this).attr('value') > 999) {
+        $(this).attr('value', 999);
+        alert('The width cannot be more than 3 digits!');
+        return false;
+    }
+    $(line).attr('width', $(this).attr('value'));
+    $(line).next().next().html('(This is ' + $(this).attr('value') + ' pixels)');
+    return false;
+}
+
+$(function ()
+{
+    $('input[name="width"]').change(lovd_setWidth);
+});
+
+</SCRIPT>
+<?php
 
     $_T->printFooter();
     exit;
