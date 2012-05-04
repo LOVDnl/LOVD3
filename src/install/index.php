@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-25
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-04
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -205,7 +205,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
 
 if ($_GET['step'] == 1 && defined('NOT_INSTALLED')) {
     // Step 1: Administrator account details.
-    if ($_DB->query('SHOW TABLES LIKE ?', array(TABLE_USERS))->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS)->fetchColumn()) {
+    if ($_DB->query('SHOW TABLES LIKE "' . TABLE_USERS . '"')->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS)->fetchColumn()) {
         // We already have a database user!
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] + 2));
         exit;
@@ -286,7 +286,7 @@ if ($_GET['step'] == 1 && defined('NOT_INSTALLED')) {
 
 if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // Step 2: Install database tables.
-    if ($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn() && !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn()) {
+    if ($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn()) {
         // Installed, but not configured yet.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] + 1));
         exit;
@@ -319,7 +319,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // Do any of these tables exist yet?
     $aTablesMatched = array();
     $aTablesFound = array();
-    $q = $_DB->query('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
+    $q = $_DB->query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
     while ($sTable = $q->fetchColumn()) {
         $aTablesMatched[] = $sTable;
         if (in_array($sTable, $_TABLES)) {
@@ -535,9 +535,9 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
 
 
 
-if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
+if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
     // Step 3: Configuring general LOVD system settings.
-    if (!$_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn()) {
+    if (!$_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn()) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
         exit;
@@ -782,7 +782,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG
 //if ($_GET['step'] == 5) {
 if ($_GET['step'] == 4) {
     // Step 5: Done.
-    if (!($_DB->query('SHOW TABLES LIKE ?', array(TABLE_CONFIG))->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
+    if (!($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
         // Didn't finish previous step correctly.
         //header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 2));
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));

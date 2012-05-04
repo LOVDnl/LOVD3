@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-04-30
+ * Modified    : 2012-05-04
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -549,7 +549,9 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
 
     // Are we installed properly?
     $aTables = array();
-    $q = $_DB->query('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
+    // We can't put TABLE_PREFIX in an argument, since SHOW ... can't be prepared by PDO in some PHP versions.
+    // Generated errors on 5.1.6, works fine on 5.3.3.
+    $q = $_DB->query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
     while ($sCol = $q->fetchColumn()) {
         if (in_array($sCol, $_TABLES)) {
             $aTables[] = $sCol;

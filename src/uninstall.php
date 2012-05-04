@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2012-04-25
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-04
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -143,7 +143,7 @@ if (!empty($_POST)) {
             // Does any of these tables exist yet?
             print('Checking LOVD installation...' . "\n");
             $aTables = array();
-            $q = lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLEPREFIX . '\_%'));
+            $q = lovd_queryDB_Old('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
             while ($r = mysql_fetch_row($q)) {
                 if (in_array($r[0], $_TABLES)) {
                     $aTables[] = $r[0];

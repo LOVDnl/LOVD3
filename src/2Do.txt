@@ -1,12 +1,12 @@
 Prioritize:
 ===========
+On all multiple selection lists, voeg meer uitleg toe aan het veld hoe dingen te selecteren/deselecteren, onder ?.
 No cols for gene? "No shared_columns found!"
 - Custom columns need to be able to be edited per gene!
   + URL: /gene/GENE/columns/VariantOnTranscript/DNA (viewentry)
   + URL: /gene/GENE/columns/VariantOnTranscript/DNA?edit
 - Bug: VOT/Protein edit: Disallowed tag found in form field "description_legend_full". XSS attack?
 - Mapping script moet geen p.(=) opslaan, als Mutalyzer een WSPLICE foutmelding geeft.
-- DBID mag geen custom links meer hebben (mag ook niet gekozen worden).
 - IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
   + Reported by Christopher Watson.
 - Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
@@ -27,18 +27,15 @@ No cols for gene? "No shared_columns found!"
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - Unit tests via Selenium (of alternatief)?
-  * Hebben we OpenSSL ergens voor nodig?
-    + http mutalyzer contact als zelf in https???
 - VariantOnGenome/Times_reported???
 - Handmatige variant mapper: ook p. description ophalen bij Mutalyzer?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
 - Referer from login moet pagina zijn met alleen een action? Om te voorkomen dat er geredirect wordt naar een del action zonder dat dat de bedoeling is?
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
 - Als een individu wordt verwijderd, worden de varianten niet verwijderd - deze blijven dus hangen in het systeem.
-  + Daarnaast: als je een screening verwijdert, blijven de varianten die nergens anders aan verbonden zijn, los hangen in het systeem.
-  + Als je een screening verwijderd, moet er een waarschuwing bij komen, dat er X varianten worden verwijderd uit het systeem, omdat die alleen aan deze screening vast zitten.
   + Als je een individu verwijderd, moet het een optie worden om de X varianten ook te verwijderen, of de varianten los te koppelen en vrij te laten in het systeem.
-- IE7 @ LUMC heeft geen pagineren, net als dropdowns en andere dingen.
+  + Daarnaast: als je een screening verwijdert, blijven de varianten die nergens anders aan verbonden zijn, los hangen in het systeem.
+    * Als je een screening verwijderd, moet er een waarschuwing bij komen, dat er X varianten worden verwijderd uit het systeem, omdat die alleen aan deze screening vast zitten.
 
 - Beta-05:
   - DATA DOWNLOAD.
@@ -79,6 +76,8 @@ No cols for gene? "No shared_columns found!"
   - Gene headers & footers implementeren?
   - Should we maybe set default_socket_timeout somewhere?
 
+- Hebben we OpenSSL ergens voor nodig?
+  + http mutalyzer contact als zelf in https???
 - Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).

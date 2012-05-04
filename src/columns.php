@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-03
+ * Modified    : 2012-05-04
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -901,7 +901,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
     // If type has changed... take action!
     // Check size of table where this column needs to be added to and determine necessary time.
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
-    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE ?', array($aColumnInfo['table_sql']))->fetchAssoc();
+    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
     $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
     $nSizeIndexes = $zStatus['Index_length'];
     // Calculating time it could take to rebuild the table. This is just an estimate and it depends
@@ -1596,7 +1596,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     if ($zData['active_checked']) {
         $tAlter = 0;
     } else {
-        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE ?', array($aTableInfo['table_sql']))->fetchAssoc();
+        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
         $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
         $nSizeIndexes = $zStatus['Index_length'];
         // Calculating time it could take to rebuild the table. This is just an estimate and it depends

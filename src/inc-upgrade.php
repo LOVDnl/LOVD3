@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-19
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-04
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -249,6 +249,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'ALTER TABLE ' . TABLE_EFFECT . ' MODIFY COLUMN id TINYINT(2) UNSIGNED NOT NULL',
                                 'UPDATE ' . TABLE_CONFIG . ' SET proxy_port = NULL WHERE proxy_port = 0',
                              ),
+                    '3.0-beta-05' =>
+                        array(
+                                'UPDATE ' . TABLE_COLS . ' SET mysql_type = "VARCHAR(50)" WHERE id = "Phenotype/Inheritance"',
+                             ),
                   );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -313,6 +317,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         $aUpdates['3.0-beta-03d']['allele_values'] = $aAlleleSQL[0];
     }
 
+    if ($sCalcVersionDB < lovd_calculateVersion('3.0-beta-05')) {
+        // Make Phenotype/Inheritance long enough to actually fit the values in its selection list.
+        $aColumns = $_DB->query('DESCRIBE ' . TABLE_PHENOTYPES)->fetchAllColumn();
+        if (in_array('Phenotype/Inheritance', $aColumns)) {
+            $aUpdates['3.0-beta-05'][] = 'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY `Phenotype/Inheritance` VARCHAR(50)';
+        }
+    }
 
 
 
