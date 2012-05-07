@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-01
- * Modified    : 2012-02-28
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-05-07
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -30,7 +30,6 @@
 
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
-session_write_close();
 
 // Require manager clearance.
 if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
@@ -41,10 +40,24 @@ if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
 // Delete log entry, if available.
 if (!empty($_GET['id'])) {
     // The easiest thing to do is just run the query, and check if there is an effect.
-    $aDel = explode(',', $_GET['id']);
-    if (count($aDel) == 3) {
-        $q = $_DB->query('DELETE FROM ' . TABLE_LOGS . ' WHERE name = ? AND date = ? AND mtime = ?', $aDel, false);
-        die((string) ($q && $q->rowCount()));
+    if ($_GET['id'] == 'selected') {
+        $aIDs = $_SESSION['viewlists']['Logs']['checked'];
+    } else {
+        $aIDs = array($_GET['id']);
     }
+    $nDeleted = 0;
+    foreach ($aIDs as $key => $sID) {
+        $aDel = explode(',', $sID);
+        if (count($aDel) == 3) {
+            $q = $_DB->query('DELETE FROM ' . TABLE_LOGS . ' WHERE name = ? AND date = ? AND mtime = ?', $aDel, false);
+            if ($q && $q->rowCount()) {
+                $nDeleted ++;
+                if ($_GET['id'] == 'selected') {
+                    unset($_SESSION['viewlists']['Logs']['checked'][$key]); // To clean up.
+                }
+            }
+        }
+    }
+    die((string) ($nDeleted > 0) . ' ' . $nDeleted);
 }
 ?>

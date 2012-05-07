@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-04-25
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-07
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -51,7 +51,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
-    $_DATA->viewList('Screenings', 'screeningid');
+    $_DATA->viewList('Screenings', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
 
     $_T->printFooter();
     exit;
@@ -107,7 +107,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_genes.php';
         $_DATA = new LOVD_Gene();
         $_DATA->setSortDefault('id');
-        $_DATA->viewList('Genes_for_S_VE', 'geneid', true, true);
+        $_DATA->viewList('Genes_for_S_VE', array(), true, true);
         unset($_GET['search_geneid']);
     }
     

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-04
+ * Modified    : 2012-05-07
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -77,24 +77,24 @@ if (PATH_COUNT < 3 && !ACTION) {
                             ' Also, modifications made to the columns added to ' . (empty($_PE[1])? 'the system' : 'a certain ' . $aTableInfo['unit']) . ' are not shown.'), 'information', 950);
     }
     $aSkip = array();
+    print('      <UL id="viewlistMenu_Columns" class="jeegoocontext jeegooviewlist">' . "\n");
     if (!empty($_PE[1])) {
         $_DATA->setSortDefault('col_order'); // To show the user we're now sorting on this (the ViewList does so by default, anyway).
         $aSkip = array('category');
+        print('        <LI><A href="' . $_PE[0] . '">Show all custom columns</A></LI>' . "\n");
+        if ($_AUTH['level'] >= LEVEL_MANAGER) {
+            print('        <LI><A click="lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $_PE[1] . '\', 800, 500);">Change ' . ($aTableInfo['shared']? 'default ' : '') . 'order of columns</LI>' . "\n");
+        }
+
     } else {
         // Let users restrict their choices.
         $aCategories = array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript');
-        $aNavigation = array();
         foreach ($aCategories as $sCategory) {
-            $aNavigation[CURRENT_PATH . '/' . $sCategory] = array('', 'Show only ' . $sCategory . ' columns', 1);
+            print('        <LI><A href="' . CURRENT_PATH . '/' . $sCategory . '">Show only ' . $sCategory . ' columns</A></LI>' . "\n");
         }
-        lovd_showJGNavigation($aNavigation, 'RestrictColumns');
-        print('      <BR>' . "\n\n");
     }
-    $n = $_DATA->viewList('Columns', $aSkip);
-
-    if ($n && !empty($_PE[1]) && $_AUTH['level'] >= LEVEL_MANAGER) {
-        lovd_showJGNavigation(array('javascript:lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $_PE[1] . '\', 800, 500);' => array('', 'Change ' . ($aTableInfo['shared']? 'default ' : '') . 'order of columns', 1)), 'Columns');
-    }
+    print('      </UL>' . "\n\n");
+    $_DATA->viewList('Columns', $aSkip, false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
 
     $_T->printFooter();
     exit;
@@ -902,7 +902,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
     // If type has changed... take action!
     // Check size of table where this column needs to be added to and determine necessary time.
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
-    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
+    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aColumnInfo['table_sql'] . '"')->fetchAssoc();
     $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
     $nSizeIndexes = $zStatus['Index_length'];
     // Calculating time it could take to rebuild the table. This is just an estimate and it depends

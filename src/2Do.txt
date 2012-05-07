@@ -44,7 +44,7 @@ No cols for gene? "No shared_columns found!"
 
 - Beta-05:
   - DATA DOWNLOAD.
-    + Improve info in de header over de filters die gebruikt zijn.
+    + Is the Charset correctly set?
     + DATA IMPORT
       * Choose character set!
         - Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
@@ -171,6 +171,7 @@ No cols for gene? "No shared_columns found!"
 - CURRENT_PATH is mooier in de code dan $_PE[0] . '/' . $nID, maar CURRENT_PATH mist de str_pad die $nID wel heeft. Is hier een mooie oplossing voor?
   + Kan CURRENT_PATH afhankelijk worden gemaakt van een bepaalde predefined set, dat <object>/<numeriek> automatisch een str_pad/sprintf ontvangt, afhankelijk van <object>?
 - Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
+- Add viewlist menu also on other pages? viewlists within viewentries? phenotypes for instance, can't be downloaded yet.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-04-27
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-07
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -151,9 +151,8 @@ class LOVD_Gene extends LOVD_Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
-                        // Copy of the gene's ID for the search terms in the screening's viewEntry.
                         'geneid' => array(
-                                    'view' => array('Symbol', 100),
+                                    'view' => false, // Copy of the gene's ID for the search terms in the screening's viewEntry.
                                     'db'   => array('g.id', 'ASC', true)),
                         'id_' => array(
                                     'view' => array('Symbol', 100),

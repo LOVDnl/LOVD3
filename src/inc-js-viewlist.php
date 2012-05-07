@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2012-04-30
+ * Modified    : 2012-05-07
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -109,15 +109,6 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
         return true;
     }
 
-    // Disable the empty search fields.
-    for (var i in oForm) {
-        if (i.substring(0, 7) == 'search_') {
-            if (!oForm[i].value) {
-                oForm[i].disabled = true;
-            }
-        }
-    }
-
     // Create HTTP request object.
     var objHTTP = lovd_createHTTPRequest();
     if (!objHTTP) {
@@ -171,10 +162,10 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
                     sVal = 1;
                 if (aInput[i].name == 'page')
                     sVal = oForm['page_size'].value * oForm['page'].value;
-                sGET = (sGET? sGET + '&' : '') + aInput[i].name + '=' + encodeURIComponent(sVal);
+                sGET += (sGET? '&' : '') + aInput[i].name + '=' + encodeURIComponent(sVal);
             }
         }
-        sGET = (sGET? sGET + '&' : '') + 'only_rows=true';
+        sGET += (sGET? '&' : '') + 'only_rows=true';
         objHTTP.open('GET', '<?php echo lovd_getInstallURL() . 'ajax/viewlist.php?'; ?>' + sGET, true);
         objHTTP.send(null);
     }
@@ -288,8 +279,8 @@ if (!isset($_GET['nohistory'])) {
                         var sHash = '';
                         aInput = oForm.getElementsByTagName('input');
                         for (var i in aInput) {
-                            if (!aInput[i].disabled && aInput[i].value && aInput[i].name != 'viewlistid' && aInput[i].name != 'object') {
-                                sHash = (sHash? sHash + '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
+                            if (!aInput[i].disabled && aInput[i].value && aInput[i].name != 'viewlistid' && aInput[i].name != 'object' && aInput[i].name.substring(0,6) != 'check_') {
+                                sHash += (sHash? '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
                             }
                         }
                         window.location.hash = sHash;
@@ -324,7 +315,7 @@ if (!isset($_GET['nohistory'])) {
         aInput = oForm.getElementsByTagName('input');
         for (var i in aInput) {
             if (!aInput[i].disabled && aInput[i].value && aInput[i].name.substring(0,6) != 'check_') {
-                sGET = (sGET? sGET + '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
+                sGET += (sGET? '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
             }
         }
         // Gather changed checkbox IDs and send, too.
@@ -334,7 +325,7 @@ if (!isset($_GET['nohistory'])) {
             } else {
                 var sIDlist = check_list[sViewListID];
             }
-            sGET += (sGET? sGET + '&' : '') + 'ids_changed=' + sIDlist;
+            sGET += (sGET? '&' : '') + 'ids_changed=' + sIDlist;
             check_list[sViewListID] = [];
         }
         objHTTP.open('GET', '<?php echo lovd_getInstallURL() . 'ajax/viewlist.php?'; ?>' + sGET, true);

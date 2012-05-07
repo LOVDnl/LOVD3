@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2012-04-04
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-07
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -53,7 +53,7 @@ class LOVD_Log extends LOVD_Object {
         // Default constructor.
 
         // SQL code for viewing a list of entries.
-        $this->aSQLViewList['SELECT']   = 'l.*, CONCAT(l.date, " ", l.mtime) AS timestamp, u.name AS user';
+        $this->aSQLViewList['SELECT']   = 'l.*, CONCAT_WS(",", l.name, l.date, l.mtime) AS row_id, "" AS row_link, CONCAT(l.date, " ", l.mtime) AS timestamp, u.name AS user';
         $this->aSQLViewList['FROM']     = TABLE_LOGS . ' AS l LEFT JOIN ' . TABLE_USERS . ' AS u ON (l.userid = u.id)';
         $this->aSQLViewList['ORDER_BY'] = 'timestamp DESC';
 
@@ -101,7 +101,6 @@ class LOVD_Log extends LOVD_Object {
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
 
-        $zData['row_id'] = $zData['name'] . ',' . $zData['date'] . ',' . $zData['mtime'];
         $zData['user_'] = '<A href="users/' . $zData['userid'] . '">' . $zData['user'] . '</A>';
         $zData['del'] = '<A href="#" onclick="lovd_AJAX_deleteLogEntry(\'Logs\', \'' . $zData['row_id'] . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Delete" title="Delete" width="11" height="11" style="margin-top : 3px;"/></A>';
         $zData['entry'] = str_replace(array("\r\n", "\r", "\n"), '<BR/>', $zData['log']);

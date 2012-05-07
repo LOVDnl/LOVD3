@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-01
- * Modified    : 2011-05-17
- * For LOVD    : 3.0-pre-20
+ * Modified    : 2012-05-07
+ * For LOVD    : 3.0-beta-05
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -52,7 +52,7 @@ function lovd_AJAX_deleteLogEntry (sViewListID, sID)
             if (objHTTP.readyState == 4) {
                 objElement.style.cursor = '';
                 if (objHTTP.status == 200) {
-                    if (objHTTP.responseText == '1') {
+                    if (objHTTP.responseText.substring(0, 1) == '1') {
                         // Object successfully deleted.
                         lovd_AJAX_viewListHideRow(sViewListID, sID);
                         document.forms['viewlistForm_' + sViewListID].total.value --;

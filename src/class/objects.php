@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-02
+ * Modified    : 2012-05-07
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1114,11 +1114,15 @@ class LOVD_Object {
             header('Pragma: public');
             print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sObject . ' Quick Download format ### This file can not be imported ###' . "\n");
             // FIXME: this has to be done better, we can't see what we're filtering for, because it's in the arguments!
-            if ($WHERE) {
-                print('## Filter ' . $WHERE . "\n");
-            }
-            if ($HAVING) {
-                print('## Filter ' . $HAVING . "\n");
+            $sFilter = $WHERE . ($WHERE && $HAVING? ' AND ' : '') . $HAVING;
+            $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
+            if ($sFilter) {
+                if (count($aArgs) == substr_count($sFilter, '?')) {
+                    foreach ($aArgs as $sArg) {
+                        $sFilter = preg_replace('/\?/', (ctype_digit($sArg)? $sArg : '"' . $sArg . '"'), $sFilter, 1);
+                    }
+                }
+                print('## Filter ' . $sFilter . "\n");
             }
             if (ACTION == 'downloadSelected') {
                 print('## Filter selected ' . implode(',', $_SESSION['viewlists'][$sViewListID]['checked']) . "\n");
@@ -1242,7 +1246,7 @@ class LOVD_Object {
                     if (in_array($sField, $aColsToSkip)) {
                         continue;
                     }
-                    print(($i ++? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes($zData[$sField])) . '"');
+                    print(($i ++? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes(html_entity_decode(strip_tags($zData[$sField])))) . '"');
                 }
                 print("\n");
             }
@@ -1278,7 +1282,8 @@ class LOVD_Object {
                       '        }' . "\n" .
                       '        // Fix the top border that could not be set through jeegoo\'s style.css.' . "\n" .
                       '        $(\'#viewlistMenu_' . $sViewListID . '\').attr(\'style\', \'border-top : 1px solid #000;\');' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').prepend(\'<LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'all\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>Select all <SPAN>entries</SPAN></A></LI><LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'none\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Unselect all</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', true);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', false);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download selected entries</A></LI>\');' . "\n" .
+                      '        $(\'#viewlistMenu_' . $sViewListID . '\').prepend(\'<LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'all\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>Select all <SPAN>entries</SPAN></A></LI><LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'none\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Unselect all</A></LI>\');' . "\n" .
+                      '        $(\'#viewlistMenu_' . $sViewListID . '\').append(\'<LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', true);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', false);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download selected entries</A></LI>\');' . "\n" .
                       '        lovd_activateMenu(\'' . $sViewListID . '\');' . "\n\n");
             }
             print('        check_list[\'' . $sViewListID . '\'] = [];' . "\n" .

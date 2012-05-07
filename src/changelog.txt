@@ -38,6 +38,14 @@
    had occurred.
  * Fixed bug; When removing a shared custom column, providing the target was not
    mandatory. When left empty, LOVD returned a bunch of errors.
+ * Enabled a menu for authorized users to the detailed views of columns,
+   diseases, genes, individuals, logs, screenings, transcripts, users, variants
+   and views, which by default allows downloading the data shown.
+ * The list of log entries now also supports deleting multiple log entries at
+   once, through the new menu.
+ * Fixed notice when editing a custom column's default settings.
+ * Fixed bug; When removing Log entries, the empty search fields above the table
+   could not be used anymore until the page was refreshed.
 
 
 
