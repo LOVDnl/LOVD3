@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-10
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -83,7 +83,7 @@ if (PATH_COUNT < 3 && !ACTION) {
         $aSkip = array('category');
         print('        <LI><A href="' . $_PE[0] . '">Show all custom columns</A></LI>' . "\n");
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            print('        <LI><A click="lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $_PE[1] . '\', 800, 500);">Change ' . ($aTableInfo['shared']? 'default ' : '') . 'order of columns</LI>' . "\n");
+            print('        <LI><A click="lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $_PE[1] . '\', 800, 500);">Change ' . ($aTableInfo['shared']? 'default ' : '') . 'order of columns</A></LI>' . "\n");
         }
 
     } else {
@@ -984,26 +984,28 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
             }
 
             // Add custom links.
-            $aSuccess = array();
-            $aFailed = array();
-            $q = $_DB->prepare('INSERT IGNORE INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)');
-            foreach ($_POST['active_links'] as $nLinkID) {
-                if (!in_array($nLinkID, $zData['active_links'])) {
-                    // Add custom link to column.
-                    $q->execute(array($sColumnID, $nLinkID));
-                    if (!$q) {
-                        $aFailed[] = $nLinkID;
-                    } else {
-                        $aSuccess[] = $nLinkID;
+            if (preg_match('/^TEXT|VARCHAR/', $_POST['mysql_type']) && $sColumnID != 'VariantOnGenome/DBID') {
+                $aSuccess = array();
+                $aFailed = array();
+                $q = $_DB->prepare('INSERT IGNORE INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)');
+                foreach ($_POST['active_links'] as $nLinkID) {
+                    if (!in_array($nLinkID, $zData['active_links'])) {
+                        // Add custom link to column.
+                        $q->execute(array($sColumnID, $nLinkID));
+                        if (!$q) {
+                            $aFailed[] = $nLinkID;
+                        } else {
+                            $aSuccess[] = $nLinkID;
+                        }
                     }
                 }
-            }
-            if ($aFailed) {
-                // Silent error.
-                lovd_writeLog('Error', LOG_EVENT, 'Custom link' . (count($aFailed) > 1? 's' : '') . ' ' . implode(', ', $aFailed) . ' could not be added to column ' . $sColumnID);
-            }
-            if ($aSuccess) {
-                lovd_writeLog('Event', LOG_EVENT, 'Custom link' . (count($aSuccess) > 1? 's' : '') . ' ' . implode(', ', $aSuccess) . ' successfully added to column ' . $sColumnID);
+                if ($aFailed) {
+                    // Silent error.
+                    lovd_writeLog('Error', LOG_EVENT, 'Custom link' . (count($aFailed) > 1? 's' : '') . ' ' . implode(', ', $aFailed) . ' could not be added to column ' . $sColumnID);
+                }
+                if ($aSuccess) {
+                    lovd_writeLog('Event', LOG_EVENT, 'Custom link' . (count($aSuccess) > 1? 's' : '') . ' ' . implode(', ', $aSuccess) . ' successfully added to column ' . $sColumnID);
+                }
             }
 
             // Write to log...
@@ -1192,7 +1194,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
-    
+
     $sJSMessage = 'Are you sure you want to change the MySQL data type of this column? Changing the data type of an existing column causes a risk of losing data!';
     $sJSMessage .= ($tAlter > $tAlterMax? '\nPlease note that the time estimated to edit this columns MySQL type is ' . round($tAlter) . ' seconds. During this time, no updates to the data table are possible.' : '');
 
@@ -1420,194 +1422,83 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
-        // FIXME; there is some code missing here, to gather info to run lovd_isAuthorized() first (see code for sorting columns)..
+        // FIXME; there is some code missing here, to gather info to run lovd_isAuthorized() first (see code for sorting columns).
         lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
     }
 
-    require ROOT_PATH . 'class/object_columns.php';
-    $_DATA = new LOVD_Column();
-    $zData = $_DATA->loadEntry($sColumnID);
+    if ($aTableInfo['shared']) {
+        $nCount = $_DB->query('SELECT COUNT(id) FROM ' . constant(strtoupper('table_' . $aTableInfo['unit'] . 's')))->fetchColumn();
+        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
+    } else {
+        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid AND ac.colid IS NULL) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
+    }
 
+    if (!$zData) {
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
 
+    if (!POST && !empty($_GET['target'])) {
+        $_POST['target'] = $_GET['target'];
+    }
 
     // In case of a shared column (VariantOnTranscript & Phenotype), the user
     // needs to select for which target (gene, disease) the column needs to be added to.
-    if ($aTableInfo['shared']) {
-        if (empty($_GET['target'])) {
-            if (POST && !empty($_POST['target']) && is_array($_POST['target'])) {
-                // I don't seem to be able to find a better way of doing this.
-                // I need this data in GET, but I have it in POST (and can't use a
-                // GET form with the current URL setup for ACTION in LOVD 3.0).
-                header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '&target=' . rawurlencode(implode(',', $_POST['target'])) . (isset($_GET['in_window'])? '&in_window' : ''));
-                exit;
-            }
+    if ($aTableInfo['shared'] && $sCategory == 'VariantOnTranscript') {
+        // Retrieve list of genes which do NOT have this column yet.
+        $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (g.id = c.geneid AND c.colid = ?) WHERE c.colid IS NULL';
+        $aSQL = array($zData['id']);
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
+            // Maybe a JOIN would be simpler?
+            $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
+            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+        }
+        $sSQL .= ' ORDER BY g.id';
+        $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+        $nPossibleTargets = count($aPossibleTargets);
+    } elseif ($aTableInfo['shared'] && $sCategory == 'Phenotype') {
+        // Retrieve list of diseases which do NOT have this column yet.
+        $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
+        $aSQL = array($zData['id']);
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
+            // Maybe a JOIN would be simpler?
+            $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+        }
+        $sSQL .= ' ORDER BY d.symbol';
+        $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+        $nPossibleTargets = count($aPossibleTargets);
+    }
 
-            $_T->printHeader();
-            $_T->printTitle();
-
-            if ($sCategory == 'VariantOnTranscript') {
-                // Add column to a certain gene.
-
-                // Retrieve list of genes which do NOT have this column yet.
-                $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (g.id = c.geneid AND c.colid = ?) WHERE c.colid IS NULL';
-                $aSQL = array($zData['id']);
-                if ($_AUTH['level'] < LEVEL_MANAGER) {
-                    // Maybe a JOIN would be simpler?
-                    $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
-                    $aSQL = array_merge($aSQL, $_AUTH['curates']);
-                }
-                $sSQL .= ' ORDER BY g.id';
-                $aTargets = $_DB->query($sSQL, $aSQL)->fetchAllCombine();
-                $nTargets = count($aTargets);
-                if ($nTargets) {
-                    print('      Please select the gene(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
-                } else {
-                    lovd_showInfoTable('There are no genes available that you can add this column to. Possibly all configured genes already have this column enabled, or you do not have the rights to edit the gene you wish to add this column to.', 'stop');
-                    $_T->printFooter();
-                    exit;
-                }
-
-            } elseif ($sCategory == 'Phenotype') {
-                // Add column to a certain disease.
-
-                // Retrieve list of diseases which do NOT have this column yet.
-                $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
-                $aSQL = array($zData['id']);
-                if ($_AUTH['level'] < LEVEL_MANAGER) {
-                    // Maybe a JOIN would be simpler?
-                    $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
-                    $aSQL = array_merge($aSQL, $_AUTH['curates']);
-                }
-                $sSQL .= ' ORDER BY d.symbol';
-                $aTargets = $_DB->query($sSQL, $aSQL)->fetchAllCombine();
-                $nTargets = count($aTargets);
-                if ($nTargets) {
-                    print('      Please select the disease(s) for which you want to enable the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
-                } else {
-                    lovd_showInfoTable('There are no diseases available that you can add this column to. Possibly all configured diseases already have this column enabled, or you do not have the rights to edit the disease you wish to add this column to; make sure it\'s connected to a gene you are a curator of.', 'stop');
-                    $_T->printFooter();
-                    exit;
-                }
-            }
-
-            print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
-
-            $nTargets = ($nTargets > 15? 15 : $nTargets);
-
-            // Array which will make up the form table.
-            $aForm = array(
-                            array('POST', '', '', '', '50%', '14', '50%'),
-                            array('Add this column to', '', 'select', 'target', $nTargets, $aTargets, false, true, true),
-                            'skip',
-                            array('', '', 'submit', 'Next &gt;'),
-                          );
-            lovd_viewForm($aForm);
-
-            print('</FORM>' . "\n\n");
-
-            $_T->printFooter();
-            exit;
-
-
-
-        } else {
-            // Verify that this target exists and is allowed to be modified by the current user.
-
-            $aTargets = explode(',', $_GET['target']);
-            if ($sCategory == 'VariantOnTranscript') {
-                // Check if targets (genes) exist and/or are editable for the user.
-                $aAvailableGenes = ($_AUTH['level'] < LEVEL_MANAGER? $_AUTH['curates'] : lovd_getGeneList());
-                foreach ($aTargets as $sSymbol) {
-                    if (!in_array($sSymbol, $aAvailableGenes)) {
-                        $_T->printHeader();
-                        $_T->printTitle();
-                        lovd_showInfoTable('Gene ' . htmlspecialchars($sSymbol) . ' does not exist or you do not have permission to edit it.', 'stop');
-                        $_T->printFooter();
-                        exit;
-                    }
-                }
-
-
-
-            } elseif ($sCategory == 'Phenotype') {
-                // Add column to a certain disease.
-
-                // First, build list of diseases, then go through them.
-                $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
-                $aSQL = array();
-                if ($_AUTH['level'] < LEVEL_MANAGER) {
-                    // Maybe a JOIN would be simpler?
-                    $sSQL .= ' WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
-                    $aSQL = $_AUTH['curates'];
-                }
-                $qDiseases = lovd_queryDB_Old($sSQL, $aSQL);
-                $nDiseases = mysql_num_rows($qDiseases);
-                $aDiseases = array();
-                while ($r = mysql_fetch_row($qDiseases)) {
-                    $aDiseases[$r[0]] = $r[1];
-                }
-
-                foreach ($aTargets as $nID) {
-                    if (!array_key_exists($nID, $aDiseases)) {
-                        $_T->printHeader();
-                        $_T->printTitle();
-                        lovd_showInfoTable('Disease ' . htmlspecialchars($nID) . ' does not exist or you do not have the rights to edit it.', 'stop');
-                        $_T->printFooter();
-                        exit;
-                    }
-                }
+    // Check if column is enabled for target.
+    lovd_errorClean();
+    if (!empty($_POST['target'])) {
+        $aTargets = $_POST['target'];
+        if (!is_array($aTargets)) {
+            $aTargets = array($aTargets);
+        }
+        foreach($aTargets as $sTarget) {
+            if (!isset($aPossibleTargets[$sTarget])) {
+                lovd_errorAdd('target', 'Please a select valid ' . $aTableInfo['unit'] . ' from the list!');
+                break;
             }
         }
     }
 
-
-
-    // Verify in the data table if column is already active or not.
-    $zData['active_checked'] = false;
-    $aActiveColumns = $_DB->query('DESCRIBE ' . $aTableInfo['table_sql'])->fetchAllColumn();
-    if (in_array($zData['id'], $aActiveColumns)) {
-        $zData['active_checked'] = true;
-    }
-
-    // If already active and this is not a shared table, adding it again is useless!
-    if ($zData['active'] && $zData['active_checked']) {
-        if (!$aTableInfo['shared']) {
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('This column has already been added to the ' . $aTableInfo['table_name'] . ' table!', 'stop');
-            $_T->printFooter();
-            exit;
-        } else {
-            $nError = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ? AND ' . ($sCategory == 'VariantOnTranscript'? 'geneid' : 'diseaseid') . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ')', array_merge(array($zData['id']), $aTargets))->fetchColumn();
-            if ($nError) {
-                // Target already has this column enabled!
-                $_T->printHeader();
-                $_T->printTitle();
-                lovd_showInfoTable('This column has already been added to ' . ($nError == 1? 'the ' . $aTableInfo['unit'] : $nError . ' of the ' . $aTableInfo['unit'] . 's') . ' you selected!', 'stop');
-                $_T->printFooter();
-                exit;
-            }
-        }
-    }
-
-    // If not active yet, check size of table where this column needs to be added to and determine necessary time.
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
-    if ($zData['active_checked']) {
-        $tAlter = 0;
-    } else {
-        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
-        $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
-        $nSizeIndexes = $zStatus['Index_length'];
-        // Calculating time it could take to rebuild the table. This is just an estimate and it depends
-        // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
-        // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
-        // (results of some quick benchmarks in September 2010 by ifokkema)
-        $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
-    }
-
-
+    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
+    $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
+    $nSizeIndexes = $zStatus['Index_length'];
+    // Calculating time it could take to rebuild the table. This is just an estimate and it depends
+    // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
+    // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
+    // (results of some quick benchmarks in September 2010 by ifokkema)
+    $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
 
     if (POST) {
         lovd_errorClean();
@@ -1622,10 +1513,23 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
+        if ($aTableInfo['shared'] && empty($_POST['target'])) {
+            lovd_errorAdd('target', 'Please select a ' . $aTableInfo['unit'] . ' from the list!');
+        }
+
         if (!lovd_error()) {
             // Start with header and text, because we want to show a progress bar...
             $_T->printHeader();
             $_T->printTitle();
+
+            $zData['active_checked'] = false;
+            if (in_array($sColumnID, $_DB->query('DESCRIBE ' . $aTableInfo['table_sql'])->fetchAllColumn())) {
+                $zData['active_checked'] = true;
+            }
+            $zData['active'] = false;
+            if (in_array($sColumnID, $_DB->query('SELECT colid FROM  ' . TABLE_ACTIVE_COLS)->fetchAllColumn())) {
+                $zData['active'] = true;
+            }
 
             if (!$zData['active_checked']) {
                 $sMessage = 'Adding column to data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
@@ -1689,7 +1593,6 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                 $zData['created_by'] = $_AUTH['id'];
                 $zData['created_date'] = date('Y-m-d H:i:s');
 
-                $aTargets = explode(',', $_GET['target']);
                 $nTargets = count($aTargets);
                 $i = 1;
 
@@ -1718,7 +1621,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
             // Write to log...
             if ($aTableInfo['shared']) {
-                lovd_writeLog('Event', LOG_EVENT,  'Enabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . $_GET['target']);
+                lovd_writeLog('Event', LOG_EVENT,  'Enabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . $aTargets);
             }
 
             // Thank the user...
@@ -1741,7 +1644,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 */
 // TMP:
 if (!isset($_GET['in_window'])) {
-    $_BAR->redirectTo(lovd_getInstallURL() . $_PE[0] . '/' . $zData['category'], 3);
+    $_BAR->redirectTo(lovd_getInstallURL() . $_PE[0] . '/' . $sCategory, 3);
 } else {
     print('<SCRIPT type="text/javascript">' . "\n" .
           '    if (opener.lovd_checkColumns) {' . "\n" .
@@ -1770,10 +1673,6 @@ if (!isset($_GET['in_window'])) {
         }
     }
 
-
-
-
-
     $_T->printHeader();
     $_T->printTitle();
 
@@ -1784,42 +1683,35 @@ if (!isset($_GET['in_window'])) {
 
     lovd_errorPrint();
 
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (empty($_GET['target'])? '' : '&amp;target=' . htmlspecialchars($_GET['target'])) . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+    
+    // Table
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
-                    array('POST', '', '', '', '35%', '14', '65%'),
+                    array('POST', '', '', '', '40%', '14', '60%'),
                   );
 
-    if (!$zData['active'] || !$zData['active_checked']) {
-        // We need two activities now.
-        $aForm[] = array('', '', 'print', '<B>Adding the ' . $zData['id'] . ' column to the ' . $aTableInfo['table_name'] . ' data table</B>');
-    }
     if ($aTableInfo['shared']) {
-        $aForm[] = array('', '', 'print', '<B>Enabling the ' . $zData['id'] . ' column for the ' . $aTableInfo['unit'] . '(s) ' . $_GET['target'] . '</B>');
-    }
-
-    if (count($aForm) == 1) {
-        // I messed up somewhere.
-        lovd_showInfoTable('<B>Error on ' . LOG_EVENT . '</B><BR><I>' . 
-                           '&nbsp;&nbsp;ColID=' . $zData['id'] . '<BR>' .
-                           '&nbsp;&nbsp;Target=' . (empty($_GET['target'])? '' : htmlspecialchars($_GET['target'])) . '<BR>' . // Target actually already should have been cleaned.
-                           '&nbsp;&nbsp;Active=' . (int) $zData['active'] . '<BR>' .
-                           '&nbsp;&nbsp;ActiveChecked=' . (int) $zData['active_checked'] . '<BR>' .
-                           '&nbsp;&nbsp;TableSQL=' . $aTableInfo['table_sql'] . '<BR>' .
-                           '&nbsp;&nbsp;TableName=' . $aTableInfo['table_name'] . '<BR>' .
-                           '&nbsp;&nbsp;Shared=' . (int) $aTableInfo['shared'] . '<BR>' .
-                           '&nbsp;&nbsp;Unit=' . $aTableInfo['unit'] . '</I><BR>' .                          
-                           'Such failure is most likely caused by a bug in LOVD.<BR>' .
-                           'Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . '" target="_blank">file a bug</A> and include the above messages to help us solve the problem.', 'stop');
-        $_T->printFooter();
-        exit;
+        // If the target is received through $_GET do not show the selection list unless there is a problem with the target.
+        if (!empty($_POST['target']) && !is_array($_POST['target']) && !in_array('target', $_ERROR['fields'])) {
+            $aForm[] = array('', '', 'print', '<B>Enabling the ' . $zData['id'] . ' column for the ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '</B><BR><BR>' . "\n");
+            print('      <INPUT type="hidden" name="target" value="' . $_POST['target'] . '">' . "\n");
+        } else {
+            print('      Please select the ' . $aTableInfo['unit'] . '(s) for which you want to remove the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
+            $nPossibleTargets = ($nPossibleTargets > 15? 15 : $nPossibleTargets);
+            $aForm['target'] = array('Remove this column from', '', 'select', 'target', $nPossibleTargets, $aPossibleTargets, false, true, true);
+            $aForm['target_skip'] = 'skip';
+        }
+    } else {
+        $aForm[] = array('', '', 'print', '<B>Adding the ' . $zData['id'] . ' column to the ' . $aTableInfo['table_name'] . ' data table</B></B>');
     }
 
     // Array which will make up the form table.
     $aForm = array_merge($aForm,
              array(
-                    'skip',
                     array('Enter your password for authorization', '', 'password', 'password', 20),
                     array('', '', 'submit', PAGE_TITLE),
                   ));
@@ -1840,55 +1732,78 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     // URL: /columns/VariantOnGenome/DNA?remove
     // URL: /columns/Phenotype/Blood_pressure/Systolic?remove
     // Disable specific custom column.
-    
+
     $aCol = $_PE;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
     $sCategory = $aCol[1];
 
+    define('PAGE_TITLE', 'Remove custom data column ' . $sColumnID);
+    define('LOG_EVENT', 'ColRemove');
+
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'inc-lib-columns.php';
 
+    // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
-
-    define('PAGE_TITLE', 'Remove custom data column ' . $sColumnID);
-    define('LOG_EVENT', 'ColRemove');
-
-    // FIXME; This code means that a curator can never remove a custom column from his gene!!!
-    if ($aTableInfo['shared'] && POST && !empty($_POST['target']) && is_array($_POST['target'])) {
-        // FIXME; Mist er nog code die wel in 'add' aanwezig is?
-        //   Met de code van 'add' er bij checken of alle functionaliteit die in 'add' zit, hier ook in zit?
-        //   Controles, manier van loggen, manier van data ophalen, etc..
-        // FIXME; target wordt helemaal niet correct gecontroleerd; add en remove hebben verschillende manieren van het opvragen van target. Gelijk trekken!
-        //    Code should be able to receive a $_GET['target'], that we can link to from the enabled shared cols viewentry, to directly remove the column from a given gene.
-        //    However, normally the form should work with POST, since $_GET is limited for large numbers of columns.
-        //    It's also nice to have only one form, but this is of less importance.
-        foreach ($_POST['target'] as $sColumn) {
-            lovd_isAuthorized($aTableInfo['unit'], $sColumn);
-            lovd_requireAUTH(LEVEL_CURATOR);
-        }
+    if ($aTableInfo['shared']) {
+        // FIXME; there is some code missing here, to gather info to run lovd_isAuthorized() first (see code for sorting columns).
+        lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
     }
 
-    $zData = @$_DB->query('SELECT c.id, c.hgvs, c.head_column, ac.colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
-
-    $sMessage = '';
+    $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ? AND c.hgvs = 0', array($sColumnID))->fetchAssoc();
     if (!$zData) {
-        $sMessage = 'No such column!';
-    } elseif (!$zData['colid']) {
-        $sMessage = 'Column is already removed!';
-    } elseif ($zData['hgvs']) {
-        lovd_writeLog('Error', 'HackAttempt', 'Tried to remove HGVS column ' . $zData['id'] . ' (' . $zData['head_column'] . ')');
-        $sMessage = 'Hack Attempt!';
-    }
-    if ($sMessage) {
         $_T->printHeader();
         $_T->printTitle();
-        lovd_showInfoTable($sMessage, 'stop');
+        lovd_showInfoTable('No such ID!', 'stop');
         $_T->printFooter();
         exit;
+    }
+
+    if (!POST && !empty($_GET['target'])) {
+        $_POST['target'] = $_GET['target'];
+    }
+
+    if ($aTableInfo['shared'] && $sCategory == 'VariantOnTranscript') {
+        // Retrieve list of genes that DO HAVE this column and you are authorized to remove columns from.
+        $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (g.id = sc.geneid AND sc.colid = ?)';
+        $aSQL = array($zData['id']);
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
+            $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
+            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+        }
+        $sSQL .= ' ORDER BY g.id';
+        $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+        $nPossibleTargets = count($aPossibleTargets);
+    } elseif ($aTableInfo['shared'] && $sCategory == 'Phenotype') {
+        // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
+        $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
+        $aSQL = array($zData['id']);
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
+            $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
+            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+        }
+        $sSQL .= ' ORDER BY d.symbol';
+        $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+        $nPossibleTargets = count($aPossibleTargets);
+    }
+
+    // Check if column is enabled for target.
+    lovd_errorClean();
+    if (!empty($_POST['target'])) {
+        $aTargets = $_POST['target'];
+        if (!is_array($aTargets)) {
+            $aTargets = array($aTargets);
+        }
+        foreach($aTargets as $sTarget) {
+            if (!isset($aPossibleTargets[$sTarget])) {
+                lovd_errorAdd('target', 'Please a select valid ' . $aTableInfo['unit'] . ' from the list!');
+                break;
+            }
+        }
     }
 
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
@@ -1902,8 +1817,6 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
 
     if (POST) {
-        lovd_errorClean();
-
         // Mandatory fields.
         if (empty($_POST['password'])) {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
@@ -1914,16 +1827,14 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
-        // Fixed Bug; Target was not mandatory! // FIXME; Perhaps this is a temporary fix, since this code needs to be structured differently, maybe.
-        if (empty($_POST['target']) || !is_array($_POST['target'])) {
-            // Throw error message, before we get a query error below...
-            lovd_errorAdd('target', 'Please select at least one ' . $aTableInfo['unit'] . ' to remove this column from.');
+        if ($aTableInfo['shared'] && empty($_POST['target'])) {
+            lovd_errorAdd('target', 'Please select a ' . $aTableInfo['unit'] . ' from the list!');
         }
 
         if (!lovd_error()) {
             $_T->printHeader();
             $_T->printTitle();
-            
+
             $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
 
             // If ALTER time is large enough, mention something about it.
@@ -1959,8 +1870,8 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                 // Query text; remove column registration first.
                 $sObject = $aTableInfo['unit'] . 'id';
                 $_DB->beginTransaction();
-                $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (?' . str_repeat(', ?', count($_POST['target'])-1) . ') AND colid = ?';
-                $aQ = array_merge($_POST['target'], array($zData['id']));
+                $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ') AND colid = ?';
+                $aQ = array_merge($aTargets, array($zData['id']));
                 $_DB->query($sQ, $aQ);
                 $_DB->commit();
                 $_BAR->setProgress(10);
@@ -1980,7 +1891,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                     $_DB->query($sQ);
                     $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')';
                 } else {
-                    $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $_POST['target']);
+                    $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $aTargets);
                 }
             }
 
@@ -1988,38 +1899,17 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $_BAR->setMessage('Done!');
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, $sMessage);
+            if ($aTableInfo['shared']) {
+                lovd_writeLog('Event', LOG_EVENT,  'Disabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . implode(', ', $aTargets));
+            }
 
             // Thank the user...
             $_BAR->setMessage('Successfully removed column "' . $zData['head_column'] . '"!', 'done');
             $_BAR->setMessageVisibility('done', true);
 
-            // When printing stuff on the page, NOTE that footer has already been closed!!!!!!!!!!!!!!
-/**************************************
-            // 2010-07-26; 2.0-28; In case the column is mandatory, check for existing patient entries that cause problems importing downloaded data.
-            $nEmptyValues = 0;
-            if ($zData['mandatory'] == '1') {
-                $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PATIENTS;
-                $nEmptyValues = @mysql_fetch_row(mysql_query($sQ));
-            }
+            $_BAR->redirectTo(lovd_getInstallURL() . $_PE[0] . '/' . $sCategory, 3);
 
-            // 2010-07-27; 2.0-28; Only forward the user when there is no problem adding the column.
-            if (!$nEmptyValues) {
-                // Dit moet nu met JS!
-                header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view_all' . lovd_showSID(true));
-*/
-// TMP:
-$_BAR->redirectTo(lovd_getInstallURL() . $_PE[0] . '/' . $sCategory, 3);
-/*
-            }
-
-            // Als we dan toch een lovd_showInfoTable() proberen te krijgen, doe die dan ook even voor de Done! message...
-            // 2010-07-27; 2.0-28; Warning when a mandatory column has been added and there are already entries.
-            if ($nEmptyValues) {
-                lovd_showInfoTable('You added a mandatory column to the patient table, which already has entries. Please note that this will cause errors when importing data files you downloaded from LOVD.', 'warning');
-            }
-*//////////////////////////////////
-            print('</BODY>' . "\n" .
+           print('</BODY>' . "\n" .
                   '</HTML>' . "\n");
             exit;
 
@@ -2029,75 +1919,46 @@ $_BAR->redirectTo(lovd_getInstallURL() . $_PE[0] . '/' . $sCategory, 3);
         }
     }
 
-
-
     $_T->printHeader();
     $_T->printTitle();
-
-    lovd_errorPrint();
-
-    if ($aTableInfo['shared']) {
-        // Remove column from a certain gene|disease.
-
-        // Retrieve list of genes|diseases that DO HAVE this column and you are authorized to remove columns from.
-        if ($sCategory == 'VariantOnTranscript') {
-            $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS c ON (g.id = c.geneid AND c.colid = ?) WHERE c.colid IS NOT NULL';
-            if ($_AUTH['level'] < LEVEL_MANAGER) {
-                $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
-                $aSQL = array_merge($aSQL, $_AUTH['curates']);
-            }
-            $sSQL .= ' ORDER BY g.id';
-        } elseif ($sCategory == 'Phenotype') {
-            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NOT NULL';
-            if ($_AUTH['level'] < LEVEL_MANAGER) {
-                $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
-                $aSQL = array_merge($aSQL, $_AUTH['curates']);
-            }
-            $sSQL .= ' ORDER BY d.symbol';
-        }
-        $aArgs = array($zData['id']);
-
-        $aTargets = $_DB->query($sSQL, $aArgs)->fetchAllCombine();
-        $nTargets = (count($aTargets) > 15? 15 : count($aTargets));
-
-        if ($nTargets) {
-            print('      Please select the ' . $aTableInfo['unit'] . '(s) for which you want to remove the ' . $zData['colid'] . ' column from.<BR><BR>' . "\n");
-            $aSelectObject = array(
-                                    'skip',
-                                    'hr',
-                                    array('Remove this column from', '', 'select', 'target', $nTargets, $aTargets, false, true, true),
-                                    'hr',
-                                    'skip',
-                                  );
-        } else {
-            lovd_showInfoTable('There are no ' . $aTableInfo['unit'] . 's available that you can remove this column from. Possibly all configured ' . $aTableInfo['unit'] . 's already have this column removed, or you do not have the rights to edit the ' . $aTableInfo['unit'] . ' you wish to remove this column from.', 'stop');
-            $_T->printFooter();
-            exit;
-        }
-    } else {
-        $aSelectObject = array(
-                                'skip',
-                              );
-    }
 
     // If ALTER time is large enough, mention something about it.
     if ($tAlter > $tAlterMax) {
         lovd_showInfoTable('Please note that the time estimated to remove this column from the ' . $aTableInfo['table_name'] . ' data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table are possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
     }
 
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
-    $aForm = array_merge(
-             array(
-                    array('POST', '', '', '', '35%', 14, '65%'),
-                    array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from the ' . $aTableInfo['table_name'] . ' data table</B>'),
-                  ),
-             $aSelectObject,
+    $aForm = array(
+                    array('POST', '', '', '', '40%', 14, '60%')
+                  );
+
+    if ($aTableInfo['shared']) {
+        // If the target is received through $_GET do not show the selection list unless there is a problem with the target.
+        if (!empty($_POST['target']) && !is_array($_POST['target']) && !in_array('target', $_ERROR['fields'])) {
+            $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '.</B><BR><BR>' . "\n");
+            print('      <INPUT type="hidden" name="target" value="' . $_POST['target'] . '">' . "\n");
+        } else {
+            print('      Please select the ' . $aTableInfo['unit'] . '(s) for which you want to remove the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
+            $nPossibleTargets = ($nPossibleTargets > 15? 15 : $nPossibleTargets);
+            $aForm[] = array('Remove this column from', '', 'select', 'target', $nPossibleTargets, $aPossibleTargets, false, true, true);
+            $aForm[] = 'skip';
+        }
+    } else {
+        $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['colid'] . ' column from the ' . $aTableInfo['table_name'] . ' data table</B>');
+    }
+
+    $aForm = array_merge($aForm,
              array(
                     array('Enter your password for authorization', '', 'password', 'password', 20),
-                    array('', '', 'submit', 'Remove custom column'),
+                    array('', '', 'submit', PAGE_TITLE),
                   )
                        );
     lovd_viewForm($aForm);

@@ -733,7 +733,7 @@ function lovd_mapVariants ()
                 window.location = $(this).find("a").attr("href");
                 return false;
             }
-        },
+        }
     };' . "\n");
 
         foreach (array_keys($aMenus) as $sTabID) {

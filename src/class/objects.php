@@ -1171,6 +1171,8 @@ class LOVD_Object {
                     $sUnit = 'variants' . (substr($this->sObject, 0, 10) == 'Transcript'? ' on transcripts' : '');
                 } elseif ($this->sObject == 'Custom_Viewlist') {
                     $sUnit = 'entries';
+                } elseif ($this->sObject == 'Shared_Column') {
+                    $sUnit = 'active columns';
                 } else {
                     $sUnit = strtolower($this->sObject) . 's';
                 }
@@ -1270,7 +1272,8 @@ class LOVD_Object {
         if (!$bAjax && FORMAT == 'text/html') {
             // If sent using Ajax, the browser is not going to evaluate this code, anyways.
             print('      <SCRIPT type="text/javascript">' . "\n" .
-                  '        lovd_stretchInputs(\'' . $sViewListID . '\');' . "\n");
+                  '        // This has to be run when the document has finished loading everything, because only then can it get the proper width from IE7 and lower!' . "\n" .
+                  '        $( function () {lovd_stretchInputs(\'' . $sViewListID . '\');});' . "\n");
             if ($bOptions) {
                 print("\n" .
                       '        // If menu\'s UL doesn\'t exist yet, create it.' . "\n" .

@@ -1002,7 +1002,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     $aColumns = $_DB->query('SELECT SUBSTRING(colid, LOCATE("/", colid)+1) FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sUnit . 'id = ? ORDER BY col_order ASC', array($sID))->fetchAllColumn();
 
     if (!count($aColumns)) {
-        lovd_showInfoTable('No columns found!', 'stop');
+        lovd_showInfoTable('No active columns found!', 'stop');
         $_T->printFooter();
         exit;
     }
@@ -1051,6 +1051,15 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
     $sID = rawurldecode($_PE[1]);
+
+    if (!in_array($sID, lovd_getGeneList())) {
+        define('PAGE_TITLE', 'Manage curators for the ' . $sID . ' gene');
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
 
     // Load appropiate user level for this gene.
     lovd_isAuthorized('gene', $sID);

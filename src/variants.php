@@ -218,8 +218,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             // Show the loading image.
             $('#mapOnRequest').children("img:first").attr({
                 src: '<?php echo ROOT_PATH; ?>gfx/lovd_loading.gif',
-                width: '16px',
-                height: '16px',
+                width: '12px',
+                height: '12px',
                 alt: 'Loading...',
                 title: 'Loading...'
             }).show();
@@ -428,8 +428,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         $aOptionsList['options'][0]['option_text'] = '<B>I want to create a variant on genomic level &raquo;&raquo;</B>';
 
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-	        $aOptionsList['options'][1]['onclick'] = 'window.location.href=\'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
-	        $aOptionsList['options'][1]['option_text'] = '<B>I want to upload a file with genomic variant data &raquo;&raquo;</B>';
+            $aOptionsList['options'][1]['onclick'] = 'window.location.href=\'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
+            $aOptionsList['options'][1]['option_text'] = '<B>I want to upload a file with genomic variant data &raquo;&raquo;</B>';
         }
 
         $aOptionsList['options'][2]['onclick'] = '$(\'#container\').toggle();';
@@ -1677,14 +1677,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                                 // Find out the protein change.
                                 $sProteinChange = 'p.?';
-                                if ($aVariant['aminoAcids'][$i] == 'none') {
-                                    if (ctype_digit($aVariant['distanceToSplice'][$i]) && $aVariant['distanceToSplice'][$i] > 10) {
-                                        $sProteinChange = 'p.(=)';
-                                    } else {
-                                        // Intronic but close to splice site.
-                                        $sProteinChange = 'p.?';
-                                    }
-                                } elseif (count($aFieldsVariantOnGenome) == 1) {
+                                if ($aVariant['aminoAcids'][$i] == 'none' && ctype_digit($aVariant['distanceToSplice'][$i]) && $aVariant['distanceToSplice'][$i] > 10) {
+                                    $sProteinChange = 'p.(=)';
+                                } elseif ($aVariant['aminoAcids'][$i] != 'none' && count($aFieldsVariantOnGenome) == 1) {
                                     // Because of the way SeattleSeq reports amino acids, we can only reliably define
                                     // the protein change if we have just one alternate (non-reference) allele.
 

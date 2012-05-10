@@ -1,17 +1,8 @@
 Prioritize:
 ===========
-On all multiple selection lists, voeg meer uitleg toe aan het veld hoe dingen te selecteren/deselecteren, onder "?".
-No cols for gene? "No shared_columns found!"
-- Add en remove custom column moet goed geschreven worden, hun structuur verschilt en remove custom column heeft issues.
-  + Gebruik $_GET['target'] moet mogelijk zijn, om binnen te komen.
-  + Maar formulier moet in $_POST verzenden (omdat $_GET limitaties heeft).
-  + Goede controles op aanwezigheid target!
-  + Zie FIXME's columns.php:1863.
-- Custom columns need to be able to be edited per gene!
-  + URL: /gene/GENE/columns/VariantOnTranscript/DNA (viewentry)
-  + URL: /gene/GENE/columns/VariantOnTranscript/DNA?edit
-- Bug: VOT/Protein edit: Disallowed tag found in form field "description_legend_full". XSS attack?
-- Mapping script moet geen p.(=) opslaan, als Mutalyzer een WSPLICE foutmelding geeft.
+- (@Ivo) Custom columns need to be able to be edited per gene!
+  + URL: /genes/GENE/columns/DNA (viewentry)
+  + URL: /genes/GENE/columns/DNA?edit
 - IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
   + Reported by Christopher Watson.
 - Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.

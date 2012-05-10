@@ -642,6 +642,19 @@ if (!defined('NOT_INSTALLED')) {
             $_PATH_ELEMENTS[$key] = '';
         }
     }
+    $aObjects = array(
+                        'variants' => 10,
+                        'transcripts' => 5,
+                        'diseases' => 5,
+                        'individuals' => 8,
+                        'screenings' => 10,
+                        'links' => 3,
+                        'phenotypes' => 10,
+                        'users' => 5,
+                     );
+    if (isset($aObjects[$_PATH_ELEMENTS[0]]) && isset($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1])) {
+        $_PATH_ELEMENTS[1] = sprintf('%0' . $aObjects[$_PATH_ELEMENTS[0]] . 'd', $_PATH_ELEMENTS[1]);
+    }
     define('CURRENT_PATH', implode('/', $_PATH_ELEMENTS));
     $_PE =& $_PATH_ELEMENTS; // Shorthand, less typing.
     define('PATH_COUNT', count($_PE)); // So you don't need !empty($_PATH_ELEMENTS[1]) && ...

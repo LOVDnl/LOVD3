@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-18
- * Modified    : 2012-02-03
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2012-05-07
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -50,12 +50,6 @@ foreach ($_GET as $key => $value) {
 }
 
 $aOutput = $_MutalyzerWS->moduleCall(ACTION, $aArgs);
-
-if (!is_array($aOutput)) {
-    echo '"' . str_replace('"', '\"', $aOutput) . '"';
-} else {
-    echo '["' . implode('","', $aOutput) . '"]';
-}
 
 var_dump($aOutput);
 ?>

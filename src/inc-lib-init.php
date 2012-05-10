@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-05-03
+ * Modified    : 2012-05-09
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -828,7 +828,7 @@ function lovd_requireAUTH ($nLevel = 0)
 
 
 
-function lovd_shortenString ($s, $l)
+function lovd_shortenString ($s, $l = 50)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Shortens string nicely to a given length.

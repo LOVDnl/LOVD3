@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-04-10
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-07
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
+ * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
+ *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -263,11 +264,11 @@ if (!empty($aVariants)) {
     if ($aTranscriptsWithinRange === false) {
         // Call failed due to network problems. Don't run the mapping script now!
         define('MAPPING_NO_RESTART', true);
-		if (!empty($_GET['variantid'])) {
-			// We were trying to map a specific variant. Set the MAPPING_ERROR flag so the user understands we tried it.
+        if (!empty($_GET['variantid'])) {
+            // We were trying to map a specific variant. Set the MAPPING_ERROR flag so the user understands we tried it.
             $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = ' . ($aVariants[0]['mapping_flags'] | MAPPING_ERROR) . ' WHERE id = ?', array($aVariants[0]['id']));
             $aVariantUpdates = array();
-		}
+        }
         
         if (empty($_SESSION['mapping']['time_error']) || time() - $_SESSION['mapping']['time_error'] > $tLogInterval) {
             lovd_writeLog('Error', LOG_EVENT, 'Could not connect to the Mutalyzer getTranscriptsMapping webservice.');
@@ -335,15 +336,23 @@ if (!empty($aVariants)) {
 
                                 // Get the p. description too.
                                 $sTranscriptNum = $_DB->query('SELECT id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sTranscriptNM))->fetchColumn();
-                                $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][6])));
-                                if (!empty($aVariantsOnProtein['string'])) {
-                                    if (!is_array($aVariantsOnProtein['string'])) {
-                                        $aVariantsOnProtein['string'] = array($aVariantsOnProtein['string']);
-                                    }
-                                    foreach ($aVariantsOnProtein['string'] as $sVariantOnProtein) {
-                                        if (($nPos = strpos($sVariantOnProtein, '_i' . $sTranscriptNum . '):p.')) !== false) {
-                                            $aSQL[1][7] = substr($sVariantOnProtein, $nPos + strlen('_i' . $sTranscriptNum . '):'));
-                                            break;
+                                $aOutputRunMutalyzer = $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][6]));
+                                $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $aOutputRunMutalyzer);
+                                $sVariantsOnProteinError = lovd_getAllValuesFromArray('messages/SoapMessage', $aOutputRunMutalyzer);
+
+                                // FIXME; Temporary fix!!! Wait for mutalyzer SOAP to return errors ONLY from the requested transcript.
+                                if ($sVariantsOnProteinError['errorcode'] == 'WSPLICE' && $sVariantsOnProteinError['message'] == 'Mutation on splice site in gene ' . $aTranscript['gene'] . ' transcript ' . $sTranscriptNum . '.') {
+                                    $aSQL[1][7] = 'p.?';
+                                } else {
+                                    if (!empty($aVariantsOnProtein['string'])) {
+                                        if (!is_array($aVariantsOnProtein['string'])) {
+                                            $aVariantsOnProtein['string'] = array($aVariantsOnProtein['string']);
+                                        }
+                                        foreach ($aVariantsOnProtein['string'] as $sVariantOnProtein) {
+                                            if (($nPos = strpos($sVariantOnProtein, '_i' . $sTranscriptNum . '):p.')) !== false) {
+                                                $aSQL[1][7] = substr($sVariantOnProtein, $nPos + strlen('_i' . $sTranscriptNum . '):'));
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -354,7 +363,6 @@ if (!empty($aVariants)) {
                                 }
                             }
                         }
-                        
                         // Remember we've mapped this variant to this gene, so we don't try to map it again.
                         $aMappedToGenesInLOVD[$aTranscript['gene']] = 1;
                     }
@@ -370,7 +378,7 @@ if (!empty($aVariants)) {
         }
 
         if (($aVariant['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) && count($aGenes)) {
-            // We may add extra genes to map this variant on.
+            // We may add extra genes to map this variant to.
 
             // Try the genes one by one.
             foreach (array_keys($aGenes) as $sGene) {

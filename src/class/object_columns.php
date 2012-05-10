@@ -176,6 +176,8 @@ class LOVD_Column extends LOVD_Object {
 
         if (ACTION == 'edit') {
             unset($this->aCheckMandatory['colid']);
+        } elseif (!empty($aData['active_links']) && !preg_match('/^TEXT|VARCHAR/', $aData['mysql_type'])) {
+            lovd_errorAdd('active_links', 'Only VARCHAR or TEXT columns can have custom links activated for it!');
         }
 
         parent::checkFields($aData);
@@ -216,7 +218,6 @@ class LOVD_Column extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-//        global $_AUTH, $_SETT, $_PATH_ELEMENTS;
         global $_PATH_ELEMENTS, $_DB;
 
         // Get links list, to connect column to link.
@@ -259,11 +260,11 @@ class LOVD_Column extends LOVD_Object {
 //                        array('Include in "hidden entries" search form', '', 'checkbox', 'allow_count_all'),
 //                        array('', '', 'print', '<SPAN class="form_note">Selecting this checkbox allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on this column.</SPAN>'),
                         'skip',
-                        array('', '', 'print', '<B>Link settings</B>'),
-                        'hr',
-                        array('Active custom links', '', 'select', 'active_links', $nLinkSize, $aLinks, false, true, true),
-                        'hr',
-                        'skip',
+'active_links_title' => array('', '', 'print', '<B>Link settings</B>'),
+  'active_links_hr1' => 'hr',
+      'active_links' => array('Active custom links', '', 'select', 'active_links', $nLinkSize, $aLinks, false, true, true),
+  'active_links_hr2' => 'hr',
+ 'active_links_skip' => 'skip',
       'apply_to_all' => array('Apply changes to all {{ UNIT }} where this column is active', '', 'checkbox', 'apply_to_all'),
                         array('Enter your password for authorization', '', 'password', 'password', 20));
 
@@ -309,6 +310,10 @@ class LOVD_Column extends LOVD_Object {
 
         // Het hele formulier moet anders met het editen... het display gedeelte moet apart denk ik - "edit display settings"; variant en phenotype cols hebben "set defaults for new genes/diseases", alle hebben "edit data types" ofzo.
         if (ACTION == 'edit') {
+            global $sColumnID;
+            if (!preg_match('/^TEXT|VARCHAR/', $_POST['mysql_type']) || $sColumnID == 'VariantOnGenome/DBID') {
+                unset($this->aFormData['active_links_title'], $this->aFormData['active_links_hr1'], $this->aFormData['active_links'], $this->aFormData['active_links_hr2'], $this->aFormData['active_links_skip']);
+            }
             unset($this->aFormData['colid'], $this->aFormData['colid_note']);
         } elseif (ACTION == 'create') {
             unset($this->aFormData['apply_to_all']);

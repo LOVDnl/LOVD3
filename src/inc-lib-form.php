@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-07
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -133,6 +133,9 @@ function lovd_checkXSS ($aInput = '')
 
     $bSuccess = true;
     foreach ($aInput as $key => $val) {
+        if (in_array($key, array('description_legend_short', 'description_legend_full'))) {
+            continue;
+        }
         if (is_array($val)) {
             $bSuccess = $bSuccess && lovd_checkXSS($val);
         } elseif (!empty($val) && preg_match('/<.*>/s', $val)) {
@@ -745,6 +748,9 @@ function lovd_viewForm ($a,
 
             // Print the HTML parts and add the help button.
             print($sHeaderPrefix . $aField[0] . $sHeaderSuffix . $sHelpPrefix);
+            if ($aField[2] == 'select' && $aField[7]) {
+                $aField[1] .= ($aField[1]? '<BR><BR>' : '') . 'You can select a range of items by clicking the first item, holding "Shift" and clicking the last item in the range. Selecting/deselecting individual items can be done by holding "Ctrl" on a PC or "Command" on a Mac and clicking on the items.';
+            }
             if (!empty($aField[1])) {
                 // Somehow, we need the str_replace() because the htmlspecialchars() with ENT_QUOTES does not prevent JS errors due to single quotes.
                 print('<IMG src="gfx/lovd_form_question.png" alt="" onmouseover="lovd_showToolTip(\'' . htmlspecialchars(str_replace("'", "\'", $aField[1])) . '\');" onmouseout="lovd_hideToolTip();" class="help" width="14" height="14">');
@@ -801,13 +807,14 @@ function lovd_viewForm ($a,
                         print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
                     }
 
-                } elseif(is_resource($oData)) {
+                } elseif (is_resource($oData)) {
                     // Query input.
                     while (list($key, $val) = mysql_fetch_row($oData)) {
                         $bSelected = ((!$bMultiple && $GLOBALS['_' . $sMethod][$sName] == $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array($key, $GLOBALS['_' . $sMethod][$sName])));
                         print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
                     }
                 }
+
                 print('</SELECT>');
 
                 // Select all link.

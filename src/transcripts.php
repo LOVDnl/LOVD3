@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-10
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -417,8 +417,7 @@ if (ACTION == 'create') {
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Transcriptomic reference sequence(s)', '', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, true),
-                        array('', '', 'note', 'Select transcript references (NM accession numbers). Please note that transcripts already added to this gene database, are not shown. You can select multiple transcripts by holding "Ctrl" on a PC or "Command" on a Mac and clicking all wanted transcripts.'),
+                        array('Transcriptomic reference sequence(s)', 'Select transcript references (NM accession numbers). Please note that transcripts already added to this gene database, are not shown', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, true),
                         array('', '', 'submit', 'Add transcript(s) to gene'),
                       ));
     lovd_viewForm($aForm);

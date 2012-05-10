@@ -252,6 +252,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                     '3.0-beta-05' =>
                         array(
                                 'UPDATE ' . TABLE_COLS . ' SET mysql_type = "VARCHAR(50)" WHERE id = "Phenotype/Inheritance"',
+                                'DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid IN (SELECT id FROM ' . TABLE_COLS . ' WHERE mysql_type NOT REGEXP "^(VARCHAR|TEXT)" OR id = "VariantOnGenome/DBID")',
                              ),
                   );
 
