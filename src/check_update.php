@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-04-18
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-11
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -140,9 +140,11 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         }
 
         // Finally, get the actual disease data (ID, symbol, name).
-        $q = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($aDiseaseIDs)-1) . ') ORDER BY id', $aDiseaseIDs, false);
-        while ($z = $q->fetchAssoc()) {
-            $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
+        if ($aDiseaseIDs) {
+            $q = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($aDiseaseIDs)-1) . ') ORDER BY id', $aDiseaseIDs, false);
+            while ($z = $q->fetchAssoc()) {
+                $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
+            }
         }
         $sData = serialize($aData);
         $sPOSTVars .= '&data=' . rawurlencode($sData);

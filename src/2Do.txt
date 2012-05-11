@@ -1,10 +1,12 @@
 Prioritize:
 ===========
-- (@Ivo) Custom columns need to be able to be edited per gene!
-  + URL: /genes/GENE/columns/DNA (viewentry)
-  + URL: /genes/GENE/columns/DNA?edit
+Als database niet bestaat, krijg je een query error?
 - IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
   + Reported by Christopher Watson.
+- Als een individu wordt verwijderd, worden de varianten niet verwijderd - deze blijven dus hangen in het systeem.
+  + Als je een individu verwijderd, moet het een optie worden om de X varianten ook te verwijderen, of de varianten los te koppelen en vrij te laten in het systeem.
+  + Daarnaast: als je een screening verwijdert, blijven de varianten die nergens anders aan verbonden zijn, los hangen in het systeem.
+    * Als je een screening verwijderd, moet er een waarschuwing bij komen, dat er X varianten worden verwijderd uit het systeem, omdat die alleen aan deze screening vast zitten.
 - Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
   + Overal waar er counts worden gedaan van de varianten, moeten we daarna checken of dat (nog) goed gaat.
 - (@Ivo) Row Link probleem:
@@ -23,15 +25,10 @@ Prioritize:
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - Unit tests via Selenium (of alternatief)?
-- VariantOnGenome/Times_reported???
 - Handmatige variant mapper: ook p. description ophalen bij Mutalyzer?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
 - Referer from login moet pagina zijn met alleen een action? Om te voorkomen dat er geredirect wordt naar een del action zonder dat dat de bedoeling is?
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
-- Als een individu wordt verwijderd, worden de varianten niet verwijderd - deze blijven dus hangen in het systeem.
-  + Als je een individu verwijderd, moet het een optie worden om de X varianten ook te verwijderen, of de varianten los te koppelen en vrij te laten in het systeem.
-  + Daarnaast: als je een screening verwijdert, blijven de varianten die nergens anders aan verbonden zijn, los hangen in het systeem.
-    * Als je een screening verwijderd, moet er een waarschuwing bij komen, dat er X varianten worden verwijderd uit het systeem, omdat die alleen aan deze screening vast zitten.
 
 - Beta-05:
   - DATA DOWNLOAD.
@@ -57,7 +54,7 @@ Prioritize:
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
   - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
   - Begin met manual (eerst alleen nog PDF).
-  - Variant/Times_reported (or similar)
+  - VariantOnGenome/Times_reported (or similar)
     + Iedere variant die gevonden wordt in de panel moet dan apart geteld worden, door middel van het "VariantOnGenome/Times_reported" veld (eventueel
       "VariantOnGenome/Chromosomes_reported" of "VariantOnGenome/Found_on_chromosomes" of ...). Hier moet het aantal chromosomen worden ingevuld, waar de
       variant is gevonden. De frequentie is dan uit te rekenen volgens: "VariantOnGenome/Times_reported" ÷ (Individuals "panel_size" * 2)
@@ -70,6 +67,11 @@ Prioritize:
   - All trim() calls in checkFields() calls can be removed, since data is automatically trimmed in Object::checkFields() anyway.
   - Gene notes for variant listings implementeren?
   - Gene headers & footers implementeren?
+  - How can a curator quickly find the genes he curates? (possibly with an overview of his work)
+  - Curators should have a nice overview per gene which columns can still be added one specific gene, like LOVD 2.0 had.
+  - Nu dat inc-init.php de $_PE[1] pad, moeten we even kijken naar wat doen we met alle code overal die $_PE[1] pad en aan nID toewijst.
+    + Alleen padding code weghalen, en toewijzing laten, of zelf $nID en $sID toewijzen in inc-init.php?
+  - Check_update: install_name -> db_name, install_dir -> db_url, tel admin en managers etc mee als submitters.
   - Should we maybe set default_socket_timeout somewhere?
 
 - Hebben we OpenSSL ergens voor nodig?

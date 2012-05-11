@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -354,9 +354,8 @@ class LOVD_Gene extends LOVD_Object {
                         array('', '', 'note', 'Collecting variants requires a proper reference sequence. Without a genomic and a transcript reference sequence the variants in this LOVD database cannot be interpreted properly or mapped to the genome.'),
                         'hr',
                         array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false),
-                        array('', '', 'note', 'Select the genomic reference sequence (NG, NC, LRG accession number). Only the references that are available to LOVD are shown'),
+                        array('', '', 'note', 'Select the genomic reference sequence (NG, NC, LRG accession number). Only the references that are available to LOVD are shown.'),
     'transcripts' =>    array('Transcript reference sequence(s)', 'Select transcript references (NM accession numbers).', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
-'transcript_info' =>    false,
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Links to information sources (optional)</B>'),
@@ -408,8 +407,7 @@ class LOVD_Gene extends LOVD_Object {
                         'skip',
                   );
         if (ACTION == 'edit') {
-            unset($this->aFormData['transcripts']);
-            $this->aFormData['transcript_info'] = array('Transcriptomic reference sequence(s)', '', 'note', '<B>Transcriptomic references (NM accession numbers) can only be modified in the transcripts page!!!</B>');
+            $this->aFormData['transcripts'] = array('Transcriptomic reference sequence(s)', '', 'note', 'To add, remove or edit transcriptomic reference sequences for this gene, please see the gene\'s detailed view.');
         }
 
         return parent::getForm();

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -691,7 +691,7 @@ class LOVD_Object {
             $aColsToSkip = array($aColsToSkip);
         }
         foreach ($this->aColumnsViewList as $sCol => $aCol) {
-            if (!$aCol['view']) {
+            if (!$aCol['view'] && !in_array($sCol, $aColsToSkip)) {
                 $aColsToSkip[] = $sCol;
             }
         }
@@ -1029,7 +1029,7 @@ class LOVD_Object {
             $_DB->commit(); // To end the transaction and the locks that come with it.
         }
 
-        // If no results are found, quit here.
+        // If no results are found, try to figure out if it was because of the user's searching or not.
         if (!$nTotal) {
             $bSearched = false;
             $aHiddenSearch = array();
@@ -1112,7 +1112,7 @@ class LOVD_Object {
             header('Content-type: text/plain; charset=UTF-8');
             header('Content-Disposition: attachment; filename="LOVD_' . $sObject . '_' . date('Y-m-d_H.i.s') . '.txt"');
             header('Pragma: public');
-            print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sObject . ' Quick Download format ### This file can not be imported ###' . "\n");
+            print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sObject . ' Quick Download format ### This file can not be imported ###' . "\r\n");
             // FIXME: this has to be done better, we can't see what we're filtering for, because it's in the arguments!
             $sFilter = $WHERE . ($WHERE && $HAVING? ' AND ' : '') . $HAVING;
             $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
@@ -1122,12 +1122,12 @@ class LOVD_Object {
                         $sFilter = preg_replace('/\?/', (ctype_digit($sArg)? $sArg : '"' . $sArg . '"'), $sFilter, 1);
                     }
                 }
-                print('## Filter ' . $sFilter . "\n");
+                print('## Filter: ' . $sFilter . "\r\n");
             }
             if (ACTION == 'downloadSelected') {
-                print('## Filter selected ' . implode(',', $_SESSION['viewlists'][$sViewListID]['checked']) . "\n");
+                print('## Filter: selected = ' . implode(',', $_SESSION['viewlists'][$sViewListID]['checked']) . "\r\n");
             }
-            print('# charset=UTF-8' . "\n");
+            print('# charset=UTF-8' . "\r\n");
             $i = 0;
             foreach ($this->aColumnsViewList as $sField => $aCol) {
                 if (in_array($sField, $aColsToSkip)) {
@@ -1136,7 +1136,7 @@ class LOVD_Object {
 
                 print(($i ++? "\t" : '') . '"{{' . $sField . '}}"');
             }
-            print("\n");
+            print("\r\n");
         }
 
         if (!$nTotal && FORMAT == 'text/html') {
@@ -1150,6 +1150,7 @@ class LOVD_Object {
                 if ($bOnlyRows) {
                     die('0'); // Silent error.
                 }
+                // FIXME; This code is sort of duplicated, some 100 lines below we also print this, *if* results are found.
                 print('</TABLE><BR>' . "\n"); // <BR> is necessary to keep the InfoTable apart from the data headers.
                 if (!$bHideNav) {
                     print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
@@ -1158,7 +1159,6 @@ class LOVD_Object {
                 }
                 lovd_showInfoTable($sMessage, 'stop');
                 print('      </DIV></FORM>' . "\n\n");
-                return 0;
 
             } else {
                 if ($bOnlyRows) {
@@ -1250,12 +1250,12 @@ class LOVD_Object {
                     }
                     print(($i ++? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes(html_entity_decode(strip_tags($zData[$sField])))) . '"');
                 }
-                print("\n");
+                print("\r\n");
             }
         }
 
         // Only print stuff if we're not just loading one entry right now.
-        if (!$bOnlyRows && FORMAT == 'text/html') {
+        if ($nTotal && !$bOnlyRows && FORMAT == 'text/html') {
             print('</TABLE>' . "\n");
             if (!$bHideNav) {
                 print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .

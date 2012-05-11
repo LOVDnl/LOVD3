@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-05-04
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -642,7 +642,7 @@ if (!defined('NOT_INSTALLED')) {
             $_PATH_ELEMENTS[$key] = '';
         }
     }
-    $aObjects = array(
+    $aObjectPadding = array(
                         'variants' => 10,
                         'transcripts' => 5,
                         'diseases' => 5,
@@ -652,8 +652,8 @@ if (!defined('NOT_INSTALLED')) {
                         'phenotypes' => 10,
                         'users' => 5,
                      );
-    if (isset($aObjects[$_PATH_ELEMENTS[0]]) && isset($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1])) {
-        $_PATH_ELEMENTS[1] = sprintf('%0' . $aObjects[$_PATH_ELEMENTS[0]] . 'd', $_PATH_ELEMENTS[1]);
+    if (isset($aObjectPadding[$_PATH_ELEMENTS[0]]) && isset($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1])) {
+        $_PATH_ELEMENTS[1] = sprintf('%0' . $aObjectPadding[$_PATH_ELEMENTS[0]] . 'd', $_PATH_ELEMENTS[1]);
     }
     define('CURRENT_PATH', implode('/', $_PATH_ELEMENTS));
     $_PE =& $_PATH_ELEMENTS; // Shorthand, less typing.

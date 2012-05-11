@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2012-05-02
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -59,6 +59,15 @@ if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = $aNeededLevel[$_GET['object']];
 } else {
     $nNeededLevel = LEVEL_ADMIN;
+}
+
+// We can't authorize Curators without loading their level!
+if ($nNeededLevel == LEVEL_CURATOR && !empty($_AUTH['curates'])) {
+    if ($_GET['object'] == 'Column') {
+        lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+    } elseif ($_GET['object'] == 'Shared_Column' && isset($_GET['object_id'])) {
+        lovd_isAuthorized('gene', $_GET['object_id']); // Authorize for the gene currently loaded.
+    }
 }
 
 // Require special clearance?

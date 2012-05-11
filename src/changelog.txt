@@ -46,6 +46,14 @@
  * Fixed notice when editing a custom column's default settings.
  * Fixed bug; When removing Log entries, the empty search fields above the table
    could not be used anymore until the page was refreshed.
+ * Fixed bug; When confirming variants with another screening, Internet Explorer
+   showed all variants in the system instead of all variants in the individual.
+ * Fixed bug; The "Select all" and "Select none" options in the viewlist menu
+   didn't work on Internet Explorer.
+ * Fixed bug; Curators could not add custom columns to their genes since their
+   authorization was not loaded properly.
+ * Fixed bug; The update checker returned errors if no diseases were configured
+   in the database yet.
 
 
 

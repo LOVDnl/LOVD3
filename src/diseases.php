@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -521,7 +521,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
          array(
                 CURRENT_PATH . '?edit' => array('menu_edit.png', 'Edit settings for this ' . $sUnit . ' only', 1),
                 // FIXME; Can we redirect inmediately to the correct page? And in a new window!
-                'columns/' . $sCategory . '/' . $sColumnID . '?remove' => array('cross.png', 'Remove column from this ' . $sUnit, 0),
+                'columns/' . $sCategory . '/' . $sColumnID . '?remove&amp;target=' . $sParentID => array('cross.png', 'Remove column from this ' . $sUnit, 1),
               );
     lovd_showJGNavigation($aNavigation, 'ColumnEdit');
 

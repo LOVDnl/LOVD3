@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-08
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -611,7 +611,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     $_GET['search_screeningids'] .= ' !' . $nID;
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
-    $_DATA->viewList('Screenings_' . $nID . '_confirmVariants', array('id_', 'screeningids', 'chromosome'), true, false, true);
+    $_DATA->viewList('Screenings_' . $nID . '_confirmVariants', array('id_', 'chromosome'), true, false, true);
 
     print('      <BR><BR>' . "\n\n");
 

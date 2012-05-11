@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -133,9 +133,6 @@ function lovd_checkXSS ($aInput = '')
 
     $bSuccess = true;
     foreach ($aInput as $key => $val) {
-        if (in_array($key, array('description_legend_short', 'description_legend_full'))) {
-            continue;
-        }
         if (is_array($val)) {
             $bSuccess = $bSuccess && lovd_checkXSS($val);
         } elseif (!empty($val) && preg_match('/<.*>/s', $val)) {

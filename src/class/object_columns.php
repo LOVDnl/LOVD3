@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-02
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -208,6 +208,8 @@ class LOVD_Column extends LOVD_Object {
         // FIXME; are we just assuming that form_format is OK?
 
         // XSS attack prevention. Deny input of HTML.
+        // Ignore the 'Description on short legend' and 'Description on full legend' fields.
+        unset($aData['description_legend_short'], $aData['description_legend_full']);
         lovd_checkXSS();
     }
 
@@ -218,7 +220,7 @@ class LOVD_Column extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-        global $_PATH_ELEMENTS, $_DB;
+        global $_PE, $_DB;
 
         // Get links list, to connect column to link.
         $aLinks = $_DB->query('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name')->fetchAllCombine();
@@ -241,7 +243,7 @@ class LOVD_Column extends LOVD_Object {
                         'skip',
                         array('', '', 'print', '<B>Data and form settings</B> (Use data type wizard to change values)'),
                         'hr',
-                        array('', '', 'print', '<BUTTON type="button" onclick="javascript:lovd_openWindow(\'' . $_PATH_ELEMENTS[0] . '?data_type_wizard&amp;workID=' . $_POST['workID'] . '\', \'DataTypeWizard\', 800, 400); return false;">Start data type wizard</BUTTON>'),
+                        array('', '', 'print', '<BUTTON type="button" onclick="javascript:lovd_openWindow(\'' . $_PE[0] . '?data_type_wizard&amp;workID=' . $_POST['workID'] . '\', \'DataTypeWizard\', 800, 400); return false;">Start data type wizard</BUTTON>'),
                         array('MySQL data type', '<B>Experts only!</B> Only change this field manually when you know what you\'re doing! Otherwise, use the data type wizard by clicking the button above this field.', 'text', 'mysql_type', 30),
                         array('Form type', '<B>Experts only!</B> Only change this field manually when you know what you\'re doing! Otherwise, use the data type wizard by clicking the button above the MySQL data type field.', 'text', 'form_type', 30),
                         'hr',
@@ -310,8 +312,7 @@ class LOVD_Column extends LOVD_Object {
 
         // Het hele formulier moet anders met het editen... het display gedeelte moet apart denk ik - "edit display settings"; variant en phenotype cols hebben "set defaults for new genes/diseases", alle hebben "edit data types" ofzo.
         if (ACTION == 'edit') {
-            global $sColumnID;
-            if (!preg_match('/^TEXT|VARCHAR/', $_POST['mysql_type']) || $sColumnID == 'VariantOnGenome/DBID') {
+            if (!preg_match('/^TEXT|VARCHAR/', $_POST['mysql_type']) || $_PE[2] == 'DBID') {
                 unset($this->aFormData['active_links_title'], $this->aFormData['active_links_hr1'], $this->aFormData['active_links'], $this->aFormData['active_links_hr2'], $this->aFormData['active_links_skip']);
             }
             unset($this->aFormData['colid'], $this->aFormData['colid_note']);

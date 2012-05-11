@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-10
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1422,23 +1422,25 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
-        // FIXME; there is some code missing here, to gather info to run lovd_isAuthorized() first (see code for sorting columns).
+        lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
         lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
     }
 
     if ($aTableInfo['shared']) {
-        $nCount = $_DB->query('SELECT COUNT(id) FROM ' . constant(strtoupper('table_' . $aTableInfo['unit'] . 's')))->fetchColumn();
+        // FIXME; If, for curator level users, we'd made a JOIN here, we could see beforehand that there will be no targets left, instead of having to check it some 50 lines below here.
+        $nCount = $_DB->query('SELECT COUNT(id) FROM ' . $aTableInfo['table_sql'])->fetchColumn();
         $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
     } else {
         $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid AND ac.colid IS NULL) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
     }
 
     if (!$zData) {
+        // Column doesn't exist or has already been added to everything it can be added to.
         $_T->printHeader();
         $_T->printTitle();
-        lovd_showInfoTable('No such ID!', 'stop');
+        lovd_showInfoTable('This column does not exist or has already been ' . ($aTableInfo['shared']? 'added to all ' . $aTableInfo['unit'] . 's' : 'enabled') . '.', 'stop');
         $_T->printFooter();
         exit;
     }
@@ -1449,30 +1451,41 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
     // In case of a shared column (VariantOnTranscript & Phenotype), the user
     // needs to select for which target (gene, disease) the column needs to be added to.
-    if ($aTableInfo['shared'] && $sCategory == 'VariantOnTranscript') {
-        // Retrieve list of genes which do NOT have this column yet.
-        $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (g.id = c.geneid AND c.colid = ?) WHERE c.colid IS NULL';
-        $aSQL = array($zData['id']);
-        if ($_AUTH['level'] < LEVEL_MANAGER) {
-            // Maybe a JOIN would be simpler?
-            $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
-            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+    if ($aTableInfo['shared']) {
+        if ($sCategory == 'VariantOnTranscript') {
+            // Retrieve list of genes which do NOT have this column yet.
+            $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (g.id = c.geneid AND c.colid = ?) WHERE c.colid IS NULL';
+            $aSQL = array($zData['id']);
+            if ($_AUTH['level'] < LEVEL_MANAGER) {
+                // Maybe a JOIN would be simpler?
+                $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
+                $aSQL = array_merge($aSQL, $_AUTH['curates']);
+            }
+            $sSQL .= ' ORDER BY g.id';
+            $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+            $nPossibleTargets = count($aPossibleTargets);
+        } elseif ($sCategory == 'Phenotype') {
+            // Retrieve list of diseases which do NOT have this column yet.
+            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
+            $aSQL = array($zData['id']);
+            if ($_AUTH['level'] < LEVEL_MANAGER) {
+                // Maybe a JOIN would be simpler?
+                $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+                $aSQL = array_merge($aSQL, $_AUTH['curates']);
+            }
+            $sSQL .= ' ORDER BY d.symbol';
+            $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+            $nPossibleTargets = count($aPossibleTargets);
         }
-        $sSQL .= ' ORDER BY g.id';
-        $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
-        $nPossibleTargets = count($aPossibleTargets);
-    } elseif ($aTableInfo['shared'] && $sCategory == 'Phenotype') {
-        // Retrieve list of diseases which do NOT have this column yet.
-        $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
-        $aSQL = array($zData['id']);
-        if ($_AUTH['level'] < LEVEL_MANAGER) {
-            // Maybe a JOIN would be simpler?
-            $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
-            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+
+        if (!$nPossibleTargets) {
+            // Column has already been added to everything it can be added to.
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('This column has already been added to all ' . $aTableInfo['unit'] . 's.', 'stop');
+            $_T->printFooter();
+            exit;
         }
-        $sSQL .= ' ORDER BY d.symbol';
-        $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
-        $nPossibleTargets = count($aPossibleTargets);
     }
 
     // Check if column is enabled for target.
@@ -1673,6 +1686,8 @@ if (!isset($_GET['in_window'])) {
         }
     }
 
+
+
     $_T->printHeader();
     $_T->printTitle();
 
@@ -1748,7 +1763,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
-        // FIXME; there is some code missing here, to gather info to run lovd_isAuthorized() first (see code for sorting columns).
+        lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
         lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -1767,28 +1782,39 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         $_POST['target'] = $_GET['target'];
     }
 
-    if ($aTableInfo['shared'] && $sCategory == 'VariantOnTranscript') {
-        // Retrieve list of genes that DO HAVE this column and you are authorized to remove columns from.
-        $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (g.id = sc.geneid AND sc.colid = ?)';
-        $aSQL = array($zData['id']);
-        if ($_AUTH['level'] < LEVEL_MANAGER) {
-            $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
-            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+    if ($aTableInfo['shared']) {
+        if ($sCategory == 'VariantOnTranscript') {
+            // Retrieve list of genes that DO HAVE this column and you are authorized to remove columns from.
+            $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (g.id = sc.geneid AND sc.colid = ?)';
+            $aSQL = array($zData['id']);
+            if ($_AUTH['level'] < LEVEL_MANAGER) {
+                $sSQL .= ' AND g.id IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
+                $aSQL = array_merge($aSQL, $_AUTH['curates']);
+            }
+            $sSQL .= ' ORDER BY g.id';
+            $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+            $nPossibleTargets = count($aPossibleTargets);
+        } elseif ($sCategory == 'Phenotype') {
+            // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
+            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
+            $aSQL = array($zData['id']);
+            if ($_AUTH['level'] < LEVEL_MANAGER) {
+                $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
+                $aSQL = array_merge($aSQL, $_AUTH['curates']);
+            }
+            $sSQL .= ' ORDER BY d.symbol';
+            $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+            $nPossibleTargets = count($aPossibleTargets);
         }
-        $sSQL .= ' ORDER BY g.id';
-        $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
-        $nPossibleTargets = count($aPossibleTargets);
-    } elseif ($aTableInfo['shared'] && $sCategory == 'Phenotype') {
-        // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
-        $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
-        $aSQL = array($zData['id']);
-        if ($_AUTH['level'] < LEVEL_MANAGER) {
-            $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
-            $aSQL = array_merge($aSQL, $_AUTH['curates']);
+
+        if (!$nPossibleTargets) {
+            // Column has already been added to everything it can be added to.
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('This column has already been removed from all ' . $aTableInfo['unit'] . 's.', 'stop');
+            $_T->printFooter();
+            exit;
         }
-        $sSQL .= ' ORDER BY d.symbol';
-        $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
-        $nPossibleTargets = count($aPossibleTargets);
     }
 
     // Check if column is enabled for target.
@@ -1918,6 +1944,8 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             unset($_POST['password']);
         }
     }
+
+
 
     $_T->printHeader();
     $_T->printTitle();

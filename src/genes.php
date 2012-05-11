@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -90,6 +90,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
         }
         $aNavigation[CURRENT_PATH . '/columns']       = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order'] = array('menu_columns.png', 'Re-order enabled variant columns', 1);
+        $aNavigation['columns/VariantOnTranscript'] = array('menu_columns.png', 'View all available variant columns', 1);
     }
     lovd_showJGNavigation($aNavigation, 'Genes');
 
@@ -812,7 +813,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])
          array(
                 CURRENT_PATH . '?edit' => array('menu_edit.png', 'Edit settings for this ' . $sUnit . ' only', 1),
                 // FIXME; Can we redirect inmediately to the correct page? And in a new window!
-                'columns/' . $sCategory . '/' . $sColumnID . '?remove' => array('cross.png', 'Remove column from this ' . $sUnit, 0),
+                'columns/' . $sCategory . '/' . $sColumnID . '?remove&amp;target=' . $sParentID => array('cross.png', 'Remove column from this ' . $sUnit, 1),
               );
     lovd_showJGNavigation($aNavigation, 'ColumnEdit');
 
@@ -1052,7 +1053,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
     $sID = rawurldecode($_PE[1]);
 
-    if (!in_array($sID, lovd_getGeneList())) {
+    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($sID))->fetchColumn()) {
         define('PAGE_TITLE', 'Manage curators for the ' . $sID . ' gene');
         $_T->printHeader();
         $_T->printTitle();
