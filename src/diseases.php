@@ -163,7 +163,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             // FIXME; add this and next block to a function, just like lovd_addAllDefaultCustomColumnsForGene().
             $aAdded = $_DB->query('DESCRIBE ' . TABLE_PHENOTYPES)->fetchAllColumn();
-            
+
             $qStandardCustomCols = $_DB->query('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "Phenotype/%" AND (standard = 1 OR hgvs = 1)');
             while ($zStandard = $qStandardCustomCols->fetchAssoc()) {
                 if (!in_array($zStandard['id'], $aAdded)) {
@@ -534,8 +534,8 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
 
 
 if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 'edit') {
-    // URL: /diseases/00001/columns/IQ
-    // URL: /diseases/00001/columns/Blood_pressure/Systolic
+    // URL: /diseases/00001/columns/IQ?edit
+    // URL: /diseases/00001/columns/Blood_pressure/Systolic?edit
     // View specific enabled column for this disease.
 
     $sUnit = 'disease';

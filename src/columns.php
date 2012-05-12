@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-11
+ * Modified    : 2012-05-12
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1430,7 +1430,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
     if ($aTableInfo['shared']) {
         // FIXME; If, for curator level users, we'd made a JOIN here, we could see beforehand that there will be no targets left, instead of having to check it some 50 lines below here.
-        $nCount = $_DB->query('SELECT COUNT(id) FROM ' . $aTableInfo['table_sql'])->fetchColumn();
+        $nCount = $_DB->query('SELECT COUNT(id) FROM ' . constant(strtoupper('table_' . $aTableInfo['unit'] . 's')))->fetchColumn();
         $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
     } else {
         $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid AND ac.colid IS NULL) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
@@ -1715,9 +1715,9 @@ if (!isset($_GET['in_window'])) {
             $aForm[] = array('', '', 'print', '<B>Enabling the ' . $zData['id'] . ' column for the ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '</B><BR><BR>' . "\n");
             print('      <INPUT type="hidden" name="target" value="' . $_POST['target'] . '">' . "\n");
         } else {
-            print('      Please select the ' . $aTableInfo['unit'] . '(s) for which you want to remove the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
+            print('      Please select the ' . $aTableInfo['unit'] . '(s) for which you want to add the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
             $nPossibleTargets = ($nPossibleTargets > 15? 15 : $nPossibleTargets);
-            $aForm['target'] = array('Remove this column from', '', 'select', 'target', $nPossibleTargets, $aPossibleTargets, false, true, true);
+            $aForm['target'] = array('Add this column to', '', 'select', 'target', $nPossibleTargets, $aPossibleTargets, false, true, true);
             $aForm['target_skip'] = 'skip';
         }
     } else {
@@ -1794,6 +1794,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $sSQL .= ' ORDER BY g.id';
             $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
+
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
             $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';

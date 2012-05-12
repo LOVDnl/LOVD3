@@ -54,6 +54,8 @@
    authorization was not loaded properly.
  * Fixed bug; The update checker returned errors if no diseases were configured
    in the database yet.
+ * Fixed bug; When the MySQL database didn't exist, you would get a fatal error
+   instead of an informative error message.
 
 
 

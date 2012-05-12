@@ -1,6 +1,5 @@
 Prioritize:
 ===========
-Als database niet bestaat, krijg je een query error?
 - IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
   + Reported by Christopher Watson.
 - Als een individu wordt verwijderd, worden de varianten niet verwijderd - deze blijven dus hangen in het systeem.

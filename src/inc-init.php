@@ -477,8 +477,8 @@ if (!class_exists('PDO')) {
 
 // DMD_SPECIFIC; FIXME; can we get rid of this already?
 // Initiate Database Connection (OLD WAY).
-$_DB = @mysql_connect($_INI['database']['hostname'], $_INI['database']['username'], $_INI['database']['password']);
-if (!$_DB) {
+$db = @mysql_connect($_INI['database']['hostname'], $_INI['database']['username'], $_INI['database']['password']);
+if (!$db) {
     // No connection!
     lovd_displayError('Init', 'Error connecting to database - ' . mysql_error());
 }

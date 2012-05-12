@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2012-05-11
+ * Modified    : 2012-05-12
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,7 +72,7 @@ class LOVD_SharedColumn extends LOVD_Object {
         $this->sSQLLoadEntry = 'SELECT sc.*, c.form_type ' .
                                'FROM ' . TABLE_SHARED_COLS . ' AS sc ' .
                                  'INNER JOIN ' . TABLE_COLS . ' AS c ON (sc.colid = c.id) ' .
-                               'WHERE sc.colid = ?';
+                               'WHERE sc.colid = ? AND sc.' . $this->aTableInfo['unit'] . 'id = "' . $sObjectID . '"'; // Variable has been checked elsewhere, before this query is run.
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'sc.*, ' .
