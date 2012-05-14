@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-05-04
+ * Modified    : 2012-05-14
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -798,7 +798,7 @@ if ($_GET['step'] == 4) {
           '      <BR>' . "\n\n" .
           '      The installation of LOVD ' . $_STAT['version'] . ' is now complete.<BR>' . "\n" .
           '      <BR>' . "\n\n" .
-          '      <BUTTON onclick="window.location.href=\'setup?newly_installed\';" style="font-weight : bold; font-size : 11px;">Continue to Setup area &gt;&gt;</BUTTON>' . "\n\n");
+          '      <BUTTON onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup?newly_installed\';" style="font-weight : bold; font-size : 11px;">Continue to Setup area &gt;&gt;</BUTTON>' . "\n\n");
 
     $_T->printFooter();
     exit;

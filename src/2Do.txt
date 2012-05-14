@@ -1,11 +1,5 @@
 Prioritize:
 ===========
-- IE pakt geen window.location.hrefs zonder full URL (hij negeert BASE tag). Hier omheen werken.
-  + Reported by Christopher Watson.
-- Als een individu wordt verwijderd, worden de varianten niet verwijderd - deze blijven dus hangen in het systeem.
-  + Als je een individu verwijderd, moet het een optie worden om de X varianten ook te verwijderen, of de varianten los te koppelen en vrij te laten in het systeem.
-  + Daarnaast: als je een screening verwijdert, blijven de varianten die nergens anders aan verbonden zijn, los hangen in het systeem.
-    * Als je een screening verwijderd, moet er een waarschuwing bij komen, dat er X varianten worden verwijderd uit het systeem, omdat die alleen aan deze screening vast zitten.
 - Johan wil geen homozygote varianten opslaan als 1 entry, moeten er twee worden. De tweede entry hoeft niet per se verborgen te worden als 't veel werk is.
   + Overal waar er counts worden gedaan van de varianten, moeten we daarna checken of dat (nog) goed gaat.
 - (@Ivo) Row Link probleem:
@@ -86,6 +80,9 @@ Prioritize:
     * De ViewList zou wel de individu informatie mogen tonen, toch?
     * De Individual ID zou wel op een bepaalde manier verborgen moeten worden.
       - De ViewEntry van de Individu zou dan ook niet-public moeten zijn.
+    * Ivar: Is het niet zo dat als je de Individual op non-public zet, dat je dan ook de link naar de varianten kwijt bent, maar de varianten
+            nog wel gewoon kunt bekijken? Met als resultaat dat de variant informatie publiekelijk beschikbaar is, maar dat het niet te herleiden
+            is naar de Individual in kwestie.
 - Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)
   + Ook support mededelingen: voor versies alpha-01 t/m alpha-10 het bericht dat alpha niet meer ondersteund wordt, dus je moet upgraden. Of voor alle installs op onze server (signature check): downtime dan en dan. Op versie of op signature??? Zoiets.
   + Ook instellen per user level (submitter, curator, manager, db admin).
@@ -109,10 +106,7 @@ Prioritize:
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
-- Kolom activeren per gen: moet via POST omdat via GET soms te lang is.
 - Delete user verder ontmoedigen?
-- VariantOnGenome/dbSNP column with rsID
-  * Beter heel nummer mét rs erbij.
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, én we zitten nu op PHP >= 5.1.0, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - Het is niet duidelijk wat object_id nu precies is (gene symbol of disease id, bedoeld om te bepalen welke cc actief zijn)
@@ -127,18 +121,17 @@ Prioritize:
   * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
 - Er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
 - When disease is created, forward user to select columns for this disease.
-- Veranderingen zoals voorgesteld 2011-06-28?
+- Veranderingen zoals voorgesteld 2011-06-28? // Ivar: Kijk hier even naar, want volgens mij is dit gedeeltelijk al opgelost.
   * Allele, genetic_origin, Phenotype/Inheritance
     - Current plans:
         Variant/allele -> Variant/Phase?
 - In individual viewList: lijst genen meest gemuteerd?
 - Als account gelocked wordt, moet er naar de gebruiker die gelocked is, gemailed worden.
 - Raar: /genes/DMD?authorize -> click alle users aan -> resort viewList.
-- Use uniqid() ipv lovd functie?
+- Use uniqid() ipv lovd functie? Ivar: Nee, er staat dat het alleen "based" is op microtime, dit maakt het hoogstwaarschijnlijk incompatible met onze implementatie van unset(<oudste entry met min()>)
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
-- Links to other resources op gene viewEntry() moet opgeruimd worden; niet-actieve velden weg.
 - Geheugengebruik hoog vanwege session: Ook fix nodig voor viewList data? Blijft ook hangen.
-- Bij installatie controleren of er een mailserver is? Poort 25 check?
+- Bij installatie controleren of er een mailserver is? Poort 25 check? Ivar: Bijna niet te checken of de mailserver werkt...
 - Bij aanmaken gen en geen LRG, wel check of LRG bestaat voor pending? (LRG webservice)
   * Dan op een bepaalde manier de curator van op de hoogte stellen?
   * Bij gebruik LRG webservice: Pontus: "Should a key be leaked or stolen in a way so that it is misused, we may need to reserve the right to ban that key. In that case, you would perhaps want to implement some way of redistributing new keys to the LOVD installations..."
@@ -159,9 +152,7 @@ Prioritize:
   + Eventueel code gebruiken gesuggereerd door Ivar (november 2011)
   - Implement lovd_getColumnMaxValue() in inc-lib-init.php.
 - SeattleSeq import: in welke kolom worden de dbSNP links geladen? Is nu nummerieke select, moet text values worden.
-- Mapper geeft query error als VOT DNA veld niet actief is: ondervangen?
-- CURRENT_PATH is mooier in de code dan $_PE[0] . '/' . $nID, maar CURRENT_PATH mist de str_pad die $nID wel heeft. Is hier een mooie oplossing voor?
-  + Kan CURRENT_PATH afhankelijk worden gemaakt van een bepaalde predefined set, dat <object>/<numeriek> automatisch een str_pad/sprintf ontvangt, afhankelijk van <object>?
+- Mapper geeft query error als VOT DNA veld niet actief is: ondervangen? Ivar: Nee, moeten ze maar niet met de database kloten...
 - Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
 - Add viewlist menu also on other pages? viewlists within viewentries? phenotypes for instance, can't be downloaded yet.
 From LOVD 2.0:

@@ -88,7 +88,7 @@ $rGenes = lovd_queryDB_Old($qGenes);
 $nGenes = mysql_num_rows($rGenes);
 while($aGene = mysql_fetch_assoc($rGenes)) {
     $nCollaborators = ($aGene['collaborators'] - $aGene['curators']);
-    print('  <TR class="data" id="' . $aGene['id'] . '" valign="top" style="cursor : pointer;" onclick="window.location.href = \'genes/' . rawurlencode($aGene['id']) . '\';">' . "\n" .
+    print('  <TR class="data" id="' . $aGene['id'] . '" valign="top" style="cursor : pointer;" onclick="window.location.href=\'' . lovd_getInstallURL() . 'genes/' . rawurlencode($aGene['id']) . '\';">' . "\n" .
           '    <TD class="ordered"><A href="genes/' . rawurlencode($aGene['id']) . '" class="hide"><B>' . $aGene['id'] . '</B></A></TD>' . "\n" .
           '    <TD>' . $aGene['name'] . '</TD>' . "\n" .
           '    <TD align="right">' . ($nCollaborators? $nCollaborators : NULL) . '</TD>' . "\n" .

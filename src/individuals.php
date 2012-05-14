@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-11
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -237,21 +237,21 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             $aOptionsList = array();
             if (!$nDiseases) {
                 $aOptionsList['options'][0]['disabled'] = true;
-                $aOptionsList['options'][0]['onclick']  = 'alert(\'' . $sMessage . '\');';
+                $aOptionsList['options'][0]['onclick']  = 'javascript:alert(\'' . $sMessage . '\');';
             } else {
-                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $nID . '\'';
+                $aOptionsList['options'][0]['onclick'] = 'phenotypes?create&amp;target=' . $nID;
             }
             $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit phenotype information on ' . $sPersons . '</B>';
 
-            $aOptionsList['options'][1]['onclick']     = 'window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $nID . '\'';
+            $aOptionsList['options'][1]['onclick']     = 'screenings?create&amp;target=' . $nID;
             $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit mutation screening information instead</B>';
             // FIXME; Once we have code to allow the user (and remind them) to continue the unfinished submission, we can enable this part again
             // (although it would be nice to put a warning here, also).
             if (true) {
                 $aOptionsList['options'][2]['disabled'] = true;
-                $aOptionsList['options'][2]['onclick']  = 'alert(\'You cannot finish your submission, because no screenings have been added to ' . $sPersons . ' yet!\')';
+                $aOptionsList['options'][2]['onclick']  = 'javascript:alert(\'You cannot finish your submission, because no screenings have been added to ' . $sPersons . ' yet!\')';
             } else {
-                $aOptionsList['options'][2]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/individual/' . $nID . '\'';
+                $aOptionsList['options'][2]['onclick'] = 'submit/finish/individual/' . $nID;
             }
             $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
 
@@ -484,8 +484,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
         if (!lovd_error()) {
             // Query text.
-            // This also deletes the entries in gen2dis and transcripts.
+            $_DB->beginTransaction();
+            if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
+                $aOutput = $_DB->query('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ?', array($nID))->fetchAllColumn();
+                if (count($aOutput)) {
+                    $_DB->query('DELETE vog FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($aOutput) - 1) . ')', $aOutput);
+                }
+            }
+
             $_DATA->deleteEntry($nID);
+
+            $_DB->commit();
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted individual information entry ' . $nID . ' (Owner: ' . $zData['owner'] . ')');
@@ -516,15 +525,26 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
+    $nVariants = $_DB->query('SELECT COUNT(DISTINCT s2v.variantid) FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s.individualid = ? GROUP BY s.individualid', array($nID))->fetchColumn();
+    $aOptions = array('remove' => 'Also remove all variants attached to this individual', 'keep' => 'Keep all attached variants as separate entries');
+
     // Array which will make up the form table.
     $aForm = array_merge(
                  array(
-                        array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting individual information entry', '', 'print', $nID . ' (Owner: ' . $zData['owner'] . ')'),
+                        array('POST', '', '', '', '45%', '14', '55%'),
+                        array('Deleting individual information entry', '', 'print', '<B>' . $nID . ' (Owner: ' . $zData['owner'] . ')</B>'),
                         'skip',
+                        array('', '', 'print', 'This individual entry has ' . ($nVariants? $nVariants : 0) . ' variant' . ($nVariants == 1? '' : 's') . ' attached.'),
+          'variants' => array('What should LOVD do with the attached variants?', '', 'select', 'remove_variants', 1, $aOptions, false, false, false),
+                        array('', '', 'note', '<B>All phenotypes and screenings attached to this individual will be automatically removed' . ($nVariants? ' regardless' : '') . '!!!</B>'),
+     'variants_skip' => 'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete individual information entry'),
                       ));
+    if (!$nVariants) {
+        unset($aForm['variants'], $aForm['variants_skip']);
+    }
+
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");

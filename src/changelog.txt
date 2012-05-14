@@ -65,6 +65,34 @@
 
 
 
+ * Fixed bug; Protein description prediction during automatic mapping now
+   returns a p.? instead of a p.= when mutalyzer predicts it is a variant
+   affecting splicing.
+ * Removed custom links from `VariantOnGenome/DBID` and all custom columns that
+   are not text columns and made it impossible to add them again to these
+   columns.
+ * Now the tooltip of multiple select fields are automatically appended with
+   basic information how to select multiple items.
+ * "Description on full legend" & "Description on short legend" of custom
+   columns can now also contain HTML.
+ * The javascript errors on IE <= 7 in viewLists are now fixed.
+   Closes #11: "Javascript errors in IE 7 on viewLists".
+ * Rewrote columns/<columnID>?add & columns/<columnID>?remove to make it cleaner
+   code-wise and more user-friendly.
+ * Added the possibility to send a target through the URL to both
+   columns/<columnID>?add & columns/<columnID>?remove.
+ * Fixed bug; Changed all javascript links to absolute URLs, because IE does
+   not respect the BASE tag.
+   (thanks to Chris Watson, St. James's Univ Hospital, Leeds, UK, for reporting)
+ * Fixed bug; The variant create & edit forms no longer produce an error despite 
+   having filled in a valid dbSNP number or DBID in the `VariantOnGenome/dbSNP`
+   and `VariantOnGenome/DBID` field respectively.
+ * Implemented the option of also removing variants when deleting a screening or
+   an individual.
+
+
+
+
 
 
 

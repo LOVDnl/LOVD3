@@ -403,7 +403,6 @@ function lovd_fetchDBID ($aData)
 function lovd_buildOptionTable ($aOptionsList = array())
 {
     // Build the options list that the user encounters after each seperate entry creation within a submission.
-
     if (empty($aOptionsList) || !is_array($aOptionsList) || empty($aOptionsList['options']) || !is_array($aOptionsList['options'])) {
         return false;
     }
@@ -415,7 +414,12 @@ function lovd_buildOptionTable ($aOptionsList = array())
         if (!empty($aOption['disabled'])) {
             $sOptionsTable .= 'class="disabled" ';
         }
-        $sOptionsTable .= 'onclick="' . $aOption['onclick'] . '">' . "\n" .
+        if (substr($aOption['onclick'], 0, 11) == 'javascript:') {
+            $aOption['onclick'] = str_replace('javascript:', '', $aOption['onclick']);
+        } else {
+            $aOption['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . $aOption['onclick'] . '\'';
+        }
+        $sOptionsTable .= 'onclick="' . $aOption['onclick']  . '">' . "\n" .
                          '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                          '          <TD>' . (!empty($aOption['disabled'])? '<I>' . $aOption['option_text'] . '</I>' : $aOption['option_text']) . '</TD></TR>' . "\n";
     }

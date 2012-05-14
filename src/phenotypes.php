@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-04-25
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-10
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -257,13 +257,13 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
                 print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n");
 
                 $aOptionsList = array();
-                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'phenotypes?create&amp;target=' . $_POST['individualid'] . '\'';
+                $aOptionsList['options'][0]['onclick'] = 'phenotypes?create&amp;target=' . $_POST['individualid'];
                 $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more phenotype information</B>';
-                $aOptionsList['options'][1]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'';
+                $aOptionsList['options'][1]['onclick'] = 'screenings?create&amp;target=' . $_POST['individualid'];
                 $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit mutation screening information instead</B>';
                 if (true) {
                     $aOptionsList['options'][2]['disabled'] = true;
-                    $aOptionsList['options'][2]['onclick'] = 'alert(\'You cannot finish your submission, because no screenings have been added to ' . $sPersons . ' yet!\');';
+                    $aOptionsList['options'][2]['onclick'] = 'javascript:alert(\'You cannot finish your submission, because no screenings have been added to ' . $sPersons . ' yet!\');';
                 }
                 $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
 

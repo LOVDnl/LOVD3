@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-05-04
+ * Modified    : 2012-05-14
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -207,7 +207,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                     '3.0-beta-02d' =>
                         array(
                                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Conservation_score/GERP",      4, 100, 0, 0, 0, "GERP conservation",    "", "Conservation score as calculated by GERP.", "The Conservation score as calculated by GERP.", "DECIMAL(5,3)", "GERP conservation score||text|6", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
-                                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/dbSNP",                        8, 120, 0, 0, 0, "dbSNP ID",             "", "The dbSNP ID.", "The dbSNP ID.", "VARCHAR(15)", "dbSNP ID|If available, please fill in the dbSNP ID, such as rs12345678.|text|10", "", "/^[rs]s\d+$/", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/dbSNP",                        8, 120, 0, 0, 0, "dbSNP ID",             "", "The dbSNP ID.", "The dbSNP ID.", "VARCHAR(15)", "dbSNP ID|If available, please fill in the dbSNP ID, such as rs12345678.|text|10", "", "/^[rs]s\\\\d+$/", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Distance_to_splice_site", 10, 150, 0, 0, 0, "Splice distance",      "", "The distance to the nearest splice site.", "The distance to the nearest splice site.", "MEDIUMINT(8) UNSIGNED", "Distance to splice site||text|8", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/GVS/Function",             9, 200, 0, 0, 0, "GVS function",         "", "Functional annotation of this position by GVS.", "The functional annotation of this position from the Genome Variation Server.", "VARCHAR(30)", "GVS function|Whether the variant is missense, nonsense, in an intron, UTR, etc.|text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/PolyPhen",                 8, 200, 0, 0, 0, "PolyPhen prediction",  "", "The effect predicted by PolyPhen.", "The effect predicted by PolyPhen.", "VARCHAR(20)", "PolyPhen prediction||select|1|true|false|false", "benign = Benign\r\npossiblyDamaging = Possably damaging\r\nprobablyDamaging = Probably damaging\r\nnoPrediction = No prediction", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
@@ -240,7 +240,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'CREATE TABLE ' . TABLE_ALLELES . ' (id TINYINT(2) UNSIGNED NOT NULL, name VARCHAR(20) NOT NULL, display_order TINYINT(1) UNSIGNED NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB, DEFAULT CHARACTER SET utf8',
              'allele_values' => 'Reserved for the insert query of the new allele table. This will be added later in this script.',
                                 'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_allele FOREIGN KEY (allele) REFERENCES ' . TABLE_ALLELES . ' (id) ON UPDATE CASCADE',
-                                'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\d{1,2}|[XYM])|(C(\d{1,2}|[XYM])orf\d+-|[A-Z][A-Z0-9]+-)?(C(\d{1,2}|[XYM])orf\d+|[A-Z][A-Z0-9]+))_[0-9]{6}$/" WHERE id = "VariantOnGenome/DBID"',
+                                'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf\\\\d+-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf\\\\d+|[A-Z][A-Z0-9]+))_[0-9]{6}$/" WHERE id = "VariantOnGenome/DBID"',
                              ),
                     '3.0-beta-04' =>
                         array(
@@ -253,6 +253,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         array(
                                 'UPDATE ' . TABLE_COLS . ' SET mysql_type = "VARCHAR(50)" WHERE id = "Phenotype/Inheritance"',
                                 'DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid IN (SELECT id FROM ' . TABLE_COLS . ' WHERE mysql_type NOT REGEXP "^(VARCHAR|TEXT)" OR id = "VariantOnGenome/DBID")',
+                                'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^[rs]s\\\\d+$/" WHERE id = "VariantOnGenome/dbSNP"',
+                                'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf\\\\d+-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf\\\\d+|[A-Z][A-Z0-9]+))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID"',
                              ),
                   );
 

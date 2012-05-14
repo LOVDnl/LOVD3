@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-05-07
+ * Modified    : 2012-05-14
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -410,12 +410,12 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             $aOptionsList = array('width' => 600);
             if (!$nVariants) {
                 $aOptionsList['options'][0]['disabled'] = true;
-                $aOptionsList['options'][0]['onclick'] = 'alert(\'You cannot confirm variants with this screening, because there aren\&#39;t any variants connected to this individual yet!\');';
+                $aOptionsList['options'][0]['onclick'] = 'javascript:alert(\'You cannot confirm variants with this screening, because there aren\&#39;t any variants connected to this individual yet!\');';
             } elseif ($nCurrentVariants == $nVariants) {
                 $aOptionsList['options'][0]['disabled'] = true;
-                $aOptionsList['options'][0]['onclick'] = 'alert(\'You cannot confirm any more variants with this screening, because all this individual\&#39;s variants have already been found/confirmed by this screening!\');';
+                $aOptionsList['options'][0]['onclick'] = 'javascript:alert(\'You cannot confirm any more variants with this screening, because all this individual\&#39;s variants have already been found/confirmed by this screening!\');';
             } else {
-                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'screenings/' . $_GET['target'] . '?confirmVariants\'';
+                $aOptionsList['options'][0]['onclick'] = 'screenings/' . $_GET['target'] . '?confirmVariants';
             }
             $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to confirm variants found using this screening &raquo;&raquo;</B>';
 
@@ -424,15 +424,15 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         }
 
         $aOptionsList = array('width' => 600);
-        $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
+        $aOptionsList['options'][0]['onclick'] = 'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
         $aOptionsList['options'][0]['option_text'] = '<B>I want to create a variant on genomic level &raquo;&raquo;</B>';
 
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $aOptionsList['options'][1]['onclick'] = 'window.location.href=\'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
+            $aOptionsList['options'][1]['onclick'] = 'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
             $aOptionsList['options'][1]['option_text'] = '<B>I want to upload a file with genomic variant data &raquo;&raquo;</B>';
         }
 
-        $aOptionsList['options'][2]['onclick'] = '$(\'#container\').toggle();';
+        $aOptionsList['options'][2]['onclick'] = 'javascript:$(\'#container\').toggle();';
         $aOptionsList['options'][2]['option_text'] = '<B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B>';
 
         print('      What kind of variant would you like to submit?<BR><BR>' . "\n\n");
@@ -608,13 +608,13 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 print('      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n");
 
                 $aOptionsList = array();
-                $aOptionsList['options'][0]['onclick']     = 'window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $_POST['screeningid'] . '\'';
+                $aOptionsList['options'][0]['onclick']     = 'variants?create&amp;target=' . $_POST['screeningid'];
                 $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more variants found by this mutation screening</B>';
                 if ($sSubmitType == 'individual') {
-                    $aOptionsList['options'][1]['onclick']     = 'window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'';
+                    $aOptionsList['options'][1]['onclick']     = 'screenings?create&amp;target=' . $_POST['individualid'];
                     $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit another screening instead</B>';
                 }
-                $aOptionsList['options'][2]['onclick']     = 'window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'] . '\'';
+                $aOptionsList['options'][2]['onclick']     = 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'];
                 $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
 
                 print(lovd_buildOptionTable($aOptionsList));
@@ -736,9 +736,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
         print('      What kind of file would you like to upload?<BR><BR>' . "\n\n");
         $aOptionsList = array('width' => 600);
 
-        $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'variants/upload?create&amp;type=VCF' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
+        $aOptionsList['options'][0]['onclick'] = 'variants/upload?create&amp;type=VCF' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
         $aOptionsList['options'][0]['option_text'] = '<B>I want to upload a Variant Call Format (VCF) file &raquo;&raquo;</B>';
-        $aOptionsList['options'][1]['onclick'] = 'window.location.href=\'variants/upload?create&amp;type=SeattleSeq' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'';
+        $aOptionsList['options'][1]['onclick'] = 'variants/upload?create&amp;type=SeattleSeq' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
         $aOptionsList['options'][1]['option_text'] = '<B>I want to upload a SeattleSeq Annotation file &raquo;&raquo;</B>';
 
         print(lovd_buildOptionTable($aOptionsList));
@@ -1875,13 +1875,13 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 // Define the continuation questions now so we can easily ask them in the setMessage calls below.
                 $aOptionsList = array();
                 $sOptions = '<BR>' . "\n" . '      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n";
-                $aOptionsList['options'][0]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $_POST['screeningid'] . '\'';
+                $aOptionsList['options'][0]['onclick'] = 'variants?create&amp;target=' . $_POST['screeningid'];
                 $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more variants found by this mutation screening</B>';
                 if ($sSubmitType == 'individual') {
-                    $aOptionsList['options'][1]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'screenings?create&amp;target=' . $_POST['individualid'] . '\'';
+                    $aOptionsList['options'][1]['onclick'] = 'screenings?create&amp;target=' . $_POST['individualid'];
                     $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit another screening instead</B>';
                 }
-                $aOptionsList['options'][2]['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'] . '\'';
+                $aOptionsList['options'][2]['onclick'] = 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'];
                 $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
                 $sOptions .= lovd_buildOptionTable($aOptionsList);
             } else {
@@ -2644,7 +2644,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                     array('POST', '', '', '', '0%', '0', '100%'),
                     array('', '', 'print', 'Enter your password for authorization'),
                     array('', '', 'password', 'password', 20),
-                    array('', '', 'print', '<INPUT type="submit" value="Save transcript list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="document.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                    array('', '', 'print', '<INPUT type="submit" value="Save transcript list">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
 

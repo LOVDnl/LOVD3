@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-12
+ * Modified    : 2012-05-14
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -250,7 +250,7 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
     }
 
     print('        </UL>' . "\n" .
-          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="' . (isset($_GET['in_window'])? 'self.close(); return false;' : 'document.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . '\'; return false;') . '" style="border : 1px solid #FF4422;">' . "\n" .
+          '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="' . (isset($_GET['in_window'])? 'self.close(); return false;' : 'window.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . '\'; return false;') . '" style="border : 1px solid #FF4422;">' . "\n" .
           '      </FORM>' . "\n\n");
 
     lovd_includeJS('lib/jQuery/jquery-ui.sortable.min.js');
@@ -685,23 +685,23 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     'options' =>
                          array(
                              array(
-                                    'onclick'     => '$(\'#optionForm input\').attr(\'value\', \'Individual\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Individual\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the individual, not related to disease</B>, not changing over time, such as date of birth',
                                   ),
                              array(
-                                    'onclick'     => '$(\'#optionForm input\').attr(\'value\', \'Phenotype\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Phenotype\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the phenotype, related to disease</B>, possibly changing over time, such as blood pressure',
                                   ),
                              array(
-                                    'onclick'     => '$(\'#optionForm input\').attr(\'value\', \'Screening\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Screening\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the detection of new variants</B>, such as detection technique or laboratory conditions',
                                   ),
                              array(
-                                    'onclick'     => '$(\'#optionForm input\').attr(\'value\', \'VariantOnGenome\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'VariantOnGenome\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the variant(s) found, in general or on the genomic level</B>, such as restriction site change',
                                   ),
                              array(
-                                    'onclick'     => '$(\'#optionForm input\').attr(\'value\', \'VariantOnTranscript\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'VariantOnTranscript\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the variant(s) found, specific for the transcript level</B>, such as predicted effect on protein level',
                                   ),
                               ),

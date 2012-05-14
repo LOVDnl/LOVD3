@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2012-05-04
+ * Modified    : 2012-05-14
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -215,7 +215,7 @@ print('      <FORM action="' . $_PE[0] . '" method="post">' . "\n" .
       '            <TD width="175">' . "\n" .
       '              <TABLE border="0" cellpadding="0" cellspacing="0" width="162">' . "\n" .
       '                <TR>' . "\n" .
-      '                  <TD align="left"><INPUT type="button" value="&lt;&lt; Cancel" onclick="window.location.href=\'' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/' . ROOT_PATH . 'setup\';" style="font-weight : bold; font-size : 11px; width : 80px;"></TD>' . "\n" .
+      '                  <TD align="left"><INPUT type="button" value="&lt;&lt; Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup\';" style="font-weight : bold; font-size : 11px; width : 80px;"></TD>' . "\n" .
       '                  <TD align="right"><INPUT type="submit" value="Next &gt;&gt;" style="font-weight : bold; font-size : 11px; width : 70px;"></TD></TR></TABLE></TD></TR></TABLE></FORM>' . "\n\n");
 
 $_T->printFooter();

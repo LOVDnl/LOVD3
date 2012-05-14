@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2012-04-23
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-14
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -113,10 +113,10 @@ $aItems =
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="2"><B>Custom individual columns</B></TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'setup_columns.php?action=add\';">' . "\n" .
+      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns.php?action=add\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_add.png" alt="Add pre-configured custom individual column" width="32" height="32"></TD>' . "\n" .
       '                <TD>Add unselected pre-configured custom individual column.</TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'setup_columns.php?action=view_all\';">' . "\n" .
+      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns.php?action=view_all\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_edit.png" alt="Manage custom individual columns" width="32" height="32"></TD>' . "\n" .
       '                <TD>Manage selected custom individual columns.</TD></TR></TABLE><BR>' . "\n");
 */
@@ -125,10 +125,10 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                         array('columns?create', 'lovd_columns_create.png', 'Create new custom data column', 'Create new custom data column.'),
                         array('columns', 'lovd_columns_view.png', 'Browse all custom data columns', 'Browse all custom data columns already available and view or edit their settings.'),
 /*
-      '              <TR class="pointer" onclick="window.location.href=\'setup_columns_global_download.php\';">' . "\n" .
+      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_download.php\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_save.png" alt="Download all LOVD custom columns" width="32" height="32"></TD>' . "\n" .
       '                <TD>Download all LOVD custom columns.</TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'setup_columns_global_import.php\';">' . "\n" .
+      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_import.php\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_import.png" alt="Import new LOVD custom columns" width="32" height="32"></TD>' . "\n" .
       '                <TD>Import new LOVD custom columns.</TD></TR>
 */
@@ -144,12 +144,12 @@ list($nModules) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TAB
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="2"><B>Modules</B></TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'setup_modules.php?action=scan\';">' . "\n" .
+      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_modules.php?action=scan\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_modules_scan.png" alt="Scan for new modules" width="32" height="32"></TD>' . "\n" .
       '                <TD>Scan LOVD install directory for new modules.</TD></TR>' .
       (!$nModules? '' :
       "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'setup_modules.php?action=view_all\';">' . "\n" .
+      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_modules.php?action=view_all\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_modules_manage.png" alt="Manage modules" width="32" height="32"></TD>' . "\n" .
       '                <TD>Manage installed LOVD modules.</TD></TR>') .
       '</TABLE>' . "\n");
@@ -171,7 +171,7 @@ foreach ($aItems as $sTitle => $aLinks) {
     foreach ($aLinks as $val) {
         list($sLink, $sIMG, $sAlt, $sText) = $val;
         print("\n" .
-              '              <TR class="pointer" onclick="window.location.href=\'' . $sLink . '\';">' . "\n" .
+              '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . $sLink . '\';">' . "\n" .
               '                <TD align="center" width="40"><IMG src="gfx/' . $sIMG . '" alt="' . $sAlt . '" width="32" height="32"></TD>' . "\n" .
               '                <TD>' . $sText . '</TD></TR>');
     }
@@ -216,7 +216,7 @@ $aItems =
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="2"><B>Download variant data for central repository</B></TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'export_data.php?all_genes\';">' . "\n" .
+      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'export_data.php?all_genes\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_save.png" alt="Download variant data" width="32" height="32"></TD>' . "\n" .
       '                <TD>Download the variant data for central repositories. This format includes the gene name, DNA change, DB ID, and possible OMIM and DbSNP IDs.</TD></TR></TABLE><BR>' . "\n");
 */
@@ -230,7 +230,7 @@ foreach ($aItems as $sTitle => $aLinks) {
     foreach ($aLinks as $val) {
         list($sLink, $sIMG, $sAlt, $sText) = $val;
         print("\n" .
-              '              <TR class="pointer" onclick="window.location.href=\'' . $sLink . '\';">' . "\n" .
+              '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . $sLink . '\';">' . "\n" .
               '                <TD align="center" width="40"><IMG src="gfx/' . $sIMG . '" alt="' . $sAlt . '" width="32" height="32"></TD>' . "\n" .
               '                <TD>' . $sText . '</TD></TR>');
     }
