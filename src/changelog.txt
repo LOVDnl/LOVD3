@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 05
- * 2012-05-????????
+ * 2012-05-16
  *********/
  * Implemented PDO in lovd_queryDB() calls in columns.php.
  * Fixed bug; The gene's external link field accepted input that did not result
@@ -56,15 +56,8 @@
    in the database yet.
  * Fixed bug; When the MySQL database didn't exist, you would get a fatal error
    instead of an informative error message.
-
-
-
-
-
-
-
-
-
+ * Improved user create & edit form by adding explanation on how to create
+   curators.
  * Fixed bug; Protein description prediction during automatic mapping now
    returns a p.? instead of a p.= when mutalyzer predicts it is a variant
    affecting splicing.
@@ -86,7 +79,7 @@
    (thanks to Chris Watson, St. James's Univ Hospital, Leeds, UK, for reporting)
  * Fixed bug; The variant create & edit forms no longer produce an error despite 
    having filled in a valid dbSNP number or DBID in the `VariantOnGenome/dbSNP`
-   and `VariantOnGenome/DBID` field respectively.
+   and `VariantOnGenome/DBID` field correctly.
  * Implemented the option of also removing variants when deleting a screening or
    an individual.
  * Redirect from login now has an extra check built in to prevent the user from
@@ -95,8 +88,6 @@
  * Users can now only edit the status and owner of their data if they are also
    curator of the gene the variant is mapped to. Managers and Database
    administators are the only ones that can do this for genomic variants.
-
-
 
 
 /*******************

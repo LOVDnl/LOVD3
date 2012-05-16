@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-05-15
+ * Modified    : 2012-05-16
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -158,15 +158,18 @@ class LOVD_Screening extends LOVD_Custom {
         parent::checkFields($aData);
 
         $aGenes = lovd_getGeneList();
+        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
+        //   De parent checkFields vraagt de getForm() namelijk al op.
+        //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
         if (!empty($aData['genes']) && is_array($aData['genes'])) {
             if (count($aData['genes']) <= 15) {
                 foreach ($aData['genes'] as $sGene) {
                     if ($sGene && !in_array($sGene, $aGenes)) {
-                        lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene');
+                        lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene.');
                     }
                 }
             } else {
-                lovd_errorAdd('genes', 'Please select no more than 15 genes. For genome-wide analysis, NO genes should be selected.');
+                lovd_errorAdd('genes', 'Please select no more than 15 genes. For genome-wide analysis, <B>no</B> genes should be selected.');
             }
         }
 
@@ -186,7 +189,7 @@ class LOVD_Screening extends LOVD_Custom {
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id > 0 ORDER BY name')->fetchAllCombine();
-            $aFormOwner = array('Owner of this screening', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
+            $aFormOwner = array('Owner of this data', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
         } else {
             $aFormOwner = array();
         }

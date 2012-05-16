@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-05-15
+ * Modified    : 2012-05-16
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -340,27 +340,22 @@ class LOVD_Custom extends LOVD_Object {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
                     // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this phenotype entry\' selection box.');
+                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this data\' selection box.');
                 }
             } else {
                 // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
-                lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this phenotype entry\'.');
+                lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this data\'.');
             }
         }
 
         if (!empty($aData['statusid'])) {
-            if (ACTION == 'edit') {
-                global $zData; // FIXME; this could be done more elegantly.
-
-                if ($_AUTH['level'] < LEVEL_CURATOR && $aData['statusid'] > $zData['statusid']) {
-                    lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
-                }
-            }
             $aSelectStatus = $_SETT['data_status'];
             unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_PENDING]);
-            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($aData['statusid'], $aSelectStatus)) {
-                lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
-            } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                if (!array_key_exists($aData['statusid'], $aSelectStatus)) {
+                    lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
+                }
+            } else {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
                 lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
             }

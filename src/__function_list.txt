@@ -106,6 +106,7 @@
 4.2.0 in_array met array als needle
 5.0.0 As of PHP 5, default values may be passed by reference.
 5.0.0 file() with FILE_IGNORE_NEW_LINES.
+5.0.0 microtime(true) ondersteunt argument true.
 5.1.0 PDO built in.
 */
 =====-========

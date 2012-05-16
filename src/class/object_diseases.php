@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2012-04-16
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-16
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -142,11 +142,11 @@ class LOVD_Disease extends LOVD_Object {
         $aGenes = lovd_getGeneList();
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
-        // Ivar: Maar de getForm gaat dan toch alsnog de query uitvoeren????
+        //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
         if (isset($aData['genes']) && is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
                 if ($sGene && !in_array($sGene, $aGenes)) {
-                    lovd_errorAdd('genes', htmlspecialchars($sGene) . 'does not exist');
+                    lovd_errorAdd('genes', htmlspecialchars($sGene) . 'is not a valid gene.');
                 }
             }
         }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-05-15
+ * Modified    : 2012-05-16
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -194,9 +194,7 @@ class LOVD_Individual extends LOVD_Custom {
 
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
-        // Ivar: Maar de getForm gaat dan toch alsnog de query uitvoeren????
-        // FIXME; parent::checkFields() heeft er toch al voor gezorgd dat $aData['active_diseases'] bestaat en een array is, of niet?
-        // Ivar: Ja, maar zorgt er niet voor dat deze gevuld is... vandaar !empty() en niet !isset()
+        //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
         if (!empty($aData['active_diseases'])) {
             $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES)->fetchAllColumn();
             foreach ($aData['active_diseases'] as $nDisease) {
@@ -231,7 +229,7 @@ class LOVD_Individual extends LOVD_Custom {
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id > 0 ORDER BY name')->fetchAllCombine();
-            $aFormOwner = array('Owner of this individual', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
+            $aFormOwner = array('Owner of this data', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aSelectStatus = $_SETT['data_status'];
             unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
             $aFormStatus = array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false);

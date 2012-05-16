@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2012-05-15
+ * Modified    : 2012-05-16
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,7 +42,7 @@ if ($_AUTH) {
 require ROOT_PATH . 'inc-lib-form.php';
 lovd_errorClean();
 
-if (!empty($_POST['referer']) && (strpos($_POST['referer'], lovd_getInstallURL()) !== 0 || strpos($_POST['referer'], lovd_getInstallURL() . 'ajax/') !== 0)) {
+if (!empty($_POST['referer']) && (strpos($_POST['referer'], lovd_getInstallURL()) !== 0 || strpos($_POST['referer'], lovd_getInstallURL() . 'ajax/') === 0)) {
     $_POST['referer'] = '';
 }
 

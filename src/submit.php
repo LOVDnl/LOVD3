@@ -140,7 +140,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
         $aSubmit[$_PE[2] . 's'] = array($nID);
     }
 
-    if ($_AUTH['level'] <= LEVEL_OWNER) {
+    if ($_AUTH['level'] == LEVEL_OWNER) {
         // If the user is not a curator or a higher, then the status will be set from "In Progress" to "Pending".
         $_DB->beginTransaction();
         if (!empty($aSubmit['variants'])) {

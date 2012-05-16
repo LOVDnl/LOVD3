@@ -203,12 +203,11 @@ class LOVD_Link extends LOVD_Object {
                 }
 
                 // Check for reference order and/or references missing from the replacement text.
-                $iRef = 1;
-                foreach ($aPatternRefs as $nRef) {
-                    if ($nRef != $iRef) {
-                        lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $iRef . '] ' . ($iRef == 1? 'first' : 'after [' . ($iRef - 1) . ']') . ', got [' . $nRef . '].');
+                reset($aPatternRefs); 
+                for ($i = 1; list(,$nRef) = each($aPatternRefs); $i ++) { 
+                    if ($nRef != $i) { 
+                        lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $i . '] ' . ($i == 1? 'first' : 'after [' . ($i - 1) . ']') . ', got [' . $nRef . '].'); 
                     }
-                    $iRef ++;
                 }
 
                 foreach ($aReplaceRefs as $nRef) {

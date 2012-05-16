@@ -2102,7 +2102,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFieldsGenome[] = 'owned_by';
                 $aFieldsGenome[] = 'statusid';
-            } elseif ($zData['statusid'] >= STATUS_MARKED) {
+            } elseif ($zData['statusid'] > STATUS_MARKED) {
                 $aFieldsGenome[] = 'statusid';
                 $_POST['statusid'] = STATUS_MARKED;
             }

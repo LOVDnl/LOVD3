@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-05-10
+ * Modified    : 2012-05-16
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -351,7 +351,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFields[] = 'owned_by';
                 $aFields[] = 'statusid';
-            } elseif ($zData['statusid'] >= STATUS_MARKED) {
+            } elseif ($zData['statusid'] > STATUS_MARKED) {
                 $aFields[] = 'statusid';
                 $_POST['statusid'] = STATUS_MARKED;
             }

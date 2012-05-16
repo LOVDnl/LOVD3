@@ -210,6 +210,7 @@ function lovd_errorClean ()
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Clean error variable.
     global $_ERROR;
+
     $_ERROR =
              array(
                     // The quotes are there, to make sure key [0] is already in use.
@@ -226,6 +227,7 @@ function lovd_errorFindField ($sField)
 {
     // Returns index of whether or not a certain form field has an error.
     global $_ERROR;
+
     return @array_search($sField, $_ERROR['fields']);
 }
 
@@ -403,6 +405,7 @@ function lovd_fetchDBID ($aData)
 function lovd_buildOptionTable ($aOptionsList = array())
 {
     // Build the options list that the user encounters after each seperate entry creation within a submission.
+
     if (empty($aOptionsList) || !is_array($aOptionsList) || empty($aOptionsList['options']) || !is_array($aOptionsList['options'])) {
         return false;
     }
@@ -419,7 +422,7 @@ function lovd_buildOptionTable ($aOptionsList = array())
         } else {
             $aOption['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . $aOption['onclick'] . '\'';
         }
-        $sOptionsTable .= 'onclick="' . $aOption['onclick']  . '">' . "\n" .
+        $sOptionsTable .= 'onclick="' . $aOption['onclick'] . '">' . "\n" .
                          '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
                          '          <TD>' . (!empty($aOption['disabled'])? '<I>' . $aOption['option_text'] . '</I>' : $aOption['option_text']) . '</TD></TR>' . "\n";
     }
@@ -437,6 +440,7 @@ function lovd_matchDate ($s, $bTime = false)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Matches a string to the date pattern, one that MySQL can understand.
+
     return (preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}' . ($bTime? ' [0-2][0-9]\:[0-5][0-9]\:[0-5][0-9]' : '') . '$/', $s));
 }
 
@@ -448,6 +452,7 @@ function lovd_matchEmail ($s)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Matches a string to the email address pattern.
+
     return (preg_match('/^[A-Z0-9_.+-]+@(([A-Z0-9][A-Z0-9-]*[A-Z0-9]|[A-Z0-9])\.)+[A-Z]{2,6}$/i', $s));
 }
 
@@ -458,6 +463,7 @@ function lovd_matchEmail ($s)
 function lovd_matchIPRange ($s, $sField = '')
 {
     // Matches a string containing an IP address range.
+
     //FIXME; include check on numbers higher than 255; preg_split on [^0-9] and foreach() through the results.
     $a = preg_split('/[;,]/', $s);
     $b = true;
@@ -482,9 +488,11 @@ function lovd_matchPassword ($s)
     // Matches a string to the password pattern (non standard). This somewhat
     // enforces the choice of a good password. This should be extended with a
     // dictionary search, maybe.
+
     if (strlen($s) < 4) {
         return false;
     }
+
     // OK... what if we remove all characters. Anything left?
     $s = preg_replace('/[A-Za-z]+/', '', $s);
     return (strlen($s) > 0);
@@ -499,6 +507,7 @@ function lovd_matchURL ($s, $bAllowCustomHosts = false)
     // Based on a function provided by Ileos.nl.
     // Matches a string to the standard URL pattern (including those using IP addresses).
     // If $bAllowCustomHosts is true, hosts like "localhost" (hosts without dots) are allowed.
+
     return (preg_match('/^(ht|f)tps?:\/\/([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-z][-0-9a-z]*[0-9a-z]|[0-9a-z])\.' . ($bAllowCustomHosts? '?' : '') . ')+[a-z]{2,6})(\/[%&=#0-9a-z\/._+-]*\??.*)?$/i', $s));
 }
 
@@ -510,6 +519,7 @@ function lovd_matchUsername ($s)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Matches a string to the username pattern (non standard).
+
     return (preg_match('/^[A-Z][A-Z0-9_.-]{3,19}$/i', $s));
 }
 
@@ -524,7 +534,6 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
     //                           array('Name', "Email\r\nEmail\r\nEmail"),
     //                           array('Name', "Email\r\nEmail")
     //                          );
-
     global $_SETT, $_CONF;
 
     $aEmailsUsed = array(); // Make sure no email address is used more than once.
