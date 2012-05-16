@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2012-04-19
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-15
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -41,6 +41,10 @@ if ($_AUTH) {
 
 require ROOT_PATH . 'inc-lib-form.php';
 lovd_errorClean();
+
+if (!empty($_POST['referer']) && (strpos($_POST['referer'], lovd_getInstallURL()) !== 0 || strpos($_POST['referer'], lovd_getInstallURL() . 'ajax/') !== 0)) {
+    $_POST['referer'] = '';
+}
 
 // Force use of cookies!
 if (!empty($_POST)) {
@@ -136,8 +140,8 @@ if (!empty($_POST)) {
                     }
 
                     // Check if referer is given, check it, then forward the user.
-                    if (!empty($_POST['referer']) && strpos($_POST['referer'], lovd_getInstallURL()) === 0) {
-                        // Location is whithin this LOVD installation.
+                    if (!empty($_POST['referer'])) {
+                        // Location is within this LOVD installation.
                         $sLocation = $_POST['referer'];
                     } else {
                         // Redirect to proper location will be done somewhere else in this code.

@@ -142,6 +142,7 @@ class LOVD_Disease extends LOVD_Object {
         $aGenes = lovd_getGeneList();
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
+        // Ivar: Maar de getForm gaat dan toch alsnog de query uitvoeren????
         if (isset($aData['genes']) && is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
                 if ($sGene && !in_array($sGene, $aGenes)) {

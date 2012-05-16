@@ -89,9 +89,12 @@
    and `VariantOnGenome/DBID` field respectively.
  * Implemented the option of also removing variants when deleting a screening or
    an individual.
-
-
-
+ * Redirect from login now has an extra check built in to prevent the user from
+   being redirected to something that could potentially harm the LOVD.
+ * Reply-To: in the email headers is now always added properly.
+ * Users can now only edit the status and owner of their data if they are also
+   curator of the gene the variant is mapped to. Managers and Database
+   administators are the only ones that can do this for genomic variants.
 
 
 

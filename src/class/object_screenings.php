@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-04-16
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-15
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -148,12 +148,7 @@ class LOVD_Screening extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        global $_AUTH, $_DB;
-
         // Checks fields before submission of data.
-        if (ACTION == 'edit') {
-            global $zData; // FIXME; this could be done more elegantly.
-        }
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -161,19 +156,6 @@ class LOVD_Screening extends LOVD_Custom {
                         'owned_by',
                       );
         parent::checkFields($aData);
-
-        // FIXME; move to object_custom.php.
-        if (!empty($aData['owned_by'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
-                    // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this screening entry\' selection box.');
-                }
-            } else {
-                // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
-                lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this screening entry\'.');
-            }
-        }
 
         $aGenes = lovd_getGeneList();
         if (!empty($aData['genes']) && is_array($aData['genes'])) {
@@ -184,7 +166,7 @@ class LOVD_Screening extends LOVD_Custom {
                     }
                 }
             } else {
-                lovd_errorAdd('genes', 'Please select no more than 15 genes. For genome-wide analysis, no genes should be selected.');
+                lovd_errorAdd('genes', 'Please select no more than 15 genes. For genome-wide analysis, NO genes should be selected.');
             }
         }
 

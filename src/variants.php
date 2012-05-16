@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-05-14
+ * Modified    : 2012-05-16
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -483,7 +483,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         define('PAGE_TITLE', 'Create a new variant entry');
     }
 
-    lovd_isAuthorized('gene', (isset($sGene)? $sGene : $_AUTH['curates']));
+    if (isset($sGene)) {
+        lovd_isAuthorized('gene', $sGene);
+    }
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = array();
@@ -562,7 +564,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                         $_DATA['Transcript'][$sGene]->buildFields());
                 $aTranscriptID = $_DATA['Transcript'][$sGene]->insertAll($_POST, $aFieldsTranscript);
             }
-            lovd_queryDB_Old('COMMIT');
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
@@ -575,6 +576,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
                 }
             }
+
+            lovd_queryDB_Old('COMMIT');
 
             $bSubmit = false;
             $sSubmitType = '';
@@ -2330,7 +2333,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
         if (!lovd_error()) {
             // Query text.
-            // This also deletes the entries in variants_on_transcripts.
+            // This also deletes the entries in TABLE_VARIANTS_ON_TRANSCRIPTS && TABLE_SCR2VAR.
             $_DATA->deleteEntry($nID);
 
             // Write to log...

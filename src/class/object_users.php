@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-04-16
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-15
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -208,7 +208,7 @@ class LOVD_User extends LOVD_Object {
 
         // Email address.
         if (!empty($aData['email'])) {
-            $aEmail = explode("\r\n", trim($aData['email']));
+            $aEmail = explode("\r\n", $aData['email']);
             foreach ($aEmail as $sEmail) {
                 if (!lovd_matchEmail($sEmail)) {
                     lovd_errorAdd('email', 'Email "' . htmlspecialchars($sEmail) . '" is not a correct email address.');
@@ -254,7 +254,7 @@ class LOVD_User extends LOVD_Object {
         }
 
         // Check given security IP range.
-        if (!empty($aData['allowed_ip']) && trim($aData['allowed_ip'])) {
+        if (!empty($aData['allowed_ip'])) {
             // This function will throw an error itself (second argument).
             $bIP = lovd_matchIPRange($aData['allowed_ip'], 'allowed_ip');
 

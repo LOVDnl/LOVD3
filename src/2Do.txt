@@ -20,7 +20,6 @@ Prioritize:
 - Unit tests via Selenium (of alternatief)?
 - Handmatige variant mapper: ook p. description ophalen bij Mutalyzer?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
-- Referer from login moet pagina zijn met alleen een action? Om te voorkomen dat er geredirect wordt naar een del action zonder dat dat de bedoeling is?
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
 
 - Beta-05:
@@ -56,8 +55,6 @@ Prioritize:
     + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
   - "Does not accept external submissions" setting? Dat moet dan ook worden doorgegeven, zodat de LOVD/LSDB lijst dat kan aangeven.
     + Apart veld, niet in data.
-  - Email forwards: staat de Reply-To altijd goed? Regelen in lovd_sendMail()?
-  - All trim() calls in checkFields() calls can be removed, since data is automatically trimmed in Object::checkFields() anyway.
   - Gene notes for variant listings implementeren?
   - Gene headers & footers implementeren?
   - How can a curator quickly find the genes he curates? (possibly with an overview of his work)

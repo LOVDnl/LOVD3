@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-15
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -120,10 +120,10 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
             $sBody = lovd_formatMail($aBody);
 
-            $sSubject = 'LOVD password reset';
+            $sSubject = 'LOVD password reset'; // Don't just change this; lovd_sendMail() is parsing it.
 
             // Send mail.
-            $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers']);
+            $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], $_CONF['send_admin_submissions']);
 
             // Thank the user...
             $_T->printHeader();

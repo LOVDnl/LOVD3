@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2011-11-17
- * For LOVD    : 3.0-alpha-06
+ * Modified    : 2012-05-16
+ * For LOVD    : 3.0-beta-05
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -203,16 +203,23 @@ class LOVD_Link extends LOVD_Object {
                 }
 
                 // Check for reference order and/or references missing from the replacement text.
-                reset($aPatternRefs);
-                for ($i = 1; list(,$nRef) = each($aPatternRefs); $i ++) {
-                    if ($nRef != $i) {
-                        lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $i . '] ' . ($i == 1? 'first' : 'after [' . ($i - 1) . ']') . ', got [' . $nRef . '].');
+                $iRef = 1;
+                foreach ($aPatternRefs as $nRef) {
+                    if ($nRef != $iRef) {
+                        lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $iRef . '] ' . ($iRef == 1? 'first' : 'after [' . ($iRef - 1) . ']') . ', got [' . $nRef . '].');
                     }
+                    $iRef ++;
                 }
 
                 foreach ($aReplaceRefs as $nRef) {
                     if (!in_array($nRef, $aPatternRefs)) {
                         lovd_errorAdd('replace_text', 'The link replacement text is found to be incorrect. Could not find used reference [' . $nRef . '] in link pattern.');
+                    }
+                }
+
+                foreach ($aPatternRefs as $nPatternRef) {
+                    if (!in_array($nPatternRef, $aReplaceRefs)) {
+                        lovd_errorAdd('replace_text', 'The link replacement text is found to be incorrect. Expected reference [' . $nPatternRef . '] not found in replacement text.');
                     }
                 }
             }

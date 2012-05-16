@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-05-10
+ * Modified    : 2012-05-15
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -505,15 +505,13 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
     $sBody = lovd_formatMail($aBody);
 
     // Set proper subject.
-    $sSubject = 'LOVD submission' . (!empty($aGenes)? ' (' . implode(', ', array_slice($aGenes, 0, 20)) . (count($aGenes) > 20? ', ...' : '') . ')' : '');
+    $sSubject = 'LOVD submission' . (!empty($aGenes)? ' (' . implode(', ', array_slice($aGenes, 0, 20)) . (count($aGenes) > 20? ', ...' : '') . ')' : ''); // Don't just change this; lovd_sendMail() is parsing it.
 
     // Set submitter address.
     $aSubmitter = array(array($_AUTH['name'], $_AUTH['email']));
 
     // Send mail.
-    $bMail = lovd_sendMail($aTo, $sSubject, $sBody, 
-                           $_SETT['email_headers'] . PHP_EOL .
-                           'Reply-To: ' . str_replace("\r\n", ', ', $_AUTH['email']), $_CONF['send_admin_submissions'], $aSubmitter);
+    $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], $_CONF['send_admin_submissions'], $aSubmitter);
 
     // FIXME; When messaging system is built in, maybe queue message for curators?
     if ($bMail) {

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-04-16
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-16
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -135,8 +135,6 @@ class LOVD_Phenotype extends LOVD_Custom {
 
     function checkFields ($aData)
     {
-        global $_AUTH, $_DB, $_SETT;
-
         // Mandatory fields.
         $this->aCheckMandatory =
                  array(
@@ -144,30 +142,6 @@ class LOVD_Phenotype extends LOVD_Custom {
                         'statusid',
                       );
         parent::checkFields($aData);
-
-        // FIXME; move to object_custom.php.
-        if (!empty($aData['owned_by'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
-                    // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this phenotype entry\' selection box.');
-                }
-            } else {
-                // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
-                lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this phenotype entry\'.');
-            }
-        }
-
-        if (!empty($aData['statusid'])) {
-            $aSelectStatus = $_SETT['data_status'];
-            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_PENDING]);
-            if ($_AUTH['level'] >= LEVEL_CURATOR && !array_key_exists($aData['statusid'], $aSelectStatus)) {
-                lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
-            } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
-                // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
-                lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
-            }
-        }
 
         lovd_checkXSS();
     }

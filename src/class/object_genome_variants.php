@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-04-18
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-16
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -198,15 +198,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         parent::checkFields($aData);
 
         // Checks fields before submission of data.
-        if (ACTION == 'edit') {
-            global $zData; // FIXME; this could be done more elegantly.
-
-            if ($_AUTH['level'] < LEVEL_CURATOR && $aData['statusid'] > $zData['statusid']) {
-                // FIXME; zullen we deze code in objects_custom doen? 
-                lovd_errorAdd('statusid', 'Not allowed to change \'Status of this data\' from ' . $_SETT['data_status'][$zData['statusid']] . ' to ' . $_SETT['data_status'][$aData['statusid']] . '.');
-            }
-        }
-
         $aAlleles = $_DB->query('SELECT id FROM ' . TABLE_ALLELES)->fetchAllColumn();
         if (!isset($aData['allele']) || !in_array($aData['allele'], $aAlleles)) {
             lovd_errorAdd('allele', 'Please select a proper allele from the \'Allele\' selection box.');
@@ -222,28 +213,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         if (!empty($aData['chromosome']) && !array_key_exists($aData['chromosome'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'])) {
             lovd_errorAdd('chromosome', 'Please select a proper chromosome from the \'Chromosome\' selection box.');
-        }
-
-        // FIXME; move to object_custom.php.
-        if (!empty($aData['owned_by'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
-                    // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this variant\' selection box.');
-                }
-            } else {
-                // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
-                lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this variant\'.');
-            }
-        }
-
-        if (!empty($aData['statusid'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR && ($aData['statusid'] < STATUS_HIDDEN || !array_key_exists($aData['statusid'], $_SETT['data_status']))) {
-                lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
-            } elseif ($_AUTH['level'] < LEVEL_CURATOR) {
-                // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
-                lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
-            }
         }
 
         lovd_checkXSS();
@@ -314,12 +283,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
              'owner' => $aFormOwner,
             'status' => $aFormStatus,
        'general_hr2' => 'hr',
-'authorization_skip' => 'skip',
+                        'skip',
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
-                      
+
         if (ACTION != 'edit') {
-            unset($this->aFormData['authorization_skip'], $this->aFormData['authorization']);
+            unset($this->aFormData['authorization']);
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['effect'], $this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);

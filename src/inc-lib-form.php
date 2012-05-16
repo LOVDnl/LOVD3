@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-11
+ * Modified    : 2012-05-15
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -584,9 +584,12 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
         // The admin should have a proper Reply-to header.
         $sAdditionalHeaders = '';
-        if (in_array($sSubject, array('LOVD registration'))) {
+        if (in_array($sSubject, array('LOVD registration', 'LOVD password reset'))) {
             // Reply-to should be original addressees.
-            $sAdditionalHeaders .= ($sAdditionalHeaders? PHP_EOL : '') . 'Reply-To: ' . $sTo;
+            $sAdditionalHeaders .= 'Reply-To: ' . $sTo;
+        } elseif (strpos($sSubject, 'LOVD submission') === 0) {
+            // Reply-to should be submitter.
+            $sAdditionalHeaders .= 'Reply-To: ' . $sCc;
         }
 
         return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
