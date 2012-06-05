@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-11
+ * Modified    : 2012-05-29
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -345,7 +345,7 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
-            if ($aData[$sField] === '' && (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' || substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 4) == 'DATE')) {
+            if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC'))) {
                 $aData[$sField] = NULL;
             }
             $aSQL[] = $aData[$sField];
@@ -553,7 +553,7 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
-            if ($aData[$sField] === '' && (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' || substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 4) == 'DATE')) {
+            if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC'))) {
                 $aData[$sField] = NULL;
             }
             $aSQL[] = $aData[$sField];
@@ -586,7 +586,7 @@ class LOVD_Object {
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
 
         // Check existence of entry.
-        list($n) = $this->getCount($nID);
+        $n = $this->getCount($nID);
         if (!$n) {
             global $_SETT, $_STAT, $_AUTH;
             lovd_showInfoTable('No such ID!', 'stop');
@@ -669,7 +669,7 @@ class LOVD_Object {
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOptions = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
-        global $_DB, $_PATH_ELEMENTS, $_SETT;
+        global $_DB, $_SETT;
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
@@ -754,6 +754,7 @@ class LOVD_Object {
                         foreach ($aOR as $nTerm => $sTerm) {
                             $$CLAUSE .= ($nTerm? ' OR ' : '');
                             switch ($sColType) {
+                                case 'DECIMAL_UNSIGNED':
                                 case 'DECIMAL':
                                 case 'INT_UNSIGNED':
                                 case 'INT':

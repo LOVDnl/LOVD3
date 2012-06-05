@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-05-09
+ * Modified    : 2012-05-23
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -334,22 +334,16 @@ function lovd_getColumnType ($sTable, $sCol)
     }
 
     if (!empty($sColType)) {
-        if (preg_match('/^(TINY|MEDIUM|LONG)?(BLOB)/i', $sColType)) {
-            return 'BLOB';
-        } elseif (preg_match('/^DATETIME/i', $sColType)) {
-            return 'DATETIME';
-        } elseif (preg_match('/^DATE/i', $sColType)) {
-            return 'DATE';
-        } elseif (preg_match('/^DEC|DECIMAL\([0-9]+,[0-9]+\) UNSIGNED/i', $sColType)) {
-            return 'DECIMAL_UNSIGNED';
-        } elseif (preg_match('/^DEC|DECIMAL\([0-9]+,[0-9]+\)/i', $sColType)) {
-            return 'DECIMAL';
-        } elseif (preg_match('/^((VAR)?CHAR|(TINY|MEDIUM|LONG)?TEXT)/i', $sColType)) {
+        if (preg_match('/^((VAR)?CHAR|(TINY|MEDIUM|LONG)?TEXT)/i', $sColType)) {
             return 'TEXT';
-        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\([0-9]+\) UNSIGNED/i', $sColType)) {
-            return 'INT_UNSIGNED';
-        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\([0-9]+\)/i', $sColType)) {
-            return 'INT';
+        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\([0-9]+\)( UNSIGNED)?/i', $sColType, $aMatches)) {
+            return 'INT' . (isset($aMatches[2])? '_UNSIGNED' : '');
+        } elseif (preg_match('/^(DEC|DECIMAL)\([0-9]+,[0-9]+\)( UNSIGNED)?/i', $sColType, $aMatches)) {
+            return 'DECIMAL' . (isset($aMatches[2])? '_UNSIGNED' : '');
+        } elseif (preg_match('/^DATE(TIME)?/i', $sColType, $aMatches)) {
+            return 'DATE' . (isset($aMatches[1])? 'TIME' : '');
+        } elseif (preg_match('/^(TINY|MEDIUM|LONG)?(BLOB)/i', $sColType)) {
+            return 'BLOB';
         }
     }
     return false;

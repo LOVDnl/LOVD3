@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-05-14
+ * Modified    : 2012-05-24
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -168,9 +168,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation.');
                 } else {
                     // This call already makes the needed lovd_errorAdd() calls.
-                    $aGeneInfo = lovd_getGeneInfoFromHgnc($_POST['hgnc_id'], array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_pub_eg_id', 'md_mim_id'));
+                    $aGeneInfo = lovd_getGeneInfoFromHgnc($_POST['hgnc_id'], array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id'));
                     if (!empty($aGeneInfo)) {
-                        list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = array_values($aGeneInfo);
+                        list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim) = array_values($aGeneInfo);
                         list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
                     }
                 }
@@ -178,9 +178,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             if (!lovd_error()) {
                 $_T->printHeader();
+                $_T->printTitle();
                 require ROOT_PATH . 'class/progress_bar.php';
 
-                $sFormNextPage = '<FORM action="' . CURRENT_PATH . '?' . ACTION . '" id="createGene" method="post">' . "\n" .
+                $sFormNextPage = '<FORM action="' . $sPath . '" id="createGene" method="post">' . "\n" .
                                  '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
                                  '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
                                  '        </FORM>';
@@ -252,10 +253,12 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                             $aTranscriptInfo = $aTranscriptInfo['c'];
                             $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo);
                             $_BAR->setMessage('Collecting ' . $aTranscriptValues['id'] . ' info...');
-                            $aTranscripts[] = $aTranscriptValues['id'];
-                            $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($sGeneName . ', ', '', $aTranscriptValues['product']);
-                            $aTranscriptsPositions[$aTranscriptValues['id']] = array('chromTransStart' => $aTranscriptValues['chromTransStart'], 'chromTransEnd' => $aTranscriptValues['chromTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
-                            $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getValueFromElement('proteinTranscript/id', $aTranscriptInfo);
+                            if ($aTranscriptValues['id']) {
+                                $aTranscripts[] = $aTranscriptValues['id'];
+                                $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($sGeneName . ', ', '', $aTranscriptValues['product']);
+                                $aTranscriptsPositions[$aTranscriptValues['id']] = array('chromTransStart' => $aTranscriptValues['chromTransStart'], 'chromTransEnd' => $aTranscriptValues['chromTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
+                                $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getValueFromElement('proteinTranscript/id', $aTranscriptInfo);
+                            }
                             $_BAR->setProgress(66 + $nProgress);
                         }
                     }
@@ -272,13 +275,17 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                                                   'id_hgnc' => $sHgncID,
                                                                   'id_entrez' => $sEntrez,
                                                                   'id_omim' => $sOmim,
+                                                                  'genomic_references' => $aRefseqGenomic,
+                                                                  'refseq_UD' => $sRefseqUD,
+                                                                );
+                if (!empty($aTranscripts)) {
+                    $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array_merge($_SESSION['work'][$sPath][$_POST['workID']]['values'], array(
                                                                   'transcripts' => $aTranscripts,
                                                                   'transcriptsProtein' => $aTranscriptsProtein,
                                                                   'transcriptNames' => $aTranscriptsName,
                                                                   'transcriptPositions' => $aTranscriptsPositions,
-                                                                  'genomic_references' => $aRefseqGenomic,
-                                                                  'refseq_UD' => $sRefseqUD,
-                                                                );
+                                                                ));
+                }
 
                 print('<SCRIPT type="text/javascript">' . "\n" .
                       '  document.forms[\'createGene\'].submit();' . "\n" .
@@ -299,7 +306,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
         lovd_errorPrint();
 
-        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+        print('      <FORM action="' . $sPath . '" method="post">' . "\n" .
               '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
 
         // Array which will make up the form table.
@@ -465,7 +472,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         lovd_includeJS('inc-js-custom_links.php');
 
         // Table.
-        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+        print('      <FORM action="' . $sPath . '" method="post">' . "\n");
 
         // Array which will make up the form table.
         $aForm = array_merge(
@@ -774,7 +781,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     $n = $_DATA->viewList('Columns');
 
     if ($n) {
-        lovd_showJGNavigation(array('javascript:lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $sID . '\', 800, 350);' => array('', 'Change order of columns', 1)), 'Columns');
+        lovd_showJGNavigation(array('javascript:lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $sID . '\', 800, 350);' => array('', 'Change order of columns', 1)), 'Columns');
     }
 
     $_T->printFooter();
@@ -1236,7 +1243,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
         // Show viewList() of users that are NO curator or collaborator at this moment.
         require ROOT_PATH . 'class/object_users.php';
         $_DATA = new LOVD_User();
-        lovd_showInfoTable('The following users are currently not a curator for this gene. Click on a user to select him as Curator or Collaborator.', 'information');
+        lovd_showInfoTable('The following users are currently not a curator for this gene. Click on a user to select him/her as Curator or Collaborator.', 'information');
         if ($aCurators) {
             // Create search string that hides the users currently selected to be curator or collaborator.
             $_GET['search_id'] = '!' . implode(' !', array_keys($aCurators));
@@ -1255,7 +1262,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
         lovd_showInfoTable('All users below have access to all data (public and non-public) of the ' . $sID . ' gene database. If you don\'t want to give the user access to <I>edit</I> any of the data that is not their own, deselect the "Allow edit" checkbox. Please note that users with level Manager or higher, cannot be restricted in their right to edit all information in the database.<BR>Users without edit rights are called Collaborators. Users having edit rights are called Curators; they receive email notifications of new submission and are shown on the gene\'s home page by default. You can disable that below by deselecting the "Shown" checkbox next to their name. To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location.', 'information');
     } else {
-        lovd_showInfoTable('To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location. If you do not want a user to be shown on the list of curators on the gene homepage and on the top of the screen, deselect the checkbox on the right side of his name.', 'information');
+        lovd_showInfoTable('To sort the list of curators for this gene, click and drag the <IMG src="gfx/drag_vertical.png" alt="" width="5" height="13"> icon up or down the list. Release the mouse button in the preferred location. If you do not want a user to be shown on the list of curators on the gene homepage and on the top of the screen, deselect the checkbox on the right side of his/her name.', 'information');
     }
 
     // Form & table.

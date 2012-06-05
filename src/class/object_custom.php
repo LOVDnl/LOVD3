@@ -163,7 +163,7 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Gathers the columns to be used for lovd_(insert/update)Entry and returns them
         // FIXME; Neither are used yet. When authorization is added to this function, then they will.
-        // global $_AUTH, $_PATH_ELEMENTS;
+        // global $_AUTH, $_PE;
 
         $aFields = array();
         foreach($this->aColumns as $sCol => $aCol) {
@@ -180,7 +180,6 @@ class LOVD_Custom extends LOVD_Object {
     function buildForm ($sPrefix = '')
     {
         // Builds the array needed to display the form.
-        global $_PATH_ELEMENTS;
         $aFormData = array();
 
         foreach ($this->aColumns as $sCol => $aCol) {

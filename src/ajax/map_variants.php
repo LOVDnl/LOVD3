@@ -384,12 +384,12 @@ if (!empty($aVariants)) {
             foreach (array_keys($aGenes) as $sGene) {
 
                 // Get information from HGNC.
-                $aGeneInfoFromHgnc = lovd_getGeneInfoFromHgnc($sGene, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_pub_eg_id', 'md_mim_id', 'gd_pub_refseq_ids', 'md_refseq_id'), true);
+                $aGeneInfoFromHgnc = lovd_getGeneInfoFromHgnc($sGene, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id', 'gd_pub_refseq_ids', 'md_refseq_id'), true);
                 if (empty($aGeneInfoFromHgnc)) {
                     // Couldn't find this gene. Try the next.
                     continue;
                 }
-                list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim, $sRefseq1, $sRefseq2) = array_values($aGeneInfoFromHgnc);
+                list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim, $sRefseq1, $sRefseq2) = array_values($aGeneInfoFromHgnc);
 
                 list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
                 $sEntrez = (empty($sEntrez)? null : $sEntrez);

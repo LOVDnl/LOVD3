@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-05-16
+ * Modified    : 2012-05-28
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -632,14 +632,14 @@ if (!defined('NOT_INSTALLED')) {
     // Load session data.
     require ROOT_PATH . 'inc-auth.php';
 
-    // Define $_PATH_ELEMENTS and CURRENT_PATH.
+    // Define $_PE and CURRENT_PATH.
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName($_SERVER['REQUEST_URI'])); // 'login' or 'genes?create' or 'users/00001?edit'
     $aPath = explode('?', $sPath); // Cut off the Query string, that will be handled later.
-    $_PATH_ELEMENTS = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')
+    $_PE = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')
     // XSS check on the elements.
-    foreach ($_PATH_ELEMENTS as $key => $val) {
+    foreach ($_PE as $key => $val) {
         if ($val !== strip_tags($val)) {
-            $_PATH_ELEMENTS[$key] = '';
+            $_PE[$key] = '';
         }
     }
     $aObjectPadding = array(
@@ -652,12 +652,11 @@ if (!defined('NOT_INSTALLED')) {
                         'phenotypes' => 10,
                         'users' => 5,
                      );
-    if (isset($aObjectPadding[$_PATH_ELEMENTS[0]]) && isset($_PATH_ELEMENTS[1]) && ctype_digit($_PATH_ELEMENTS[1])) {
-        $_PATH_ELEMENTS[1] = sprintf('%0' . $aObjectPadding[$_PATH_ELEMENTS[0]] . 'd', $_PATH_ELEMENTS[1]);
+    if (isset($aObjectPadding[$_PE[0]]) && isset($_PE[1]) && ctype_digit($_PE[1])) {
+        $_PE[1] = sprintf('%0' . $aObjectPadding[$_PE[0]] . 'd', $_PE[1]);
     }
-    define('CURRENT_PATH', implode('/', $_PATH_ELEMENTS));
-    $_PE =& $_PATH_ELEMENTS; // Shorthand, less typing.
-    define('PATH_COUNT', count($_PE)); // So you don't need !empty($_PATH_ELEMENTS[1]) && ...
+    define('CURRENT_PATH', implode('/', $_PE));
+    define('PATH_COUNT', count($_PE)); // So you don't need !empty($_PE[1]) && ...
 
     // Define ACTION.
     if ($_SERVER['QUERY_STRING'] && preg_match('/^(\w+)(&.*)?$/', $_SERVER['QUERY_STRING'], $aRegs)) {
@@ -680,7 +679,7 @@ if (!defined('NOT_INSTALLED')) {
     // FIXME; double check all of this block.
     if (!in_array(lovd_getProjectFile(), array('/check_update.php', '/logout.php'))) {
         // Force user to change password.
-        if ($_AUTH && $_AUTH['password_force_change'] && !(lovd_getProjectFile() == '/users.php' && in_array(ACTION, array('edit', 'change_password')) && $_PATH_ELEMENTS[1] == $_AUTH['id'])) {
+        if ($_AUTH && $_AUTH['password_force_change'] && !(lovd_getProjectFile() == '/users.php' && in_array(ACTION, array('edit', 'change_password')) && $_PE[1] == $_AUTH['id'])) {
             header('Location: ' . lovd_getInstallURL() . 'users/' . $_AUTH['id'] . '?change_password');
             exit;
         }

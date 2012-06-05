@@ -176,8 +176,6 @@ class LOVD_Transcript extends LOVD_Object {
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
 
-        global $_PATH_ELEMENTS;
-
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
         }

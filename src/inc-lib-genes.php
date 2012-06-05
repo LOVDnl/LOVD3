@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2012-04-10
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-28
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -73,14 +73,14 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
     // The results will be returned as an associative array; in case all genes have been loaded an array of arrays is returned with gene symbols as keys.
     // If $bRecursion == true, this function automatically handles deprecated HGNC entries.
     // On error, this function calls lovd_errorAdd if inc-lib-form.php was included. It always returns false on failure.
-    
+
     // Process columns.
     $aColumns = $aCols; // $aColumns will be extended with more information, whereas $aCols is used for the return value and as such should not be changed.
     $sColumns = '';
     foreach ($aCols as $sColumn) {
         $sColumns .= 'col=' . $sColumn . '&';
     }
-    
+
     // Make sure we request the right data.
     if ($sHgncId === true) {
         // Boolean true; return bulk data.
@@ -116,7 +116,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
         }
         return false;
     }
-    
+
     if ($sHgncId === true) {
         // Got bulk data.
 
@@ -141,16 +141,19 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
     if (isset($aHgncFile[1])) {
         // Looks like we've got valid data here.
         $aGene = array_combine($aColumns, explode("\t", $aHgncFile[1]));
+        // We might encorporate one or more of these locus types excludes later, so that we can throw an error without first calling mutalyzer a number of times.
+        //$aBadLocusTypes = array('RNA, cluster', 'RNA, transfer', 'RNA, ribosomal', 'transposable element', 'virus integration site', 'phenotype only', 'unknown', 'region', 'complex locus constituent', 'endogenous retrovirus', 'fragile site', 'T cell receptor gene', 'T cell receptor pseudogene');
+        $aBadLocusTypes = array('phenotype only');
         if ($aGene['gd_app_name'] == 'entry withdrawn') {
             if (function_exists('lovd_errorAdd')) {
-                lovd_errorAdd('', 'Entry ' . htmlspecialchars($sHgncId) . ' no longer exists in the HGNC database.');
+                lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' no longer exists in the HGNC database.');
             }
             return false;
         } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $aGene['gd_app_name'], $aRegs)) {
             if ($bRecursion) {
                 return lovd_getGeneInfoFromHgnc($aRegs[1], $aCols);
             } elseif (function_exists('lovd_errorAdd')) {
-                lovd_errorAdd('', 'Entry ' . htmlspecialchars($sHgncId) . ' is deprecated, please use ' . $aRegs[1] . '.');
+                lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' is deprecated according to the HGNC, please use ' . $aRegs[1] . '.');
             }
             return false;
         } elseif (in_array('gd_pub_chrom_map', $aCols) && $aGene['gd_pub_chrom_map'] == 'reserved') {
@@ -158,13 +161,18 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
                 lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' does not yet have a public association with a chromosomal location');
             }
             return false;
+        } elseif (in_array('gd_locus_type', $aCols) && in_array($aGene['gd_locus_type'], $aBadLocusTypes)) {
+            if (function_exists('lovd_errorAdd')) {
+                lovd_errorAdd('hgnc_id', 'LOVD cannot process this type of gene entry ' . htmlspecialchars($sHgncId) . ' (Locus Type: ' . $aGene['gd_locus_type'] . ').');
+            }
+            return false; 
         }
-        
+
         foreach (array_diff($aColumns, $aCols) as $sUnwantedColumn) {
             // Don't return columns the caller hasn't asked for.
             unset($aGene[$sUnwantedColumn]);
         }
-        
+
         return $aGene;
     } elseif (function_exists('lovd_errorAdd')) {
         lovd_errorAdd('', 'Entry ' . htmlspecialchars($sHgncId) . ' was not found in the HGNC database.');
@@ -180,17 +188,17 @@ function lovd_addAllDefaultCustomColumnsForGene ($sGene, $bUseAuthUser = true)
 {
     // This function enables all custom columns that are standard or HGVS required for the given gene.
     // If bUseAuthUser is set to false, user 0 ("LOVD") will be used for the created_by fields in TABLE_SHARED COLS and (if needed) in TABLE_ACTIVE_COLS.
-    
+
     global $_AUTH, $_DB;
     if ($bUseAuthUser) {
         $sUser = $_AUTH['id'];
     } else {
         $sUser = 0;
     }
-    
+
     // Get a list of the columns in TABLE_VARIANTS_ON_TRANSCRIPTS.
     $aAdded = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
-    
+
     // Get a list of all columns that are standard or HGVS required.
     $qStandardCustomCols = $_DB->query('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)');
     while ($aStandard = $qStandardCustomCols->fetchAssoc()) {
@@ -199,7 +207,7 @@ function lovd_addAllDefaultCustomColumnsForGene ($sGene, $bUseAuthUser = true)
             $_DB->query('ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']));
             $_DB->query('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $sUser));
         }
-        
+
         // Add the standard column to the gene.
         $_DB->query('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($sGene, $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $sUser));
     }

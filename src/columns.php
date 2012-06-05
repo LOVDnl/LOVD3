@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-14
+ * Modified    : 2012-05-24
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -83,7 +83,7 @@ if (PATH_COUNT < 3 && !ACTION) {
         $aSkip = array('category');
         print('        <LI><A href="' . $_PE[0] . '">Show all custom columns</A></LI>' . "\n");
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            print('        <LI><A click="lovd_openWindow(\'' . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $_PE[1] . '\', 800, 500);">Change ' . ($aTableInfo['shared']? 'default ' : '') . 'order of columns</A></LI>' . "\n");
+            print('        <LI><A click="lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $_PE[1] . '\', 800, 500);">Change ' . ($aTableInfo['shared']? 'default ' : '') . 'order of columns</A></LI>' . "\n");
         }
 
     } else {

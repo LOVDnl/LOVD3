@@ -185,7 +185,7 @@ class LOVD_User extends LOVD_Object {
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
-        global $_AUTH, $_DB, $_PATH_ELEMENTS, $_SETT;
+        global $_AUTH, $_DB, $_PE, $_SETT;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -258,7 +258,7 @@ class LOVD_User extends LOVD_Object {
             // This function will throw an error itself (second argument).
             $bIP = lovd_matchIPRange($aData['allowed_ip'], 'allowed_ip');
 
-            if (lovd_getProjectFile() == '/install/index.php' || (ACTION == 'edit' && $_PATH_ELEMENTS[1] == $_AUTH['id'])) {
+            if (lovd_getProjectFile() == '/install/index.php' || (ACTION == 'edit' && $_PE[1] == $_AUTH['id'])) {
                 // Check given security IP range.
                 if ($bIP && !lovd_validateIP($aData['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
                     // This IP range is not allowing the current IP to connect. This ain't right.
@@ -273,7 +273,7 @@ class LOVD_User extends LOVD_Object {
 
         // Level can't be higher or equal than the current user.
         if (!empty($aData['level']) && $aData['level'] >= $_AUTH['level']) {
-            lovd_writeLog('Error', 'HackAttempt', 'Tried to upgrade user ID ' . $_PATH_ELEMENTS[1] . ' to level ' . $_SETT['user_levels'][$aData['level']] . ')');
+            lovd_writeLog('Error', 'HackAttempt', 'Tried to upgrade user ID ' . $_PE[1] . ' to level ' . $_SETT['user_levels'][$aData['level']] . ')');
             lovd_errorAdd('level', 'User level is not permitted. Hack attempt.');
         }
 
@@ -288,7 +288,7 @@ class LOVD_User extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-        global $_AUTH, $_DB, $_SETT, $_PATH_ELEMENTS;
+        global $_AUTH, $_DB, $_SETT, $_PE;
 
         $aUserLevels = $_SETT['user_levels'];
 
@@ -357,7 +357,7 @@ class LOVD_User extends LOVD_Object {
             // No need to ask for the user's password when the user is not created yet.
             unset($this->aFormData['authorization_skip'], $this->aFormData['authorization']);
         }
-        if ($bInstall || (!empty($_PATH_ELEMENTS[1]) && $_PATH_ELEMENTS[1] == $_AUTH['id']) || ACTION == 'register') {
+        if ($bInstall || (!empty($_PE[1]) && $_PE[1] == $_AUTH['id']) || ACTION == 'register') {
             // Some fields not allowed when creating/editing your own account.
             unset($this->aFormData['passwd_change'], $this->aFormData['level'], $this->aFormData['locked']);
         }
@@ -375,7 +375,7 @@ class LOVD_User extends LOVD_Object {
                         array('New password (confirm)', '', 'password', 'password_2', 20),
                         'skip',
       'change_other' => array('Enter your password for authorization', '', 'password', 'password', 20));
-            if ($_PATH_ELEMENTS[1] == $_AUTH['id']) {
+            if ($_PE[1] == $_AUTH['id']) {
                 unset($this->aFormData['change_other']);
             } else {
                 unset($this->aFormData['change_self']);

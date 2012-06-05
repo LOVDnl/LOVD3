@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-05-16
+ * Modified    : 2012-06-04
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -263,6 +263,10 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aFormData = array_merge(
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
+                      ),
+                $aTranscriptsForm,
+                array(
+                        'skip',
                         array('', '', 'print', '<B>Genomic variant information</B>'),
                         'hr',
                         array('Allele', '', 'select', 'allele', 1, $aSelectAllele, false, false, false),
@@ -273,10 +277,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                  array(
                         array('Affects function (reported)', '', 'select', 'effect_reported', 1, $_SETT['var_effect'], false, false, false),
             'effect' => array('Affects function (concluded)', '', 'select', 'effect_concluded', 1, $_SETT['var_effect'], false, false, false),
-                        'hr'
-                      ),
-                 $aTranscriptsForm,
-                 array(
+                        'hr',
       'general_skip' => 'skip',
            'general' => array('', '', 'print', '<B>General information</B>'),
        'general_hr1' => 'hr',

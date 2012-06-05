@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-11
+ * Modified    : 2012-05-24
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -243,7 +243,7 @@ class LOVD_Column extends LOVD_Object {
                         'skip',
                         array('', '', 'print', '<B>Data and form settings</B> (Use data type wizard to change values)'),
                         'hr',
-                        array('', '', 'print', '<BUTTON type="button" onclick="javascript:lovd_openWindow(\'' . $_PE[0] . '?data_type_wizard&amp;workID=' . $_POST['workID'] . '\', \'DataTypeWizard\', 800, 400); return false;">Start data type wizard</BUTTON>'),
+                        array('', '', 'print', '<BUTTON type="button" onclick="javascript:lovd_openWindow(\'' . lovd_getInstallURL() . $_PE[0] . '?data_type_wizard&amp;workID=' . $_POST['workID'] . '\', \'DataTypeWizard\', 800, 400); return false;">Start data type wizard</BUTTON>'),
                         array('MySQL data type', '<B>Experts only!</B> Only change this field manually when you know what you\'re doing! Otherwise, use the data type wizard by clicking the button above this field.', 'text', 'mysql_type', 30),
                         array('Form type', '<B>Experts only!</B> Only change this field manually when you know what you\'re doing! Otherwise, use the data type wizard by clicking the button above the MySQL data type field.', 'text', 'form_type', 30),
                         'hr',
