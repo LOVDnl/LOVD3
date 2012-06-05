@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-05-15
+ * Modified    : 2012-06-04
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -130,12 +130,12 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         $this->unsetColsByAuthLevel();
 
         if (ACTION == 'create') {
-            $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN(?' . str_repeat(', ?', substr_count(',', $sObjectID)) . ') ORDER BY id_ncbi', array($sObjectID))->fetchAllRow();
+            $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid, id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN(?' . str_repeat(', ?', substr_count(',', $sObjectID)) . ') ORDER BY id_ncbi', array($sObjectID))->fetchAllRow();
         } else {
-            $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi, t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, t.id_ncbi', array($this->nID))->fetchAllRow();
+            $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi, t.geneid, t.id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, t.id_ncbi', array($this->nID))->fetchAllRow();
         }
         foreach ($aTranscripts as $aTranscript) {
-            $this->aTranscripts[$aTranscript[0]] = array($aTranscript[1], $aTranscript[2]);
+            $this->aTranscripts[$aTranscript[0]] = array($aTranscript[1], $aTranscript[2], $aTranscript[3]);
         }
 
         $this->sRowLink = 'variants/{{ID}}';
@@ -201,7 +201,6 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         global $_DATA, $_SETT, $_AUTH;
 
         $this->aFormData = array();
-        $this->aFormData[] = 'skip';
 
         foreach ($this->aTranscripts as $nTranscriptID => $aTranscript) {
             list($sTranscriptNM, $sGene) = $aTranscript;
@@ -212,13 +211,15 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             $this->aFormData = array_merge(
                                             $this->aFormData, 
                                             array(
-                                                    array('', '', 'print', '<B class="transcript" transcriptid="' . $nTranscriptID . '">Transcript variant on ' . $sTranscriptNM . ' (' . $sGene . ')</B>')
+                                                    array('', '', 'print', '<B class="transcript" transcriptid="' . $nTranscriptID . '">Transcript variant on ' . $sTranscriptNM . ' (' . $sGene . ')</B>'),
+                                                    'hr',
                                                   ),
-                                            array('hr'),
                                             $_DATA['Transcript'][$sGene]->buildForm($nTranscriptID . '_'),
                                             $aEffectForm,
-                                            array('hr'),
-                                            array('skip')
+                                            array(
+                                                    'hr',
+                                                    'skip',
+                                                 )
                                          );
         }
         array_pop($this->aFormData);

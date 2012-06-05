@@ -7,6 +7,39 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 06
+ * 2012-06-16????????????????
+ *********/
+ * Fixed bug; NR_ numbers did not work properly in the mapping of a variant on
+   the variant forms.
+ * Fixed bug; Transcripts without an NM or NR accession number are now no longer
+   addable to LOVD.
+ * Fixed bug; Adding transcripts to a gene would sometimes produce notices when
+   some of the transcript information was not available.
+ * Fixed bug; LOVD did not insert NULL into the database on empty DECIMAL
+   columns.
+ * Fixed bug; With some specific PHP versions on some systems, detailed data
+   views would unexpectedly throw a "No such ID!" error message.
+ * Fixed bug; UNSIGNED on a DECIMAL column was ignored by LOVD.
+ * Fixed bug; Searching on a DECIMAL UNSIGNED column in a viewList would be
+   treated as a text search instead of a number search.
+ * Fixed bug; Added the full base URL to all javascript calls using a URL, so
+   that they all work even in IE.
+ * Fixed bug; Fixed some errors where the XML functions would produce in some
+   occasions.
+ * Added a variant checker and protein change prediction button to the variant
+   forms, this is also automatically run when clicking the "Map variant" button.
+ * Added a warning style that results in a yellow outline of an element.
+ * Added the images lovd_form_information.png and lovd_form_warning.png to the
+   gfx folder. These are used in the variant forms for mutalyzer
+   errors/warnings.
+ * Changed the variant create & edit forms so that all transcript variants are
+   shown first and the genomic variant at the end of the form.
+ * Added a run_mutalyzer.php to the ajax folder, so that it can be called from
+   the variant forms to check a variant description.
+
+
+/*******************
  * 3.0 Beta 05
  * 2012-05-16
  *********/

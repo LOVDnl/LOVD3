@@ -3,9 +3,10 @@ Prioritize:
 - Nieuwe kolommen:
   + Phenotype/Age (?), kolom voor age at examination
     * Met preg_pattern: (\d+[dmy])?\??
-  + Patient/Age of Death
+  + Individual/Age of Death
     * Format: zie hierboven.
 - Gene create geeft altijd een created_date met tijd 00:00:00, zelfs als je het datum veld leeg hebt gelaten en hij dus de datum van vandaag heeft kozen.
+  + Ik kan het niet reproduceren op mijn bak, hier doet hij het gewoon zoals het hoort.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -32,13 +33,11 @@ Prioritize:
       - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
       - Store in session / DB in een col met serialized data?
 - Unit tests via Selenium (of alternatief)?
-- Handmatige variant mapper: ook p. description ophalen bij Mutalyzer?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
   * Of betekent dit, dat Mutalyzer er sowieso niet mee overweg kan?
-- Kunnen we een keiharde fout onderscheppen bij genen als: CMT1A?
-  * De HGNC heeft er niet veel info over, en zegt ook dat het geen gen met product is. Als dat op te halen is, kunnen we zelf een nette foutmelding geven.
-  * Dit is niet heel belangrijk, maar als het weinig tijd kost is het mooi als het in te bouwen is.
+- Nadat Mutalyzer komt met een test op alle genen(sliceChromosomeByGene, getTranscriptsAndInfo, numberConversion per gen 1 variant) moeten we
+  beslissen wat we ermee gaan doen, nu tijdelijke filter op "rare" LocusType's.
 
 - Beta-06:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
@@ -79,6 +78,8 @@ Prioritize:
       * Variant tellingen gaan automatisch goed.
     + We willen dit eigenlijk op een andere manier oplossen. Variant/Genetic_Origin als bit column gebruiken?
     - Should we maybe set default_socket_timeout somewhere?
+  - Inbouwen dat LOVD met NR_ accession nummers overweg kan, er staan hier en daar volgens mij wat regex checks op NM_(ajax calls e.d.)
+  - RNA prediction toevoegen aan het variant create & edit formulier.
 
 - Hebben we OpenSSL ergens voor nodig?
   + http mutalyzer contact als zelf in https???
@@ -279,7 +280,7 @@ LOVD 3.0
         Het hele probleem is dat alle output moet ge-htmlspecialchar()ed worden om normaal getoond te worden als er een < in zit. Maar echte HTML gaat dan verloren.
         Toch overal maar htmlspecialchars invoeren? Dan moet bij de custom links worden uitgekeken dat het niet twee keer gebeurt, en daarnaast moeten de custom links later worden toegepast.
 ++++ListView: stick header to top met code die ook voor LOVD 2 was geschreven.
-    Een array opbouwen van $_PATH_ELEMENTS / ACTIONS met titels waar we zijn geweest (edits, dels, creates e.d. niet opgeslagen) zodat je makkelijk terug kunt?
+    Een array opbouwen van $_PE / ACTIONS met titels waar we zijn geweest (edits, dels, creates e.d. niet opgeslagen) zodat je makkelijk terug kunt?
     Probeer iets in te bouwen, dat een upgrade te negeren is. Dat dus iemand kan zeggen; ik wil blijven werken, ik weet dat er een probleem is. Maak dan het scherm duidelijk anders. Continue bericht bovenaan o.i.d.?
         $_SESSION VAR, uitgelezen door inc-top.php.
     Data license? Mummi schreef er over (Science Commons) 8 november 2009

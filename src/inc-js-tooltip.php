@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-06-25
- * Modified    : 2012-03-14
- * For LOVD    : 3.0-beta-03
+ * Modified    : 2012-05-30
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -55,6 +55,7 @@ var timer_is_on = 0;
 
 function lovd_showToolTip (sText, handle)
 {
+    sText = unescape(sText);
     if (typeof(handle) == 'undefined') {
         // No element given, tooltip linked to the mouse, like on data entry forms.
         var oEvent = window.windowevent;

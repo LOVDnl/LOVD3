@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-15
- * Modified    : 2012-04-20
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-05-29
+ * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -222,26 +222,25 @@ function lovd_getElementFromArray ($sPath = '', $aArray = array(), $sType = '')
         $aPath = explode("/", trim($sPath, '/'));
     
         foreach ($aPath as $sElement) {
+            $nIndex = 0;
+            $sName  = $sElement;
             if (preg_match("/\[(\d+)\]/", $sElement, $aMatches)) {
                 $nIndex = intVal($aMatches[1]);
                 $sName  = str_replace("[" . $nIndex . "]", "", $sElement);
-            } else {
-                $nIndex = false;
-                $sName  = $sElement;
             }
 
-            if (!isset($aStructure[$sName][($nIndex === false? 0 : $nIndex)]['c'])) {
+            if (!isset($aStructure[$sName][$nIndex]['c'])) {
                 return false;
             }
 
             if ($sElement == end($aPath)) {
                 if ($sType == '') {
-                    return ($nIndex === false? $aStructure[$sName] : $aStructure[$sName][$nIndex]);
+                    return ($nIndex? $aStructure[$sName][$nIndex] : $aStructure[$sName]);
                 } else {
-                    return $aStructure[$sName][($nIndex === false? 0 : $nIndex)][$sType];
+                    return $aStructure[$sName][$nIndex][$sType];
                 }
             } else {
-                $aStructure = &$aStructure[$sName][($nIndex === false? 0 : $nIndex)]['c'];
+                $aStructure = &$aStructure[$sName][$nIndex]['c'];
             }
 
         }
@@ -268,16 +267,46 @@ function lovd_getAllValuesFromArray ($sPath = '', $aArray = array())
         }
     }
     $aValues = array();
+    if ($aArray) {
+        foreach ($aArray as $entity => $index) {
+            foreach ($index as $elements) {
+                $aValues[$entity][] = $elements['v'];
+            } 
+            if (count($aValues[$entity]) == 1) {
+                $aValues[$entity] = $aValues[$entity][0];
+            }
+        }
+        return $aValues;
+    } else {
+        return array();
+    }
+}
+
+
+
+
+
+function lovd_getAllValuesFromSingleElement ($sPath = '', $aArray = array())
+{
+    // Designed to easily parse the array returned by lovd_xml2array() 
+    // Will loop through the specified element in $aArray and return its values if they are set
     
-    foreach ($aArray as $entity => $index) {
-        foreach ($index as $elements) {
-            $aValues[$entity][] = $elements['v'];
-        } 
-        if (count($aValues[$entity]) == 1) {
-            $aValues[$entity] = $aValues[$entity][0];
+    if (!empty($sPath)) {
+        $aArray = lovd_getElementFromArray($sPath, $aArray, '');
+    } else { 
+        if (empty($aArray) || !is_array($aArray)) {
+            return false;
         }
     }
-    return $aValues;
+    $aValues = array();
+    if ($aArray) {
+        foreach ($aArray as $index => $elements) {
+            $aValues[$index] = $elements['v'];
+        }
+        return $aValues;
+    } else {
+        return array();
+    }
 }
 
 

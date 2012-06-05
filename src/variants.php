@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-05-16
+ * Modified    : 2012-06-05
  * For LOVD    : 3.0-beta-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -259,7 +259,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete variant entry</A>';
         }
         if (!empty($zData['position_g_start'])) {
-            $sNavigation .= ' | <A href="#" onclick="lovd_openWindow(\'' . CURRENT_PATH . '?search_global\', \'global_search\', 900, 450); return false;">Search public LOVDs</A>';
+            $sNavigation .= ' | <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?search_global\', \'global_search\', 900, 450); return false;">Search public LOVDs</A>';
         }
     }
 
@@ -681,20 +681,29 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             while (oNextElement.children().size() > 1) {
                 // More than one TD, so it is an input field.
                 if ($(this).attr('checked')) {
-                    oNextElement.find(">:last-child").find(">:first-child").attr('disabled', true);
+                    oNextElement.find(">:last-child").find(">:first-child").attr('disabled', true).siblings('button:first').hide();
                 } else {
                     oNextElement.find(">:last-child").find(">:first-child").removeAttr('disabled');
                 }
                 oNextElement = oNextElement.next();
             }
         });
+        var aUDrefseqs = {
+<?php
+    if (isset($sGene)) {
+        echo '            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
+    }
+
+    echo "\n" . '        };';
+?>
+
         var aTranscripts = {
 <?php
     if (isset($sGene)) {
         $i = 0;
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
-            list($sTranscriptNM, $sGeneSymbol) = $aTranscript;
-            echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\']';
+            list($sTranscriptNM, $sGeneSymbol, $sMutalyzerID) = $aTranscript;
+            echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\', \'' . $sMutalyzerID . '\']';
             $i++;
         }
     }
@@ -1480,7 +1489,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                 if (empty($aGeneInfo)) {
                                     // Getting all gene information from the HGNC takes a few seconds.
                                     $_BAR->setMessage('Loading gene data...', 'done');
-                                    $aGeneInfo = lovd_getGeneInfoFromHgnc(true, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_pub_eg_id', 'md_mim_id'));
+                                    $aGeneInfo = lovd_getGeneInfoFromHgnc(true, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id'));
 
                                     if (empty($aGeneInfo)) {
                                         // We can't gene information from the HGNC, so we can't add them.
@@ -2261,14 +2270,21 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     lovd_includeJS('inc-js-variants.php?chromosome=' . $zData['chromosome']);
 
     print('      <SCRIPT type="text/javascript">' . "\n" .
-          '        var aTranscripts = ');
+          '        var aUDrefseqs = ');
 
     if ($bGene) {
         print('{' . "\n");
+        $i=0;
+        foreach($aGenes as $sGene) {
+            echo ($i? ',' . "\n" : '') . '            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
+            $i++;
+        }
+        print("\n" . '        }' . "\n" .
+              '        var aTranscripts = {' . "\n");
         $i = 0;
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
-            list($sTranscriptNM, $sGeneSymbol) = $aTranscript;
-            echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\']';
+            list($sTranscriptNM, $sGeneSymbol, $sMutalyzerID) = $aTranscript;
+            echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\', \'' . $sMutalyzerID . '\']';
             $i++;
         }
         print("\n" . '        }');
