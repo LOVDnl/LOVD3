@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2012-05-12
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-05-24
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -221,13 +221,13 @@ class LOVD_SharedColumn extends LOVD_Object {
                         array('POST', '', '', '', '40%', '14', '60%'),
                         array('', '', 'print', '<B>Column descriptions</B>'),
                         'hr',
-                        array('Description on short legend', '', 'textarea', 'description_legend_short', 50, 2),
-                        array('Description on full legend', '', 'textarea', 'description_legend_full', 50, 3),
+                        array('Description on short legend<BR>(HTML enabled)', '', 'textarea', 'description_legend_short', 50, 2),
+                        array('Description on full legend<BR>(HTML enabled)', '', 'textarea', 'description_legend_full', 50, 3),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Form settings</B>'),
                         array('Notes on form (optional)', '', 'textarea', 'description_form', 50, 2),
-           'options' => array('List of possible options', '', 'print', '<TEXTAREA name="select_options" cols="60" rows="5" class="S11">' . (empty($_POST['select_options'])? '' : $_POST['select_options']) . '</TEXTAREA>'),
+           'options' => array('List of possible options', '', 'textarea', 'select_options', 50, 5),
       'options_note' => array('', '', 'note', 'This is used to build the available options for the selection list.<BR>One option per line.<BR>If you want to use abbreviations, use: Abbreviation = Long name<BR>Example: &quot;DMD = Duchenne Muscular Dystrophy&quot;'),
                         'hr',
                         'skip',
@@ -282,7 +282,8 @@ class LOVD_SharedColumn extends LOVD_Object {
                 unset($this->aColumnsViewEntry['select_options']);
             }
 
-            $zData['description_legend_full'] = html_entity_decode($zData['description_legend_full']);
+            $zData['description_legend_short'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_short']));
+            $zData['description_legend_full'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_full']));
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
         }
         // FIXME; for titles use tooltips?

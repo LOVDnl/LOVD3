@@ -5,7 +5,7 @@
  *
  * Created     : 2010-03-04
  * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-05
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -618,7 +618,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
     $aSelect    = array(array('Provide "-- select --" option', 'This will add an option called "-- select --" that will be regarded as an empty value.', 'checkbox', 'select'));
     $aSelectAll = array(array('Provide "select all" link', 'This will add a link next to the selection list that allows the user to instantly select all available options.', 'checkbox', 'select_all'));
     $aOptions   = array(
-                    array('List of possible options', '', 'print', '<TEXTAREA name="select_options" cols="70" rows="5" class="S11">' . (empty($_POST['select_options'])? '' : $_POST['select_options']) . '</TEXTAREA>'),
+                    array('List of possible options', '', 'textarea', 'select_options', 50, 5),
                     array('', '', 'note', 'This is used to build the available options for the selection list.<BR>One option per line.<BR>If you want to use abbreviations, use: Abbreviation = Long name<BR>Example: &quot;DMD = Duchenne Muscular Dystrophy&quot;'));
 
     // Form depends on chosen form type.

@@ -146,7 +146,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
         lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'stop');
         $_T->printFooter();
         exit;
-    } elseif (!lovd_isAuthorized('individuals', $_GET['target'], true)) {
+    } elseif (!lovd_isAuthorized('individual', $_GET['target'], true)) {
         lovd_requireAUTH(LEVEL_OWNER);
     }
     $_POST['individualid'] = $_GET['target'];

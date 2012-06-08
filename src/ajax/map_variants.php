@@ -338,10 +338,10 @@ if (!empty($aVariants)) {
                                 $sTranscriptNum = $_DB->query('SELECT id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sTranscriptNM))->fetchColumn();
                                 $aOutputRunMutalyzer = $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][6]));
                                 $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $aOutputRunMutalyzer);
-                                $sVariantsOnProteinError = lovd_getAllValuesFromArray('messages/SoapMessage', $aOutputRunMutalyzer);
+                                $aVariantsOnProteinError = lovd_getAllValuesFromArray('messages/SoapMessage', $aOutputRunMutalyzer);
 
                                 // FIXME; Temporary fix!!! Wait for mutalyzer SOAP to return errors ONLY from the requested transcript.
-                                if ($sVariantsOnProteinError['errorcode'] == 'WSPLICE' && $sVariantsOnProteinError['message'] == 'Mutation on splice site in gene ' . $aTranscript['gene'] . ' transcript ' . $sTranscriptNum . '.') {
+                                if ($aVariantsOnProteinError['errorcode'] == 'WSPLICE' && $aVariantsOnProteinError['message'] == 'Mutation on splice site in gene ' . $aTranscript['gene'] . ' transcript ' . $sTranscriptNum . '.') {
                                     $aSQL[1][7] = 'p.?';
                                 } else {
                                     if (!empty($aVariantsOnProtein['string'])) {
@@ -403,6 +403,7 @@ if (!empty($aVariants)) {
                 }
                 if (empty($aRefseqsTranscript)) {
                     // The HGNC does not have a transcript accession for this gene. Get one from LOVD.
+                    // FIXME; don't use file_get_contents() but instead lovd_php_file().
                     $sGeneLink = @substr($sGeneLink = @file_get_contents('http://www.lovd.nl/' . $sSymbol . '?getURL'), 0, @strpos($sGeneLink, "\n"));
                     $aGeneInfo = @explode("\n", @file_get_contents($sGeneLink . 'api/rest.php/genes/' . $sSymbol));
                     if (!empty($aGeneInfo) && is_array($aGeneInfo)) {

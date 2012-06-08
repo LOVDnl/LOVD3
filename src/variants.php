@@ -5,7 +5,7 @@
  *
  * Created     : 2010-12-21
  * Modified    : 2012-06-05
- * For LOVD    : 3.0-beta-05
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -358,7 +358,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
         $sMessage = '';
         if (!$z) {
             $sMessage = 'The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.';
-        } elseif (!lovd_isAuthorized('screenings', $_GET['target'])) {
+        } elseif (!lovd_isAuthorized('screening', $_GET['target'])) {
             lovd_requireAUTH(LEVEL_OWNER);
         } elseif (!$z['variants_found']) {
             $sMessage = 'Cannot add variants to the given screening, because the value \'Have variants been found?\' is unchecked.';
@@ -909,6 +909,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
 
 
+    // FIXME: Seems a bit overkill. Can't the check be done when the file is being parsed?
     function lovd_reconstructSeattleSeqLine ($aVariant, $nTranscriptIndex = 0)
     {
         // Returns the given variant as a string, like it was in the SeattleSeq file.
@@ -1096,9 +1097,14 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                     // Check the chromosome number.
                     //preg_match('/.*?(\d{1,2}|[XYM]).*?/', $aLine['#CHROM'], $aChromosome); // Tries to extract any chromosome number (0-99, XYM)
-                    preg_match('/^(?:c(?:hr)?)?([XYM]|[1-9]|1[0-9]|2[0-2])$/', $aLine['#CHROM'], $aChromosome); // Allows '##', 'c##' and 'chr##' (where ## = 1-22 or XYM)
-                    if (!$aChromosome) {
-                        $aUploadData['num_variants_unsupported'] += count(explode(',', $aLine['ALT']));
+                    // Check Chromosome field, allows '##', 'c##' and 'chr##' (where ## = 1-22 or XYM).
+                    if (!isset($aLine['#CHROM']) || !preg_match('/^(?:c(?:hr)?)?([XYM]|[1-9]|1[0-9]|2[0-2])$/', $aLine['#CHROM'], $aChromosome) || !$aChromosome) {
+                        if (isset($aLine['ALT'])) {
+                            $aUploadData['num_variants_unsupported'] += count(explode(',', $aLine['ALT']));
+                        } else {
+                            // Assuming we're dealing with a variant here. We've got no proof of it, but well...
+                            $aUploadData['num_variants_unsupported'] ++;
+                        }
                         if ($aUploadData['num_variants_unsupported'] < $nMaxListedUnsupported) {
                             $aUnsupportedLines[] = $sLine;
                         }
@@ -1538,6 +1544,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         $_BAR->setMessage('Loading genomic reference list...', 'done');
 
                                         // Get NG's first.
+                                        // FIXME; Implement cache, so we don't request this file for every gene.
                                         $aLines = lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt');
                                         foreach ($aLines as $sLine) {
                                             if (preg_match('/(\w+)\s+(NG_\d+\.\d+)/', $sLine, $aMatches)) {
@@ -1546,6 +1553,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         }
 
                                         // Overwrite with any existing LRG's.
+                                        // FIXME; Implement cache, so we don't request this file for every gene.
                                         $aLines = lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt');
                                         foreach ($aLines as $sLine) {
                                             if (preg_match('/(LRG_\d+)\s+(\w+)/', $sLine, $aMatches)) {
@@ -1759,8 +1767,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                 if (isset($aVariant['polyPhen']) && in_array('VariantOnTranscript/PolyPhen', $aGenesChecked[$sSymbol]['columns'])) {
                                                     $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/PolyPhen'] = $aVariant['polyPhen'][$i];
                                                 }
-                                                if (isset($aVariant['distanceToSplice']) && in_array('VariantOnTranscript/Distance_to_splice', $aGenesChecked[$sSymbol]['columns'])) {
-                                                    $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/Distance_to_splice'] = $aVariant['distanceToSplice'][$i];
+                                                if (isset($aVariant['distanceToSplice']) && in_array('VariantOnTranscript/Distance_to_splice_site', $aGenesChecked[$sSymbol]['columns'])) {
+                                                    $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/Distance_to_splice_site'] = $aVariant['distanceToSplice'][$i];
                                                 }
 
                                                 // lovd_fetchDBID needs some VariantOnTranscript information too.
@@ -1878,6 +1886,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 }
             }
 
+            // FIXME; If no variants were found, we should NOT have a continue button.
+            //   Then, DELETE data from $_SESSION.
             if ($bSubmit) {
                 if (!isset($aSubmit['uploads'])) {
                     $aSubmit['uploads'] = array();
@@ -1904,31 +1914,35 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
             // Processing finished.
             $_BAR->setProgress(100);
-            if (!$aUploadData['num_variants_unsupported']) {
+            if ($aUploadData['num_variants'] && !$aUploadData['num_variants_unsupported']) {
+                // Variants were imported, none were ignored.
                 if ($bSubmit) {
-                    $_BAR->setMessage('All variants have been loaded successfully!');
+                    $_BAR->setMessage('All ' . $aUploadData['num_variants'] . ' variants have been imported successfully!');
                     $_BAR->setMessage($sOptions, 'done');
                     $_BAR->setMessageVisibility('done', true);
                 } else {
-                    $_BAR->setMessage('All variants have been loaded successfully. Redirecting...');
+                    $_BAR->setMessage('All ' . $aUploadData['num_variants'] . ' variants have been imported successfully. Redirecting...');
                     $_BAR->redirectTo(lovd_getInstallURL() . 'submit/finish/upload/' . $nUploadID);
                 }
             } else {
-                $_BAR->setMessage($aUploadData['num_variants_unsupported'] . ' variant' . ($aUploadData['num_variants_unsupported'] == 1? '' : 's') . ' could not be imported.' .
+                // FIXME; If no variants were found, we should NOT have a continue button.
+                $_BAR->setMessage($aUploadData['num_variants'] . ' variant' . ($aUploadData['num_variants'] == 1? '' : 's') . ' where imported' . (!$aUploadData['num_variants_unsupported']? '.' : ', ' . $aUploadData['num_variants_unsupported'] . ' variant' . ($aUploadData['num_variants_unsupported'] == 1? '' : 's') . ' could not be imported.') .
                 // If we're in a submission and some variants couldn't be imported, show them the list and replace it with the continuation questions when they click the Continue button.
                        ($bSubmit? '<P>' .
-                                  '  <INPUT type="button" value="Continue &raquo;" onclick="$(this).parent().toggle();$(\'#continuation_questions\').toggle();$(oPB_' . $_BAR->sID . '_message_done).toggle()">' .
+                                  '  <INPUT type="button" value="Continue &raquo;" onclick="$(this).parent().toggle();$(\'#continuation_questions\').toggle();$(oPB_' . $_BAR->sID . '_message_done).toggle();">' .
                                   '</P>' .
                                   '<DIV id="continuation_questions" style="display: none">' . $sOptions . '</DIV>' :
                 // If we're not in a submission just use the Continue button to forward the user to submit/finish/upload/123.
                                   '<FORM action="' . ROOT_PATH . 'submit/finish/upload/' . $nUploadID . '" method="GET">' .
                                   '  <INPUT type="submit" value="Continue &raquo;">' .
                                   '</FORM>'));
-                $_BAR->setMessage('Below is ' . ($aUploadData['num_variants_unsupported'] > 1? 'a list of ' : '') . 'the ' . ($aUploadData['num_variants_unsupported'] > $nMaxListedUnsupported? 'first ' . $nMaxListedUnsupported . ' of ' : '') . ($aUploadData['num_variants_unsupported'] == 1? 'variant' : $aUploadData['num_variants_unsupported'] . ' variants') . ' that could not be imported.' .
-                                  '<DIV style="white-space: pre; font-family: monospace; border: 1px solid #224488; overflow: auto; max-height: 300px; max-width: 1000px">' .
-                                      implode("\n", $aUnsupportedLines) .
-                                  '</DIV>', 'done');
-                $_BAR->setMessageVisibility('done', true);
+                if ($aUploadData['num_variants_unsupported']) {
+                    $_BAR->setMessage('Below is ' . ($aUploadData['num_variants_unsupported'] > 1? 'a list of ' : '') . 'the ' . ($aUploadData['num_variants_unsupported'] > $nMaxListedUnsupported? 'first ' . $nMaxListedUnsupported . ' of ' : '') . ($aUploadData['num_variants_unsupported'] == 1? 'variant' : $aUploadData['num_variants_unsupported'] . ' variants') . ' that could not be imported.' .
+                                      '<DIV style="white-space: pre; font-family: monospace; border: 1px solid #224488; overflow: auto; max-height: 300px; max-width: 1000px">' .
+                                          implode("\n", $aUnsupportedLines) .
+                                      '</DIV>', 'done');
+                    $_BAR->setMessageVisibility('done', true);
+                }
             }
 
 

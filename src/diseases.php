@@ -5,7 +5,7 @@
  *
  * Created     : 2010-07-27
  * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-05
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -85,6 +85,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         }
         $aNavigation[CURRENT_PATH . '/columns']       = array('menu_columns.png', 'View enabled phenotype columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order'] = array('menu_columns.png', 'Re-order enabled phenotype columns', 1);
+        $aNavigation['columns/Phenotype'] = array('menu_columns.png', 'View all available phenotype columns', 1);
     }
     lovd_showJGNavigation($aNavigation, 'Genes');
 

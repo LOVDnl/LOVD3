@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-08
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -224,6 +224,16 @@ class LOVD_Phenotype extends LOVD_Custom {
         if ($sView == 'entry') {
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
             $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';
+            if (!empty($zData['Phenotype/Age']) && preg_match('/^([<>])?(\d+y)(\d+m)?(\d+d)?(\?)?$/', htmlspecialchars_decode($zData['Phenotype/Age']), $aMatches)) {
+                $aMatches = $aMatches + array_fill(0, 5, ''); // Fill $aMatches with enough values.
+                $nYears = (int) $aMatches[2];
+                $nMonths = (int) $aMatches[3];
+                $nDays = (int) $aMatches[4];
+                $sAge  = (!$nYears? '' : $nYears . ' year' . ($nYears == 1? '' : 's'));
+                $sAge .= (!$nMonths? '' : ($sAge? ', ' : '') . $nMonths . ' month' . ($nMonths == 1? '' : 's'));
+                $sAge .= (!$nDays? '' : ($sAge? ', ' : '') . $nDays . ' day' . ($nDays == 1? '' : 's'));
+                $zData['Phenotype/Age'] .= ' (' . (!$aMatches[1]? '' : ($aMatches[1] == '>'? 'later than' : 'before') . ' ') . (empty($aMatches[5])? '' : 'approximately ') . $sAge . ')';
+            }
         }
 
         return $zData;

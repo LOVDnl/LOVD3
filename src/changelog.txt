@@ -8,8 +8,37 @@
 
 /*******************
  * 3.0 Beta 06
- * 2012-06-16????????????????
+ * 2012-06-18 ???????????????????????????????
  *********/
+ * Custom column detailed views didn't render the legend fields correctly, if
+   they contained multiple lines.
+ * Clarified on the custom column data entry forms that the legend fields can
+   contain HTML.
+ * From a disease's detailed view you now also have the option to see all
+   available phenotype custom columns.
+ * Properly removed the column editing errors given when the custom column's
+   legend fields contained HTML. Also the regular expression pattern is no
+   longer checked for HTML contents.
+ * Fixed bug; When importing data from a SeattleSeq annotated file, data for the
+   "DistanceToSplice" column was not stored.
+ * Added new custom columns: Individual/Age_of_death, Individual/Death/Cause,
+   Phenotype/Age and Phenotype/Length.
+ * When importing VCF or SeattleSeq files, the number of successfully imported
+   variants is now mentioned when importing is done. Also, you will get an error
+   message when no variants were imported. LOVD will no longer throw PHP errors
+   when a non-VCF file is being imported.
+ * The gene's disclaimer has been moved to the far bottom of the gene home page.
+ * Fixed bug; A gene's human readable reference sequence can now actually be
+   clicked and opened from the gene home page.
+ * Improved PubMed custom link help text.
+
+
+
+
+
+
+
+
  * Fixed bug; NR_ numbers did not work properly in the mapping of a variant on
    the variant forms.
  * Fixed bug; Transcripts without an NM or NR accession number are now no longer
@@ -39,6 +68,10 @@
    the variant forms to check a variant description.
 
 
+
+
+
+
 /*******************
  * 3.0 Beta 05
  * 2012-05-16
@@ -52,7 +85,7 @@
    and object_transcript_variants.php.
  * Fixed bug; PDO was not implemented completely in LOVD_Objects::loadEntry()
    and LOVD_Transcript_Variants::loadEntry().
- * From a gene's or disease's detailed view, you can now view a list of its
+ * From a gene's or disease's detailed view, you can now view a list of its
    active columns. From there you can also change the order in which the columns
    are shown in the system. Clicking a custom column leads to a detailed page
    about the column's settings for that gene or disease. These settings can now
@@ -71,7 +104,7 @@
    had occurred.
  * Fixed bug; When removing a shared custom column, providing the target was not
    mandatory. When left empty, LOVD returned a bunch of errors.
- * Enabled a menu for authorized users to the detailed views of columns,
+ * Enabled a menu for authorized users to the data listings of columns,
    diseases, genes, individuals, logs, screenings, transcripts, users, variants
    and views, which by default allows downloading the data shown.
  * The list of log entries now also supports deleting multiple log entries at
@@ -308,6 +341,7 @@
    something equivalent on non-Apache servers) is activated. It also checks for
    the PHP function xml_parser_create().
    Closes #4: "Problems running LOVD 3.0 on Windows 7/WampServer 2.0".
+   (thanks to John-Paul Plazzer, Royal Melbourne Hosp. Australia, for reporting)
  * Updated the INSTALL.txt to reflect this.
  * Removed link to LOVD status page for now since we haven't implemented it yet.
  * When resorting a ViewList, the list will return to the first page.

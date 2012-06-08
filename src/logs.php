@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-26
- * Modified    : 2012-05-07
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-05-21
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -40,12 +40,11 @@ if ($_AUTH) {
 // URL: /logs
 // View all log entries.
 
-// Require manager clearance.
-lovd_requireAUTH(LEVEL_MANAGER);
-
 define('PAGE_TITLE', 'View system log entries');
 $_T->printHeader();
 $_T->printTitle();
+
+lovd_requireAUTH(LEVEL_MANAGER);
 
 
 

@@ -128,7 +128,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add phenotype" button.', 'stop');
         $_T->printFooter();
         exit;
-    } elseif (!lovd_isAuthorized('individuals', $_GET['target'], true)) {
+    } elseif (!lovd_isAuthorized('individual', $_GET['target'], true)) {
         lovd_requireAUTH(LEVEL_OWNER);
     }
     $_POST['individualid'] = $_GET['target'];

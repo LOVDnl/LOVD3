@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-05-25
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -209,8 +209,8 @@ class LOVD_Column extends LOVD_Object {
 
         // XSS attack prevention. Deny input of HTML.
         // Ignore the 'Description on short legend' and 'Description on full legend' fields.
-        unset($aData['description_legend_short'], $aData['description_legend_full']);
-        lovd_checkXSS();
+        unset($aData['preg_pattern'], $aData['description_legend_short'], $aData['description_legend_full']);
+        lovd_checkXSS($aData);
     }
 
 
@@ -237,8 +237,8 @@ class LOVD_Column extends LOVD_Object {
              'colid' => array('Column ID', '', 'text', 'colid', 30),
         'colid_note' => array('', '', 'note', 'This ID must be unique and may contain only letters, numbers and underscores. Subcategories must be divided by a slash (/), such as \'{{ EXAMPLE }}\'.'),
                         array('Column heading', 'This will appear above the column in data tables.', 'text', 'head_column', 30),
-                        array('Description on short legend', '', 'textarea', 'description_legend_short', 40, 2),
-                        array('Description on full legend', '', 'textarea', 'description_legend_full', 40, 2),
+                        array('Description on short legend<BR>(HTML enabled)', '', 'textarea', 'description_legend_short', 40, 2),
+                        array('Description on full legend<BR>(HTML enabled)', '', 'textarea', 'description_legend_full', 40, 4),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Data and form settings</B> (Use data type wizard to change values)'),
@@ -363,7 +363,8 @@ class LOVD_Column extends LOVD_Object {
             }
 
             $zData['mandatory_']       = '<IMG src="gfx/mark_' . $zData['mandatory'] . '.png" alt="" width="11" height="11">';
-            $zData['description_legend_full'] = html_entity_decode($zData['description_legend_full']);
+            $zData['description_legend_short'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_short']));
+            $zData['description_legend_full'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_full']));
             $zData['form_type_']       = lovd_describeFormType($zData) . '<BR>' . $zData['form_type'];
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';

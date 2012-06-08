@@ -1,12 +1,17 @@
 Prioritize:
 ===========
+- De kolom volgorden en omschrijvingen overnemen van de shared install? Wel even alles dubbel checken.
+  + head_column van VOG/DNA aanpassen naar "DNA change genomic"?
+    * De omschrijving van deze kolom klopt op dit moment niet in de shared database.
+  + Lijstje maken van de veranderingen, want ik ben het niet met alles eens. Veel te veel informatie in de "notes on form" voor mijn smaak.
+- Status pagina weer terug, alleen wat simpele statistieken en de datum.
+  + Aantal genen, individuen, screenings, varianten totaal, varianten uniek.
+    + Deze berekeningen worden in check_update.php ook al gedaan, maar er moet misschien worden gekeken of die queries
+      ook geschikt zijn om op de status pagina te zetten; zijn ze wel efficient genoeg?
 - Nieuwe kolommen:
-  + Phenotype/Age (?), kolom voor age at examination
-    * Met preg_pattern: (\d+[dmy])?\??
-  + Individual/Age of Death
-    * Format: zie hierboven.
+  + GVS/Function naar selection list, zodat Maja er ook wat aan heeft?
 - Gene create geeft altijd een created_date met tijd 00:00:00, zelfs als je het datum veld leeg hebt gelaten en hij dus de datum van vandaag heeft kozen.
-  + Ik kan het niet reproduceren op mijn bak, hier doet hij het gewoon zoals het hoort.
+  + (Ivar) Ik kan het niet reproduceren op mijn bak, hier doet hij het gewoon zoals het hoort.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -22,22 +27,35 @@ Prioritize:
     * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns). OOK IN CUSTOM VIEWLIST.
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
-- DATA DOWNLOAD.
+- (@Ivo) DATA DOWNLOAD.
   + Is the Charset correctly set?
   + DATA IMPORT
     * Choose character set!
       - Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
         nodig... dat werkt vanaf 4.3.0... Alleen laden met config_import.txt?
         Testfile heb ik in mijn email, van David Bonthron (Wed, 18 Jun 2008 12:28:46 +0100).
+    * Alle velden moeten getrimmed worden voordat er naar gekeken wordt.
     * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
       - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
       - Store in session / DB in een col met serialized data?
+- Dropdown menu's op de overige VE's ook inbouwen.
 - Unit tests via Selenium (of alternatief)?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
   * Of betekent dit, dat Mutalyzer er sowieso niet mee overweg kan?
-- Nadat Mutalyzer komt met een test op alle genen(sliceChromosomeByGene, getTranscriptsAndInfo, numberConversion per gen 1 variant) moeten we
-  beslissen wat we ermee gaan doen, nu tijdelijke filter op "rare" LocusType's.
+- Kunnen we een keiharde fout onderscheppen bij genen als: CMT1A?
+  + De HGNC heeft er niet veel info over, en zegt ook dat het geen gen met product is. Als dat op te halen is, kunnen we zelf een nette foutmelding geven. 
+  + Nadat Mutalyzer komt met een test op alle genen(sliceChromosomeByGene, getTranscriptsAndInfo, numberConversion per gen 1 variant) moeten we
+    beslissen wat we ermee gaan doen, nu tijdelijke filter op "rare" LocusType's.
+- Refseq parser installeren voor LOVD3 install, losgekoppeld van LOVD zodat je het gen niet nodig hebt (maar de NG file wel!).
+  * Handmatig aanpassingen aan de code toepassen.
+- Incorporate links to Alamut.
+- (@Ivar): Als een VCF file geen varianten bevat, mag de file niet als volledige submissie gezien worden.
+  + Met andere woorden, de data in $_SESSION moet zo gemanipuleerd worden in variants.php na het importeren, dat er geen mail wordt gestuurd met info over alleen een lege file.
+  + Misschien moeten we wel toestaan, dat er in een volledige submissie met individual e.d. een melding over de lege file komt (er moet dan sowieso gemailed worden).
+  + Ik heb wel wijzigingen aan de code aangebracht, maar mijn kennis van de submissie SESSION array is niet groot genoeg om snel te zien hoe ik dit aan pas zonder andere nare effecten.
+  + Er zijn hiervoor twee FIXME's toegevoegd.
+  + Overleg?
 
 - Beta-06:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
@@ -77,7 +95,10 @@ Prioritize:
     + Voordelen:
       * Variant tellingen gaan automatisch goed.
     + We willen dit eigenlijk op een andere manier oplossen. Variant/Genetic_Origin als bit column gebruiken?
-    - Should we maybe set default_socket_timeout somewhere?
+  - Should we maybe set default_socket_timeout somewhere?
+  - Overstappen naar de JSON API - kiezen van een JSON lib (ZEND?)
+    + In het geval dat we de browser direct de calls en de interpretatie willen laten doen, hebben we een wrapper script in PHP
+      nodig die de calls doet en de JSON controleert (indien we een foutmelding krijgen, een JSON object maakt) en alles doorstuurt.
   - Inbouwen dat LOVD met NR_ accession nummers overweg kan, er staan hier en daar volgens mij wat regex checks op NM_(ajax calls e.d.)
   - RNA prediction toevoegen aan het variant create & edit formulier.
 
@@ -159,6 +180,10 @@ Prioritize:
 - API.
 - ORCID integratie.
 - lovd_setUpdatedDate() implementeren.
+- How to store functional assays? Functional effect screenings? Separate table, with DBID or something to link to variant in general? Chr,g_pos?
+  + Als linken naar een variant (of iemand zegt: ik heb DEZE variant getest), wat doen we dan als de variant wordt bewerkt?
+  + Moet ook kunnen linken naar meerdere varianten, als deze tegelijkertijd zijn getest.
+  + Must be able to store phenotype like information (not individual-like)
 - Since Objects::checkFields() is running getForm(), can't that code take care of invalid values in selection lists? Now that code is all over the place; object_custom for custom columns and lots of object_* files for each data type.
 - Floating header? Anders: eerst de hele tabel inladen, daarna nieuwe table maken, de TR moven naar de andere tabel met behoud van breedte, en laten floaten.
   + Eventueel code gebruiken gesuggereerd door Ivar (november 2011)
@@ -168,6 +193,11 @@ Prioritize:
 - Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
 - Add viewlist menu also on other pages? viewlists within viewentries? phenotypes for instance, can't be downloaded yet.
 - Wat moet LOVD kunnen met LRGs? Doorsturen i.p.v. UD nummers (= NC slice) bij name checker e.d.? Idem NGs?
+- When finishing the data type wizard, it should show what your created field looks like. You then get the option to agree (OK&close), or revise these settings (restart, remembering values).
+- Nadat we eenmaal grafieken hebben ingebouwd (David Baux), kunnen we ook automatisch grafieken inbouwen als je meer dan
+  1 phenotype entry hebt van een bepaalde aandoening, en er numerieke kolommen in voorkomen.
+  + De data kan dan worden geparsed (viewList moet array terug geven ipv count, die gebruiken we toch niet) zodat leeftijd of datum horizontaal,
+    en numerieke kolommen (blood pressure, length, etc) verticaal kunnen. Per kolom een aparte grafiek?
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 

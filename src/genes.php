@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-08
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -94,6 +94,14 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     }
     lovd_showJGNavigation($aNavigation, 'Genes');
 
+    $_GET['search_geneid'] = '="' . $sID . '"';
+    print('<BR><BR>' . "\n\n");
+    $_T->printTitle('Active transcripts', 'H4');
+    require ROOT_PATH . 'class/object_transcripts.php';
+    $_DATA = new LOVD_Transcript();
+    $_DATA->setSortDefault('variants');
+    $_DATA->viewList('Transcripts_for_G_VE', 'geneid', true, true);
+
     // Disclaimer.
     if ($zData['disclaimer']) {
         print('<BR>' . "\n\n" .
@@ -103,14 +111,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
               '        <TR class="S11">' . "\n" .
               '          <TD>' . $zData['disclaimer_text_'] . '</TD></TR></TABLE><BR>' . "\n\n");
     }
-
-    $_GET['search_geneid'] = '="' . $sID . '"';
-    print('<BR><BR>' . "\n\n");
-    $_T->printTitle('Active transcripts', 'H4');
-    require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new LOVD_Transcript();
-    $_DATA->setSortDefault('variants');
-    $_DATA->viewList('Transcripts_for_G_VE', 'geneid', true, true);
 
     $_T->printFooter();
     exit;
