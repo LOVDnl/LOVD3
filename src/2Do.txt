@@ -101,6 +101,7 @@ Prioritize:
       nodig die de calls doet en de JSON controleert (indien we een foutmelding krijgen, een JSON object maakt) en alles doorstuurt.
   - Inbouwen dat LOVD met NR_ accession nummers overweg kan, er staan hier en daar volgens mij wat regex checks op NM_(ajax calls e.d.)
   - RNA prediction toevoegen aan het variant create & edit formulier.
+  - Als $zData['column_'] niet defined is, pakt viewList en viewEntry automatisch $zData['column']? Dat staat ons wat "sloppy" code toe, waar we icoontjes toevoegen speciaal voor text/html, maar dat niet willen voor downloads of XML.
 
 - Hebben we OpenSSL ergens voor nodig?
   + http mutalyzer contact als zelf in https???

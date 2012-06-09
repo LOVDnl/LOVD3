@@ -250,23 +250,26 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_GenomeVariant();
     $zData = $_DATA->viewEntry($nID);
 
-    $sNavigation = '';
+    $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit variant entry</A>';
-        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?map">Add variant description to additional transcript</A>';
+        // Authorized user is logged in. Provide tools.
+        $aNavigation[CURRENT_PATH . '?edit']       = array('menu_edit.png', 'Edit variant entry</A>', 1);
+        $aNavigation[CURRENT_PATH . '?map']        = array('menu_plus.png', 'Manage transcripts for this variant</A>', 1);
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete variant entry</A>';
+            $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete variant entry', 1);
         }
-        if (!empty($zData['position_g_start'])) {
-            $sNavigation .= ' | <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?search_global\', \'global_search\', 900, 450); return false;">Search public LOVDs</A>';
+        if (!empty($zData['position_g_start']) && $_CONF['refseq_build'] != '----') {
+            $lVariant = abs($zData['position_g_end'] - $zData['position_g_start']);
+            $lMargin = ($lVariant > 20? 5 : round((30 - $lVariant)/2));
+            $aNavigation['javascript:lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?search_global\', \'global_search\', 900, 450);'] = array('menu_magnifying_glass.png', 'Search public LOVDs', 1);
+            // FIXME; Once this navigation menu supports multi-level menu's, add this in a sub level.
+            $aNavigation['javascript:lovd_openWindow(\'http://genome.ucsc.edu/cgi-bin/hgTracks?clade=mammal&amp;org=Human&amp;db=' . $_CONF['refseq_build'] . '&amp;position=chr' . $zData['chromosome'] . ':' . ($zData['position_g_start'] - $lMargin) . '-' . ($zData['position_g_end'] + $lMargin) . '&amp;width=800&amp;ruler=full&amp;ccdsGene=full\', \'variant_UCSC\', 1000, 500);'] = array('menu_magnifying_glass.png', 'Visualize in UCSC genome browser', 1);
+            $aNavigation['javascript:lovd_openWindow(\'' . ($_CONF['refseq_build'] == 'hg18'?
+                 'http://may2009.archive.ensembl.org/Homo_sapiens/Location/View?r=' . $zData['chromosome'] . ':' . ($zData['position_g_start'] - $lMargin) . '-' . ($zData['position_g_end'] + $lMargin) :
+                 'http://www.ensembl.org/Homo_sapiens/Location/View?r=' . $zData['chromosome'] . ':' . ($zData['position_g_start'] - $lMargin) . '-' . ($zData['position_g_end'] + $lMargin)) . '\', \'variant_Ensembl\', 1000, 500);'] = array('menu_magnifying_glass.png', 'Visualize in Ensembl genome browser', 1);
         }
     }
-
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
+    lovd_showJGNavigation($aNavigation, 'Genes');
 
     print('      <BR><BR>' . "\n\n" .
           '      <DIV id="viewentryDiv">' . "\n" .
