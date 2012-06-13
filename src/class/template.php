@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-13
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -84,6 +84,7 @@ class LOVD_Template {
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all genes', 0),
                                 '/genes/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View the ' . $_SESSION['currdb'] . ' gene homepage', 0),
+                                '/genes/' . $_SESSION['currdb'] . '/graphs' => array('menu_graphs.png', 'View graphs about the ' . $_SESSION['currdb'] . ' gene database', 0),
                                 'create' => array('plus.png', 'Create a new gene entry', LEVEL_MANAGER),
                               ),
                         'transcripts' => 'View transcripts',

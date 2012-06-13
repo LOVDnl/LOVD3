@@ -31,10 +31,15 @@
  * Fixed bug; A gene's human readable reference sequence can now actually be
    clicked and opened from the gene home page.
  * Improved PubMed custom link help text.
- * Implemented the new dropdown menu at the variant's detailed view, instead of
-   one long row of links. Also included links to the UCSC and Ensembl genome
-   browsers from the dropdown menu.
-
+ * Implemented the new dropdown menu at the user's and variant's detailed views,
+   instead of one long row of links.
+ * Included links to the UCSC and Ensembl genome browsers from the variant's
+   detailed view dropdown menu.
+ * Implemented the full data download from the setup.
+ * When viewing your own account details, from the options dropdown menu you can
+   download all of your submitted data.
+ * Implemented a first set of graphs displaying information about the variant
+   types in a gene database.
 
 
 

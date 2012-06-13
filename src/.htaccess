@@ -22,6 +22,7 @@ php_flag mysql.trace_mode Off
     RewriteRule ^columns(.*)$ columns.php
     RewriteRule ^diseases(.*)$ diseases.php
     RewriteRule ^docs(.*)$ docs.php
+    RewriteRule ^download(.*)$ download.php
     RewriteRule ^genes(.*)$ genes.php
 #    RewriteRule ^install(.*)$ install/index.php # I'm having trouble using /install?etc because Apache is redirecting to /install/?etc which loses the $_POST info. Very annoying.
     RewriteRule ^individuals(.*)$ individuals.php

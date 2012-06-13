@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-06-07
+ * Modified    : 2012-06-13
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -135,6 +135,11 @@ class LOVD_Gene extends LOVD_Object {
                         'updated_date_' => array('Date last update', LEVEL_COLLABORATOR),
                         'TableEnd_General' => '',
                         'HR_1' => '',
+                        'TableStart_Graphs' => '',
+                        'TableHeader_Graphs' => 'Graphical displays and utilities',
+                        'graphs' => 'Graphs',
+                        'TableEnd_Graphs' => '',
+                        'HR_2' => '',
                         'TableStart_Links' => '',
                         'TableHeader_Links' => 'Links to other resources',
                         'url_homepage_' => 'Homepage URL',
@@ -498,6 +503,9 @@ class LOVD_Gene extends LOVD_Object {
                 }
                 $this->aColumnsViewEntry['collaborators_'][0] .= ' (' . $nCollaborators . ')';
             }
+
+            // Graphs & utilities.
+            $zData['graphs'] = '<A href="' . CURRENT_PATH . '/graphs" class="hide">Graphs displaying summary information of all variants in the database</A> &raquo;';
 
             // URLs for "Links to other resources".
             $zData['url_homepage_'] = ($zData['url_homepage']? '<A href="' . $zData['url_homepage'] . '" target="_blank">' . $zData['url_homepage'] . '</A>' : '');

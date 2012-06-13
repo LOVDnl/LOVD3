@@ -83,7 +83,6 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $sPOSTVars .= '&patient_count=' . $nIndividuals;
 
         // Number of unique variants.
-        // FIXME; enforce there is no other value behind the DBID?
         $nUniqueVariants = $_DB->query('SELECT COUNT(DISTINCT `VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' WHERE statusid >= ' . STATUS_MARKED)->fetchColumn();
         $sPOSTVars .= '&uniquevariant_count=' . $nUniqueVariants;
 

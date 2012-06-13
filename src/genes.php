@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-06-08
+ * Modified    : 2012-06-13
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1045,6 +1045,64 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
         });
       </SCRIPT>
 <?php
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && $_PE[2] == 'graphs' && !ACTION) {
+    // URL: /genes/DMD/graphs
+    // Show different graphs about this gene; variant type (DNA, RNA & Protein level), ...
+
+    $sID = rawurldecode($_PE[1]);
+    define('PAGE_TITLE', 'Graphs &amp; statistics on gene ' . $sID);
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Load authorization, collaborators and up see statistics about all variants, not just the public ones.
+    lovd_isAuthorized('gene', $sID);
+
+    // Check if there are variants at all.
+    $nVariants = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND statusid >= ' . STATUS_MARKED), array($sID))->fetchColumn();
+    if (!$nVariants) {
+        lovd_showInfoTable('There are currently no ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants in this gene.', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
+
+
+    require ROOT_PATH . 'class/graphs.php';
+    $_G = new LOVD_Graphs();
+    lovd_includeJS('lib/flot/jquery.flot.min.js');
+    lovd_includeJS('lib/flot/jquery.flot.pie.min.js');
+    print('      <!--[if lte IE 8]><SCRIPT type="text/javascript" src="lib/flot/excanvas.min.js"></SCRIPT><![endif]-->' . "\n\n");
+
+    // FIXME; Implement:
+    // - Variant types (RNA, Protein level).
+    // - Locations of variants (exon and intron numbers)?
+    // - Variants in this gene reported in individuals with which diseases?
+    //   * Too bad we don't know if these variants cause this disease. Search for pathogenicity only?
+
+    // We need to create the DIV containers, the Graph object will fill it in.
+    // Variant types (DNA level).
+    print('      <H5>Variant type (DNA level)</H5>' . "\n" .
+          '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+          '        <TR valign="top">' . "\n" .
+          '          <TD width="50%">' . "\n" .
+          '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
+          '            <DIV id="variantsTypeDNA_all" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_all_hover">&nbsp;</DIV></TD>' . "\n" .
+          '          <TD width="50%">' . "\n" .
+          '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
+          '            <DIV id="variantsTypeDNA_unique" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_unique_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
+
+    flush();
+    $_G->variantsTypeDNA('variantsTypeDNA_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
+    $_G->variantsTypeDNA('variantsTypeDNA_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
 
     $_T->printFooter();
     exit;

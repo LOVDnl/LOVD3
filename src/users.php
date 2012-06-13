@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-04-25
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-06-11
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -91,24 +91,25 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_User();
     $zData = $_DATA->viewEntry($nID);
 
-    $sNavigation = '';
+    $aNavigation = array();
     if ($_AUTH['level'] > $zData['level']) {
-        // Authorized user (admin or manager) is logged in. Provide tools.
-        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit user</A>';
+        // Authorized user is logged in. Provide tools.
+        $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Edit user', 1);
         if ($zData['active']) {
-            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?boot">Force user log out</A>';
+            $aNavigation[CURRENT_PATH . '?boot'] = array('', 'Force user log out', 1);
         }
-        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?' . ($zData['locked']? 'un' : '') . 'lock">' . ($zData['locked']? 'Unl' : 'L') . 'ock user</A>';
-        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete user</A>';
+        if ($zData['locked']) {
+            $aNavigation[CURRENT_PATH . '?unlock'] = array('check.png', 'Unlock user', 1);
+        } else {
+            $aNavigation[CURRENT_PATH . '?lock'] = array('status_locked.png', 'Lock user', 1); // FIXME; this image is actually too small but it doesn't look too bad.
+        }
+        $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete user', 1);
     } elseif ($_AUTH['id'] == $nID) {
         // Viewing himself!
-        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Update your registration</A>';
+        $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Update your registration', 1);
+        $aNavigation['download/all/mine']    = array('menu_save.png', 'Download all my data', 1);
     }
-
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
+    lovd_showJGNavigation($aNavigation, 'Users');
 
 
 

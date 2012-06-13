@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2012-05-14
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-11
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -154,6 +154,10 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD>Manage installed LOVD modules.</TD></TR>') .
       '</TABLE>' . "\n");
 */
+            'Download' =>
+                 array(
+                        array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD (individuals, phenotypes, screenings &amp; variants).'),
+                      ),
             'System logs' =>
                  array(
                         array('logs', 'lovd_logs.png', 'System logs', 'View, search and delete system logs.'),

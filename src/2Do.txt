@@ -1,5 +1,23 @@
 Prioritize:
 ===========
+Handmatige mapping: leeg DBID wordt chrX ID, zelfs met VOT.
+Auto mapping: creert de vars niet op bestaande transcripten?
+
+Vog form: dna add (relative to CONF refseq_build)
+Fix VOG/DNA description
+
+- Moet nog aan de changelog worden toegevoegd:
+  + Fixed bug; Curators could not complete their submissions because of typos in the authorization functions.
+
+- David Baux: maak branch aan, geef rechten.
+- Geen internet && variant gemaakt:
+  + Notice: Undefined index: position_g_start in /www/svn/LOVD3/trunk/src/class/objects.php on line 348
+  + Notice: Undefined index: position_g_start in /www/svn/LOVD3/trunk/src/class/objects.php on line 351
+  + Notice: Undefined index: type in /www/svn/LOVD3/trunk/src/class/objects.php on line 348
+  + Notice: Undefined index: type in /www/svn/LOVD3/trunk/src/class/objects.php on line 351
+  + Notice: Undefined index: position_g_end in /www/svn/LOVD3/trunk/src/class/objects.php on line 348
+  + Notice: Undefined index: position_g_end in /www/svn/LOVD3/trunk/src/class/objects.php on line 351
+  + Er kon ook geen email gestuurd worden na de submissie, maar de foutmelding van LOVD die op zich correct was, bleef zo kort staan dat mensen 'm niet kunnen lezen.
 - De kolom volgorden en omschrijvingen overnemen van de shared install? Wel even alles dubbel checken.
   + head_column van VOG/DNA aanpassen naar "DNA change genomic"?
     * De omschrijving van deze kolom klopt op dit moment niet in de shared database.
@@ -28,6 +46,21 @@ Prioritize:
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - (@Ivo) DATA DOWNLOAD.
+  + File format: header, individuals, phenotypes, screenings, vog, vot.
+    * Genen, ziektes en transcripten moeten nog worden toegevoegd aan de download.
+      - Misschien niet om ook te importeren, maar om duidelijk te maken waarheen gelinkt wordt.
+  + URLs left to implement:
+    * Alle data van een bepaald gen downloaden (curator and up):
+      - /download/all/gene=GENE
+      - We moeten dan zien te achterhalen welke individuen bij dit gen horen, en welke ziektes.
+        Phenotype data van andere ziektes moeten niet gedownload worden, omdat de curator sowieso de rechten niet heeft die data weer terug te importeren.
+        De custom columns moeten nu ook beperkt worden.
+    * Alleen bepaalde data downloaden (manager and up):
+      - /download/individuals,phenotypes      (voorbeeld)
+      - Hier ook restrictie kunnen leggen?
+    * We zullen in de toekomst wel toestaan dat voor dit format een selectie van de data wordt gedownload, maar
+      dat moet dan maar op basis van de geselecteerde IDs die in SESSION worden opgeslagen. Ik wil niet code voor
+      het parsen van zoektermen moeten kopieëren naar download oid.
   + Is the Charset correctly set?
   + DATA IMPORT
     * Choose character set!
@@ -199,6 +232,7 @@ Prioritize:
   1 phenotype entry hebt van een bepaalde aandoening, en er numerieke kolommen in voorkomen.
   + De data kan dan worden geparsed (viewList moet array terug geven ipv count, die gebruiken we toch niet) zodat leeftijd of datum horizontaal,
     en numerieke kolommen (blood pressure, length, etc) verticaal kunnen. Per kolom een aparte grafiek?
+- Be able to change the mapping setting of a certain variant?
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 
