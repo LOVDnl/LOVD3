@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-17
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -198,7 +198,8 @@ class LOVD_Custom extends LOVD_Object {
                         $aEntry[] = $sPrefix . $sCol;
                     }
                 }
-                $aFormData[] = $aEntry;
+                // Setting the key allows easy post-processing of the form.
+                $aFormData[$sPrefix . $sCol] = $aEntry;
 
             } else {
                 // Select entries are modified a little more - need source data.
@@ -260,7 +261,8 @@ class LOVD_Custom extends LOVD_Object {
                     }
                 }
 
-                $aFormData[] = $aEntry;
+                // Setting the key allows easy post-processing of the form.
+                $aFormData[$sPrefix . $sCol] = $aEntry;
             }
 
             // Any custom links we want to mention?
@@ -271,12 +273,12 @@ class LOVD_Custom extends LOVD_Object {
                     $sToolTip = str_replace(array("\r\n", "\r", "\n"), '<BR>', 'Click to insert:<BR>' . $aLink['pattern_text'] . '<BR><BR>' . addslashes(htmlspecialchars($aLink['description'])));
                     $sLinks .= ($sLinks? ', ' : '') . '<A href="#" onmouseover="lovd_showToolTip(\'' . $sToolTip . '\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'' . $aLink['pattern_text'] . '\'); return false">' . $aLink['name'] . '</A>';
                 }
-                $aFormData[] = array('', '', 'print', '<SPAN class="S11">(Active custom link' . (count($aCol['custom_links']) == 1? '' : 's') . ' : ' . $sLinks . ')</SPAN>');
+                $aFormData[$sPrefix . $sCol . '_links'] = array('', '', 'print', '<SPAN class="S11">(Active custom link' . (count($aCol['custom_links']) == 1? '' : 's') . ' : ' . $sLinks . ')</SPAN>');
             }
 
             // Need to add description?
             if ($aCol['description_form']) {
-                $aFormData[] = array('', '', 'note', $aCol['description_form']);
+                $aFormData[$sPrefix . $sCol . '_notes'] = array('', '', 'note', $aCol['description_form']);
             }
         }
 

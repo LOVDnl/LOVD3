@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-05-15
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-17
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -166,7 +166,6 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
     // Remove the submission information from $_SESSION and close the session file, so that other scripts can use it without having to wait for this script to finish.
     unset($_SESSION['work']['submits'][$_PE[2]][$nID]);
     session_write_close();
-    header('Refresh: 3; url=' . lovd_getInstallURL() . $sURI . $nID);
     define('LOG_EVENT', 'Submit' . ucfirst($_PE[2]));
     define('PAGE_TITLE', 'Submit ' . $sTitle);
 
@@ -516,6 +515,9 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
     // FIXME; When messaging system is built in, maybe queue message for curators?
     if ($bMail) {
         lovd_showInfoTable('Successfully processed your submission and sent an email notification to the relevant curator(s)!', 'success');
+
+        // Forward only if there was no error sending the email.
+        print('      <SCRIPT type="text/javascript">setTimeout("window.location.href=\'' . lovd_getInstallURL() . $sURI . $nID . '\'", 3000);</SCRIPT>' . "\n");
     } else {
         lovd_showInfoTable('Successfully processed your submission, but LOVD wasn\'t able to send an email notification to the relevant curator(s)!<BR>Please contact one of the relevant curators and notify them of your submission so that they can curate your data!', 'warning');
     }

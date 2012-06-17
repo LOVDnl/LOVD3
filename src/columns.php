@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-24
+ * Modified    : 2012-06-17
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -527,7 +527,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
                   '        <!--' . "\n" .
                   '        opener.document.forms[0][\'mysql_type\'].value = \'' . addslashes($sMySQLType) . '\';' . "\n" .
                   '        opener.document.forms[0][\'form_type\'].value = \'' . addslashes($sFormType) . '\';' . "\n" .
-                  '        opener.document.forms[0][\'description_form\'].value = \'' . addslashes($_POST['description_form']) . '\';' . "\n" .
+                  '        opener.document.forms[0][\'description_form\'].value = \'' . str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes($_POST['description_form'])) . '\';' . "\n" .
                   '        opener.document.forms[0][\'preg_pattern\'].value = \'' . addslashes($sPregPattern) . '\';' . "\n" .
                   '        opener.document.forms[0][\'select_options\'].value = \'' . (empty($_POST['select_options'])? '' : str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes($_POST['select_options']))) . '\';' . "\n" .
                   '        window.close();' . "\n" .
@@ -598,7 +598,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
                     array('', '', 'print', '<B>Column options</B>'),
                     array('Column name on form', '', 'text', 'name', 30),
                     array('Help text', 'If you think the data field needs clarification given as an icon such as this one, add it here.', 'text', 'help_text', 50),
-                    array('Notes on form (optional)', '', 'textarea', 'description_form', 40, 2),
+                    array('Notes on form (optional)<BR>(HTML enabled)', '', 'textarea', 'description_form', 40, 2),
                     array('', '', 'note', 'If you think the data field needs clarification on the data entry form, add it here - it will appear below the field on the data entry form just like this piece of text.'),
                   );
 

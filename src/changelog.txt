@@ -40,6 +40,13 @@
    download all of your submitted data.
  * Implemented a first set of graphs displaying information about the variant
    types in a gene database.
+ * The genomic DNA change field now shows the used genomic reference build on
+   the form.
+ * Fixed notices when submitting without internet connection.
+ * Fixed bug; After submission the user was also forwarded to the data overview
+   if the submission email could not be sent.
+ * The custom column's "Notes on form" fields are now HTML enabled also, and
+   support newlines.
 
 
 

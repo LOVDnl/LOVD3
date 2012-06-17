@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2012-06-13
+ * Modified    : 2012-06-17
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -60,15 +60,15 @@ class LOVD_Graphs {
         }
 
         // Keys need to be renamed.
-        $aRename =
+        $aTypes =
              array(
-                    ''       => 'Unknown',
-                    'del'    => 'Deletions',
-                    'delins' => 'Indels',
-                    'dup'    => 'Duplications',
-                    'ins'    => 'Insertions',
-                    'inv'    => 'Inversions',
-                    'subst'  => 'Substitutions',
+                    ''       => array('Unknown', '#000'),
+                    'del'    => array('Deletions', '#A00'),
+                    'delins' => array('Indels', '#95F'),
+                    'dup'    => array('Duplications', '#F90'),
+                    'ins'    => array('Insertions', '#090'),
+                    'inv'    => array('Inversions', '#0AC'),
+                    'subst'  => array('Substitutions', '#00C'),
                   );
 
         if (!is_array($Data)) {
@@ -99,12 +99,14 @@ class LOVD_Graphs {
         ksort($aData); // May not work correctly, if keys are replaced...
         $i = 0;
         $nTotal = 0;
-        foreach ($aData as $sLabel => $nValue) {
-            if (isset($aRename[$sLabel])) {
-                $sLabel = $aRename[$sLabel];
+        foreach ($aData as $sType => $nValue) {
+            if (isset($aTypes[$sType])) {
+                $sLabel = $aTypes[$sType][0];
+            } else {
+                $sLabel = $sType;
             }
             print(($i++? ',' : '') . "\n" .
-                  '            {label: "' . $sLabel . '", data: ' . $nValue . '}');
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
             $nTotal += $nValue;
         }
 		print('];' . "\n\n" .

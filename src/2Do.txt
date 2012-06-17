@@ -2,22 +2,19 @@ Prioritize:
 ===========
 Handmatige mapping: leeg DBID wordt chrX ID, zelfs met VOT.
 Auto mapping: creert de vars niet op bestaande transcripten?
+VOG/DNA zegt dat hij is niet toegevoegd, omdat de join naar active columns niet werkt; dat moet anders gedaan worden.
 
-Vog form: dna add (relative to CONF refseq_build)
-Fix VOG/DNA description
+Fix VOG/DNA description in shared installation.
+
+- (@Ivar) Bij poging verzenden variant submissie van g.? / c.? (IVD):
+  + [Sat Jun 16 11:59:18 2012] [error] [client 84.86.115.30] PHP Warning:  Invalid argument supplied for foreach() in /var/www/databases.lovd.nl/shared/ajax/convert_position.php on line 52, referer: http://databases.lovd.nl/shared/variants?create&reference=Transcript&geneid=IVD&target=0000000122
+  + [Sat Jun 16 12:00:15 2012] [error] [client 84.86.115.30] PHP Fatal error:  Cannot use string offset as an array in /var/www/databases.lovd.nl/shared/variants.php on line 525, referer: http://databases.lovd.nl/shared/variants?create&reference=Transcript&geneid=IVD&target=0000000122
+- (@Ivar) c.1_3inv geeft error met mappen (PHP error)
 
 - Moet nog aan de changelog worden toegevoegd:
   + Fixed bug; Curators could not complete their submissions because of typos in the authorization functions.
 
-- David Baux: maak branch aan, geef rechten.
-- Geen internet && variant gemaakt:
-  + Notice: Undefined index: position_g_start in /www/svn/LOVD3/trunk/src/class/objects.php on line 348
-  + Notice: Undefined index: position_g_start in /www/svn/LOVD3/trunk/src/class/objects.php on line 351
-  + Notice: Undefined index: type in /www/svn/LOVD3/trunk/src/class/objects.php on line 348
-  + Notice: Undefined index: type in /www/svn/LOVD3/trunk/src/class/objects.php on line 351
-  + Notice: Undefined index: position_g_end in /www/svn/LOVD3/trunk/src/class/objects.php on line 348
-  + Notice: Undefined index: position_g_end in /www/svn/LOVD3/trunk/src/class/objects.php on line 351
-  + Er kon ook geen email gestuurd worden na de submissie, maar de foutmelding van LOVD die op zich correct was, bleef zo kort staan dat mensen 'm niet kunnen lezen.
+- David Baux: maak branch aan, geef rechten. Stuur hem ook een screenshot.
 - De kolom volgorden en omschrijvingen overnemen van de shared install? Wel even alles dubbel checken.
   + head_column van VOG/DNA aanpassen naar "DNA change genomic"?
     * De omschrijving van deze kolom klopt op dit moment niet in de shared database.
@@ -89,8 +86,9 @@ Fix VOG/DNA description
   + Ik heb wel wijzigingen aan de code aangebracht, maar mijn kennis van de submissie SESSION array is niet groot genoeg om snel te zien hoe ik dit aan pas zonder andere nare effecten.
   + Er zijn hiervoor twee FIXME's toegevoegd.
   + Overleg?
+- Kunnen we ook het Exon veld voorspellen?
 
-- Beta-06:
+- Beta-07:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
@@ -160,7 +158,7 @@ Fix VOG/DNA description
     * Je kunt $_STAT gewoon analyseren, want het icoon is al geladen tijdens het inloggen dus hoort al te weten dat er een update is!
     * Popup heeft andere kleur aan de hand van update belangrijkheid...
     * Kan popup zo'n hoekje hebben die naar het logo wijst?
-- Vanaf beta moeten bij bugfixes de datum en versie gezet worden..
+- Vanaf stable moeten bij bugfixes de datum en versie gezet worden.
 - INCORPORATE PDO EVERYWHERE.
   + Check for lovd_queryDB calls.
   + When done with this, make sure all the left mysql_query() calls are taken out, too.
@@ -186,9 +184,6 @@ Fix VOG/DNA description
     - /view     -> MAPPING TO /view/variants+screenings+individuals+phenotypes
     - All the traffic to variants and individuals in LOVD 2.0 enters through variants.php, lucky me. So this file in 3.0 will both serve the "new" clean URLs, but if it detects the old LOVD 2.0 formatted URLs, it will forward to the standard URL.
 - (@Ivo) genes?authorize : Gebruikers mogen geen gelijke users rechten ontnemen. Bouw die check in op query niveau.
-- status.php:
-  * Zorg er voor dat de info die uit status.php gehaald kan worden m.b.t. de genen, ook in de genes viewList terecht komen.
-  * Status.php kan dan andere gegevens gaan geven, niet meer per gen. Heb je suggesties?
 - Er mogen geen 2.0 opmerkingen meer in LOVD 3.0 staan.
 - When disease is created, forward user to select columns for this disease.
 - Variant/allele -> Variant/Phase?
@@ -206,8 +201,6 @@ Fix VOG/DNA description
 - (@Ivo) De Oostenrijkse DB sluit:
   http://grenada.lumc.nl/LSDB_list/lsdb.php?action=view_all&symbol_start=DHCR7
   (zie email van 9 jan)
-- Menu's onder viewEntry's mooier maken: array met voorwaarde, link, logo en tekst. Functie doet de rest.
-- Menu's bij viewLists.
 - Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
 - De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
 - Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.

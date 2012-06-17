@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-29
+ * Modified    : 2012-06-17
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -345,6 +345,10 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
+            if (!isset($aData[$sField])) {
+                // Field may be not set, make sure it is (happens in very rare cases).
+                $aData[$sField] = '';
+            }
             if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC'))) {
                 $aData[$sField] = NULL;
             }
@@ -553,6 +557,10 @@ class LOVD_Object {
         $aSQL = array();
         foreach ($aFields as $key => $sField) {
             $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
+            if (!isset($aData[$sField])) {
+                // Field may be not set, make sure it is (happens in very rare cases).
+                $aData[$sField] = '';
+            }
             if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC'))) {
                 $aData[$sField] = NULL;
             }

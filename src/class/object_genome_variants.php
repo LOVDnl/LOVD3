@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-06-04
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-17
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -257,6 +257,10 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             $aTranscriptsForm = $aTranscriptObject->getForm();
         }
 
+        // Add '(hg19)' to VOG/DNA field. NOTE: If you choose to remove this, make sure the additional fix after the aFormData array creation is also removed.
+        $this->aColumns['VariantOnGenome/DNA']['description_form'] = '<B>Relative to ' . $_CONF['refseq_build'] . ' / ' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . '.</B>' .
+            (!$this->aColumns['VariantOnGenome/DNA']['description_form']? '' : '<BR>' . $this->aColumns['VariantOnGenome/DNA']['description_form']);
+
         // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
         // A similar if() to create the "authorization" block, or possibly an if() in the building of this form array, is easier to understand and more efficient.
         // Array which will make up the form table.
@@ -294,6 +298,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['effect'], $this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
         }
+        // Reset VOG/DNA field to normal, because getForm() can be called twice per page load (checkFields && normal call).
+        // NOTE: Bastardly annoying preg pattern, very hard to make it not eat everything away. Maybe just put the hg reference in the field's name?
+        $this->aColumns['VariantOnGenome/DNA']['description_form'] = preg_replace('/^<B>[^<]+<\/B>(<BR>)?/', '', $this->aColumns['VariantOnGenome/DNA']['description_form']);
 
         return parent::getForm();
     }

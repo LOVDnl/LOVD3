@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-05-25
+ * Modified    : 2012-06-17
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -209,7 +209,7 @@ class LOVD_Column extends LOVD_Object {
 
         // XSS attack prevention. Deny input of HTML.
         // Ignore the 'Description on short legend' and 'Description on full legend' fields.
-        unset($aData['preg_pattern'], $aData['description_legend_short'], $aData['description_legend_full']);
+        unset($aData['description_form'], $aData['preg_pattern'], $aData['description_legend_short'], $aData['description_legend_full']);
         lovd_checkXSS($aData);
     }
 
