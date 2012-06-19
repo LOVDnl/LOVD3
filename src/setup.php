@@ -140,7 +140,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                       ),
 /*
 // Modules.
-list($nModules) = mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_MODULES));
+$nModules = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_MODULES)->fetchColumn();
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="2"><B>Modules</B></TD></TR>' . "\n" .

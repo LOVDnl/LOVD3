@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-05-14
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-07
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -150,7 +150,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
         $sPHPFunctions .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bFunction . '.png" alt="" width="11" height="11">&nbsp;PHP function : ' . $sFunction . '()<BR>';
     }
 
-    $sMySQLVers = str_replace('_', '-', mysql_get_server_info()) . '-';
+    $sMySQLVers = str_replace('_', '-', $_DB->getServerInfo()) . '-';
     $sMySQLVers = substr($sMySQLVers, 0, strpos($sMySQLVers, '-'));
     $bMySQL = ($sMySQLVers >= $aRequired['MySQL']);
     $sMySQL = '<IMG src="gfx/mark_' . (int) $bMySQL . '.png" alt="" width="11" height="11">&nbsp;MySQL : ' . $sMySQLVers . ' (' . $aRequired['MySQL'] . ' required)';
@@ -488,7 +488,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
         $_BAR->setMessage($sMessage);
 
         foreach ($aSQL as $sSQL) {
-            $q = $_DB->query($sSQL, false, false, true); // This means that there is no SQL injection check here. But hey - these are our own queries. DON'T USE lovd_queryDB_Old(). It complains because there are ?s in the queries.
+            $q = $_DB->query($sSQL, false, false, true); // This means that there is no SQL injection check here. But hey - these are our own queries.
             if (!$q) {
                 // Error when running query. We will use the Div for the form now.
                 $sMessage = 'Error during install while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', '[' . implode('] [', $_DB->errorInfo()) . ']') . '</DIV><BR>' .
@@ -631,14 +631,14 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
 
 
 
-/*if ($_GET['step'] == 4 && !@mysql_num_rows(lovd_queryDB_Old('SELECT * FROM ' . TABLE_MODULES))) {
+/*if ($_GET['step'] == 4 && !@$_DB->query('SELECT COUNT(*) FROM ' . TABLE_MODULES)->fetchColumn()) {
     // Step 4: Configuring LOVD modules.
-    if (@mysql_num_rows(lovd_queryDB_Old('SHOW TABLES LIKE ?', array(TABLE_MODULES))) != 1) {
+    if (@count($_DB->query('SHOW TABLES LIKE ?', array(TABLE_MODULES))->fetchAllRow())) != 1) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 2));
         exit;
     }
-    if (!@mysql_fetch_row(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_CONFIG))) {
+    if (!@$_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn()) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
         exit;
@@ -726,9 +726,9 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
 
         // All seems to be OK... install module, but do not activate right now.
         $sQ = 'INSERT INTO ' . TABLE_MODULES . ' VALUES ("' . $sModuleID . '", "' . $aModule['name'] . '", "' . $aModule['version'] . '", "' . $aModule['description'] . '", 0, "' . $aModule['settings'] . '", NOW(), NULL)';
-        $q = mysql_query($sQ);
+        $q = $_DB->query($sQ);
         if (!$q) {
-            lovd_writeLog('Error', 'ModuleScan', 'Error while scanning for new modules: ' . $sModuleID . '/module.php does not install properly:' . "\n" . 'Query : ' . $sQ . "\n" . 'Error : ' . mysql_error());
+            lovd_writeLog('Error', 'ModuleScan', 'Error while scanning for new modules: ' . $sModuleID . '/module.php does not install properly:' . "\n" . 'Query : ' . $sQ . "\n" . 'Error : ' . $_DB->formatError());
             $aFailed[] = $sModuleID;
             continue;
         }

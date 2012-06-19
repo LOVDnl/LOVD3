@@ -166,6 +166,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('PAGE_TITLE', 'Create a new individual information entry');
     define('LOG_EVENT', 'IndividualCreate');
 
+    lovd_isAuthorized('gene', $_AUTH['curates']);
     lovd_requireAUTH(LEVEL_SUBMITTER);
 
     require ROOT_PATH . 'class/object_individuals.php';

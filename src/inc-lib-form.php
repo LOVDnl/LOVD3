@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-15
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-07
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -626,8 +626,8 @@ function lovd_setUpdatedDate ($sGene)
     // Does this user have rights on this gene? It doesn't really matter that much, but still.
     if (lovd_isCurator($sGene)) {
         // Just update the database and we'll see what happens.
-        @mysql_query('UPDATE ' . TABLE_DBS . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE id = "' . $sGene . '"');
-        if (mysql_affected_rows() > 0) {
+        $q = @$_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE id = "' . $sGene . '"');
+        if ($q->rowCount()) {
             return true;
         }
     }
@@ -816,13 +816,6 @@ function lovd_viewForm ($a,
                 if (is_array($oData)) {
                     // Array input.
                     foreach ($oData as $key => $val) {
-                        $bSelected = ((!$bMultiple && $GLOBALS['_' . $sMethod][$sName] == $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array($key, $GLOBALS['_' . $sMethod][$sName])));
-                        print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
-                    }
-
-                } elseif (is_resource($oData)) {
-                    // Query input.
-                    while (list($key, $val) = mysql_fetch_row($oData)) {
                         $bSelected = ((!$bMultiple && $GLOBALS['_' . $sMethod][$sName] == $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array($key, $GLOBALS['_' . $sMethod][$sName])));
                         print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
                     }

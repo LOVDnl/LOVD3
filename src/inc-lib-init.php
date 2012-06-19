@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-05-23
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-07
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -473,7 +473,10 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     }
 
     // Check data type.
-    if (!$Data || !in_array($sType, array('gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
+    if (!$Data) {
+        return false;
+    } elseif (!in_array($sType, array('gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
+        lovd_writeLog('Error', 'LOVD-Lib', 'lovd_isAuthorized() - Function didn\'t receive a valid datatype (' . $sType . ').');
         return false;
     }
 
@@ -704,59 +707,6 @@ function lovd_printGeneHeader ()
     }
 }
 */
-
-
-
-
-
-function lovd_queryDB_Old ($sQuery, $aArgs = array(), $bHalt = false, $bDebug = false)
-{
-    // Queries the database and protects against SQL injection with
-    // mysql_real_escape_string. No code in LOVD should query the database
-    // directly!
-
-    if (!is_array($aArgs)) {
-        lovd_displayError('LOVD-Lib', 'lovd_queryDB_Old() - Received a wrong type of $aArgs argument from ' . $_SERVER['REQUEST_URI'] . "\n" . 'Query: ' . $sQuery);
-    }
-
-    // Explode so we can glue the pieces back together. A simple replace will mess up with more than one argument and one of the replaced values itself contains questionmarks.
-    $aQuery = explode('?', $sQuery);
-    $sSQL = $aQuery[0]; // So queries without arguments work, too :)
-    $aArgs = array_values($aArgs); // Make sure there are continuous numeric keys only.
-
-    // A mismatch between the number of ? in the query and the number of items
-    // in $aArgs indicates a bug in LOVD.
-    $nSlots = count($aQuery) - 1;
-    $nArgs = count($aArgs);
-    if ($nSlots != $nArgs) {
-        lovd_displayError('LOVD-Lib', 'lovd_queryDB_Old() - ' . $nArgs . ' argument' . ($nArgs == 1? ' does' : 's do') . ' not fit in ' . $nSlots . ' slot' . ($nSlots == 1? '' : 's') . ' from ' . $_SERVER['REQUEST_URI'] . "\n" . 'Query: ' . $sQuery);
-    }
-
-    // If they're arguments, go through them and put them into the query.
-    foreach ($aArgs as $nKey => $sArg) {
-        if ($sArg === NULL) {
-            $sSQL .= 'NULL';
-        } elseif (is_array($sArg)) {
-            // We handle arrays gracefully.
-            $sSQL .= '\'' . mysql_real_escape_string(implode(';', $sArg)) . '\'';
-        } else {
-            // Numeric arguments WILL ALSO BE QUOTED because MySQL handles '01' very different from 01 for VARCHAR columns.
-            $sSQL .= '\'' . mysql_real_escape_string($sArg) . '\'';
-        }
-        $sSQL .= $aQuery[$nKey + 1];
-    }
-    if ($bDebug) {
-        echo htmlspecialchars($sSQL);
-    }
-    $q = mysql_query($sSQL);
-    if (!$q && $bHalt) {
-        $sError = mysql_error(); // Save the mysql_error before it disappears.
-        lovd_queryDB_Old('ROLLBACK'); // In case we were in a transaction.
-        // lovd_queryError() will call lovd_displayError() which will halt the system.
-        lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sSQL, $sError);
-    }
-    return $q;
-}
 
 
 

@@ -483,16 +483,16 @@ function lovd_mapVariants ()
         print('    function lovd_switchGeneInline () {' . "\n" .
         // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
               '      varForm = \'<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDBInline" method="get" style="margin : 0px;"><SELECT name="select_db" onchange="document.getElementById(\\\'SelectGeneDBInline\\\').submit();">');
-        $q = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
-        while ($z = mysql_fetch_assoc($q)) {
+        $zGenes = $_DB->query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllAssoc();
+        foreach ($zGenes as $a) {
             // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
-            $z['name'] = lovd_shortenString($z['name'], 75);
-            if (substr($z['name'], -3) == '...') {
-                $z['name'] .= str_repeat(')', substr_count($z['name'], '('));
+            $a['name'] = lovd_shortenString($a['name'], 75);
+            if (substr($a['name'], -3) == '...') {
+                $a['name'] .= str_repeat(')', substr_count($a['name'], '('));
             }
             // Added str_replace which will translate ' into \' so that it does not disturb the JS code.
             // Of course also \ needs to be replaced by \\...
-            print('<OPTION value="' . $z['id'] . '"' . ($_SESSION['currdb'] == $z['id']? ' selected' : '') . '>' . str_replace(array('\\', "'"), array('\\\\', "\'"), $z['name']) . '</OPTION>');
+            print('<OPTION value="' . $a['id'] . '"' . ($_SESSION['currdb'] == $a['id']? ' selected' : '') . '>' . str_replace(array('\\', "'"), array('\\\\', "\'"), $a['name']) . '</OPTION>');
         }
         print('</SELECT>');
         // Only use the $_GET variables that we have received (and not the ones we created ourselves).
@@ -549,7 +549,7 @@ function lovd_mapVariants ()
         // During submission, show the gene we're submitting to instead of the currently selected gene.
         if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
             // Fetch gene's info from db... we don't have it anywhere yet.
-            list($sCurrSymbol, $sCurrGene) = mysql_fetch_row(lovd_queryDB_Old('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene'])));
+            list($sCurrSymbol, $sCurrGene) = $_DB->query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene']))->fetchRow();
         } else*/if (!empty($_SESSION['currdb'])) {
             // Just use currently selected database.
             $sCurrSymbol = $_SESSION['currdb'];

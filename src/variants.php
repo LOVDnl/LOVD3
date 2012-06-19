@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-06-05
+ * Modified    : 2012-06-07
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -533,7 +533,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
-            lovd_queryDB_Old('BEGIN TRANSACTION');
+            $_DB->beginTransaction();
             $nID = $_DATA['Genome']->insertEntry($_POST, $aFieldsGenome);
 
             if (isset($sGene)) {
@@ -569,18 +569,18 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             }
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Created variant entry ' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Created variant entry #' . $nID);
 
             if (isset($_POST['screeningid'])) {
                 // Add variant to screening.
-                $q = lovd_queryDB_Old('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
+                $q = $_DB->query('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
                 }
             }
 
-            lovd_queryDB_Old('COMMIT');
+            $_DB->commit();
 
             $bSubmit = false;
             $sSubmitType = '';
@@ -2175,7 +2175,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
             // FIXME: implement versioning in updateEntry!
-            lovd_queryDB_Old('BEGIN TRANSACTION');
+            $_DB->beginTransaction();
             $_DATA['Genome']->updateEntry($nID, $_POST, $aFieldsGenome);
 
             if ($bGene) {
@@ -2215,7 +2215,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 }
                 $aTranscriptID = $_DATA['Transcript'][$sGene]->updateAll($nID, $_POST, $aFieldsTranscripts);
             }
-            lovd_queryDB_Old('COMMIT');
+            $_DB->commit();
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited variant entry ' . $nID);

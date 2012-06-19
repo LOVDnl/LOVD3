@@ -27,14 +27,6 @@
 4.0.0 list
 4.0.0 md5
 4.0.0 microtime
-4.0.0 mysql_connect
-4.0.0 mysql_error
-4.0.3 mysql_fetch_assoc
-4.0.0 mysql_fetch_row
-4.0.0 mysql_num_rows
-4.0.0 mysql_query
-4.3.0 mysql_real_escape_string
-4.0.0 mysql_select_db
 4.0.0 preg_match
 4.0.0 preg_replace
 4.0.0 round
@@ -78,8 +70,6 @@
 4.0.0 mail
 4.0.0 max
 4.0.0 mt_rand
-4.0.0 mysql_affected_rows
-4.0.5 mysql_get_server_info
 4.0.0 opendir
 4.0.0 preg_quote
 4.0.0 rawurlencode

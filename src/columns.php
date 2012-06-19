@@ -753,20 +753,20 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             // Store custom link connections.
             $aLinks = array();
             if ($_POST['active_links']) {
-                $q = lovd_queryDB_Old('SELECT id, name FROM ' . TABLE_LINKS . ' WHERE id IN (?' . str_repeat(', ?', count($_POST['active_links']) - 1) . ')', $_POST['active_links']);
-                while ($r = mysql_fetch_row($q)) {
-                    $aLinks[$r[0]] = $r[1];
+                $qLinks = $_DB->query('SELECT id, name FROM ' . TABLE_LINKS . ' WHERE id IN (?' . str_repeat(', ?', count($_POST['active_links']) - 1) . ')', $_POST['active_links']);
+                while ($rLink = $qLinks->fetchRow()) {
+                    $aLinks[$rLink[0]] = $rLink[1];
                 }
             }
 
             $bFailedLinks = false;
             foreach ($aLinks AS $nID => $sName) {
-                $q = @lovd_queryDB_Old('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($_POST['id'], $nID));
+                $q = @$_DB->query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($_POST['id'], $nID));
                 if (!$q) {
                     $bFailedLinks = true;
-                    lovd_writeLog('Error', 'LinkAdd', 'Custom link ' . $nID . ' (' . $sName . ') could not be added to ' . $_POST['colid'] . "\n" . mysql_error());
+                    lovd_writeLog('Error', 'LinkAdd', 'Custom link ' . $nID . ' (' . $sName . ') could not be added to ' . $_POST['colid'] . "\n" . $_DB->formatError());
                 } else {
-                    lovd_writeLog('Event', 'LinkAdd', 'Custom link ' . $nID . ' (' . $sName . ') successfully added to ' . $_POST['colid'] . "\n" . mysql_error());
+                    lovd_writeLog('Event', 'LinkAdd', 'Custom link ' . $nID . ' (' . $sName . ') successfully added to ' . $_POST['colid'] . "\n" . $_DB->formatError());
                 }
             }
 
@@ -1056,7 +1056,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                 $nEmptyValues = 0;
                 if ($zData['mandatory'] == '1') {
                     $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PATIENTS;
-                    $nEmptyValues = @mysql_fetch_row(mysql_query($sQ));
+                    $nEmptyValues = @$_DB->query($sQ)->fetchColumn();
                 }
 
                 // 2010-07-27; 2.0-28; Only forward the user when there is no problem adding the column.
@@ -1243,7 +1243,7 @@ if ($_GET['action'] == 'edit_colid' && !empty($_GET['edit_colid'])) {
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"'));
+    $zData = @$_DB>query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"')->fetchAssoc();
     if (!$zData) {
         // Wrong ID, apparently.
         $_T->printHeader();
@@ -1258,7 +1258,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
         // Check genes to find if column is active.
         $aGenes = lovd_getGeneList();
         foreach ($aGenes as $sSymbol) {
-            list($bSelected) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"'));
+            $bSelected = $_DB->query('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"')->fetchColumn();
             if ($bSelected) {
                 // Column present in this gene.
                 break;
@@ -1266,7 +1266,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
         }
     } elseif (substr($zData['colid'], 0, 7) == 'Patient') {
         // Patient column.
-        list($bSelected) = mysql_fetch_row(mysql_query('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"'));
+        $bSelected = $_DB->query('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"')->fetchColumn();
     }
 
     if (!$zData['created_by'] || $bSelected) {
@@ -1304,7 +1304,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
         // ColID must not exist in the database.
         if ($_POST['col_cat'] && $_POST['colid'] && $_POST['col_cat'] . '/' . $_POST['colid'] != $zData['colid']) {
-            list($n) = mysql_fetch_row(mysql_query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE colid = "' . $_POST['col_cat'] . '/' . $_POST['colid'] . '"'));
+            $n = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE colid = "' . $_POST['col_cat'] . '/' . $_POST['colid'] . '"')->fetchColumn();
             if ($n) {
                 lovd_errorAdd('colid', 'There is already a ' . $_POST['col_cat'] . ' column with this column ID. Please choose another one.');
             }
@@ -1319,9 +1319,9 @@ lovd_requireAUTH(LEVEL_MANAGER);
             // Query text.
             $_POST['colid'] = $_POST['col_cat'] . '/' . $_POST['colid'];
             $sQ = 'UPDATE ' . TABLE_COLS . ' SET colid = "' . $_POST['colid'] . '", edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
-            $q = mysql_query($sQ);
+            $q = $_DB->query($sQ);
             if (!$q) {
-                $sError = mysql_error(); // Save the mysql_error before it disappears.
+                $sError = $_DB->formatError(); // Save the mysql_error before it disappears.
                 $_T->printHeader();
                 $_T->printTitle('LOVD Setup - Manage custom column defaults');
                 lovd_dbFout('ColEditColID', $sQ, $sError);
@@ -1332,7 +1332,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
             // 2008-12-03; 2.0-15; Update links (whether they exist or not)
             $sQ = 'UPDATE ' . TABLE_COLS2LINKS . ' SET colid="' . $_POST['colid'] . '" WHERE colid="' . $zData['colid'] . '"';
-            $q = mysql_query($sQ);
+            $q = $_DB->query($sQ);
             if (!$q) {
                 // Silent error.
                 lovd_writeLog('MySQL:Error', 'ColEdit', 'Custom links could not be updated for ' . $_POST['colid']);
@@ -1647,7 +1647,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $nEmptyValues = 0;
             if ($zData['mandatory'] == '1') {
                 $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PATIENTS;
-                $nEmptyValues = @mysql_fetch_row(mysql_query($sQ));
+                $nEmptyValues = @$_DB->query($sQ)->fetchColumn();
             }
 
             // 2010-07-27; 2.0-28; Only forward the user when there is no problem adding the column.

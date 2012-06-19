@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2012-05-14
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-19
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -99,15 +99,15 @@ if (!empty($_POST)) {
 
                 foreach ($aTables as $sTable) {
                     $sSQL = 'DROP TABLE IF EXISTS ' . $sTable;
-                    $q = lovd_queryDB_Old($sSQL);
+                    $q = $_DB->query($sSQL);
                     if (!$q) {
                         // Error when running query. We will use the Div for the form now.
-                        $sMessage = 'Error during uninstallation while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', mysql_error()) . '</DIV><BR><BR>' .
+                        $sMessage = 'Error during uninstallation while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $_DB->formatError()) . '</DIV><BR><BR>' .
                                     'A failed uninstallation is most likely caused by a bug in LOVD.<BR>' .
                                     'Please <A href="' . $_SETT['upstream_URL'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
                         $_BAR->setMessage($sMessage, 'done');
                         $_BAR->setMessageVisibility('done', true);
-                        lovd_queryDB_Old('DROP TABLE IF EXISTS ' . implode(', ', $aTables)); // Try again to remove everything.
+                        $_DB->query('DROP TABLE IF EXISTS ' . implode(', ', $aTables)); // Try again to remove everything.
                         print('</BODY>' . "\n" .
                               '</HTML>' . "\n");
                         exit;
@@ -143,10 +143,10 @@ if (!empty($_POST)) {
             // Does any of these tables exist yet?
             print('Checking LOVD installation...' . "\n");
             $aTables = array();
-            $q = lovd_queryDB_Old('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
-            while ($r = mysql_fetch_row($q)) {
-                if (in_array($r[0], $_TABLES)) {
-                    $aTables[] = $r[0];
+            $qTables = $_DB->query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
+            while ($sTable = $qTables->fetchRow()) {
+                if (in_array($sTable, $_TABLES)) {
+                    $aTables[] = $sTable;
                 }
             }
             $nTables = count($aTables);

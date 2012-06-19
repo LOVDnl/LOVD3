@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-07
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -130,13 +130,13 @@ class LOVD_Link extends LOVD_Object {
         // Link name must be unique.
         if (!empty($aData['name'])) {
             // Enforced in the table, but we want to handle this gracefully.
-            $sSQL = 'SELECT id FROM ' . TABLE_LINKS . ' WHERE name = ?';
+            $sSQL = 'SELECT COUNT(*) FROM ' . TABLE_LINKS . ' WHERE name = ?';
             $aSQL = array($aData['name']);
             if (ACTION == 'edit') {
                 $sSQL .= ' AND id != ?';
                 $aSQL[] = $zData['id'];
             }
-            if (mysql_num_rows(lovd_queryDB_Old($sSQL, $aSQL))) {
+            if ($_DB->query($sSQL, $aSQL)->fetchColumn()) {
                 lovd_errorAdd('name', 'There is already a custom link with this link name. Please choose another one.');
             }
         }
@@ -147,7 +147,7 @@ class LOVD_Link extends LOVD_Object {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
             // FIXME; eerst een group_concat, daarna een explode()? 
             $sSQL = 'SELECT GROUP_CONCAT(id) FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'';
-            list($sColumns) = mysql_fetch_row(lovd_queryDB_Old($sSQL));
+            $sColumns = $_DB->query($sSQL)->fetchColumn();
             $aColumns = explode(',', $sColumns);
             foreach($aData['active_columns'] as $sCol) {
                 if (substr_count($sCol, '/') && !in_array($sCol, $aColumns)) {
@@ -161,13 +161,13 @@ class LOVD_Link extends LOVD_Object {
         if (!empty($aData['pattern_text'])) {
             // Pattern text must be unique.
             // Enforced in the table, but we want to handle this gracefully.
-            $sSQL = 'SELECT id FROM ' . TABLE_LINKS . ' WHERE pattern_text = ?';
+            $sSQL = 'SELECT COUNT(*) FROM ' . TABLE_LINKS . ' WHERE pattern_text = ?';
             $aSQL = array($aData['pattern_text']);
             if (ACTION == 'edit') {
                 $sSQL .= ' AND id != ?';
                 $aSQL[] = $zData['id'];
             }
-            if (mysql_num_rows(lovd_queryDB_Old($sSQL, $aSQL))) {
+            if ($_DB->query($sSQL, $aSQL)->fetchColumn()) {
                 lovd_errorAdd('pattern_text', 'There is already a custom link with this pattern. Please choose another one.');
 
             } else {
@@ -239,22 +239,22 @@ class LOVD_Link extends LOVD_Object {
         // Get column list, to connect link to column.
         $aData = array();
         $sLastCategory = '';
-        $qData = lovd_queryDB_Old('SELECT id, CONCAT(id, " (", head_column, ")") FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\' ORDER BY id');
-        $nData = mysql_num_rows($qData);
+        $zData = $_DB->query('SELECT id, CONCAT(id, " (", head_column, ")") FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\' ORDER BY id')->fetchAllCombine();
+        $nData = count($zData);
         $nFieldSize = ($nData < 20? $nData : 20);
 
         // Print active columns list ourselves, because we want to apply styling in the selection box.
         $sSelect = '<SELECT name="active_columns[]" size="' . $nFieldSize . '" multiple>';
-        while ($r = mysql_fetch_row($qData)) {
-            $sCategory = substr($r[0], 0, strpos($r[0], '/'));
+        foreach ($zData as $key => $val) {
+            $sCategory = substr($key, 0, strpos($key, '/'));
             if ($sCategory != $sLastCategory) {
                 // Weird trick; we need to work around the safety measures in lovd_viewForm() to do this;
                 $aData[$sCategory . '" style="font-weight : bold; color : #FFFFFF; background : #224488; text-align : center;'] = ucfirst($sCategory) . ' columns';
                 $sLastCategory = $sCategory;
-                $aData[$r[0]] = $r[1];
+                $aData[$key] = $val;
             } else {
                 // Implement the safety measures normally present in lovd_viewForm().
-                $aData[htmlspecialchars($r[0])] = htmlspecialchars($r[1]);
+                $aData[htmlspecialchars($key)] = htmlspecialchars($val);
             }
         }
         foreach ($aData as $key => $val) {

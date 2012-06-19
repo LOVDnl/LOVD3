@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-06-08
+ * Modified    : 2012-06-19
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -265,6 +265,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("Phenotype/Age",             2, 100, 0, 0, 0, "Age examined", "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the individual was examined, if known. 04y08m = 4 years and 8 months.", "The age at which the individual was examined, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", "VARCHAR(12)", "Age at examination|The age at which the individual was examined, if known. Numbers lower than 10 should be prefixed by a zero and the field should always begin with years, to facilitate sorting on this column.|text|10", "", "/^([<>]?\\\\d{2,3}y(\\\\d{2}m(\\\\d{2}d)?)?)?\\\\??$/", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("Phenotype/Length",        200, 100, 0, 0, 0, "Length", "", "Length of the individual, in cm.", "Length of the individual, in centimeters (cm).", "SMALLINT(3) UNSIGNED", "Length of individual (cm)|Length of individual, in centimeters.|text|3", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                                 'UPDATE ' . TABLE_LINKS . ' SET description = "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s), possibly including year.\r\n[2] = The PubMed ID.\r\n\r\nExample:\r\n{PMID:Fokkema et al. (2011):21520333}" WHERE id = 1 AND name = "PubMed"',
+                                'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "Unknown\r\nGermline (inherited)\r\nSomatic\r\nDe novo\r\nUniparental disomy\r\nUniparental disomy, maternal allele\r\nUniparental disomy, paternal allele" WHERE id = "VariantOnGenome/Genetic_origin"',
                              ),
                   );
 
@@ -506,6 +507,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         print('<SCRIPT type="text/javascript">document.forms[\'upgrade_form\'].submit.value = document.forms[\'upgrade_form\'].submit.value.replace(\'Proceed\', \'Force upgrade\');</SCRIPT>' . "\n");
     }
     $_BAR->setMessageVisibility('done', true);
+
+    // Resets the mapping timer so that the automatic mapper will begin mapping when the upgrade is finished.
+    $_SESSION['mapping']['time_complete'] = 0;
+    $_SESSION['mapping']['time_error'] = 0;
     print('</BODY>' . "\n" .
           '</HTML>' . "\n");
     exit;

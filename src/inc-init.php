@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-05-28
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-07
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -471,28 +471,6 @@ if (!class_exists('PDO')) {
     if (!in_array('mysql', PDO::getAvailableDrivers())) {
         lovd_displayError('Init', 'This PHP installation does not have MySQL support for PDO installed. Without it, LOVD will not function. Please install MySQL support for PHP PDO.');
     }
-}
-
-
-
-// DMD_SPECIFIC; FIXME; can we get rid of this already?
-// Initiate Database Connection (OLD WAY).
-$db = @mysql_connect($_INI['database']['hostname'], $_INI['database']['username'], $_INI['database']['password']);
-if (!$db) {
-    // No connection!
-    lovd_displayError('Init', 'Error connecting to database - ' . mysql_error());
-}
-
-$bSelected = @mysql_select_db($_INI['database']['database']);
-if (!$bSelected) {
-    // Can't select database.
-    lovd_displayError('Init', 'Error selecting database - ' . mysql_error());
-}
-
-// Get the character set right.
-if (($sCharSet = mysql_client_encoding()) && $sCharSet != 'utf8') {
-    // mysql_set_charset() is available only with PHP 5.2.3 and MySQL 5.0.7.
-    @lovd_queryDB_Old('SET NAMES utf8');
 }
 
 

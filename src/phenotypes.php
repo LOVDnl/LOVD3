@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-07
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -51,9 +51,9 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_phenotypes.php';
 
-    $q = lovd_queryDB_Old('SELECT * FROM ' . TABLE_DISEASES);
-    if ($q) {
-        while($aDisease = mysql_fetch_assoc($q)) {
+    $qDiseases = $_DB->query('SELECT * FROM ' . TABLE_DISEASES);
+    if ($qDiseases) {
+        while ($aDisease = $qDiseases->fetchAssoc()) {
             $_GET['search_diseaseid'] = $aDisease['id'];
             $_DATA = new LOVD_Phenotype($aDisease['id']);
             $_DATA->setSortDefault('phenotypeid');
@@ -117,7 +117,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
     //   is goed af te leiden van transcripts?create.
     define('LOG_EVENT', 'PhenotypeCreate');
 
-    lovd_requireAUTH();
+    lovd_requireAUTH(LEVEL_SUBMITTER);
 
     $_GET['target'] = sprintf('%08d', $_GET['target']);
     $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
@@ -141,7 +141,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         if (ctype_digit($_GET['diseaseid'])) {
             $_POST['diseaseid'] = sprintf('%05d', $_GET['diseaseid']);
             // Check if there are phenotype columns enabled for this disease & check if the $_POST['diseaseid'] is actually linked to this individual.
-            if (!mysql_num_rows(lovd_queryDB_Old('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid'])))) {
+            if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid']))->fetchColumn()) {
                 lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease id or no phenotype columns have been enabled for this disease.');
             }
         } else {
@@ -149,6 +149,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         }
     }
 
+    lovd_isAuthorized('gene', $_AUTH['curates']);
     require ROOT_PATH . 'class/object_phenotypes.php';
     if (!empty($_POST['diseaseid'])) {
         $_DATA = new LOVD_Phenotype($_POST['diseaseid']);
@@ -156,10 +157,10 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
 
     if (empty($_POST['diseaseid']) || lovd_error()) {
         $sSQL = 'SELECT d.id, d.name, d.symbol FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY d.name';
-        $q = lovd_queryDB_Old($sSQL, array($_POST['individualid']));
+        $qDiseases = $_DB->query($sSQL, array($_POST['individualid']));
         $aSelectDiseases = array();
-        if (mysql_num_rows($q)) {
-            while ($aDisease = mysql_fetch_assoc($q)) {
+        if ($qDiseases) {
+            while ($aDisease = $qDiseases->fetchAssoc()) {
                 $aSelectDiseases[$aDisease['id']] = $aDisease['name'] . ' (' . $aDisease['symbol'] . ')';
             }
         } else {
@@ -253,7 +254,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
             if ($bSubmit) {
                 $_T->printHeader();
                 $_T->printTitle();
-                
+
                 print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n");
 
                 $aOptionsList = array();

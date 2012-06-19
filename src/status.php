@@ -83,10 +83,10 @@ print('<B>DISABLED FOR REVISION!</B>');
 
 $nTotalCurators = 0;
 $nTotalCollaborators = 0;
-$qGenes = 'SELECT g.id, g.name, g.updated_date, COUNT(u2g.userid) AS collaborators, SUM(u2g.allow_edit) AS curators FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) GROUP BY g.id ORDER BY g.id ASC';
-$rGenes = lovd_queryDB_Old($qGenes);
-$nGenes = mysql_num_rows($rGenes);
-while($aGene = mysql_fetch_assoc($rGenes)) {
+$sSQL = 'SELECT g.id, g.name, g.updated_date, COUNT(u2g.userid) AS collaborators, SUM(u2g.allow_edit) AS curators FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) GROUP BY g.id ORDER BY g.id ASC';
+$zGenes = $_DB->query($sSQL)->fetchAllAssoc();
+$nGenes = count($zGenes);
+foreach ($zGenes as $aGene) {
     $nCollaborators = ($aGene['collaborators'] - $aGene['curators']);
     print('  <TR class="data" id="' . $aGene['id'] . '" valign="top" style="cursor : pointer;" onclick="window.location.href=\'' . lovd_getInstallURL() . 'genes/' . rawurlencode($aGene['id']) . '\';">' . "\n" .
           '    <TD class="ordered"><A href="genes/' . rawurlencode($aGene['id']) . '" class="hide"><B>' . $aGene['id'] . '</B></A></TD>' . "\n" .

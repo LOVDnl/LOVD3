@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-06-13
+ * Modified    : 2012-06-19
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -244,6 +244,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     if (!empty($aOutput)) {
                         $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
                         $aTranscriptsName = array();
+                        $aTranscriptsMutalyzer = array();
                         $aTranscriptsPositions = array();
                         $aTranscriptsProtein = array();
                         $nTranscripts = count($aTranscriptsInfo);
@@ -256,6 +257,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                             if ($aTranscriptValues['id']) {
                                 $aTranscripts[] = $aTranscriptValues['id'];
                                 $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($sGeneName . ', ', '', $aTranscriptValues['product']);
+                                $aTranscriptsMutalyzer[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($sSymbol . '_v', '', $aTranscriptValues['name']);
                                 $aTranscriptsPositions[$aTranscriptValues['id']] = array('chromTransStart' => $aTranscriptValues['chromTransStart'], 'chromTransEnd' => $aTranscriptValues['chromTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
                                 $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getValueFromElement('proteinTranscript/id', $aTranscriptInfo);
                             }
@@ -281,6 +283,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 if (!empty($aTranscripts)) {
                     $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array_merge($_SESSION['work'][$sPath][$_POST['workID']]['values'], array(
                                                                   'transcripts' => $aTranscripts,
+                                                                  'transcriptMutalyzer' => $aTranscriptsMutalyzer,
                                                                   'transcriptsProtein' => $aTranscriptsProtein,
                                                                   'transcriptNames' => $aTranscriptsName,
                                                                   'transcriptPositions' => $aTranscriptsPositions,
@@ -393,14 +396,15 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 if (!empty($_POST['active_transcripts'])) {
                     foreach($_POST['active_transcripts'] as $sTranscript) {
                         // Gather transcript information from session.
+                        $nMutalyzerID = $zData['transcriptMutalyzer'][preg_replace('/\.\d+/', '', $sTranscript)];
                         $sTranscriptProtein = $zData['transcriptsProtein'][$sTranscript];
                         $sTranscriptName = $zData['transcriptNames'][preg_replace('/\.\d+/', '', $sTranscript)];
                         $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
 
                         // Add transcript to gene.
-                        $q = $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
-                                         'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
-                                         array($_POST['id'], $sTranscriptName, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
+                        $q = $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
+                                         'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
+                                         array($_POST['id'], $sTranscriptName, $nMutalyzerID, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
                         if (!$q) {
                             // Silent error.
                             lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);

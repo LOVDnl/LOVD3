@@ -81,10 +81,10 @@
    shown first and the genomic variant at the end of the form.
  * Added a run_mutalyzer.php to the ajax folder, so that it can be called from
    the variant forms to check a variant description.
-
-
-
-
+ * Fixed bug; Fixed authorization issues that didn't allow some users to finish
+   a submission properly.
+ * Changed all remaining lovd_queryDB_Old() & mysql_*() function calls to their
+   PDO counterparts.
 
 
 /*******************

@@ -1,7 +1,7 @@
 Prioritize:
 ===========
 Handmatige mapping: leeg DBID wordt chrX ID, zelfs met VOT.
-Auto mapping: creert de vars niet op bestaande transcripten?
+Auto mapping: creeert de vars niet op bestaande transcripten?
 VOG/DNA zegt dat hij is niet toegevoegd, omdat de join naar active columns niet werkt; dat moet anders gedaan worden.
 
 Fix VOG/DNA description in shared installation.
@@ -44,7 +44,7 @@ Fix VOG/DNA description in shared installation.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - (@Ivo) DATA DOWNLOAD.
   + File format: header, individuals, phenotypes, screenings, vog, vot.
-    * Genen, ziektes en transcripten moeten nog worden toegevoegd aan de download.
+    * Genes, diseases en transcripts moeten nog worden toegevoegd aan de download.
       - Misschien niet om ook te importeren, maar om duidelijk te maken waarheen gelinkt wordt.
   + URLs left to implement:
     * Alle data van een bepaald gen downloaden (curator and up):
@@ -159,9 +159,6 @@ Fix VOG/DNA description in shared installation.
     * Popup heeft andere kleur aan de hand van update belangrijkheid...
     * Kan popup zo'n hoekje hebben die naar het logo wijst?
 - Vanaf stable moeten bij bugfixes de datum en versie gezet worden.
-- INCORPORATE PDO EVERYWHERE.
-  + Check for lovd_queryDB calls.
-  + When done with this, make sure all the left mysql_query() calls are taken out, too.
 - User curator maken voor >1 gen in 1 keer: nieuw form!
   + Popup van zijn viewEntry; alleen genen tonen waar hij GEEN curator voor is, geef twee vinkjes: wel/niet edit, wel/niet zichtbaar.
   + Remove als curator: apart van add, geen vinkjes.
