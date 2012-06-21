@@ -47,6 +47,17 @@
    if the submission email could not be sent.
  * The custom column's "Notes on form" fields are now HTML enabled also, and
    support newlines.
+ * Fixed bug; Custom columns added by the system automatically were reported as
+   not active yet on their detailed view.
+ * The two DNA columns (genomic & transcript) now have a distinct header to more
+   clearly indicate which is which.
+ * Added the LOVD status page. Since most of the information that was on the
+   status page in LOVD 2.0 can now be seen elsewhere in LOVD, some graphs were
+   created with various statistics.
+ * LOVD now sends the correct charset through (as an HTTP header), regardless of
+   the web server settings.
+ * Fixed bug; LOVD did not handle well when the mutalyzer webservice generated a
+   serious fatal error.
 
 
 
@@ -73,14 +84,8 @@
    occasions.
  * Added a variant checker and protein change prediction button to the variant
    forms, this is also automatically run when clicking the "Map variant" button.
- * Added a warning style that results in a yellow outline of an element.
- * Added the images lovd_form_information.png and lovd_form_warning.png to the
-   gfx folder. These are used in the variant forms for mutalyzer
-   errors/warnings.
  * Changed the variant create & edit forms so that all transcript variants are
    shown first and the genomic variant at the end of the form.
- * Added a run_mutalyzer.php to the ajax folder, so that it can be called from
-   the variant forms to check a variant description.
  * Fixed bug; Fixed authorization issues that didn't allow some users to finish
    a submission properly.
  * Changed all remaining lovd_queryDB_Old() & mysql_*() function calls to their

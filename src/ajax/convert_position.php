@@ -5,7 +5,7 @@
  *
  * Created     : 2011-09-09
  * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-05
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>

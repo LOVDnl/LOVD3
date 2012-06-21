@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-06-13
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -187,6 +187,7 @@ class LOVD_Template {
         // Remove certain menu entries, if there is no gene selected.
         if (!$_SESSION['currdb']) {
             unset($this->aMenu['genes_']['/genes/']);
+            unset($this->aMenu['genes_']['/genes//graphs']);
             unset($this->aMenu['transcripts_']['/transcripts/']);
             unset($this->aMenu['variants_']['/variants/']);
             unset($this->aMenu['variants_']['/view/']);
@@ -563,8 +564,7 @@ function lovd_mapVariants ()
           '    </TD>' . "\n" .
           '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
               '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] .
-              // 2012-02-01; 3.0-beta-02; Disable link to status page for now.
-              (false && !defined('NOT_INSTALLED')? ' [ <A href="status">Current LOVD status</A> ]' : '') .
+              (!defined('NOT_INSTALLED')? ' [ <A href="status">Current LOVD status</A> ]' : '') .
               '<BR>' . "\n");
         if (!(ROOT_PATH == '../' || defined('NOT_INSTALLED'))) {
             if ($_AUTH) {

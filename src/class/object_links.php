@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2012-06-07
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -113,6 +113,7 @@ class LOVD_Link extends LOVD_Object {
     function checkFields ($aData)
     {
         // Checks fields before submission of data.
+        global $_DB;
         if (ACTION == 'edit') {
             global $zData; // FIXME; this could be done more elegantly.
         }
@@ -235,6 +236,7 @@ class LOVD_Link extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
+        global $_DB;
 
         // Get column list, to connect link to column.
         $aData = array();

@@ -5,7 +5,7 @@
  *
  * Created     : 2011-11-08
  * Modified    : 2012-06-05
- * For LOVD    : 3.0-beta-05
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -36,6 +36,7 @@ define('AJAX_NO_AUTH', '8');
 define('AJAX_DATA_ERROR', '9');
 ?>
 
+// FIXME; This entire file needs to get commented. Now there are only 7 comments in ±300 lines of code ~ 43 lines per comment.
 function lovd_checkHGVS () {
     var oVariantDNA = $(this);
     $(oVariantDNA).removeClass();
@@ -223,6 +224,7 @@ function lovd_getProteinChange (oElement) {
                         sErrorCode = 'WRANGE';
                         sErrorMessage = '';
                         var aVariantRange = $(oThisDNA).val().split('_');
+                        // FIXME; Add clear comments, explain which exceptions are added here.
                         if (aVariantRange.length == 2 && /-u\d+/.exec(aVariantRange[0]) != null && /-u\d+/.exec(aVariantRange[1]) != null) {
                             sPredict = 'p.(=)';
                         } else if (aVariantRange.length == 2 && /-u\d+/.exec(aVariantRange[0]) != null && /\+d\d+/.exec(aVariantRange[1]) != null) {
@@ -282,6 +284,7 @@ function lovd_getProteinChange (oElement) {
                                 // Highlight the protein input field which has been modified.
                                 $(oThisProtein).attr('style', 'background : #AAFFAA;');
 
+                                // Fade background to white, then remove the class.
                                 var nColor = 170;
                                 for (i = nColor; i < 255; i++) {
                                     setTimeout(function () {

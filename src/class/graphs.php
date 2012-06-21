@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2012-06-17
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,10 +40,280 @@ if (!defined('ROOT_PATH')) {
 class LOVD_Graphs {
     // This class provides different methods for graphs implemented using Flot, a JS graph library with jQuery handlers.
 
+
+
+
+
+    function getHoverFunction ($sDIV, $nTotal)
+    {
+        // Prints hover function for pie charts, that are needed to display the correct hover text.
+        // It would be nice if we can rewrite this function somehow to know from where we're called,
+        // so we can update the correct DIV for each graph.
+        // As long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+
+        return '        function ' . $sDIV . '_hover (event, pos, obj)' . "\n" .
+               '        {' . "\n" .
+               '            // Handles the hover label generation and fade.' . "\n" .
+               '            if (!obj) {' . "\n" .
+               '                // Although obj seems to be NULL also half of the time while hovering the pie, this if() is only activated when you\'re moving outside of the pie.' . "\n" .
+               '                $("#' . $sDIV . '_hover").fadeOut(1000);' . "\n" .
+               '                return;' . "\n" .
+               '            }' . "\n" .
+               '            sMessage = obj.series.datapoints.points[1] + "/' . $nTotal . ' (" + parseFloat(obj.series.percent).toFixed(1) + "%)";' . "\n" .
+               '            $("#' . $sDIV . '_hover").stop(true, true); // Completes possible fading animation immediately and empties queue.' . "\n" .
+               '            $("#' . $sDIV . '_hover").show(); // Shows the div, that may have been hidden.' . "\n" .
+               '            $("#' . $sDIV . '_hover").html("<B>" + obj.series.label + ": " + sMessage + "</B>");' . "\n" .
+               '        }' . "\n";
+    }
+
+
+
+
+
+    function getPieGraph ()
+    {
+        // Prints standard pie graph settings.
+
+        return '                pie: {' . "\n" .
+               '                    show: true,' . "\n" .
+               '                    radius: .9, // A little smaller than full size' . "\n" .
+               '                    innerRadius: .4, // The donut effect' . "\n" .
+               '                    label: {' . "\n" .
+               '                        show: true,' . "\n" .
+               '                        radius: 3/4,' . "\n" .
+               '                        formatter: function(label, series) {' . "\n" .
+               '                            return \'<DIV class="S09" style="text-align:center; padding : 2px; color : #FFF;">\' + label + "<BR>" + Math.round(series.percent)+\'%</DIV>\';' . "\n" .
+               '                        },' . "\n" .
+               '                        background: {opacity: 0.5, color: "#000"},' . "\n" .
+               '                        threshold: 0.05 // 5%' . "\n" .
+               '                    },' . "\n" .
+               '                    highlight: {opacity : 0.25} // Less highlighting than the default.' . "\n" .
+               '                }' . "\n";
+    }
+
+
+
+
+
+    function genesLinkedDiseases ($sDIV, $Data = array())
+    {
+        // Shows a nice piechart about the number of diseases per gene in a certain data set.
+        // $Data can be either a * (all genes), or an array of gene symbols.
+        global $_DB;
+
+        if (empty($sDIV)) {
+            return false;
+        }
+
+        print('      <SCRIPT type="text/javascript">' . "\n");
+
+        if (empty($Data)) {
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::genesLinkedDiseases()<BR>No data received to create graph.");' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+            return false;
+        }
+
+        // Keys need to be renamed.
+        $aTypes =
+             array(
+                    '0'  => array('None', '#000'),
+                    '1'  => array('1 disease', '#800'),
+                    '2'  => array('2 diseases', '#A30'),
+                    '3'  => array('3 diseases', '#D60'),
+                    '4'  => array('4 diseases', '#FC0'),
+                    '5'  => array('5 diseases', '#FF0'),
+                    '>5' => array('More than 5', '#CF0'),
+                  );
+
+        // Retricting to a certain set of genes, or full database ($Data == '*', although we actually don't check the value of $Data).
+        if (!is_array($Data)) {
+            $qData = $_DB->query('SELECT g.id, COUNT(g2d.diseaseid) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) GROUP BY geneid');
+        } elseif (count($Data)) {
+            // Using list of gene IDs.
+            $qData = $_DB->query('SELECT g.id, COUNT(g2d.diseaseid) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) WHERE geneid IN (?' . str_repeat(',?', count($Data)-1) . ') GROUP BY geneid', array($Data));
+        }
+
+        // Fetch and group data.
+        $aData = array_combine(array_keys($aTypes), array_fill(0, count($aTypes), 0));
+        while (list($sGene, $nCount) = $qData->fetchRow()) {
+            if ($nCount < 5) {
+                $sType = (string) $nCount;
+            } else {
+                $sType = '>5';
+            }
+            $aData[$sType] ++;
+        }   
+
+        // Format $aData.
+        print('        var data = [');
+        $i = 0;
+        $nTotal = 0;
+        foreach ($aData as $sType => $nValue) {
+            if (isset($aTypes[$sType])) {
+                $sLabel = $aTypes[$sType][0];
+            } else {
+                $sLabel = $sType;
+            }
+            print(($i++? ',' : '') . "\n" .
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+            $nTotal += $nValue;
+        }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
+		print('];' . "\n\n" .
+              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+              '        {' . "\n" .
+              '            series: {' . "\n" .
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
+
+/*
+		combine: {
+			threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
+			color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
+			label: any text value of what the combined slice should be labeled
+		}
+*/
+              '        });' . "\n" .
+              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+
+        // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+        $this->getHoverFunction($sDIV, $nTotal) .
+              '      </SCRIPT>' . "\n\n");
+
+        flush();
+        return true;
+    }
+
+
+
+
+
+    function genesNumberOfVariants ($sDIV, $Data = array(), $bPublicOnly = true)
+    {
+        // Shows a nice piechart about the number of variants per gene in a certain data set.
+        // $Data can be either a * (all genes), or an array of gene symbols.
+        // $bPublicOnly indicates whether or not only the public variants should be used.
+        global $_DB;
+
+        if (empty($sDIV)) {
+            return false;
+        }
+
+        print('      <SCRIPT type="text/javascript">' . "\n");
+
+        if (empty($Data)) {
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::genesNumberOfVariants()<BR>No data received to create graph.");' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+            return false;
+        }
+
+        // Keys need to be renamed.
+        $aTypes =
+             array(
+                    '0'      => array('None', '#000'),
+                    '<=10'   => array('1 - 10 variants', '#800'),
+                    '<=50'   => array('11 - 50 variants', '#A30'),
+                    '<=100'  => array('51 - 100 variants', '#D60'),
+                    '<=500'  => array('101 - 500 variants', '#FA0'),
+                    '<=1000' => array('501 - 1000 variants', '#FD0'),
+                    '>1000'  => array('More than 1000', '#FF0'),
+                  );
+
+        // Retricting to a certain set of genes, or full database ($Data == '*', although we actually don't check the value of $Data).
+        if (!is_array($Data)) {
+            $qData = $_DB->query('SELECT t.geneid, COUNT(DISTINCT vot.id) FROM ' .
+                ($bPublicOnly? TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' : TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ') .
+                'INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
+                (!$bPublicOnly? '' : ' WHERE statusid >= ' . STATUS_MARKED) .
+                ' GROUP BY t.geneid');
+        } elseif (count($Data)) {
+            // Using list of gene IDs.
+            $qData = $_DB->query('SELECT t.geneid, COUNT(DISTINCT vot.id) FROM ' .
+                (!$bPublicOnly? '' : TABLE_VARIANTS . ' AS vog INNER JOIN ') .
+                TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid IN (?' . str_repeat(',?', count($Data)-1) . ')' .
+                (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) .
+                ' GROUP BY t.geneid', array($Data));
+        }
+
+        // Fetch and group data.
+        $aData = array_combine(array_keys($aTypes), array_fill(0, count($aTypes), 0));
+        while (list($sGene, $nCount) = $qData->fetchRow()) {
+            if (!$nCount) {
+                $sType = '0';
+            } elseif ($nCount <= 10) {
+                $sType = '<=10';
+            } elseif ($nCount <= 50) {
+                $sType = '<=50';
+            } elseif ($nCount <= 100) {
+                $sType = '<=100';
+            } elseif ($nCount <= 500) {
+                $sType = '<=500';
+            } elseif ($nCount <= 1000) {
+                $sType = '<=1000';
+            } else {
+                $sType = '>1000';
+            }
+            $aData[$sType] ++;
+        }   
+
+        // Format $aData.
+        print('        var data = [');
+        $i = 0;
+        $nTotal = 0;
+        foreach ($aData as $sType => $nValue) {
+            if (isset($aTypes[$sType])) {
+                $sLabel = $aTypes[$sType][0];
+            } else {
+                $sLabel = $sType;
+            }
+            print(($i++? ',' : '') . "\n" .
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+            $nTotal += $nValue;
+        }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
+		print('];' . "\n\n" .
+              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+              '        {' . "\n" .
+              '            series: {' . "\n" .
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
+
+/*
+		combine: {
+			threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
+			color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
+			label: any text value of what the combined slice should be labeled
+		}
+*/
+              '        });' . "\n" .
+              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+
+        // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+        $this->getHoverFunction($sDIV, $nTotal) .
+              '      </SCRIPT>' . "\n\n");
+
+        flush();
+        return true;
+    }
+
+
+
+
+
     function variantsTypeDNA ($sDIV, $Data = array(), $bPublicOnly = true, $bUnique = false)
     {
         // Shows a nice piechart about the variant types on DNA level in a certain data set.
-        // $aData can be either a gene symbol or an array of variant IDs.
+        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
         // $bPublicOnly indicates whether or not only the public variants should be used.
         global $_DB;
 
@@ -72,10 +342,14 @@ class LOVD_Graphs {
                   );
 
         if (!is_array($Data)) {
-            // Retricting to a certain gene.
+            // Retricting to a certain gene, or full database ($Data == '*').
             if ($bUnique) {
-                // Not correct; fix.
-                $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                // FIXME: Double check if multi-transcript genes don't mess up the statistics here.
+                if ($Data == '*') {
+                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog' . (!$bPublicOnly? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                } else {
+                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                }
                 $aData = array();
                 while (list($sType, $nCount) = $qData->fetchRow()) {
                     // If $nCount is greater than one, this DBID had more than one type. Probably a mistake, but we'll count it as complex.
@@ -88,13 +362,17 @@ class LOVD_Graphs {
                     $aData[$sType] ++;
                 }   
             } else {
-                $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY type', array($Data))->fetchAllCombine();
+                if ($Data == '*') {
+                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog' . (!$bPublicOnly? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY type')->fetchAllCombine();
+                } else {
+                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY type', array($Data))->fetchAllCombine();
+                }
             }
         } else {
             // Using list of variant IDs.
         }
 
-        // Format $a.
+        // Format $aData.
         print('        var data = [');
         ksort($aData); // May not work correctly, if keys are replaced...
         $i = 0;
@@ -109,54 +387,29 @@ class LOVD_Graphs {
                   '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
             $nTotal += $nValue;
         }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
 		print('];' . "\n\n" .
               '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
               '        {' . "\n" .
               '            series: {' . "\n" .
-              '                pie: {' . "\n" .
-              '                    show: true,' . "\n" .
-              '                    radius: .9, // A little smaller than full size' . "\n" .
-              '                    innerRadius: .4, // The donut effect' . "\n" .
-              '                    label: {' . "\n" .
-              '                        show: true,' . "\n" .
-              '                        radius: 3/4,' . "\n" .
-              '                        formatter: function(label, series) {' . "\n" .
-              '                            return \'<DIV class="S09" style="text-align:center; padding : 2px; color : #FFF;">\' + label + "<BR>" + Math.round(series.percent)+\'%</DIV>\';' . "\n" .
-              '                        },' . "\n" .
-              '                        background: {opacity: 0.5, color: "#000"},' . "\n" .
-              '                        threshold: 0.05 // 5%' . "\n" .
-              '                    },' . "\n" .
-              '                    highlight: {opacity : 0.25} // Less highlighting than the default.' . "\n" .
-              '                }' . "\n" .
-              '           },' . "\n" .
-              '           grid: {hoverable: true}' . "\n" .
-
-/*
-		combine: {
-			threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
-			color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
-			label: any text value of what the combined slice should be labeled
-		}
-*/
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
               '        });' . "\n" .
               '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
 
+        // Add the total number to the header above the graph.
+              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+
         // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
-              '        function ' . $sDIV . '_hover (event, pos, obj)' . "\n" .
-              '        {' . "\n" .
-              '            // Handles the hover label generation and fade.' . "\n" .
-              '            if (!obj) {' . "\n" .
-              '                // Although obj seems to be NULL also half of the time while hovering the pie, this if() is only activated when you\'re moving outside of the pie.' . "\n" .
-              '                $("#' . $sDIV . '_hover").fadeOut(1000);' . "\n" .
-              '                return;' . "\n" .
-              '            }' . "\n" .
-              '            sMessage = obj.series.datapoints.points[1] + "/' . $nTotal . ' (" + parseFloat(obj.series.percent).toFixed(1) + "%)";' . "\n" .
-              '            $("#' . $sDIV . '_hover").stop(true, true); // Completes possible fading animation immediately and empties queue.' . "\n" .
-              '            $("#' . $sDIV . '_hover").show(); // Shows the div, that may have been hidden.' . "\n" .
-              '            $("#' . $sDIV . '_hover").html("<B>" + obj.series.label + ": " + sMessage + "</B>");' . "\n" .
-              '        }' . "\n" .
+        $this->getHoverFunction($sDIV, $nTotal) .
               '      </SCRIPT>' . "\n\n");
 
+        flush();
         return true;
     }
 }

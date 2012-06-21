@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-07
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -76,6 +76,7 @@ if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
 } else {
     define('FORMAT', $aFormats[0]);
 }
+header('Content-type: ' . FORMAT . '; charset=UTF-8');
 
 define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorization is depending on assignments, not user levels anymore.
 define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
@@ -610,7 +611,7 @@ if (!defined('NOT_INSTALLED')) {
     // Load session data.
     require ROOT_PATH . 'inc-auth.php';
 
-    // Define $_PE and CURRENT_PATH.
+    // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName($_SERVER['REQUEST_URI'])); // 'login' or 'genes?create' or 'users/00001?edit'
     $aPath = explode('?', $sPath); // Cut off the Query string, that will be handled later.
     $_PE = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')

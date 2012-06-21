@@ -2,27 +2,20 @@ Prioritize:
 ===========
 Handmatige mapping: leeg DBID wordt chrX ID, zelfs met VOT.
 Auto mapping: creeert de vars niet op bestaande transcripten?
-VOG/DNA zegt dat hij is niet toegevoegd, omdat de join naar active columns niet werkt; dat moet anders gedaan worden.
 
-Fix VOG/DNA description in shared installation.
+- Keuzes submissie formulier veranderen, moet duidelijker en VOT moet aangemoedigd worden (dus bovenaan):
+  + We kunnen het nog over de exacte tekst hebben, maar ik stel voor:
+    1) "A variant that is found within a gene's transcript"
+    2) "A variant that was only detected on genomic level"
+    3) "I want to upload a file with genomic variant data"
+  + Voor wel/niet individual data:
+    * De keuze "No, I will only submit summary variant data" moet ontmoedigd worden, dus er op klikken moet eerst een extra melding geven.
+      - Misschien iets van: "Please reconsider to submit individual data as well, as it makes the data you submit much more valuable".
+        Tekst wellicht voorleggen aan groep?
 
-- (@Ivar) Bij poging verzenden variant submissie van g.? / c.? (IVD):
-  + [Sat Jun 16 11:59:18 2012] [error] [client 84.86.115.30] PHP Warning:  Invalid argument supplied for foreach() in /var/www/databases.lovd.nl/shared/ajax/convert_position.php on line 52, referer: http://databases.lovd.nl/shared/variants?create&reference=Transcript&geneid=IVD&target=0000000122
-  + [Sat Jun 16 12:00:15 2012] [error] [client 84.86.115.30] PHP Fatal error:  Cannot use string offset as an array in /var/www/databases.lovd.nl/shared/variants.php on line 525, referer: http://databases.lovd.nl/shared/variants?create&reference=Transcript&geneid=IVD&target=0000000122
-- (@Ivar) c.1_3inv geeft error met mappen (PHP error)
-
-- Moet nog aan de changelog worden toegevoegd:
-  + Fixed bug; Curators could not complete their submissions because of typos in the authorization functions.
-
-- David Baux: maak branch aan, geef rechten. Stuur hem ook een screenshot.
+- David Baux: maak branch aan, geef rechten.
 - De kolom volgorden en omschrijvingen overnemen van de shared install? Wel even alles dubbel checken.
-  + head_column van VOG/DNA aanpassen naar "DNA change genomic"?
-    * De omschrijving van deze kolom klopt op dit moment niet in de shared database.
   + Lijstje maken van de veranderingen, want ik ben het niet met alles eens. Veel te veel informatie in de "notes on form" voor mijn smaak.
-- Status pagina weer terug, alleen wat simpele statistieken en de datum.
-  + Aantal genen, individuen, screenings, varianten totaal, varianten uniek.
-    + Deze berekeningen worden in check_update.php ook al gedaan, maar er moet misschien worden gekeken of die queries
-      ook geschikt zijn om op de status pagina te zetten; zijn ze wel efficient genoeg?
 - Nieuwe kolommen:
   + GVS/Function naar selection list, zodat Maja er ook wat aan heeft?
 - Gene create geeft altijd een created_date met tijd 00:00:00, zelfs als je het datum veld leeg hebt gelaten en hij dus de datum van vandaag heeft kozen.
@@ -87,6 +80,8 @@ Fix VOG/DNA description in shared installation.
   + Er zijn hiervoor twee FIXME's toegevoegd.
   + Overleg?
 - Kunnen we ook het Exon veld voorspellen?
+- Quick curate option?
+- Per variant de mapping opties kunnen veranderen?
 
 - Beta-07:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)

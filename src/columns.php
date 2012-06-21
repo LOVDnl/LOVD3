@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-06-17
+ * Modified    : 2012-06-18
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1433,7 +1433,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
         $nCount = $_DB->query('SELECT COUNT(id) FROM ' . constant(strtoupper('table_' . $aTableInfo['unit'] . 's')))->fetchColumn();
         $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
     } else {
-        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid AND ac.colid IS NULL) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
+        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ? AND ac.colid IS NULL', array($sColumnID))->fetchAssoc();
     }
 
     if (!$zData) {
