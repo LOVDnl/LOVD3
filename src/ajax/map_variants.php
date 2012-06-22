@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-05-07
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-06-20
+ * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -166,7 +166,22 @@ session_write_close();
 $sChromosome = null;
 $nVariants = 0;
 
-
+$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE t.position_g_mrna_end = 0 OR t.id_mutalyzer = NULL ORDER BY Rand() LIMIT 10')->fetchAllAssoc();
+if ($zTranscripts) {
+    foreach ($zTranscripts as $aTranscript) {
+        $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']));
+        if (!empty($aOutput)) {
+            $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
+            foreach($aTranscriptsInfo as $aTranscriptInfo) {
+                $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo['c']);
+                if ($aTranscriptValues['id'] == $aTranscript['id_ncbi']) {
+                    $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = ?, position_c_mrna_start = ?, position_c_mrna_end = ?, position_c_cds_end = ?, position_g_mrna_start = ?, position_g_mrna_end = ? WHERE id = ?', array(str_replace($aTranscript['geneid'] . '_v', '', $aTranscriptValues['name']), $aTranscriptValues['cTransStart'], $aTranscriptValues['sortableTransEnd'], $aTranscriptValues['cCDSStop'], $aTranscriptValues['chromTransStart'], $aTranscriptValues['chromTransEnd'], $aTranscript['id']));
+                }
+            }
+        }
+    }
+    exit(AJAX_TRUE . "\t" . 'preparing' . "\t" . 'Fixing transcripts positions and mutalyzer ids...');
+}
 
 // Single variant mapping.
 if (!empty($_GET['variantid'])) {
@@ -253,7 +268,7 @@ if (!empty($aVariants)) {
 
     // We'll need a list of transcripts in the database on this chromosome.
     $aTranscriptsInLOVD = array();
-    $qTranscriptsInLOVD = $_DB->query('SELECT t.id, geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_GENES . ' AS g ON(g.id = t.geneid) WHERE chromosome = ?', array($sChromosome));
+    $qTranscriptsInLOVD = $_DB->query('SELECT t.id, geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid) WHERE chromosome = ?', array($sChromosome));
     while ($aTranscriptInLOVD = $qTranscriptsInLOVD->fetchAssoc()) {
         $aTranscriptsInLOVD[$aTranscriptInLOVD['geneid']][$aTranscriptInLOVD['id']] = array('id' => $aTranscriptInLOVD['id'], 'id_ncbi' => $aTranscriptInLOVD['id_ncbi']);
     }
@@ -308,7 +323,15 @@ if (!empty($aVariants)) {
         $aMappedToGenesInLOVD = array();
 
         // Find out on which transcripts this variant has been mapped already.
-        $aVariant['alreadyMappedTranscripts'] = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON(t.id = vot.transcriptid AND vot.id = ' . $aVariant['id'] . ')')->fetchAllColumn();
+        $aVariant['alreadyMappedTranscripts'] = array();
+        $zVariantInfo = $_DB->query('SELECT t.id, id_ncbi, geneid, `VariantOnTranscript/DNA` AS dna FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON(t.id = vot.transcriptid AND vot.id = ' . $aVariant['id'] . ')')->fetchAllAssoc();
+        foreach ($zVariantInfo as $a) {
+            $aVariant['alreadyMappedTranscripts'][] = $a['id_ncbi'];
+            // Fake the POST variables that DBID needs to make a better prediction.
+            $aVariant['aTranscripts'][$a['id']] = array($a['id_ncbi'], $a['geneid']);
+            $aVariant[$a['id'] . '_VariantOnTranscript/DNA'] = $a['dna'];
+        }
+        
 
         foreach ($aTranscriptData as $sTranscriptNM => $aTranscript) {
             if (!empty($aFailedGenes[$aTranscript['gene']])) {

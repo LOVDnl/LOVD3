@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 06
- * 2012-06-18 ???????????????????????????????
+ * 2012-06-22 ???????????????????????????????
  *********/
  * Custom column detailed views didn't render the legend fields correctly, if
    they contained multiple lines.
@@ -90,6 +90,14 @@
    a submission properly.
  * Changed all remaining lovd_queryDB_Old() & mysql_*() function calls to their
    PDO counterparts.
+ * Changed the option menu when creating a variant.
+ * Manual mapping of a variant now fills in the correct DBID when the variant
+   has already been succesfully mapped before.
+ * Added a functionality that will first check if all transcripts have positions
+   in the database. If not it will fetch them and update the transcript entries
+   before starting the mapping.
+ * Fixed bug; LOVD could not handle g.? or c.? very well.
+ 
 
 
 /*******************

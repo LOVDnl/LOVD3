@@ -1,24 +1,11 @@
 Prioritize:
 ===========
-Handmatige mapping: leeg DBID wordt chrX ID, zelfs met VOT.
-Auto mapping: creeert de vars niet op bestaande transcripten?
-
-- Keuzes submissie formulier veranderen, moet duidelijker en VOT moet aangemoedigd worden (dus bovenaan):
-  + We kunnen het nog over de exacte tekst hebben, maar ik stel voor:
-    1) "A variant that is found within a gene's transcript"
-    2) "A variant that was only detected on genomic level"
-    3) "I want to upload a file with genomic variant data"
-  + Voor wel/niet individual data:
-    * De keuze "No, I will only submit summary variant data" moet ontmoedigd worden, dus er op klikken moet eerst een extra melding geven.
-      - Misschien iets van: "Please reconsider to submit individual data as well, as it makes the data you submit much more valuable".
-        Tekst wellicht voorleggen aan groep?
-
 - David Baux: maak branch aan, geef rechten.
 - De kolom volgorden en omschrijvingen overnemen van de shared install? Wel even alles dubbel checken.
   + Lijstje maken van de veranderingen, want ik ben het niet met alles eens. Veel te veel informatie in de "notes on form" voor mijn smaak.
 - Nieuwe kolommen:
   + GVS/Function naar selection list, zodat Maja er ook wat aan heeft?
-- Gene create geeft altijd een created_date met tijd 00:00:00, zelfs als je het datum veld leeg hebt gelaten en hij dus de datum van vandaag heeft kozen.
+- Gene create geeft altijd een created_date met tijd 00:00:00, zelfs als je het datum veld leeg hebt gelaten en hij dus de datum van vandaag heeft gekozen.
   + (Ivar) Ik kan het niet reproduceren op mijn bak, hier doet hij het gewoon zoals het hoort.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.

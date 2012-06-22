@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-06-19
+ * Modified    : 2012-06-20
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -268,6 +268,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'UPDATE ' . TABLE_COLS . ' SET head_column = "DNA change (genomic)" WHERE id = "VariantOnGenome/DNA"',
                                 'UPDATE ' . TABLE_COLS . ' SET head_column = "DNA change (cDNA)" WHERE id = "VariantOnTranscript/DNA"',
                                 'UPDATE ' . TABLE_COLS . ' SET select_options = "Unknown\r\nGermline (inherited)\r\nSomatic\r\nDe novo\r\nUniparental disomy\r\nUniparental disomy, maternal allele\r\nUniparental disomy, paternal allele" WHERE id = "VariantOnGenome/Genetic_origin"',
+                                // Delete all transcript positions from TABLE_TRANSCRIPTS, so that they can be recalculated.
+                                'UPDATE ' . TABLE_TRANSCRIPTS . ' SET position_c_mrna_start = 0, position_c_mrna_end = 0, position_c_cds_end = 0, position_g_mrna_start = 0, position_g_mrna_end = 0',
                              ),
                   );
 

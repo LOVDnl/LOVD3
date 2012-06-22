@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-06-07
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -427,16 +427,16 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         }
 
         $aOptionsList = array('width' => 600);
-        $aOptionsList['options'][0]['onclick'] = 'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
-        $aOptionsList['options'][0]['option_text'] = '<B>I want to create a variant on genomic level &raquo;&raquo;</B>';
+        $aOptionsList['options'][0]['onclick'] = 'javascript:$(\'#container\').toggle();';
+        $aOptionsList['options'][0]['option_text'] = '<B>A variant that is found within a gene\'s transcript &raquo;&raquo;</B>';
+
+        $aOptionsList['options'][1]['onclick'] = 'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
+        $aOptionsList['options'][1]['option_text'] = '<B>A variant that was only detected on genomic level &raquo;&raquo;</B>';
 
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $aOptionsList['options'][1]['onclick'] = 'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
-            $aOptionsList['options'][1]['option_text'] = '<B>I want to upload a file with genomic variant data &raquo;&raquo;</B>';
+            $aOptionsList['options'][2]['onclick'] = 'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
+            $aOptionsList['options'][2]['option_text'] = '<B>I want to upload a file with genomic variant data &raquo;&raquo;</B>';
         }
-
-        $aOptionsList['options'][2]['onclick'] = 'javascript:$(\'#container\').toggle();';
-        $aOptionsList['options'][2]['option_text'] = '<B>I want to create a variant on genomic & transcript level &raquo;&raquo;</B>';
 
         print('      What kind of variant would you like to submit?<BR><BR>' . "\n\n");
         print(lovd_buildOptionTable($aOptionsList));
@@ -496,6 +496,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     if (isset($sGene)) {
         require ROOT_PATH . 'class/object_transcript_variants.php';
         $_DATA['Transcript'][$sGene] = new LOVD_TranscriptVariant($sGene);
+        // This is done so that fetchDBID can have this information and can give a better prediction.
         $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
         $_POST['chromosome'] = $_DB->query('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn();
     }
@@ -522,10 +523,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             require ROOT_PATH . 'class/REST2SOAP.php';
             $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
             $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']));
-            if (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
+            if (is_array($aOutput) && !empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
                 $_POST['position_g_start'] = $aOutput['start_g'][0]['v'];
                 $_POST['position_g_end'] = $aOutput['end_g'][0]['v'];
                 $_POST['type'] = $aOutput['mutationType'][0]['v'];
+            } else {
+                $_POST['position_g_start'] = NULL;
+                $_POST['position_g_end'] = NULL;
+                $_POST['type'] = NULL;
             }
 
             $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
@@ -2101,6 +2106,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 $zData = array_merge($zData, $_DATA['Transcript'][$sGene]->loadAll($nID));
             }
         }
+        // This is done so that fetchDBID can have this information and can give a better prediction.
         $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
     }
 
@@ -2138,10 +2144,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
                 $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type', 'mapping_flags'));
                 $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']));
-                if (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
+                if (is_array($aOutput) && !empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
                     $_POST['position_g_start'] = $aOutput['start_g'][0]['v'];
                     $_POST['position_g_end'] = $aOutput['end_g'][0]['v'];
                     $_POST['type'] = $aOutput['mutationType'][0]['v'];
+                } else {
+                    $_POST['position_g_start'] = NULL;
+                    $_POST['position_g_end'] = NULL;
+                    $_POST['type'] = NULL;
                 }
 
                 // Remove the MAPPING_NOT_RECOGNIZED and MAPPING_DONE flags if the VariantOnGenome/DNA field changes.

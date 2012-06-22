@@ -576,7 +576,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
                 }
                 if (!$nVariantsChecked) {
                     $aOptionsList['options'][2]['disabled'] = true;
-                    $aOptionsList['options'][2]['onclick']  = 'javascript:alert(\'You finish this submission, because there aren\&#39;t any variants connected to this screening yet!\');';
+                    $aOptionsList['options'][2]['onclick']  = 'javascript:alert(\'You cannot finish this submission, because there aren\&#39;t any variants connected to this screening yet!\');';
                 } else {
                     $aOptionsList['options'][2]['onclick'] = 'submit/finish/' . $sSubmitType . '/' . ($sSubmitType == 'individual'? $nIndividual : $nID);
                 }

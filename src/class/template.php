@@ -339,7 +339,11 @@ function lovd_mapVariants ()
         {
             // The server responded successfully. Let\'s see what he\'s saying.
             aResponse = sResponse.split("\t");
-            $("#mapping_progress").attr({"src": "gfx/lovd_mapping_" + aResponse[1] + ".png", "title": aResponse[2]});
+            if (aResponse[1] == "preparing") {
+                $("#mapping_progress").attr({"src": "gfx/lovd_mapping_" + aResponse[1] + ".gif", "title": aResponse[2]});
+            } else {
+                $("#mapping_progress").attr({"src": "gfx/lovd_mapping_" + aResponse[1] + ".png", "title": aResponse[2]});
+            }
 
             if (sResponse.indexOf("Notice") >= 0 || sResponse.indexOf("Warning") >= 0 || sResponse.indexOf("Error") >= 0 || sResponse.indexOf("Fatal") >= 0) {
                 // Something went wrong while processing the request, don\'t try again.

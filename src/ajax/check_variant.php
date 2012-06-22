@@ -47,7 +47,6 @@ require ROOT_PATH . 'class/REST2SOAP.php';
 $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
 $aOutput = $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $_GET['variant']));
 if (is_array($aOutput) && !empty($aOutput)) {
-    $aMessages = array();
     if (!empty($aOutput['messages'][0]['c'])) {
         $aMessages = lovd_getAllValuesFromArray('messages/SoapMessage', $aOutput);
     }

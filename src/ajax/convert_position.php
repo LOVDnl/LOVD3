@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-09
- * Modified    : 2012-05-24
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,7 +48,7 @@ $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
 
 $aOutput = $_MutalyzerWS->moduleCall('numberConversion', array('build' => 'hg19', 'variant' => $_GET['variant'], 'gene' => $_GET['gene']));
 $sVariants = '';
-if (isset($aOutput['string'])) {
+if (is_array($aOutput) && isset($aOutput['string'])) {
     foreach($aOutput['string'] as $aVariant) {
         $sVariants .= ';' . $aVariant['v'];
     }
