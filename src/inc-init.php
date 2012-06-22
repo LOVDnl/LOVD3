@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-21
+ * Modified    : 2012-06-22
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -119,7 +119,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-beta-05',
+                            'version' => '3.0-beta-06',
                           ),
                 'user_levels' =>
                      array(
@@ -451,10 +451,6 @@ $_TABLES =
 
 foreach ($_TABLES as $sConst => $sTable) {
     define($sConst, $sTable);
-}
-
-if (!function_exists('mysql_connect')) {
-    lovd_displayError('Init', 'This PHP installation does not have MySQL support installed. Without it, LOVD will not function. Please install MySQL support for PHP.');
 }
 
 // Check PDO existence.

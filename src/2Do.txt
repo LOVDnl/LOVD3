@@ -1,12 +1,11 @@
 Prioritize:
 ===========
+- text/plain uitzetten gebruikers < LEVEL_COLLABORATOR?
 - David Baux: maak branch aan, geef rechten.
 - De kolom volgorden en omschrijvingen overnemen van de shared install? Wel even alles dubbel checken.
   + Lijstje maken van de veranderingen, want ik ben het niet met alles eens. Veel te veel informatie in de "notes on form" voor mijn smaak.
 - Nieuwe kolommen:
   + GVS/Function naar selection list, zodat Maja er ook wat aan heeft?
-- Gene create geeft altijd een created_date met tijd 00:00:00, zelfs als je het datum veld leeg hebt gelaten en hij dus de datum van vandaag heeft gekozen.
-  + (Ivar) Ik kan het niet reproduceren op mijn bak, hier doet hij het gewoon zoals het hoort.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -38,7 +37,6 @@ Prioritize:
     * We zullen in de toekomst wel toestaan dat voor dit format een selectie van de data wordt gedownload, maar
       dat moet dan maar op basis van de geselecteerde IDs die in SESSION worden opgeslagen. Ik wil niet code voor
       het parsen van zoektermen moeten kopieëren naar download oid.
-  + Is the Charset correctly set?
   + DATA IMPORT
     * Choose character set!
       - Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
@@ -48,6 +46,7 @@ Prioritize:
     * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
       - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
       - Store in session / DB in een col met serialized data?
+- Mapping melding (successfully mapped xxx variants slaat nergens op)
 - Dropdown menu's op de overige VE's ook inbouwen.
 - Unit tests via Selenium (of alternatief)?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
@@ -69,6 +68,8 @@ Prioritize:
 - Kunnen we ook het Exon veld voorspellen?
 - Quick curate option?
 - Per variant de mapping opties kunnen veranderen?
+- Als Mutalyzer twee warnings geeft, zien we er maar eentje.
+  + Voorbeeld: NM_007313.2:c.7_9inv (ABL1)
 
 - Beta-07:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)

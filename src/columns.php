@@ -761,7 +761,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             $bFailedLinks = false;
             foreach ($aLinks AS $nID => $sName) {
-                $q = @$_DB->query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($_POST['id'], $nID));
+                $q = $_DB->query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($_POST['id'], $nID), false);
                 if (!$q) {
                     $bFailedLinks = true;
                     lovd_writeLog('Error', 'LinkAdd', 'Custom link ' . $nID . ' (' . $sName . ') could not be added to ' . $_POST['colid'] . "\n" . $_DB->formatError());
@@ -1056,7 +1056,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                 $nEmptyValues = 0;
                 if ($zData['mandatory'] == '1') {
                     $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PATIENTS;
-                    $nEmptyValues = @$_DB->query($sQ)->fetchColumn();
+                    $nEmptyValues = $_DB->query($sQ)->fetchColumn();
                 }
 
                 // 2010-07-27; 2.0-28; Only forward the user when there is no problem adding the column.
@@ -1243,7 +1243,7 @@ if ($_GET['action'] == 'edit_colid' && !empty($_GET['edit_colid'])) {
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = @$_DB>query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"')->fetchAssoc();
+    $zData = $_DB>query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"')->fetchAssoc();
     if (!$zData) {
         // Wrong ID, apparently.
         $_T->printHeader();

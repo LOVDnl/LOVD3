@@ -578,7 +578,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             if (isset($_POST['screeningid'])) {
                 // Add variant to screening.
-                $q = $_DB->query('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID));
+                $q = $_DB->query('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID), false);
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);

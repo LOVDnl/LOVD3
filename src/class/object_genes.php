@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-06-13
+ * Modified    : 2012-06-22
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -503,6 +503,8 @@ class LOVD_Gene extends LOVD_Object {
                 }
                 $this->aColumnsViewEntry['collaborators_'][0] .= ' (' . $nCollaborators . ')';
             }
+
+            $zData['created_date_'] = str_replace(' 00:00:00', '', $zData['created_date_']);
 
             // Graphs & utilities.
             $zData['graphs'] = '<A href="' . CURRENT_PATH . '/graphs" class="hide">Graphs displaying summary information of all variants in the database</A> &raquo;';

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-06-20
+ * Modified    : 2012-06-22
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -166,22 +166,33 @@ session_write_close();
 $sChromosome = null;
 $nVariants = 0;
 
+
+
+
+
+// Check if all transcripts have their positions and the mutalyzer ID correctly set; if not, fix before we start to do any type of mapping.
 $zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE t.position_g_mrna_end = 0 OR t.id_mutalyzer = NULL ORDER BY Rand() LIMIT 10')->fetchAllAssoc();
 if ($zTranscripts) {
     foreach ($zTranscripts as $aTranscript) {
         $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']));
         if (!empty($aOutput)) {
             $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
-            foreach($aTranscriptsInfo as $aTranscriptInfo) {
+            foreach ($aTranscriptsInfo as $aTranscriptInfo) {
                 $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo['c']);
                 if ($aTranscriptValues['id'] == $aTranscript['id_ncbi']) {
                     $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = ?, position_c_mrna_start = ?, position_c_mrna_end = ?, position_c_cds_end = ?, position_g_mrna_start = ?, position_g_mrna_end = ? WHERE id = ?', array(str_replace($aTranscript['geneid'] . '_v', '', $aTranscriptValues['name']), $aTranscriptValues['cTransStart'], $aTranscriptValues['sortableTransEnd'], $aTranscriptValues['cCDSStop'], $aTranscriptValues['chromTransStart'], $aTranscriptValues['chromTransEnd'], $aTranscript['id']));
+                    break;
                 }
             }
         }
     }
+    // The "preparing" type of image shows an animation; we don't want to show the progress but still the user should see we're doing something.
     exit(AJAX_TRUE . "\t" . 'preparing' . "\t" . 'Fixing transcripts positions and mutalyzer ids...');
 }
+
+
+
+
 
 // Single variant mapping.
 if (!empty($_GET['variantid'])) {
@@ -324,7 +335,7 @@ if (!empty($aVariants)) {
 
         // Find out on which transcripts this variant has been mapped already.
         $aVariant['alreadyMappedTranscripts'] = array();
-        $zVariantInfo = $_DB->query('SELECT t.id, id_ncbi, geneid, `VariantOnTranscript/DNA` AS dna FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON(t.id = vot.transcriptid AND vot.id = ' . $aVariant['id'] . ')')->fetchAllAssoc();
+        $zVariantInfo = $_DB->query('SELECT t.id, id_ncbi, geneid, `VariantOnTranscript/DNA` AS dna FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid AND vot.id = ' . $aVariant['id'] . ')')->fetchAllAssoc();
         foreach ($zVariantInfo as $a) {
             $aVariant['alreadyMappedTranscripts'][] = $a['id_ncbi'];
             // Fake the POST variables that DBID needs to make a better prediction.

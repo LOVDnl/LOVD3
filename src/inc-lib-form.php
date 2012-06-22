@@ -626,7 +626,7 @@ function lovd_setUpdatedDate ($sGene)
     // Does this user have rights on this gene? It doesn't really matter that much, but still.
     if (lovd_isCurator($sGene)) {
         // Just update the database and we'll see what happens.
-        $q = @$_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE id = "' . $sGene . '"');
+        $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE id = ?', array($sGene), false);
         if ($q->rowCount()) {
             return true;
         }

@@ -156,7 +156,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     $sMySQL = '<IMG src="gfx/mark_' . (int) $bMySQL . '.png" alt="" width="11" height="11">&nbsp;MySQL : ' . $sMySQLVers . ' (' . $aRequired['MySQL'] . ' required)';
 
     // Check for InnoDB support.
-    $sInnoDB = @$_DB->query('SHOW VARIABLES LIKE "have\_innodb"')->fetchColumn(1);
+    $sInnoDB = $_DB->query('SHOW VARIABLES LIKE "have\_innodb"')->fetchColumn(1);
     $bInnoDB = ($sInnoDB == 'YES');
     $sInnoDB = '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bInnoDB . '.png" alt="" width="11" height="11">&nbsp;MySQL InnoDB support ' . ($bInnoDB? 'en' : 'dis') . 'abled (required)';
 
@@ -631,14 +631,14 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
 
 
 
-/*if ($_GET['step'] == 4 && !@$_DB->query('SELECT COUNT(*) FROM ' . TABLE_MODULES)->fetchColumn()) {
+/*if ($_GET['step'] == 4 && !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_MODULES, array(), false)->fetchColumn()) {
     // Step 4: Configuring LOVD modules.
     if (@count($_DB->query('SHOW TABLES LIKE ?', array(TABLE_MODULES))->fetchAllRow())) != 1) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 2));
         exit;
     }
-    if (!@$_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn()) {
+    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG, array(), false)->fetchColumn()) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
         exit;

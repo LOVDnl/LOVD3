@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-06-07
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,9 +51,9 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_phenotypes.php';
 
-    $qDiseases = $_DB->query('SELECT * FROM ' . TABLE_DISEASES);
-    if ($qDiseases) {
-        while ($aDisease = $qDiseases->fetchAssoc()) {
+    $aDiseases = $_DB->query('SELECT * FROM ' . TABLE_DISEASES)->fetchAllAssoc();
+    if (count($aDiseases)) {
+        foreach ($aDiseases as $aDisease) {
             $_GET['search_diseaseid'] = $aDisease['id'];
             $_DATA = new LOVD_Phenotype($aDisease['id']);
             $_DATA->setSortDefault('phenotypeid');
@@ -156,14 +156,9 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
     }
 
     if (empty($_POST['diseaseid']) || lovd_error()) {
-        $sSQL = 'SELECT d.id, d.name, d.symbol FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY d.name';
-        $qDiseases = $_DB->query($sSQL, array($_POST['individualid']));
-        $aSelectDiseases = array();
-        if ($qDiseases) {
-            while ($aDisease = $qDiseases->fetchAssoc()) {
-                $aSelectDiseases[$aDisease['id']] = $aDisease['name'] . ' (' . $aDisease['symbol'] . ')';
-            }
-        } else {
+        $sSQL = 'SELECT d.id, CONCAT(d.name, " (", d.symbol, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY d.name';
+        $aSelectDiseases = $_DB->query($sSQL, array($_POST['individualid']))->fetchAllCombine();
+        if (!count($aSelectDiseases)) {
             // Wrong individual ID, individual without diseases, or diseases without phenotype columns.
             $_T->printHeader();
             $_T->printTitle();

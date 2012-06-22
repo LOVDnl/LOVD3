@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-07
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -151,7 +151,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     }
 
     // Write to log file... if we're not here because we don't have MySQL.
-    if (function_exists('mysql_connect')) {
+    if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers())) {
         $bLog = lovd_writeLog($sLogFile, $sError, $sMessage);
     } else {
         $bLog = false;

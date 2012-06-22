@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 06
- * 2012-06-22 ???????????????????????????????
+ * 2012-06-22
  *********/
  * Custom column detailed views didn't render the legend fields correctly, if
    they contained multiple lines.
@@ -58,13 +58,8 @@
    the web server settings.
  * Fixed bug; LOVD did not handle well when the mutalyzer webservice generated a
    serious fatal error.
-
-
-
-
-
-
-
+ * Databases created on a certain date with time set to 0, will now only show
+   the day and not the time.
  * Fixed bug; NR_ numbers did not work properly in the mapping of a variant on
    the variant forms.
  * Fixed bug; Transcripts without an NM or NR accession number are now no longer
@@ -90,14 +85,14 @@
    a submission properly.
  * Changed all remaining lovd_queryDB_Old() & mysql_*() function calls to their
    PDO counterparts.
- * Changed the option menu when creating a variant.
+ * Changed the option menu when creating a variant, to promote the submission of
+   variant data linked with a gene.
  * Manual mapping of a variant now fills in the correct DBID when the variant
    has already been succesfully mapped before.
  * Added a functionality that will first check if all transcripts have positions
    in the database. If not it will fetch them and update the transcript entries
    before starting the mapping.
  * Fixed bug; LOVD could not handle g.? or c.? very well.
- 
 
 
 /*******************

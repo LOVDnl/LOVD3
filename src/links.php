@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2012-06-07
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -138,7 +138,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     continue;
                 }
                 // Add custom link to column.
-                $q = $_DB->query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID));
+                $q = $_DB->query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID), false);
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Custom link ' . $nID . ' - ' . $_POST['name'] . ' - could not be added to column ' . $sCol);
@@ -249,7 +249,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             foreach ($aCols AS $sCol) {
                 if ($sCol && !in_array($sCol, $_POST['active_columns'])) {
                     // User has requested removal...
-                    $q = $_DB->query('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid = ?', array($sCol, $nID));
+                    $q = $_DB->query('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid = ?', array($sCol, $nID), false);
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Custom link ' . $nID . ' - ' . $_POST['name'] . ' - could not be removed from column ' . $sCol);
@@ -271,7 +271,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 }
                 if (!in_array($sCol, $aCols)) {
                     // Add custom link to column.
-                    $q = $_DB->query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID));
+                    $q = $_DB->query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($sCol, $nID), false);
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Custom link ' . $nID . ' - ' . $_POST['name'] . ' - could not be added to column ' . $sCol);

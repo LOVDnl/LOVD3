@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2012-06-19
+ * Modified    : 2012-06-21
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,7 +99,7 @@ if (!empty($_POST)) {
 
                 foreach ($aTables as $sTable) {
                     $sSQL = 'DROP TABLE IF EXISTS ' . $sTable;
-                    $q = $_DB->query($sSQL);
+                    $q = $_DB->query($sSQL, array(), false);
                     if (!$q) {
                         // Error when running query. We will use the Div for the form now.
                         $sMessage = 'Error during uninstallation while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $_DB->formatError()) . '</DIV><BR><BR>' .
@@ -107,7 +107,7 @@ if (!empty($_POST)) {
                                     'Please <A href="' . $_SETT['upstream_URL'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
                         $_BAR->setMessage($sMessage, 'done');
                         $_BAR->setMessageVisibility('done', true);
-                        $_DB->query('DROP TABLE IF EXISTS ' . implode(', ', $aTables)); // Try again to remove everything.
+                        $_DB->query('DROP TABLE IF EXISTS ' . implode(', ', $aTables), array(), false); // Try again to remove everything.
                         print('</BODY>' . "\n" .
                               '</HTML>' . "\n");
                         exit;
@@ -144,7 +144,7 @@ if (!empty($_POST)) {
             print('Checking LOVD installation...' . "\n");
             $aTables = array();
             $qTables = $_DB->query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
-            while ($sTable = $qTables->fetchRow()) {
+            while ($sTable = $qTables->fetchColumn()) {
                 if (in_array($sTable, $_TABLES)) {
                     $aTables[] = $sTable;
                 }

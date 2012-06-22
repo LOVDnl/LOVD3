@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="https://localhost/LOVDv.3.0-dev/install/" />
+<title>selenium_install_LOVD</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">selenium_install_LOVD</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>/LOVDv.3.0-dev/install/</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=name</td>
+	<td>Ivo F.A.C. Fokkema</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=institute</td>
+	<td>Leiden University Medical Center</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=department</td>
+	<td>Human Genetics</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=address</td>
+	<td>Einthovenweg 20<br />2333 ZC Leiden</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=email</td>
+	<td>I.F.A.C.Fokkema@LUMC.nl</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=telephone</td>
+	<td>+31 (0)71 526 9438</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=username</td>
+	<td>ifokkema</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=password_1</td>
+	<td>test1234</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=password_2</td>
+	<td>test1234</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>name=countryid</td>
+	<td>label=Netherlands</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=city</td>
+	<td>Leiden</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=institute</td>
+	<td>Leiden University Medical Center</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=email_address</td>
+	<td>noreply@LOVD.nl</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=proxy_host</td>
+	<td>localhost</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=proxy_port</td>
+	<td>3128</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>name=send_stats</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>name=include_in_listing</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>name=lock_uninstall</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=button</td>
+	<td></td>
+</tr>
+
+</tbody></table>
+</body>
+</html>

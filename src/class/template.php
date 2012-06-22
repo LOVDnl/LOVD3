@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-06-21
+ * Modified    : 2012-06-22
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -339,11 +339,7 @@ function lovd_mapVariants ()
         {
             // The server responded successfully. Let\'s see what he\'s saying.
             aResponse = sResponse.split("\t");
-            if (aResponse[1] == "preparing") {
-                $("#mapping_progress").attr({"src": "gfx/lovd_mapping_" + aResponse[1] + ".gif", "title": aResponse[2]});
-            } else {
-                $("#mapping_progress").attr({"src": "gfx/lovd_mapping_" + aResponse[1] + ".png", "title": aResponse[2]});
-            }
+            $("#mapping_progress").attr({"src": "gfx/lovd_mapping_" + aResponse[1] + (aResponse[1] == "preparing"? ".gif" : ".png"), "title": aResponse[2]});
 
             if (sResponse.indexOf("Notice") >= 0 || sResponse.indexOf("Warning") >= 0 || sResponse.indexOf("Error") >= 0 || sResponse.indexOf("Fatal") >= 0) {
                 // Something went wrong while processing the request, don\'t try again.
@@ -488,6 +484,7 @@ function lovd_mapVariants ()
         print('    function lovd_switchGeneInline () {' . "\n" .
         // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
               '      varForm = \'<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDBInline" method="get" style="margin : 0px;"><SELECT name="select_db" onchange="document.getElementById(\\\'SelectGeneDBInline\\\').submit();">');
+        // FIXME; waarschijnlijk geen fetchAllAssoc() nodig.
         $zGenes = $_DB->query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllAssoc();
         foreach ($zGenes as $a) {
             // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
