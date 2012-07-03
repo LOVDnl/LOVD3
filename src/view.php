@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2012-05-07
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-07-02
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -49,6 +49,11 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     if (in_array(rawurldecode($_PE[1]), lovd_getGeneList())) {
         $sGene = rawurldecode($_PE[1]);
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
+
+        // Curators are allowed to download this list...
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            define('FORMAT_ALLOW_TEXTPLAIN', true);
+        }
 
         // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
         $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE t.geneid = ? AND vot.id IS NOT NULL', array($sGene))->fetchAllCombine();
@@ -100,7 +105,9 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $sTranscript = $sSelect . '</SELECT>';
         $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
     }
-    lovd_showInfoTable($sMessage);
+    if (FORMAT == 'text/html') {
+        lovd_showInfoTable($sMessage);
+    }
 
     if ($nTranscripts > 0) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';

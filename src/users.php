@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-06-11
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-02
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -44,6 +44,11 @@ if ($_AUTH) {
 if (PATH_COUNT == 1 && !ACTION) {
     // URL: /users
     // View all entries.
+
+    // Managers are allowed to download this list...
+    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+        define('FORMAT_ALLOW_TEXTPLAIN', true);
+    }
 
     define('PAGE_TITLE', 'View user accounts');
     $_T->printHeader();

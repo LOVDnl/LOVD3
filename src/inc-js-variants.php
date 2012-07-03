@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2012-06-22
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-02
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -257,6 +257,8 @@ function lovd_getProteinChange (oElement)
                 if (!oThisProtein.attr('disabled')) {
                     $(oThisProtein).siblings('img:first').attr({
                         src: 'gfx/cross.png',
+                        onclick: '',
+                        style: '',
                         alt: 'Error on mutalyzer request!\nError code: ' + sData,
                         title: 'Error on mutalyzer request!\nError code: ' + sData
                     }).show();
@@ -310,6 +312,8 @@ function lovd_getProteinChange (oElement)
                         }).show();
                         $(oThisProtein).siblings('img:first').attr({
                             src: 'gfx/cross.png',
+                            onclick: '',
+                            style: '',
                             alt: 'Encountered an error during protein prediction!',
                             title: 'Encountered an error during protein prediction!'
                         }).show();
@@ -365,8 +369,11 @@ function lovd_getProteinChange (oElement)
 
                             $(oThisProtein).siblings('img:first').attr({
                                 src: 'gfx/check.png',
+                                // FIXME: We can't point to the mutalyzer link stored in $_CONF unless we include inc-init.php.
+                                onclick: 'lovd_openWindow("https://www.mutalyzer.nl/check?name=' + escape(sVariantNotation).replace('+', '%2B') + '&standalone=1");',
+                                style: 'cursor : pointer',
                                 alt: 'Prediction OK!',
-                                title: 'Prediction OK!'
+                                title: 'Prediction OK! Click to see result on Mutalyzer.'
                             }).show();
                             $(oThisProtein).siblings('button:eq(0)').hide();
                         }

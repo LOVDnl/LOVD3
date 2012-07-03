@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-04-18
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-06-27
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -157,6 +157,8 @@ class LOVD_SystemSetting extends LOVD_Object {
         foreach ($_SETT['human_builds'] as $sCode => $aBuild) {
             $aHumanBuilds[$sCode] = $sCode . ' / ' . $aBuild['ncbi_name'];
         }
+        // No more hg18! We'll support LOVDs having this setting, but we won't allow new installations to pick this setting.
+        unset($aHumanBuilds['hg18']);
 
         $aFeedHistory = array('Not available');
         for ($i = 1; $i <= 12; $i ++) {
@@ -169,9 +171,9 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('', '', 'print', '<B>General system settings</B>'),
                         'hr',
                         array('Title of this LOVD installation', 'This will be shown on the top of every page.', 'text', 'system_title', 45),
-                        array('Institute (optional)', 'The institute which runs this database is displayed in the public area and in emails sent by LOVD. Is commonly set to a laboratory name or a website name.', 'text', 'institute', 45),
+                        array('Institute (optional)', 'The institute which runs this database is displayed in the public area and in emails sent by LOVD. It\'s commonly set to a laboratory name or a website name.', 'text', 'institute', 45),
                         array('Database URL (optional)', 'This is the URL with which the database can be accessed by the outside world, including "http://" or "https://". It will also be used in emails sent by LOVD. This field is mandatory if you select the "Include in the global LOVD listing" option.<BR>If you click the "check" link, LOVD will verify or try to predict the value.', 'print', '<INPUT type="text" name="location_url" size="40" id="location_url" value="' . (empty($_POST['location_url'])? '' : htmlspecialchars($_POST['location_url'])) . '"' . (!lovd_errorFindField('location_url')? '' : ' class="err"') . '>&nbsp;<SPAN id="location_url_check">(<A href="#" onclick="javascript:lovd_checkURL(); return false;">check</A>)</SPAN>'),
-                        array('LOVD email address', 'This email address will be used to send emails from LOVD to users. We need this address to make sure that emails from LOVD arrive. Please note that although strictly spoken this email address does not need to exist, we recommend that you use a valid address.', 'text', 'email_address', 40),
+                        array('LOVD email address', 'This email address will be used to send emails from LOVD to users. We need this address to make sure that emails from LOVD arrive. Please note that although strictly speaking this email address does not need to exist, we recommend that you use a valid address.', 'text', 'email_address', 40),
                         array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'checkbox', 'send_admin_submissions'),
       'refseq_build' => array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
                         //array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'select', 'api_feed_history', 1, $aFeedHistory, false, false, false),
@@ -188,7 +190,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'skip',
                         'skip',
                         array('', '', 'print', '<B>Customize LOVD</B>'),
-                        array('', '', 'note', 'Here you can customize the way LOVD looks. We will add new options here later.'),
+                        array('', '', 'note', 'Here you can customize the way LOVD looks. We will add more options here later.'),
                         'hr',
                         array('System logo', 'If you wish to have your custom logo on the top left of every page instead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.', 'text', 'logo_uri', 40),
                         array('', '', 'note', 'Currently, only images already uploaded to the LOVD server are allowed here.'),

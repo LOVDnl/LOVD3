@@ -1,7 +1,9 @@
 Prioritize:
 ===========
-- text/plain uitzetten gebruikers < LEVEL_COLLABORATOR?
-- David Baux: maak branch aan, geef rechten.
+- Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
+  + Ik kan dit niet bevestigen op mijn LUMC install.
+- Ik krijg van Mutalyzer geen waarschuwingen m.b.t. de splicing meer.
+  + Dit heeft denk ik er mee te maken, dat alleen de eerste waarschuwing geparsed wordt.
 - De kolom volgorden en omschrijvingen overnemen van de shared install? Wel even alles dubbel checken.
   + Lijstje maken van de veranderingen, want ik ben het niet met alles eens. Veel te veel informatie in de "notes on form" voor mijn smaak.
 - Nieuwe kolommen:
@@ -21,6 +23,7 @@ Prioritize:
     * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns). OOK IN CUSTOM VIEWLIST.
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
+- (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - (@Ivo) DATA DOWNLOAD.
   + File format: header, individuals, phenotypes, screenings, vog, vot.
     * Genes, diseases en transcripts moeten nog worden toegevoegd aan de download.
@@ -46,8 +49,10 @@ Prioritize:
     * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
       - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
       - Store in session / DB in een col met serialized data?
+    * Daarna: we moeten ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
 - Mapping melding (successfully mapped xxx variants slaat nergens op)
 - Dropdown menu's op de overige VE's ook inbouwen.
+=============== Below here needs to be re-evaluated for priority ===============
 - Unit tests via Selenium (of alternatief)?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
@@ -56,31 +61,37 @@ Prioritize:
   + De HGNC heeft er niet veel info over, en zegt ook dat het geen gen met product is. Als dat op te halen is, kunnen we zelf een nette foutmelding geven. 
   + Nadat Mutalyzer komt met een test op alle genen(sliceChromosomeByGene, getTranscriptsAndInfo, numberConversion per gen 1 variant) moeten we
     beslissen wat we ermee gaan doen, nu tijdelijke filter op "rare" LocusType's.
-- Refseq parser installeren voor LOVD3 install, losgekoppeld van LOVD zodat je het gen niet nodig hebt (maar de NG file wel!).
-  * Handmatig aanpassingen aan de code toepassen.
 - Incorporate links to Alamut.
 - (@Ivar): Als een VCF file geen varianten bevat, mag de file niet als volledige submissie gezien worden.
   + Met andere woorden, de data in $_SESSION moet zo gemanipuleerd worden in variants.php na het importeren, dat er geen mail wordt gestuurd met info over alleen een lege file.
   + Misschien moeten we wel toestaan, dat er in een volledige submissie met individual e.d. een melding over de lege file komt (er moet dan sowieso gemailed worden).
   + Ik heb wel wijzigingen aan de code aangebracht, maar mijn kennis van de submissie SESSION array is niet groot genoeg om snel te zien hoe ik dit aan pas zonder andere nare effecten.
   + Er zijn hiervoor twee FIXME's toegevoegd.
+  + Wellicht is het makkelijker gewoon een foutmelding te geven als in: geen varianten gevonden, upload een correcte file?
+    * Tenslotte gaat het niet over managers, de individu en/of screening is vast al publiek.
   + Overleg?
 - Kunnen we ook het Exon veld voorspellen?
 - Quick curate option?
 - Per variant de mapping opties kunnen veranderen?
 - Als Mutalyzer twee warnings geeft, zien we er maar eentje.
   + Voorbeeld: NM_007313.2:c.7_9inv (ABL1)
+- VOT/Published_as is op zich niet nodig als VOG/Published_as is toegevoegd. Hier dan ook een stokje voor steken?
+- Submissie: Submitters mogen geen losse varianten submitten, maar *moeten* individuals toevoegen?
+  + Met de gedachte dat ze toch nooit dbSNP varianten zullen submitten.
+  + Is dit makkelijk in te bouwen?
+- Connect existing variant to existing individual; kies individual via viewlist in new window, daarna kies screening?
+- If the wrong password is provided 3(?) times on data entry forms, log this and include a delay (store in SESSION), such that the password can't be brute forced.
 
 - Beta-07:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
+    + Sowieso moeten submissies bekeken kunnen worden; "My submissions", zoals in LOVD 2.0.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
   - (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
     + Hierna kan de transcript ViewList voor nieuwe VOT op bestaande VOG specifieker worden geselecteerd.
   - Johan wil dat we bij de redirect("Successfully created *****") een knop zetten. Er moet dan een tekst staan met "You are being redirected, if not you can click here". Schijnbaar werkt de redirect soms niet.
     + Redirect: zouden we dan misschien een functie moeten maken? Code voor een knopje met redirect (JS lijkt me het handigst?) in een lovd_showInfoTable() is dan best wel weer lang.
-  - Ook moeten we ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
   - How can a curator quickly find the genes he curates? (possibly with an overview of his work)
   - HGNC niet te bereiken? Nette foutmelding of mirror gebruiken?
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
@@ -151,7 +162,6 @@ Prioritize:
 - Custom View:
   * The full data overview moet nog de varianten tonen, die óók in de individu gevonden zijn.
 - Probleem LOVD2 c.0, c.= en c.? notaties. Speciale variant IDs of andere flag? Wel/niet tonen = instelling?
-- (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
 - Delete user verder ontmoedigen?
@@ -206,6 +216,9 @@ Prioritize:
   + De data kan dan worden geparsed (viewList moet array terug geven ipv count, die gebruiken we toch niet) zodat leeftijd of datum horizontaal,
     en numerieke kolommen (blood pressure, length, etc) verticaal kunnen. Per kolom een aparte grafiek?
 - Be able to change the mapping setting of a certain variant?
+- Legend moet nog gemaakt worden; mouseover column of column header?
+  + Hoe dan ook, moet de full legend nog steeds een aparte file zijn.
+- De afhandeling van text/plain voor de verschillende levels voelt nogal fragiel aan, en is behoorlijk irrirant om door te hebben.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 
@@ -393,7 +406,6 @@ Suggesties:
     right click on variant -> maybe left click on a small button or mouseover explaining to right-click?,
     show pathogenicity in color values for the whole line?
         The uniprot format by the way has the advantage to use lines for the data, so adding more lines for a individual's phenotype data is just fine, but the file gets so long...
-    mouseover column or column header for legend info?
 
 
 

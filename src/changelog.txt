@@ -7,6 +7,26 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 07
+ * 2012-07-?? ????????????????????????????????????
+ *********/
+ * You can now open the Mutalyzer prediction page from the variant data entry form, by clicking on the mark besides the protein field after a successful prediction has been run.
+ * LOVD 3.0 can no longer be configured for hg18, but existing installations will still be supported.
+ * Fixed some typos and textual changes.
+ * The quick download format for data lists are now only available for properly authorized users.
+ * Included version 3.0-beta-07 of official LOVD Reference Sequence Parser script.
+   - Compared to LOVD 2.0, the greatest improvement is that this script downloads the reference sequence from Mutalyzer, and therefore no longer requires GenBank files to be uploaded to LOVD.
+   - It does not support generating GenBank files, like in LOVD 2.0.
+
+
+
+
+
+
+
+
+
+/*******************
  * 3.0 Beta 06
  * 2012-06-22
  *********/

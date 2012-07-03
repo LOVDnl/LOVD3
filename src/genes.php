@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-06-19
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-03
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -44,6 +44,11 @@ if ($_AUTH) {
 if (PATH_COUNT == 1 && !ACTION) {
     // URL: /genes
     // View all entries.
+
+    // Managers are allowed to download this list...
+    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+        define('FORMAT_ALLOW_TEXTPLAIN', true);
+    }
 
     define('PAGE_TITLE', 'View all genes');
     $_T->printHeader();
@@ -91,6 +96,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
         $aNavigation[CURRENT_PATH . '/columns']       = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order'] = array('menu_columns.png', 'Re-order enabled variant columns', 1);
         $aNavigation['columns/VariantOnTranscript'] = array('menu_columns.png', 'View all available variant columns', 1);
+        $aNavigation['javascript:lovd_openWindow(\'' . lovd_getInstallURL() . 'scripts/refseq_parser.php?step=1&amp;symbol=' . $sID . '\', \'refseq_parser\', 900, 500);'] = array('menu_scripts.png', 'Create human-readable refseq file', ($zData['refseq_UD'] && $zData['transcripts']));
     }
     lovd_showJGNavigation($aNavigation, 'Genes');
 
@@ -1104,11 +1110,13 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
           '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
           '            <DIV id="variantsTypeDNA_unique" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_unique_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
 
-    flush();
+    $_T->printFooter(false);
+
     $_G->variantsTypeDNA('variantsTypeDNA_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
     $_G->variantsTypeDNA('variantsTypeDNA_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
 
-    $_T->printFooter();
+    print('</BODY>' . "\n" .
+          '</HTML>' . "\n");
     exit;
 }
 

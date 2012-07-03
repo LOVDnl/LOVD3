@@ -682,8 +682,8 @@ class LOVD_Object {
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
         }
-        if (!defined('FORMAT')) {
-           define('FORMAT', 'text/html');
+        if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
+            die('text/plain not allowed here');
         }
 
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');

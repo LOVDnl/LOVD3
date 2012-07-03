@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2012-05-11
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-07-03
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -62,11 +62,15 @@ if (isset($aNeededLevel[$_GET['object']])) {
 }
 
 // We can't authorize Curators without loading their level!
-if ($nNeededLevel == LEVEL_CURATOR && !empty($_AUTH['curates'])) {
+if ($_AUTH['level'] < LEVEL_MANAGER && !empty($_AUTH['curates'])) {
     if ($_GET['object'] == 'Column') {
         lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+    } elseif ($_GET['object'] == 'Transcript' && isset($_GET['search_geneid']) && preg_match('/^="([^"]+)"$/', $_GET['search_geneid'], $aRegs)) {
+        lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
     } elseif ($_GET['object'] == 'Shared_Column' && isset($_GET['object_id'])) {
         lovd_isAuthorized('gene', $_GET['object_id']); // Authorize for the gene currently loaded.
+    } elseif ($_GET['object'] == 'Custom_ViewList' && isset($_GET['id'])) {
+        lovd_isAuthorized('gene', $_GET['id']); // Authorize for the gene currently loaded.
     }
 }
 
@@ -74,6 +78,18 @@ if ($nNeededLevel == LEVEL_CURATOR && !empty($_AUTH['curates'])) {
 if ($nNeededLevel && (!$_AUTH || $_AUTH['level'] < $nNeededLevel)) {
     // If not authorized, die with error message.
     die(AJAX_NO_AUTH);
+}
+
+// Managers, and sometimes curators, are allowed to download lists...
+if (ACTION == 'download') {
+    if ($_AUTH['level'] >= LEVEL_CURATOR) {
+        // We need this define() because the Object::viewList() may still throw some error which calls
+        // Template::printHeader(), which would then thow a "text/plain not allowed here" error.
+        define('FORMAT_ALLOW_TEXTPLAIN', true);
+    }
+}
+if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
+    die(AJAX_NO_AUTH); // Temporary fix; whenever curators need to be able to download, we need to fix this somehow...
 }
 
 $sFile = ROOT_PATH . 'class/object_' . strtolower($_GET['object']) . 's.php';

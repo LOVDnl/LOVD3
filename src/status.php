@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-03
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-06-26
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -85,14 +85,12 @@ print('      <H5>Variant type (DNA level)</H5>' . "\n" .
 
 
 
-flush();
-@ob_end_flush(); // Can generate errors on the screen if no buffer found.
+$_T->printFooter(false);
+
 $_G->genesNumberOfVariants('genesNumberOfVariants', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR));
 $_G->genesLinkedDiseases('genesLinkedDiseases', '*');
 $_G->variantsTypeDNA('variantsTypeDNA_all', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
 $_G->variantsTypeDNA('variantsTypeDNA_unique', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
-
-
 
 
 
@@ -125,7 +123,6 @@ foreach ($zGenes as $aGene) {
 }
 */
 
-
-$_T->printFooter();
-
+print('</BODY>' . "\n" .
+      '</HTML>' . "\n");
 ?>

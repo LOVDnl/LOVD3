@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-02
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -48,6 +48,11 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PE[1]))) 
     // URL: /variants/chrX
     // View all genomic variant entries, optionally restricted by chromosome.
 
+    // Managers are allowed to download this list...
+    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+        define('FORMAT_ALLOW_TEXTPLAIN', true);
+    }
+
     if (!empty($_PE[1])) {
         $sChr = $_PE[1];
     } else {
@@ -78,6 +83,11 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PE[1]))) 
 if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
     // URL: /variants/in_gene
     // View all entries effecting a transcript.
+
+    // Managers are allowed to download this list...
+    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+        define('FORMAT_ALLOW_TEXTPLAIN', true);
+    }
 
     define('PAGE_TITLE', 'View transcript variants');
     $_T->printHeader();
@@ -129,6 +139,11 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $sGene = rawurldecode($_PE[1]);
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
+        // Curators are allowed to download this list...
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            define('FORMAT_ALLOW_TEXTPLAIN', true);
+        }
+
         // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
         $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE t.geneid = ? AND vot.id IS NOT NULL', array($sGene))->fetchAllCombine();
         $nTranscripts = count($aTranscripts);
@@ -178,7 +193,9 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         }
         $sMessage = 'The variants shown are described using the ' . $sSelect . '</SELECT> transcript reference sequence.';
     }
-    lovd_showInfoTable($sMessage);
+    if (FORMAT == 'text/html') {
+        lovd_showInfoTable($sMessage);
+    }
 
     if ($nTranscripts > 0) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
@@ -2264,7 +2281,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
 
 
-    
+
 
     $_T->printHeader();
     $_T->printTitle();
@@ -2459,9 +2476,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
         $_T->printFooter();
         exit;
     }
-    
+
     print('The variant has been found in the following public LOVDs. Click the entry for which you want to see more information.<BR><BR>' . "\n");
-    
+
     print('<TABLE class="data" cellpadding="0" cellspacing="1" width="100%">' . "\n" .
           '  <TR>' . "\n" .
           '    <TH>Genome&nbsp;build</TH>' . "\n" .
@@ -2473,7 +2490,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
           '    <TH>LOVD&nbsp;location</TH>' . "\n" .
           '  </TR>' . "\n");
     $aHeaders = explode("\"\t\"", trim(array_shift($aData), '"'));
-    
+
     // Remove all-zero DBIDs from the array.
     $aDataCleaned = array();
     foreach ($aData as $sHit) {
@@ -2486,7 +2503,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
         // We've still got variants left, so let's use the cleaned array. We wouldn't want to use a 'cleaned' array if that means we cleared it!
         $aData = $aDataCleaned;
     }
-    
+
     foreach ($aData as $sHit) {
         $aHit = array_combine($aHeaders, explode("\"\t\"", trim($sHit, '"')));
         print('  <TR class="data" style="cursor : pointer;" onclick="window.open(\'' . htmlspecialchars($aHit['url']) . '\', \'_blank\');">' . "\n" .

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-06-22
+ * Modified    : 2012-06-25
  * For LOVD    : 3.0-beta-06
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -172,7 +172,7 @@ $nVariants = 0;
 
 
 // Check if all transcripts have their positions and the mutalyzer ID correctly set; if not, fix before we start to do any type of mapping.
-$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE t.position_g_mrna_end = 0 OR t.id_mutalyzer = NULL ORDER BY Rand() LIMIT 10')->fetchAllAssoc();
+$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE t.position_g_mrna_end = 0 OR t.id_mutalyzer IS NULL ORDER BY Rand() LIMIT 10')->fetchAllAssoc();
 if ($zTranscripts) {
     foreach ($zTranscripts as $aTranscript) {
         $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']));
@@ -189,6 +189,16 @@ if ($zTranscripts) {
                     break;
                 }
             }
+            // If we get here, the transcript got removed.
+            $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1' .
+            // Mark the transcript as removed, if not done already.
+            (strpos($aTranscript['id_ncbi'], 'removed') !== false? '' : ', name = CONCAT(name, " (removed from reference sequence)")') .
+            ' WHERE id = ?', array($aTranscript['id']));
+        } elseif ($aOutput === '') {
+            // UD file does not contain any transcripts? Reload UD?
+            // FIXME; Temporary fix.
+            $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1 WHERE id = ?', array($aTranscript['id']));
+            continue;
         }
     }
     // The "preparing" type of image shows an animation; we don't want to show the progress but still the user should see we're doing something.
