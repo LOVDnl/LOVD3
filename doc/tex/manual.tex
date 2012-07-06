@@ -1,14 +1,20 @@
 \documentclass[a4paper,oneside,openany,12pt]{memoir}
 \usepackage[T1]{fontenc} % To get different font encoding, thus allow \guillemotright.
+% Undo bad "side effects" of T1 font encoding (ugly font && chapters in small caps).
+% Note that it's now not shown in small caps simply because the selected font does not support it.
+\usepackage{lmodern}
 \usepackage{graphicx} % For images
 \graphicspath{{../gfx/}}
 %\usepackage[english]{babel} % For correct word hyphenating.
-\usepackage{color} % For the colored boxes.
+\usepackage{color}    % For the colored boxes.
+\definecolor{LOVDdark}{RGB}{34, 68, 136} %224488 % Why does the "HTML" color model not work?
+\definecolor{LOVDlight}{RGB}{240, 243, 255} %F0F3FF % Why does the "HTML" color model not work?
 \usepackage{hyperref} % For URLs.
-\usepackage{float} % For custom floats (the info boxes) and a box around every figure.
-% When loaded before float, doesn't work. When loaded after, it's included *within* the fbox.
-% Maybe not do an fbox but a box without border and with background color?
-%\usepackage[format=hang,font=footnotesize,labelfont=bf]{caption} % To format captions.
+\usepackage{float}    % For custom floats (the info boxes).
+\usepackage{wrapfig}  % For floating boxes meant for small notes.
+% When loaded before float, doesn't work.
+% For figures, maybe not do an frame but a box without border and with background color?
+\usepackage[format=hang,font=footnotesize,labelfont=bf,skip=5pt]{caption} % To format captions.
 
 % Include all of this in a separate file!
 \newcommand{\HRule}{\rule{\linewidth}{1mm}} % Doet height (zie style) hetzelfde?
@@ -26,6 +32,7 @@
 
 
 
+%%%%% PAGE HEADERS AND FOOTERS %%%%%
 \makepagestyle{LOVD}
 
 % Because we don't have odd or even pages, we only need to define odd pages.
@@ -71,6 +78,9 @@
 %  \thispagestyle{title}
 %}
 
+
+
+%%%%% TITLE PAGE FORMAT %%%%%
 \setlength{\droptitle}{-3cm} % Moves the title (logo, title, authors etc) 3cm up.
 \pretitle{
   \begin{center}
@@ -83,12 +93,15 @@
 \predate{\hfill Last updated } % \hfill aligns the rest of the line to the right. \flushright would have done the same.
 \postdate{\par\vskip 2cm \noindent \small \fund}
 
+
+
+%%%%% CHAPTER STYLE (CHAPTER HEADS) %%%%%
 \makechapterstyle{LOVD}{%
   \setlength\beforechapskip{10pt} % A small distance just above the new Chapter title.
   \setlength\afterchapskip{20pt} % A small distance between the Chapter title and the text.
   \renewcommand{\chapterheadstart}{\vspace*{\beforechapskip}\hrule height 2pt \medskip} % Nice ruler above the Capter title.
   \renewcommand{\chapnamefont}{\normalfont\large\scshape} % CHAPTER
-  \renewcommand{\chapnumfont}{\normalfont\LARGE\scshape} % 1
+  \renewcommand{\chapnumfont}{\normalfont\huge\bfseries\scshape} % 1
   \renewcommand{\chaptitlefont}{\normalfont\huge\bfseries\scshape} % e.g. "Introduction"
   \renewcommand{\printchaptername}{} % Empty text instead of "Chapter".
                   \renewcommand{\chapternamenum}{ } % Weet niet wat dit anders doet.
@@ -98,9 +111,9 @@
 }
 \chapterstyle{LOVD}
 
-% For the colored boxes.
-%\definecolor{gray}{rgb}{0.9,0.9,0.9}
-%\definecolor{darkgray}{gray}{0.3}
+
+
+%%%%% LINK CONFIGURATION %%%%%
 \definecolor{linkblue}{rgb}{0.1, 0, 1}
 \hypersetup{
   colorlinks,
@@ -110,70 +123,97 @@
   urlcolor=linkblue
 }
 
+
+
 % The custom floats.
-\definecolor{infoblue}{RGB}{240, 243, 255} %F0F3FF
 %\floatstyle{ruled}
 %\newfloat{infobox}{h!}{floats}
 %\floatname{infobox}{}
 
-\floatstyle{boxed} 
-\restylefloat{figure}
+%\floatstyle{boxed}
+%\newfloat{notebox}{h!}{floats}
+%\floatname{notebox}{Note:}
+
+% Give all figures a boxed float.
+%\floatstyle{boxed}
+%\restylefloat{figure}
 
 
 
+%%%%% INFOTABLE AND WARNTABLE DEFINITIONS %%%%%
 \newsavebox{\infobox}
 \newlength{\infoboxlength}
 \newlength{\infoboxinnerlength}
 \setlength{\infoboxlength}{\textwidth}
 \addtolength{\infoboxlength}{-2\fboxsep}
 \addtolength{\infoboxlength}{-2\fboxrule}
-\addtolength{\infoboxlength}{-1.5cm}
+\addtolength{\infoboxlength}{-1.7cm} % Manually configured value making sure the whole box doesn't exceed the line width.
 \setlength{\infoboxinnerlength}{\infoboxlength}
-\addtolength{\infoboxinnerlength}{-6pt}
+\addtolength{\infoboxinnerlength}{-5pt} % Manually configured value making sure the text doesn't get too near the right border.
 
 \newenvironment{infotable}
   {\begin{lrbox}{\infobox}%
     \begin{minipage}[t]{1.5cm}
-	  \centering
-	  \vspace{0pt}
+      \centering
+      \vspace{0pt}
       \includegraphics[width=1cm,height=1cm]{lovd_information.png}
     \end{minipage}
    \begin{minipage}[t]{\infoboxlength}\vspace{5pt}\begin{minipage}{\infoboxinnerlength}}
-  {\vspace{10pt}\end{minipage}\end{minipage}\end{lrbox}%
+  {\vspace{6pt}\end{minipage}\end{minipage}\end{lrbox}%
    \begin{center}
-   \fcolorbox{black}{infoblue}{\usebox{\infobox}}
+   \fcolorbox{black}{LOVDlight}{\usebox{\infobox}}
    \end{center}}
 
 \newenvironment{warntable}
   {\begin{lrbox}{\infobox}%
     \begin{minipage}[t]{1.5cm}
-	  \centering
-	  \vspace{0pt}
+      \centering
+      \vspace{0pt}
       \includegraphics[width=1cm,height=1cm]{lovd_warning.png}
     \end{minipage}
    \begin{minipage}[t]{\infoboxlength}\vspace{5pt}\begin{minipage}{\infoboxinnerlength}}
-  {\vspace{10pt}\end{minipage}\end{minipage}\end{lrbox}%
+  {\vspace{6pt}\end{minipage}\end{minipage}\end{lrbox}%
    \begin{center}
-   \fcolorbox{black}{infoblue}{\usebox{\infobox}}
+   \fcolorbox{black}{LOVDlight}{\usebox{\infobox}}
    \end{center}}
 
 
 
-% Standard sizes for images.
-\newlength{\imagewidth}
-\setlength{\imagewidth}{\textwidth}
-\addtolength{\imagewidth}{-2\fboxsep}
-\addtolength{\imagewidth}{-2\fboxrule}
+%%%%% CONFIGURE LEFTBAR (FRAMED PACKAGE) %%%%%
+% Taken and adapted from http://tex.stackexchange.com/questions/22526/regarding-the-leftbar-environment
+% (thanks, xport & Martin Scharrer)
+% I still don't like the space between the bar and the colorbox (can be removed by taking out the \hspace), but
+% I want that space *inside* the colorbox.
+\renewenvironment{leftbar}[1][\hsize]
+{%
+    \def\FrameCommand
+    {%
+        {\color{LOVDdark}\vrule width 3pt \hspace{5pt}}%
+        \colorbox{LOVDlight}%
+    }%
+    \MakeFramed{\hsize#1\advance\hsize-\width\FrameRestore}%
+}
+{\endMakeFramed}
+
+
+
+%%%%% CONFIGURE IMAGES %%%%%
+\definecolor{shadecolor}{RGB}{240, 243, 255} %F0F3FF
+%\newlength{\imagewidth}
+%\setlength{\imagewidth}{\textwidth}
+%\addtolength{\imagewidth}{-2\FrameSep}
+%\addtolength{\imagewidth}{-2\FrameRule}
 
 
 
 
 
-\setLOVDversion{3.0-beta-05}
+%%%%% SETTINGS FOR THE TITLE PAGE %%%%%
+\setLOVDversion{3.0-beta-07}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2012-05-31} % I guess it's easier to use this as a "Last modified" column.
+\date{2012-07-06} % I guess it's easier to use this as a "Last modified" column.
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -190,6 +230,7 @@
 
 
 
+\hypertarget{toc}{}
 \tableofcontents
 
 
@@ -307,7 +348,7 @@ If you are installing LOVD on a remote server, be sure to have the FTP username 
 
 
 \subsection{Download \& Extract}
-To download LOVD, go to the \href{http://www.LOVD.nl/3.0/}{LOVD website} and click on the `Download' tab.
+To download LOVD, go to the \href{http://www.LOVD.nl/3.0/}{LOVD website} and click on the ``Download'' tab.
 You can download LOVD in two formats; GZIPped TARball and ZIP archive.
 The first format is common for Unix and Linux systems while the ZIP archive is popular on the Windows platform.
 Usually you will be able to open both formats.
@@ -350,7 +391,7 @@ More information about AllowOverride:\\
 LOVD will access the file through the filesystem.
 Also, the .htaccess file sets a couple of PHP options and enables mod\_rewrite.
 If you use a different webserver, please disable the following PHP options: \emph{register\_globals}, \emph{magic\_quotes\_gpc}, \emph{mysql.trace\_mode}.
-Also make sure there is ``MultiViews'' functionality, which allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.
+Also make sure there is ``MultiViews'' functionality, which allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.%
 \end{warntable}
 
 
@@ -367,10 +408,12 @@ This could, for instance, be \emph{http://localhost/LOVDv.3.0/} or \emph{http://
 LOVD will tell you it's not installed yet, and include a link to the install directory.
 
 \begin{figure}[h]
-  \includegraphics[width=\linewidth]{c02s02_screenshot_not_installed.png}%
-  \caption{\footnotesize% % I want to format the captions better, but I'm having issues (see package loading comments).
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_not_installed.png}}%
+  \caption{%
     When pointing your browser to the LOVD location, it will tell you it's not installed yet.
     Click the link to start the install process.}
+  \end{shaded}
 \end{figure}
 
 LOVD will first check a few requirements.
@@ -383,9 +426,10 @@ If all looks well, LOVD will tell you all requirements are OK and you're ready t
 Installing LOVD consists of only 4 simple steps and will take only a couple of minutes, or less.
 
 \begin{figure}[h]
-  \includegraphics[width=\linewidth]{c02s02_screenshot_installer_01.png}%
-  \caption{\footnotesize% % I want to format the captions better, but I'm having issues (see package loading comments).
-    If all requirements are OK, you're ready to start installing LOVD.}
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_01.png}}%
+  \caption{If all requirements are OK, you're ready to start installing LOVD.}
+  \end{shaded}
 \end{figure}
 
 
@@ -397,9 +441,10 @@ The database administrator is the only user capable of creating manager accounts
 Managers can only create curator and submitter accounts.
 
 \begin{figure}[h]
-  \includegraphics[width=\linewidth]{c02s02_screenshot_installer_02.png}%
-  \caption{\footnotesize% % I want to format the captions better, but I'm having issues (see package loading comments).
-    The database administrator registration form, with example data filled in.}
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_02.png}}%
+  \caption{The database administrator registration form, with example data filled in.}
+  \end{shaded}
 \end{figure}
 
 Most of the form is pretty straight forward, but I will highlight one field - ``Allowed IP address list''.
@@ -431,9 +476,10 @@ This may take a while on non-optimal conditions, so please be patient.
 When everything is done, a ``Next \guillemotright'' button appears - click it to continue.
 
 \begin{figure}[h]
-  \includegraphics[width=\linewidth]{c02s02_screenshot_installer_03.png}%
-  \caption{\footnotesize% % I want to format the captions better, but I'm having issues (see package loading comments).
-    Watch the progress bar complete while LOVD informs you which part of the database table installation is currently in progress.}
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_03.png}}%
+  \caption{Watch the progress bar complete while LOVD informs you which part of the database table installation is currently in progress.}
+  \end{shaded}
 \end{figure}
 
 
@@ -447,11 +493,13 @@ Setting the uninstall lock will prevent uninstallation of LOVD by the database a
 The only way to remove this lock is directly through the MySQL database backend.
 
 \begin{figure}[h]
-  \includegraphics[width=\linewidth]{c02s02_screenshot_installer_04.png}%
-  \caption{\footnotesize% % I want to format the captions better, but I'm having issues (see package loading comments).
-    The system settings form, with example data filled in.}
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_04.png}}%
+  \caption{The system settings form, with example data filled in.}
+  \end{shaded}
 \end{figure}
 
+% FIXME
 %For more information on the options of the LOVD system settings, see the LOVD system settings section of the manual.
 %\\
 %\par
@@ -462,34 +510,614 @@ Almost done!
 
 
 
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
 \subsection{Done}
 % FIXME; to be honest nothing is done in this step... so... kill it?
 When everything has been filled in and stored correctly, the installation is complete.
-Now that you're done installing LOVD, click the ``Continue to Setup area \guillemotright'' button to be forwarded to the LOVD setup area.
+Now that you're done installing LOVD, click the ``Continue to Setup area \guillemotright'' button to be forwarded to the \hyperlink{c_setup}{LOVD setup area}.
 From there, you can perform the most important actions for managers in LOVD, such as creating new gene databases or disease information entries, registering new user accounts or authorizing curators, or manage the custom columns and links.
 The button to create a new gene will be highlighted, as a suggestion of your next step!
+\clearpage % Makes the hyper target actually point to the right place.
 
 
 
 
 
 
-%\chapter{Chapter...}
 
 
 
-%\section{Section...}
 
-%\subsection{Subsection...}
+\hypertarget{c_setup}{}
+\chapter{LOVD Setup}
 
-%\subsubsection{Subsubsection...}
+To change system-wide settings, but also to perform actions with system-wide effects, start at the LOVD setup area.
+The setup area is only available for managers and the database administrator and can be accessed by clicking on the ``Setup'' tab in the menu.
+If you do not see a ``Setup'' tab, you first need to log into the system with a manager or administrator account.
+\\
+\par
+The LOVD setup shows some statistics on the left of the screen, like date of installation, number of registered users and variant counts, separated by status.
+Furthermore, there are two columns of options.
+The left column has options for the system settings, authorized users, the custom columns, custom links, full data download and the LOVD system logs.
+The right column has options for genes, transcripts, diseases, individuals and variants.
+Some of the general options from the LOVD setup are also available through the Setup tab's dropdown menu, allowing you to quickly navigate to other setup options without having to go through the setup main page.
+The other options shown in the setup area are available through their own tab's dropdown menus.
+\\
+\par
+In this chapter, we will describe changing the LOVD system settings, how to check, search and clean up the LOVD system logs, and how to uninstall LOVD.
+The other actions available from the LOVD setup are described in their respective chapters (\hyperlink{toc}{see the table of contents}).
 
 
 
-%\begin{infobox}
-%  \caption{\textbf{Caption}}
-%  ...
-%\end{infobox}
+
+
+% FIXME: I've been trying multiple things to prevent these lists from breaking over one page.
+% The most successful was an attempt in creating a new command "\mynobreakpar" that supposedly creates a par that doesn't break.
+% The effect was that the text was more compressed (ugly!!!) to try and prevent a broken item, but it still breaks and anyway I just want it to leave space at the bottom of the page instead of compressing everything.
+% Writing \nopagebreak in every freaking line is too much, so I checked out "needspace": http://texblog.net/latex-archive/layout/prevent-page-breaks/
+% However, \needspace just dumps space there, so if it's not breaking there because of a change of text in front of it, it now shows a big empty part. Ugly, too.
+\section{LOVD system settings}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+The LOVD system settings allow you to adapt your LOVD installation to your preferences.
+For instance by changing the installation's displayed name or email address (general settings), proxy server settings (connection settings), settings on statistics, or the security settings.
+\par
+To view or edit the LOVD system settings, click on the ``Setup'' tab, then on ``View and change LOVD System settings (...)'',
+or move your mouse over the ``Setup'' tab and click the ``LOVD system settings'' menu option from the dropdown list.
+
+
+
+\subsection{General system settings}
+\begin{description}
+  \item[Title of this LOVD installation] \hfill \\
+  This title will be shown on the top of every page, above the menu tabs.
+  The default value is ``LOVD - Leiden Open Variation Database''.
+  \item[Institute] \hfill \\
+  The institute which runs this database is displayed in the public area and in emails sent by LOVD.
+  It's commonly set to a laboratory name or a website name.
+  If it's not specified, LOVD will use the (autodetected) website name LOVD has been installed on.
+  \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+  \item[Database URL] \hfill \\
+  This is the URL with which the database can be accessed by the outside world, including ``http://'' or ``https://'', and is not necessarily the URL you are using right now to access the database.
+  It will also be used in emails sent by LOVD.
+  This field is mandatory if you select the ``Include in the global LOVD listing'' option.
+  \\
+  If you click the ``check'' link, LOVD will verify or try to predict the value.
+  \item[LOVD email address] \hfill \\
+  This email address will be used to send emails from LOVD to users.
+  LOVD needs this address to prevent problems with spam filters, to make sure that emails from LOVD arrive.
+  Please note that although strictly speaking this email address does not need to exist,
+  we recommend that you use a valid address to make sure that bounces of emails sent from LOVD (to submitters or curators) are still caught by someone, so that they can be handled.
+  \item[Forward messages to database admin] \hfill \\
+  With this setting enabled, LOVD will forward messages to the database administrator about submitter registrations, submissions, and such.
+  \item[Human Build to map to (UCSC/NCBI)] \hfill \\
+  This value can only be set during installation, and cannot be changed later.
+  It defines on which version of the Human Build (hg18/Build 36.1 or hg19/GRCh37) genomic variants are described.
+  Links to the UCSC and Ensembl genome browsers and the NCBI sequence viewer also depend on this setting.
+  \\
+  From LOVD 3.0-beta-07, the hg18 setting is no longer available for new LOVD installations, although it will remain to be supported.
+  When hg20 will come out, LOVD will start supporting multiple genome builds per installation.
+  \item[List database changes in feed for how long?] \hfill \\
+  \emph{Note: Not yet implemented!}
+  \\
+  LOVD includes a ``newsfeed'' that allows users to get a list of changes recently made in the database.
+  Select here how many months back you want changes to appear on this list.
+  Set to ``Not available'' to disable the newsfeed.
+\end{description}
+
+
+
+\subsection{Connection settings (optional)}
+Some networks have no access to the outside world except through a so-called proxy server (\href{http://en.wikipedia.org/wiki/Proxy_server#Forward_proxies}{more info on WikiPedia}).
+If this applies to the network this server is installed on, please fill in the proxy server information here.
+\begin{description}
+  \item[Proxy server host name] \hfill \\
+  The host name of the proxy server, such as ``www-cache.institution.edu''.
+  \item[Proxy server port number] \hfill \\
+  The port number of the proxy server, such as 3128.
+\end{description}
+
+
+
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+\subsection{Customize LOVD}
+Here you can customize the way LOVD looks.
+Right now, there is only one option included, we will add more later.
+\begin{description}
+  \item[System logo] \hfill \\
+  If you wish to have your custom logo on the top left of every page instead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.
+  If left empty, it will be set to the default value, which is ``gfx/LOVD\_logo130x50.jpg''.
+  Currently, only images already uploaded to the LOVD server are allowed here.
+\end{description}
+
+
+
+\pagebreak[0] % ``Please'' break the page here (up to 4; 4 is very persistent)
+\subsection{Global LOVD statistics}
+Your LOVD installation can send some general information on your installation back to us.
+We use this information to see how many LOVDs there are worldwide, which versions of LOVD are currently in use, how LOVD is being used (amount of data), to see what type of software is used to run LOVD and to construct the public list of LOVD installs.
+\begin{description}
+  \item[Send statistics] \hfill \\
+  When this setting is enabled, LOVD will collect general usage statistics and send this to us.
+  The following information is sent: the number of submitters, genes, individuals, variants and unique variants in your system.
+  No specific information is sent, just the numbers.
+  \item[Include in the global LOVD listing] \hfill \\ %% FIXME; When LOVD 3.0 site has such a list, use that URL here.
+  On our website, we keep a \href{http://www.lovd.nl/2.0/index_list.php}{list of public LOVD installations}.
+  This list is also feeding our \href{http://www.lovd.nl/LSDBs}{worldwide LSDB list}, through which submitters can locate databases for a specific gene to submit data to.
+  If you enable the ``Include in the global LOVD listing'' setting, your LOVD installation will send us all the information we need to build these lists:
+  the LOVD installation's name, the URL, the available gene databases, the date of last update of the gene databases,
+  the disease abbreviations and names of the diseases related to these genes and finally the names, institutes and email addresses of the curators of these gene databases.
+  If you change this setting, please allow one day for the setting to take effect.
+\end{description}
+
+
+
+\hypertarget{ss_security_settings}{}
+\subsection{Security settings}
+In this section you can control some security settings of LOVD.
+\begin{description}
+  \item[Lock users after 3rd failed login?] \hfill \\
+  With this setting enabled, submitters, curators and managers will be locked out of the system after they have provided the wrong password three times.
+  A manager or, in the case of a locked manager, the database administrator needs to unlock the user's account once it's locked.
+  \\
+  This does \emph{not} affect the database administrator account.
+  \item[Allow (locked) users to retrieve a new password?] \hfill \\
+  If a submitter, curator, or manager has lost his password, enabling this ``I forgot my password'' feature allows them to receive a unlocking code in their email with which they can unlock their account and choose a new password.
+  \item[Enable submitters to change data?] \hfill \\
+  This setting allows submitters to make changes to data previously submitted by them or assigned to them.
+  % FIXME: implement!
+  % Changes made by submitters will be reported to the curators by email.
+  \item[Enable getting counts of hidden entries?] \hfill \par
+  \emph{Note: Not yet implemented!}
+  \\
+  Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns.
+  This feature will only mention the number of variant entries matched, without showing them.
+  % FIXME: Implement!
+  % The columns which can be used for this type of searching, can be configured ....
+  \item[Force SSL-only access to LOVD?] \hfill \\
+  \nopagebreak
+  SSL is a secure protocol allowing for encryption of data sent between you and LOVD.
+  \nopagebreak
+  When you record sensitive individual information in LOVD, you \emph{\textbf{should}} enable this setting, as the individual information can otherwise be ``sniffed'' off the network.
+  \nopagebreak
+  If you do not record sensitive information, enabling SSL is \emph{recommended}.
+  \item[Use data versioning of biological data?] \hfill \\
+  \emph{Note: Not yet implemented!}
+  \\
+  Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state.
+  Please note that this feature requires quite a lot of space in the database.
+  Disabling this feature later will not free any space, just prevent more space from being used.
+\end{description}
+
+
+
+
+
+\section{System logs}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+System logs were introduced in LOVD 2.0 to allow authorized users to keep track of events in LOVD.
+This can be for security purposes, to follow each other's progress when working together,
+or to track down errors in case something went wrong.
+The logs are initiated when LOVD is installed.
+
+
+
+\subsection{What is logged by LOVD}
+LOVD logs four types of events: authorization events and errors, general events, general errors, and installation and upgrade events.
+In case the event or error was triggered by an authorized user, the username of this user is also logged.
+
+\subsubsection{Authorization events and errors (``Auth'')}
+This list stores all successful and unsuccessful login attempts and password reset attempts.
+In all cases, the IP address from where the login or password reset attempts have been made, is also logged.
+For successful and unsuccessful login attempts the given username and the length of the given password is stored, so you can easily uncover brute force attempts where in general the attacker will try many random passwords.
+If a user can't log in because of the IP restriction on the account, the current IP restriction is also stored in the log entry.
+Please note that it is recommended to have LOVD lock user accounts after three failed login attempts. See subsection \hyperlink{ss_security_settings}{Security settings} for more information.
+
+% TODO: Insert list of possible log options, or at least a link to an appendix where they are mentioned.
+
+\subsubsection{General events (``Event'')}
+General events are logged to show a user's activity, to allow collaborating users to track each other's activities or to check what happened to a certain data entry over time.
+
+% TODO: Insert list of possible log options, or at least a link to an appendix where they are mentioned.
+
+\subsubsection{General errors (``Error'')}
+Whenever an unrecoverable error occurs, LOVD logs the error and stops processing.
+Also some non-fatal errors are logged, such as when only part of the requested action could be completed.
+In principle, during any database event, an error can occur.
+This is then logged under the name of the event, so any of the event names used in the general event log can also be found in the error log.
+% TODO: In the below table you can find the event names that appear exclusively in the error log. If you find any other event name in the error log, see the above table.
+
+\subsubsection{Installation and upgrade events (``Install'')}
+LOVD creates a log entry on completion of the LOVD installation procedure.
+Also, after each upgrade, LOVD will add an entry stating from which version to which version it has been upgraded, and how many database queries have been used for the upgrade.
+Also errors during an LOVD upgrade, might they occur, will be logged here.
+
+
+
+\subsection{Viewing and searching through the logs}
+To browse the system logs, click the ``View system logs'' option of the ``Setup'' tab dropdown menu, or the ``View, search and delete system logs'' link on the setup area.
+The system log overview is fully searchable and sortable, allowing you to find log entries quickly.
+\par
+The ``Log'' column shows the type of log every - \emph{Auth}, \emph{Event}, \emph{Error} or \emph{Install}.
+The ``Date'' column shows the date the log entry was created.
+The ``User'' column shows, if available, which user caused the log entry to be created.
+The ``Event'' column lists the type of event that occurred.
+Finally, the ``Entry'' column provides more information about the event that has occurred.
+For login attempts, it will contain the IP address of the user attempting to log in.
+For most event types, it will include the ID of the entry that was created, edited or deleted.
+%TODO:
+% A full list of event names is listed in the Appendix.
+%\\
+%\par
+%TODO
+% Information on how to sort and search in the LOVD overviews, please see section ...
+
+
+
+\subsection{Removing log entries}
+\begin{wrapfigure}[4]{r}{5cm} % Only wrap for 4 lines
+  \vspace{-26pt}
+  \begin{framed}
+    \raisebox{-0.5mm}{\includegraphics[width=4mm]{cross.png}} Delete log entry\\
+    \raisebox{-0.5mm}{\includegraphics[width=4mm]{options.png}} Options menu button
+  \end{framed}
+\end{wrapfigure}
+To remove a single log entry, click on the red cross in the 6th column.
+To remove multiple log entries at once, first apply as many search terms on the log entries as needed to restrict the view to the entries you want to delete.
+Either manually select the checkboxes next to the entries you want deleted, or click the option button on the top left of the log overview, and select the ``Select all ... entries'' option, after which you can deselect log entries you do not want deleted.
+Then, open the option menu again and click the ``Delete selected entries'' option.
+Please note that deleting log entries can not be undone.
+
+
+
+
+
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+\section{Uninstalling LOVD}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Database administrator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Only the database administrator can uninstall LOVD, provided the uninstall lock has not been set during installation of LOVD.
+The uninstall lock is set within the MySQL database and can only be removed by directly accessing MySQL.
+If you know how to handle MySQL, you can also uninstall LOVD through MySQL directly, by removing all LOVD tables, but this is not recommended.
+\\
+\par
+To uninstall LOVD and remove all data stored in LOVD, click on the ``Uninstall LOVD'' link on the setup area.
+This link is only available if the uninstall lock is disabled.
+You will need to fill in the database administrator's password twice to complete the uninstallation process.
+
+\begin{warntable}
+Once you have uninstalled LOVD, you have lost all variant and individual information.
+If you wish to store these data elsewhere, make sure you download all data first!
+\end{warntable}
+
+\begin{infotable}
+Please note that the LOVD uninstaller will not remove the LOVD files itself, just the database tables that it has created during install.
+Thus, to completely remove LOVD from the system, also remove the files from the server.
+\end{infotable}
+
+
+
+
+
+
+
+
+
+
+\chapter{Gene databases}
+Although in LOVD 3.0 you can enter data into the database without having genes in your installation, the genes still embody an important part of LOVD.
+Configuring genes in LOVD allows you to see the effects of variants on transcript level, and draws submitters with variant data to your installation.
+\par
+Gene databases can also be created automatically for you, when you are importing VCF or SeattleSeq annotated files in LOVD.
+However, this chapter deals with manually creating gene databases.
+%TODO
+%For more information on how to import VCF or SeattleSeq annotated files, see ...
+You can create new genes through the \hyperlink{c_setup}{LOVD setup area}.
+Editing and deleting genes is done through the ``Genes'' tab.
+Curators assigned to genes can also edit these after they've been created, but can not delete genes.
+%Emptying genes (removing all associated variant and patient data) and managing it's variants is done through the configuration area.
+This chapter describes how to create, edit and delete gene databases in LOVD.
+
+
+
+
+
+\hypertarget{s_gene_create}{}
+\section{Creating a new gene database}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Creating a new gene database in LOVD is largely automated.
+Click the ``Create a new gene entry'' option of the ``Genes'' tab dropdown menu, or the ``Create a new gene database'' link on the setup area.
+Fill in the HGNC ID or the gene symbol of the gene you want to create, and click ``Continue \guillemotright''.
+LOVD will check if the gene already exists in this LOVD installation, and if the gene symbol or HGNC ID is correct.
+For this, it contacts the \href{http://www.genenames.org/}{HGNC website}.
+If the gene symbol you used has been replaced by a new one, or if LOVD can find genes for which the given symbol is an alias, LOVD will report back the official symbol(s).
+\\
+\par
+LOVD will show a progress bar while it contacts several webservices to retrieve gene information, reference sequence information and available transcript information.
+Usually retrieving this information takes about 1-3 seconds, but this depends on the internet connection between
+the server and the internet and the current load on the webservices which are contacted.
+When LOVD has retrieved all the information, you are forwarded to the data entry form where you can review the retrieved information and complete this gene's settings.
+
+
+
+\subsection{General information}
+This part describes the bare essentials of the gene information.
+Therefore, most of the information in this section has been filled in for you, and some values are fixed to ensure the data is correct.
+\begin{description}
+  \item[Full gene name] \hfill \\
+  This information has been filled in for you, and can't be changed.
+  \item[Official gene symbol] \hfill \\
+  This information has been filled in for you, and can't be changed.
+  \item[Chromosome] \hfill \\
+  This information has been filled in for you, and can't be changed.
+  \item[Chromosomal band] \hfill \\
+  The chromosomal band on which the gene lies, is retrieved from the HGNC. You may modify it, if you wish.
+  \item[Imprinting] \hfill \\
+  If known, please fill in if this gene is imprinted (maternal or paternal) or not.
+  \item[Date of creation] \hfill \\
+  \emph{Note: This field can only be filled in when creating a gene database and can never be edited afterwards!}
+  \\
+% TODO: link to gene homepage section of manual.
+  The database's date of creation is mentioned on the gene homepage.
+  Today's date will automatically be stored if you leave this field empty, but in case you already had a gene database but you're moving it to this LOVD installation, you may want to fill in a different date.
+\end{description}
+
+
+
+\subsection{Relation to diseases}
+\begin{description}
+  \item[This gene has been linked to these diseases] \hfill \\
+  By linking the gene to disease(s), LOVD can help predicting next steps in data submission, and the link to the disease information will be shown on the gene homepage.
+  If a disease you need is not present in this list, you can click the ``configure more diseases'' link below the selection list to create a new disease now.
+  Afterwards, reload the gene form so you can select the new disease.
+  \\
+  Alternatively, create the disease after the gene has been created.
+\end{description}
+
+
+
+\subsection{Reference sequences}
+Collecting variants requires a proper reference sequence.
+Without a genomic and a transcript reference sequence the variants in this LOVD database cannot be interpreted properly or mapped to the genome.
+% TODO: once we have BED file export.
+When properly configured, LOVD will add links to the Ensembl, NCBI and UCSC genome browsers from the gene homepage.%, generating a nice visual overview of the variants in the database.
+\begin{description}
+  \item[Genomic reference sequence] \hfill \\
+  Select the genomic reference sequence (NG, NC or LRG accession number).
+  Only the references that are available to LOVD are shown.
+  Whether there is an LRG available, is determined by contacting the EBI.
+  Checking for an available NG reference sequence is done at the NCBI.
+  The NC reference sequence is always available, and depends on the chromosome on which the gene lies.
+  \item[Transcript reference sequence(s)] \hfill \\
+  LOVD retrieves a list of available transcripts from Mutalyzer.
+  Mutalyzer currently only supports NCBI reference sequences.
+  Please select which transcript you want to use to name the variants in this gene.
+  If there are more transcripts, usually you would pick the transcript that encodes for the longest protein, or the transcript that is expressed in the tissue you focus your research on.
+\end{description}
+
+
+
+\subsection{Links to information sources}
+Here you can add links to other resources that will be displayed on the gene's LOVD gene homepage, such as Entrez Gene, OMIM, HGMD or GeneTests, but you can also add links to any website you want.
+\begin{description}
+  \item[Homepage URL] \hfill \\
+  If you have a separate homepage about this gene, you can specify the URL here.
+  For the format: use the complete URL, including ``http://'' or ``https://''.
+  \item[External links] \hfill \\
+  Here you can provide links to other resources on the internet that you would like to link to, such as other gene variant databases, or websites with more information about diagnostics.
+  If you want to include more than one link, put every link on a new line in this field.
+  If you do not want to include a title for this link, simply paste the full URL in this field, such as ``http://DMD.LOVD.nl/''.
+  If you do want to include a title, use the format ``Description <URL>'', such as ``Other LOVDs on this gene <http://DMD.LOVD.nl/>''.
+  \item[HGNC ID] \hfill \\
+  This information has been filled in for you, and can't be changed.
+  \item[Entrez Gene (Locuslink) ID] \hfill \\
+  This information has been filled in for you, and can't be changed.
+  \item[OMIM Gene ID] \hfill \\
+  This information has been filled in for you, and can't be changed.
+  \item[Provide link to HGMD] \hfill \\
+  If you wish to include a link from the gene homepage to the gene's page on the HGMD site, enable this checkbox.
+  \item[Provide link to GeneCards] \hfill \\
+  If you wish to include a link from the gene homepage to the gene's page on the GeneCards site, enable this checkbox.
+  \item[Provide link to GeneTests] \hfill \\
+  If you wish to include a link from the gene homepage to the gene's page on the GeneTests site, enable this checkbox.
+  \item[This gene has a human-readable reference sequence] \hfill \\
+  Although GenBank files are the official reference sequence, they are not very readable for humans.
+  If you have a human-readable format of your reference sequence online, please select the type here; ``Coding DNA'' or ``Genomic''.
+  \item[Human-readable reference sequence location] \hfill \\
+% TODO: add link to refseq parser section in manual.
+  To create a human-readable reference sequence file, you can use our Reference Sequence Parser.
+  It retrieves the reference sequence from Mutalyzer, and formats it into a human-readable format with good annotation of the upstream sequence, the exons, the introns, the downstream sequence, the predicted protein sequence and the alternative stop codons.
+  Fill in the complete URL of the file, including ``http://'' or ``https://''.
+\end{description}
+
+
+
+\subsection{Customizations}
+LOVD allows you to customize the gene homepage by adding citation references, headers, footers, notes and a disclaimer.
+The header and footer will also be shown on the variant listings.
+\begin{description}
+  \item[Citation reference(s)] \hfill \\
+% TODO: add link to custom links when in manual.
+  Using our PubMed custom link, you can add links to PubMed articles to cite your database or that you want to point visitors to.
+  % For more information on how to use custom links, see.....
+  \item[Include disclaimer] \hfill \\
+  If you want a disclaimer added to the gene's LOVD gene homepage, select your preferred option here.
+  \item[Text for own disclaimer] \hfill \\
+  Only in case you selected the ``Use own disclaimer'' in the field above, you can enter the text here.
+  Text in this field will be ignored if you disabled the disclaimer or selected the standard LOVD disclaimer.
+  \item[Page header] \hfill \\
+  If you want a gene-specific header on all public gene-specific pages, please enter the text here.
+  \item[Header aligned to] \hfill \\
+  In case you defined a page header, here you can select how you want it aligned - left, center or right.
+  \item[Page footer] \hfill \\
+  If you want a gene-specific footer on all public gene-specific pages, please enter the text here.
+  \item[Footer aligned to] \hfill \\
+  In case you defined a page footer, here you can select how you want it aligned - left, center or right.
+  \item[Notes for the LOVD gene homepage] \hfill \\
+  Text entered here will appear in the General Information box on the gene's homepage.
+  In general, curators put additional information about the database here, such as how the data in the database was collected, grants supporting this work, or news.
+  \item[Notes for the variant listings] \hfill \\
+  Text entered here will appear below the gene's variant listings.
+\end{description}
+
+
+
+\subsection{Security settings}
+Using the following settings you can control some security settings of LOVD.
+\begin{description}
+  \item[Allow public to download variant entries] \hfill \\
+  This controls whether or not the public can also make downloads of your gene's variants.
+  \item[Allow my public variant and individual data to be indexed by WikiProfessional] \hfill \\
+  \emph{Note: Not yet implemented!}
+  \\
+  If you'll allow the \href{http://www.wikiprofessional.org/}{WikiProfessional} concept web to index your variant and individual data, enable this checkbox.
+\end{description}
+
+
+
+
+
+\hypertarget{s_gene_homepage}{}
+\section{The gene homepage}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: None (public)\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+LOVD automatically generates a gene homepage for every gene created within LOVD.
+The gene homepage is the entry point for visitors of a locus-specific database.
+In installations where LOVD is used for next-generation sequencing, the gene homepage serves more as a summary page of the gene-specific data in LOVD.
+Besides showing the basic information known about the gene in question (symbol, name, chromosome band, variant statistics, etc), curators also have quite a few options to customize the gene's homepage.
+\\
+\par
+If the gene you wish to view is already selected (its name is on the top of the page), simply click the ``Genes'' tab to open the gene's homepage.
+Otherwise, move your mouse over the ``Genes'' tab, and select the ``View all genes'' menu option.
+Then, locate the gene you wish to edit by searching or browsing through the given genes listing.
+Clicking the entry will direct you to the gene's homepage.
+\par
+Once on the gene's homepage, the gene will be selected (its name will appear on the very top of the page), which allows faster navigation to information related to the gene of interest.
+For instance, when a gene is selected and you click the ``Variants'' tab, you are directed to the gene-specific variant overview.
+If no gene is selected, clicking on the same tab shows all genomic variants in the database.
+If you do not like this behavior, simply move your mouse over a tab, and select a different option from the dropdown menu.
+% TODO: STUB!
+% Add info about certain fields? Add info about the graphs? Add info about the transcripts shown? Add info about the menu? Maybe in a different subsection?
+%LOVD2 wrote (some parts already removed):
+%This homepage shows general information on the gene, including links to a list of all PubMed references in the database and a RSS feed subscription link for updates of the gene, combined with links to graphical displays and utilities, the sequence variant tables, links to search forms and links to other external resources.
+%\\
+%\par
+%The "Graphical displays and utilities" table provides links to summary tables, to the Reading Frame Checker, and to external/genome browsers (UCSC, NCBI).
+%The summary tables show statistics on all sequence variants in the database, including graphs on the distribution of variants over the gene and the different variant types.
+%The Reading Frame Checker generates a prediction of the effect of whole-exon changes.
+%The UCSC Genome browser will show the variants in this database as a custom track, so you will have an overview of the variants in relation to their position in the gene.
+%The normal view will show the variants labeled with the DNA change, the compact view without these labels.
+%The NCBI Sequence Viewer will show a distribution histogram of variants from this database.
+%This feature is only available if the gene's transcript reference sequence ID has been filled in in the gene database settings.
+%
+%Optionally, a download link is also added to the table, with which you can download all of the variant and patient information in the database.
+%The unique sequence variants listing shows all unique sequence variants in the database, but no patient data.
+%The complete sequence variant listing will show all variants in the database in combination with the patient data associated with them.
+%The listing of variants with no known pathogenicity shows all variants that do not appear to have any pathogenic effect on the patient.
+%
+%The variant listing based on patient origin only works if origin fields have been enabled.
+%If enabled, you can create an overview of all variants and patients from a certain geographical or ethnic origin.
+%More information on this overview can be found in the Viewing and searching variant and patient data section.
+%And finally, if enabled, an option is presented to search through all (including hidden) data to return the number of entries matching your search terms.
+%This overview allows you for instance to quickly check if a certain variant is already included in the database (even if it's not yet public) or the amount of entries associated with a certain reference.
+%
+%The "Links to other resources" table can contain any number of links to external sources, as configured by the gene's curator(s).
+%Examples of external sources that LOVD can link to easily are Entrez Gene, OMIM, UniProtKB, HGMD, GeneCards and GeneTests.
+
+
+
+
+
+\section{Editing a gene database}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Curators, appointed to a gene database, have the rights to edit its settings.
+Managers and up can edit all gene databases in the LOVD installation.
+To edit the gene's settings, first proceed to the \hyperlink{s_gene_homepage}{gene's homepage}.
+\par
+\begin{wrapfigure}[4]{r}{5cm} % Only wrap for 4 lines
+  \vspace{-26pt}
+  \begin{framed}
+    \raisebox{-0.5mm}{\includegraphics[width=2.1cm]{options_button.png}}\\Options menu button
+  \end{framed}
+\end{wrapfigure}
+Click on the ``Options'' menu button to open up the gene entry's menu.
+If you do not see the ``Options'' menu button, you are not logged in or you do not have rights to edit this gene's settings.
+In the opened menu, click ``Edit gene information'' to open up the gene's edit form.
+The fields on the form are explained in the section ``\hyperlink{s_gene_create}{Creating a new gene database}''.
+After you submit the form, LOVD redirects you automatically back to the gene's homepage.
+
+
+
+
+
+\section{Deleting a gene database}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Only managers and up can delete gene databases from LOVD.
+To delete the gene database in question, first proceed to the \hyperlink{s_gene_homepage}{gene's homepage}.
+Click on the ``Options'' menu button to open up the gene entry's menu, and select the ``Delete gene entry'' option.
+To complete the removal, you need to fill in your password and submit the form.
+
+\begin{warntable}
+Removing a gene can not be undone, you will need to create the gene database again.
+% TODO: when we have import...
+%If in any doubt, first make a download of the database so that you can re-upload the data .....blabla
+Please note that deleting a gene removes also its transcripts in the database and therefore all variant annotation on the gene in question, but it \emph{does not remove the variants from the database}.
+%TODO: so how do we delete these variants?
+\end{warntable}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -498,13 +1126,31 @@ The button to create a new gene will be highlighted, as a suggestion of your nex
 
 \end{document}
 
+\hypertarget{name_of_label}{}
+\hyperlink{name_of_label}{name of link}.
 
+\begin{infobox}
+  \caption{\textbf{Caption}}
+  ...
+\end{infobox}
 
+% Add to text explaining how to log in:
+Cookies are small text files stored on your computer that help a website identify you. LOVD uses this to keep you identified after you log into the system. If this setting is disabled, LOVD will include a so-called session id in the URL, to keep track of the authenticated users. However, this is much less secure because including the session id in the URL may expose this session id in log files on your computer or on proxy servers. This may allow others to hijack your user's accounts. So leaving this option set is highly recommended.
 
+% Maybe move to create individual?
+List of possible diseases associated with mutations in the available genes: Specify a list of phenotypes that are used in this LOVD installation. This list will appear on the full legend and will allow a submitter to select a phenotype from the list. If no phenotypes are specified, the submitter will need to fill in the phenotype in a common text field.
 
+% Move somewhere about the screening data:
+List of available detection techniques: Specify a list of detection techniques appropriate for the genes configured in this LOVD installation. By default, a full set of detection techniques has been put in this list already. This list will appear on the full legend and will allow a submitter to select the used detections technique(s) from the list. If no techniques are specified, the submitter will need to fill in the technique in a common text field.
+
+%10
 \chapter{}
+%5
 \section{}
+%3
 \subsection{}
+%1
+\subsubsection{}
 
 
 
@@ -512,13 +1158,9 @@ $_PAGES =
      array(
             'LOVD Setup',
              array(
-                    'LOVD system settings',
                     'Gene databases',
                      array(
-                            'Creating new genes',
-                            'Editing genes',
                             'Emptying genes',
-                            'Deleting genes',
                           ),
                     'Custom columns',
                      array(
@@ -557,13 +1199,6 @@ $_PAGES =
                             'Uninstalling modules',
                             'Available LOVD modules',
                           ),
-                    'System logs',
-                     array(
-                            'What is logged by LOVD',
-                            'Viewing and searching through the logs',
-                            'Removing log entries',
-                          ),
-                    'Uninstalling LOVD',
                   ),
             'LOVD Gene configuration area',
              array(

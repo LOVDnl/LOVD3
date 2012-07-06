@@ -10,13 +10,28 @@
  * 3.0 Beta 07
  * 2012-07-?? ????????????????????????????????????
  *********/
- * You can now open the Mutalyzer prediction page from the variant data entry form, by clicking on the mark besides the protein field after a successful prediction has been run.
- * LOVD 3.0 can no longer be configured for hg18, but existing installations will still be supported.
+ * You can now open the Mutalyzer prediction page from the variant data entry
+   form, by clicking on the mark besides the protein field after a successful
+   prediction has been run.
+ * LOVD 3.0 can no longer be configured for hg18, but existing installations
+   will still be supported.
  * Fixed some typos and textual changes.
- * The quick download format for data lists are now only available for properly authorized users.
- * Included version 3.0-beta-07 of official LOVD Reference Sequence Parser script.
-   - Compared to LOVD 2.0, the greatest improvement is that this script downloads the reference sequence from Mutalyzer, and therefore no longer requires GenBank files to be uploaded to LOVD.
+ * The quick download format for data lists are now only available for properly
+   authorized users.
+ * Included version 3.0-beta-07 of official LOVD Reference Sequence Parser
+   script.
+   - Compared to LOVD 2.0, the greatest improvement is that this script
+     downloads the reference sequence from Mutalyzer, and therefore no longer
+     requires GenBank files to be uploaded to LOVD.
    - It does not support generating GenBank files, like in LOVD 2.0.
+ * When searching for a gene symbol on the "Create a new gene" form, LOVD now
+   also searches for aliases if no match is found.
+ * From the gene data entry form, you can now open a new window to create new
+   disease entries.
+ * From the individual data entry form, managers can now open a new window to
+   create new disease entries. Other users get a note that they can include a
+   missing disease in the individual's remarks field, such that a manager can
+   configure the requested disease in the LOVD.
 
 
 
@@ -186,7 +201,7 @@
  * Fixed bug; Changed all javascript links to absolute URLs, because IE does
    not respect the BASE tag.
    (thanks to Chris Watson, St. James's Univ Hospital, Leeds, UK, for reporting)
- * Fixed bug; The variant create & edit forms no longer produce an error despite 
+ * Fixed bug; The variant create & edit forms no longer produce an error despite
    having filled in a valid dbSNP number or DBID in the `VariantOnGenome/dbSNP`
    and `VariantOnGenome/DBID` field correctly.
  * Implemented the option of also removing variants when deleting a screening or
@@ -286,7 +301,7 @@
    & external url fields to actual clickable links.
  * Now does not show some columns in the gene homepage when they are empty or
    when the user's level is not high enough.
- * Activated the Phenotype & VariantOnTranscript standard custom columns during 
+ * Activated the Phenotype & VariantOnTranscript standard custom columns during
    installation.
  * Added a few variant statistics to the gene homepage and fixed the variant
    statistics on the gene viewList.
@@ -426,7 +441,7 @@
    the user is the owner of the data, curator or higher.
  * You can now specify that no variants were found with a particular screening.
  * Now a user is only able to select up to 15 genes that have been screened in
-   the screenings create & edit forms. For genome-wide analysis no genes should 
+   the screenings create & edit forms. For genome-wide analysis no genes should
    be selected.
  * Fixed bug; The DBID was not properly predicted in some cases.
  * Fixed bug; When creating a gene, there were in some specific cases no proper
@@ -557,7 +572,7 @@
    just "1234567".
  * Fixed bug; The VariantOnTranscripts ViewList did not show any active custom
    columns.
- * Added the "Affects function" selection list to all variant create & edit 
+ * Added the "Affects function" selection list to all variant create & edit
    forms, which will be the replacement of the "Pathogenicity" field from LOVD2.
  * Added the option M (mitochondrial) to the chromosome selection list when
    creating a genomic variant.
@@ -818,7 +833,7 @@
    contain @ and #.
  * Implemented a urldecode and urlencode in genes.php to allow special chars
    to be in the gene symbol and thus in the URL.
- * Implemented automatic exploding of GROUP_CONCAT data based on their name. 
+ * Implemented automatic exploding of GROUP_CONCAT data based on their name.
    So '_genes' = array (;) or '__active_diseases' = nested array(;;).
  * Added the temporary memory leak fix from genes?create also to genes?edit &
    transcripts?create.

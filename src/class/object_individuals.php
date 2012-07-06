@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-05-25
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-05
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *     
+ *
  *
  * This file is part of LOVD.
  *
@@ -219,7 +219,7 @@ class LOVD_Individual extends LOVD_Custom {
         // Get list of diseases.
         $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id')->fetchAllCombine();
         $nDiseases = count($aDiseasesForm);
-        $nFieldSize = ($nDiseases < 20? $nDiseases : 20);
+        $nFieldSize = ($nDiseases < 15? $nDiseases : 15);
         if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
             $nFieldSize = 1;
@@ -257,7 +257,9 @@ class LOVD_Individual extends LOVD_Custom {
                         array('', '', 'print', '<B>Relation to diseases</B>'),
                         'hr',
                         array('This individual has been diagnosed with these diseases', '', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
-                        'hr',
+     'diseases_info' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD. If any disease you would like to select is not in here, please mention this in the remarks, preferably including the omim number. This way, a manager can configure this disease in this LOVD.'),
+   'diseases_create' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD. Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
+                     'hr',
       'general_skip' => 'skip',
            'general' => array('', '', 'print', '<B>General information</B>'),
        'general_hr1' => 'hr',
@@ -267,12 +269,17 @@ class LOVD_Individual extends LOVD_Custom {
                         'skip',
       'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
-                      
+
         if (ACTION != 'edit') {
             unset($this->aFormData['authorization']);
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
+        }
+        if ($_AUTH['level'] < LEVEL_MANAGER) {
+            unset($this->aFormData['diseases_create']);
+        } else {
+            unset($this->aFormData['diseases_info']);
         }
 
         return parent::getForm();

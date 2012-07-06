@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-05
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -96,7 +96,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_Individual();
     $_DATA->setSortDefault('id');
     $_DATA->viewList('Individuals_for_D_VE', array('panelid', 'diseaseids'), true, true);
-    
+
     $_T->printFooter();
     exit;
 }
@@ -197,11 +197,16 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $nID);
-
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable('Successfully created the disease information entry!', 'success');
+
+            if (isset($_GET['in_window'])) {
+                // We're in a new window, refresh opener en close window.
+                print('      <SCRIPT type="text/javascript">setTimeout(\'self.close();\', 1000);</SCRIPT>' . "\n\n");
+            } else {
+                print('      <SCRIPT type="text/javascript">setTimeout(\'window.location.href=\\\'' . lovd_getInstallURL() . CURRENT_PATH . '/' . $nID . '\\\';\', 3000);</SCRIPT>' . "\n\n");
+            }
 
             $_T->printFooter();
             exit;
@@ -232,7 +237,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -629,7 +634,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
-    
+
 ?>
 <SCRIPT type="text/javascript">
 function lovd_setWidth ()

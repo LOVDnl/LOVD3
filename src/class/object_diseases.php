@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-07-05
+ * For LOVD    : 3.0-beta-07
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -173,7 +173,7 @@ class LOVD_Disease extends LOVD_Object {
         if (!$nData) {
             $aGenesForm = array('' => 'No gene entries available');
         }
-        $nFieldSize = (count($aGenesForm) < 20? count($aGenesForm) : 20);
+        $nFieldSize = (count($aGenesForm) < 15? count($aGenesForm) : 15);
 
         // Array which will make up the form table.
         $this->aFormData =
@@ -186,7 +186,7 @@ class LOVD_Disease extends LOVD_Object {
                         array('OMIM ID', '', 'text', 'id_omim', 10),
                         'hr',
                         'skip',
-                        array('', '', 'print', '<B>Relation to genes</B>'),
+                        array('', '', 'print', '<B>Relation to genes (optional)</B>'),
                         'hr',
                         array('This disease has been linked to these genes', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
                         'hr',

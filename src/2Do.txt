@@ -1,5 +1,9 @@
 Prioritize:
 ===========
+- (@Ivo:) RefSeq parser: create overview file, zonder transcript in naam, met links naar de juiste files.
+- (@Ivo:) Some fields on the gene edit page should be allowed HTML (disclaimer, header, footer, notes).
+  + fix this, add "HTML enabled" to form and document this.
+
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
 - Ik krijg van Mutalyzer geen waarschuwingen m.b.t. de splicing meer.
@@ -24,6 +28,8 @@ Prioritize:
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
+- Gene headers & footers implementeren? Staat al wel omschreven in de manual.
+- Gene notes for variant listings implementeren? Staat al wel omschreven in de manual.
 - (@Ivo) DATA DOWNLOAD.
   + File format: header, individuals, phenotypes, screenings, vog, vot.
     * Genes, diseases en transcripts moeten nog worden toegevoegd aan de download.
@@ -40,6 +46,10 @@ Prioritize:
     * We zullen in de toekomst wel toestaan dat voor dit format een selectie van de data wordt gedownload, maar
       dat moet dan maar op basis van de geselecteerde IDs die in SESSION worden opgeslagen. Ik wil niet code voor
       het parsen van zoektermen moeten kopieëren naar download oid.
+  + How does the public make downloads?
+    * Link from the gene homepage?
+    * Link from the viewList, after applying search terms, just like in LOVD2?
+      - But then, you need to control the viewList from that button, such that the search terms are correct, OR the button is provided by the viewList.
   + DATA IMPORT
     * Choose character set!
       - Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
@@ -53,12 +63,15 @@ Prioritize:
 - Mapping melding (successfully mapped xxx variants slaat nergens op)
 - Dropdown menu's op de overige VE's ook inbouwen.
 =============== Below here needs to be re-evaluated for priority ===============
+- Individual viewList: add column "variants in genes" with gene symbols.
+  + Then, add option to dropdown menu if we have a currdb.
+  + After that, change the default link when clicking the individual tab.
+  + Then, apply the same to screenings (add column "genes screened", add option in tab menu, change default link).
 - Unit tests via Selenium (of alternatief)?
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
   * Of betekent dit, dat Mutalyzer er sowieso niet mee overweg kan?
-- Kunnen we een keiharde fout onderscheppen bij genen als: CMT1A?
-  + De HGNC heeft er niet veel info over, en zegt ook dat het geen gen met product is. Als dat op te halen is, kunnen we zelf een nette foutmelding geven. 
+- Met betrekking tot het blokkeren van het aanmaken van niet volledig bekende genen:
   + Nadat Mutalyzer komt met een test op alle genen(sliceChromosomeByGene, getTranscriptsAndInfo, numberConversion per gen 1 variant) moeten we
     beslissen wat we ermee gaan doen, nu tijdelijke filter op "rare" LocusType's.
 - Incorporate links to Alamut.
@@ -100,14 +113,16 @@ Prioritize:
     + Iedere variant die gevonden wordt in de panel moet dan apart geteld worden, door middel van het "VariantOnGenome/Times_reported" veld (eventueel
       "VariantOnGenome/Chromosomes_reported" of "VariantOnGenome/Found_on_chromosomes" of ...). Hier moet het aantal chromosomen worden ingevuld, waar de
       variant is gevonden. De frequentie is dan uit te rekenen volgens: "VariantOnGenome/Times_reported" ÷ (Individuals "panel_size" * 2)
+      Misschien beter niet chromosomen, maar personen, zoals ook de panel? Aantal chromosomen kan afgeleid worden van variant chromosoom (autosomaal?),
+      Individual/Gender en VOG/Allele instellingen?
+      * Behalve bij geslachts-gemengde groep! Maar zijn er wel dat soort groepen, als het om geslachtschromosomen gaat?
+        - Misschien enkel problemen als paper zegt gevonden in X/Y chromosomen?
     + Om aan te geven dat een variant niet gevonden is in een controle groep, kan men de "Variant/Times_reported" op 0 zetten, maar dan alleen als de
       Individuals "panel_size" groter dan 1 is (dus dat mag niet in een individu, alleen een panel).
     + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
   - "Does not accept external submissions" setting? Dat moet dan ook worden doorgegeven, zodat de LOVD/LSDB lijst dat kan aangeven.
     + Apart veld, niet in data.
-  - Begin met manual (eerst alleen nog PDF).
-  - Gene notes for variant listings implementeren?
-  - Gene headers & footers implementeren?
+  - Werk verder aan manual (eerst alleen nog PDF).
   - Curators should have a nice overview per gene which columns can still be added one specific gene, like LOVD 2.0 had.
   - Nu dat inc-init.php de $_PE[1] pad, moeten we even kijken naar wat doen we met alle code overal die $_PE[1] pad en aan nID toewijst.
     + Alleen padding code weghalen, en toewijzing laten, of zelf $nID en $sID toewijzen in inc-init.php?
@@ -120,6 +135,12 @@ Prioritize:
     + Voordelen:
       * Variant tellingen gaan automatisch goed.
     + We willen dit eigenlijk op een andere manier oplossen. Variant/Genetic_Origin als bit column gebruiken?
+      * Dit zou gerelateerd kunnen zijn aan een ander probleem wat we hebben: de LOVD2 c.0, c.= en c.? notaties.
+        - Hier misschien toch een extra kolom voor?
+        - Maak lijst van welke waardes samen moeten kunnen komen;
+          + Tweede allel WT / niet bekeken / verloren / homozygoot
+        - Het moet goed te tellen zijn (frequenties!)
+        - Wel/niet tonen = instelling?
   - Should we maybe set default_socket_timeout somewhere?
   - Overstappen naar de JSON API - kiezen van een JSON lib (ZEND?)
     + In het geval dat we de browser direct de calls en de interpretatie willen laten doen, hebben we een wrapper script in PHP
@@ -161,7 +182,6 @@ Prioritize:
 - Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
 - Custom View:
   * The full data overview moet nog de varianten tonen, die óók in de individu gevonden zijn.
-- Probleem LOVD2 c.0, c.= en c.? notaties. Speciale variant IDs of andere flag? Wel/niet tonen = instelling?
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
 - Delete user verder ontmoedigen?

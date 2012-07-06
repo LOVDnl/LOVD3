@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-06-17
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-05
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -190,7 +190,7 @@ class LOVD_Custom extends LOVD_Object {
                 foreach ($aCol['form_type'] as $key => $val) {
                     if (!$key && !$aCol['mandatory']) {
                         // Add '(Optional)'.
-                        $val .= ' (Optional)';
+                        $val .= ' (optional)';
                     }
                     $aEntry[] = $val;
                     if ($key == 2) {
@@ -206,7 +206,7 @@ class LOVD_Custom extends LOVD_Object {
                 foreach ($aCol['form_type'] as $key => $val) {
                     if (!$key && !$aCol['mandatory']) {
                         // Add '(Optional)'.
-                        $val .= ' (Optional)';
+                        $val .= ' (optional)';
                     } elseif ($key == 3) { // Size
                         // We need to place the form entry name (e.g. "Individual/Gender") in between.
                         $aEntry[] = $sPrefix . $sCol;
@@ -309,8 +309,8 @@ class LOVD_Custom extends LOVD_Object {
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
             $bAlignRight = preg_match('/^(DEC|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);
-            
-            $aViewList[$sID] = 
+
+            $aViewList[$sID] =
                             array(
                                     'view' => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
                                     'db'   => array('`' . $aCol['colid'] . '`', 'ASC', true),

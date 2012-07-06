@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-07-03
+ * Modified    : 2012-07-05
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *     
+ *
  *
  * This file is part of LOVD.
  *
@@ -180,8 +180,8 @@ class LOVD_Gene extends LOVD_Object {
                         'uniq_variants' => array(
                                     'view' => array('Unique variants', 70),
                                     'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
-                        'updated_date_' => array( 
-                                    'view' => array('Last updated', 110), 
+                        'updated_date_' => array(
+                                    'view' => array('Last updated', 110),
                                     'db'   => array('g.updated_date', 'DESC', true)),
                         'diseases_' => array(
                                     'view' => array('Associated with diseases', 200),
@@ -298,7 +298,7 @@ class LOVD_Gene extends LOVD_Object {
         // Get list of diseases.
         $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id')->fetchAllCombine();
         $nDiseases = count($aDiseasesForm);
-        $nFieldSize = ($nDiseases < 20? $nDiseases : 20);
+        $nFieldSize = ($nDiseases < 15? $nDiseases : 15);
         if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
             $nFieldSize = 1;
@@ -319,7 +319,7 @@ class LOVD_Gene extends LOVD_Object {
         } else {
             $aTranscriptsForm = array('' => 'No transcripts available');
         }
-        
+
         $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
 
         $aSelectRefseq = array(
@@ -351,9 +351,10 @@ class LOVD_Gene extends LOVD_Object {
                         array('Date of creation (optional)', 'Format: YYYY-MM-DD. If left empty, today\'s date will be used.', 'text', 'created_date', 10),
                         'hr',
                         'skip',
-                        array('', '', 'print', '<B>Relation to diseases</B>'),
+                        array('', '', 'print', '<B>Relation to diseases (optional)</B>'),
                         'hr',
                         array('This gene has been linked to these diseases', 'Listed are all disease entries currently configured in LOVD.', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
+                        array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD. Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Reference sequences (mandatory)</B>'),
@@ -380,7 +381,9 @@ class LOVD_Gene extends LOVD_Object {
                         array('This gene has a human-readable reference sequence', '', 'select', 'refseq', 1, $aSelectRefseq, 'No', false, false),
                         array('', '', 'note', 'Although GenBank files are the official reference sequence, they are not very readable for humans. If you have a human-readable format of your reference sequence online, please select the type here.'),
                         array('Human-readable reference sequence location', '', 'text', 'refseq_url', 40),
-//                        array('', '', 'note', 'If you used our Reference Sequence Parser to create a human-readable reference sequence, the result is located at "http://chromium.liacs.nl/LOVD2/refseq/GENESYMBOL_codingDNA.html".'),
+                     // FIXME: Link incorrect!!!
+   'refseqparse_new' => array('', '', 'note', 'If you are going to use our <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'scripts/refseq_parser.php\', \'RefSeqParser\', 800, 500); return false;">Reference Sequence Parser</A> to create a human-readable reference sequence, the result will be located at "' . lovd_getInstallURL() . 'refseq/' . $zData['id'] . '_codingDNA.html".'),
+  'refseqparse_edit' => array('', '', 'note', 'If you used our <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'scripts/refseq_parser.php?symbol=' . $zData['id'] . '\', \'RefSeqParser\', 800, 500); return false;">Reference Sequence Parser</A> to create a human-readable reference sequence, the result is located at "' . lovd_getInstallURL() . 'refseq/' . $zData['id'] . '_codingDNA.html".'),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Customizations (optional)</B>'),
@@ -414,6 +417,9 @@ class LOVD_Gene extends LOVD_Object {
                   );
         if (ACTION == 'edit') {
             $this->aFormData['transcripts'] = array('Transcriptomic reference sequence(s)', '', 'note', 'To add, remove or edit transcriptomic reference sequences for this gene, please see the gene\'s detailed view.');
+            unset($this->aFormData['refseqparse_new']);
+        } else {
+            unset($this->aFormData['refseqparse_edit']);
         }
 
         return parent::getForm();
@@ -561,7 +567,7 @@ class LOVD_Gene extends LOVD_Object {
     {
         // Sets default values of fields in $_POST.
         global $zData;
-        
+
         $_POST['chrom_band'] = $zData['chrom_band'];
         $_POST['disclaimer'] = '1';
     }

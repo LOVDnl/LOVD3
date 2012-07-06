@@ -146,7 +146,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     if (GET) {
         if (!isset($_SESSION['work'][$sPath])) {
             $_SESSION['work'][$sPath] = array();
-        } 
+        }
 
         while (count($_SESSION['work'][$sPath]) >= 5) {
             unset($_SESSION['work'][$sPath][min(array_keys($_SESSION['work'][$sPath]))]);
@@ -352,8 +352,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $aFields = array(
                                 'id', 'name', 'chromosome', 'chrom_band', 'imprinting', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage',
                                 'url_external', 'allow_download', 'allow_index_wiki', 'id_hgnc', 'id_entrez', 'id_omim', 'show_hgmd',
-                                'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer', 
-                                'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date', 
+                                'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer',
+                                'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date',
                                 );
 
                 // Prepare values.
@@ -540,7 +540,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
         if (!isset($_SESSION['work'][$sPath])) {
             $_SESSION['work'][$sPath] = array();
-        } 
+        }
 
         while (count($_SESSION['work'][$sPath]) >= 5) {
             unset($_SESSION['work'][$sPath][min(array_keys($_SESSION['work'][$sPath]))]);
@@ -563,7 +563,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
                             'name', 'chrom_band', 'imprinting', 'refseq_genomic', 'reference', 'url_homepage', 'url_external', 'allow_download',
                             'allow_index_wiki', 'show_hgmd', 'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq',
                             'refseq_url', 'disclaimer', 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_date',
-                            'edited_by', 'edited_date', 
+                            'edited_by', 'edited_date',
                             );
 
             if (empty($zData['refseq_UD'])) {
@@ -582,7 +582,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
             $_POST['name'] = $zData['name'];
-            
+
             $_DATA->updateEntry($sID, $_POST, $aFields);
 
             // Write to log...
@@ -937,7 +937,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
-    
+
 ?>
 <SCRIPT type="text/javascript">
 function lovd_setWidth ()

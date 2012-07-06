@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2012-05-28
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-05
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -41,7 +41,7 @@ if (!defined('ROOT_PATH')) {
 
 function lovd_getLRGbyGeneSymbol ($sGeneSymbol)
 {
-    // Get LRG reference sequence 
+    // Get LRG reference sequence
     preg_match('/(LRG_\d+)\s+' . $sGeneSymbol . '/', implode(' ', lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt')), $aMatches);
     if(!empty($aMatches)) {
         return $aMatches[1];
@@ -98,7 +98,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
         } else {
             // FIXME; implement proper check on gene symbol.
             // Gene symbol; also match SYMBOL~withdrawn to be able to use a deprecated symbol as search key.
-            $sWhere = 'gd_app_sym%20IN%28%22' . $sHgncId . '%22%2C%22' . $sHgncId . '%7Ewithdrawn%22%29';
+            $sWhere = rawurlencode('gd_app_sym IN ("' . $sHgncId . '", "' . $sHgncId . '~withdrawn")');
         }
 
         // We also surely need gd_app_name to check for and handle withdrawn or deprecated entries.
@@ -110,7 +110,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
     $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
 
     // If the HGNC is having database problems, we get an HTML page.
-    if (empty($aHgncFile) || stripos(implode($aHgncFile), '<html') !== FALSE) {
+    if (empty($aHgncFile) || stripos(implode($aHgncFile), '<html') !== false) {
         if (function_exists('lovd_errorAdd')) {
             lovd_errorAdd('', 'Couldn\'t get gene information, probably because the HGNC is having database problems.');
         }
@@ -120,6 +120,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
     if ($sHgncId === true) {
         // Got bulk data.
 
+        $aHGNCgenes = array();
         array_shift($aHgncFile);
         foreach ($aHgncFile as $sGene) {
             $aGene = array_combine($aColumns, explode("\t", $sGene));
@@ -165,7 +166,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
             if (function_exists('lovd_errorAdd')) {
                 lovd_errorAdd('hgnc_id', 'LOVD cannot process this type of gene entry ' . htmlspecialchars($sHgncId) . ' (Locus Type: ' . $aGene['gd_locus_type'] . ').');
             }
-            return false; 
+            return false;
         }
 
         foreach (array_diff($aColumns, $aCols) as $sUnwantedColumn) {
@@ -174,8 +175,31 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
         }
 
         return $aGene;
+
     } elseif (function_exists('lovd_errorAdd')) {
-        lovd_errorAdd('', 'Entry ' . htmlspecialchars($sHgncId) . ' was not found in the HGNC database.');
+        // No math found, start looking for alias. We could have included an OR in the original search, but I am not
+        // sure if that would maybe have other genes pop up while the official gene is then ignored.
+        // We only do this search, if we can report if of course (hence the check for lovd_errorAdd()).
+        // Replace WHERE.
+        $sWhere = rawurlencode('CONCAT(" ", gd_aliases, ",") LIKE "% ' . $sHgncId . ',%"');
+        $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
+
+        // Just quick check if we have a match now...
+        if (!empty($aHgncFile) && stripos(implode($aHgncFile), '<html') === false) {
+            unset($aHgncFile[0]);
+            $sSymbolList = '';
+            foreach ($aHgncFile as $sLine) {
+                $aGene = array_combine($aColumns, explode("\t", $sLine));
+                $sSymbolList .= (!$sSymbolList? '' : ', ') . $aGene['gd_app_sym'];
+            }
+            if ($sSymbolList) {
+                // "Prettify" the output by replacing the last , by an "or".
+                $sSymbolList = preg_replace('/, ([^ ]+)$/', " or $1", $sSymbolList);
+                lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' was not found, perhaps you are referring to ' . $sSymbolList . '?');
+            } else {
+                lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' was not found in the HGNC database.');
+            }
+        }
     }
     return false;
 }
