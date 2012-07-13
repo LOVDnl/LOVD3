@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-04-13
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-07-12
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -64,6 +64,8 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
         // Collect custom column information, all active columns (possibly restricted per gene).
+        // FIXME; Kijk voor shared cols niet naar default settings, maar naar de applied settings (kolom hidden in alle genen? -> verbergen)
+        // FIXME; Daarna moet er per regel bij het printen van de data weer worden gekeken wat de instellingen van dit gen zijn, en dan de data verwijderen. Hoe doen we dat?
         $sSQL = 'SELECT c.id, c.width, c.head_column, c.mysql_type, c.col_order FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) ' .
                     'WHERE ' . ($_AUTH['level'] >= LEVEL_MANAGER? '' : 'c.public_view = 1 AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     (!$sGene? '' :
@@ -111,7 +113,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnGenome':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '');
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') . ', dsg.name AS var_status';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['SELECT'] .= ', vog.id AS row_id'; // To ensure other table's id columns don't interfere.
@@ -132,6 +134,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     if (!in_array('VariantOnTranscript', $aObjects)) {
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS eg ON (vog.effectid = eg.id)';
                     }
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
                     // If no collaborator, hide lines with hidden variants!
                     if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
                         $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vog.statusid >= ' . STATUS_MARKED;
@@ -197,7 +200,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'Individual':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY d.symbol SEPARATOR ", ") AS diseases_';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY d.symbol SEPARATOR ", ") AS diseases_, dsi.name AS ind_status';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';
@@ -232,6 +235,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' .
                                      TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) LEFT OUTER JOIN ' .
                                      TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)';
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsi ON (i.statusid = dsi.id)';
                     break;
             }
         }
@@ -276,6 +280,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     // The fixed columns.
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                          array(
+                                // NOTE: there are more columns defined a little further below.
                                 'chromosome' => array(
                                         'view' => array('Chr', 50),
                                         'db'   => array('vog.chromosome', 'ASC', true)),
@@ -335,7 +340,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                     // The fixed columns.
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                          array(
-                                'diseases_' => array(
+                             // NOTE: there are more columns defined a little further below.
+                             'diseases_' => array(
                                             'view' => array('Disease', 175),
                                             'db'   => array('diseases_', false, true)),
                               ));
@@ -344,6 +350,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                     }
                     break;
             }
+
+
 
             // The custom columns.
             foreach ($this->aColumns as $sColID => $aCol) {
@@ -354,6 +362,41 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'db'   => array($sPrefix . '`' . $aCol['id'] . '`', 'ASC', lovd_getColumnType('', $aCol['mysql_type'])),
                               );
                 }
+            }
+
+
+
+            // Some fixed columns are supposed to be shown AFTER this objects's custom columns, so we'll need to go through the objects again.
+            switch ($sObject) {
+                case 'VariantOnGenome':
+                    // More fixed columns.
+                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
+                        array(
+                            // NOTE: there are more columns defined a little further up.
+                            'var_status' => array(
+                                'view' => array('Var. status', 70),
+                                'db'   => array('dsg.name', false, true)),
+                        ));
+                    if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+                        // Unset status column for non-collaborators. We're assuming here, that lovd_isAuthorized() only gets called for gene-specific overviews.
+                        unset($this->aColumnsViewList['var_status']);
+                    }
+                    break;
+
+                case 'Individual':
+                    // More fixed columns.
+                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
+                        array(
+                            // NOTE: there are more columns defined a little further up.
+                            'ind_status' => array(
+                                'view' => array('Ind. status', 70),
+                                'db'   => array('dsi.name', false, true)),
+                        ));
+                    if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+                        // Unset status column for non-collaborators. We're assuming here, that lovd_isAuthorized() only gets called for gene-specific overviews.
+                        unset($this->aColumnsViewList['ind_status']);
+                    }
+                    break;
             }
         }
 

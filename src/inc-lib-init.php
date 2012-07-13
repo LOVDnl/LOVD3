@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-10
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -234,7 +234,7 @@ function lovd_getColumnData ($sTable)
                           );
         }
     }
-    
+
     return $aTableCols[$sTable];
 }
 
@@ -362,7 +362,7 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
     if (!count($aSources)) {
         $aSources = $_DB->query('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine();
     }
-    
+
     if (array_key_exists($sSource, $aSources)) {
         $s = $aSources[$sSource];
         if ($bHTML) {
@@ -559,6 +559,9 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         }
         return 0;
     }
+    if ($bSetUserLevel) {
+        $_AUTH['level'] = LEVEL_SUBMITTER;
+    }
     return false;
 }
 
@@ -635,7 +638,7 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
             if ($s === false) {
                 // This mysteriously may happen at the first fgets() call???
                 continue;
-            } 
+            }
             $s = rtrim($s, "\r\n");
             if ($bListen) {
                 $aOutput[] = $s;
@@ -931,7 +934,7 @@ function lovd_validateIP ($sRange, $sIP)
             } else {
                 $bPart = false;
                 break;
-            }            
+            }
         }
         $b = $bPart;
     }

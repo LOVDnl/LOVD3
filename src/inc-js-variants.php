@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2012-07-02
+ * Modified    : 2012-07-09
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,7 +48,7 @@ function lovd_checkHGVS ()
         src: 'gfx/lovd_loading.gif',
         alt: 'Loading...',
         title: 'Loading...',
-        class: '',
+        className: '',
         onmouseover: '',
         onmouseout: ''
     }).show();
@@ -114,7 +114,7 @@ function lovd_convertPosition (oElement)
         src: 'gfx/trans.png',
         alt: '',
         title: '',
-        class: '',
+        className: '',
         onmouseover: '',
         onmouseout: ''
     }).show();
@@ -122,13 +122,13 @@ function lovd_convertPosition (oElement)
     $(oAllProteins).siblings('img:first').attr({
         src: 'gfx/trans.png',
         alt: '',
-        title: '',
+        title: ''
     }).show();
     $(oThisDNA).siblings('img:first').attr({
         src: 'gfx/lovd_loading.gif',
         alt: 'Loading...',
         title: 'Loading...',
-        class: '',
+        className: '',
         onmouseover: '',
         onmouseout: ''
     }).show();
@@ -138,7 +138,7 @@ function lovd_convertPosition (oElement)
         var sVariantNotation = 'chr<?php echo $_GET['chromosome']; ?>:' + oThisDNA.val();
         var aGenes = [];
         for (nTranscriptID in aTranscripts) {
-            if ($.inArray(aTranscripts[nTranscriptID][1], aGenes) == -1) { 
+            if ($.inArray(aTranscripts[nTranscriptID][1], aGenes) == -1) {
                 aGenes.push(aTranscripts[nTranscriptID][1]);
             }
         }
@@ -166,7 +166,7 @@ function lovd_convertPosition (oElement)
                             if (aVariant != null) {
                                 var oInput = $('#variantForm input[id_ncbi="' + aVariant[1] + '"]');
                                 if (oInput[0] != undefined) {
-                                    // If the transcript returned by mutalyzer is present in the form, fill in the respons from mutalyzer.  
+                                    // If the transcript returned by mutalyzer is present in the form, fill in the respons from mutalyzer.
                                     oInput.attr('value', aVariant[2]);
                                     oInput.siblings('img:first').attr({
                                         src: 'gfx/check.png',
@@ -306,7 +306,7 @@ function lovd_getProteinChange (oElement)
                             src: 'gfx/lovd_form_warning.png',
                             alt: '',
                             title : '',
-                            class: 'help',
+                            className: 'help',
                             onmouseover : 'lovd_showToolTip(\'' + escape(sErrorMessage) + '\');',
                             onmouseout: 'lovd_hideToolTip();'
                         }).show();
@@ -332,7 +332,7 @@ function lovd_getProteinChange (oElement)
                                     src: 'gfx/lovd_form_information.png',
                                     alt: '',
                                     title : '',
-                                    class: 'help',
+                                    className: 'help',
                                     onmouseover : 'lovd_showToolTip(\'' + escape(sErrorMessage) + '\');',
                                     onmouseout: 'lovd_hideToolTip();'
                                 }).show();

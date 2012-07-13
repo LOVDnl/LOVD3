@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-10
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -46,7 +46,13 @@ lovd_requireAUTH(LEVEL_SUBMITTER);
 
 if (PATH_COUNT == 1 && !ACTION) {
     // URL: /submit
-    // Submission process 
+    // Submission process
+
+    // 2012-07-10; 3.0-beta-07; Submitters are no longer allowed to add variants without individual data.
+    if (!lovd_isAuthorized('gene', $_AUTH['curates'], false)) {
+        header('Location: ' . lovd_getInstallURL() . 'individuals?create');
+        exit;
+    }
 
     define('PAGE_TITLE', 'Submit new information to this database');
     $_T->printHeader();
@@ -55,7 +61,6 @@ if (PATH_COUNT == 1 && !ACTION) {
     print('      Do you have any information available regarding an individual or a group of individuals?<BR><BR>' . "\n\n");
 
     $aOptionsList = array();
-
     $aOptionsList['options'][0]['onclick'] = 'individuals?create';
     $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit information on individuals</B>, such as phenotype or mutation screening information';
     $aOptionsList['options'][1]['onclick'] = 'javascript:if(confirm(\'Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!\nDo you want to continue anyway?\')){window.location.href=\'' . lovd_getInstallURL() . 'variants?create\';}';
@@ -335,7 +340,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
         ($zIndividualDetails['owned_by'] != $_AUTH['id']? $zIndividualDetails['owned_by_'] = 'Data owner' : false);
         $zIndividualDetails['statusid_'] = $_SETT['data_status'][$zIndividualDetails['statusid']];
         $bUnpublished = ($bUnpublished || $zIndividualDetails['statusid'] < STATUS_MARKED);
-        if ($zIndividualDetails['panel_size'] <= 1) { 
+        if ($zIndividualDetails['panel_size'] <= 1) {
             unset($aIndividualFields['panel_size']);
         }
         $aIndividualFields['statusid_'] = 'Data status';

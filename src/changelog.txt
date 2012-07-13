@@ -32,6 +32,24 @@
    create new disease entries. Other users get a note that they can include a
    missing disease in the individual's remarks field, such that a manager can
    configure the requested disease in the LOVD.
+ * Fixed bug; Internet Explorer users couldn't configure new curators for genes
+   or use the Mutalyzer mapping / variant checking features.
+ * Improved the full download format; it now includes more data (genes,
+   transcripts, and diseases), and also includes the relationships between
+   individuals and diseases, screenings and genes, and screenings and variants.
+ * Submitters are no longer allowed to add submissions without adding individual
+   data also.
+ * Fixed bug; Curators could not open the detailed view of a variant's effect on
+   transcripts if the variant was non-public, even though the variant lies
+   within one of their genes.
+ * Fixed bug; On a disease's detailed view, in the list of genes the disease is
+   linked to, genes without an OMIM ID were left out.
+ * When there is an LOVD update available, this is now displayed in the Setup
+   area.
+ * Added the LOVD Configuration area; just like in LOVD 2.0 it serves as a gene-
+   specific starting page for curators.
+ * The Status column has been added to more data overviews, if the user is
+   authorized to see this column.
 
 
 

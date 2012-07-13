@@ -256,7 +256,7 @@ class LOVD_Object {
             } else {
                 return false;
             }
-        }            
+        }
     }
 
 
@@ -746,7 +746,7 @@ class LOVD_Object {
                     }
                     $sColType = lovd_getColumnType($sTable, $sColName);
                 }
-                // Allow for searches where the order of words is forced by enclosing the values with double quotes; 
+                // Allow for searches where the order of words is forced by enclosing the values with double quotes;
                 // Replace spaces in sentences between double quotes so they don't get exploded.
                 if ($sColType == 'DATETIME') {
                     $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($_GET['search_' . $sColumn]));
@@ -883,7 +883,7 @@ class LOVD_Object {
             if ($aOrder[0] == 'VariantOnGenome/DNA') {
                 $sSQLOrderBy .= ', position_g_start ' . $aOrder[1] . ', position_g_end ' . $aOrder[1] . ', `VariantOnGenome/DNA` ' . $aOrder[1];
             }
-        } else if ($aOrder[0] == 'VariantOnTranscript/DNA') {
+        } elseif ($aOrder[0] == 'VariantOnTranscript/DNA') {
             $sSQLOrderBy = 'position_c_start ' . $aOrder[1] . ', position_c_start_intron ' . $aOrder[1] . ', position_c_end ' . $aOrder[1] . ', position_c_end_intron ' . $aOrder[1] . ', `VariantOnTranscript/DNA` ' . $aOrder[1];
         }
         $this->aSQLViewList['ORDER_BY'] = $sSQLOrderBy . (empty($this->aSQLViewList['ORDER_BY'])? '' : ', ' . $this->aSQLViewList['ORDER_BY']);
@@ -983,38 +983,40 @@ class LOVD_Object {
                     $aSessionViewList['checked'] = array();
                 }
 
-                if (isset($_GET['ids_changed']) && $_GET['ids_changed'] == 'all') {
-                    // If the select all button was clicked, fetch all entries and mark them as 'checked' in session.
-                    // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
-                    // of the query.
-                    $q = $_DB->query($sSQL, $aArgs);
-                    while ($zData = $q->fetchAssoc()) {
-                        $zData = $this->generateRowID($zData);
-                        // We only need the row_id here for knowing which ones we need to check.
-                        $aSessionViewList['checked'][] = $zData['row_id'];
-                    }
-                } elseif (isset($_GET['ids_changed']) && $_GET['ids_changed'] == 'none') {
-                    // If the unselect all button was clicked, reset the 'checked' array.
-                    $aSessionViewList['checked'] = array();
-                } elseif (isset($_GET['ids_changed'])) {
-                    // Get the changed ids and remove them from or add them to the session.
-                    $aIDsChanged = explode(';', $_GET['ids_changed']);
-                    // Flip the keys & values, so that we can do a simple isset() to see if the id is already present.
-                    $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
-                    // Determine the highest key number, so we can use that later when adding new values to the array.
-                    $nIndex = (count($aSessionViewList['checked'])? max($aSessionViewList['checked']) + 1 : 0);
-                    foreach ($aIDsChanged as $nID) {
-                        if (isset($aSessionViewList['checked'][$nID])) {
-                            // ID is found in the array, but is also in the 'ids_changed' array, so remove it!
-                            unset($aSessionViewList['checked'][$nID]);
-                        } else {
-                            // ID is not found in the array, but IS in the 'ids_changed' array, so add it using the $nIndex as value we determined earlier.
-                            // Also add 1 to the $nIndex so that the next id that needs to be added will not overwrite this one.
-                            $aSessionViewList['checked'][$nID] = ++$nIndex;
+                if (isset($_GET['ids_changed'])) {
+                    if ($_GET['ids_changed'] == 'all') {
+                        // If the select all button was clicked, fetch all entries and mark them as 'checked' in session.
+                        // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
+                        // of the query.
+                        $q = $_DB->query($sSQL, $aArgs);
+                        while ($zData = $q->fetchAssoc()) {
+                            $zData = $this->generateRowID($zData);
+                            // We only need the row_id here for knowing which ones we need to check.
+                            $aSessionViewList['checked'][] = $zData['row_id'];
                         }
+                    } elseif ($_GET['ids_changed'] == 'none') {
+                        // If the unselect all button was clicked, reset the 'checked' array.
+                        $aSessionViewList['checked'] = array();
+                    } else {
+                        // Get the changed ids and remove them from or add them to the session.
+                        $aIDsChanged = explode(';', $_GET['ids_changed']);
+                        // Flip the keys & values, so that we can do a simple isset() to see if the id is already present.
+                        $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
+                        // Determine the highest key number, so we can use that later when adding new values to the array.
+                        $nIndex = (count($aSessionViewList['checked'])? max($aSessionViewList['checked']) + 1 : 0);
+                        foreach ($aIDsChanged as $nID) {
+                            if (isset($aSessionViewList['checked'][$nID])) {
+                                // ID is found in the array, but is also in the 'ids_changed' array, so remove it!
+                                unset($aSessionViewList['checked'][$nID]);
+                            } else {
+                                // ID is not found in the array, but IS in the 'ids_changed' array, so add it using the $nIndex as value we determined earlier.
+                                // Also add 1 to the $nIndex so that the next id that needs to be added will not overwrite this one.
+                                $aSessionViewList['checked'][$nID] = ++$nIndex;
+                            }
+                        }
+                        // Flip the array back to its original state.
+                        $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
                     }
-                    // Flip the array back to its original state.
-                    $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
                 }
             }
 
@@ -1082,7 +1084,7 @@ class LOVD_Object {
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
                       '        <THEAD>' . "\n" .
-                      '        <TR>' . 
+                      '        <TR>' .
    ($bOptions? "\n" . '          <TH valign="center" style="text-align:center;">' . "\n" .
                       '            <IMG id="viewlistOptionsButton_' . $sViewListID . '" src="gfx/options.png" width="16" height="16" style="cursor : pointer;"></TH>' : ''));
 
@@ -1196,7 +1198,7 @@ class LOVD_Object {
                             $sWhere .= ($sWhere? ' and ' : ' where ') . strtolower($sCol) . ' is "' . str_replace('|', '" or "', trim($sValue, '="') . '"');
                         }
                     }
-                    $sMessage .= $sWhere;                    
+                    $sMessage .= $sWhere;
                 }
                 lovd_showInfoTable($sMessage . '!', 'stop');
 

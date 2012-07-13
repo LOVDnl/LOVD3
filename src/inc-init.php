@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-22
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-11
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -435,7 +435,7 @@ $_TABLES =
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
                 'TABLE_HITS' => TABLEPREFIX . '_hits',
-                
+
                 // VERSIONING TABLES
                 //'TABLE_INDIVIDUALS_REV' => TABLEPREFIX . '_individuals_revisions',
                 //'TABLE_VARIANTS_REV' => TABLEPREFIX . '_variants_revisions',
@@ -593,11 +593,13 @@ if (ini_get('session.cookie_path') == '/') {
 if (!empty($_STAT['signature'])) {
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($_STAT['signature']);
-    session_name('PHPSESSID_' . $_SETT['cookie_id']);
-
-    // Start sessions - use cookies.
-    @session_start();
+} else {
+    $_SETT['cookie_id'] = md5($_INI['database']['database'] . $_INI['database']['table_prefix']);
 }
+session_name('PHPSESSID_' . $_SETT['cookie_id']);
+
+// Start sessions - use cookies.
+@session_start();
 header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version']) || $_STAT['version'] == $_SETT['system']['version']? '' : ' (DB @ ' . $_STAT['version'] . ')'));
 
 
@@ -670,16 +672,10 @@ if (!defined('NOT_INSTALLED')) {
 
         // Switch gene.
         // Gene switch will occur automatically at certain pages. They can be accessed by following links in LOVD itself, or possibly from outer sources.
-        if (preg_match('/^(genes|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
-            $sSelectGene = $aRegs[2];
-        }      
-
-        if (!empty($sSelectGene)) {
-            if (in_array($sSelectGene, lovd_getGeneList())) {
-                $_SESSION['currdb'] = $sSelectGene;
-            } else {
-                // FIXME; we used to have this... but probably not such a good idea now (it replaces normal error at genes/GENE).
-                //lovd_displayError('Init', 'You provided a non-existing gene database name');
+        if (preg_match('/^(configuration|genes|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
+            // We'll check this value further down in this code.
+            if ($aRegs[2] != 'in_gene') {
+                $_SESSION['currdb'] = $aRegs[2];
             }
         }
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-07-02
+ * Modified    : 2012-07-10
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -113,7 +113,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     define('PAGE_TITLE', 'View genomic variants from upload #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
-    
+
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_genome_variants.php';
@@ -240,7 +240,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
                 alt: 'Loading...',
                 title: 'Loading...'
             }).show();
-            
+
             // Call the script.
             $.get('<?php echo ROOT_PATH . 'ajax/map_variants.php?variantid=' . $nID; ?>', function ()
                 {
@@ -369,6 +369,10 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     // don't have to duplicate this code for variants?create and variants/upload?create.
 
     // We don't want to show an error message about the screening if the user isn't allowed to come here.
+    // 2012-07-10; 3.0-beta-07; Submitters are no longer allowed to add variants without individual data.
+    if (!isset($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)) {
+        lovd_requireAUTH(LEVEL_OWNER);
+    }
     lovd_requireAUTH(empty($_PE[1])? LEVEL_SUBMITTER : LEVEL_MANAGER);
 
     if (isset($_GET['target'])) {
@@ -392,7 +396,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
             exit;
         } else {
             $_POST['screeningid'] = $_GET['target'];
-            $_GET['search_id_'] = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn(); 
+            $_GET['search_id_'] = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn();
         }
 
     } else {
@@ -409,7 +413,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: variants?create
     // Create a new entry.
 
-    // We already called lovd_requireAUTH(LEVEL_SUBMITTER).
+    // We already called lovd_requireAUTH().
 
     define('LOG_EVENT', 'VariantCreate');
 
@@ -713,17 +717,15 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 oNextElement = oNextElement.next();
             }
         });
-        var aUDrefseqs = {
 <?php
-    if (isset($sGene)) {
-        echo '            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
+    print('    var aUDrefseqs = {' . "\n");
+        if (isset($sGene)) {
+        print('            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'');
     }
 
-    echo "\n" . '        };';
-?>
+    print("\n" . '        };' . "\n\n" .
+          '        var aTranscripts = {' . "\n");
 
-        var aTranscripts = {
-<?php
     if (isset($sGene)) {
         $i = 0;
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
@@ -1368,7 +1370,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                     // Detect format type.
                     $bSkip = false;
-                    if (strlen($aVariant['referenceBase']) == 1 && strlen($aVariant['sampleGenotype']) == 1) {    
+                    if (strlen($aVariant['referenceBase']) == 1 && strlen($aVariant['sampleGenotype']) == 1) {
                         // SNPs, from any source.
                         $aFieldsVariantOnGenome[0]['type'] = 'subst';
                         $aFieldsVariantOnGenome[0]['position_g_start'] = $aFieldsVariantOnGenome[0]['position_g_end'] = $aVariant['position'];
@@ -1784,7 +1786,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                 if (in_array('VariantOnTranscript/GVS/Function', $aGenesChecked[$sSymbol]['columns'])) {
                                                     $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/GVS/Function'] = $aVariant['functionGVS'][$i];
                                                 }
-                                                
+
                                                 // cDNAPosition, polyPhen and distanceToSplice are optional columns so we should check for their existance too.
                                                 if (isset($aVariant['cDNAPosition']) && in_array('VariantOnTranscript/Position', $aGenesChecked[$sSymbol]['columns'])) {
                                                     $aFieldsVariantOnTranscript[$j][$sAccession]['VariantOnTranscript/Position'] = $aVariant['cDNAPosition'][$i];
@@ -1828,7 +1830,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                         if (isset($_POST['screeningid'])) {
                             $qInsertScr2Var->execute(array($_POST['screeningid'], $nVariantID));
                         }
-                        
+
                         if (!empty($aFieldsVariantOnTranscript[$i])) {
                             // Also got some VariantOnTranscripts.
 
@@ -1889,7 +1891,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             if ($nMappingFlags & MAPPING_ALLOW) {
                 $_SESSION['mapping']['time_complete'] = 0;
             }
-            
+
             // Saving work information.
             $bSubmit = false;
             $sSubmitType = '';
@@ -1918,7 +1920,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     $aSubmit['uploads'] = array();
                 }
                 $aSubmit['uploads'][$nUploadID] = $aUploadData;
-                
+
                 // Define the continuation questions now so we can easily ask them in the setMessage calls below.
                 $aOptionsList = array();
                 $sOptions = '<BR>' . "\n" . '      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n";
@@ -2078,7 +2080,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                    array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false),
                    'hr',
                    array('','','submit','Upload ' . $_GET['type'] . ' file'));
-    
+
     lovd_viewform($aForm);
     print('</FORM>');
 
@@ -2458,7 +2460,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
 
     lovd_isAuthorized('variant', $nID);
     lovd_requireAUTH(LEVEL_OWNER);
-    
+
     require ROOT_PATH . 'class/object_genome_variants.php';
     $zData = new LOVD_GenomeVariant();
     $zData = $zData->loadEntry($nID);
