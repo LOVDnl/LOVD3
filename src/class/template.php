@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-06-26
+ * Modified    : 2012-07-13
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -28,7 +28,7 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
- 
+
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
@@ -78,7 +78,8 @@ class LOVD_Template {
             return true;
         }
 
-        $this->aMenu = array(
+        $this->aMenu =
+            array(
                         'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'View all genes'),
                         'genes_' =>
                          array(
@@ -90,8 +91,8 @@ class LOVD_Template {
                         'transcripts' => 'View transcripts',
                         'transcripts_' =>
                          array(
-                                '' => array('menu_magnifying_glass.png', 'View all transcripts', 0),
-                                '/transcripts/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all transcripts of the ' . $_SESSION['currdb'] . ' gene', 0),
+                                '' => array('menu_transcripts.png', 'View all transcripts', 0),
+                                '/transcripts/' . $_SESSION['currdb'] => array('menu_transcripts.png', 'View all transcripts of the ' . $_SESSION['currdb'] . ' gene', 0),
                                 'create' => array('plus.png', 'Create a new transcript information entry', LEVEL_CURATOR),
                               ),
                         'variants' => 'View variants',
@@ -136,18 +137,19 @@ class LOVD_Template {
                                 // Public list of submitters?
                                 // My submissions?
                               ),
+                        'configuration' => 'LOVD configuration area',
+                        'configuration_' =>
+                         array(
 /*
-                        'config' =>
-                                 array(
-                                        array('', '', 'Configuration', 'LOVD configuration area', 'lovd_config'),
-                                        array('', 'switch_db', 'Switch gene', 'Switch gene', 'lovd_database_switch'),
                                         array('variants.php', 'search_all&search_status_=Submitted%7CNon_Public%7CMarked', 'Curate', 'Curate', 'lovd_variants_curate'),
                                         'vr',
                                         array('config_free_edit.php', 'fnr', 'Find &amp; Replace', 'Find &amp; Replace', 'lovd_free_edit_fnr'),
                                         array('config_free_edit.php', 'copy', 'Copy Column', 'Copy Column', 'lovd_free_edit_copy'),
                                         'vr',
-                                        array('columns', 'add', 'Add column', 'Add unselected pre-configured custom variant column to the ' . $_SESSION['currdb'] . ' gene', 'lovd_columns_add'),
-                                        array('columns', 'view_all', 'Edit columns', 'Manage selected custom columns in the ' . $_SESSION['currdb'] . ' gene', 'lovd_columns_edit'),
+*/
+                                '/columns/VariantOnTranscript' => array('menu_columns_add.png', 'Add variant column to ' . $_SESSION['currdb'], LEVEL_CURATOR),
+                                '/genes/' . $_SESSION['currdb'] . '/columns' => array('menu_columns.png', 'View variant columns enabled in ' . $_SESSION['currdb'], LEVEL_CURATOR),
+/*
                                         'vr',
                                         array('genes', 'manage', 'Edit gene db', 'Manage ' . $_SESSION['currdb'] . ' gene', 'lovd_database_edit'),
                                         array('genes', 'empty', 'Empty gene db', 'Empty ' . $_SESSION['currdb'] . ' gene', 'lovd_database_empty'),
@@ -156,8 +158,8 @@ class LOVD_Template {
                                         array('import', '', 'Import', 'Import variants into the ' . $_SESSION['currdb'] . ' gene database', 'lovd_database_import'),
                                         'vr',
                                         array('scripts', '', 'Scripts', 'LOVD scripts', 'lovd_scripts'),
-                                      ),
 */
+                                      ),
                         'setup' => 'LOVD system setup',
                         'setup_' =>
                          array(
@@ -182,6 +184,9 @@ class LOVD_Template {
         if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
             unset($this->aMenu['users'], $this->aMenu['users_']); // FIXME; Submitter list should be public.
             unset($this->aMenu['setup'], $this->aMenu['setup_']);
+            if (!$_AUTH || !count($_AUTH['curates'])) {
+                unset($this->aMenu['configuration'], $this->aMenu['configuration_']);
+            }
         }
 
         // Remove certain menu entries, if there is no gene selected.
@@ -283,7 +288,7 @@ class LOVD_Template {
         if (substr(lovd_getProjectFile(), 0, 6) == '/docs/') {
             // In documents section.
             print('  For the latest version of the LOVD manual, <A href="' . $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/docs/" target="_blank">check the online version</A>.<BR>' . "\n");
-            
+
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
               '  &copy;2004-2012 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
@@ -543,7 +548,7 @@ function lovd_mapVariants ()
         $aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
         if (!is_array($aImage)) {
             $aImage = array('130', '50', '', 'width="130" heigth="50"');
-        }    
+        }
         list($nWidth, $nHeight, $sType, $sSize) = $aImage;
         print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($nHeight + 5) . '">' . "\n" .
               '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
@@ -615,6 +620,7 @@ function lovd_mapVariants ()
         $bSel      = false;
         $bPrevSel  = false;
         $aMenus    = array();
+        $bCurator  = ($_AUTH && count($_AUTH['curates'])); // We can't check LEVEL_CURATOR since it may not be set.
         foreach ($this->aMenu as $sPrefix => $Title) {
             // Arrays (children links of parent tabs) can only be processed if we still have the $sFile from the previous run.
             if (is_array($Title)) {
@@ -636,7 +642,7 @@ function lovd_mapVariants ()
                     }
                     list($sIMG, $sName, $nRequiredLevel) = $aItem;
                     $bDisabled = false;
-                    if ($nRequiredLevel && $nRequiredLevel > $_AUTH['level']) {
+                    if ($nRequiredLevel && (($nRequiredLevel == LEVEL_CURATOR && !$bCurator) || ($nRequiredLevel != LEVEL_CURATOR && $nRequiredLevel > $_AUTH['level']))) {
                         $bDisabled = true;
                     } else {
                         if (!$sURL) {
@@ -691,7 +697,7 @@ function lovd_mapVariants ()
             $sURL = $sPrefix;
             // If a gene has been selected, some of the tabs get different default URLs.
             if ($_SESSION['currdb']) {
-                if (in_array($sPrefix, array('genes', 'transcripts', 'variants'))) {
+                if (in_array($sPrefix, array('configuration', 'genes', 'transcripts', 'variants'))) {
                     $sURL = $sPrefix . '/' . $_SESSION['currdb'];
                 } elseif ($sPrefix == 'diseases') {
                     $sURL = $sPrefix . '?search_genes_=' . $_SESSION['currdb'];
@@ -733,7 +739,7 @@ function lovd_mapVariants ()
         delay: 100,
         onSelect: function(e, context){
             if($(this).hasClass("disabled"))
-            {              
+            {
                 return false;
             } else {
                 window.location = $(this).find("a").attr("href");

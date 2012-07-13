@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-25
- * Modified    : 2011-07-05
- * For LOVD    : 3.0-alpha-02
+ * Modified    : 2012-07-13
+ * For LOVD    : 3.0-beta-07
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -31,15 +31,16 @@
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
 
-// Already logged in to the system.
-if ($_AUTH) {
-    // Send manager and database administrator to setup, the rest to the gene page.
-    // FIXME; Read current gene database from cookie! (but check value, gene may have been deleted by now)
-    header('Location: ' . lovd_getInstallURL() . ($_AUTH['level'] >= LEVEL_MANAGER? 'setup' : 'genes'));
-    exit;
+// Send manager and database administrator to setup, curators to the config, with selected database to the gene homepage, the rest to the gene listing.
+if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
+    $sFile = 'setup';
+} elseif ($_AUTH && $_SESSION['currdb'] && lovd_isAuthorized('gene', $_SESSION['currdb'], false)) {
+    $sFile = 'configuration';
+} elseif ($_SESSION['currdb']) {
+    $sFile = 'genes/' . $_SESSION['currdb'];
 } else {
-    // Gene listing.
-    header('Location: ' . lovd_getInstallURL() . 'genes');
-    exit;
+    $sFile = 'genes';
 }
+header('Location: ' . lovd_getInstallURL() . $sFile);
+exit;
 ?>

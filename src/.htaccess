@@ -20,6 +20,7 @@ php_flag mysql.trace_mode Off
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^check_update(.*)$ check_update.php
     RewriteRule ^columns(.*)$ columns.php
+    RewriteRule ^configuration(.*)$ configuration.php
     RewriteRule ^diseases(.*)$ diseases.php
     RewriteRule ^docs(.*)$ docs.php
     RewriteRule ^download(.*)$ download.php

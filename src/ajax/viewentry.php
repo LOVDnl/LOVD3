@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-09
- * Modified    : 2012-07-02
+ * Modified    : 2012-07-12
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -36,8 +36,6 @@ if (empty($_GET['id']) || empty($_GET['object']) || !preg_match('/^[A-Z_]+$/i', 
     die(AJAX_DATA_ERROR);
 }
 
-// FIXME; lovd_isAuthorized() has to be implemented somewhere around here when authorization checks are built into viewEntry()
-
 // The required security to load the viewEntry() depends on the data that is shown.
 // To prevent security problems if we forget to set a requirement here, we default to LEVEL_ADMIN.
 $aNeededLevel =
@@ -49,6 +47,15 @@ if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = $aNeededLevel[$_GET['object']];
 } else {
     $nNeededLevel = LEVEL_ADMIN;
+}
+
+// We can't authorize Curators without loading their level!
+if ($_AUTH['level'] < LEVEL_MANAGER && !empty($_AUTH['curates'])) {
+    if ($_GET['object'] == 'Transcript_Variant') {
+        list($nVariantID, $nTranscriptID) = explode(',', $_GET['id']);
+        lovd_isAuthorized('variant', $nVariantID);
+    }
+    // FIXME; other lovd_isAuthorized() calls?
 }
 
 // Require special clearance?
@@ -82,6 +89,7 @@ if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant', 'Custom_V
 
     // Exception for VOT viewEntry, we need to isolate the gene from the ID to correctly pass this to the data object.
     if ($_GET['object'] == 'Transcript_Variant') {
+        // This line below is redundant as long as it's also called at the lovd_isAuthorized() call. Remove it here maybe...?
         list($nVariantID, $nTranscriptID) = explode(',', $nID);
         $sObjectID = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscriptID))->fetchColumn();
     }

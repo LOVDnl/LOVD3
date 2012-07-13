@@ -93,6 +93,14 @@ foreach ($aTotalVars as $nStatus => $nVars) {
 }
 print('</TD></TR></TABLE><BR>' . "\n\n");
 
+// Mention that LOVD can be updated!
+if ($_STAT['update_level']) {
+    $_STAT['update_level'] = 7;
+    lovd_showInfoTable('LOVD update available:<BR><B>' . $_STAT['update_version'] . '</B><BR>' . ($_STAT['update_level'] >= 7? ' It is ' . strtolower($_SETT['update_levels'][$_STAT['update_level']]) . ' to upgrade!' : '') . '<BR><A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'check_update\', \'CheckUpdate\', 650, 175); return false;">More information &raquo;</A>', ($_STAT['update_level'] >= 7? 'warning' : 'information'));
+}
+
+
+
 print('          </TD>' . "\n" .
       '          <TD valign="top" width="50%" style="padding-left : 10px; padding-right : 10px; border-right : 1px solid #224488;" id="setupLeft">' . "\n\n");
 
@@ -188,12 +196,12 @@ print('          </TD>' . "\n" .
       '          <TD valign="top" width="50%" style="padding-left : 10px;" id="setupRight">' . "\n\n");
 
 
-$aItems = 
+$aItems =
     array(
             'Gene databases' =>
                  array(
                         array('genes?create', 'lovd_genes_create.png', 'Create new gene database', 'Create a new gene database.'),
-                        array('genes', 'lovd_genes_edit.png', 'View all gene databases', 'Manage configured gene databases.'),
+                        array('genes', 'lovd_genes_view.png', 'View all gene databases', 'Manage configured gene databases.'),
                       ),
             'Transcripts' =>
                  array(

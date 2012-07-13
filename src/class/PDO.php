@@ -28,7 +28,7 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
- 
+
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
