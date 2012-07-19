@@ -84,6 +84,17 @@ print('      <H5>Variant type (DNA level)</H5>' . "\n" .
 
 
 
+//begin_david
+// Screening techniques, whole database.
+print('      <H5>Screening techniques</H5>' . "\n" .
+      '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+      '        <TR valign="top">' . "\n" .
+      '          <TD width="50%">' . "\n" .
+      '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' individuals</B><BR>'. "\n" .
+      '            <DIV id="screeningTechniques" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="screeningTechniques_hover">&nbsp;</DIV></TD>' . "\n" .
+      '          <TD width="50%">' . "\n" .
+      '            </TD></TR></TABLE>' . "\n\n");
+//end_david
 
 flush();
 @ob_end_flush(); // Can generate errors on the screen if no buffer found.
@@ -92,8 +103,10 @@ $_G->genesLinkedDiseases('genesLinkedDiseases', '*');
 $_G->variantsTypeDNA('variantsTypeDNA_all', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
 $_G->variantsTypeDNA('variantsTypeDNA_unique', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
 
-
-
+//begin_david
+//screening techniques
+$_G->screeningTechniques('screeningTechniques', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
+//end_david
 
 
 
