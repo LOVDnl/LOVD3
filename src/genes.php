@@ -1104,9 +1104,28 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
           '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
           '            <DIV id="variantsTypeDNA_unique" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_unique_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
 
-    flush();
+    
     $_G->variantsTypeDNA('variantsTypeDNA_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
     $_G->variantsTypeDNA('variantsTypeDNA_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
+    
+    //begin_david
+    // Variant types (protein level), whole database.
+    print('      <H5>Variant type (Protein level)</H5>' . "\n" .
+          '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+          '        <TR valign="top">' . "\n" .
+          '          <TD width="50%">' . "\n" .
+          '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
+          '            <DIV id="variantsTypeProtein_all" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeProtein_all_hover">&nbsp;</DIV></TD>' . "\n" .
+          '          <TD width="50%">' . "\n" .
+          '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
+          '            <DIV id="variantsTypeProtein_unique" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeProtein_unique_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
+    //end_david
+    flush();
+    
+    //begin_david
+    $_G->variantsTypeProtein('variantsTypeProtein_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
+    $_G->variantsTypeProtein('variantsTypeProtein_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
+    //end_david
 
     $_T->printFooter();
     exit;
