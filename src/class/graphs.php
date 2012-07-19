@@ -92,7 +92,86 @@ class LOVD_Graphs {
     }
 
 
+    //begin_david
+    function screeningTechniques ($sDIV, $Data = array())
+    {
+        // Shows a nice piechart about the type/number of techniques used per individual in a certain data set.
+        // $Data can be either a * (all genes), or an array of gene symbols.
+        global $_DB;
+        
+         if (empty($sDIV)) {
+            return false;
+        }
 
+        print('      <SCRIPT type="text/javascript">' . "\n");
+        
+        if (empty($Data)) {
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::screeningTechniques()<BR>No data received to create graph.");' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+            return false;
+        }
+        // Retricting to a certain set of genes, or full database ($Data == '*', although we actually don't check the value of $Data).
+        if (!is_array($Data)) {
+            $qData = $_DB->query('SELECT `Screening/Technique`, COUNT(`Screening/Technique`) FROM ' . TABLE_SCREENINGS . ' GROUP BY `Screening/Technique`;');
+        } elseif (count($Data)) {
+            // Using list of gene IDs.
+            $qData = $_DB->query('SELECT `Screening/Technique`, COUNT(`Screening/Technique`) FROM ' . TABLE_SCREENINGS . ' WHERE individualid IN (?' . str_repeat(',?', count($Data)-1) . ')  GROUP BY `Screening/Technique`;', array($Data));
+        }
+
+        $aData = array();
+        while (list($sType, $nCount) = $qData->fetchRow()) {
+            if (!isset($aData[$sType])) {
+                $aData[$sType] = 0;
+            }
+            $aData[$sType] = $nCount;
+        }   
+
+        // Format $aData.
+        print('        var data = [');
+        $i = 0;
+        $nTotal = 0;
+        foreach ($aData as $sType => $nValue) {
+            if (isset($aTypes[$sType])) {
+                $sLabel = $aTypes[$sType][0];
+            } else {
+                $sLabel = $sType;
+            }
+            print(($i++? ',' : '') . "\n" .
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+            $nTotal += $nValue;
+        }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
+		print('];' . "\n\n" .
+              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+              '        {' . "\n" .
+              '            series: {' . "\n" .
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
+
+/*
+		combine: {
+			threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
+			color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
+			label: any text value of what the combined slice should be labeled
+		}
+*/
+              '        });' . "\n" .
+              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+
+        // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+        $this->getHoverFunction($sDIV, $nTotal) .
+              '      </SCRIPT>' . "\n\n");
+
+        flush();
+        return true;
+        
+    }
+    //end_david
 
 
     function genesLinkedDiseases ($sDIV, $Data = array())
