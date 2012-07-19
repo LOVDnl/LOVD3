@@ -171,6 +171,151 @@ class LOVD_Graphs {
         return true;
         
     }
+    
+    
+    function variantsTypeProtein ($sDIV, $Data = array(), $bPublicOnly = true, $bUnique = false)
+    {
+        // Shows a nice piechart about the variant types on protein level in a certain data set.
+        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
+        // $bPublicOnly indicates whether or not only the public variants should be used.
+        global $_DB;
+
+        if (empty($sDIV)) {
+            return false;
+        }
+
+        print('      <SCRIPT type="text/javascript">' . "\n");
+
+        if (empty($Data)) {
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsTypeProtein()<BR>No data received to create graph.");' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+            return false;
+        }
+
+        // Keys need to be renamed.
+        //$aTypes =
+        //     array(
+        //            ''       => array('Unknown', '#000'),
+        //            'del'    => array('Deletions', '#A00'),
+        //            'delins' => array('Indels', '#95F'),
+        //            'dup'    => array('Duplications', '#F90'),
+        //            'ins'    => array('Insertions', '#090'),
+        //            'inv'    => array('Inversions', '#0AC'),
+        //            'subst'  => array('Substitutions', '#00C'),
+        //          );
+
+        if (!is_array($Data)) {
+            // Retricting to a certain gene, or full database ($Data == '*').
+            if ($bUnique) {
+                // FIXME: Double check if multi-transcript genes don't mess up the statistics here.
+                if ($Data == '*') {
+                    $qData = $_DB->query('SELECT DISTINCT `VariantOnTranscript/Protein` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS);
+                } else {
+                    $qData = $_DB->query('SELECT DISTINCT `VariantOnTranscript/Protein` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED), array($Data));
+                }
+                
+                //$aData = array();
+                //while (list($pName) = $qData->fetchRow()) {
+                //    if (preg_match("#fs#", $pName)) {
+                //        $aData['frameshift'] ++;
+                //    }
+                //    else if(preg_match("#*#", $pName)) {
+                //        $aData['stop'] ++;
+                //    }
+                //    
+                //    
+                //    // If $nCount is greater than one, this DBID had more than one type. Probably a mistake, but we'll count it as complex.
+                //    //if ($nCount > 1) {
+                //    //    $sType = 'complex';
+                //    //}
+                //    //if (!isset($aData[$sType])) {
+                //    //    $aData[$sType] = 0;
+                //    //}
+                //    //$aData[$sType] ++;
+                //}   
+            } else {
+                if ($Data == '*') {
+                    $qData = $_DB->query('SELECT `VariantOnTranscript/Protein` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS);
+                } else {
+                    $qData = $_DB->query('SELECT `VariantOnTranscript/Protein` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED), array($Data));
+                }
+            }
+            $aData = array();
+            while (list($pName) = $qData->fetchRow()) {
+                if (preg_match("#fs#", $pName)) {
+                    $aData['frameshift'] ++;
+                }
+                else if(preg_match("#[\*X]#", $pName)) {
+                    $aData['stop'] ++;
+                }
+                else if(preg_match("#=#", $pName)) {
+                    $aData['silent'] ++;
+                }
+                else if(preg_match("#0\?#", $pName)) {
+                    $aData['no protein'] ++;
+                }
+                else if(preg_match("#\?#", $pName)) {
+                    $aData['unknown'] ++;
+                }
+                else if(preg_match("#del#", $pName, $matches)) {
+                    $aData['in frame del'] ++;
+                }
+                else if(preg_match("#dup#", $pName, $matches)) {
+                    $aData['in frame dup'] ++;
+                }
+                else if(preg_match("#([A-Za-z]{1,3})\d+([A-Za-z]{1,3})#", $pName, $matches)) {
+                    if ($matches[1] == $matches[2]) {
+                        $aData['silent'] ++;
+                    }
+                    else {
+                        $aData['missense'] ++;
+                    }
+                }
+            }   
+        } else {
+            // Using list of variant IDs.
+        }
+
+        // Format $aData.
+        print('        var data = [');
+        //ksort($aData); // May not work correctly, if keys are replaced...
+        $i = 0;
+        $nTotal = 0;
+        foreach ($aData as $sType => $nValue) {
+            #if (isset($aTypes[$sType])) {
+            #    $sLabel = $aTypes[$sType][0];
+            #} else {
+                $sLabel = $sType;
+            #}
+            print(($i++? ',' : '') . "\n" .
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+            $nTotal += $nValue;
+        }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
+		print('];' . "\n\n" .
+              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+              '        {' . "\n" .
+              '            series: {' . "\n" .
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
+              '        });' . "\n" .
+              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+
+        // Add the total number to the header above the graph.
+              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+
+        // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+        $this->getHoverFunction($sDIV, $nTotal) .
+              '      </SCRIPT>' . "\n\n");
+
+        flush();
+        return true;
+    }
     //end_david
 
 
