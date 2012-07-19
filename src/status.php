@@ -94,6 +94,16 @@ print('      <H5>Screening techniques</H5>' . "\n" .
       '            <DIV id="screeningTechniques" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="screeningTechniques_hover">&nbsp;</DIV></TD>' . "\n" .
       '          <TD width="50%">' . "\n" .
       '            </TD></TR></TABLE>' . "\n\n");
+// Variant types (protein level), whole database.
+print('      <H5>Variant type (Protein level)</H5>' . "\n" .
+      '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+      '        <TR valign="top">' . "\n" .
+      '          <TD width="50%">' . "\n" .
+      '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
+      '            <DIV id="variantsTypeProtein_all" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeProtein_all_hover">&nbsp;</DIV></TD>' . "\n" .
+      '          <TD width="50%">' . "\n" .
+      '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
+      '            <DIV id="variantsTypeProtein_unique" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeProtein_unique_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
 //end_david
 
 flush();
@@ -106,6 +116,8 @@ $_G->variantsTypeDNA('variantsTypeDNA_unique', '*', ($_AUTH['level'] >= LEVEL_CO
 //begin_david
 //screening techniques
 $_G->screeningTechniques('screeningTechniques', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
+$_G->variantsTypeProtein('variantsTypeProtein_all', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
+$_G->variantsTypeProtein('variantsTypeProtein_unique', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
 //end_david
 
 
