@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-06-17
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-19
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -111,7 +111,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                  array(
                         'mapping_flags_' => array('Automatic mapping', LEVEL_COLLABORATOR),
                         'owned_by_' => 'Owner',
-                        'status' => 'Variant data status',
+                        'status' => array('Variant data status', LEVEL_COLLABORATOR),
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -144,7 +144,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'db'   => array('uo.name', 'ASC', true)),
                         'status' => array(
                                     'view' => array('Status', 70),
-                                    'db'   => array('ds.name', false, true)),
+                                    'db'   => array('ds.name', false, true),
+                                    'auth' => LEVEL_COLLABORATOR),
                         'created_by' => array(
                                     'view' => false,
                                     'db'   => array('vog.created_by', false, true)),
@@ -183,7 +184,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         // Do this before running checkFields so that we have time to predict the DBID and fill it in.
-        if (isset($this->aColumns['VariantOnGenome/DBID'])) {
+        if (!empty($aData['VariantOnGenome/DNA']) && isset($this->aColumns['VariantOnGenome/DBID']) && ($this->aColumns['VariantOnGenome/DBID']['public_add'] || $_AUTH['level'] >= LEVEL_CURATOR)) {
             // VOGs with at least one VOT, which still have a chr* DBID, will get an error. So we'll empty the DBID field, allowing the new VOT value to be autofilled in.
             if (!empty($aData['aTranscripts']) && !empty($aData['VariantOnGenome/DBID']) && strpos($aData['VariantOnGenome/DBID'], 'chr' . $aData['chromosome'] . '_') !== false) {
                 $aData['VariantOnGenome/DBID'] = '';
@@ -193,6 +194,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             } elseif (!lovd_checkDBID($aData)) {
                 lovd_errorAdd('VariantOnGenome/DBID', 'Please enter a valid ID in the \'ID\' field or leave it blank and LOVD will predict it.');
             }
+        } else if (empty($aData['VariantOnGenome/DBID'])) {
+            $aData['VariantOnGenome/DBID'] = '-';
         }
 
         parent::checkFields($aData);
@@ -270,7 +273,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ),
                 $aTranscriptsForm,
                 array(
-                        'skip',
                         array('', '', 'print', '<B>Genomic variant information</B>'),
                         'hr',
                         array('Allele', '', 'select', 'allele', 1, $aSelectAllele, false, false, false),

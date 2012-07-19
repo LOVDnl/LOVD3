@@ -33,8 +33,8 @@ Prioritize:
   + Een invalid search expression in een viewlist genereert een extra PHP foutmelding.
     De regel in objects die door $q loopt om de data te tonen, geeft een notice en fatal error omdat $q niet bestaat.
     Die wordt namelijk alleen gemaakt als $aBadSyntaxColumns leeg is, en dat is hij dan niet.
-    Blijkbaar, omdat er nu geen exit() meer is na de controle op bad syntax columns, krijg ik dit.
-    Die exit() is weggehaald om het eind van de viewList() code wel te hebben (stretch input e.d.).
+    Blijkbaar, omdat er nu geen "exit" meer is na de controle op bad syntax columns, krijg ik dit.
+    Die "exit" is weggehaald om het eind van de viewList() code wel te hebben (stretch input e.d.).
     * Exacte foutmelding: Notice: Undefined variable: q in /home/ifokkema/www/other/LOVD3/trunk/src/class/objects.php on line 1209
     * Fatal error: Call to a member function fetchAssoc() on a non-object in /home/ifokkema/www/other/LOVD3/trunk/src/class/objects.php on line 1209
 
@@ -52,12 +52,28 @@ Prioritize:
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
 - (@Ivar) Combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
 - (BELANGRIJK) Van alles moet bepaald worden wat de minimale level is die benodigd is.
+        ^ Views/Actions checken op user level requirements:
+            v Users
+            % Genes
+            % Diseases
+            % Transcripts
+            % Individuals
+            % Phenotypes
+            % Screenings
+            % Variants
+        ^ Alle standaard kolommen checken voor ieder level:
+            v Users
+            % Genes
+            % Diseases
+            % Transcripts
+            % Individuals
+            % Phenotypes
+            % Screenings
+            % Variants
   + (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
     * Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
   + IVAR: Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
     * (dus niet in de losse scripts zoals variants.php!!!)
-    * objects_custom moet alle kolommen laden; functies die de data opbouwen voor viewForm, viewEntry, getForm, checkFields etc moeten dan de juiste flags controleren.
-    * VERGEET OOK PUBLIC_VIEW/PUBLIC_ADD CONTROLE NIET (van de custom columns). OOK IN CUSTOM VIEWLIST.
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.

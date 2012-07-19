@@ -54,6 +54,22 @@
 
 
 
+ * Protein prediction on the variant create and edit form can now return
+   multiple warnings/errors returned by Mutalyzer.
+ * Fixed bug; The check on the DBID during variant create/edit now only accepts
+   gene symbols that are actually present in the LOVD.
+ * Fixed bug; In some cases the variant create/edit forms would give a
+   javascript error.
+ * Fixed bug; Since Mutalyzer changed how upstream/downstream positions are
+   described, protein predictions could produce weird errors.
+ * Status columns are now automatically hidden if the users do not have all view
+   privileges on that entry.
+ * Implemented the "Show contents to public" and "Show field on submission form"
+   options for custom columns, so that they are actually hidden when deselected.
+ * Variant DBID's kan now only be filled in by Curators, Managers and
+   Administrators.
+ * The OMIM ID field now has a check to ensure that the number is 6 digits and
+   that the first digit is at least a 1 or higher.
 
 
 

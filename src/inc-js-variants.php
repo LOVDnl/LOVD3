@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2012-07-09
+ * Modified    : 2012-07-13
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -265,49 +265,74 @@ function lovd_getProteinChange (oElement)
                 }
 
             } else {
-                var aData = sData.split(';;'); // aData[0] = errors, aData[1] = actual reply.
-                var aError = aData[0].split(':');
-                var sErrorCode = aError[0];
-                aError.splice(0,1);
-                var sErrorMessage = aError.join(':');
-
-                if (sErrorCode == 'ERANGE') {
-                    // Ignore 'ERANGE' as an actual error, because we can always interpret this as p.(=), p.? or p.0.
-                    sErrorCode = 'WRANGE';
-                    sErrorMessage = '';
-                    var aVariantRange = $(oThisDNA).val().split('_');
-                    // Check what the variant looks like and act accordingly.
-                    if (aVariantRange.length == 2 && /-u\d+/.exec(aVariantRange[0]) != null && /-u\d+/.exec(aVariantRange[1]) != null) {
-                        // Variant has 2 positions. Variant has both the start and end positions upstream of the transcript, we can assume that the product will not be affected.
-                        sPredict = 'p.(=)';
-                    } else if (aVariantRange.length == 2 && /-u\d+/.exec(aVariantRange[0]) != null && /\+d\d+/.exec(aVariantRange[1]) != null) {
-                        // Variant has 2 positions. Variant has an upstream start position and a downstream end position, we can assume that the product will not be expressed.
-                        sPredict = 'p.0';
-                    } else if (aVariantRange.length == 2 && /\+d\d+/.exec(aVariantRange[0]) != null && /\+d\d+/.exec(aVariantRange[1]) != null) {
-                        // Variant has 2 positions. Variant has both the start and end positions downstream of the transcript, we can assume that the product will not be affected.
-                        sPredict = 'p.(=)';
-                    } else if (aVariantRange.length == 1 && (/-u\d+/.exec(aVariantRange[0]) != null || /\+d\d+/.exec(aVariantRange[0]) != null)) {
-                        // Variant has 1 position and is either upstream or downstream from the transcript, we can assume that the product will not be affected.
-                        sPredict = 'p.(=)';
-                    } else {
-                        // The one of the positions of the variant falls within the transcript, so we can not make any assumptions based on that.
-                        sPredict = 'p.?';
+                var aData = sData.split('||'); // aData[0] = errors, aData[1] = actual reply.
+                if (aData[0]) {
+                    var aErrors = aData[0].split('|'); // aErrors could contain multiple errors.
+                } else {
+                    var aErrors = [];
+                }
+                var aErrorList = [];
+                var aWarningList = [];
+                for (index in aErrors) {
+                    // Analyze the messages that Mutalyzer returns.
+                    var aError = aErrors[index].split(':');
+                    var sErrorCode = aError[0];
+                    aError.splice(0,1);
+                    var sErrorMessage = aError.join(':');
+                    if (sErrorCode == 'WSPLICE' || (sErrorCode == 'WSTART' && sErrorMessage != 'Mutation in start codon of gene ' + aTranscripts[nTranscriptID][1] + ' transcript ' + aTranscripts[nTranscriptID][2] + '.')) {
+                        // These warnings apply to another transcript than the one of interest.
+                        continue;
+                    } else if (sErrorCode == 'ERANGE') {
+                        // Ignore 'ERANGE' as an actual error, because we can always interpret this as p.(=), p.? or p.0.
+                        sErrorMessage = '';
+                        var aVariantRange = $(oThisDNA).val().split('_');
+                        // Check what the variant looks like and act accordingly.
+                        if (aVariantRange.length == 2 && /-\d+/.exec(aVariantRange[0]) != null && /-\d+/.exec(aVariantRange[1]) != null) {
+                            // Variant has 2 positions. Variant has both the start and end positions upstream of the transcript, we can assume that the product will not be affected.
+                            sPredict = 'p.(=)';
+                        } else if (aVariantRange.length == 2 && /-\d+/.exec(aVariantRange[0]) != null && /\*\d+/.exec(aVariantRange[1]) != null) {
+                            // Variant has 2 positions. Variant has an upstream start position and a downstream end position, we can assume that the product will not be expressed.
+                            sPredict = 'p.0';
+                        } else if (aVariantRange.length == 2 && /\*\d+/.exec(aVariantRange[0]) != null && /\*\d+/.exec(aVariantRange[1]) != null) {
+                            // Variant has 2 positions. Variant has both the start and end positions downstream of the transcript, we can assume that the product will not be affected.
+                            sPredict = 'p.(=)';
+                        } else if (aVariantRange.length == 1 && (/-\d+/.exec(aVariantRange[0]) != null || /\*\d+/.exec(aVariantRange[0]) != null)) {
+                            // Variant has 1 position and is either upstream or downstream from the transcript, we can assume that the product will not be affected.
+                            sPredict = 'p.(=)';
+                        } else {
+                            // One of the positions of the variant falls within the transcript, so we can not make any assumptions based on that.
+                            sPredict = 'p.?';
+                        }
+                        // Fill in our assumption in aData to forge that this information came from Mutalyzer.
+                        aData[1] = sPredict;
+                        continue;
                     }
-                    // Fill in our assumption in aData to forge that this information came from Mutalyzer.
-                    aData[1] = aUDrefseqs[aTranscripts[nTranscriptID][1]] + '(' + aTranscripts[nTranscriptID][1] + '_i' + aTranscripts[nTranscriptID][2] + '):' + sPredict;
+                    if (sErrorCode.substring(0, 1) == 'E') {
+                        aErrorList.push(sErrorCode + ':' + sErrorMessage);
+                    } else {
+                        aWarningList.push(sErrorCode + ':' + sErrorMessage);
+                    }
                 }
 
-                // Other errors are handled here.
-                if (sErrorCode.substring(0, 1) == 'E' || !aData[1]) {
+                // Decide what to do with the analyzed Mutalyzer output.
+                var sErrorMessages = '';
+                if (aErrorList.length || !aData[1]) {
+                    // Mutalyzer returned one or more errors, so we add the err class to make the field red. We Also add an image with a tooltip that shows the error.
+                    for (index in aErrorList) {
+                        if (index != '0') {
+                            sErrorMessages += '<BR>';
+                        }
+                        var aError = aErrorList[index].split(':');
+                        sErrorMessages +=  '<B>' + aError[0] + ':</B> ' + aError[1];
+                    }
                     if (!oThisProtein.attr('disabled')) {
-                        // Mutalyzer returned an error so we add the err class to make the field red. We Also add an image with a tooltip that shows the error.
                         $(oThisDNA).attr('class', 'err');
                         $(oThisDNA).siblings('img:first').attr({
                             src: 'gfx/lovd_form_warning.png',
                             alt: '',
                             title : '',
                             className: 'help',
-                            onmouseover : 'lovd_showToolTip(\'' + escape(sErrorMessage) + '\');',
+                            onmouseover : 'lovd_showToolTip(\'' + escape(sErrorMessages) + '\');',
                             onmouseout: 'lovd_hideToolTip();'
                         }).show();
                         $(oThisProtein).siblings('img:first').attr({
@@ -321,63 +346,66 @@ function lovd_getProteinChange (oElement)
                     }
 
                 } else {
-                    var aProteinDescriptions = aData[1].split(';');
-                    $(aProteinDescriptions).each( function(index, value) {
-                        if (value.replace(/UD_\d+\(/, '').replace(/\):p\..+/, '') == aTranscripts[nTranscriptID][1] + '_i' + aTranscripts[nTranscriptID][2] && !oThisProtein.attr('disabled')) {
-                            if (sErrorMessage && sErrorCode != 'WSPLICE') {
-                                // Mutalyzer returned a warning so we add the warn class to make the field yellow. We Also add an image with a tooltip that shows the warning.
-                                // The exception here is WSPLICE, since this only says something about another transcript.
-                                $(oThisDNA).attr('class', 'warn');
-                                $(oThisDNA).siblings('img:first').attr({
-                                    src: 'gfx/lovd_form_information.png',
-                                    alt: '',
-                                    title : '',
-                                    className: 'help',
-                                    onmouseover : 'lovd_showToolTip(\'' + escape(sErrorMessage) + '\');',
-                                    onmouseout: 'lovd_hideToolTip();'
-                                }).show();
-                            } else {
-                                $(oThisDNA).siblings('img:first').attr({
-                                    alt: 'HGVS compliant!',
-                                    title : 'HGVS compliant!'
-                                }).show();
+                    // No errors returned by Mutalyzer.
+                    if (aWarningList.length) {
+                        // Mutalyzer returned a warning so we add the warn class to make the field yellow. We Also add an image with a tooltip that shows the warning.
+                        for (index in aWarningList) {
+                            if (index != '0') {
+                                sErrorMessages += '<BR>';
                             }
-                            if (sErrorCode != 'WSPLICESELECTED') {
-                                // Fill in the predicted value in the corresponding protein field.
-                                $(oThisProtein).attr('value', value.replace(/UD_\d+\(.+\):/, ''));
-                            } else {
-                                // WSPLICESELECTED, so we don't know what the consequence will be. Mutalyzer returns a p.(=), which we don't want here.
-                                $(oThisProtein).attr('value', 'p.?');
+                            var aWarning = aWarningList[index].split(':');
+                            if (aWarning[0] == 'WSPLICESELECTED') {
+                                aData[1] = 'p.?';
                             }
-
-                            // Highlight the protein input field which has been modified, as long as it's not being done already.
-                            if (!$(oThisProtein).attr('style') || $(oThisProtein).attr('style').search('background') == -1) {
-                                $(oThisProtein).attr('style', 'background : #AAFFAA;');
-
-                                // Fade background to white, then remove the style.
-                                var nColor = 170;
-                                for (i = nColor; i < 255; i++) {
-                                    setTimeout(function () {
-                                        $(oThisProtein).attr('style', 'background : #' + nColor.toString(16).toUpperCase() + 'FF' + nColor.toString(16).toUpperCase() + ';');
-                                        nColor ++;
-                                    }, (i - 130) * 40);
-                                }
-                                setTimeout(function () {
-                                    $(oThisProtein).attr('style', '');
-                                }, (i - 130) * 40);
-                            }
-
-                            $(oThisProtein).siblings('img:first').attr({
-                                src: 'gfx/check.png',
-                                // FIXME: We can't point to the mutalyzer link stored in $_CONF unless we include inc-init.php.
-                                onclick: 'lovd_openWindow("https://www.mutalyzer.nl/check?name=' + escape(sVariantNotation).replace('+', '%2B') + '&standalone=1");',
-                                style: 'cursor : pointer',
-                                alt: 'Prediction OK!',
-                                title: 'Prediction OK! Click to see result on Mutalyzer.'
-                            }).show();
-                            $(oThisProtein).siblings('button:eq(0)').hide();
+                            sErrorMessages +=  '<B>' + aWarning[0] + ':</B> ' + aWarning[1];
                         }
-                    });
+                        if (!oThisProtein.attr('disabled')) {
+                            $(oThisDNA).attr('class', 'warn');
+                            $(oThisDNA).siblings('img:first').attr({
+                                src: 'gfx/lovd_form_information.png',
+                                alt: '',
+                                title : '',
+                                className: 'help',
+                                onmouseover : 'lovd_showToolTip(\'' + escape(sErrorMessages) + '\');',
+                                onmouseout: 'lovd_hideToolTip();'
+                            }).show();
+                        }
+                    } else {
+                        // No warnings or errors returned by Mutalyzer.
+                        $(oThisDNA).siblings('img:first').attr({
+                            alt: 'HGVS compliant!',
+                            title : 'HGVS compliant!'
+                        }).show();
+                    }
+                    // Fill in the predicted value in the corresponding protein field.
+                    $(oThisProtein).attr('value', aData[1]);
+
+                    // Highlight the protein input field which has been modified, as long as it's not being done already.
+                    if (!$(oThisProtein).attr('style') || $(oThisProtein).attr('style').search('background') == -1) {
+                        $(oThisProtein).attr('style', 'background : #AAFFAA;');
+
+                        // Fade background to white, then remove the style.
+                        var nColor = 170;
+                        for (i = nColor; i < 255; i++) {
+                            setTimeout(function () {
+                                $(oThisProtein).attr('style', 'background : #' + nColor.toString(16).toUpperCase() + 'FF' + nColor.toString(16).toUpperCase() + ';');
+                                nColor ++;
+                            }, (i - 130) * 40);
+                        }
+                        setTimeout(function () {
+                            $(oThisProtein).attr('style', '');
+                        }, (i - 130) * 40);
+                    }
+
+                    $(oThisProtein).siblings('img:first').attr({
+                        src: 'gfx/check.png',
+                        // FIXME: We can't point to the mutalyzer link stored in $_CONF unless we include inc-init.php.
+                        onclick: 'lovd_openWindow("https://www.mutalyzer.nl/check?name=' + escape(sVariantNotation).replace('+', '%2B') + '&standalone=1");',
+                        style: 'cursor : pointer',
+                        alt: 'Prediction OK!',
+                        title: 'Prediction OK! Click to see result on Mutalyzer.'
+                    }).show();
+                    $(oThisProtein).siblings('button:eq(0)').hide();
                 }
             }
     });

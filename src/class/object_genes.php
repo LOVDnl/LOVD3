@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-07-05
+ * Modified    : 2012-07-11
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -297,12 +297,16 @@ class LOVD_Gene extends LOVD_Object {
 
         // Get list of diseases.
         $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id')->fetchAllCombine();
-        $nDiseases = count($aDiseasesForm);
-        $nFieldSize = ($nDiseases < 15? $nDiseases : 15);
-        if (!$nDiseases) {
+        if (!empty($aDiseasesForm)) {
+            foreach ($aDiseasesForm as $nDisease => $sDisease) {
+                $aDiseasesForm[$nDisease] = lovd_shortenString($sDisease, 50);
+            }
+        } else {
             $aDiseasesForm = array('' => 'No disease entries available');
-            $nFieldSize = 1;
         }
+
+        $nDiseasesFormSize = count($aDiseasesForm);
+        $nDiseasesFormSize = ($nDiseasesFormSize < 15? $nDiseasesFormSize : 15);
 
         // References sequences (genomic and transcripts).
         $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
@@ -320,7 +324,8 @@ class LOVD_Gene extends LOVD_Object {
             $aTranscriptsForm = array('' => 'No transcripts available');
         }
 
-        $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
+        $nTranscriptsFormSize = count($aTranscriptsForm);
+        $nTranscriptsFormSize = ($nTranscriptsFormSize < 10? $nTranscriptsFormSize : 10);
 
         $aSelectRefseq = array(
                                 'c' => 'Coding DNA',
@@ -353,8 +358,8 @@ class LOVD_Gene extends LOVD_Object {
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases (optional)</B>'),
                         'hr',
-                        array('This gene has been linked to these diseases', 'Listed are all disease entries currently configured in LOVD.', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
-                        array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD. Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
+                        array('This gene has been linked to these diseases', 'Listed are all disease entries currently configured in LOVD.', 'select', 'active_diseases', $nDiseasesFormSize, $aDiseasesForm, false, true, false),
+                        array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD.<BR>Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Reference sequences (mandatory)</B>'),

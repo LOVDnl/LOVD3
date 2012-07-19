@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-06-07
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-13
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -104,9 +104,19 @@ function lovd_checkDBID ($aData)
             return false;
         }
     } elseif (!empty($aGenes) && !in_array($sSymbol, $aGenes)) {
+        // VOT, but DBID does not use the gene symbol of one of these VOT's.
         return false;
-    } elseif (empty($aGenes) && substr($aData['VariantOnGenome/DBID'], 0, 3) == 'chr' && $sSymbol != 'chr' . $aData['chromosome'] && !in_array($sSymbol, lovd_getGeneList())) {
-        return false;
+    } elseif (empty($aGenes)) {
+        // VOG
+        if (substr($aData['VariantOnGenome/DBID'], 0, 3) != 'chr') {
+            if (!in_array($sSymbol, lovd_getGeneList())) {
+                // Gene symbol used in the DBID does not exist in the database.
+                return false;
+            }
+        } elseif ($sSymbol != 'chr' . $aData['chromosome']) {
+            // Chromosome number in the DBID does not match the chromosome of the genomic variant.
+            return false;
+        }
     }
     return true;
 }

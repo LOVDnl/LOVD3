@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-07-12
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -62,17 +62,16 @@ class LOVD_CustomViewList extends LOVD_Object {
         $this->sObjectID = implode(',', $aObjects);
 
 
-
         // Collect custom column information, all active columns (possibly restricted per gene).
         // FIXME; Kijk voor shared cols niet naar default settings, maar naar de applied settings (kolom hidden in alle genen? -> verbergen)
-        // FIXME; Daarna moet er per regel bij het printen van de data weer worden gekeken wat de instellingen van dit gen zijn, en dan de data verwijderen. Hoe doen we dat?
-        $sSQL = 'SELECT c.id, c.width, c.head_column, c.mysql_type, c.col_order FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) ' .
-                    'WHERE ' . ($_AUTH['level'] >= LEVEL_MANAGER? '' : 'c.public_view = 1 AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
-                    (!$sGene? '' :
+        // FIXME; Daarna moet er per regel bij het printen van de data weer worden gekeken wat de instellingen van dit gen zijn, en dan de data verwijderen. Hoe doen we dat?        
+        $sSQL = 'SELECT c.id, c.width, c.head_column, c.mysql_type, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = ac.colid) ' .
+                    'WHERE ' . ($_AUTH['level'] >= LEVEL_MANAGER? '' : '((c.id NOT LIKE "VariantOnTranscript/%" AND c.public_view = 1) OR sc.public_view = 1) AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
+                    (!$sGene? 'GROUP BY c.id ' :
                       // If gene is given, only shown VOT columns active in the given gene! We'll use an UNION for that, so that we'll get the correct width and order also.
-                      'AND c.id NOT LIKE "VariantOnTranscript/%" ' . // Exclude the VOT columns from the normal set, we'll load them below.
+                      'AND c.id NOT LIKE "VariantOnTranscript/%" GROUP BY c.id ' . // Exclude the VOT columns from the normal set, we'll load them below.
                       'UNION ' .
-                      'SELECT c.id, sc.width, c.head_column, c.mysql_type, sc.col_order FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE sc.geneid = ? ' .
+                      'SELECT c.id, sc.width, c.head_column, c.mysql_type, sc.col_order, CONCAT(sc.geneid, ":", sc.public_view) AS public_view FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE sc.geneid = ? ' .
                       ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'AND sc.public_view = 1 ')) .
                     'ORDER BY col_order';
         $aSQL = array();
@@ -83,11 +82,19 @@ class LOVD_CustomViewList extends LOVD_Object {
             $aSQL[] = $sGene;
             $this->nID = $sGene; // We need the ajax script to have the same restrictions!!!
         }
+
         $q = $_DB->query($sSQL, $aSQL);
         while ($z = $q->fetchAssoc()) {
             $z['custom_links'] = array();
+            if (substr($z['id'], 0,19) == 'VariantOnTranscript') {
+                $z['public_view'] = explode(';', rtrim(preg_replace('/([A-Za-z0-9-]+:0;|:1)/', '', $z['public_view'] . ';'), ';'));
+            }
+            if (is_null($z['public_view'])) {
+                $z['public_view'] = array();
+            }
             $this->aColumns[$z['id']] = $z;
         }
+        $_AUTH['allowed_to_view'] = ($_AUTH? array_merge($_AUTH['curates'], $_AUTH['collaborates']) : array());
 
 
 
@@ -428,7 +435,7 @@ class LOVD_CustomViewList extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
-        global $_SETT;
+        global $_SETT, $_AUTH;
 
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
@@ -443,6 +450,12 @@ class LOVD_CustomViewList extends LOVD_Object {
         }
 
         foreach ($this->aColumns as $sCol => $aCol) {
+            if ($_AUTH['level'] < LEVEL_MANAGER && !$this->nID && substr($sCol, 0, 19) == 'VariantOnTranscript') {
+                // A column that has been disabled for this gene, may still show its value to collaborators and higher.
+                if (!in_array($zData['geneid'], $aCol['public_view']) && !in_array($zData['geneid'], $_AUTH['allowed_to_view'])) {
+                    $zData[$sCol] = '';
+                }
+            }
             if (!empty($aCol['custom_links'])) {
                 foreach ($aCol['custom_links'] as $nLink) {
                     $sRegexpPattern = $this->aCustomLinks[$nLink]['regexp_pattern'];

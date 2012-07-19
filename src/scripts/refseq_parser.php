@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2012-07-03
+ * Modified    : 2012-07-11
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -105,7 +105,9 @@ if ($_GET['step'] == 1) {
             // All fields filled in, go ahead.
             // Read file into an array.
             // FIXME!!! LOVD's lovd_php_file() can't communicate in HTTPS, but Mutalyzer forces it...
-            $aGenBank = file('https://mutalyzer.nl/Reference/' . $_POST['file'] . '.gb');
+            global $_CONF;
+
+            $aGenBank = file(str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $_POST['file'] . '.gb');
 
             if (!$aGenBank) {
                 lovd_errorAdd('symbol', 'We couldn\'t retreive the reference sequence file for this gene. Please try again later.');

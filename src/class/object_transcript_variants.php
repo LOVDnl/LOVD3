@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-06-07
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-19
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -121,7 +121,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                  array(
                         'status' => array(
                                     'view' => array('Status', 70),
-                                    'db'   => array('ds.name', false, true)),
+                                    'db'   => array('ds.name', false, true),
+                                    'auth' => LEVEL_COLLABORATOR),
                       ));
 
         $this->sSortDefault = 'id_ncbi';
@@ -162,28 +163,32 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         global $_AUTH, $_SETT;
 
         foreach (array_keys($this->aTranscripts) as $nTranscriptID) {
-            if (empty($aData['ignore_' . $nTranscriptID])) {
-                foreach ($this->aColumns as $sCol => $aCol) {
-                    $sCol = $nTranscriptID . '_' . $sCol;
-                    if ($aCol['mandatory']) {
-                        $this->aCheckMandatory[] = $sCol;
-                    }
-                    if (isset($aData[$sCol])) {
-                        $this->checkInputRegExp($sCol, $aData[$sCol]);
-                        $this->checkSelectedInput($sCol, $aData[$sCol]);
-                    }
+            if (!empty($aData['ignore_' . $nTranscriptID])) {
+                continue;
+            }
+            foreach ($this->aColumns as $sCol => $aCol) {
+                if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
+                    continue;
                 }
-                $this->aCheckMandatory[] = $nTranscriptID . '_effect_reported';
-                if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                    $this->aCheckMandatory[] = $nTranscriptID . '_effect_concluded';
+                $sCol = $nTranscriptID . '_' . $sCol;
+                if ($aCol['mandatory']) {
+                    $this->aCheckMandatory[] = $sCol;
                 }
-                if (isset($aData[$nTranscriptID . '_effect_reported']) && !array_key_exists($aData[$nTranscriptID . '_effect_reported'], $_SETT['var_effect'])) {
-                    lovd_errorAdd($nTranscriptID . '_effect_reported', 'Please select a proper functional effect from the \'Affects function (reported)\' selection box.');
+                if (isset($aData[$sCol])) {
+                    $this->checkInputRegExp($sCol, $aData[$sCol]);
+                    $this->checkSelectedInput($sCol, $aData[$sCol]);
                 }
+            }
+            $this->aCheckMandatory[] = $nTranscriptID . '_effect_reported';
+            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                $this->aCheckMandatory[] = $nTranscriptID . '_effect_concluded';
+            }
+            if (isset($aData[$nTranscriptID . '_effect_reported']) && !array_key_exists($aData[$nTranscriptID . '_effect_reported'], $_SETT['var_effect'])) {
+                lovd_errorAdd($nTranscriptID . '_effect_reported', 'Please select a proper functional effect from the \'Affects function (reported)\' selection box.');
+            }
 
-                if (isset($aData[$nTranscriptID . '_effect_concluded']) && !array_key_exists($aData[$nTranscriptID . '_effect_concluded'], $_SETT['var_effect'])) {
-                    lovd_errorAdd($nTranscriptID . '_effect_concluded', 'Please select a proper functional effect from the \'Affects function (concluded)\' selection box.');
-                }
+            if (isset($aData[$nTranscriptID . '_effect_concluded']) && !array_key_exists($aData[$nTranscriptID . '_effect_concluded'], $_SETT['var_effect'])) {
+                lovd_errorAdd($nTranscriptID . '_effect_concluded', 'Please select a proper functional effect from the \'Affects function (concluded)\' selection box.');
             }
         }
 

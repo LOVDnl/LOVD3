@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-06-17
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-18
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -133,6 +133,9 @@ class LOVD_Object {
         global $_AUTH;
         $aForm = $this->getForm();
         $aFormInfo = $aForm[0];
+        if (!$aFormInfo[0]) {
+            $aFormInfo[0] = 'POST';
+        }
         unset($aForm[0]);
 
         // Always mandatory.
@@ -149,7 +152,8 @@ class LOVD_Object {
 
             // Trim() all fields. We don't want those spaces in the database anyway.
             if (isset($aData[$sName]) && !is_array($aData[$sName])) {
-                $GLOBALS['_' . $aFormInfo[0]][$sName] = $aData[$sName] = trim($aData[$sName]);
+                $GLOBALS['_' . $aFormInfo[0]][$sName] = trim($GLOBALS['_' . $aFormInfo[0]][$sName]);
+                $aData[$sName] = trim($aData[$sName]);
             }
 
             // Mandatory fields, as defined by child object.

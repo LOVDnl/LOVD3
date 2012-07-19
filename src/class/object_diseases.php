@@ -138,6 +138,10 @@ class LOVD_Disease extends LOVD_Object {
                       );
         parent::checkFields($aData);
 
+        if (!empty($aData['id_omim']) && !preg_match('/^[1-9]\d{5}$/', $aData['id_omim'])) {
+            lovd_errorAdd('id_omim', 'The OMIM ID has to be six digits long and cannot start with a \'0\'.');
+        }
+
         $aGenes = lovd_getGeneList();
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.

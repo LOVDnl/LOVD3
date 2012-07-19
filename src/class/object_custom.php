@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-07-05
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -139,8 +139,6 @@ class LOVD_Custom extends LOVD_Object {
             $this->aCustomLinks[$aLink['id']] = $aLink;
         }
 
-
-
         parent::__construct();
 
         // Hide entries that are not marked or public.
@@ -162,12 +160,13 @@ class LOVD_Custom extends LOVD_Object {
     function buildFields ()
     {
         // Gathers the columns to be used for lovd_(insert/update)Entry and returns them
-        // FIXME; Neither are used yet. When authorization is added to this function, then they will.
-        // global $_AUTH, $_PE;
+        global $_AUTH;
 
         $aFields = array();
         foreach($this->aColumns as $sCol => $aCol) {
-            // FIXME; implement a check for authorization to create/edit each columns using lovd_isAuthorized(), public_view && public_add.
+            if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
+                continue;
+            }
             $aFields[] = $sCol;
         }
         return $aFields;
@@ -180,9 +179,13 @@ class LOVD_Custom extends LOVD_Object {
     function buildForm ($sPrefix = '')
     {
         // Builds the array needed to display the form.
+        global $_AUTH;
         $aFormData = array();
 
         foreach ($this->aColumns as $sCol => $aCol) {
+            if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
+                continue;
+            }
             // Build what type of form entry?
             $aEntry = array();
             if ($aCol['form_type'][2] != 'select') {
@@ -292,8 +295,12 @@ class LOVD_Custom extends LOVD_Object {
     function buildViewEntry ()
     {
         // Gathers the columns which are active for the current data type and returns them in a viewEntry format
+        global $_AUTH;
         $aViewEntry = array();
         foreach ($this->aColumns as $sID => $aCol) {
+            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+                continue;
+            }
             $aViewEntry[$sID] = $aCol['head_column'];
         }
         return $aViewEntry;
@@ -306,8 +313,12 @@ class LOVD_Custom extends LOVD_Object {
     function buildViewList ()
     {
         // Gathers the columns which are active for the current data type and returns them in a viewList format
+        global $_AUTH;
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
+            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+                continue;
+            }
             $bAlignRight = preg_match('/^(DEC|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);
 
             $aViewList[$sID] =
@@ -328,6 +339,9 @@ class LOVD_Custom extends LOVD_Object {
         global $_AUTH, $_SETT, $_DB;
         // Checks fields before submission of data.
         foreach ($this->aColumns as $sCol => $aCol) {
+            if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
+                continue;
+            }
             if ($aCol['mandatory']) {
                 $this->aCheckMandatory[] = $sCol;
             }
@@ -455,8 +469,13 @@ class LOVD_Custom extends LOVD_Object {
 
     function prepareData ($zData = '', $sView = 'list')
     {
+        // Prepares the data before returning it to the user.        
+        global $_AUTH;
         $zData = parent::prepareData($zData, $sView);
         foreach ($this->aColumns as $sCol => $aCol) {
+            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+                continue;
+            }
             if (!empty($aCol['custom_links'])) {
                 foreach ($aCol['custom_links'] as $nLink) {
                     $sRegexpPattern = $this->aCustomLinks[$nLink]['regexp_pattern'];

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-07-13
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -682,7 +682,7 @@ function lovd_mapVariants ()
             // Determine if we're the current tab.
             $bSel = (substr(lovd_getProjectFile(), 1, strrpos(lovd_getProjectFile(), '.') - 1) == $sPrefix);
             // Auch! Hard coded exception!
-            if (!$bSel && $sPrefix == 'docs' && substr(lovd_getProjectFile(), 0, 6) == '/docs/') { $bSel = true; }
+            if (!$bSel && defined('TAB_SELECTED') && TAB_SELECTED == $sPrefix) { $bSel = true; }
             $sFile = 'tab_' . $sPrefix;
 
             // Print transition.

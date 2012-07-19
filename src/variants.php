@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-07-10
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -544,7 +544,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             require ROOT_PATH . 'class/REST2SOAP.php';
             $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
             $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']));
-            if (is_array($aOutput) && !empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
+            if (is_array($aOutput) && !empty($aOutput) && empty($aOutput['errorcode'][0]['v'])) {
                 $_POST['position_g_start'] = $aOutput['start_g'][0]['v'];
                 $_POST['position_g_end'] = $aOutput['end_g'][0]['v'];
                 $_POST['type'] = $aOutput['mutationType'][0]['v'];
@@ -717,15 +717,17 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 oNextElement = oNextElement.next();
             }
         });
+        var aUDrefseqs = {
 <?php
-    print('    var aUDrefseqs = {' . "\n");
-        if (isset($sGene)) {
-        print('            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'');
+    if (isset($sGene)) {
+        echo '            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
     }
 
-    print("\n" . '        };' . "\n\n" .
-          '        var aTranscripts = {' . "\n");
+    echo "\n" . '        };';
+?>
 
+        var aTranscripts = {
+<?php
     if (isset($sGene)) {
         $i = 0;
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
@@ -2316,28 +2318,25 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     lovd_includeJS('inc-js-variants.php?chromosome=' . $zData['chromosome']);
 
     print('      <SCRIPT type="text/javascript">' . "\n" .
-          '        var aUDrefseqs = ');
-
+          '        var aUDrefseqs = {' . "\n");
     if ($bGene) {
-        print('{' . "\n");
         $i=0;
         foreach($aGenes as $sGene) {
             echo ($i? ',' . "\n" : '') . '            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
             $i++;
         }
-        print("\n" . '        }' . "\n" .
-              '        var aTranscripts = {' . "\n");
-        $i = 0;
+    }
+    print("\n" . '        };' . "\n" .
+          '        var aTranscripts = {' . "\n");
+    $i = 0;
+    if ($bGene) {
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
             list($sTranscriptNM, $sGeneSymbol, $sMutalyzerID) = $aTranscript;
             echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\', \'' . $sMutalyzerID . '\']';
             $i++;
         }
-        print("\n" . '        }');
-    } else {
-        print('false');
     }
-    print(';' . "\n\n" .
+    print("\n" . '        };' . "\n\n" .
           '        $( function () {' . "\n" .
           '          $(\'#variantForm\').attr("action", $(\'#variantForm\').attr("action") + window.location.hash)' . "\n" .
           '          var aNewTranscripts = window.location.hash.substring(1).split(",");' . "\n" .

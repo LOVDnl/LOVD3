@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-07-05
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -115,7 +115,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'panelid_' => 'Panel ID',
                         'panel_size' => 'Panel size',
                         'owned_by_' => 'Owner name',
-                        'status' => 'Individual data status',
+                        'status' => array('Individual data status', LEVEL_COLLABORATOR),
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -154,7 +154,8 @@ class LOVD_Individual extends LOVD_Custom {
                                     'db'   => array('uo.name', 'ASC', true)),
                         'status' => array(
                                     'view' => array('Status', 70),
-                                    'db'   => array('ds.name', false, true)),
+                                    'db'   => array('ds.name', false, true),
+                                    'auth' => LEVEL_COLLABORATOR),
                       ));
         $this->sSortDefault = 'id_';
 
@@ -258,7 +259,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'hr',
                         array('This individual has been diagnosed with these diseases', '', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
      'diseases_info' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD. If any disease you would like to select is not in here, please mention this in the remarks, preferably including the omim number. This way, a manager can configure this disease in this LOVD.'),
-   'diseases_create' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD. Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
+   'diseases_create' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD.<BR>Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
                      'hr',
       'general_skip' => 'skip',
            'general' => array('', '', 'print', '<B>General information</B>'),
