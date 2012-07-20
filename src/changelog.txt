@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 07
- * 2012-07-?? ????????????????????????????????????
+ * 2012-07-2? ????????????????????????????????????
  *********/
  * You can now open the Mutalyzer prediction page from the variant data entry
    form, by clicking on the mark besides the protein field after a successful
@@ -50,6 +50,21 @@
    specific starting page for curators.
  * The Status column has been added to more data overviews, if the user is
    authorized to see this column.
+ * The Phenotype/Inheritance column is now HGVS standard and enabled by default
+   for new diseases.
+ * You can now tag healthy controls as such by applying the "Healthy/Control"
+   disease to the individual in question.
+ * Fixed bug; A zero is now valid input for a mandatory column.
+ * Fixed bug; If a multiple selection list contained a value of zero, it was
+   incorrectly selected by itself due to some PHP strangeness.
+ * Several gene's fields are now HTML enabled; Text for own disclaimer, Page
+   header, Page footer, Notes for the LOVD gene homepage, and Notes for the
+   variant listings.
+ * On a user's detailed view, the genes this user is curator or collaborator of,
+   are now clickable. A curator or collaborator may now also see which genes he/
+   she is collaborator of.
+ * Fixed bug; Invalid search expressions caused one or two PHP errors as well as
+   generate a normal LOVD error message.
 
 
 

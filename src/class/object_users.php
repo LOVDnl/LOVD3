@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-07-19
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -52,7 +52,7 @@ class LOVD_User extends LOVD_Object {
     {
         // Default constructor.
         global $_SETT;
-        
+
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT *, (login_attempts >= 3) AS locked ' .
                                'FROM ' . TABLE_USERS . ' ' .
@@ -69,8 +69,8 @@ class LOVD_User extends LOVD_Object {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
                                            '(u.login_attempts >= 3) AS locked, ' .
-                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, ' .
-                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ", ") AS collaborates_, ' .
+                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _curates, ' .
+                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _collaborates, ' .
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
@@ -86,7 +86,7 @@ class LOVD_User extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
                                           'COUNT(CASE u2g.allow_edit WHEN 1 THEN u2g.geneid END) AS curates, ' .
                                           'c.name AS country_, ' .
-                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level, ' . 
+                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level, ' .
                                           'CASE GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . '))' . $sLevelQuery . ' END AS level_';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
@@ -113,7 +113,7 @@ class LOVD_User extends LOVD_Object {
                         'phpsessid' => array('Session ID', LEVEL_MANAGER),
                         'saved_work_' => 'Saved work',
                         'curates_' => 'Curator for',
-                        'collaborates_' => array('Collaborator for', LEVEL_MANAGER),
+                        'collaborates_' => 'Collaborator for',
 //                        'submits' => 'Submits',
                         'level_' => 'User level',
                         'allowed_ip_' => 'Allowed IP address list',
@@ -415,6 +415,15 @@ class LOVD_User extends LOVD_Object {
                 // Do something later.
             } else {
                 $zData['saved_work_'] = 'N/A';
+            }
+            // Provide links to gene symbols this user is curator and collaborator for. Easy access to one's own genes.
+            $zData['curates_'] = '';
+            foreach ($zData['curates'] as $key => $sGene) {
+                $zData['curates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
+            }
+            $zData['collaborates_'] = '';
+            foreach ($zData['collaborates'] as $key => $sGene) {
+                $zData['collaborates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
             }
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');

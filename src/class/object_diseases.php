@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2012-07-12
+ * Modified    : 2012-07-18
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -77,6 +77,7 @@ class LOVD_Disease extends LOVD_Object {
                                           'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
+        $this->aSQLViewList['WHERE']    = 'd.id > 0';
         $this->aSQLViewList['GROUP_BY'] = 'd.id';
 
         // List of columns and (default?) order for viewing an entry.

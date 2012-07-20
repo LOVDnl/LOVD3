@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-07-11
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -282,7 +282,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // XSS attack prevention. Deny input of HTML.
         // Ignore the 'External links' field.
-        unset($aData['url_external']);
+        unset($aData['url_external'], $aData['disclaimer_text'], $aData['header'], $aData['footer'], $aData['note_index'], $aData['note_listing']);
         lovd_checkXSS($aData);
     }
 
@@ -296,7 +296,7 @@ class LOVD_Gene extends LOVD_Object {
         global $_CONF, $_DB, $zData, $_SETT;
 
         // Get list of diseases.
-        $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id')->fetchAllCombine();
+        $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' WHERE id > 0 ORDER BY id')->fetchAllCombine();
         if (!empty($aDiseasesForm)) {
             foreach ($aDiseasesForm as $nDisease => $sDisease) {
                 $aDiseasesForm[$nDisease] = lovd_shortenString($sDisease, 50);
@@ -398,17 +398,17 @@ class LOVD_Gene extends LOVD_Object {
                         array('', '', 'note', '(Active custom link : <A href="#" onmouseover="lovd_showToolTip(\'Click to insert:<BR>{PMID:[1]:[2]}<BR><BR>Links to abstracts in the PubMed database.<BR>[1] = The name of the author(s).<BR>[2] = The PubMed ID.\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'{PMID:[1]:[2]}\'); return false">Pubmed</A>)'),
                         array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, false, false, false),
                         array('', '', 'note', 'If you want a disclaimer added to the gene\'s LOVD gene homepage, select your preferred option here.'),
-                        array('Text for own disclaimer', '', 'textarea', 'disclaimer_text', 55, 3),
+                        array('Text for own disclaimer<BR>(HTML enabled)', '', 'textarea', 'disclaimer_text', 55, 3),
                         array('', '', 'note', 'Only applicable if you choose to use your own disclaimer (see option above).'),
-                        array('Page header', '', 'textarea', 'header', 55, 3),
+                        array('Page header<BR>(HTML enabled)', '', 'textarea', 'header', 55, 3),
                         array('', '', 'note', 'Text entered here will appear above all public gene-specific pages.'),
                         array('Header aligned to', '', 'select', 'header_align', 1, $aSelectHeaderFooter, false, false, false),
-                        array('Page footer', '', 'textarea', 'footer', 55, 3),
+                        array('Page footer<BR>(HTML enabled)', '', 'textarea', 'footer', 55, 3),
                         array('', '', 'note', 'Text entered here will appear below all public gene-specific pages.'),
                         array('Footer aligned to', '', 'select', 'footer_align', 1, $aSelectHeaderFooter, false, false, false),
-                        array('Notes for the LOVD gene homepage', '', 'textarea', 'note_index', 55, 3),
+                        array('Notes for the LOVD gene homepage<BR>(HTML enabled)', '', 'textarea', 'note_index', 55, 3),
                         array('', '', 'note', 'Text entered here will appear in the General Information box on the gene\'s LOVD gene homepage.'),
-                        array('Notes for the variant listings', '', 'textarea', 'note_listing', 55, 3),
+                        array('Notes for the variant listings<BR>(HTML enabled)', '', 'textarea', 'note_listing', 55, 3),
                         array('', '', 'note', 'Text entered here will appear below the gene\'s variant listings.'),
                         'hr',
                         'skip',

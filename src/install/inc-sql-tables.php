@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-04-13
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-07-19
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -239,7 +239,7 @@ $aTableSQL =
     name VARCHAR(5) NOT NULL,
     PRIMARY KEY (id))
     ' . $sSettings
-    
+
           , 'TABLE_INDIVIDUALS' =>
    'CREATE TABLE ' . TABLE_INDIVIDUALS . ' (
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
@@ -528,7 +528,7 @@ $aTableSQL =
     description_legend_short TEXT NOT NULL,
     description_legend_full TEXT NOT NULL,
     mysql_type VARCHAR(255) NOT NULL,
-    form_type VARCHAR(255) NOT NULL,
+    form_type TEXT NOT NULL,
     select_options TEXT NOT NULL,
     preg_pattern VARCHAR(255) NOT NULL,
     public_view BOOLEAN NOT NULL,

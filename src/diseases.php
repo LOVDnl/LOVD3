@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-07-05
+ * Modified    : 2012-07-18
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,6 +69,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     define('PAGE_TITLE', 'View disease #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
+
+    if ($nID == '00000') {
+        $nID = -1;
+    }
 
     // Load appropiate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
@@ -265,6 +269,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     define('PAGE_TITLE', 'Edit disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseEdit');
 
+    if ($nID == '00000') {
+        $nID = -1;
+    }
+
     // Load appropiate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
     lovd_requireAUTH(LEVEL_CURATOR);
@@ -393,6 +401,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $nID = sprintf('%05d', $_PE[1]);
     define('PAGE_TITLE', 'Delete disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseDelete');
+
+    if ($nID == '00000') {
+        $nID = -1;
+    }
 
     // Require manager clearance.
     // FIXME; allow curators to delete diseases that point to no other genes besides their own?
@@ -746,7 +758,7 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION ==
           $('#column_list').sortable({
             containment: 'parent',
             tolerance: 'pointer',
-            handle: 'TD.handle',
+            handle: 'TD.handle'
           });
           $('#column_list').disableSelection();
         });

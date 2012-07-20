@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-07-11
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -674,7 +674,7 @@ if (!defined('NOT_INSTALLED')) {
         // Gene switch will occur automatically at certain pages. They can be accessed by following links in LOVD itself, or possibly from outer sources.
         if (preg_match('/^(configuration|genes|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
             // We'll check this value further down in this code.
-            if ($aRegs[2] != 'in_gene') {
+            if ($aRegs[2] != 'in_gene' && !ctype_digit($aRegs[2])) {
                 $_SESSION['currdb'] = $aRegs[2];
             }
         }

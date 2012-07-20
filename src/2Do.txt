@@ -1,47 +1,29 @@
 Prioritize:
 ===========
+AFMAKEN: BEZIG MET COLS VERGELIJKEN UIT DATABASE IN MELD.
+  + Reinstall doen op v33 en kijken hoe de cols er uit zien.
+  + Daarna: inc-upgrade aanpassen? Zo ja, op basis van svn diff. Niet de MySQL types aanpassen van custom cols, omdat je niet weet of ze wel actief zijn.
+
 - Opmerkingen Johan:
-  + Phenotype/Inheritance moet HGVS worden, en standaard aan.
-  + Phenotype/Additional ook standaard maken?
   + Menu's moeten met GET geladen worden, zodat je terug kunt naar GET (terug in browser, POST warning, refresh geeft nieuwe individu entry!)
     * Formulieren moeten dan ook een Cancel knop krijgen, waarmee je terug kunt naar het keuze menu.
     * Formulieren in submit.php?
   + Greppen op Mutation, veranderen naar variant.
-  + Vanaf individual page, phenotype toevoegen, waarom niet terug naar de individu?
-    * Op zich OK om op de phenotype pagina te zitten, maar het is niet duidelijk genoeg hoe je nu terug komt naar de individu.
-  + Vanaf individual pagina, zonder phenotype, kun je bij de (lege) viewlist van phenotypes niet een phenotype toevoegen.
   + Er is onenigheid over hoe vaak je moet vragen naar de Functional effect.
     * Mijn suggestie is de naam van de VOT effect kolommen te veranderen naar "Effects function of this transcript".
       - De VOG functional effect kolommen verdwijnen dan, en worden op de achtergrond automatisch ingevuld voor de "hoogste" waarde in de VOT kolommen.
     * Johan zegt echter, dat hij één set velden per variant genoeg vindt (alleen de VOGs dus).
       Hij is het niet eens met mijn mening dat je per transcript moet kunnen zeggen of de functie beïnvloed wordt.
-  + Disease 000000 maken (= "Healthy / Control"), met default phenotype velden (IQ, lengte, etc)
-  + Patient/Lab-ID veld groter maken?
-  + Exon uitleg: verwijder het stukje m.b.t. de padding, is niet meer nodig?
-- LOVD ziet het verschil niet tussen "" en "0" select value. Daar === voor gebruiken? Dan moeten de array die erin wordt gedouwd wel altijd met strings werken, of wij moeten het omzetten als zodanig.
 - (@Ivo:) RefSeq parser: create overview file, zonder transcript in naam, met links naar de juiste files.
-- (@Ivo:) Some fields on the gene edit page should be allowed HTML (disclaimer, header, footer, notes).
-  + fix this, add "HTML enabled" to form and document this.
-- (@Ivo:) Indien geen kolommen actief zijn voor aandoening en/of gen, geef aan hoe dat te fixen. ViewList zou count(*) terug moeten geven, waarna de code kan weten dat er blijkbaar niets te tonen was.
-- How can a curator quickly find the genes he curates? (possibly with an overview of his work)
 - Hebben we al antwoord m.b.t. "Mogen curatoren zelf diseases aanmaken of editen, gekoppeld aan hun eigen genen?"
   + Want: Curatoren krijgen geen edit knopje, maar mogen wel degelijk diseases editen (specifiek zo geprogrammeerd, dus communicatie fout?)
 - BUGs:
-  + IE7: /genes/GENE options -> refseq parser; JS error: "Access denied". WTF?
-  + Als curator mag ik niet een non-public VOG niet zien, terwijl die een VOT heeft in mijn gen.
-    * Moet dus een join naar VOT en daarna transcripten hebben.
-  + Een invalid search expression in een viewlist genereert een extra PHP foutmelding.
-    De regel in objects die door $q loopt om de data te tonen, geeft een notice en fatal error omdat $q niet bestaat.
-    Die wordt namelijk alleen gemaakt als $aBadSyntaxColumns leeg is, en dat is hij dan niet.
-    Blijkbaar, omdat er nu geen "exit" meer is na de controle op bad syntax columns, krijg ik dit.
-    Die "exit" is weggehaald om het eind van de viewList() code wel te hebben (stretch input e.d.).
-    * Exacte foutmelding: Notice: Undefined variable: q in /home/ifokkema/www/other/LOVD3/trunk/src/class/objects.php on line 1209
-    * Fatal error: Call to a member function fetchAssoc() on a non-object in /home/ifokkema/www/other/LOVD3/trunk/src/class/objects.php on line 1209
+  + Als curator mag ik niet een non-public VOG niet zien in de VL, terwijl die een VOT heeft in mijn gen.
+    * Moet dus een join naar VOT en daarna transcripten hebben (Is Ivar mee bezig).
 
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
-- De kolom volgorden en omschrijvingen overnemen van de shared install? Wel even alles dubbel checken.
-  + Lijstje maken van de veranderingen, want ik ben het niet met alles eens. Veel te veel informatie in de "notes on form" voor mijn smaak.
+- De kolom volgorden en omschrijvingen verder overnemen van de shared install - afmaken.
 - Nieuwe kolommen:
   + GVS/Function naar selection list, zodat Maja er ook wat aan heeft?
 - (@Ivo) Row Link probleem:
@@ -72,8 +54,6 @@ Prioritize:
             % Variants
   + (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
     * Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
-  + IVAR: Status kolom moet ook gehide worden, als men niet is ingelogd. Regelen in objects.php of object_*.php.
-    * (dus niet in de losse scripts zoals variants.php!!!)
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
@@ -120,6 +100,11 @@ Prioritize:
     Individuals "panel_size" groter dan 1 is (dus dat mag niet in een individu, alleen een panel).
   + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
 =============== Below here needs to be re-evaluated for priority ===============
+- Waarschuwing voor MySQL type verandering alleen doen als echt het type verandert en/of de lengte minder wordt?
+- Gene create -> (OMIM API) Auto create related diseases -> (OMIM API or HPO files) Auto create custom columns
+- Disease create -> (OMIM API or HPO files) Auto create custom columns
+                 -> (OMIM API) Auto create related genes
+- (@Ivo:) Indien geen kolommen actief zijn voor aandoening en/of gen, geef aan hoe dat te fixen vanaf het object z'n columns VL. ViewList zou count(*) terug moeten geven, waarna de code kan weten dat er blijkbaar niets te tonen was.
 Opmerkingen Johan:
   + Diseases selecteren bij patient moet makkelijker worden, en er moet een voorspelling in zitten afhankelijk van het gen waar je nu in zit.
     * Dat wordt dan waarschijnlijk een tag JS library, die in combinatie met een autocomplete de klus zou moeten kunnen klaren.
@@ -201,6 +186,9 @@ Opmerkingen Johan:
   - Inbouwen dat LOVD met NR_ accession nummers overweg kan, er staan hier en daar volgens mij wat regex checks op NM_(ajax calls e.d.)
   - RNA prediction toevoegen aan het variant create & edit formulier.
   - Als $zData['column_'] niet defined is, pakt viewList en viewEntry automatisch $zData['column']? Dat staat ons wat "sloppy" code toe, waar we icoontjes toevoegen speciaal voor text/html, maar dat niet willen voor downloads of XML.
+  - Vanaf individual page, phenotype toevoegen, waarom niet terug naar de individu?
+    + Op zich OK om op de phenotype pagina te zitten, maar het is niet duidelijk genoeg hoe je nu terug komt naar de individu.
+  - Vanaf individual pagina, zonder phenotype, kun je bij de (lege) viewlist van phenotypes niet een phenotype toevoegen.
 
 - Unit tests via Selenium (of alternatief)?
 - Hebben we OpenSSL ergens voor nodig?

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-07-02
+ * Modified    : 2012-07-18
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -97,6 +97,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $zData = $_DATA->viewEntry($nID);
 
     $aNavigation = array();
+    // This all assumes we are LEVEL_MANAGER already.
     if ($_AUTH['level'] > $zData['level']) {
         // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Edit user', 1);
@@ -238,6 +239,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // Require valid user.
     lovd_requireAUTH();
 
+    if ($nID == '00000') {
+        $nID = -1;
+    }
+
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
@@ -353,6 +358,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     // Require valid user.
     lovd_requireAUTH();
 
+    if ($nID == '00000') {
+        $nID = -1;
+    }
+
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
@@ -453,6 +462,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Require valid user.
     lovd_requireAUTH();
 
+    if ($nID == '00000') {
+        $nID = -1;
+    }
+
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
@@ -480,7 +493,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                     array('POST', '', '', '', '40%', '14', '60%'),
                     array('Deleting user', '', 'print', '<SPAN style="font-family: monospace;"><I>' . $zData['username'] . '</I></SPAN>, ' . $zData['name'] . ' (' . $_SETT['user_levels'][$zData['level']] . ')'),
                     // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
-                    (!count($aCuratedGenes)? false : 
+                    (!count($aCuratedGenes)? false :
                     array('&nbsp;', '', 'print', '<B>This user is the only curator of ' . count($aCuratedGenes) . ' gene' . (count($aCuratedGenes) == 1? '' : 's') . ': ' . implode(', ', $aCuratedGenes) . '. You will become the curator of ' . (count($aCuratedGenes) == 1? 'this gene' : 'these genes') . ' once this user is deleted.</B>')),
                     'skip',
                     array('Enter your password for authorization', '', 'password', 'password', 20),
@@ -556,7 +569,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
             lovd_showInfoTable('<B>The user you are about to delete has the following references to data in this installation:</B><BR>' .
                                $nLogs . ' log entr' . ($nLogs == 1? 'y' : 'ies') . ' will be deleted,<BR>' .
-                               $nCurates . ' gene' . ($nCurates == 1? '' : 's') . ' will have this user removed as curator,<BR>' . 
+                               $nCurates . ' gene' . ($nCurates == 1? '' : 's') . ' will have this user removed as curator,<BR>' .
                                $nIndividuals . ' individual' . ($nIndividuals == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
                                $nScreenings . ' screening' . ($nScreenings == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
                                $nVars . ' variant' . ($nVars == 1? '' : 's') . ' are owned, created by or last edited by this user (you will no longer be able to see that),<BR>' .
@@ -625,6 +638,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
+    if ($nID == '00000') {
+        $nID = -1;
+    }
+
     $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
@@ -663,6 +680,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
+
+    if ($nID == '00000') {
+        $nID = -1;
+    }
 
     $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
@@ -810,7 +831,7 @@ if (PATH_COUNT == 1 && ACTION == 'register') {
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable('Your account has successfully been created!<BR>' . "\n" .
-                               ($bMail? 'We\'ve sent you an email containing your account information.' : 
+                               ($bMail? 'We\'ve sent you an email containing your account information.' :
                                'Due to an error, we couldn\'t send you an email containing your account information. Our apologies for the inconvenience.'),
                                ($bMail? 'success' : 'information'));
 

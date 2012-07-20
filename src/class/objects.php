@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-07-18
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -157,7 +157,7 @@ class LOVD_Object {
             }
 
             // Mandatory fields, as defined by child object.
-            if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
+            if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || $aData[$sName] === '')) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
             }
 
@@ -1210,7 +1210,8 @@ class LOVD_Object {
             }
         }
 
-        while ($zData = $q->fetchAssoc()) {
+        // Now loop through the data and print. But check for $q to be set; if we had a bad search syntax, we end up here as well, but without an $q.
+        while (isset($q) && $zData = $q->fetchAssoc()) {
             // If row_id is not given by the database, but it should be created according to some format ($this->sRowID), put the data's ID in this format.
             $zData = $this->generateRowID($zData);
             // If row_link is not given by the database, but it should be created according to some format ($this->sRowLink), put the data's ID and the viewList's ID in this format.

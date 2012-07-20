@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-07
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-18
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -298,12 +298,12 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
 
     @set_time_limit(0); // We don't want the installation to time out in the middle of table creation.
 
-    // Start session.
+    // Restart session, now with correct session name.
+    session_destroy();
     $sSignature = md5($_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . time());
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($sSignature);
     session_name('PHPSESSID_' . $_SETT['cookie_id']);
-
     session_start();
 
     $_T->printHeader();
@@ -393,7 +393,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // (3) Creating LOVD user & administrator.
     $aInstallSQL['Creating LOVD account &amp; LOVD database administrator account...'] =
              array(
-                    'INSERT INTO ' . TABLE_USERS . '(name, created_date) VALUES ("LOVD", NOW())',
+                    'INSERT INTO ' . TABLE_USERS . ' (name, created_date) VALUES ("LOVD", NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
                     'INSERT INTO ' . TABLE_USERS . ' VALUES ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' . $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW(), NULL, NULL)',
                   );
@@ -450,27 +450,41 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
                 $sTable = 'TABLE_' . strtoupper($sCategory) . 'S';
             }
 
-            $aInstallSQL['Activating LOVD standard custom columns'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
-            $aInstallSQL['Activating LOVD standard custom columns'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aCol[0] . '", "00000", NOW())';
+            $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
+            $aInstallSQL['Activating LOVD standard custom columns...'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("' . $aCol[0] . '", "00000", NOW())';
         }
     }
 
 
-    // (10) Creating standard custom links.
+    // (10) Creating the "Healthy / Control" disease. Maybe later enable some more default columns? (IQ, ...)
+    $aInstallSQL['Registering phenotype columns for healthy controls...'] =
+        array(
+            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
+            'UPDATE ' . TABLE_DISEASES . ' SET id = 0',
+            'ALTER TABLE ' . TABLE_DISEASES . ' auto_increment = 0',
+            'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `Phenotype/Length` SMALLINT(3) UNSIGNED',
+            'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Length", 0, NOW())',
+            'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, width, description_legend_short, description_legend_full, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Length", 100, "Length of the individual, in cm.", "Length of the individual, in centimeters (cm).", 1, 1, 0, NOW())',
+            'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `Phenotype/Age` VARCHAR(12)',
+            'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Age", 0, NOW())',
+            'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, width, description_form, description_legend_short, description_legend_full, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Age", 100, "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the individual was examined, if known. 04y08m = 4 years and 8 months.", "The age at which the individual was examined, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", 1, 1, 0, NOW())',
+        );
+
+    // (11) Creating standard custom links.
     require 'inc-sql-links.php';
     $nLinks = count($aLinkSQL);
     $aInstallSQL['Creating LOVD custom links...'] = $aLinkSQL;
     $nInstallSQL += $nLinks;
 
 
-    // (11) Creating LOVD status.
+    // (12) Creating LOVD status.
     $aInstallSQL['Registering LOVD system status...'] =
              array(
                     'INSERT INTO ' . TABLE_STATUS . ' VALUES (0, "' . $_SETT['system']['version'] . '", "' . $sSignature . '", NULL, NULL, NULL, NULL, NULL, NOW(), NULL)');
     $nInstallSQL ++;
 
 
-    // (12) Creating standard external sources.
+    // (13) Creating standard external sources.
     require 'inc-sql-sources.php';
     $nSources = count($aSourceSQL);
     $aInstallSQL['Creating external sources...'] = $aSourceSQL;

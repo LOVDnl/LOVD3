@@ -220,6 +220,7 @@ class LOVD_Custom extends LOVD_Object {
                             if (substr_count($sLine, '=')) {
                                 list($sKey, $sVal) = explode('=', $sLine, 2);
                                 $sVal = lovd_shortenString(trim($sVal), 75);
+                                // NOTE: This array *refuses* to create string keys if the contents are integer strings. So the keys can actually be integers.
                                 $aData[trim($sKey)] = $sVal;
                             } else {
                                 $sVal = trim($sLine);

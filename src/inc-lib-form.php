@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-07-13
+ * Modified    : 2012-07-19
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -679,7 +679,7 @@ function lovd_viewForm ($a,
      * array('<header>', '<help_text>', 'select', '<field_name>', <field_size>, <data> (array, key => val|query, [0] => [1]), <select>:true|false|select_text, <multiple>:true|false, <select_all_link>:true|false|link_text),
      * array('<header>', '<help_text>', 'checkbox', '<field_name>'),
      * array('<header>', '<help_text>', 'submit', '<button_value>', '<field_name>'),
-     * 
+     *
      **********/
 
     // Options.
@@ -826,7 +826,8 @@ function lovd_viewForm ($a,
                 if (is_array($oData)) {
                     // Array input.
                     foreach ($oData as $key => $val) {
-                        $bSelected = ((!$bMultiple && $GLOBALS['_' . $sMethod][$sName] == $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array($key, $GLOBALS['_' . $sMethod][$sName])));
+                        // We have to cast the $key to string because PHP made integers of them, if they were integer strings.
+                        $bSelected = ((!$bMultiple && $GLOBALS['_' . $sMethod][$sName] === (string) $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array((string) $key, $GLOBALS['_' . $sMethod][$sName], true)));
                         print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
                     }
                 }
@@ -834,7 +835,7 @@ function lovd_viewForm ($a,
                 print('</SELECT>');
 
                 // Select all link.
-                if ($bMultiple && $bSelectAll) {                    
+                if ($bMultiple && $bSelectAll) {
                     print('&nbsp;<A href="#" onclick="var list = this.previousSibling.previousSibling; for (i=0;i<list.options.length;i++) { list.options[i].selected = true; }; return false">Select&nbsp;all</A>');
                 }
 
