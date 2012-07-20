@@ -1090,11 +1090,11 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     // - Variant types (RNA, Protein level).
     // - Locations of variants (exon and intron numbers)?
     // - Variants in this gene reported in individuals with which diseases?
-    //   * Too bad we don't know if these variants cause this disease. Search for pathogenicity only?
+    //   * Too bad we don't know if these variants cause this disease. Search for pathogenicity only? YES
 
     // We need to create the DIV containers, the Graph object will fill it in.
     // Variant types (DNA level).
-    print('      <H5>Variant type (DNA level)</H5>' . "\n" .
+    print('      <H5>Variant type (DNA level, all variants)</H5>' . "\n" .
           '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
           '        <TR valign="top">' . "\n" .
           '          <TD width="50%">' . "\n" .
@@ -1109,7 +1109,23 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     $_G->variantsTypeDNA('variantsTypeDNA_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
     
     //begin_david
-    // Variant types (protein level), whole database.
+    //the same for pathogenic
+    print('      <H5>Variant type (DNA level, pathogenic variants)</H5>' . "\n" .
+          '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+          '        <TR valign="top">' . "\n" .
+          '          <TD width="50%">' . "\n" .
+          '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
+          '            <DIV id="variantsTypeDNA_all_pathogenic" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_all_pathogenic_hover">&nbsp;</DIV></TD>' . "\n" .
+          '          <TD width="50%">' . "\n" .
+          '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
+          '            <DIV id="variantsTypeDNA_unique_pathogenic" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_unique_pathogenic_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
+
+    
+    $_G->variantsTypeDNA2('variantsTypeDNA_all_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, true);
+    $_G->variantsTypeDNA2('variantsTypeDNA_unique_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, true);
+    
+    
+    // Variant types (protein level)
     print('      <H5>Variant type (Protein level)</H5>' . "\n" .
           '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
           '        <TR valign="top">' . "\n" .
@@ -1119,12 +1135,34 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
           '          <TD width="50%">' . "\n" .
           '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
           '            <DIV id="variantsTypeProtein_unique" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeProtein_unique_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
-    //end_david
+    // Variant types (protein level), pathogenic.
+print('      <H5>Variant type (Protein level, pathogenic variants)</H5>' . "\n" .
+      '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+      '        <TR valign="top">' . "\n" .
+      '          <TD width="50%">' . "\n" .
+      '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
+      '            <DIV id="variantsTypeProtein_all_pathogenic" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeProtein_all_pathogenic_hover">&nbsp;</DIV></TD>' . "\n" .
+      '          <TD width="50%">' . "\n" .
+      '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
+      '            <DIV id="variantsTypeProtein_unique_pathogenic" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeProtein_unique_pathogenic_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
+    // Variant positions
+    print('      <H5>Variant positions</H5>' . "\n" .
+      '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+      '        <TR valign="top">' . "\n" .
+      '          <TD width="50%">' . "\n" .
+      '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
+      '            <DIV id="variantsPositions" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsPositions_hover">&nbsp;</DIV></TD>' . "\n" .
+      '         </TR></TABLE>' . "\n\n");
+
+//end_david
     flush();
     
     //begin_david
-    $_G->variantsTypeProtein('variantsTypeProtein_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
-    $_G->variantsTypeProtein('variantsTypeProtein_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
+    $_G->variantsTypeProtein('variantsTypeProtein_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, false);
+    $_G->variantsTypeProtein('variantsTypeProtein_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, false);
+    $_G->variantsTypeProtein('variantsTypeProtein_all_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, true);
+    $_G->variantsTypeProtein('variantsTypeProtein_unique_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, true);
+    $_G->variantsPositions('variantsPositions', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR));
     //end_david
 
     $_T->printFooter();
