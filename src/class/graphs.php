@@ -93,6 +93,7 @@ class LOVD_Graphs {
 
 
     //begin_david
+    // To do: a good use of public data, coolaborator levels etc, in queries. I just focused on the types of graphs.
     function screeningTechniques ($sDIV, $Data = array())
     {
         // Shows a nice piechart about the type/number of techniques used per individual in a certain data set.
