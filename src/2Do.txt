@@ -6,7 +6,10 @@ Prioritize:
     * Formulieren moeten dan ook een Cancel knop krijgen, waarmee je terug kunt naar het keuze menu.
     * Formulieren in submit.php?
 
+- Update branch.
+- Report changes to beta-07 to group.
 - Als David Baux zijn scripts klaar zijn, mergen met trunk.
+- (@Ivo): Als het weinig tijd kost, de quick gene switcher implementeren; al is 't maar enkel voor de configuration area.
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
 - De kolom volgorden en omschrijvingen verder overnemen van de shared install - afmaken.
