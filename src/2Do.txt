@@ -6,6 +6,7 @@ Prioritize:
     * Formulieren moeten dan ook een Cancel knop krijgen, waarmee je terug kunt naar het keuze menu.
     * Formulieren in submit.php?
 
+- Als David Baux zijn scripts klaar zijn, mergen met trunk.
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
 - De kolom volgorden en omschrijvingen verder overnemen van de shared install - afmaken.
@@ -87,41 +88,11 @@ Prioritize:
   + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
 - Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
 - Curator/Manager moet cols kunnen instellen voor disease Healty/Control.
-=============== Below here needs to be re-evaluated for priority ===============
-- Waarschuwing voor MySQL type verandering alleen doen als echt het type verandert en/of de lengte minder wordt?
-- Gene create -> (OMIM API) Auto create related diseases -> (OMIM API or HPO files) Auto create custom columns
-- Disease create -> (OMIM API or HPO files) Auto create custom columns
-                 -> (OMIM API) Auto create related genes
-- (@Ivo:) Indien geen kolommen actief zijn voor aandoening en/of gen, geef aan hoe dat te fixen vanaf het object z'n columns VL. ViewList zou count(*) terug moeten geven, waarna de code kan weten dat er blijkbaar niets te tonen was.
-Opmerkingen Johan:
-  + Diseases selecteren bij patient moet makkelijker worden, en er moet een voorspelling in zitten afhankelijk van het gen waar je nu in zit.
-    * Dat wordt dan waarschijnlijk een tag JS library, die in combinatie met een autocomplete de klus zou moeten kunnen klaren.
-      - Maar dan moet die wel snel genoeg zijn en je de mogelijkheid geven om met "muscular dystrophy" ook "dystrophy, muscular, duchenne" te vinden.
-      - We willen natuurlijk liever niet zelf een JS lib hiervoor maken.
-      - Opties:
-        + Tag-it! : https://github.com/aehlke/tag-it
-        + Tagit   : http://webspirited.com/tagit/?theme=simple-blue
-        + Tags Input : http://xoxco.com/projects/code/tagsinput/
-        + Tag edit   : http://tagedit.webwork-albrecht.de/playground.html
-  + Als je een screening aanmaakt terwijl je in gen X zit, moet die standaard geselecteerd zijn?
-  + Kunnen we de haakjes uit de protein description halen, als het RNA veld is ingevuld?
-    * Eigenlijk zouden we dat uit de screening info moeten halen, natuurlijk.
-  + Er is onenigheid over hoe vaak je moet vragen naar de Functional effect.
-    * Mijn suggestie is de naam van de VOT effect kolommen te veranderen naar "Effects function of this transcript".
-      - De VOG functional effect kolommen verdwijnen dan, en worden op de achtergrond automatisch ingevuld voor de "hoogste" waarde in de VOT kolommen.
-    * Johan zegt echter, dat hij één set velden per variant genoeg vindt (alleen de VOGs dus).
-      Hij is het niet eens met mijn mening dat je per transcript moet kunnen zeggen of de functie beïnvloed wordt.
 - Individual viewList: add column "variants in genes" with gene symbols.
   + Then, add option to dropdown menu if we have a currdb.
   + After that, change the default link when clicking the individual tab.
   + Then, apply the same to screenings (add column "genes screened", add option in tab menu, change default link).
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
-- Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
-  * Of betekent dit, dat Mutalyzer er sowieso niet mee overweg kan?
-- Met betrekking tot het blokkeren van het aanmaken van niet volledig bekende genen:
-  + Nadat Mutalyzer komt met een test op alle genen(sliceChromosomeByGene, getTranscriptsAndInfo, numberConversion per gen 1 variant) moeten we
-    beslissen wat we ermee gaan doen, nu tijdelijke filter op "rare" LocusType's.
-- Incorporate links to Alamut.
 - (@Ivar): Als een VCF file geen varianten bevat, mag de file niet als volledige submissie gezien worden.
   + Met andere woorden, de data in $_SESSION moet zo gemanipuleerd worden in variants.php na het importeren, dat er geen mail wordt gestuurd met info over alleen een lege file.
   + Misschien moeten we wel toestaan, dat er in een volledige submissie met individual e.d. een melding over de lege file komt (er moet dan sowieso gemailed worden).
@@ -130,15 +101,13 @@ Opmerkingen Johan:
   + Wellicht is het makkelijker gewoon een foutmelding te geven als in: geen varianten gevonden, upload een correcte file?
     * Tenslotte gaat het niet over managers, de individu en/of screening is vast al publiek.
   + Overleg?
+=============== Below here needs to be re-evaluated for priority ===============
 - Kunnen we ook het Exon veld voorspellen?
 - Quick curate option?
 - Per variant de mapping opties kunnen veranderen?
-- VOT/Published_as is op zich niet nodig als VOG/Published_as is toegevoegd. Hier dan ook een stokje voor steken?
 - Connect existing variant to existing individual; kies individual via viewlist in new window, daarna kies screening?
-- If the wrong password is provided 3(?) times on data entry forms, log this and include a delay (store in SESSION), such that the password can't be brute forced.
-  + SESSION may not always be available (cookie not sent), do we already block login attempts without our cookie?
 
-- Beta-07:
+- Beta-09:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
@@ -164,7 +133,7 @@ Opmerkingen Johan:
       * Je kunt niet goed meer zoeken naar homozygote varianten.
       * Extra data opslag.
     + Voordelen:
-      * Variant tellingen gaan automatisch goed.
+      * Variant tellingen gaan automatisch goed, als je tenminste vindt dat het er 2 moeten zijn.
     + We willen dit eigenlijk op een andere manier oplossen. Variant/Genetic_Origin als bit column gebruiken?
       * Dit zou gerelateerd kunnen zijn aan een ander probleem wat we hebben: de LOVD2 c.0, c.= en c.? notaties.
         - Hier misschien toch een extra kolom voor?
@@ -183,7 +152,38 @@ Opmerkingen Johan:
     + Op zich OK om op de phenotype pagina te zitten, maar het is niet duidelijk genoeg hoe je nu terug komt naar de individu.
   - Vanaf individual pagina, zonder phenotype, kun je bij de (lege) viewlist van phenotypes niet een phenotype toevoegen.
   - lovd_setUpdatedDate() implementeren.
+  - Gene create -> (OMIM API) Auto create related diseases -> (OMIM API or HPO files) Auto create custom columns
+  - Disease create -> (OMIM API or HPO files) Auto create custom columns
+                   -> (OMIM API) Auto create related genes
+  - If the wrong password is provided 3(?) times on data entry forms, log this and include a delay (store in SESSION), such that the password can't be brute forced.
 
+Opmerkingen Johan:
+  + Diseases selecteren bij patient moet makkelijker worden, en er moet een voorspelling in zitten afhankelijk van het gen waar je nu in zit.
+    * Dat wordt dan waarschijnlijk een tag JS library, die in combinatie met een autocomplete de klus zou moeten kunnen klaren.
+      - Maar dan moet die wel snel genoeg zijn en je de mogelijkheid geven om met "muscular dystrophy" ook "dystrophy, muscular, duchenne" te vinden.
+      - We willen natuurlijk liever niet zelf een JS lib hiervoor maken.
+      - Opties:
+        + Tag-it! : https://github.com/aehlke/tag-it
+        + Tagit   : http://webspirited.com/tagit/?theme=simple-blue
+        + Tags Input : http://xoxco.com/projects/code/tagsinput/
+        + Tag edit   : http://tagedit.webwork-albrecht.de/playground.html
+  + Als je een screening aanmaakt terwijl je in gen X zit, moet die standaard geselecteerd zijn?
+  + Kunnen we de haakjes uit de protein description halen, als het RNA veld is ingevuld?
+    * Eigenlijk zouden we dat uit de screening info moeten halen, natuurlijk.
+  + Er is onenigheid over hoe vaak je moet vragen naar de Functional effect.
+    * Mijn suggestie is de naam van de VOT effect kolommen te veranderen naar "Effects function of this transcript".
+      - De VOG functional effect kolommen verdwijnen dan, en worden op de achtergrond automatisch ingevuld voor de "hoogste" waarde in de VOT kolommen.
+    * Johan zegt echter, dat hij één set velden per variant genoeg vindt (alleen de VOGs dus).
+      Hij is het niet eens met mijn mening dat je per transcript moet kunnen zeggen of de functie beïnvloed wordt.
+- Waarschuwing voor MySQL type verandering alleen doen als echt het type verandert en/of de lengte minder wordt?
+- (@Ivo:) Indien geen kolommen actief zijn voor aandoening en/of gen, geef aan hoe dat te fixen vanaf het object z'n columns VL. ViewList zou count(*) terug moeten geven, waarna de code kan weten dat er blijkbaar niets te tonen was.
+- Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
+  * Of betekent dit, dat Mutalyzer er sowieso niet mee overweg kan?
+- Met betrekking tot het blokkeren van het aanmaken van niet volledig bekende genen:
+  + Nadat Mutalyzer komt met een test op alle genen(sliceChromosomeByGene, getTranscriptsAndInfo, numberConversion per gen 1 variant) moeten we
+    beslissen wat we ermee gaan doen, nu tijdelijke filter op "rare" LocusType's.
+- Incorporate links to Alamut.
+- VOT/Published_as is op zich niet nodig als VOG/Published_as is toegevoegd. Hier dan ook een stokje voor steken?
 - Als send_stats uit staat, heeft include_in_listing weinig zin...
 - Gene removed, refseq files deleted?
 - Unit tests via Selenium (of alternatief)?

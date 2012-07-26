@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 07
- * 2012-07-2? ????????????????????????????????????
+ * 2012-07-26
  *********/
  * You can now open the Mutalyzer prediction page from the variant data entry
    form, by clicking on the mark besides the protein field after a successful
@@ -73,10 +73,6 @@
  * Added new custom column: Phenotype/Additional.
  * Fixed some PHP notices and two display bugs in the "Add transcript to gene"
    process.
-
-
-
-
  * Protein prediction on the variant create and edit form can now return
    multiple warnings/errors returned by Mutalyzer.
  * Fixed bug; The check on the DBID during variant create/edit now only accepts
@@ -93,9 +89,6 @@
    Administrators.
  * The OMIM ID field now has a check to ensure that the number is 6 digits and
    that the first digit is at least a 1 or higher.
-
-
-
 
 
 /*******************
