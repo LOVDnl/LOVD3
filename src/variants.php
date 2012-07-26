@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-07-19
+ * Modified    : 2012-07-23
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -569,7 +569,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']));
                         if (!is_array($aOutput) && !empty($aOutput)) {
                             $_MutalyzerWS->soapError('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']), $aOutput);
-                        } elseif (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
+                        } elseif (!empty($aOutput) && empty($aOutput['errorcode'][0]['v'])) {
                             $_POST[$nTranscriptID . '_position_c_start'] = $aOutput['startmain'][0]['v'];
                             $_POST[$nTranscriptID . '_position_c_start_intron'] = $aOutput['startoffset'][0]['v'];
                             $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
@@ -717,17 +717,17 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 oNextElement = oNextElement.next();
             }
         });
-        var aUDrefseqs = {
 <?php
+    print('        var aUDrefseqs = {' . "\n");
+
     if (isset($sGene)) {
         echo '            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
     }
 
-    echo "\n" . '        };';
-?>
+    print("\n" .
+          '        };' . "\n" .
+          '        var aTranscripts = {'. "\n");
 
-        var aTranscripts = {
-<?php
     if (isset($sGene)) {
         $i = 0;
         foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
@@ -2165,7 +2165,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
                 $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type', 'mapping_flags'));
                 $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']));
-                if (is_array($aOutput) && !empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
+                if (is_array($aOutput) && !empty($aOutput) && empty($aOutput['errorcode'][0]['v'])) {
                     $_POST['position_g_start'] = $aOutput['start_g'][0]['v'];
                     $_POST['position_g_end'] = $aOutput['end_g'][0]['v'];
                     $_POST['type'] = $aOutput['mutationType'][0]['v'];
@@ -2221,7 +2221,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                             $aOutput = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']));
                             if (!is_array($aOutput) && !empty($aOutput)) {
                                 $_MutalyzerWS->soapError('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']), $aOutput);
-                            } elseif (!empty($aOutput) && !$aOutput['errorcode'][0]['v']) {
+                            } elseif (!empty($aOutput) && empty($aOutput['errorcode'][0]['v'])) {
                                 $_POST[$nTranscriptID . '_position_c_start'] = $aOutput['startmain'][0]['v'];
                                 $_POST[$nTranscriptID . '_position_c_start_intron'] = $aOutput['startoffset'][0]['v'];
                                 $_POST[$nTranscriptID . '_position_c_end'] = $aOutput['endmain'][0]['v'];
@@ -2600,7 +2600,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                             if (!empty($aVariant['v']) && preg_match('/^' . preg_quote($zTranscript['id_ncbi']) . ':(c\..+)$/', $aVariant['v'], $aMatches)) {
                                 // Call the mappingInfo module of mutalyzer to get the start & stop positions of this variant on the transcript.
                                 $aMapping = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $zTranscript['id_ncbi'], 'variant' => $aMatches[1]));
-                                if (!empty($aMapping) && !$aMapping['errorcode'][0]['v']) {
+                                if (!empty($aMapping) && empty($aMapping['errorcode'][0]['v'])) {
                                     $aMapping['position_c_start'] = $aMapping['startmain'][0]['v'];
                                     $aMapping['position_c_start_intron'] = $aMapping['startoffset'][0]['v'];
                                     $aMapping['position_c_end'] = $aMapping['endmain'][0]['v'];
@@ -2720,12 +2720,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
         function lovd_addTranscript (sViewListID, nID, sGene, sName, sNM)
         {
             // Moves the transcript to the variant mapping block and removes the row from the viewList.
-            objViewListF = document.getElementById('viewlistForm_' + sViewListID);
-            objElement = document.getElementById(nID);
+            var objViewListF = document.getElementById('viewlistForm_' + sViewListID);
+            var objElement = document.getElementById(nID);
             objElement.style.cursor = 'progress';
 
-            objUsers = document.getElementById('transcript_list');
-            oLI = document.createElement('LI');
+            var objUsers = document.getElementById('transcript_list');
+            var oLI = document.createElement('LI');
             oLI.id = 'li_' + nID;
             oLI.innerHTML = '<INPUT type="hidden" name="transcripts[]" value="' + nID + '"><TABLE width="100%"><TR><TD width="98">' + sGene + '</TD><TD align="left">' + sName + '</TD><TD width="120" align="left">' + sNM + '</TD><TD width="20" align="right"><A href="#" onclick="lovd_removeTranscript(\'VOT_map\', \'' + nID + '\', \'' + sNM + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
             objUsers.appendChild(oLI);

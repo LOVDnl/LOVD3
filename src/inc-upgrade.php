@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-06-20
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-26
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -270,8 +270,24 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'UPDATE ' . TABLE_COLS . ' SET select_options = "Unknown\r\nGermline (inherited)\r\nSomatic\r\nDe novo\r\nUniparental disomy\r\nUniparental disomy, maternal allele\r\nUniparental disomy, paternal allele" WHERE id = "VariantOnGenome/Genetic_origin"',
                                 // Delete all transcript positions from TABLE_TRANSCRIPTS, so that they can be recalculated.
                                 'UPDATE ' . TABLE_TRANSCRIPTS . ' SET position_c_mrna_start = 0, position_c_mrna_end = 0, position_c_cds_end = 0, position_g_mrna_start = 0, position_g_mrna_end = 0',
-                             ),
-                  );
+                        ),
+                    '3.0-beta-07' =>
+                        array(
+                            'ALTER TABLE ' . TABLE_COLS . ' MODIFY COLUMN form_type TEXT NOT NULL',
+                            'UPDATE ' . TABLE_COLS . ' SET select_options = "? = Unknown\r\nF = Female\r\nM = Male\r\nrF = Raised as female\r\nrM = Raised as male" WHERE id = "Individual/Gender" and select_options = "Female\r\nMale\r\nUnknown"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "Geographic origin|If mixed, please indicate origin of father and mother, if known.|text|30" WHERE id = "Individual/Origin/Geographic" and select_options = "Geographic origin||text|30"',
+                            'INSERT INTO ' . TABLE_COLS . ' VALUES ("Phenotype/Additional", 250, 200, 0, 1, 0, "Phenotype details", "Additional information on the phenotype of the individual.", "Additional information on the phenotype of the individual.", "Additional information on the phenotype of the individual.", "TEXT", "Additional phenotype details||textarea|40|4", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                            'UPDATE ' . TABLE_COLS . ' SET hgvs = 1, standard = 1 WHERE id = "Phenotype/Inheritance"',
+                            'UPDATE ' . TABLE_COLS . ' SET select_options = "? = Unknown\r\narrayCGH = array for Comparative Genomic Hybridisation\r\narraySEQ = array for resequencing\r\narraySNP = array for SNP typing\r\narrayCNV = array for Copy Number Variation (SNP and CNV probes)\r\nBESS = Base Excision Sequence Scanning\r\nCMC = Chemical Mismatch Cleavage\r\nCSCE = Conformation Sensitive Capillary Electrophoresis\r\nddF = dideoxy Fingerprinting\r\nDGGE = Denaturing-Gradient Gel-Electrophoresis\r\nDHPLC = Denaturing High-Performance Liquid Chromatography\r\nDOVAM = Detection Of Virtually All Mutations (SSCA variant)\r\nDSCA = Double-Strand DNA Conformation Analysis\r\nEMC = Enzymatic Mismatch Cleavage\r\nHD = HeteroDuplex analysis\r\nIHC = Immuno-Histo-Chemistry\r\nMAPH = Multiplex Amplifiable Probe Hybridisation\r\nMCA = high-resolution Melting Curve Analysis (hrMCA)\r\nMLPA = Multiplex Ligation-dependent Probe Amplification\r\nNorthern = Northern blotting\r\nPAGE = Poly-Acrylamide Gel-Electrophoresis\r\nPCR = Polymerase Chain Reaction\r\nPCRdig = PCR + restriction enzyme digestion\r\nPCRlr = PCR, long-range\r\nPCRm = PCR, multiplex\r\nPCRq = PCR, quantitative\r\nPFGE = Pulsed-Field Gel-Electrophoresis (+Southern)\r\nPTT = Protein Truncation Test\r\nRT-PCR = Reverse Transcription and PCR\r\nSBE = Single Base Extension\r\nSEQ = SEQuencing\r\nSEQ-NG = next-generation sequencing\r\nSEQ-NG-H = next-generation sequencing - Helicos\r\nSEQ-NG-I = next-generation sequencing - Illumina/Solexa\r\nSEQ-NG-R = next-generation sequencing - Roche/454\r\nSEQ-NG-S = next-generation sequencing - SOLiD\r\nSouthern = Southern blotting\r\nSSCA = Single-Strand DNA Conformation polymorphism Analysis (SSCP)\r\nSSCAf = fluorescent SSCA (SSCP)\r\nTaqMan = TaqMan assay\r\nWestern = Western Blotting" WHERE id = "Screening/Technique" and select_options = "Unknown\r\nBESS = Base Excision Sequence Scanning\r\nCMC = Chemical Mismatch Cleavage\r\nCSCE = Conformation sensitive capillary electrophoresis\r\nDGGE = Denaturing-Gradient Gel-Electrophoresis\r\nDHPLC = Denaturing High-Performance Liquid Chromatography\r\nDOVAM = Detection Of Virtually All Mutations (SSCA variant)\r\nDSCA = Double-Strand DNA Conformation Analysis\r\nHD = HeteroDuplex analysis\r\nIHC = Immuno-Histo-Chemistry\r\nmPCR = multiplex PCR\r\nMAPH = Multiplex Amplifiable Probe Hybridisation\r\nMLPA = Multiplex Ligation-dependent Probe Amplification\r\nNGS = Next Generation Sequencing\r\nPAGE = Poly-Acrylamide Gel-Electrophoresis\r\nPCR = Polymerase Chain Reaction\r\nPTT = Protein Truncation Test\r\nRT-PCR = Reverse Transcription and PCR\r\nSEQ = SEQuencing\r\nSouthern = Southern Blotting\r\nSSCA = Single-Strand DNA Conformation Analysis (SSCP)\r\nWestern = Western Blotting"',
+                            'UPDATE ' . TABLE_COLS . ' SET select_options = "DNA\r\nRNA = RNA (cDNA)\r\nProtein\r\n? = unknown" WHERE id = "Screening/Template" and select_options = "DNA\r\nRNA\r\nProtein"',
+                            'UPDATE ' . TABLE_COLS . ' SET mandatory = 1 WHERE id = "VariantOnGenome/Genetic_origin"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "GVS function||select|1|true|false|false", select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nutr-3\r\nnear-gene-3" WHERE id = "VariantOnTranscript/GVS/Function" and form_type LIKE "GVS function|%|text|%"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "Protein change (HGVS format)|Description of variant at protein level (following HGVS recommendations); e.g. p.(Arg345Pro) = change predicted from DNA (RNA not analysed), p.Arg345Pro = change derived from RNA analysis, p.0 (no protein produced), p.? (unknown effect).|text|30" WHERE id = "VariantOnTranscript/Protein" and form_type LIKE "Protein change (HGVS format)||text|%"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "RNA change (HGVS format)|Description of variant at RNA level (following HGVS recommendations); e.g. r.123c>u, r.? = unknown, r.(?) = RNA not analysed but probably transcribed copy of DNA variant, r.spl? = RNA not analysed but variant probably affects splicing, r.(spl?) = RNA not analysed but variant may affect splicing.|text|30" WHERE id = "VariantOnTranscript/RNA" and form_type LIKE "RNA change (HGVS format)||text|%"',
+                            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
+                            'UPDATE ' . TABLE_DISEASES . ' SET id = 0 WHERE id_omim IS NULL, created_by = 0 AND symbol = "Healty/Control"',
+                        ),
+             );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
         // Simply reload all custom columns.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-07-19
+ * Modified    : 2012-07-20
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -133,16 +133,18 @@ class LOVD_Object {
         global $_AUTH;
         $aForm = $this->getForm();
         $aFormInfo = $aForm[0];
-        if (!$aFormInfo[0]) {
-            $aFormInfo[0] = 'POST';
+        if (!in_array($aFormInfo[0], array('GET', 'POST'))) {
+            // We're not working on a full form array, possibly an incomplete VOT form.
+            $aFormInfo = array('POST');
+        } else {
+            unset($aForm[0]);
         }
-        unset($aForm[0]);
 
         // Always mandatory.
         $this->aCheckMandatory[] = 'password';
 
         // Validate form by looking at the form itself, and check what's needed.
-        foreach ($aForm as $key => $aField) {
+        foreach ($aForm as $aField) {
             if (!is_array($aField)) {
                 // 'skip', 'hr', etc...
                 continue;
@@ -227,12 +229,12 @@ class LOVD_Object {
                     $GLOBALS['_' . $aFormInfo[0]][$sName] = 0;
                 }
             }
-        }
 
-        if ($sName == 'password') {
-            // Password is in the form, it must be checked. Assuming here that it is also considered mandatory.
-            if (!empty($aData['password']) && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
-                lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+            if ($sName == 'password') {
+                // Password is in the form, it must be checked. Assuming here that it is also considered mandatory.
+                if (!empty($aData['password']) && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
+                    lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+                }
             }
         }
     }

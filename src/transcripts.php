@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-06-19
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-26
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -85,7 +85,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $zData = $_DATA->viewEntry($nID);
-    
+
     $sNavigation = '';
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit transcript information</A>';
@@ -188,6 +188,7 @@ if (ACTION == 'create') {
 
 
 
+    define('PAGE_TITLE', 'Add transcript to gene ' . $_PE[1]);
     $sPath = CURRENT_PATH . '?' . ACTION;
     $sPathBase = $_PE[0] . '?' . ACTION;
     // Gene given, check validity.
@@ -221,8 +222,6 @@ if (ACTION == 'create') {
             unset($_SESSION['work'][$sPathBase][min(array_keys($_SESSION['work'][$sPathBase]))]);
         }
 
-        define('PAGE_TITLE', 'Add transcript to gene ' . $_PE[1]);
-
         $zGene = $_DB->query('SELECT id, name, chromosome, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchAssoc();
 
         $_T->printHeader();
@@ -241,7 +240,7 @@ if (ACTION == 'create') {
 
         $_BAR = new ProgressBar('', 'Collecting transcript information...', $sFormNextPage);
 
-        $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags. 
+        $_T->printFooter(false); // The false prevents the footer to actually close the <BODY> and <HTML> tags.
 
         // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
         flush();
@@ -255,28 +254,29 @@ if (ACTION == 'create') {
         if (!is_array($aOutput) && !empty($aOutput)) {
             $_MutalyzerWS->soapError('getTranscriptsAndInfo', array('genomicReference' => $zGene['refseq_UD'], 'geneName' => $zGene['id']), $aOutput);
         } else {
-            $aTranscripts = array();
             $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array();
             if (!empty($aOutput)) {
                 $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
                 $aTranscripts = array();
                 $aTranscriptsName = array();
+                $aTranscriptsMutalyzer = array();
                 $aTranscriptsPositions = array();
                 $aTranscriptsProtein = array();
                 $aResultTranscriptsAdded = $_DB->query('SELECT GROUP_CONCAT(DISTINCT id_ncbi ORDER BY id_ncbi SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid="' . $zGene['id'] . '"')->fetchColumn();
                 $aTranscriptsAdded = explode(';', $aResultTranscriptsAdded);
                 $nTranscripts = 0;
                 foreach ($aTranscriptsInfo as $aTranscript) {
-                    if (in_array($aTranscript['c']['id'][0]['v'], $aTranscriptsAdded)) {
+                    if (!in_array($aTranscript['c']['id'][0]['v'], $aTranscriptsAdded)) {
                         $nTranscripts += 1;
                     }
                 }
-                $nProgress = 0.0;
+                $nTranscripts = max($nTranscripts, 1);
+                $nProgress = 0;
                 foreach($aTranscriptsInfo as $aTranscriptInfo) {
                     $aTranscriptInfo = $aTranscriptInfo['c'];
                     $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo);
                     if (!in_array($aTranscriptValues['id'], $aTranscriptsAdded)) {
-                        $nProgress = $nProgress + (100/$nTranscripts);
+                        $nProgress += (100/$nTranscripts);
                         $_BAR->setMessage('Collecting ' . $aTranscriptValues['id'] . ' info...');
                         if ($aTranscriptValues['id']) {
                             $aTranscripts[] = $aTranscriptValues['id'];
@@ -285,11 +285,11 @@ if (ACTION == 'create') {
                             $aTranscriptsPositions[$aTranscriptValues['id']] = array('chromTransStart' => $aTranscriptValues['chromTransStart'], 'chromTransEnd' => $aTranscriptValues['chromTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
                             $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getElementFromArray('proteinTranscript/id', $aTranscriptInfo, 'v');
                         }
-                        $_BAR->setProgress(0 + $nProgress);
+                        $_BAR->setProgress($nProgress);
                     }
                 }
                 $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array(
-                                                                          'gene' => $zGene, 
+                                                                          'gene' => $zGene,
                                                                           'transcripts' => $aTranscripts,
                                                                           'transcriptMutalyzer' => $aTranscriptsMutalyzer,
                                                                           'transcriptsProtein' => $aTranscriptsProtein,
@@ -414,7 +414,7 @@ if (ACTION == 'create') {
         }
     }
     asort($aTranscriptsForm);
-    
+
     $nTranscriptsFormSize = (count($aTranscriptsForm) < 10? count($aTranscriptsForm) : 10);
 
     // Table.
@@ -503,7 +503,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     lovd_errorPrint();
 
     // Tooltip JS code.
-    lovd_includeJS('inc-js-tooltip.php');   
+    lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-07-19
+ * Modified    : 2012-07-20
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,8 +63,7 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
         // Collect custom column information, all active columns (possibly restricted per gene).
-        // FIXME; Kijk voor shared cols niet naar default settings, maar naar de applied settings (kolom hidden in alle genen? -> verbergen)
-        // FIXME; Daarna moet er per regel bij het printen van de data weer worden gekeken wat de instellingen van dit gen zijn, en dan de data verwijderen. Hoe doen we dat?        
+        // FIXME; This join is not always needed (it's done for VOT columns, but sometimes they are excluded, or the join is not necessary because of the user level), exclude when not needed to speed up the query?
         $sSQL = 'SELECT c.id, c.width, c.head_column, c.mysql_type, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = ac.colid) ' .
                     'WHERE ' . ($_AUTH['level'] >= LEVEL_MANAGER? '' : '((c.id NOT LIKE "VariantOnTranscript/%" AND c.public_view = 1) OR sc.public_view = 1) AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     (!$sGene? 'GROUP BY c.id ' :
@@ -94,7 +93,9 @@ class LOVD_CustomViewList extends LOVD_Object {
             }
             $this->aColumns[$z['id']] = $z;
         }
-        $_AUTH['allowed_to_view'] = ($_AUTH? array_merge($_AUTH['curates'], $_AUTH['collaborates']) : array());
+        if ($_AUTH) {
+            $_AUTH['allowed_to_view'] = array_merge($_AUTH['curates'], $_AUTH['collaborates']);
+        }
 
 
 
@@ -452,7 +453,7 @@ class LOVD_CustomViewList extends LOVD_Object {
         foreach ($this->aColumns as $sCol => $aCol) {
             if ($_AUTH['level'] < LEVEL_MANAGER && !$this->nID && substr($sCol, 0, 19) == 'VariantOnTranscript') {
                 // A column that has been disabled for this gene, may still show its value to collaborators and higher.
-                if (!in_array($zData['geneid'], $aCol['public_view']) && !in_array($zData['geneid'], $_AUTH['allowed_to_view'])) {
+                if (!$_AUTH || (!in_array($zData['geneid'], $aCol['public_view']) && !in_array($zData['geneid'], $_AUTH['allowed_to_view']))) {
                     $zData[$sCol] = '';
                 }
             }

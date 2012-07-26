@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2012-07-11
+ * Modified    : 2012-07-26
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,19 +46,25 @@ if (!isset($_GET['step'])) {
     $_GET['step'] = '';
 }
 
+
+
 function lovd_fileCopiesExist($sFileName) {
-    //renames existing files up to three copies
-    $nDotPos = strpos($sFileName, '.', 3);//start counting at the third position because ROOT_PATH can be included
-    if (file_exists(substr_replace($sFileName, '.0' . substr($sFileName, $nDotPos), $nDotPos))) {
-        if (file_exists(substr_replace($sFileName, '.1' . substr($sFileName, $nDotPos), $nDotPos))) {
-            if (file_exists(substr_replace($sFileName, '.2' . substr($sFileName, $nDotPos), $nDotPos))) {
-                unlink(substr_replace($sFileName, '.2' . substr($sFileName, $nDotPos), $nDotPos));
+    // Renames existing files up to three copies.
+
+    $nDotPos = strrpos($sFileName, '.');
+    $sFileName0 = substr_replace($sFileName, '.0', $nDotPos, 0);
+    $sFileName1 = substr_replace($sFileName, '.1', $nDotPos, 0);
+    $sFileName2 = substr_replace($sFileName, '.2', $nDotPos, 0);
+    if (file_exists($sFileName0)) {
+        if (file_exists($sFileName1)) {
+            if (file_exists($sFileName2)) {
+                unlink($sFileName2);
             }
-            rename(substr_replace($sFileName, '.1' . substr($sFileName, $nDotPos), $nDotPos), substr_replace($sFileName, '.2' . substr($sFileName, $nDotPos), $nDotPos));
+            rename($sFileName1, $sFileName2);
         }
-        rename((substr_replace($sFileName, '.0' . substr($sFileName, $nDotPos), $nDotPos)), (substr_replace($sFileName, '.1' . substr($sFileName, $nDotPos), $nDotPos)));
+        rename($sFileName0, $sFileName1);
     }
-    rename($sFileName, substr_replace($sFileName, '.0' . substr($sFileName, $nDotPos), $nDotPos));
+    rename($sFileName, $sFileName0);
     return $sFileName;
 }
 
@@ -105,8 +111,6 @@ if ($_GET['step'] == 1) {
             // All fields filled in, go ahead.
             // Read file into an array.
             // FIXME!!! LOVD's lovd_php_file() can't communicate in HTTPS, but Mutalyzer forces it...
-            global $_CONF;
-
             $aGenBank = file(str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $_POST['file'] . '.gb');
 
             if (!$aGenBank) {
@@ -411,7 +415,7 @@ if ($_GET['step'] == 1) {
         $aArgs[] = $_AUTH['id'];
     }
     $sQ .= ' ORDER BY g.id';
-	$aGenes = $_DB->query($sQ, $aArgs)->fetchAllCombine();
+    $aGenes = $_DB->query($sQ, $aArgs)->fetchAllCombine();
 
     // Print the form for step 1: import a GenBank file
     $_T->printTitle('Step 1 - Import annotated Genbank sequence to extract genomic sequence');
@@ -717,7 +721,7 @@ if ($_GET['step'] == 2) {
                             $sPreSpaces = str_repeat(' ', (LENGTH_LINE - $nLeftover));
                             if (strlen($sPreSpaces) > strlen($nPreceedNumber)) {// + 3) {// +3 because of the extra space
                                 // Determine if there is enough room for the preceeding nucleotide number
-                                $sPreSpaces = str_repeat(' ', (LENGTH_LINE - $nLeftover - 3 - strlen($nPreceedNumber)));
+                                $sPreSpaces = @str_repeat(' ', (LENGTH_LINE - $nLeftover - 3 - strlen($nPreceedNumber)));
                                 fputs($fIntron, $sPreSpaces . 'g.1' . str_repeat(' ', strlen($nPreceedNumber)) . substr($sLinemarkBack, -$nLeftover) . '    g.' . $nLeftover . "\n");// Print the line with the 10th position marks (dots)
                                 fputs($fIntron, $sPreSpaces . 'c.' . $nPreceedNumber . ' ' . substr($sUpstream, 0, $nLeftover) . '    c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             } else {
@@ -1009,7 +1013,7 @@ if ($_GET['step'] == 2) {
                     }
                     // 2012-07-02; 3.0-beta05
                     // $sOut .= ($sOut? "\n" : '') . 'Successfully wrote exon lengths table, see: <A href="'. ROOT_PATH . 'refseq/' . $_POST['symbol'] . '_table.txt" target="_blank">' . $_POST['symbol'] . '_table.txt</A>)';
-                    $sOut .= ($sOut? "\n" : '') . 'Successfully wrote exon lengths table, see: <A href="refseq/' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_table.txt" target="_blank">' . $_POST['symbol'] . '_table.txt</A>)';
+                    $sOut .= ($sOut? "\n" : '') . 'Successfully wrote exon lengths table, see: <A href="refseq/' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_table.txt" target="_blank">' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_table.txt</A>)';
                     fclose($fTable);
                 } else {
                     // This really shouldn't happen, as we have checked this already...
@@ -1089,7 +1093,7 @@ if ($_GET['step'] == 2) {
                     }
                     // 2012-07-02; 3.0-beta05
                     // $sOut .= ($sOut? "\n" : '') . 'Successfully wrote exon lengths table, see: <A href="'. ROOT_PATH . 'refseq/' . $_POST['symbol'] . '_table.html" target="_blank">' . $_POST['symbol'] . '_table.html</A>)';
-                    $sOut .= ($sOut? "\n" : '') . 'Successfully wrote exon lengths table, see: <A href="refseq/' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_table.html" target="_blank">' . $_POST['symbol'] . '_table.html</A>)';
+                    $sOut .= ($sOut? "\n" : '') . 'Successfully wrote exon lengths table, see: <A href="refseq/' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_table.html" target="_blank">' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_table.html</A>)';
                     fwrite($fTable, '</TABLE>' . "\n\n" . '</BODY></HTML>');
                     fclose($fTable);
                 } else {
@@ -1335,7 +1339,7 @@ if ($_GET['step'] == 3) {
                     '<BODY>' . "\n\n" .
                     '<HR>' . "\n" .
                     '<H1 align="center">' . $_POST['gene'] . ' (' . $_POST['symbol'] . ') - coding DNA reference sequence</H1>' . "\n" .
-                    '<P align="center"><I>(used for mutation description)<BR><BR>(last modified ' . $sNow . ')</I></P>' . "\n" .
+                    '<P align="center"><I>(used for variant description)<BR><BR>(last modified ' . $sNow . ')</I></P>' . "\n" .
                     '<HR>' . "\n\n");
 
                 // 2009-12-03; 2.0-23; added the mRNA accession number
@@ -1891,19 +1895,19 @@ if ($_GET['step'] == 3) {
                         "</PRE>\n\n" .
                         ($_POST['legend']?
                             "<SPAN style=\"font-size : 15px;\"><U><B>Legend:</B></U></SPAN><BR>\n" .
-                                "Nucleotide numbering (following the rules of the <A href=\"http://www.HGVS.org/mutnomen/\" target=\"_blank\">HGVS</A> for a 'Coding DNA Reference Sequence') is indicated at the right of the sequence, counting the A of the ATG translation initiating Methionine as 1. Every 10<SUP>th</SUP> nucleotide is indicated by a &quot;.&quot; above the sequence. The " . ucfirst($_POST['gene']) . " protein sequence is shown below the coding DNA sequence, with numbering indicated at the right starting with 1 for the translation initiating Methionine. Every 10<SUP>th</SUP> amino acid is shown in bold. The position of introns is indicated by a vertical line, splitting the two exons. The start of the first exon (transcription initiation site) is indicated by a '\', the end of the last exon (poly-A addition site) by a '/'. The exon number is indicated above the first nucleotide(s) of the exon. To aid the description of frame shift mutations, all <B>stop codons in the +1 frame are shown in bold</B> while all <U>stop codons in the +2 frame are underlined</U>.<BR>\n\n" : ""));
+                                "Nucleotide numbering (following the rules of the <A href=\"http://www.HGVS.org/mutnomen/\" target=\"_blank\">HGVS</A> for a 'Coding DNA Reference Sequence') is indicated at the right of the sequence, counting the A of the ATG translation initiating Methionine as 1. Every 10<SUP>th</SUP> nucleotide is indicated by a &quot;.&quot; above the sequence. The " . ucfirst($_POST['gene']) . " protein sequence is shown below the coding DNA sequence, with numbering indicated at the right starting with 1 for the translation initiating Methionine. Every 10<SUP>th</SUP> amino acid is shown in bold. The position of introns is indicated by a vertical line, splitting the two exons. The start of the first exon (transcription initiation site) is indicated by a '\', the end of the last exon (poly-A addition site) by a '/'. The exon number is indicated above the first nucleotide(s) of the exon. To aid the description of frame shift variants, all <B>stop codons in the +1 frame are shown in bold</B> while all <U>stop codons in the +2 frame are underlined</U>.<BR>\n\n" : ""));
                 } else {
                     fputs($fCoding, ' (downstream sequence)' . "\n" .
                         "</PRE>\n\n" .
                         ($_POST['legend']?
                             "<SPAN style=\"font-size : 15px;\"><U><B>Legend:</B></U></SPAN><BR>\n" .
-                                "Nucleotide numbering (following the rules of the <A href=\"http://www.HGVS.org/mutnomen/\" target=\"_blank\">HGVS</A> for a 'Coding DNA Reference Sequence') is indicated at the right of the sequence, counting the A of the ATG translation initiating Methionine as 1. Every 10<SUP>th</SUP> nucleotide is indicated by a &quot;.&quot; above the sequence. The " . ucfirst($_POST['gene']) . " protein sequence is shown below the coding DNA sequence, with numbering indicated at the right starting with 1 for the translation initiating Methionine. Every 10<SUP>th</SUP> amino acid is shown in bold. The position of introns is indicated by a vertical line, splitting the two exons. The start of the first exon (transcription initiation site) is indicated by a '\', the end of the last exon (poly-A addition site) by a '/'. The exon number is indicated above the first nucleotide(s) of the exon. To aid the description of frame shift mutations, all <B>stop codons in the +1 frame are shown in bold</B> while all <U>stop codons in the +2 frame are underlined</U>.<BR>\n\n" : ""));
+                                "Nucleotide numbering (following the rules of the <A href=\"http://www.HGVS.org/mutnomen/\" target=\"_blank\">HGVS</A> for a 'Coding DNA Reference Sequence') is indicated at the right of the sequence, counting the A of the ATG translation initiating Methionine as 1. Every 10<SUP>th</SUP> nucleotide is indicated by a &quot;.&quot; above the sequence. The " . ucfirst($_POST['gene']) . " protein sequence is shown below the coding DNA sequence, with numbering indicated at the right starting with 1 for the translation initiating Methionine. Every 10<SUP>th</SUP> amino acid is shown in bold. The position of introns is indicated by a vertical line, splitting the two exons. The start of the first exon (transcription initiation site) is indicated by a '\', the end of the last exon (poly-A addition site) by a '/'. The exon number is indicated above the first nucleotide(s) of the exon. To aid the description of frame shift variants, all <B>stop codons in the +1 frame are shown in bold</B> while all <U>stop codons in the +2 frame are underlined</U>.<BR>\n\n" : ""));
                 }
 
                 // 2008-10-30; 2.0-13; link to coding sequence added by Gerard
                 // 2009-03-17; 2.0-17; link should always be there, not only when the box for providing links to intronic sequences was ticked (Gerard)
                 // 2010-01-28; 2.0-24; replaced link to www.dmd.nl by link to www.lovd.nl
-                $sOut .= ($sOut? "\n" : '') . 'Successfully wrote coding DNA reference sequence (<A href="refseq/' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_codingDNA.html" target="_blank">' . $_POST['symbol'] . ' coding DNA sequence</A>)' . "\n";
+                $sOut .= ($sOut? "\n" : '') . 'Successfully wrote coding DNA reference sequence (<A href="refseq/' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_codingDNA.html" target="_blank">' . $_POST['symbol'] . ' coding DNA sequence</A>)';
                 fputs($fCoding, '<HR>' . "\n" .
                     '<P align="center" style="font-size : 11px;">' . "\n" .
                     '  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
@@ -1914,18 +1918,90 @@ if ($_GET['step'] == 3) {
                     '</HTML>');
                 fclose($fCoding);
 
+            } else {
+                // This really shouldn't happen, as we have checked this already...
+                lovd_errorAdd('file', 'Couldn\'t open file to write to for coding DNA reference sequence');
+            }
+
+
+
+            // Create a file that points to all transcripts available for this gene. If only one transcript is present, the link will be automatic.
+            $sFileName = $sPath . $_POST['symbol'] . '_codingDNA.html';
+            if (file_exists($sFileName) && $_POST['exists'] == 'rename') {
+                // Rename the old file.
+                $sFileName = lovd_fileCopiesExist($sFileName);
+            }
+
+            $aTranscripts = array();
+            $hDir = opendir($sPath);
+            if ($hDir) {
+                while (($sFile = (readdir($hDir))) !== false) {
+                    if (preg_match('/^' . $_POST['symbol'] . '_(NM_[0-9.]+)_codingDNA.html$/', $sFile, $aRegs)) {
+                        $aTranscripts[] = $aRegs[1];
+                    }
+                }
+            }
+
+            // Write to file.
+            $fIndex = @fopen($sFileName, 'w');
+            // Remove file if it cannot be opened for writing.
+            if (!$fIndex) {
+                unlink($sFileName);
+                $fIndex = fopen($sFileName, 'w');
+            }
+
+            if ($fIndex) {
+                fputs($fIndex, '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"' . "\n" .
+                    '        "http://www.w3.org/TR/html4/loose.dtd">' . "\n" .
+                    '<HTML lang="en">' . "\n" .
+                    '<HEAD>' . "\n" .
+                    '  <TITLE>' . $_POST['gene'] . ' (' . $_POST['symbol'] . ') - reference sequences</TITLE>' . "\n" .
+                    '  <META http-equiv="content-type" content="text/html; charset=UTF-8">' . "\n" .
+                    '  <META name="generator" content="LOVD v.' . $_SETT['system']['version'] . ' Reference Sequence Parser @ ' . $sNowHead . '">' . "\n" .
+                    '  <META name="LOVD copyright" content="&copy; 2004-' . date('Y') . ' LUMC: http://www.LUMC.nl/">' . "\n" .
+                    (count($aTranscripts) > 1? "\n" : '  <META http-equiv="refresh" content="0; url=' . $sPath . $_POST['symbol'] . '_' . $aTranscripts[0] . '_codingDNA.html">') .
+                    '  <STYLE type="text/css">' . "\n" .
+                    '    body {font-family : Verdana, Helvetica, sans-serif; font-size : 13px;}' . "\n" .
+                    '    pre  {font-family : monospace;}' . "\n" .
+                    '    sup  {font-size : 0.5em;}' . "\n" .
+                    '  </STYLE>' . "\n" .
+                    '</HEAD>' . "\n\n" .
+                    '<BODY>' . "\n\n" .
+                    '<HR>' . "\n" .
+                    '<H1 align="center">' . $_POST['gene'] . ' (' . $_POST['symbol'] . ') - coding DNA reference sequences</H1>' . "\n" .
+                    '<HR>' . "\n\n" .
+                    '<UL>' . "\n");
+
+                foreach ($aTranscripts as $sTranscript) {
+                    fputs($fIndex, '  <LI><A href="' . $_POST['symbol'] . '_' . $sTranscript . '_codingDNA.html">' . $sTranscript . ' coding reference sequence<A></LI>');
+                }
+
+                $sOut .= ($sOut? "\n" : '') . 'Successfully wrote index file (<A href="refseq/' . $_POST['symbol'] . '_codingDNA.html" target="_blank">' . $_POST['symbol'] . ' reference sequences</A>)' . "\n";
+                fputs($fIndex, '</UL>' . "\n" .
+                    '<HR>' . "\n" .
+                    '<P align="center" style="font-size : 11px;">' . "\n" .
+                    '  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
+                    '  &copy;2004-' . date('Y') . ' <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n" .
+                    '</P>' . "\n" .
+                    '<HR>' . "\n\n" .
+                    '</BODY>' . "\n" .
+                    '</HTML>');
+                fclose($fIndex);
+
                 // When the reference sequence has been created, put the URL in the database.
                 if ($_CONF['location_url']) {
-                    $sURL = $_CONF['location_url'] . 'refseq/' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_codingDNA.html';
+                    $sURL = $_CONF['location_url'] . 'refseq/' . $_POST['symbol'] . '_codingDNA.html';
                 } else {
-                    $sURL = lovd_getInstallURL() . 'refseq/' . $_POST['symbol'] . '_' . $_POST['transcript_id'] . '_codingDNA.html';
+                    $sURL = lovd_getInstallURL() . 'refseq/' . $_POST['symbol'] . '_codingDNA.html';
                 }
                 $_DB->query('UPDATE ' . TABLE_GENES . ' SET refseq = ?, refseq_url = ? WHERE id = ? AND refseq = "" AND refseq_url= ""', array(($_POST['link'] && $bStep2? 'g' : 'c'), $sURL, $_POST['symbol']));
 
             } else {
                 // This really shouldn't happen, as we have checked this already...
-                lovd_errorAdd('file', 'Couldn\'t open file to write to for coding DNA reference sequence');
+                lovd_errorAdd('file', 'Couldn\'t open file to write to for index of reference sequences');
             }
+
+
 
             if (!lovd_error()) {
                 print('<SPAN class="S15"><B>Step 3 - Create coding DNA reference sequence</B></SPAN><BR><BR>' . "\n\n");
@@ -2029,7 +2105,7 @@ if ($_GET['step'] == 3) {
             '</SPAN><BR>' . "\n" .
               '      ' . $a_print[1] . '</TD></TR></TABLE><BR>' . "\n\n");
     }
-            
+
     $_T->printFooter();
     exit;
 }

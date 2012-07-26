@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2012-01-04
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-07-23
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -50,8 +50,10 @@ require ROOT_PATH . 'class/REST2SOAP.php';
 $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
 
 $aOutput = $_MutalyzerWS->moduleCall('checkSyntax', array('variant' => $_GET['variant']));
-if (isset($aOutput['valid']) && $aOutput['valid'][0]['v'] == 'true') {
-    die(AJAX_TRUE); 
+if (is_array($aOutput) && !count($aOutput)) {
+    die(AJAX_UNKNOWN_RESPONSE);
+} elseif (isset($aOutput['valid']) && $aOutput['valid'][0]['v'] == 'true') {
+    die(AJAX_TRUE);
 } else {
     die(AJAX_FALSE);
 }

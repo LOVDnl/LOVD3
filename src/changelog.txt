@@ -65,6 +65,14 @@
    she is collaborator of.
  * Fixed bug; Invalid search expressions caused one or two PHP errors as well as
    generate a normal LOVD error message.
+ * If Mutalyzer is having problems, the HGVS syntax checker no longer claims the
+   variant's syntax is not correct.
+ * Fixed some PHP notices in variants.php.
+ * Updated descriptions, lengends and sometimes types of all custom columns.
+   Only some of these changes will also be applied to existing installations.
+ * Added new custom column: Phenotype/Additional.
+ * Fixed some PHP notices and two display bugs in the "Add transcript to gene"
+   process.
 
 
 

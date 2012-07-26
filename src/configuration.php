@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-07-11
- * Modified    : 2012-07-13
+ * Modified    : 2012-07-23
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -144,7 +144,7 @@ $sLink = 'view/' . $_SESSION['currdb'] . '?search_var_status=';
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="' . (count($aVarCounts) - 3) . '"><B>Variants</B></TD>' . "\n" .
-      '                <TD colspan="' . (count($aVarCounts) - 2) . '"><B><A href="' . $sLink . 'Submitted%7CNon">All uncurated</A></B>: ' . (int) ($aVarCounts[STATUS_PENDING] + $aVarCounts[STATUS_HIDDEN]) . '</TD>' . "\n" .
+      '                <TD colspan="' . (count($aVarCounts) - 2) . '"><B><A href="' . $sLink . 'Pending%7CNon">All uncurated</A></B>: ' . (int) ($aVarCounts[STATUS_PENDING] + $aVarCounts[STATUS_HIDDEN]) . '</TD>' . "\n" .
       '                <TD colspan="' . (count($aVarCounts) - 2) . '"><B><A href="' . $sLink . 'Marked%7CPublic%20%21Non">All curated</A></B>: ' . (int) ($aVarCounts[STATUS_MARKED] + $aVarCounts[STATUS_OK]) . '</TD></TR>' . "\n" .
       '              <TR class="S11">' . "\n" .
       '                <TD><A href="' . $sLink . '">Total</A>: ' . $nTotalVars . '</TD>');

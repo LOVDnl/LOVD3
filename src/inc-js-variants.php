@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2012-07-13
+ * Modified    : 2012-07-23
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,6 +33,8 @@ header('Content-type: text/javascript; charset=UTF-8');
 
 define('AJAX_FALSE', '0');
 define('AJAX_TRUE', '1');
+define('AJAX_UNKNOWN_RESPONSE', '6');
+define('AJAX_CONNECTION_ERROR', '7');
 define('AJAX_NO_AUTH', '8');
 define('AJAX_DATA_ERROR', '9');
 ?>
@@ -71,8 +73,8 @@ function lovd_checkHGVS ()
                 // Either Mutalyzer says No, our regexp didn't find a c. or g. at the beginning or user lost $_AUTH.
                 $(oVariantDNA).siblings('img:first').attr({
                     src: 'gfx/cross.png',
-                    alt: 'Not a valid HGVS syntax!',
-                    title: 'Not a valid HGVS syntax!'
+                    alt: (sData == <?php echo AJAX_UNKNOWN_RESPONSE; ?>? 'Unexpected response from Mutalyzer. Please try again later.' : 'Not a valid HGVS syntax!'),
+                    title: (sData == <?php echo AJAX_UNKNOWN_RESPONSE; ?>? 'Unexpected response from Mutalyzer. Please try again later.' : 'Not a valid HGVS syntax!'),
                 }).show();
                 // Now hide the "Map variant" and "Predict" buttons.
                 if (!$.isEmptyObject(aTranscripts)) {
@@ -84,7 +86,7 @@ function lovd_checkHGVS ()
                 $(oVariantDNA).siblings('img:first').attr({
                     src: 'gfx/check.png',
                     alt: 'Valid HGVS syntax!',
-                    title: 'Valid HGVS syntax!'
+                    title: 'Valid HGVS syntax!',
                 }).show();
                 // Check if the variant description is a c.? or a g.?. If it is, then do not let the user map the variant.
                 if (oVariantDNA.val().substring(1,3) == '.?') {

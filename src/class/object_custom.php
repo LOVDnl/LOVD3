@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-07-19
+ * Modified    : 2012-07-23
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -340,9 +340,6 @@ class LOVD_Custom extends LOVD_Object {
         global $_AUTH, $_SETT, $_DB;
         // Checks fields before submission of data.
         foreach ($this->aColumns as $sCol => $aCol) {
-            if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
-                continue;
-            }
             if ($aCol['mandatory']) {
                 $this->aCheckMandatory[] = $sCol;
             }
@@ -470,7 +467,7 @@ class LOVD_Custom extends LOVD_Object {
 
     function prepareData ($zData = '', $sView = 'list')
     {
-        // Prepares the data before returning it to the user.        
+        // Prepares the data before returning it to the user.
         global $_AUTH;
         $zData = parent::prepareData($zData, $sView);
         foreach ($this->aColumns as $sCol => $aCol) {

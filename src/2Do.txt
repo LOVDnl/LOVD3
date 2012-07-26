@@ -1,31 +1,14 @@
 Prioritize:
 ===========
-AFMAKEN: BEZIG MET COLS VERGELIJKEN UIT DATABASE IN MELD.
-  + Reinstall doen op v33 en kijken hoe de cols er uit zien.
-  + Daarna: inc-upgrade aanpassen? Zo ja, op basis van svn diff. Niet de MySQL types aanpassen van custom cols, omdat je niet weet of ze wel actief zijn.
-
+- (@Ivo) Na deze commit, de volgorde van de kolommen in de inc-sql-columns.php goed zetten; nu niet gedaan omdat ik al een flinke diff heb.
 - Opmerkingen Johan:
   + Menu's moeten met GET geladen worden, zodat je terug kunt naar GET (terug in browser, POST warning, refresh geeft nieuwe individu entry!)
     * Formulieren moeten dan ook een Cancel knop krijgen, waarmee je terug kunt naar het keuze menu.
     * Formulieren in submit.php?
-  + Greppen op Mutation, veranderen naar variant.
-  + Er is onenigheid over hoe vaak je moet vragen naar de Functional effect.
-    * Mijn suggestie is de naam van de VOT effect kolommen te veranderen naar "Effects function of this transcript".
-      - De VOG functional effect kolommen verdwijnen dan, en worden op de achtergrond automatisch ingevuld voor de "hoogste" waarde in de VOT kolommen.
-    * Johan zegt echter, dat hij één set velden per variant genoeg vindt (alleen de VOGs dus).
-      Hij is het niet eens met mijn mening dat je per transcript moet kunnen zeggen of de functie beïnvloed wordt.
-- (@Ivo:) RefSeq parser: create overview file, zonder transcript in naam, met links naar de juiste files.
-- Hebben we al antwoord m.b.t. "Mogen curatoren zelf diseases aanmaken of editen, gekoppeld aan hun eigen genen?"
-  + Want: Curatoren krijgen geen edit knopje, maar mogen wel degelijk diseases editen (specifiek zo geprogrammeerd, dus communicatie fout?)
-- BUGs:
-  + Als curator mag ik niet een non-public VOG niet zien in de VL, terwijl die een VOT heeft in mijn gen.
-    * Moet dus een join naar VOT en daarna transcripten hebben (Is Ivar mee bezig).
 
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
 - De kolom volgorden en omschrijvingen verder overnemen van de shared install - afmaken.
-- Nieuwe kolommen:
-  + GVS/Function naar selection list, zodat Maja er ook wat aan heeft?
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -59,6 +42,9 @@ AFMAKEN: BEZIG MET COLS VERGELIJKEN UIT DATABASE IN MELD.
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - Gene headers & footers implementeren? Staat al wel omschreven in de manual.
 - Gene notes for variant listings implementeren? Staat al wel omschreven in de manual.
+- Curator mag alleen phenotype kolommen verwijderen, als er geen data meer in zit bij entries van deze ziekte (managers wel).
+  + De curator hoeft namelijk niet per se rechten te hebben op alle patienten met deze ziekte.
+- Een curator mag ziektes aanmaken en editen.
 - (@Ivo) DATA DOWNLOAD.
   + URLs left to implement:
     * Alle data van een bepaald gen downloaden (curator and up):
@@ -99,6 +85,8 @@ AFMAKEN: BEZIG MET COLS VERGELIJKEN UIT DATABASE IN MELD.
   + Om aan te geven dat een variant niet gevonden is in een controle groep, kan men de "Variant/Times_reported" op 0 zetten, maar dan alleen als de
     Individuals "panel_size" groter dan 1 is (dus dat mag niet in een individu, alleen een panel).
   + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
+- Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
+- Curator/Manager moet cols kunnen instellen voor disease Healty/Control.
 =============== Below here needs to be re-evaluated for priority ===============
 - Waarschuwing voor MySQL type verandering alleen doen als echt het type verandert en/of de lengte minder wordt?
 - Gene create -> (OMIM API) Auto create related diseases -> (OMIM API or HPO files) Auto create custom columns
@@ -118,6 +106,11 @@ Opmerkingen Johan:
   + Als je een screening aanmaakt terwijl je in gen X zit, moet die standaard geselecteerd zijn?
   + Kunnen we de haakjes uit de protein description halen, als het RNA veld is ingevuld?
     * Eigenlijk zouden we dat uit de screening info moeten halen, natuurlijk.
+  + Er is onenigheid over hoe vaak je moet vragen naar de Functional effect.
+    * Mijn suggestie is de naam van de VOT effect kolommen te veranderen naar "Effects function of this transcript".
+      - De VOG functional effect kolommen verdwijnen dan, en worden op de achtergrond automatisch ingevuld voor de "hoogste" waarde in de VOT kolommen.
+    * Johan zegt echter, dat hij één set velden per variant genoeg vindt (alleen de VOGs dus).
+      Hij is het niet eens met mijn mening dat je per transcript moet kunnen zeggen of de functie beïnvloed wordt.
 - Individual viewList: add column "variants in genes" with gene symbols.
   + Then, add option to dropdown menu if we have a currdb.
   + After that, change the default link when clicking the individual tab.
@@ -189,7 +182,10 @@ Opmerkingen Johan:
   - Vanaf individual page, phenotype toevoegen, waarom niet terug naar de individu?
     + Op zich OK om op de phenotype pagina te zitten, maar het is niet duidelijk genoeg hoe je nu terug komt naar de individu.
   - Vanaf individual pagina, zonder phenotype, kun je bij de (lege) viewlist van phenotypes niet een phenotype toevoegen.
+  - lovd_setUpdatedDate() implementeren.
 
+- Als send_stats uit staat, heeft include_in_listing weinig zin...
+- Gene removed, refseq files deleted?
 - Unit tests via Selenium (of alternatief)?
 - Hebben we OpenSSL ergens voor nodig?
   + http mutalyzer contact als zelf in https???
@@ -221,7 +217,6 @@ Opmerkingen Johan:
   + Remove als curator: apart van add, geen vinkjes.
 - (~BELANGRIJK) Misschien beter een inc-js-lib-init.php o.i.d. te maken, omdat we nu al openWindow en toggleVisibility hebben, en dat zijn al twee JS calls. Vertraagt LOVD.
 - <OPTGROUP label="groep"><OPTION value="asdf">asdf</OPTION></OPTGROUP> voor custom link active for columns selection?
-- Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
 - Custom View:
   * The full data overview moet nog de varianten tonen, die óók in de individu gevonden zijn.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
@@ -258,7 +253,6 @@ Opmerkingen Johan:
 - Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - API.
 - ORCID integratie.
-- lovd_setUpdatedDate() implementeren.
 - How to store functional assays? Functional effect screenings? Separate table, with DBID or something to link to variant in general? Chr,g_pos?
   + Als linken naar een variant (of iemand zegt: ik heb DEZE variant getest), wat doen we dan als de variant wordt bewerkt?
   + Moet ook kunnen linken naar meerdere varianten, als deze tegelijkertijd zijn getest.
@@ -333,6 +327,8 @@ Data transfer LOVD 2.0 -> LOVD 3.0:
 
 
 Ook belangrijk, maar iets minder:
+- LOVD bepaalt of je met Ajax wel of niet een resource mag benaderen?
+  + http://en.wikipedia.org/wiki/Cross-Origin_Resource_Sharing
 - Tabs instelbaar maken voor gebruikers?
 - (Na beta) Versioned tabel structuur aanpassen zoals nieuwe stresstest aantoonde dat beter was.
   * Twee tabellen, normale en _revisions. Versioned tabel heeft datum kolommen zoals, nu, MAAR GEEN created_by, created_date.

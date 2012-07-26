@@ -304,7 +304,6 @@ class LOVD_Gene extends LOVD_Object {
         } else {
             $aDiseasesForm = array('' => 'No disease entries available');
         }
-
         $nDiseasesFormSize = count($aDiseasesForm);
         $nDiseasesFormSize = ($nDiseasesFormSize < 15? $nDiseasesFormSize : 15);
 

@@ -33,7 +33,7 @@ require ROOT_PATH . 'inc-init.php';
 session_write_close();
 
 $aGenes = lovd_getGeneList();
-if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes) || !preg_match('/^(UD_\d{12}\(' . $_GET['gene'] . '_v\d{3}\)):c\..+$/', $_GET['variant'], $aVariantMatches) ) {
+if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes) || !preg_match('/^(UD_\d{12}\(' . $_GET['gene'] . '_v\d{3}\)):c\..+$/', $_GET['variant'], $aVariantMatches)) {
     die(AJAX_DATA_ERROR);
 }
 $sProteinPrefix = str_replace('_v', '_i', $aVariantMatches[1]);
