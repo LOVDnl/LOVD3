@@ -1,18 +1,15 @@
 Prioritize:
 ===========
-- (@Ivo) Na deze commit, de volgorde van de kolommen in de inc-sql-columns.php goed zetten; nu niet gedaan omdat ik al een flinke diff heb.
 - Opmerkingen Johan:
   + Menu's moeten met GET geladen worden, zodat je terug kunt naar GET (terug in browser, POST warning, refresh geeft nieuwe individu entry!)
     * Formulieren moeten dan ook een Cancel knop krijgen, waarmee je terug kunt naar het keuze menu.
     * Formulieren in submit.php?
 
 - Update branch.
-- Report changes to beta-07 to group.
 - Als David Baux zijn scripts klaar zijn, mergen met trunk.
 - (@Ivo): Als het weinig tijd kost, de quick gene switcher implementeren; al is 't maar enkel voor de configuration area.
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
-- De kolom volgorden en omschrijvingen verder overnemen van de shared install - afmaken.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -278,6 +275,7 @@ Opmerkingen Johan:
 - Legend moet nog gemaakt worden; mouseover column of column header?
   + Hoe dan ook, moet de full legend nog steeds een aparte file zijn.
 - De afhandeling van text/plain voor de verschillende levels voelt nogal fragiel aan, en is behoorlijk irrirant om door te hebben.
+- Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
 - Find & Replace:
   + Een viewList, met daarboven heel compact het formulier voor de Find & Replace
   + De voorgestelde verandering is direct zichtbaar gemarkeerd in de viewList (wordt gedaan in PHP/Prepare data), die ze kunnen sorteren, navigeren, etc.
