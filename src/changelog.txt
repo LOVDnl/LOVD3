@@ -10,7 +10,30 @@
  * 3.0 Beta 07
  * 2012-09-???????????????????????????????????????????????????????????????????
  *********/
-// Resorted the inc-sql-columns.php file alphabetically, like it should have been.
+ * Added the "Switch gene database" icon to the LOVD header; it will only be
+   shown where appropriate.
+ * Fixed bug; Under some circumstances, searching for active columns didn't show
+   all active columns in the overview.
+ * Implemented the gene-specific page header & footer.
+ * Fixed bug; The gene's "Text for own disclaimer" and "Notes for the LOVD gene
+   homepage" were not rendered as HTML enabled.
+ * Fixed bug; The lists of diseases on the individual and gene data entry forms,
+   are now sorted on value instead of ID.
+   The list on the individual's data entry form is also now bound to a maximum
+   width, to make sure that long disease names don't stretch the form anymore.
+   The list on the gene's data entry form was already restricted in width.
+ * A gene's full data view now also shows whether an individual is a panel
+   (group of individuals) or not.
+ * Fixed bug; The individual's panel_size is now taken into account on the gene
+   homepage's individual count.
+   (thanks to Anne Polvi, University of Helsinki, Finland, for reporting)
+ * Fixed bug; Submitters couldn't edit their own variants, if these were linked
+   to transcripts also. Curators had problems editing variants that were linked
+   to other genes as well as one of their genes.
+ * Included version 3.0-beta-08 of official LOVD Reference Sequence Parser
+   script.
+   - Fixed some small mistakes in the format of the reference sequence parser's
+     index file HTML output.
 
 
 

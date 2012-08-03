@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-07-19
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-01
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -218,15 +218,14 @@ class LOVD_Individual extends LOVD_Custom {
         global $_AUTH, $_DB, $_SETT;
 
         // Get list of diseases.
-        $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY id')->fetchAllCombine();
+        $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY (id > 0), symbol, name')->fetchAllCombine();
         $nDiseases = count($aDiseasesForm);
+        $aDiseasesForm = array_combine(array_keys($aDiseasesForm), array_map('lovd_shortenString', $aDiseasesForm, array_fill(0, $nDiseases, 60)));
         $nFieldSize = ($nDiseases < 15? $nDiseases : 15);
         if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
             $nFieldSize = 1;
         }
-
-        $aSelectOwner = array();
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id > 0 ORDER BY name')->fetchAllCombine();
@@ -312,7 +311,12 @@ class LOVD_Individual extends LOVD_Custom {
                 $sAge .= (!$nDays? '' : ($sAge? ', ' : '') . $nDays . ' day' . ($nDays == 1? '' : 's'));
                 $zData['Individual/Age_of_death'] .= ' (' . (!$aMatches[1]? '' : ($aMatches[1] == '>'? 'later than' : 'before') . ' ') . (empty($aMatches[5])? '' : 'approximately ') . $sAge . ')';
             }
-            $zData['panelid_'] = (!empty($zData['panelid'])? '<A href="individuals/' . $zData['panelid'] . '">' . $zData['panelid'] . '</A>' : '-');
+            // Hide Panel ID if not applicable.
+            if (empty($zData['panelid'])) {
+                unset($this->aColumnsViewEntry['panelid_']);
+            } else {
+                $zData['panelid_'] = '<A href="individuals/' . $zData['panelid'] . '">' . $zData['panelid'] . '</A>';
+            }
         }
 
         return $zData;

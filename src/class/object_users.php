@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-07-19
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-07-31
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -56,7 +56,7 @@ class LOVD_User extends LOVD_Object {
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT *, (login_attempts >= 3) AS locked ' .
                                'FROM ' . TABLE_USERS . ' ' .
-                               'WHERE id = ?';
+                               'WHERE id = ? AND id > 0';
 
         // SQL code to insert the level names into the database output, so it can be searched on.
         $sLevelQuery = '';

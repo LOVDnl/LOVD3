@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2012-07-26
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-03
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1958,8 +1958,8 @@ if ($_GET['step'] == 3) {
                     '  <TITLE>' . $_POST['gene'] . ' (' . $_POST['symbol'] . ') - reference sequences</TITLE>' . "\n" .
                     '  <META http-equiv="content-type" content="text/html; charset=UTF-8">' . "\n" .
                     '  <META name="generator" content="LOVD v.' . $_SETT['system']['version'] . ' Reference Sequence Parser @ ' . $sNowHead . '">' . "\n" .
-                    '  <META name="LOVD copyright" content="&copy; 2004-' . date('Y') . ' LUMC: http://www.LUMC.nl/">' . "\n" .
-                    (count($aTranscripts) > 1? "\n" : '  <META http-equiv="refresh" content="0; url=' . $sPath . $_POST['symbol'] . '_' . $aTranscripts[0] . '_codingDNA.html">') .
+                    '  <META name="LOVD copyright" content="&copy; 2004-' . date('Y') . ' LUMC: http://www.LUMC.nl/">' .
+                    (count($aTranscripts) > 1? '' : "\n" . '  <META http-equiv="refresh" content="0; url=' . $sPath . $_POST['symbol'] . '_' . $aTranscripts[0] . '_codingDNA.html">') . "\n\n" .
                     '  <STYLE type="text/css">' . "\n" .
                     '    body {font-family : Verdana, Helvetica, sans-serif; font-size : 13px;}' . "\n" .
                     '    pre  {font-family : monospace;}' . "\n" .
@@ -1973,7 +1973,7 @@ if ($_GET['step'] == 3) {
                     '<UL>' . "\n");
 
                 foreach ($aTranscripts as $sTranscript) {
-                    fputs($fIndex, '  <LI><A href="' . $_POST['symbol'] . '_' . $sTranscript . '_codingDNA.html">' . $sTranscript . ' coding reference sequence<A></LI>');
+                    fputs($fIndex, '  <LI><A href="' . $_POST['symbol'] . '_' . $sTranscript . '_codingDNA.html">' . $sTranscript . ' coding reference sequence</A></LI>' . "\n");
                 }
 
                 $sOut .= ($sOut? "\n" : '') . 'Successfully wrote index file (<A href="refseq/' . $_POST['symbol'] . '_codingDNA.html" target="_blank">' . $_POST['symbol'] . ' reference sequences</A>)' . "\n";

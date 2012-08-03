@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-07-19
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-02
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -71,7 +71,7 @@ class LOVD_Gene extends LOVD_Object {
                                            'uu.name AS updated_by_, ' .
                                            'COUNT(DISTINCT vog.id) AS variants, ' .
                                            'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants, ' .
-                                           'COUNT(DISTINCT s.individualid) AS count_individuals, ' .
+                                           'GROUP_CONCAT(DISTINCT i.id, ";", i.panel_size SEPARATOR ";;") AS __individuals, ' .
                                            'COUNT(DISTINCT hidden_vog.id) AS hidden_variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
@@ -86,7 +86,8 @@ class LOVD_Gene extends LOVD_Object {
                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id AND vog.statusid >= ' . STATUS_MARKED . ') ' .
                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS hidden_vog ON (vot.id = hidden_vog.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
+                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.panelid IS NULL) ';
         $this->aSQLViewEntry['GROUP_BY'] = 'g.id';
 
         // SQL code for viewing the list of genes
@@ -296,16 +297,14 @@ class LOVD_Gene extends LOVD_Object {
         global $_CONF, $_DB, $zData, $_SETT;
 
         // Get list of diseases.
-        $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' WHERE id > 0 ORDER BY id')->fetchAllCombine();
-        if (!empty($aDiseasesForm)) {
-            foreach ($aDiseasesForm as $nDisease => $sDisease) {
-                $aDiseasesForm[$nDisease] = lovd_shortenString($sDisease, 50);
-            }
-        } else {
+        $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' WHERE id > 0 ORDER BY symbol, name')->fetchAllCombine();
+        $nDiseases = count($aDiseasesForm);
+        $aDiseasesForm = array_combine(array_keys($aDiseasesForm), array_map('lovd_shortenString', $aDiseasesForm, array_fill(0, $nDiseases, 60)));
+        $nDiseasesFormSize = ($nDiseases < 15? $nDiseases : 15);
+        if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
+            $nDiseasesFormSize = 1;
         }
-        $nDiseasesFormSize = count($aDiseasesForm);
-        $nDiseasesFormSize = ($nDiseasesFormSize < 15? $nDiseasesFormSize : 15);
 
         // References sequences (genomic and transcripts).
         $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
@@ -514,10 +513,23 @@ class LOVD_Gene extends LOVD_Object {
                 $this->aColumnsViewEntry['collaborators_'][0] .= ' (' . $nCollaborators . ')';
             }
 
+            $zData['note_index'] = html_entity_decode($zData['note_index']);
+
+            // The individual count can only be found by adding up all distinct individual's panel_size.
+            $zData['count_individuals'] = 0;
+            foreach ($zData['individuals'] as $a) {
+                // Array of individual IDs and panel_sizes.
+                $zData['count_individuals'] += $a[1];
+            }
+
             $zData['created_date_'] = str_replace(' 00:00:00', '', $zData['created_date_']);
 
             // Graphs & utilities.
-            $zData['graphs'] = '<A href="' . CURRENT_PATH . '/graphs" class="hide">Graphs displaying summary information of all variants in the database</A> &raquo;';
+            if ($zData['variants']) {
+                $zData['graphs'] = '<A href="' . CURRENT_PATH . '/graphs" class="hide">Graphs displaying summary information of all variants in the database</A> &raquo;';
+            } else {
+                unset($this->aColumnsViewEntry['TableStart_Graphs'],$this->aColumnsViewEntry['TableHeader_Graphs'],$this->aColumnsViewEntry['graphs'],$this->aColumnsViewEntry['TableEnd_Graphs'],$this->aColumnsViewEntry['HR_2']);
+            }
 
             // URLs for "Links to other resources".
             $zData['url_homepage_'] = ($zData['url_homepage']? '<A href="' . $zData['url_homepage'] . '" target="_blank">' . $zData['url_homepage'] . '</A>' : '');
@@ -549,7 +561,7 @@ class LOVD_Gene extends LOVD_Object {
             $sYear = ((int) $sYear && $sYear < date('Y')? $sYear . '-' . date('Y') : date('Y'));
             $aDisclaimer = array(0 => 'No', 1 => 'Standard LOVD disclaimer', 2 => 'Own disclaimer');
             $zData['disclaimer_']      = $aDisclaimer[$zData['disclaimer']];
-            $zData['disclaimer_text_'] = (!$zData['disclaimer']? '' : ($zData['disclaimer'] == 2? $zData['disclaimer_text'] :
+            $zData['disclaimer_text_'] = (!$zData['disclaimer']? '' : ($zData['disclaimer'] == 2? html_entity_decode($zData['disclaimer_text']) :
                 'The contents of this LOVD database are the intellectual property of the respective curator(s). Any unauthorised use, copying, storage or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising out of any inaccuracies or omissions. Individuals, organisations and companies which use this database do so on the understanding that no liability whatsoever either direct or indirect shall rest upon the curator(s) or any of their employees or agents for the effects of any product, process or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
 
             // Unset fields that will not be shown if they're empty.

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-08-01
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -156,7 +156,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
     }
 
     if (empty($_POST['diseaseid']) || lovd_error()) {
-        $sSQL = 'SELECT d.id, CONCAT(d.name, " (", d.symbol, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY d.name';
+        $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY (d.id > 0), d.symbol, d.name';
         $aSelectDiseases = $_DB->query($sSQL, array($_POST['individualid']))->fetchAllCombine();
         if (!count($aSelectDiseases)) {
             // Wrong individual ID, individual without diseases, or diseases without phenotype columns.

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-07-23
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-02
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -171,6 +171,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     define('PAGE_TITLE', 'View transcript variants in ' . $sGene);
     $_T->printHeader();
     $_T->printTitle();
+    lovd_printGeneHeader();
 
     $sViewListID = 'CustomVL_VOT_VOG_' . $sGene;
 
@@ -202,8 +203,14 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $_DATA->viewList($sViewListID, array('transcriptid', 'chromosome', 'allele_'), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
+
+        // Notes for the variant listings...
+        if (!empty($_SETT['currdb']['note_listing'])) {
+            print($_SETT['currdb']['note_listing'] . '<BR><BR>' . "\n\n");
+        }
     }
 
+    lovd_printGeneFooter();
     $_T->printFooter();
     exit;
 }
@@ -2122,12 +2129,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     if ($bGene) {
         require ROOT_PATH . 'class/object_transcript_variants.php';
         foreach ($aGenes as $sGene) {
-            if (lovd_isAuthorized('gene', $sGene)) {
-                $_DATA['Transcript'][$sGene] = new LOVD_TranscriptVariant($sGene, $nID);
-                $zData = array_merge($zData, $_DATA['Transcript'][$sGene]->loadAll($nID));
-            }
+            // If we ever want to restrict curators in editing only certain VOTs related to a VOG linked to one of their genes,
+            // change VOT object to load only the transcripts that this user is authorized to edit.
+            $_DATA['Transcript'][$sGene] = new LOVD_TranscriptVariant($sGene, $nID);
+            $zData = array_merge($zData, $_DATA['Transcript'][$sGene]->loadAll($nID));
         }
         // This is done so that fetchDBID can have this information and can give a better prediction.
+        // We don't care about which gene we pass, because the VOT object loads *ALL* transcripts linked to this variant.
         $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
     }
 
@@ -2589,6 +2597,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                     $zTranscript = $_DB->query('SELECT id, geneid, name, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscript))->fetchAssoc();
                     // Call the numberConversion module of mutalyzer to get the VariantOnTranscript/DNA value for this variant on this transcript.
                     // Check if we already have the converted positions for this gene, if so, we won't have to call mutalyzer again for this information.
+                    // FIXME; If the variant is not understood, the mapping should still be done!
                     if (!array_key_exists($zTranscript['geneid'], $aVariantDescriptions)) {
                         $aVariantDescriptions[$zTranscript['geneid']] = $_MutalyzerWS->moduleCall('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => 'chr' . $zData['chromosome'] . ':' . $zData['VariantOnGenome/DNA'], 'gene' => $zTranscript['geneid']));
                     }
@@ -2612,7 +2621,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                                     $aMapping['position_c_end_intron'] = 0;
                                 }
                                 // Insert all the gathered information about the variant description into the database.
-                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '(id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], '55', $aMatches[1]));
+                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], '55', $aMatches[1]));
                                 // Remove this value from the output from mutalyzer, so we will not check this one again with the next transcript that we will add.
                                 unset($aVariantDescriptions[$zTranscript['geneid']]['string'][$key]);
                                 break;

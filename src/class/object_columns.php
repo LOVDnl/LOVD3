@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-06-18
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-07-30
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -128,7 +128,7 @@ class LOVD_Column extends LOVD_Object {
                                     'db'   => array('c.head_column', 'ASC', true)),
                         'active_' => array(
                                     'view' => array('Active', 60, 'style="text-align : center;"'),
-                                    'db'   => array('IFNULL((a.created_by > 0), 0)', 'DESC', 'INT')),
+                                    'db'   => array('IFNULL((a.colid IS NOT NULL), 0)', 'DESC', 'INT')),
                         'hgvs_' => array(
                                     'view' => array('HGVS', 50, 'style="text-align : center;"'),
                                     'db'   => array('c.hgvs', 'DESC', true)),

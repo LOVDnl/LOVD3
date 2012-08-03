@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-07-20
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-02
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -396,6 +396,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                         array(
                             // NOTE: there are more columns defined a little further up.
+                            'panel_size' => array(
+                                'view' => array('Panel size', 70),
+                                'db'   => array('i.panel_size', 'DESC', true)),
                             'ind_status' => array(
                                 'view' => array('Ind. status', 70),
                                 'db'   => array('dsi.name', false, true)),

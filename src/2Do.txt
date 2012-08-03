@@ -5,9 +5,7 @@ Prioritize:
     * Formulieren moeten dan ook een Cancel knop krijgen, waarmee je terug kunt naar het keuze menu.
     * Formulieren in submit.php?
 
-- Update branch.
 - Als David Baux zijn scripts klaar zijn, mergen met trunk.
-- (@Ivo): Als het weinig tijd kost, de quick gene switcher implementeren; al is 't maar enkel voor de configuration area.
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
 - (@Ivo) Row Link probleem:
@@ -40,12 +38,19 @@ Prioritize:
     * Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
   + Testen wat public / curator wel en niet mag.
   + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
+  + Curator mag alleen phenotype kolommen verwijderen, als er geen data meer in zit bij entries van deze ziekte (managers wel).
+    * De curator hoeft namelijk niet per se rechten te hebben op alle patienten met deze ziekte.
+  + Een curator mag ziektes aanmaken en editen.
 - (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
-- Gene headers & footers implementeren? Staat al wel omschreven in de manual.
-- Gene notes for variant listings implementeren? Staat al wel omschreven in de manual.
-- Curator mag alleen phenotype kolommen verwijderen, als er geen data meer in zit bij entries van deze ziekte (managers wel).
-  + De curator hoeft namelijk niet per se rechten te hebben op alle patienten met deze ziekte.
-- Een curator mag ziektes aanmaken en editen.
+- BUGS:
+  + Als individu disease = 00000 heeft, kun je dat niet in de VE zien.
+    * Also, you can't add any phenotype entries.
+    * And actually, LOVD should not allow you to select Healty if you're also picking any other disease.
+  + Log entry: "Enabled column VariantOnTranscript/PolyPhen (PolyPhen prediction) for 2 gene(s): Array"
+  + Submitter mag wel zien dat variant 7 aan individu 1 zit, maar hij mag individu 1 niet zien. Beter niet laten zien dat hij er aan vast zit...
+- VOG/DNA heeft geen help tekst? Die moet toch de notes on form vervangen?
+- Hoe kan een gebruiker op een zojuist geopend edit formulier de predict triggeren en/of de Mutalyzer namechecker openen in een nieuwe window?
+  + Wellicht, voor een losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
 - (@Ivo) DATA DOWNLOAD.
   + URLs left to implement:
     * Alle data van een bepaald gen downloaden (curator and up):
@@ -76,6 +81,8 @@ Prioritize:
 - Mapping melding (successfully mapped xxx variants slaat nergens op)
 - Dropdown menu's op de overige VE's ook inbouwen.
 - VariantOnGenome/Times_reported (or similar)
+  + Kolom mag ALLEEN getoond worden op 't formulier, als gekoppeld aan een individu die een panel_size > 1 heeft.
+    Anders, standaard invullen; 2 voor homozygoot, 1 voor alles anders.
   + Iedere variant die gevonden wordt in de panel moet dan apart geteld worden, door middel van het "VariantOnGenome/Times_reported" veld (eventueel
     "VariantOnGenome/Chromosomes_reported" of "VariantOnGenome/Found_on_chromosomes" of ...). Hier moet het aantal chromosomen worden ingevuld, waar de
     variant is gevonden. De frequentie is dan uit te rekenen volgens: "VariantOnGenome/Times_reported" ÷ (Individuals "panel_size" * 2)
@@ -86,6 +93,8 @@ Prioritize:
   + Om aan te geven dat een variant niet gevonden is in een controle groep, kan men de "Variant/Times_reported" op 0 zetten, maar dan alleen als de
     Individuals "panel_size" groter dan 1 is (dus dat mag niet in een individu, alleen een panel).
   + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
+    * Dat moet dan ook gebeuren op de gene homepage.
+  + Eigenlijk moet de update checken of het Frequency veld nu gebruikt wordt op de manier waarop wij hebben gezegd dat het tijdelijk moet, en dat daarna de waarde goed wordt overgenomen...
 - Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
 - Curator/Manager moet cols kunnen instellen voor disease Healty/Control.
 - Individual viewList: add column "variants in genes" with gene symbols.
@@ -94,13 +103,11 @@ Prioritize:
   + Then, apply the same to screenings (add column "genes screened", add option in tab menu, change default link).
 - Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
 - (@Ivar): Als een VCF file geen varianten bevat, mag de file niet als volledige submissie gezien worden.
-  + Met andere woorden, de data in $_SESSION moet zo gemanipuleerd worden in variants.php na het importeren, dat er geen mail wordt gestuurd met info over alleen een lege file.
-  + Misschien moeten we wel toestaan, dat er in een volledige submissie met individual e.d. een melding over de lege file komt (er moet dan sowieso gemailed worden).
   + Ik heb wel wijzigingen aan de code aangebracht, maar mijn kennis van de submissie SESSION array is niet groot genoeg om snel te zien hoe ik dit aan pas zonder andere nare effecten.
   + Er zijn hiervoor twee FIXME's toegevoegd.
   + Wellicht is het makkelijker gewoon een foutmelding te geven als in: geen varianten gevonden, upload een correcte file?
-    * Tenslotte gaat het niet over managers, de individu en/of screening is vast al publiek.
-  + Overleg?
+    * Tenslotte gaat het hier over managers, de individu en/of screening is vast al publiek.
+- De diseases op de individual VE kosten veel ruimte, terwijl 't er meestal toch maar 1 is. Vervangen door abbreviation en name in VE tabel?
 =============== Below here needs to be re-evaluated for priority ===============
 - Kunnen we ook het Exon veld voorspellen?
 - Quick curate option?
@@ -156,6 +163,7 @@ Prioritize:
   - Disease create -> (OMIM API or HPO files) Auto create custom columns
                    -> (OMIM API) Auto create related genes
   - If the wrong password is provided 3(?) times on data entry forms, log this and include a delay (store in SESSION), such that the password can't be brute forced.
+  - Controle of variant wel toegevoegd mag worden? Anders kun je een bepaalde variant onbeperkt toevoegen aan 1 individu.
 
 Opmerkingen Johan:
   + Diseases selecteren bij patient moet makkelijker worden, en er moet een voorspelling in zitten afhankelijk van het gen waar je nu in zit.
@@ -175,6 +183,8 @@ Opmerkingen Johan:
       - De VOG functional effect kolommen verdwijnen dan, en worden op de achtergrond automatisch ingevuld voor de "hoogste" waarde in de VOT kolommen.
     * Johan zegt echter, dat hij één set velden per variant genoeg vindt (alleen de VOGs dus).
       Hij is het niet eens met mijn mening dat je per transcript moet kunnen zeggen of de functie beïnvloed wordt.
+    * Als variant gemapped wordt, de nieuwe VOT waardes zetten op de VOG waarde.
+- Het is al eens gebeurd dat de Chr moest worden aangepast van een variant; zelfs een manager kan dat niet. Enable?
 - Waarschuwing voor MySQL type verandering alleen doen als echt het type verandert en/of de lengte minder wordt?
 - (@Ivo:) Indien geen kolommen actief zijn voor aandoening en/of gen, geef aan hoe dat te fixen vanaf het object z'n columns VL. ViewList zou count(*) terug moeten geven, waarna de code kan weten dat er blijkbaar niets te tonen was.
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
@@ -283,6 +293,8 @@ Opmerkingen Johan:
   + Allowing full regexp mode where you can build your own regular expression; submitting the form will first return
     * all changes that will be made to the database, agreeing will actually perform the find & replace.
     * This is related to the "asterisk wildcard" question of Raymond Dalgleish, April 2010.
+- VOG is not correctly generated by LOVD when a VOT of a gene on the reverse strand has a deletion in a repeat region (forward rule).
+  + LOVD should "fix" the VOG using the namechecker? VOG by itself should be correct; position converter is wrong in these cases.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 

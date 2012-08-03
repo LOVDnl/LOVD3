@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-07-19
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-07-30
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -488,43 +488,26 @@ function lovd_mapVariants ()
 
 <?php
         // A quick way to switch genes, regardless of on which page you are.
-        // DMD_SPECIFIC, this does not work yet, needs to be rewritten, how do we do that?
-        /*
-        print('    function lovd_switchGeneInline () {' . "\n" .
-        // IF THIS IS IMPORTED IN 3.0, you'll need to check this properly. Probably don't want to use SCRIPT_NAME here.
-              '      varForm = \'<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" id="SelectGeneDBInline" method="get" style="margin : 0px;"><SELECT name="select_db" onchange="document.getElementById(\\\'SelectGeneDBInline\\\').submit();">');
-        // FIXME; waarschijnlijk geen fetchAllAssoc() nodig.
-        $zGenes = $_DB->query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllAssoc();
-        foreach ($zGenes as $a) {
+        // FIXME; Currently we don't support "=GENE" matching (for instance, on the disease tab) because changing that value will not trigger a change in CURRDB... Yet.
+        //$sGeneSwitchURL = preg_replace('/(\/|=)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
+        $sGeneSwitchURL = preg_replace('/(\/)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
+        print('    var sURL = "' . $sGeneSwitchURL . '";' . "\n" .
+              '    function lovd_switchGeneInline () {' . "\n" .
+        // FIXME; It is very very difficult to keep the hash, it should be selective since otherwise you might be loading the EXACT SAME VL, BUT ON A DIFFERENT PAGE (viewing variants belonging to gene X, on a page that says you're looking at gene Y).
+//              '      var sForm = \'<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="document.location.href=(sURL.replace(\\\'{{GENE}}\\\', $(this).children(\\\'select\\\').val()) + (!window.location.hash? \\\'\\\' : window.location.hash)); return false;">' .
+              '      var sForm = \'<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="document.location.href=(sURL.replace(\\\'{{GENE}}\\\', $(this).children(\\\'select\\\').val())); return false;">' .
+                                  '<SELECT name="select_db" onchange="$(this).parent().submit();">');
+        $qGenes = $_DB->query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
+        while ($zGene = $qGenes->fetchAssoc()) {
             // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
-            $a['name'] = lovd_shortenString($a['name'], 75);
-            if (substr($a['name'], -3) == '...') {
-                $a['name'] .= str_repeat(')', substr_count($a['name'], '('));
-            }
-            // Added str_replace which will translate ' into \' so that it does not disturb the JS code.
-            // Of course also \ needs to be replaced by \\...
-            print('<OPTION value="' . $a['id'] . '"' . ($_SESSION['currdb'] == $a['id']? ' selected' : '') . '>' . str_replace(array('\\', "'"), array('\\\\', "\'"), $a['name']) . '</OPTION>');
+            $zGene['name'] = lovd_shortenString($zGene['name'], 75);
+            print('<OPTION value="' . $zGene['id'] . '"' . ($_SESSION['currdb'] == $zGene['id']? ' selected' : '') . '>' . addslashes($zGene['name']) . '</OPTION>');
         }
-        print('</SELECT>');
-        // Only use the $_GET variables that we have received (and not the ones we created ourselves).
-        $aGET = explode('&', $_SERVER['QUERY_STRING']);
-        foreach ($aGET as $val) {
-            if ($val) { // Added if() to make sure pages without $_GET variables don't throw a notice.
-                @list($key, $val) = explode('=', $val);
-                if (lovd_getProjectFile() == '/variants.php' && $key == 'view' && !is_numeric($val)) {
-                    // Fix problem when switching gene while viewing detailed variant information.
-                    $val = preg_replace('/^([0-9]+).*$/', "$1", $val);
-                }
-                if (!in_array($key, array('select_db', 'sent'))) {
-                    print('<INPUT type="hidden" name="' . htmlspecialchars(rawurldecode($key), ENT_QUOTES) . '" value="' . htmlspecialchars(rawurldecode($val), ENT_QUOTES) . '">');
-                }
-            }
-        }
-        print('<INPUT type="submit" value="Switch"></FORM>\';' . "\n" .
-              '      document.getElementById(\'gene_name\').innerHTML=varForm;' . "\n" .
+        print('</SELECT>' .
+              '<INPUT type="submit" value="Switch"></FORM>\';' . "\n" .
+              '      document.getElementById(\'gene_name\').innerHTML=sForm;' . "\n" .
               '    }' . "\n");
-*/
-?>
+        ?>
 
     //-->
   </SCRIPT>
@@ -569,10 +552,11 @@ function lovd_mapVariants ()
 
         print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>' . "\n" .
-//              ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')&nbsp;<A href="#" onclick="javascript:lovd_switchGeneInline(); return false;"><IMG src="gfx/lovd_database_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top"></A></H5>' . "\n" : '') .
-          ($sCurrSymbol && $sCurrGene? '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')</H5>' . "\n" : '') .
-          '    </TD>' . "\n" .
-          '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
+              (!($sCurrSymbol && $sCurrGene)? '' : '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')' .
+              (strpos($sGeneSwitchURL, '{{GENE}}') === false? '' : '&nbsp;<A href="#" onclick="lovd_switchGeneInline(); return false;"><IMG src="gfx/lovd_genes_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top"></A>') .
+              '</H5>' . "\n") .
+              '    </TD>' . "\n" .
+              '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
               '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] .
               (!defined('NOT_INSTALLED')? ' [ <A href="status">Current LOVD status</A> ]' : '') .
               '<BR>' . "\n");

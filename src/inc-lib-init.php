@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-07-10
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-07-30
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -686,8 +686,6 @@ function lovd_php_htmlspecialchars ($Var)
 
 
 
-/*
-DMD_SPECIFIC
 function lovd_printGeneFooter ()
 {
     // Prints the current gene's footer, if any is stored.
@@ -709,7 +707,6 @@ function lovd_printGeneHeader ()
         print('      <DIV style="text-align : ' . $_SETT['notes_align'][$_SETT['currdb']['header_align']] . ';">' . $_SETT['currdb']['header'] . '</DIV>' . "\n\n");
     }
 }
-*/
 
 
 
@@ -781,13 +778,11 @@ function lovd_shortenString ($s, $l = 50)
     // Shortens string nicely to a given length.
     // FIXME; Should be able to shorten from the left as well, useful with for example transcript names.
     if (strlen($s) > $l) {
-        $s = substr($s, 0, $l - 3);
-        // 2012-02-02; 3.0-beta-02; Now also makes sure the parentheses are balanced.
-        //   It assumes they were balanced before shorting the string.
+        $s = rtrim(substr($s, 0, $l - 3), '(');
+        // Also make sure the parentheses are balanced. It assumes they were balanced before shorting the string.
         $nClosingParenthesis = 0;
         while (substr_count($s, '(') > (substr_count($s, ')') + $nClosingParenthesis)) {
-            $s = substr($s, 0, -1);
-            $nClosingParenthesis ++;
+            $s = rtrim(substr($s, 0, ($l - 3 - ++$nClosingParenthesis)), '('); // Usually eats off one, but we may have started with a shorter string because of the rtrim().
         }
         $s .= '...' . str_repeat(')', $nClosingParenthesis);
     }

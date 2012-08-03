@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-07-18
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-07-31
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -239,10 +239,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // Require valid user.
     lovd_requireAUTH();
 
-    if ($nID == '00000') {
-        $nID = -1;
-    }
-
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
@@ -358,10 +354,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     // Require valid user.
     lovd_requireAUTH();
 
-    if ($nID == '00000') {
-        $nID = -1;
-    }
-
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     $zData = $_DATA->loadEntry($nID);
@@ -461,10 +453,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     // Require valid user.
     lovd_requireAUTH();
-
-    if ($nID == '00000') {
-        $nID = -1;
-    }
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();

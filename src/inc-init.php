@@ -674,7 +674,7 @@ if (!defined('NOT_INSTALLED')) {
 
         // Switch gene.
         // Gene switch will occur automatically at certain pages. They can be accessed by following links in LOVD itself, or possibly from outer sources.
-        if (preg_match('/^(configuration|genes|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
+        if (preg_match('/^(configuration|genes|transcripts|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
             // We'll check this value further down in this code.
             if ($aRegs[2] != 'in_gene' && !ctype_digit($aRegs[2])) {
                 $_SESSION['currdb'] = $aRegs[2];

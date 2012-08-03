@@ -149,11 +149,18 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_GET['search_screeningids'] = $zData['screeningids'];
         print('<BR><BR>' . "\n\n");
         $_T->printTitle('Variants', 'H4');
+
+        /*
+         * // FIXME; Custom ViewList doesn't know (yet) how to link VOG to Screening.
+        require ROOT_PATH . 'class/object_custom_viewlists.php';
+        $_DATA = new LOVD_CustomViewList(array('Screening', 'VariantOnGenome', 'VariantOnTranscript'));
+        $_DATA->viewList('VOG_for_I_VE', array(), true);
+        */
+
         require ROOT_PATH . 'class/object_genome_variants.php';
         $_DATA = new LOVD_GenomeVariant();
         $_DATA->setSortDefault('id');
         $_DATA->viewList('VOG_for_I_VE', 'screeningids', true);
-        unset($_GET['search_screeningids']);
     }
 
     $_T->printFooter();
@@ -231,14 +238,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 unset($_SESSION['work']['submits']['individual'][min(array_keys($_SESSION['work']['submits']['individual']))]);
             }
             $_SESSION['work']['submits']['individual'][$nID] = array('id' => $nID, 'panel_size' => $_POST['panel_size']);
-            
+
             $sPersons = ($_POST['panel_size'] > 1? 'this group of individuals' : 'this individual');
             $sMessage = (empty($_POST['active_diseases'])? 'No diseases were selected for ' . $sPersons . '.\nThe phenotype information that can be submitted depends on the selected diseases.' : 'The disease' . (count($_POST['active_diseases']) > 1? 's' : '') . ' added to ' . $sPersons . ' do' . (count($_POST['active_diseases']) > 1? '' : 'es') . ' not have phenotype columns enabled yet.');
 
             $_T->printHeader();
             $_T->printTitle();
             print('      Do you have any phenotype information available for ' . $sPersons . '?<BR><BR>' . "\n\n");
-            
+
             $aOptionsList = array();
             if (!$nDiseases) {
                 $aOptionsList['options'][0]['disabled'] = true;
