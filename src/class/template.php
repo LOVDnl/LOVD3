@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-07-30
+ * Modified    : 2012-08-08
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -431,7 +431,7 @@ function lovd_mapVariants ()
     function printHeaderHTML ($bFull = true)
     {
         // Print the LOVD header, including the menu (if $bFull == true).
-        global $_AUTH, $_CONF, $_DB, $_SETT, $_STAT;
+        global $_AUTH, $_CONF, $_DB, $_SETT, $_STAT, $_SESSION;
 
         // Build menu, if tabs are shown.
         if ($bFull) {
@@ -487,26 +487,28 @@ function lovd_mapVariants ()
     <!--
 
 <?php
-        // A quick way to switch genes, regardless of on which page you are.
-        // FIXME; Currently we don't support "=GENE" matching (for instance, on the disease tab) because changing that value will not trigger a change in CURRDB... Yet.
-        //$sGeneSwitchURL = preg_replace('/(\/|=)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
-        $sGeneSwitchURL = preg_replace('/(\/)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
-        print('    var sURL = "' . $sGeneSwitchURL . '";' . "\n" .
-              '    function lovd_switchGeneInline () {' . "\n" .
-        // FIXME; It is very very difficult to keep the hash, it should be selective since otherwise you might be loading the EXACT SAME VL, BUT ON A DIFFERENT PAGE (viewing variants belonging to gene X, on a page that says you're looking at gene Y).
+        if (!defined('NOT_INSTALLED')) {
+            // A quick way to switch genes, regardless of on which page you are.
+            // FIXME; Currently we don't support "=GENE" matching (for instance, on the disease tab) because changing that value will not trigger a change in CURRDB... Yet.
+            //$sGeneSwitchURL = preg_replace('/(\/|=)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
+            $sGeneSwitchURL = preg_replace('/(\/)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
+            print('    var sURL = "' . $sGeneSwitchURL . '";' . "\n" .
+                  '    function lovd_switchGeneInline () {' . "\n" .
+            // FIXME; It is very very difficult to keep the hash, it should be selective since otherwise you might be loading the EXACT SAME VL, BUT ON A DIFFERENT PAGE (viewing variants belonging to gene X, on a page that says you're looking at gene Y).
 //              '      var sForm = \'<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="document.location.href=(sURL.replace(\\\'{{GENE}}\\\', $(this).children(\\\'select\\\').val()) + (!window.location.hash? \\\'\\\' : window.location.hash)); return false;">' .
-              '      var sForm = \'<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="document.location.href=(sURL.replace(\\\'{{GENE}}\\\', $(this).children(\\\'select\\\').val())); return false;">' .
-                                  '<SELECT name="select_db" onchange="$(this).parent().submit();">');
-        $qGenes = $_DB->query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
-        while ($zGene = $qGenes->fetchAssoc()) {
-            // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
-            $zGene['name'] = lovd_shortenString($zGene['name'], 75);
-            print('<OPTION value="' . $zGene['id'] . '"' . ($_SESSION['currdb'] == $zGene['id']? ' selected' : '') . '>' . addslashes($zGene['name']) . '</OPTION>');
+                  '      var sForm = \'<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="document.location.href=(sURL.replace(\\\'{{GENE}}\\\', $(this).children(\\\'select\\\').val())); return false;">' .
+                                      '<SELECT name="select_db" onchange="$(this).parent().submit();">');
+            $qGenes = $_DB->query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
+            while ($zGene = $qGenes->fetchAssoc()) {
+                // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
+                $zGene['name'] = lovd_shortenString($zGene['name'], 75);
+                print('<OPTION value="' . $zGene['id'] . '"' . ($_SESSION['currdb'] == $zGene['id']? ' selected' : '') . '>' . addslashes($zGene['name']) . '</OPTION>');
+            }
+            print('</SELECT>' .
+                  '<INPUT type="submit" value="Switch"></FORM>\';' . "\n" .
+                  '      document.getElementById(\'gene_name\').innerHTML=sForm;' . "\n" .
+                  '    }' . "\n");
         }
-        print('</SELECT>' .
-              '<INPUT type="submit" value="Switch"></FORM>\';' . "\n" .
-              '      document.getElementById(\'gene_name\').innerHTML=sForm;' . "\n" .
-              '    }' . "\n");
         ?>
 
     //-->
