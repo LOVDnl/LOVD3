@@ -3,8 +3,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2012-05-30
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-08-22
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -102,13 +102,6 @@ table.error td {padding : 0px 4px;}
 
 
 
-/* For lovd_showNavigation() */
-table.navigation                {font-size : 11px; border-top : 3px double #000000; border-bottom : 3px double #000000;}
-table.navigation a              {font-weight : bold; text-decoration : none; color : #000000;}
-table.navigation td             {padding-left : 5px; padding-right : 5px;}
-
-
-
 /* Error messages on forms, required by lovd_errorPrint() */
 div.err                         {font-size : 11px; border : 1px solid #FF0000; background : #F3F3F3; padding : 5px;}
 input.err, textarea.err, button.err, select.err
@@ -145,26 +138,32 @@ table.data                               {font-size : 11px; border : 1px solid #
 table.data a                             {color : #0000FF;}
 table.data a.hide                        {color : #000000; text-decoration : none;} /* Somehow it doesn't get the color-thing when it's not defined within table.data */
 table.data th                            {background : #AFC8FA; padding-left : 4px; padding-right : 4px;}
+table.data th.order                      {cursor : pointer;}
+table.data th.ordered                    {background : #8CAFF0; cursor : pointer;}
 table.data td                            {background : #F0F3FF; padding-left : 4px; padding-right : 4px;}
+table.data td.ordered                    {background : #C8DCFA;}
 table.data tr.data:hover td              {background : #C8DCFA;}
+table.data tr.data:hover td.ordered      {background : #AFC8FA;}
 table.data tr.data:hover td.checkbox     {background : #F0F3FF; cursor : default;}
 table.data input:disabled                {color : #000000; background : #FFFFFF; border : 1px solid #224488;}
-/*table.data tr.del a                    {color : #AAAAAA;}
-table.data tr.del td                     {background : #F8FAFF; color : #AAAAAA;}
-table.data tr.del_hover a                {color : #AAAAAA;}
-table.data tr.del_hover td               {background : #C8DCFA; color : #AAAAAA;}
+table.data tr.del a                      {color : #999999;}
+table.data tr.del:hover a                {color : #888888;}
+table.data tr.del td                     {background : #F8FAFF; color : #999999;}
+table.data tr.del td.ordered             {background : #E5E5EF; color : #888888;}
+table.data tr.del:hover td               {background : #E5E5EF; color : #888888;}
+table.data tr.del:hover td.ordered       {background : #D0D0E0; color : #666666;}
+table.data tr.del:hover td.ordered a     {color : #666666;}
+table.data tr.del:hover td.checkbox      {background : #F8FAFF; cursor : default;}
 table.data tr.marked td                  {background : #FFF0F0;}
-table.data tr.marked_hover td            {background : #FAD5D5;}*/
+table.data tr.marked td.ordered          {background : #FAD5D5;}
+table.data tr.marked:hover td            {background : #FAD5D5;}
+table.data tr.marked:hover td.ordered    {background : #FFB5B5;}
+table.data tr.marked:hover td.checkbox   {background : #FFF0F0; cursor : default;}
 
-/* Used for ordering the data tables per column. */
-table.data th.order             {cursor : pointer;}
-table.data th.ordered           {background : #8CAFF0; cursor : pointer;}
-table.data td.ordered           {background : #C8DCFA;}
 /*table.data tr.del td.ordered    {background : #F0F3FF;}
 table.data tr.del_hover td.ordered    {background : #AFC8FA;}
 table.data tr.marked td.ordered {background : #FFD5D5;}
 table.data tr.marked_hover td.ordered {background : #FFC0C0;}*/
-table.data tr.data:hover td.ordered {background : #AFC8FA;}
 
 /* Searching styles... */
 table.data input                {font-size : 11px;}/*

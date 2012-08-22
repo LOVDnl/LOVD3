@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-07-26
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-22
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -286,6 +286,16 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             'UPDATE ' . TABLE_COLS . ' SET form_type = "RNA change (HGVS format)|Description of variant at RNA level (following HGVS recommendations); e.g. r.123c>u, r.? = unknown, r.(?) = RNA not analysed but probably transcribed copy of DNA variant, r.spl? = RNA not analysed but variant probably affects splicing, r.(spl?) = RNA not analysed but variant may affect splicing.|text|30" WHERE id = "VariantOnTranscript/RNA" and form_type LIKE "RNA change (HGVS format)||text|%"',
                             'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
                             'UPDATE ' . TABLE_DISEASES . ' SET id = 0 WHERE id_omim IS NULL AND created_by = 0 AND symbol = "Healty/Control"',
+                        ),
+                    '3.0-beta-08' =>
+                        array(
+                            'UPDATE ' . TABLE_COLS . ' SET width = 120 WHERE id = "VariantOnGenome/DBID"',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN fatherid MEDIUMINT(8) UNSIGNED ZEROFILL AFTER id',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN motherid MEDIUMINT(8) UNSIGNED ZEROFILL AFTER fatherid',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD INDEX (fatherid)',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD INDEX (motherid)',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_fatherid FOREIGN KEY (fatherid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_motherid FOREIGN KEY (motherid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                         ),
              );
 

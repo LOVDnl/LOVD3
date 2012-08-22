@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-07-19
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-08
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -379,17 +379,22 @@ function lovd_fetchDBID ($aData)
             preg_match('/^((.+)_(\d{6}))$/', $sDBID, $aMatches);
             list($sDBIDnew, $sDBIDnewSymbol, $sDBIDnewNumber) = array($aMatches[1], $aMatches[2], $aMatches[3]);
 
-            if (preg_match('/^((.+)_(\d{6}))$/', $aOption[2], $aMatches)) {
-                list($sDBIDoptionAll, $sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
+            if (preg_match('/^(.+)_(\d{6})$/', $aOption[2], $aMatches)) {
+                list($sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
+                $aDataCopy = $aData;
+                $aDataCopy['VariantOnGenome/DBID'] = $sDBIDoption;
+                if (!lovd_checkDBID($aData)) {
+                    continue;
+                }
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
                     // If the symbol of the option is the same, but the number is lower(not including 000000), take it.
-                    $sDBID = $sDBIDoptionAll;
+                    $sDBID = $sDBIDoption;
                 } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDnewSymbol, $aGenes)) {
                     // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.
-                    $sDBID = $sDBIDoptionAll;
+                    $sDBID = $sDBIDoption;
                 } elseif (substr($sDBIDnewSymbol, 0, 3) == 'chr' && substr($sDBIDoptionSymbol, 0, 3) != 'chr') {
                     // If the symbol of the option is not a chromosome, but the current DBID is, take it.
-                    $sDBID = $sDBIDoptionAll;
+                    $sDBID = $sDBIDoption;
                 }
             }
         }
@@ -827,7 +832,7 @@ function lovd_viewForm ($a,
                     // Array input.
                     foreach ($oData as $key => $val) {
                         // We have to cast the $key to string because PHP made integers of them, if they were integer strings.
-                        $bSelected = ((!$bMultiple && $GLOBALS['_' . $sMethod][$sName] === (string) $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array((string) $key, $GLOBALS['_' . $sMethod][$sName], true)));
+                        $bSelected = ((!$bMultiple && (string) $GLOBALS['_' . $sMethod][$sName] === (string) $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array((string) $key, $GLOBALS['_' . $sMethod][$sName], true)));
                         print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
                     }
                 }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-06-27
+ * Modified    : 2012-07-23
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -200,7 +200,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('', '', 'print', '<B>Global LOVD statistics</B>'),
                         array('', '', 'note', 'The following settings apply to the kind of information your LOVD install sends to the development team to gather statistics about global LOVD usage.'),
                         'hr',
-                        array('Send statistics?', 'This sends <I>anonymous</I> statistics about the number of submitters, genes, individuals and mutations in your installation of LOVD.', 'checkbox', 'send_stats'),
+                        array('Send statistics?', 'This sends <I>anonymous</I> statistics about the number of submitters, genes, individuals and variants in your installation of LOVD.', 'checkbox', 'send_stats'),
                         array('Include in the global LOVD listing?', 'We keep a public listing of LOVD installations, their genes and their URLs. Deselect this checkbox if you do not want to be included in this public listing.', 'checkbox', 'include_in_listing'),
                         'hr',
                         'skip',

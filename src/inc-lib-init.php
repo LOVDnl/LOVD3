@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-07-30
+ * Modified    : 2012-08-22
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,6 +99,8 @@ function lovd_cleanDirName ($s)
         return false;
     }
 
+    // Clean up the pwd; remove '\'
+    $s = stripcslashes($s);
     // Clean up the pwd; remove '//'
     $s = preg_replace('/\/+/', '/', $s);
     // Clean up the pwd; remove '/./'
@@ -772,6 +774,24 @@ function lovd_requireAUTH ($nLevel = 0)
 
 
 
+function lovd_saveWork ()
+{
+    // Save the changes made in $_AUTH['saved_work'] by inserting the changed array back into the database.
+    global $_AUTH;
+
+    if ($_AUTH && isset($_AUTH['saved_work'])) {
+        $_DB->query('UPDATE ' . TABLE_USERS . ' SET saved_work = ? WHERE id = ?', array(serialize($_AUTH['saved_work']), $_AUTH['id']));
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+
+
+
+
 function lovd_shortenString ($s, $l = 50)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
@@ -823,24 +843,6 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
 
 
 
-function lovd_showNavigation ($sBody, $nPrefix = 3)
-{
-    // Function kindly provided by Ileos.nl in the interest of Open Source.
-    // Displays navigation table to the screen with given contents, accepting a
-    // number of settings.
-
-    // Spaces prepended to HTML code for proper alignment.
-    $sPrefix = str_repeat('  ', $nPrefix);
-
-    print($sPrefix . '<TABLE border="0" cellpadding="0" cellspacing="0" class="navigation">' . "\n" .
-          $sPrefix . '  <TR align="center">' . "\n" .
-          $sPrefix . '    <TD>' . $sBody . '</TD></TR></TABLE>'. "\n\n");
-}
-
-
-
-
-
 function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
 {
     // Prints a navigation dropdown menu to the screen with given contents.
@@ -876,7 +878,7 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '      onSelect: function(e, context) {' . "\n" .
           $sPrefix . '        if ($(this).hasClass("disabled")) {' . "\n" .
           $sPrefix . '          return false;' . "\n" .
-          $sPrefix . '        } else if ($(this).find(\'a\').attr(\'href\') != undefined) {' . "\n" .
+          $sPrefix . '        } else if ($(this).find(\'a\').attr(\'href\') != undefined && $(this).find(\'a\').attr(\'href\') != \'\') {' . "\n" .
           $sPrefix . '          window.location = $(this).find(\'a\').attr(\'href\');' . "\n" .
           $sPrefix . '          return true; // True closes the menu.' . "\n" .
           $sPrefix . '        } else if ($(this).find(\'a\').attr(\'click\') != undefined) {' . "\n" .

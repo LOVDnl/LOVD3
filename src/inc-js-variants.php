@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2012-07-23
+ * Modified    : 2012-08-08
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -86,7 +86,7 @@ function lovd_checkHGVS ()
                 $(oVariantDNA).siblings('img:first').attr({
                     src: 'gfx/check.png',
                     alt: 'Valid HGVS syntax!',
-                    title: 'Valid HGVS syntax!',
+                    title: 'Valid HGVS syntax!'
                 }).show();
                 // Check if the variant description is a c.? or a g.?. If it is, then do not let the user map the variant.
                 if (oVariantDNA.val().substring(1,3) == '.?') {
@@ -375,6 +375,7 @@ function lovd_getProteinChange (oElement)
                     } else {
                         // No warnings or errors returned by Mutalyzer.
                         $(oThisDNA).siblings('img:first').attr({
+                            src: 'gfx/check.png',
                             alt: 'HGVS compliant!',
                             title : 'HGVS compliant!'
                         }).show();
