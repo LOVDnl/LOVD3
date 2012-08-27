@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-07-23
+ * Modified    : 2012-07-24
  * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -148,8 +148,14 @@ class LOVD_Custom extends LOVD_Object {
             } else {
                 $sAlias = strtolower($this->sCategory{0});
             }
-            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
+            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '")';
             $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
+            if ($this->sCategory == 'VariantOnGenome' && $_AUTH) {
+                // Added so that Curators and Collaborators can view the variants for which they have viewing rights in the genomic variant viewlist.
+                $this->aSQLViewList['WHERE'] .= ' OR t.geneid IN ("' . implode('", "', array_merge($_AUTH['curates'], $_AUTH['collaborates'])) . '"))';
+            } else {
+                $this->aSQLViewList['WHERE'] .= ')';
+            }
         }
     }
 
@@ -469,6 +475,7 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Prepares the data before returning it to the user.
         global $_AUTH;
+
         $zData = parent::prepareData($zData, $sView);
         foreach ($this->aColumns as $sCol => $aCol) {
             if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {

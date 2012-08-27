@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-06-18
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-08-22
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -126,44 +126,23 @@ if (PATH_COUNT > 2 && !ACTION) {
     $zData = $_DATA->viewEntry($sColumnID);
     $aTableInfo = lovd_getTableInfoByCategory($zData['category']);
 
-    $sNavigation = '';
+    $aNavigation = array();
     if ($_AUTH['level'] >= LEVEL_MANAGER || ($aTableInfo['shared'] && $_AUTH['level'] >= LEVEL_CURATOR)) {
         // Authorized user (admin or manager, or curator in case of shared column) is logged in. Provide tools.
-        if (!$zData['active'] || $aTableInfo['shared']) {
-            // FIXME; needs exact check if there are genes/diseases left that do not have this column.
-            // A check on 'active' is way too simple and does not work for shared columns.
-            $sNavigation = '<A href="' . CURRENT_PATH . '?add">Enable column</A>';
-        } else {
-            $sNavigation = '<A style="color : #999999;">Enable column</A>';
-        }
+        // FIXME; needs exact check if there are genes/diseases left that do not have this column.
+        // A check on 'active' is way too simple and does not work for shared columns.
+        $aNavigation[CURRENT_PATH . '?add']                         = array('check.png', 'Enable column', (!$zData['active'] || $aTableInfo['shared']? 1 : 0));
         // Disable column.
-        if ($zData['active'] && !$zData['hgvs']) {
-            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?remove">Disable column</A>';
-        } else {
-            $sNavigation .= ' | <A style="color : #999999;">Disable column</A>';
-        }
+        $aNavigation[CURRENT_PATH . '?remove']                      = array('cross.png', 'Disable column', ($zData['active'] && !$zData['hgvs']? 1 : 0));
         // Delete column.
-        if (!$zData['active'] && !$zData['hgvs'] && (int) $zData['created_by']) {
-            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete column</A>';
-        } else {
-            $sNavigation .= ' | <A style="color : #999999;">Delete column</A>';
-        }
-        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?edit">Edit custom data column settings</A>';
-        $sNavigation .= ' | <A href="' . $_PE[0] . '/' . $zData['category'] . '?order">Re-order all ' . $zData['category'] . ' columns</A>';
-/*
-
-        if ($zData['created_by'] && !$bSelected) {
-            $sNavigation .= ' | <A href="' . $_SERVER['PHP_SELF'] . '?action=edit_colid&amp;edit_colid=' . rawurlencode($zData['colid']) . '">Edit column ID</A>';
-        } else {
-            $sNavigation .= ' | <A style="color : #999999;">Edit column ID</A>';
-        }
-*/
+        $aNavigation[CURRENT_PATH . '?delete']                      = array('cross.png', 'Delete column', (!$zData['active'] && !$zData['hgvs'] && (int) $zData['created_by']? 1 : 0));
+        $aNavigation[CURRENT_PATH . '?edit']                        = array('menu_edit.png', 'Edit custom data column settings', 1);
+        $aNavigation[$_PE[0] . '/' . $zData['category'] . '?order'] = array('menu_columns.png', 'Re-order all ' . $zData['category'] . ' columns', 1);
+        /*
+        $aNavigation[$_SERVER['PHP_SELF'] . '?action=edit_colid&amp;edit_colid=' . rawurlencode($zData['colid'])] = array('menu_edit.png', 'Edit column ID', ($zData['created_by'] && !$bSelected? 1 : 0));
+        */
     }
-
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
+    lovd_showJGNavigation($aNavigation, 'Columns');
 
     $_T->printFooter();
     exit;
@@ -1466,14 +1445,14 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $nPossibleTargets = count($aPossibleTargets);
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases which do NOT have this column yet.
-            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
+            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.name, " (", d.symbol, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
             $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Maybe a JOIN would be simpler?
-                $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+                $sSQL .= ' AND (g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') OR d.id <' . ($_AUTH['level'] == LEVEL_CURATOR? '=' : '') . '"00000")';
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
-            $sSQL .= ' ORDER BY d.symbol';
+            $sSQL .= ' ORDER BY d.name';
             $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
         }
@@ -1634,7 +1613,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
             // Write to log...
             if ($aTableInfo['shared']) {
-                lovd_writeLog('Event', LOG_EVENT,  'Enabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . $aTargets);
+                lovd_writeLog('Event', LOG_EVENT,  'Enabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . implode(', ', $aTargets));
             }
 
             // Thank the user...
@@ -1797,11 +1776,12 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
-            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
-            $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
-                $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
-                $aSQL = array_merge($aSQL, $_AUTH['curates']);
+                $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")"), (p.`' . $zData['id'] . '` != "" OR p.`' . $zData['id'] . '` IS NOT NULL) AS in_use FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ') OR d.id = 0 GROUP BY d.id HAVING in_use IS NULL';
+                $aSQL = array_merge(array($zData['id']), $_AUTH['curates']);
+            } else {
+                $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
+                $aSQL = array($zData['id']);
             }
             $sSQL .= ' ORDER BY d.symbol';
             $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
@@ -1809,7 +1789,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         }
 
         if (!$nPossibleTargets) {
-            // Column has already been added to everything it can be added to.
+            // Column has already been removed from everything it can be removed from.
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable('This column has already been removed from all ' . $aTableInfo['unit'] . 's.', 'stop');

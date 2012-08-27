@@ -52,6 +52,7 @@ class LOVD_Phenotype extends LOVD_Custom {
     function __construct ($sObjectID = '', $nID = '')
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT p.*, ' .
@@ -75,8 +76,11 @@ class LOVD_Phenotype extends LOVD_Custom {
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (p.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'p.id';
 
-        // SQL code for viewing the list of genes
+        // SQL code for viewing the list of phenotypes
         $this->aSQLViewList['SELECT']   = 'p.*, ' .
+                                        ($_AUTH['level'] >= LEVEL_COLLABORATOR?
+                                          'CASE p.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name,'
+                                        : '') .
                                           'uo.name AS owned_by_';
         $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id)';

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-07-30
+ * Modified    : 2012-08-07
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -92,16 +92,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_Transcript();
     $zData = $_DATA->viewEntry($nID);
 
-    $sNavigation = '';
+    $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
-        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit transcript information</A>';
-        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete transcript entry</A>';
+        // Authorized user is logged in. Provide tools.
+        $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit transcript information', 1);
+        $aNavigation[CURRENT_PATH . '?delete']    = array('cross.png', 'Delete transcript entry', 1);
     }
-
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
+    lovd_showJGNavigation($aNavigation, 'Transcripts');
 
     $_GET['search_transcriptid'] = $nID;
     print('<BR><BR>' . "\n\n");

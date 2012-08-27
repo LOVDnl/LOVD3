@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-08-02
+ * Modified    : 2012-08-08
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,7 +63,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS __diseases, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.name SEPARATOR ";;") AS __diseases, ' .
                                            'COUNT(DISTINCT t.id) AS transcripts, ' .
                                            'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS __curators, ' .
                                            'uc.name AS created_by_, ' .
@@ -299,11 +299,12 @@ class LOVD_Gene extends LOVD_Object {
         // Get list of diseases.
         $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' WHERE id > 0 ORDER BY symbol, name')->fetchAllCombine();
         $nDiseases = count($aDiseasesForm);
-        $aDiseasesForm = array_combine(array_keys($aDiseasesForm), array_map('lovd_shortenString', $aDiseasesForm, array_fill(0, $nDiseases, 60)));
-        $nDiseasesFormSize = ($nDiseases < 15? $nDiseases : 15);
         if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
             $nDiseasesFormSize = 1;
+        } else {
+            $aDiseasesForm = array_combine(array_keys($aDiseasesForm), array_map('lovd_shortenString', $aDiseasesForm, array_fill(0, $nDiseases, 60)));
+            $nDiseasesFormSize = ($nDiseases < 15? $nDiseases : 15);
         }
 
         // References sequences (genomic and transcripts).

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-07-18
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-27
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -83,15 +83,24 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
-        if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit disease information</A>', 1);
+        $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit disease information</A>', 1);
+        if ($_AUTH['level'] == LEVEL_CURATOR) {
+            $bDelete = true;
+            foreach ($zData['genes'] as $sGene) {
+                if (!in_array($sGene, $_AUTH['curates'])) {
+                    $bDelete = false;
+                    break;
+                }
+            }
+        }
+        if ($_AUTH['level'] >= LEVEL_MANAGER || $bDelete) {
             $aNavigation[CURRENT_PATH . '?delete']    = array('cross.png', 'Delete disease entry', 1);
         }
         $aNavigation[CURRENT_PATH . '/columns']       = array('menu_columns.png', 'View enabled phenotype columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order'] = array('menu_columns.png', 'Re-order enabled phenotype columns', 1);
         $aNavigation['columns/Phenotype'] = array('menu_columns.png', 'View all available phenotype columns', 1);
     }
-    lovd_showJGNavigation($aNavigation, 'Genes');
+    lovd_showJGNavigation($aNavigation, 'Diseases');
 
     $_GET['search_diseaseids'] = $nID;
     print('<BR><BR>' . "\n\n");
@@ -143,9 +152,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('PAGE_TITLE', 'Create a new disease information entry');
     define('LOG_EVENT', 'DiseaseCreate');
 
-    // Require manager clearance.
-    // FIXME; allow curator to create disease entries linked to own genes?
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Require curator clearance.
+    lovd_isAuthorized('gene', $_AUTH['curates']);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
@@ -406,13 +415,33 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         $nID = -1;
     }
 
-    // Require manager clearance.
-    // FIXME; allow curators to delete diseases that point to no other genes besides their own?
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_isAuthorized('disease', $nID);
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
     $zData = $_DATA->loadEntry($nID);
+
+    if ($_AUTH['level'] == LEVEL_CURATOR) {
+        $bDelete = true;
+        foreach ($zData['genes'] as $sGene) {
+            if (!in_array($sGene, $_AUTH['curates'])) {
+                $bDelete = false;
+                break;
+            }
+        }
+
+        if (!$bDelete) {
+            // Require manager clearance.
+            lovd_requireAUTH(LEVEL_MANAGER);
+        }
+    } else {
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_MANAGER);
+    }
+    
+    
+    
+
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (!empty($_POST)) {

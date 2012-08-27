@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-07-20
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-27
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -219,6 +219,7 @@ class LOVD_Object {
                 // FIXME; is it also with selection lists with a size > 1? Then you should change the check above.
                 if (!isset($aData[$sName])) {
                     $GLOBALS['_' . $aFormInfo[0]][$sName] = array();
+                    $aData[$sName] = array();
                 }
 
             } elseif ($sType == 'checkbox') {
@@ -227,6 +228,7 @@ class LOVD_Object {
                 // columns can't receive an empty string if STRICT is on.
                 if (!isset($aData[$sName])) {
                     $GLOBALS['_' . $aFormInfo[0]][$sName] = 0;
+                    $aData[$sName] = array();
                 }
             }
 
@@ -237,6 +239,7 @@ class LOVD_Object {
                 }
             }
         }
+        return $aData;
     }
 
 
@@ -731,6 +734,7 @@ class LOVD_Object {
                         'HAVING' => array()
                            );
         $aBadSyntaxColumns = array();
+        $aColTypes = array();
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
                 $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false? 'HAVING' : 'WHERE');
@@ -747,11 +751,12 @@ class LOVD_Object {
                             $sTable = '';
                         }
                     } else {
-                        $sColName = $aCol['db'][0];
+                        $sColName = trim($aCol['db'][0], '`');
                         $sTable = constant($this->sTable);
                     }
                     $sColType = lovd_getColumnType($sTable, $sColName);
                 }
+                $aColTypes[$sColumn] = $sColType;
                 // Allow for searches where the order of words is forced by enclosing the values with double quotes;
                 // Replace spaces in sentences between double quotes so they don't get exploded.
                 if ($sColType == 'DATETIME') {
@@ -1117,7 +1122,7 @@ class LOVD_Object {
                             (!$bSearchable? '' :
                                  "\n" .
                                  // SetTimeOut() is necessary because if the function gets executed right away, selecting a previously used value from a *browser-generated* list in one of the fields, gets aborted and it just sends whatever is typed in at that moment.
-                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain..." style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\')\', 0); }">') .
+                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain...' . (!empty($_GET['search_' . $sField])? "\nCurrent search:\n\n" . htmlspecialchars(lovd_formatSearchExpression($_GET['search_' . $sField], $aColTypes[$sField])) : '') .'" style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\')\', 0); }">') .
                           '</TH>');
                 }
                 print('</TR></THEAD>');

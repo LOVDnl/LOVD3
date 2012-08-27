@@ -54,6 +54,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     function __construct ()
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT * ' .
@@ -87,8 +88,16 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                           'a.name AS allele_, ' .
                                           'e.name AS effect, ' .
                                           'uo.name AS owned_by_, ' .
+                                ($_AUTH['level'] >= LEVEL_COLLABORATOR?
+                                          'CASE ds.id WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name,'
+                                        : '') .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
+                                // Added so that Curators and Collaborators can view the variants for which they have viewing rights in the genomic variant viewlist.
+                                ($_AUTH['level'] == LEVEL_SUBMITTER? 
+                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
+                                        : '') .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
@@ -325,7 +334,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             $zData['individualid_'] = '';
             // While in principle a variant should only be connected to one patient, due to database model limitations, through several screenings, one could link a variant to more individuals.
             foreach ($zData['individualids'] as $nID) {
-                $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
+                if (lovd_isAuthorized('individual', $nID, false)) {
+                    $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
+                }
+            }
+            if (empty($zData['individualid_'])) {
+                unset($this->aColumnsViewEntry['individualid_']);
             }
             $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
             $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-07-30
+ * Modified    : 2012-08-07
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -86,17 +86,17 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         // Authorized user is logged in. Provide tools.
-        $aNavigation[CURRENT_PATH . '?edit']            = array('menu_edit.png', 'Edit gene information</A>', 1);
-        $aNavigation['transcripts/' . $sID . '?create'] = array('menu_plus.png', 'Add transcript(s) to gene', 1);
+        $aNavigation[CURRENT_PATH . '?edit']             = array('menu_edit.png', 'Edit gene information', 1);
+        $aNavigation['transcripts/' . $sID . '?create']  = array('menu_plus.png', 'Add transcript(s) to gene', 1);
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $aNavigation[CURRENT_PATH . '?delete']    = array('cross.png', 'Delete gene entry', 1);
-            $aNavigation[CURRENT_PATH . '?authorize'] = array('', 'Add/remove curators/collaborators', 1);
+            $aNavigation[CURRENT_PATH . '?delete']       = array('cross.png', 'Delete gene entry', 1);
+            $aNavigation[CURRENT_PATH . '?authorize']    = array('', 'Add/remove curators/collaborators', 1);
         } else {
             $aNavigation[CURRENT_PATH . '?sortCurators'] = array('', 'Sort/hide curators/collaborators names', 1);
         }
-        $aNavigation[CURRENT_PATH . '/columns']       = array('menu_columns.png', 'View enabled variant columns', 1);
-        $aNavigation[CURRENT_PATH . '/columns?order'] = array('menu_columns.png', 'Re-order enabled variant columns', 1);
-        $aNavigation['columns/VariantOnTranscript'] = array('menu_columns.png', 'View all available variant columns', 1);
+        $aNavigation[CURRENT_PATH . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
+        $aNavigation[CURRENT_PATH . '/columns?order']    = array('menu_columns.png', 'Re-order enabled variant columns', 1);
+        $aNavigation['columns/VariantOnTranscript']      = array('menu_columns.png', 'View all available variant columns', 1);
         $aNavigation['javascript:lovd_openWindow(\'' . lovd_getInstallURL() . 'scripts/refseq_parser.php?step=1&amp;symbol=' . $sID . '\', \'refseq_parser\', 900, 500);'] = array('menu_scripts.png', 'Create human-readable refseq file', ($zData['refseq_UD'] && $zData['transcripts']));
     }
     lovd_showJGNavigation($aNavigation, 'Genes');

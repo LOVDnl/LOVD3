@@ -121,7 +121,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnGenome':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') . ', dsg.name AS var_status';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') . ', dsg.id AS var_statusid, dsg.name AS var_status';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['SELECT'] .= ', vog.id AS row_id'; // To ensure other table's id columns don't interfere.
@@ -208,7 +208,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'Individual':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY d.symbol SEPARATOR ", ") AS diseases_, dsi.name AS ind_status';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.*, GROUP_CONCAT(DISTINCT d.symbol ORDER BY d.symbol SEPARATOR ", ") AS diseases_, dsi.id AS ind_statusid, dsi.name AS ind_status';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';
@@ -247,6 +247,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
             }
         }
+
         if (!$aSQL['SELECT'] || !$aSQL['FROM']) {
             // Apparently, not implemented or no objects given.
             lovd_displayError('ObjectError', 'CustomViewLists::__construct() requested with non-existing or missing object(s) \'' . htmlspecialchars(implode(',', $aObjects)) . '\'.');
@@ -271,7 +272,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                          array(
                                 'geneid' => array(
-                                        'view' => array('Gene', 70),
+                                        'view' => array('Gene', 100),
                                         'db'   => array('t.geneid', 'ASC', true)),
                                 'id_ncbi' => array(
                                         'view' => array('Transcript', 120),
@@ -443,6 +444,18 @@ class LOVD_CustomViewList extends LOVD_Object {
 
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
+
+        $bVarStatus = (!empty($zData['var_statusid']) && in_array($zData['var_statusid'], array(4, 7)));
+        $bIndStatus = (!empty($zData['ind_statusid']) && in_array($zData['ind_statusid'], array(4, 7)));
+
+        if ($bVarStatus && $bIndStatus) {
+            $nStatus = min($zData['var_statusid'], $zData['ind_statusid']);
+            $zData['class_name'] = ($nStatus == 7? 'marked' : 'del');
+        } elseif ($bVarStatus && !$bIndStatus) {
+            $zData['class_name'] = ($zData['var_statusid'] == 7? 'marked' : 'del');
+        } elseif (!$bVarStatus && $bIndStatus) {
+            $zData['class_name'] = ($zData['ind_statusid'] == 7? 'marked' : 'del');
+        }
 
         if ($sView == 'list') {
             // "Clean" the GROUP_CONCAT columns for double values.

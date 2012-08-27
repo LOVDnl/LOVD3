@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2012-03-29
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-08-17
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -38,6 +38,71 @@ function lovd_escapeSearchTerm ($sTerm)
     // Reverse the insertion of {{SPACE}} done to allow for searches where the order of words is forced by enclosing the values with double quotes.
     $sTerm = str_replace('{{SPACE}}', ' ', $sTerm);
     return $sTerm;
+}
+
+
+
+
+
+function lovd_formatSearchExpression ($sExpression, $sColumnType)
+{
+    // Formats the search expressions for the "title" text of the input field so that the users can understand what their search does.
+    if ($sColumnType == 'DATETIME') {
+        $sExpression = preg_replace('/ (\d)/', "{{SPACE}}$1", $sExpression);
+    } else {
+        $sExpression = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), $sExpression);
+    }
+    $aANDExpressions = explode(' ', $sExpression);
+    $nANDLength = count($aANDExpressions);
+    $sFormattedExpressions = '';
+    foreach ($aANDExpressions as $nANDIndex => $sANDExpression) {
+        $aORExpressions = explode('|', $sANDExpression);
+        $nORLength = count($aORExpressions);
+        $sFormattedExpression = ($sColumnType == 'TEXT'? ' - ' : ' ');
+        if ($nORLength > 1) {
+            $sFormattedExpression .= '(';
+        }
+        foreach ($aORExpressions as $nORIndex => $sORExpression) {
+            switch ($sColumnType) {
+                case 'TEXT':
+                    if ($sORExpression{0} == '!' && $sORExpression{1} == '=') {
+                        $sFormattedExpression .= 'Does not exactly match ' . trim($sORExpression, '!="');
+                    } elseif ($sORExpression{0} == '!' && $sORExpression{1} != '=') {
+                        $sFormattedExpression .= 'Does not contain ' . trim($sORExpression, '!=');
+                    } elseif ($sORExpression{0} == '=') {
+                        $sFormattedExpression .= 'Exactly matches ' . trim($sORExpression, '="');
+                    } else {
+                        $sFormattedExpression .= 'Contains ' . $sORExpression;
+                    }
+                    break;
+                case 'INT':
+                case 'INT_UNSIGNED':
+                case 'DECIMAL':
+                case 'DECIMAL_UNSIGNED':
+                case 'DATE':
+                case 'DATETIME':
+                    if (!in_array($sORExpression{0}, array('<', '>', '!'))) {
+                        $sFormattedExpression .= '=' . $sORExpression;
+                    } else {
+                        $sFormattedExpression .= $sORExpression;
+                    }
+                    break;
+                default:
+                    $sFormattedExpression .= $sORExpression;
+            }
+            if ($nORIndex + 1 != $nORLength) {
+                $sFormattedExpression .= ' OR ';
+            } elseif ($nORLength > 1) {
+                $sFormattedExpression .= ')';
+            }
+        }
+        $sFormattedExpressions .= $sFormattedExpression;
+        if ($nANDIndex + 1 != $nANDLength) {
+            $sFormattedExpressions .= "\nAND\n";
+        }
+    }
+
+    return preg_replace('/{{SPACE}}/', ' ', $sFormattedExpressions);
 }
 
 
