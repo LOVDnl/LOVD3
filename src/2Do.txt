@@ -1,10 +1,5 @@
 Prioritize:
 ===========
-- Opmerkingen Johan:
-  + Menu's moeten met GET geladen worden, zodat je terug kunt naar GET (terug in browser, POST warning, refresh geeft nieuwe individu entry!)
-    * Formulieren moeten dan ook een Cancel knop krijgen, waarmee je terug kunt naar het keuze menu.
-    * Formulieren in submit.php?
-
 - Als David Baux zijn scripts klaar zijn, mergen met trunk.
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
@@ -15,39 +10,7 @@ Prioritize:
   + Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
 - (@Ivar) Combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
-- (BELANGRIJK) Van alles moet bepaald worden wat de minimale level is die benodigd is.
-        ^ Views/Actions checken op user level requirements:
-            v Users
-            % Genes
-            % Diseases
-            % Transcripts
-            % Individuals
-            % Phenotypes
-            % Screenings
-            % Variants
-        ^ Alle standaard kolommen checken voor ieder level:
-            v Users
-            % Genes
-            % Diseases
-            % Transcripts
-            % Individuals
-            % Phenotypes
-            % Screenings
-            % Variants
-  + (@Ivar) De hele submissie code moet worden gecontroleerd, of de rechten wel goed zijn. Een submitter moet OWNER zijn van de data, om daar iets aan toe te voegen.
-    * Curatoren krijgen rechten via ownership of via de genen (varianten van individu). Hier hetzelfde: als isAuthorized rechten geeft op de target/parent, dan mag je toevoegen.
-  + Testen wat public / curator wel en niet mag.
-  + Ook als knopjes niet zichtbaar zijn, of de pagina zelf 'm ook blokkeert.
-  + Curator mag alleen phenotype kolommen verwijderen, als er geen data meer in zit bij entries van deze ziekte (managers wel).
-    * De curator hoeft namelijk niet per se rechten te hebben op alle patienten met deze ziekte.
-  + Een curator mag ziektes aanmaken en editen.
-- (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
-- BUGS:
-  + Als individu disease = 00000 heeft, kun je dat niet in de VE zien.
-    * Also, you can't add any phenotype entries.
-    * And actually, LOVD should not allow you to select Healty if you're also picking any other disease.
-  + Log entry: "Enabled column VariantOnTranscript/PolyPhen (PolyPhen prediction) for 2 gene(s): Array"
-  + Submitter mag wel zien dat variant 7 aan individu 1 zit, maar hij mag individu 1 niet zien. Beter niet laten zien dat hij er aan vast zit...
+@ (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - VOG/DNA heeft geen help tekst? Die moet toch de notes on form vervangen?
 - Hoe kan een gebruiker op een zojuist geopend edit formulier de predict triggeren en/of de Mutalyzer namechecker openen in een nieuwe window?
   + Wellicht, voor een losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
@@ -79,7 +42,6 @@ Prioritize:
       - Store in session / DB in een col met serialized data?
     * Daarna: we moeten ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
 - Mapping melding (successfully mapped xxx variants slaat nergens op)
-- Dropdown menu's op de overige VE's ook inbouwen.
 - VariantOnGenome/Times_reported (or similar)
   + Kolom mag ALLEEN getoond worden op 't formulier, als gekoppeld aan een individu die een panel_size > 1 heeft.
     Anders, standaard invullen; 2 voor homozygoot, 1 voor alles anders.
@@ -95,19 +57,8 @@ Prioritize:
   + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
     * Dat moet dan ook gebeuren op de gene homepage.
   + Eigenlijk moet de update checken of het Frequency veld nu gebruikt wordt op de manier waarop wij hebben gezegd dat het tijdelijk moet, en dat daarna de waarde goed wordt overgenomen...
-- Add Individual/Parents/Father and /Mother, but probably not as custom columns? We don't want to deal with these cols in the data entry forms I think.
-- Curator/Manager moet cols kunnen instellen voor disease Healty/Control.
-- Individual viewList: add column "variants in genes" with gene symbols.
-  + Then, add option to dropdown menu if we have a currdb.
-  + After that, change the default link when clicking the individual tab.
-  + Then, apply the same to screenings (add column "genes screened", add option in tab menu, change default link).
-- Unieke variant met niet-unieke DBID: edit geeft foutmelding, maar de auto suggest is dezelfde ID. Wat moet er anders?
-- (@Ivar): Als een VCF file geen varianten bevat, mag de file niet als volledige submissie gezien worden.
-  + Ik heb wel wijzigingen aan de code aangebracht, maar mijn kennis van de submissie SESSION array is niet groot genoeg om snel te zien hoe ik dit aan pas zonder andere nare effecten.
-  + Er zijn hiervoor twee FIXME's toegevoegd.
-  + Wellicht is het makkelijker gewoon een foutmelding te geven als in: geen varianten gevonden, upload een correcte file?
-    * Tenslotte gaat het hier over managers, de individu en/of screening is vast al publiek.
-- De diseases op de individual VE kosten veel ruimte, terwijl 't er meestal toch maar 1 is. Vervangen door abbreviation en name in VE tabel?
+- Een manager moet de Healthy/Control disease kunnen beheren om bijvoorbeeld de kolommen te kunnen sorteren.
+- Individual & Screening viewLists: add column "variants in genes" with gene symbols.
 =============== Below here needs to be re-evaluated for priority ===============
 - Kunnen we ook het Exon veld voorspellen?
 - Quick curate option?
@@ -118,7 +69,6 @@ Prioritize:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
-    + Sowieso moeten submissies bekeken kunnen worden; "My submissions", zoals in LOVD 2.0.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
   - (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
     + Hierna kan de transcript ViewList voor nieuwe VOT op bestaande VOG specifieker worden geselecteerd.

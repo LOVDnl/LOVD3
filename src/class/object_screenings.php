@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-08-28
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -52,6 +52,7 @@ class LOVD_Screening extends LOVD_Custom {
     function __construct ()
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT s.*, ' .
@@ -66,7 +67,7 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
-                                           'COUNT(s2v.variantid) AS variants, ' .
+                                           'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(s2v.variantid)) AS variants_found_, ' .
                                            'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -82,10 +83,15 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for viewing the list of screenings
         $this->aSQLViewList['SELECT']   = 's.*, ' .
                                           's.id AS screeningid, ' .
-                                          'COUNT(DISTINCT s2v.variantid) AS variants, ' .
+                                          'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(s2v.variantid)) AS variants_found_, ' .
+                                          'GROUP_CONCAT(s2g.geneid) AS genes, ' .
+                                        ($_AUTH['level'] >= LEVEL_COLLABORATOR?
+                                          'CASE i.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name, '
+                                        : '') .
                                           'uo.name AS owned_by_';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id)';
         $this->aSQLViewList['GROUP_BY'] = 's.id';
@@ -114,7 +120,7 @@ class LOVD_Screening extends LOVD_Custom {
                         'screeningid' => array(
                                     'view' => false,
                                     'db'   => array('s.id', 'ASC', true)),
-                        'id_' => array(
+                        'id' => array(
                                     'view' => array('Screening ID', 110),
                                     'db'   => array('s.id', 'ASC', true)),
                         'individualid' => array(
@@ -123,9 +129,12 @@ class LOVD_Screening extends LOVD_Custom {
                       ),
                  $this->buildViewList(),
                  array(
-                        'variants' => array(
-                                    'view' => array('Variants found', 120),
-                                    'db'   => array('variants', 'ASC', 'INT_UNSIGNED')),
+                        'genes' => array(
+                                    'view' => array('Genes screened', 20),
+                                    'db'   => array('genes', 'ASC', 'TEXT')),
+                        'variants_found_' => array(
+                                    'view' => array('Variants found', 100),
+                                    'db'   => array('variants_found_', 'ASC', 'INT_UNSIGNED')),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
@@ -136,7 +145,7 @@ class LOVD_Screening extends LOVD_Custom {
                                     'view' => array('Date edited', 130),
                                     'db'   => array('s.edited_date', 'ASC', true)),
                       ));
-        $this->sSortDefault = 'id_';
+        $this->sSortDefault = 'id';
 
         // Because the gene information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
@@ -260,8 +269,8 @@ class LOVD_Screening extends LOVD_Custom {
         if ($sView == 'entry') {
             // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
-            $zData['variants_found_'] = '<IMG src="gfx/mark_' . $zData['variants_found'] . '.png" alt="" width="11" height="11">';
         }
+        $zData['variants_found_'] = ($zData['variants_found_'] == -1? 'Not yet submitted' : $zData['variants_found_']);
 
         return $zData;
     }

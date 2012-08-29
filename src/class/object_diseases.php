@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2012-08-20
+ * Modified    : 2012-08-28
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -144,7 +144,7 @@ class LOVD_Disease extends LOVD_Object {
             lovd_errorAdd('id_omim', 'The OMIM ID has to be six digits long and cannot start with a \'0\'.');
         }
         $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?', array($aData['id_omim']))->fetchColumn();
-        if ($bExists && (ACTION == 'create' || (ACTION == 'edit' && $aData['id_omim'] != $zData['id_omim']))) {
+        if (!empty($aData['id_omim']) && $bExists && (ACTION == 'create' || (ACTION == 'edit' && $aData['id_omim'] != $zData['id_omim']))) {
             lovd_errorAdd('id_omim', 'Another disease already exists with this OMIM ID!');
         }
 
@@ -152,12 +152,15 @@ class LOVD_Disease extends LOVD_Object {
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
         //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
+        if ($_AUTH['level'] < LEVEL_MANAGER && empty($aData['genes'])) {
+            lovd_errorAdd('genes', 'You should at least select one of the genes you are curator of.');
+        }
         $_POST['genes'] = array();
-        if (isset($aData['genes']) && is_array($aData['genes'])) {
+        if (is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
                 if ($sGene && !in_array($sGene, $aGenes)) {
                     lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene.');
-                } elseif (!in_array($sGene, $_AUTH['curates']) && ACTION == 'create') {
+                } elseif (!lovd_isAuthorized('gene', $sGene, false) && ACTION == 'create') {
                     lovd_errorAdd('genes', 'You are not authorized to add this disease to gene ' . htmlspecialchars($sGene) . '.');
                 } else {
                     $_POST['genes'][] = $sGene;
@@ -165,9 +168,9 @@ class LOVD_Disease extends LOVD_Object {
             }
         }
         if (ACTION == 'edit') {
-            if (isset($zData['genes']) && is_array($zData['genes'])) {
+            if (is_array($aData['genes']) && isset($zData['genes']) && is_array($zData['genes'])) {
                 foreach ($zData['genes'] as $sGene) {
-                    if ($sGene && !in_array($sGene, $aData['genes']) && !lovd_isAuthorized('gene', $sGene)) {
+                    if ($sGene && !in_array($sGene, $aData['genes']) && !lovd_isAuthorized('gene', $sGene, false)) {
                         lovd_errorAdd('genes', 'You are not authorized to remove this disease from gene ' . htmlspecialchars($sGene) . '.');
                         $_POST['genes'][] = $sGene;
                     }

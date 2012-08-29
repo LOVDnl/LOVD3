@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-08-22
+ * Modified    : 2012-08-27
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -777,7 +777,7 @@ function lovd_requireAUTH ($nLevel = 0)
 function lovd_saveWork ()
 {
     // Save the changes made in $_AUTH['saved_work'] by inserting the changed array back into the database.
-    global $_AUTH;
+    global $_AUTH, $_DB;
 
     if ($_AUTH && isset($_AUTH['saved_work'])) {
         $_DB->query('UPDATE ' . TABLE_USERS . ' SET saved_work = ? WHERE id = ?', array(serialize($_AUTH['saved_work']), $_AUTH['id']));

@@ -7,7 +7,7 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
- * 3.0 Beta 07
+ * 3.0 Beta 08
  * 2012-09-???????????????????????????????????????????????????????????????????
  *********/
  * Added the "Switch gene database" icon to the LOVD header; it will only be
@@ -42,6 +42,47 @@
 
 
 
+ * Fixed bug; The checkbox "Have variants been found?" in screening create &
+   edit forms didn't work anymore.
+ * It is now possible to add a phenotype to disease "Healthy/Control"
+ * The whole submission workflow has been changed
+ * Added a "Cancel" button to all forms when you are in the middle of a full
+   submission.
+ * Link to "Your submissions" has been added so you can see unfinished
+   submissions.
+ * The individual viewEntry now contains a list of diseases and the diseases
+   viewList below has been removed.
+ * Added some new options to the tab menu and fixed the occasional disappearance
+   of older ones.
+ * Fixed bug; LOVD no longer predicts & fills in a DBID for you which produces
+   an error on the form.
+ * Fixed bug; The backslashes issue in the URLs of some installations has now
+   been fixed.
+ * Fixed bug; The menu below the gene homepage no longer produces a JavaScript
+   error when "Create human-readable refseq file" is clicked in Internet
+   Explorer <= 7.
+ * Fixed bug; Uploading a variant would make LOVD lose the currently select
+   gene.
+ * Fixed bug; Curators and Collaborators can now also see the variants for which
+   they have viewing rights in the genomic variant viewlist.
+ * Added color highlighting for marked and non-public entries in viewLists.
+ * Fixed bug; The search fields on custom columns no longer produce an
+   unexpected "Bad syntax error".
+ * It is now possible to add and remove custom columns to the "Healthy/Control"
+   disease.
+ * When hovering your mouse over a search field, the current search expression
+   will be explained in more detail in the popup.
+ * No longer possible to add both a disease AND "Healthy/Control" to a
+   individual.
+ * Changed all viewEntry options to the new Jeegoo menu implementation.
+ * Curators can now create diseases, but can only do so when they connect them
+   to their own gene(s).
+ * Curators can now edit diseases, but can only do so when they are connected to
+   their own gene(s).
+ * Curators can now remove diseases, but can only do so when they are not
+   connected to other genes than their own gene(s).
+ * The screenings & individuals pages now have gene specific page, which shows
+   the entries that have been screened for the currently selected gene.
 
 
 

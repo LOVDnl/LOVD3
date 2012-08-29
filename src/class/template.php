@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-08-08
+ * Modified    : 2012-08-28
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -105,8 +105,10 @@ class LOVD_Template {
                                 '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                               ),
                         'individuals' => 'View individuals',
+                        'individuals_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all individuals', 0),
+                                '/individuals/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all individuals for the ' . $_SESSION['currdb'] . ' gene', 0),
                                 'create' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                                 'hr',
                                 '/columns/Individual?search_active_=1' => array('menu_columns.png', 'View active custom columns', LEVEL_MANAGER),
@@ -115,11 +117,14 @@ class LOVD_Template {
                         'diseases' => 'View diseases',
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all diseases', 0),
-                                'create' => array('plus.png', 'Create a new disease information entry', LEVEL_MANAGER), // FIXME; level_curator?
+                                'create' => array('plus.png', 'Create a new disease information entry', LEVEL_CURATOR),
+                                '/columns/Phenotype' => array('menu_columns_add.png', 'View phenotype columns', LEVEL_CURATOR),
                               ),
                         'screenings' => 'View screenings',
+                        'screenings_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all screenings', 0),
+                                '/screenings/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all screenings for the ' . $_SESSION['currdb'] . ' gene', 0),
                                 '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                                 'hr',
                                 '/columns/Screening?search_active_=1' => array('menu_columns.png', 'View active custom columns', LEVEL_MANAGER),
@@ -147,8 +152,8 @@ class LOVD_Template {
                                         array('config_free_edit.php', 'copy', 'Copy Column', 'Copy Column', 'lovd_free_edit_copy'),
                                         'vr',
 */
-                                '/columns/VariantOnTranscript' => array('menu_columns_add.png', 'Add variant column to ' . $_SESSION['currdb'], LEVEL_CURATOR),
-                                '/genes/' . $_SESSION['currdb'] . '/columns' => array('menu_columns.png', 'View variant columns enabled in ' . $_SESSION['currdb'], LEVEL_CURATOR),
+                                '/columns/VariantOnTranscript' => array('menu_columns_add.png', 'Add variant column to ' . ($_SESSION['currdb']? $_SESSION['currdb'] : 'gene'), LEVEL_CURATOR),
+                                '/genes/' . $_SESSION['currdb'] . '/columns' => array('menu_columns.png', 'View variant columns enabled in ' . ($_SESSION['currdb']? $_SESSION['currdb'] : 'gene'), LEVEL_CURATOR),
 /*
                                         'vr',
                                         array('genes', 'manage', 'Edit gene db', 'Manage ' . $_SESSION['currdb'] . ' gene', 'lovd_database_edit'),
@@ -196,6 +201,8 @@ class LOVD_Template {
             unset($this->aMenu['transcripts_']['/transcripts/']);
             unset($this->aMenu['variants_']['/variants/']);
             unset($this->aMenu['variants_']['/view/']);
+            unset($this->aMenu['individuals_']['/individuals/']);
+            unset($this->aMenu['screenings_']['/screenings/']);
         }
 
         if (!defined('PAGE_TITLE')) {
@@ -565,7 +572,7 @@ function lovd_mapVariants ()
         if (!(ROOT_PATH == '../' || defined('NOT_INSTALLED'))) {
             if ($_AUTH) {
                 print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
-                      '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
+                      '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
                 print('      <A href="users?register"><B>Register as submitter</B></A> | <A href="login"><B>Log in</B></A>' . "\n");
             }
@@ -606,7 +613,7 @@ function lovd_mapVariants ()
         $bSel      = false;
         $bPrevSel  = false;
         $aMenus    = array();
-        $bCurator  = ($_AUTH && count($_AUTH['curates'])); // We can't check LEVEL_CURATOR since it may not be set.
+        $bCurator  = ($_AUTH && (count($_AUTH['curates']) || $_AUTH['level'] > LEVEL_CURATOR)); // We can't check LEVEL_CURATOR since it may not be set.
         foreach ($this->aMenu as $sPrefix => $Title) {
             // Arrays (children links of parent tabs) can only be processed if we still have the $sFile from the previous run.
             if (is_array($Title)) {
@@ -683,7 +690,7 @@ function lovd_mapVariants ()
             $sURL = $sPrefix;
             // If a gene has been selected, some of the tabs get different default URLs.
             if ($_SESSION['currdb']) {
-                if (in_array($sPrefix, array('configuration', 'genes', 'transcripts', 'variants'))) {
+                if (in_array($sPrefix, array('configuration', 'genes', 'transcripts', 'variants', 'screenings', 'individuals'))) {
                     $sURL = $sPrefix . '/' . $_SESSION['currdb'];
                 } elseif ($sPrefix == 'diseases') {
                     $sURL = $sPrefix . '?search_genes_=' . $_SESSION['currdb'];

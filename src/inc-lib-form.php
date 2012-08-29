@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-08-08
+ * Modified    : 2012-08-28
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -438,7 +438,7 @@ function lovd_buildOptionTable ($aOptionsList = array())
             $aOption['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . $aOption['onclick'] . '\'';
         }
         $sOptionsTable .= 'onclick="' . $aOption['onclick'] . '">' . "\n" .
-                         '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                         '          <TD width="30" align="center"><SPAN class="S18">&' . (!empty($aOption['type'])? $aOption['type'] : 'r') . 'aquo;</SPAN></TD>' . "\n" .
                          '          <TD>' . (!empty($aOption['disabled'])? '<I>' . $aOption['option_text'] . '</I>' : $aOption['option_text']) . '</TD></TR>' . "\n";
     }
 

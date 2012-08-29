@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-08-01
+ * Modified    : 2012-08-28
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,6 +52,7 @@ class LOVD_Individual extends LOVD_Custom {
     function __construct ()
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT i.*, uo.name AS owner, ' .
@@ -65,7 +66,7 @@ class LOVD_Individual extends LOVD_Custom {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'i.*, ' .
                                            'GROUP_CONCAT(DISTINCT d.id SEPARATOR ";") AS _diseaseids, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS __diseases, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", d.symbol, ";", d.name ORDER BY d.name SEPARATOR ";;") AS __diseases, ' .
                                            // FIXME; TABLE_PHENOTYPES heeft een individual ID, dus je kunt een gewone count(*) opvragen, je hebt geen lijst phenotype IDs nodig.
                                            'GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS _phenotypes, ' .
                                            // FIXME; een niet-standaard separator is misschien niet zo handig voor de standaardisatie.
@@ -94,6 +95,9 @@ class LOVD_Individual extends LOVD_Custom {
                                           'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ", ") AS genes_screened_, ' .
                                           'COUNT(DISTINCT s2v.variantid) AS variants_, ' .
                                           'uo.name AS owned_by_, ' .
+                                        ($_AUTH['level'] >= LEVEL_COLLABORATOR?
+                                          'CASE ds.id WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name,'
+                                        : '') .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) ' .
@@ -114,6 +118,7 @@ class LOVD_Individual extends LOVD_Custom {
                  array(
                         'panelid_' => 'Panel ID',
                         'panel_size' => 'Panel size',
+                        'diseases_' => 'Diseases',
                         'owned_by_' => 'Owner name',
                         'status' => array('Individual data status', LEVEL_COLLABORATOR),
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -125,7 +130,10 @@ class LOVD_Individual extends LOVD_Custom {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
-                        'id_' => array(
+                        'individualid' => array(
+                                    'view' => false,
+                                    'db'   => array('i.id', 'ASC', true)),
+                        'id' => array(
                                     'view' => array('Individual ID', 110),
                                     'db'   => array('i.id', 'ASC', true)),
                         'panelid' => array(
@@ -157,7 +165,7 @@ class LOVD_Individual extends LOVD_Custom {
                                     'db'   => array('ds.name', false, true),
                                     'auth' => LEVEL_COLLABORATOR),
                       ));
-        $this->sSortDefault = 'id_';
+        $this->sSortDefault = 'id';
 
         // Because the information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
@@ -197,10 +205,14 @@ class LOVD_Individual extends LOVD_Custom {
         //   De parent checkFields vraagt de getForm() namelijk al op.
         //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
         if (!empty($aData['active_diseases'])) {
-            $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES)->fetchAllColumn();
-            foreach ($aData['active_diseases'] as $nDisease) {
-                if ($nDisease && !in_array($nDisease, $aDiseases)) {
-                    lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease.');
+            if (count($aData['active_diseases']) > 1 && in_array('00000', $aData['active_diseases'])) {
+                lovd_errorAdd('active_diseases', 'You cannot select both "Healthy/Control" and a disease for the same individual entry.');
+            } else {
+                $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES)->fetchAllColumn();
+                foreach ($aData['active_diseases'] as $nDisease) {
+                    if ($nDisease && !in_array($nDisease, $aDiseases)) {
+                        lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease.');
+                    }
                 }
             }
         }
@@ -220,7 +232,9 @@ class LOVD_Individual extends LOVD_Custom {
         // Get list of diseases.
         $aDiseasesForm = $_DB->query('SELECT id, CONCAT(symbol, " (", name, ")") FROM ' . TABLE_DISEASES . ' ORDER BY (id > 0), symbol, name')->fetchAllCombine();
         $nDiseases = count($aDiseasesForm);
-        $aDiseasesForm = array_combine(array_keys($aDiseasesForm), array_map('lovd_shortenString', $aDiseasesForm, array_fill(0, $nDiseases, 60)));
+        foreach ($aDiseasesForm as $nID => $sDisease) {
+            $aDiseasesForm[$nID] = lovd_shortenString($sDisease, 60);
+        }
         $nFieldSize = ($nDiseases < 15? $nDiseases : 15);
         if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
@@ -316,6 +330,13 @@ class LOVD_Individual extends LOVD_Custom {
                 unset($this->aColumnsViewEntry['panelid_']);
             } else {
                 $zData['panelid_'] = '<A href="individuals/' . $zData['panelid'] . '">' . $zData['panelid'] . '</A>';
+            }
+            // Associated with diseases...
+            $zData['diseases_'] = '';
+            foreach($zData['diseases'] as $aDisease) {
+                list($nID, $sSymbol, $sName) = $aDisease;
+                // Link to disease entry in LOVD
+                $zData['diseases_'] .= (!$zData['diseases_']? '' : '<BR>') . '<A href="diseases/' . $nID . '">' . $sName . ' (' .$sSymbol . ')</A>';
             }
         }
 
