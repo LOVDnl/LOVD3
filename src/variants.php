@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-08-02
+ * Modified    : 2012-08-28
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -382,6 +382,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     }
     lovd_requireAUTH(empty($_PE[1])? LEVEL_SUBMITTER : LEVEL_MANAGER);
 
+    $bSubmit = false;
     if (isset($_GET['target'])) {
         // On purpose not checking for numeric target. If it's not numeric, we'll automatically get to the error message below.
         $_GET['target'] = sprintf('%010d', $_GET['target']);
@@ -403,7 +404,19 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
             exit;
         } else {
             $_POST['screeningid'] = $_GET['target'];
-            $_GET['search_id_'] = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn();
+            $_GET['search_id_'] = $_DB->query('SELECT GROUP_CONCAT(DISTINCT "=\"", geneid, "\"" SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn();
+        }
+
+        if (isset($_POST['screeningid']) && isset($_AUTH['saved_work']['submissions']['screening'][$_POST['screeningid']])) {
+            $bSubmit = true;
+            $aSubmit = &$_AUTH['saved_work']['submissions']['screening'][$_POST['screeningid']];
+        } elseif (isset($_POST['screeningid']) && isset($_AUTH['saved_work']['submissions']['individual'])) {
+            foreach($_AUTH['saved_work']['submissions']['individual'] as $nIndividualID => &$aSubmit) {
+                if (isset($aSubmit['screenings']) && in_array($_POST['screeningid'], $aSubmit['screenings'])) {
+                    $bSubmit = true;
+                    break;
+                }
+            }
         }
 
     } else {
@@ -454,8 +467,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             print(lovd_buildOptionTable($aOptionsList));
         }
 
+        $sViewListID = 'Genes_SubmitVOT' . ($_GET['target']? '_' . $_GET['target'] : '');
+
         $aOptionsList = array('width' => 600);
-        $aOptionsList['options'][0]['onclick'] = 'javascript:$(\'#container\').toggle();';
+        $aOptionsList['options'][0]['onclick'] = 'javascript:$(\'#container\').toggle(); lovd_stretchInputs(\'' . $sViewListID . '\');';
         $aOptionsList['options'][0]['option_text'] = '<B>A variant that is found within a gene\'s transcript &raquo;&raquo;</B>';
 
         $aOptionsList['options'][1]['onclick'] = 'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
@@ -469,8 +484,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         print('      What kind of variant would you like to submit?<BR><BR>' . "\n\n");
         print(lovd_buildOptionTable($aOptionsList));
 
-        $sViewListID = 'Genes_SubmitVOT' . ($_GET['target']? '_' . $_GET['target'] : '');
-
         require ROOT_PATH . 'class/object_genes.php';
         $_GET['page_size'] = 10;
         $_DATA = new LOVD_Gene();
@@ -481,7 +494,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         print('      </DIV>' . "\n" .
               '      <SCRIPT type="text/javascript">' . "\n" .
               '        $("#container").hide();' . "\n" .
-              '      </SCRIPT>' . "\n");
+              '      </SCRIPT>' . "\n" .
+   ($bSubmit? '      <INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" : ''));
 
         $_T->printFooter();
         exit;
@@ -615,23 +629,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             $_DB->commit();
 
-            $bSubmit = false;
-            $sSubmitType = '';
-            if (isset($_POST['screeningid']) && isset($_SESSION['work']['submits']['screening'][$_POST['screeningid']])) {
-                $bSubmit = true;
-                $aSubmit = &$_SESSION['work']['submits']['screening'][$_POST['screeningid']];
-                $sSubmitType = 'screening';
-            } elseif (isset($_POST['screeningid']) && isset($_SESSION['work']['submits']['individual'])) {
-                foreach($_SESSION['work']['submits']['individual'] as $nIndividualID => &$aSubmit) {
-                    if (isset($aSubmit['screenings']) && in_array($_POST['screeningid'], $aSubmit['screenings'])) {
-                        $bSubmit = true;
-                        $sSubmitType = 'individual';
-                        $_POST['individualid'] = $nIndividualID;
-                        break;
-                    }
-                }
-            }
-
             if ($bSubmit) {
                 if (!isset($aSubmit['variants'])) {
                     $aSubmit['variants'] = array();
@@ -642,21 +639,15 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             }
 
             if ($bSubmit) {
+                lovd_saveWork();
+
+                // Thank the user...
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid']);
+
                 $_T->printHeader();
                 $_T->printTitle();
-                print('      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n");
 
-                $aOptionsList = array();
-                $aOptionsList['options'][0]['onclick']     = 'variants?create&amp;target=' . $_POST['screeningid'];
-                $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more variants found by this mutation screening</B>';
-                if ($sSubmitType == 'individual') {
-                    $aOptionsList['options'][1]['onclick']     = 'screenings?create&amp;target=' . $_POST['individualid'];
-                    $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit another screening instead</B>';
-                }
-                $aOptionsList['options'][2]['onclick']     = 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'];
-                $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
-
-                print(lovd_buildOptionTable($aOptionsList));
+                lovd_showInfoTable('Successfully created the variant entry!', 'success');
 
                 $_T->printFooter();
             } else {
@@ -696,7 +687,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     $aForm = array_merge(
                  $_DATA['Genome']->getForm((isset($sGene)? $_DATA['Transcript'][$sGene]->getForm() : array())),
                  array(
-                        array('', '', 'submit', 'Create variant entry'),
+                        array('', '', 'print', '<INPUT type="submit" value="Create variant entry">' . ($bSubmit? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\'; return false;" style="border : 1px solid #FF4422;">' : '')),
                       ));
     lovd_viewForm($aForm);
 
@@ -788,6 +779,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
         $aOptionsList['options'][0]['option_text'] = '<B>I want to upload a Variant Call Format (VCF) file &raquo;&raquo;</B>';
         $aOptionsList['options'][1]['onclick'] = 'variants/upload?create&amp;type=SeattleSeq' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
         $aOptionsList['options'][1]['option_text'] = '<B>I want to upload a SeattleSeq Annotation file &raquo;&raquo;</B>';
+        $aOptionsList['options'][2]['onclick'] = 'variants/?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
+        $aOptionsList['options'][2]['type'] = 'l';        
+        $aOptionsList['options'][2]['option_text'] = '<B>Back</B>';
 
         print(lovd_buildOptionTable($aOptionsList));
 
@@ -1901,28 +1895,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 $_SESSION['mapping']['time_complete'] = 0;
             }
 
-            // Saving work information.
-            $bSubmit = false;
-            $sSubmitType = '';
-            if (isset($_POST['screeningid']) && isset($_SESSION['work']['submits']['screening'][$_POST['screeningid']])) {
-                // Got a screening which we've added to an existing individual.
-                $bSubmit = true;
-                $aSubmit = &$_SESSION['work']['submits']['screening'][$_POST['screeningid']];
-                $sSubmitType = 'screening';
-            } elseif (isset($_POST['screeningid']) && isset($_SESSION['work']['submits']['individual'])) {
-                // Got a screening which we've added to a new individual. Let's find out which individual.
-                foreach($_SESSION['work']['submits']['individual'] as $nIndividualID => &$aSubmit) {
-                    if (isset($aSubmit['screenings']) && in_array($_POST['screeningid'], $aSubmit['screenings'])) {
-                        // The screening belongs to this individual, we've found him!
-                        $bSubmit = true;
-                        $sSubmitType = 'individual';
-                        $_POST['individualid'] = $nIndividualID;
-                        break;
-                    }
-                }
-            }
-
-            // FIXME; If no variants were found, we should NOT have a continue button.
             //   Then, DELETE data from $_SESSION.
             if ($bSubmit) {
                 if (!isset($aSubmit['uploads'])) {
@@ -1930,18 +1902,10 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 }
                 $aSubmit['uploads'][$nUploadID] = $aUploadData;
 
-                // Define the continuation questions now so we can easily ask them in the setMessage calls below.
-                $aOptionsList = array();
-                $sOptions = '<BR>' . "\n" . '      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n";
-                $aOptionsList['options'][0]['onclick'] = 'variants?create&amp;target=' . $_POST['screeningid'];
-                $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more variants found by this mutation screening</B>';
-                if ($sSubmitType == 'individual') {
-                    $aOptionsList['options'][1]['onclick'] = 'screenings?create&amp;target=' . $_POST['individualid'];
-                    $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit another screening instead</B>';
+                if ($aUploadData['num_variants']) {
+                    lovd_saveWork();
                 }
-                $aOptionsList['options'][2]['onclick'] = 'submit/finish/' . $sSubmitType . '/' . $_POST[$sSubmitType . 'id'];
-                $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
-                $sOptions .= lovd_buildOptionTable($aOptionsList);
+
             } else {
                 $_SESSION['work']['submits']['upload'][$nUploadID] = $aUploadData;
             }
@@ -1952,22 +1916,18 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             $_BAR->setProgress(100);
             if ($aUploadData['num_variants'] && !$aUploadData['num_variants_unsupported']) {
                 // Variants were imported, none were ignored.
+                $_BAR->setMessage('All ' . $aUploadData['num_variants'] . ' variants have been imported successfully!');
                 if ($bSubmit) {
-                    $_BAR->setMessage('All ' . $aUploadData['num_variants'] . ' variants have been imported successfully!');
-                    $_BAR->setMessage($sOptions, 'done');
-                    $_BAR->setMessageVisibility('done', true);
+                    $_BAR->redirectTo(lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid']);
                 } else {
-                    $_BAR->setMessage('All ' . $aUploadData['num_variants'] . ' variants have been imported successfully. Redirecting...');
                     $_BAR->redirectTo(lovd_getInstallURL() . 'submit/finish/upload/' . $nUploadID);
                 }
             } else {
-                // FIXME; If no variants were found, we should NOT have a continue button.
                 $_BAR->setMessage($aUploadData['num_variants'] . ' variant' . ($aUploadData['num_variants'] == 1? '' : 's') . ' where imported' . (!$aUploadData['num_variants_unsupported']? '.' : ', ' . $aUploadData['num_variants_unsupported'] . ' variant' . ($aUploadData['num_variants_unsupported'] == 1? '' : 's') . ' could not be imported.') .
                 // If we're in a submission and some variants couldn't be imported, show them the list and replace it with the continuation questions when they click the Continue button.
                        ($bSubmit? '<P>' .
-                                  '  <INPUT type="button" value="Continue &raquo;" onclick="$(this).parent().toggle();$(\'#continuation_questions\').toggle();$(oPB_' . $_BAR->sID . '_message_done).toggle();">' .
-                                  '</P>' .
-                                  '<DIV id="continuation_questions" style="display: none">' . $sOptions . '</DIV>' :
+                                  '  <INPUT type="button" value="Continue &raquo;" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\';">' .
+                                  '</P>' :
                 // If we're not in a submission just use the Continue button to forward the user to submit/finish/upload/123.
                                   '<FORM action="' . ROOT_PATH . 'submit/finish/upload/' . $nUploadID . '" method="GET">' .
                                   '  <INPUT type="submit" value="Continue &raquo;">' .
@@ -2088,7 +2048,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                    array('Owner of all imported variants', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false),
                    array('Status of this data', '', 'select', 'statusid', 1, $aSelectStatus, false, false, false),
                    'hr',
-                   array('','','submit','Upload ' . $_GET['type'] . ' file'));
+                   array('', '', 'print', '<INPUT type="submit" value="Upload ' . $_GET['type'] . ' file">' . ($bSubmit? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '') . '\'; return false;" style="border : 1px solid #FF4422;">' : '')));
 
     lovd_viewform($aForm);
     print('</FORM>');
@@ -2139,6 +2099,41 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
     }
 
+    $bSubmit = false;
+    if (isset($_GET['submission'])) {
+        if (isset($_AUTH['saved_work']['submissions']['screening'][$_GET['submission']])) {
+            $aSubmit = $_AUTH['saved_work']['submissions']['screening'][$_GET['submission']];
+            if (!empty($aSubmit['variants']) && in_array($nID, $aSubmit['variants'])) {
+                $bSubmit = true;
+            } elseif (!empty($aSubmit['uploads'])) {
+                $aUploadDates = array();
+                foreach ($aSubmit['uploads'] as $aUploadInfo) {
+                    $aUploadDates[] = $aUploadInfo['upload_date'];
+                }
+                $bSubmit = $_DB->query('SELECT TRUE FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND created_date IN (?' . str_repeat(', ?', count($aUploadDates) - 1) . ')', array_merge(array($nID), $aUploadDates))->fetchColumn(); 
+            }
+        }
+
+        if (!$bSubmit && isset($_AUTH['saved_work']['submissions']['individual'])) {
+            foreach ($_AUTH['saved_work']['submissions']['individual'] as $nIndividualID => $aSubmit) {
+                if (!empty($aSubmit['variants']) && in_array($nID, $aSubmit['variants'])) {
+                    $bSubmit = true;
+                    break;
+                }
+                if (!empty($aSubmit['uploads'])) {
+                    $aUploadDates = array();
+                    foreach ($aSubmit['uploads'] as $aUploadInfo) {
+                        $aUploadDates[] = $aUploadInfo['upload_date'];
+                    }
+                    $bSubmit = $_DB->query('SELECT TRUE FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND created_date IN (?' . str_repeat(', ?', count($aUploadDates) - 1) . ')', array_merge(array($nID), $aUploadDates))->fetchColumn();
+                    if ($bSubmit) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (POST) {
@@ -2155,7 +2150,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
             $aFieldsGenome = array_merge(
-                                array('allele', 'effectid', 'edited_by', 'edited_date'),
+                                array('allele', 'effectid'), 
+                                (!$bSubmit || !empty($zData['edited_by'])? array('edited_by', 'edited_date') : array()),
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
@@ -2210,8 +2206,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 }
             }
 
-            $_POST['edited_by'] = $_AUTH['id'];
-            $_POST['edited_date'] = date('Y-m-d H:i:s');
+            if (!$bSubmit || !empty($zData['edited_by'])) {
+                $_POST['edited_by'] = $_AUTH['id'];
+                $_POST['edited_date'] = date('Y-m-d H:i:s');
+            }
 
             // FIXME: implement versioning in updateEntry!
             $_DB->beginTransaction();
@@ -2260,7 +2258,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             lovd_writeLog('Event', LOG_EVENT, 'Edited variant entry ' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+            if ($bSubmit) {
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/screening/' . $_GET['submission']);
+            } else {
+                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+            }
 
             $_T->printHeader();
             $_T->printTitle();
@@ -2281,6 +2283,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         }
         $_POST['effect_reported'] = $zData['effectid']{0};
         $_POST['effect_concluded'] = $zData['effectid']{1};
+        $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR && $zData['statusid'] >= STATUS_HIDDEN? $zData['statusid'] : STATUS_OK);
         if ($bGene) {
             foreach ($aGenes as $sGene) {
                 foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
@@ -2310,13 +2313,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['submission'])? '&amp;submission=' . $_GET['submission'] : '') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
                  $_DATA['Genome']->getForm(),
                  array(
-                        array('', '', 'submit', 'Edit variant entry'),
+                        array('', '', 'print', '<INPUT type="submit" value="Edit variant entry">' . ($bSubmit? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_GET['submission'] . '\'; return false;" style="border : 1px solid #FF4422;">' : '')),
                       ));
     lovd_viewForm($aForm);
 
@@ -2359,6 +2362,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
           '              newPosition = $(oNewTranscript).offset();' . "\n" .
           '              window.scrollTo(newPosition.left, newPosition.top);' . "\n" .
           '              break;' . "\n" .
+          '            }' . "\n" .
+          '          }' . "\n" .
+          '          for (i in aTranscripts) {' . "\n" .
+          '            var oDNA = $(\'input[name="\' + i + \'_VariantOnTranscript/DNA"]\');' . "\n" .
+          '            var oProtein = $(\'input[name="\' + i + \'_VariantOnTranscript/Protein"]\');' . "\n" .
+          '            if ($(oDNA).attr("value") && !$(oProtein).attr("value")) {' . "\n" .
+          '              $(oProtein).siblings(\'button:eq(0)\').show();' . "\n" .
           '            }' . "\n" .
           '          }' . "\n" .
           '        });' . "\n" .

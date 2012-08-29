@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-08-01
+ * Modified    : 2012-08-28
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -89,16 +89,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_Phenotype('', $nID);
     $zData = $_DATA->viewEntry($nID);
 
-    $sNavigation = '';
+    $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
-        $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit phenotype information</A>';
-        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete phenotype entry</A>';
+        // Authorized user is logged in. Provide tools.
+        $aNavigation[CURRENT_PATH . '?edit']   = array('menu_edit.png', 'Edit phenotype information', 1);
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete phenotype entry', 1);
+        }
     }
 
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
+    lovd_showJGNavigation($aNavigation, 'Phenotypes');
 
     $_T->printFooter();
     exit;
@@ -155,8 +155,13 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         $_DATA = new LOVD_Phenotype($_POST['diseaseid']);
     }
 
+    $bSubmit = false;
+    if (isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']])) {
+        $bSubmit = true;
+    }
+
     if (empty($_POST['diseaseid']) || lovd_error()) {
-        $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY (d.id > 0), d.symbol, d.name';
+        $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY d.id, d.symbol, d.name';
         $aSelectDiseases = $_DB->query($sSQL, array($_POST['individualid']))->fetchAllCombine();
         if (!count($aSelectDiseases)) {
             // Wrong individual ID, individual without diseases, or diseases without phenotype columns.
@@ -184,7 +189,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         $aForm = array(
                         array('POST', '', '', '', '50%', '14', '50%'),
                         array('Select the disease', '', 'select', 'diseaseid', 1, $aSelectDiseases, '--Select--', false, false),
-                        array('', '', 'submit', 'Continue &raquo;'),
+                        array('', '', 'print', '<INPUT type="submit" value="Continue &raquo;">' . ($bSubmit? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual/' . $_POST['individualid'] . '\'; return false;" style="border : 1px solid #FF4422;">' : '')),
                       );
         lovd_viewForm($aForm);
 
@@ -219,20 +224,13 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID . ' for individual ' . $_POST['individualid'] . ' related to disease ' . $_POST['diseaseid']);
 
-            $bSubmit = false;
-            if (isset($_SESSION['work']['submits']['individual'][$_POST['individualid']])) {
-                $bSubmit = true;
-
-                $nPanel = $_SESSION['work']['submits']['individual'][$_POST['individualid']]['panel_size'];
-
-                if (!isset($_SESSION['work']['submits']['individual'][$_POST['individualid']]['phenotypes'])) {
-                    $_SESSION['work']['submits']['individual'][$_POST['individualid']]['phenotypes'] = array();
+            if ($bSubmit) {
+                if (!isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['phenotypes'])) {
+                    $_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['phenotypes'] = array();
                 }
-
-                $_SESSION['work']['submits']['individual'][$_POST['individualid']]['phenotypes'][] = $nID;
+                $_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['phenotypes'][] = $nID;
+                lovd_saveWork();
             } else {
-                $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_POST['individualid']))->fetchColumn();
-
                 if (!isset($_SESSION['work']['submits']['phenotype'])) {
                     $_SESSION['work']['submits']['phenotype'] = array();
                 }
@@ -244,30 +242,21 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
                 $_SESSION['work']['submits']['phenotype'][$nID] = $nID;
             }
 
-            $sPersons = ($nPanel > 1? 'this group of individuals' : 'this individual');
-
             if ($bSubmit) {
+                // Thank the user...
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/individual/' . $_POST['individualid']);
+
                 $_T->printHeader();
                 $_T->printTitle();
 
-                print('      Do you want to add more phenotype information to ' . $sPersons . '?<BR><BR>' . "\n\n");
+                lovd_showInfoTable('Successfully created the phenotype entry!', 'success');
 
-                $aOptionsList = array();
-                $aOptionsList['options'][0]['onclick'] = 'phenotypes?create&amp;target=' . $_POST['individualid'];
-                $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more phenotype information</B>';
-                $aOptionsList['options'][1]['onclick'] = 'screenings?create&amp;target=' . $_POST['individualid'];
-                $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit mutation screening information instead</B>';
-                if (true) {
-                    $aOptionsList['options'][2]['disabled'] = true;
-                    $aOptionsList['options'][2]['onclick'] = 'javascript:alert(\'You cannot finish your submission, because no screenings have been added to ' . $sPersons . ' yet!\');';
-                }
-                $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
-
-                print(lovd_buildOptionTable($aOptionsList));
                 $_T->printFooter();
             } else {
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/phenotype/' . $nID);
             }
+
+            $_T->printFooter();
             exit;
         }
 
@@ -299,7 +288,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
-                        array('', '', 'submit', 'Create phenotype information entry'),
+                        array('', '', 'print', '<INPUT type="submit" value="Create phenotype information entry">' . ($bSubmit? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual/' . $_POST['individualid'] . '\'; return false;" style="border : 1px solid #FF4422;">' : '')),
                       ));
     lovd_viewForm($aForm);
 
@@ -332,6 +321,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
+    $bSubmit = false;
+    if (isset($_AUTH['saved_work']['submissions']['individual'][$zData['individualid']])) {
+        $bSubmit = true;
+    }
+
     if (!empty($_POST)) {
         lovd_errorClean();
 
@@ -340,7 +334,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('edited_by', 'edited_date'),
+                            (!$bSubmit || !empty($zData['edited_by'])? array('edited_by', 'edited_date') : array()),
                             $_DATA->buildFields());
 
             // Prepare values.
@@ -351,8 +345,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 $aFields[] = 'statusid';
                 $_POST['statusid'] = STATUS_MARKED;
             }
-            $_POST['edited_by'] = $_AUTH['id'];
-            $_POST['edited_date'] = date('Y-m-d H:i:s');
+            if (!$bSubmit || !empty($zData['edited_by'])) {
+                $_POST['edited_by'] = $_AUTH['id'];
+                $_POST['edited_date'] = date('Y-m-d H:i:s');
+            }
 
             // FIXME: implement versioning in updateEntry!
             $_DATA->updateEntry($nID, $_POST, $aFields);
@@ -361,7 +357,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             lovd_writeLog('Event', LOG_EVENT, 'Edited phenotype information entry ' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
+            if ($bSubmit) {
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/individual/' . $zData['individualid']);
+            } else {
+                header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
+            }
 
             $_T->printHeader();
             $_T->printTitle();
@@ -377,6 +377,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     } else {
         // Load current values.
         $_POST = array_merge($_POST, $zData);
+        $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR && $zData['statusid'] >= STATUS_HIDDEN? $zData['statusid'] : STATUS_OK);
     }
 
 
@@ -402,7 +403,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
-                        array('', '', 'submit', 'Edit phenotype information entry'),
+                        array('', '', 'print', '<INPUT type="submit" value="Edit phenotype information entry">' . ($bSubmit? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual/' . $zData['individualid'] . '\'; return false;" style="border : 1px solid #FF4422;">' : '')),
                       ));
     lovd_viewForm($aForm);
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-07-31
+ * Modified    : 2012-08-28
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -870,6 +870,66 @@ if (PATH_COUNT == 1 && ACTION == 'register') {
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
+    // URL: users/00001?submissions
+    // Manage unfinished submissions
+
+    $nID = sprintf('%05d', $_PE[1]);
+    define('PAGE_TITLE', 'Manage unfinished submissions for user #' . $nID);
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    lovd_showInfoTable('Below are lists of your unfinished submissions', 'information');
+
+    if ($_AUTH['id'] == $nID) {
+        // Require submitter clearance.
+        lovd_requireAUTH(LEVEL_SUBMITTER);
+    } else {
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_MANAGER);
+    }
+
+    $zData = $_DB->query('SELECT saved_work FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID), false)->fetchAssoc();
+    if (!empty($zData['saved_work'])) {
+        $zData['saved_work'] = unserialize($zData['saved_work']);
+    }
+    
+    $_T->printTitle('Individuals', 'H4');
+    $aUnfinished = (!empty($zData['saved_work']['submissions']['individual'])? array_keys($zData['saved_work']['submissions']['individual']) : array());
+    if (!empty($aUnfinished)) {
+        require ROOT_PATH . 'class/object_individuals.php';
+        $_DATA = new LOVD_Individual();
+        $_GET['search_individualid'] = implode('|', $aUnfinished);
+        $_GET['page_size'] = '10';
+        $_DATA->setRowLink('Individuals_submissions', ($_AUTH['id'] == $nID? 'submit/individual/' . $_DATA->sRowID : ''));
+        $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true);
+        unset($_GET['search_individualid']);
+    } else {
+        lovd_showInfoTable('No submissions of individuals found!', 'stop');
+    }
+
+    $_T->printTitle('Screenings', 'H4');
+    $aUnfinished = (!empty($zData['saved_work']['submissions']['screening'])? array_keys($zData['saved_work']['submissions']['screening']) : array());
+    if (!empty($aUnfinished)) {    
+        require ROOT_PATH . 'class/object_screenings.php';
+        $_DATA = new LOVD_Screening();
+        $_GET['search_screeningid'] = implode('|', $aUnfinished);
+        $_GET['page_size'] = '10';
+        $_DATA->setRowLink('Screenings_submissions', ($_AUTH['id'] == $nID? 'submit/screening/' . $_DATA->sRowID : ''));
+        $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true);
+    } else {
+        lovd_showInfoTable('No submissions of variant screenings found!', 'stop');
+    }
 
     $_T->printFooter();
     exit;
