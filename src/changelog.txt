@@ -83,6 +83,7 @@
    connected to other genes than their own gene(s).
  * The screenings & individuals pages now have gene specific page, which shows
    the entries that have been screened for the currently selected gene.
+ * Mails are now being sent to the appropriate users after an edit of data.
 
 
 

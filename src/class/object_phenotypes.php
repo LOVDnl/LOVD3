@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-07-19
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-30
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -55,6 +55,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
+        // FIXME; change owner to owned_by_ in the load entry query below.
         $this->sSQLLoadEntry = 'SELECT p.*, ' .
                                'uo.name AS owner ' .
                                'FROM ' . TABLE_PHENOTYPES . ' AS p ' .

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-08-28
+ * Modified    : 2012-08-30
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -337,6 +337,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 $_POST['edited_date'] = date('Y-m-d H:i:s');
             }
 
+            if (!$bSubmit) {
+                // Put $zData with the old values in $_SESSION for mailing.
+                // FIXME; change owner to owned_by_ in the load entry query of object_individuals.php.
+                $zData['owned_by_'] = $zData['owner'];
+                $_SESSION['work']['edits']['individual'][$nID] = $zData;
+            }
+
             // FIXME: implement versioning in updateEntry!
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
@@ -387,15 +394,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             // Thank the user...
             if ($bSubmit) {
                 header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/individual/' . $nID);
+
+                $_T->printHeader();
+                $_T->printTitle();
+                lovd_showInfoTable('Successfully edited the individual information entry!', 'success');
+
+                $_T->printFooter();
             } else {
-                header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
+                header('Location: ' . lovd_getInstallURL() . 'submit/finish/individual/' . $nID . '?edit');
             }
 
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully edited the individual information entry!', 'success');
-
-            $_T->printFooter();
             exit;
 
         } else {

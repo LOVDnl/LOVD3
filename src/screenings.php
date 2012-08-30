@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-08-28
+ * Modified    : 2012-08-30
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -332,7 +332,22 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 $_POST['edited_by'] = $_AUTH['id'];
                 $_POST['edited_date'] = date('Y-m-d H:i:s');
             }
-            
+
+            if (!$bSubmit) {
+                // Put $zData with the old values in $_SESSION for mailing.
+                // FIXME; change owner to owned_by_ in the load entry query of object_screenings.php.
+                $zData['owned_by_'] = $zData['owner'];
+                if ($zData['variants_found']) {
+                    $zData['variants_found_'] = $_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
+                    if (!$zData['variants_found_']) {
+                        $zData['variants_found_'] = 0;
+                    }
+                } else {
+                    $zData['variants_found_'] = 'None';
+                }
+                $_SESSION['work']['edits']['screening'][$nID] = $zData;
+            }
+
             // FIXME: implement versioning in updateEntry!
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
@@ -385,15 +400,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             // Thank the user...
             if ($bSubmit) {
                 header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/screening/' . $nID);
+
+                $_T->printHeader();
+                $_T->printTitle();
+                lovd_showInfoTable('Successfully edited the screening information entry!', 'success');
+
+                $_T->printFooter();
             } else {
-                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+                header('Location: ' . lovd_getInstallURL() . 'submit/finish/screening/' . $nID . '?edit');
             }
 
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully edited the screening information entry!', 'success');
-
-            $_T->printFooter();
             exit;
 
         } else {

@@ -10,7 +10,6 @@ Prioritize:
   + Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
 - (@Ivar) Combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
-@ (@Ivar) Als curatoren iets veranderen, moet er ook gemailed worden! Ook aan de collega's! Ook aan de data owner! Iedereen moet gewoon altijd overal over gemailed worden.
 - VOG/DNA heeft geen help tekst? Die moet toch de notes on form vervangen?
 - Hoe kan een gebruiker op een zojuist geopend edit formulier de predict triggeren en/of de Mutalyzer namechecker openen in een nieuwe window?
   + Wellicht, voor een losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?

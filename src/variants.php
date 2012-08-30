@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-08-28
+ * Modified    : 2012-08-30
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2211,6 +2211,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 $_POST['edited_date'] = date('Y-m-d H:i:s');
             }
 
+            if (!$bSubmit) {
+                // Put $zData with the old values in $_SESSION for mailing.
+                // FIXME; change owner to owned_by_ in the load entry query of object_genome_variants.php.
+                $zData['owned_by_'] = $zData['owner'];
+                $zData['allele_'] = $_DB->query('SELECT name FROM ' . TABLE_ALLELES . ' WHERE id = ?', array($zData['allele']))->fetchColumn();
+                if (!empty($_POST['aTranscripts'])) {
+                    $zData['aTranscripts'] = array_keys($_POST['aTranscripts']);
+                }
+                $_SESSION['work']['edits']['variant'][$nID] = $zData;
+            }
+
             // FIXME: implement versioning in updateEntry!
             $_DB->beginTransaction();
             $_DATA['Genome']->updateEntry($nID, $_POST, $aFieldsGenome);
@@ -2260,15 +2271,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             // Thank the user...
             if ($bSubmit) {
                 header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/screening/' . $_GET['submission']);
+
+                $_T->printHeader();
+                $_T->printTitle();
+                lovd_showInfoTable('Successfully edited the variant entry!', 'success');
+
+                $_T->printFooter();
             } else {
-                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+                header('Location: ' . lovd_getInstallURL() . 'submit/finish/variant/' . $nID . '?edit');
             }
 
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully edited the variant entry!', 'success');
-
-            $_T->printFooter();
             exit;
 
         } else {
