@@ -148,13 +148,14 @@ class LOVD_Disease extends LOVD_Object {
             lovd_errorAdd('id_omim', 'Another disease already exists with this OMIM ID!');
         }
 
+        if ($_AUTH['level'] < LEVEL_MANAGER && empty($aData['genes'])) {
+            lovd_errorAdd('genes', 'You should at least select one of the genes you are curator of.');
+        }
+
         $aGenes = lovd_getGeneList();
         // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
         //   De parent checkFields vraagt de getForm() namelijk al op.
         //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
-        if ($_AUTH['level'] < LEVEL_MANAGER && empty($aData['genes'])) {
-            lovd_errorAdd('genes', 'You should at least select one of the genes you are curator of.');
-        }
         $_POST['genes'] = array();
         if (is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {

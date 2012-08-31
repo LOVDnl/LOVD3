@@ -94,7 +94,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
-        // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit transcript information', 1);
         $aNavigation[CURRENT_PATH . '?delete']    = array('cross.png', 'Delete transcript entry', 1);
     }

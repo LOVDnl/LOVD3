@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2012-08-03
+ * Modified    : 2012-08-30
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -111,8 +111,7 @@ if ($_GET['step'] == 1) {
         if (!lovd_error()) {
             // All fields filled in, go ahead.
             // Read file into an array.
-            // FIXME!!! LOVD's lovd_php_file() can't communicate in HTTPS, but Mutalyzer forces it...
-            $aGenBank = file(str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $_POST['file'] . '.gb');
+            $aGenBank = lovd_php_file(str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $_POST['file'] . '.gb');
 
             if (!$aGenBank) {
                 lovd_errorAdd('symbol', 'We couldn\'t retreive the reference sequence file for this gene. Please try again later.');
@@ -139,7 +138,7 @@ if ($_GET['step'] == 1) {
                     }
                     // Determine the accession number, including version.
                     if (substr($line, 0, 7) == 'VERSION') {
-                        $_POST['version_id'] = preg_replace('/^VERSION\s+(N[CG]_[0-9]+\.[0-9]+)\s+.*$\n/', "$1", $line);
+                        $_POST['version_id'] = preg_replace('/^VERSION\s+(N[CG]_[0-9]+\.[0-9]+)\s+.*$/', "$1", rtrim($line));
                     }
                     if ('/gene="' . $_POST['symbol'] . '"' == preg_replace('/\s+/', '', $line)) {
                         // We are in the right gene.

@@ -34,6 +34,13 @@
    script.
    - Fixed some small mistakes in the format of the reference sequence parser's
      index file HTML output.
+   - Fixed problem in parsing the reference sequence ID out of the file.
+   - Will now also work behind a proxy server or with PHP's fopen wrappers off.
+ * Improved some texts on data entry forms to improve clarity.
+ * Proxy servers requiring Basic authentication are now also handled correctly;
+   a username and password can be set in the LOVD system settings.
+ * Curators were not able to delete any data, although links to do so were shown
+   in the menu.
 
 
 
@@ -44,11 +51,11 @@
 
  * Fixed bug; The checkbox "Have variants been found?" in screening create &
    edit forms didn't work anymore.
- * It is now possible to add a phenotype to disease "Healthy/Control"
- * The whole submission workflow has been changed
+ * It is now possible to add a phenotype to disease "Healthy/Control".
+ * The whole submission workflow has been changed.
  * Added a "Cancel" button to all forms when you are in the middle of a full
    submission.
- * Link to "Your submissions" has been added so you can see unfinished
+ * Link to "Unfinished submissions" has been added so you can see unfinished
    submissions.
  * The individual viewEntry now contains a list of diseases and the diseases
    viewList below has been removed.
@@ -61,7 +68,7 @@
  * Fixed bug; The menu below the gene homepage no longer produces a JavaScript
    error when "Create human-readable refseq file" is clicked in Internet
    Explorer <= 7.
- * Fixed bug; Uploading a variant would make LOVD lose the currently select
+ * Fixed bug; Uploading variants would make LOVD lose the currently selected
    gene.
  * Fixed bug; Curators and Collaborators can now also see the variants for which
    they have viewing rights in the genomic variant viewlist.
@@ -84,9 +91,6 @@
  * The screenings & individuals pages now have gene specific page, which shows
    the entries that have been screened for the currently selected gene.
  * Mails are now being sent to the appropriate users after an edit of data.
-
-
-
 
 
 /*******************

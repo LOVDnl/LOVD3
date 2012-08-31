@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-08-22
+ * Modified    : 2012-08-23
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -287,15 +287,18 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
                             'UPDATE ' . TABLE_DISEASES . ' SET id = 0 WHERE id_omim IS NULL AND created_by = 0 AND symbol = "Healty/Control"',
                         ),
-                    '3.0-beta-08' =>
+                    '3.0-beta-07b' =>
                         array(
-                            'UPDATE ' . TABLE_COLS . ' SET width = 120 WHERE id = "VariantOnGenome/DBID"',
+                            'UPDATE ' . TABLE_COLS . ' SET width = 120 WHERE id = "VariantOnGenome/DBID" AND width < 120',
                             'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN fatherid MEDIUMINT(8) UNSIGNED ZEROFILL AFTER id',
                             'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN motherid MEDIUMINT(8) UNSIGNED ZEROFILL AFTER fatherid',
                             'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD INDEX (fatherid)',
                             'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD INDEX (motherid)',
                             'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_fatherid FOREIGN KEY (fatherid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                             'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_motherid FOREIGN KEY (motherid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                            'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN omim_apikey VARCHAR(40) NOT NULL AFTER mutalyzer_soap_url',
+                            'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_username VARCHAR(255) NOT NULL AFTER proxy_port',
+                            'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_password VARCHAR(255) NOT NULL AFTER proxy_username',
                         ),
              );
 

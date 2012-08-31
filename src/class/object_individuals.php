@@ -68,7 +68,7 @@ class LOVD_Individual extends LOVD_Custom {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'i.*, ' .
                                            'GROUP_CONCAT(DISTINCT d.id SEPARATOR ";") AS _diseaseids, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id, ";", d.symbol, ";", d.name ORDER BY d.name SEPARATOR ";;") AS __diseases, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS __diseases, ' .
                                            // FIXME; TABLE_PHENOTYPES heeft een individual ID, dus je kunt een gewone count(*) opvragen, je hebt geen lijst phenotype IDs nodig.
                                            'GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS _phenotypes, ' .
                                            // FIXME; een niet-standaard separator is misschien niet zo handig voor de standaardisatie.
@@ -267,7 +267,7 @@ class LOVD_Individual extends LOVD_Custom {
                  array(
                         array('Panel size', '', 'text', 'panel_size', 10),
                         array('', '', 'note', 'Fill in how many individuals this entry represents (default: 1).'),
-                        array('Panel ID (Optional)', 'Fill in the ID of the group to which this individual or group of individuals belong to (Optional).', 'text', 'panelid', 10),
+                        array('ID of panel this entry belongs to (optional)', 'Fill in LOVD\'s individual ID of the group to which this individual or group of individuals belong to (Optional).', 'text', 'panelid', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
@@ -337,8 +337,10 @@ class LOVD_Individual extends LOVD_Custom {
             $zData['diseases_'] = '';
             foreach($zData['diseases'] as $aDisease) {
                 list($nID, $sSymbol, $sName) = $aDisease;
-                // Link to disease entry in LOVD
-                $zData['diseases_'] .= (!$zData['diseases_']? '' : '<BR>') . '<A href="diseases/' . $nID . '">' . $sName . ' (' .$sSymbol . ')</A>';
+                if (!$sSymbol || $sSymbol == '-') {
+                    $sSymbol = $sName;
+                }
+                $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '" title="' . $sName . '">' . $sSymbol . '</A>';
             }
         }
 

@@ -63,7 +63,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
-                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.name SEPARATOR ";;") AS __diseases, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, " "), ";", d.symbol, ";", d.name ORDER BY d.symbol SEPARATOR ";;") AS __diseases, ' .
                                            'COUNT(DISTINCT t.id) AS transcripts, ' .
                                            'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS __curators, ' .
                                            'uc.name AS created_by_, ' .

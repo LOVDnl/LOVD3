@@ -1,5 +1,29 @@
 Prioritize:
 ===========
+- Na toevoegen variant aan screening, kun je niet makkelijk finishen.
+- VOG pending is niet grijs?
+- Gen pagina: diseases zonder abbreviation staan in de lijst related diseases heel stom. Kan dat dan de volledige naam worden?
+  + Ook: diseases worden twee keer getoond, maar twee keer anders, hoewel in dezelfde volgorde = niet handig?
+  + Individuals VE disease lijst is beter.
+- Het is niet duidelijk, hoe een variant aan een bestaande individu toe te voegen (moet dus via screening). Dat moet duidelijk gemaakt worden.
+
+- Gene delete heeft GEEN CORRECTE reminder bij het verwijderen!!!
+  + Disease verwijderen hoort ook een reminder te geven, dat alle phenotype data verdwijnt, mits aanwezig.
+- Individual ge-edit, disease uitgeklikt, maar daar zat phenotype data aan... en nu?
+  + Niet toestaan disease uit te zetten tenzij phenotype data is verwijderd?
+
+- Authorizatieprobleem voorleggen bij groep;
+  + Curator maakt per ongeluk een screening teveel aan bij een patient, die van haar is (en ze is curator hiervan). Screening kan niet verwijderd worden, omdat ze LEVEL_OWNER is.
+    * We kunnen zeggen: LEVEL_OWNER icm ergens curator van: rechten op screening. NU kan een curator al rechten verwerven door aan deze submissie een variant in haar gen toe te voegen; dan kan ze de hele individu verwijderen.
+      - Dus ook een variant in een ander gen, waar ze eigenlijk normaal gesproken geen rechten op heeft!
+    * Alleen verwijderen als geen nadelig effect op andere genen?
+
+- Curator detailed view heeft niet alle genen genoteerd staan? Limit?
+- Individu VE; Screenings VL heeft geen "Genes screened" kolom; moet wel.
+- Link to nomenclature page from DNA, RNA and Protein fields... link in help hover?
+- Link naar Mutalyzer pagina werkt niet voor vars met een plus er in, wordt niet goed ge-encode (mutalyzer denkt dat 't een spatie is).
+- Curator mag geen cols zien van disease 0, foutmelding: je moet curator zijn.
+  + Disease healthy kan niet beheerd worden (kolommen inzien, hersorteren e.d.)?
 - Als David Baux zijn scripts klaar zijn, mergen met trunk.
 - Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
   + Ik kan dit niet bevestigen op mijn LUMC install.
@@ -10,6 +34,17 @@ Prioritize:
   + Objects::viewList() heeft sinds kort code voor het invullen van $zData['row_id'] en aanverwanten. De prepareData() functies kunnen daarom ingekort worden.
 - (@Ivo) Link van /view/GENE moet naar individu indien aanwezig, anders variant.
 - (@Ivar) Combined viewList toevoegen onder andere viewEntries, overal waar er viewLists zijn van varianten even kijken welke daar het beste kan staan.
+- (BELANGRIJK) Van alles moet bepaald worden wat de minimale level is die benodigd is.
+        ^ Views/Actions checken op user level requirements:
+            X Individuals -> Een submitter mag niet een individual verwijderen; een curator wel? Ook als deze curator alleen owner is van deze individu? Wat als anderen data aan deze individu hebben toegevoegd?
+            X Phenotypes  -> Een owner krijgt een link om te deleten (maar manager required), maar dat is nergens anders zo (overal curator).
+            X Screenings  -> Een submitter mag niet een screening verwijderen; een curator wel? Ook als deze curator alleen owner is van deze screening? Wat als anderen data aan deze screening hebben toegevoegd?
+            X Variants    -> Een submitter mag niet een variant verwijderen; een curator wel? Ook als deze curator alleen owner is van deze variant?
+- BUGS:
+  + Submitter mag wel zien dat variant 7 aan individu 1 zit, maar hij mag individu 1 niet zien. Beter niet laten zien dat hij er aan vast zit...
+- Individual viewList: add column "variants in genes" with gene symbols.
+  + Then, add option to dropdown menu if we have a currdb (replace: individuals screened for gene X).
+  + After that, change the default link when clicking the individual tab.
 - VOG/DNA heeft geen help tekst? Die moet toch de notes on form vervangen?
 - Hoe kan een gebruiker op een zojuist geopend edit formulier de predict triggeren en/of de Mutalyzer namechecker openen in een nieuwe window?
   + Wellicht, voor een losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
@@ -57,7 +92,6 @@ Prioritize:
     * Dat moet dan ook gebeuren op de gene homepage.
   + Eigenlijk moet de update checken of het Frequency veld nu gebruikt wordt op de manier waarop wij hebben gezegd dat het tijdelijk moet, en dat daarna de waarde goed wordt overgenomen...
 - Een manager moet de Healthy/Control disease kunnen beheren om bijvoorbeeld de kolommen te kunnen sorteren.
-- Individual & Screening viewLists: add column "variants in genes" with gene symbols.
 =============== Below here needs to be re-evaluated for priority ===============
 - Kunnen we ook het Exon veld voorspellen?
 - Quick curate option?
@@ -68,6 +102,7 @@ Prioritize:
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
+    + Sowieso moeten submissies bekeken kunnen worden; "My submissions", zoals in LOVD 2.0.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
   - (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
     + Hierna kan de transcript ViewList voor nieuwe VOT op bestaande VOG specifieker worden geselecteerd.
@@ -113,6 +148,11 @@ Prioritize:
                    -> (OMIM API) Auto create related genes
   - If the wrong password is provided 3(?) times on data entry forms, log this and include a delay (store in SESSION), such that the password can't be brute forced.
   - Controle of variant wel toegevoegd mag worden? Anders kun je een bepaalde variant onbeperkt toevoegen aan 1 individu.
+  - VCF files kunnen informatie hebben over NM files:
+    + The transcript ID was already specified in the VCF file however an arbitrary transcript was chosen by LOVD
+    + 9       286593  rs529208        C       A       .       PASS    NS=1;DP=1216;AF=0.965;ANNOT=CDS;REFAA=P;AAC=T;GI=DOCK8;TI=NM_203447.3;PI=NP_982272.2    GT:DP:EC:CONFS  1/1:1216:1174:21.600,24.640,1.000,0.880,1.000,1.000,1.000
+      * File is in inbox mail; by Ammar Husami, 2012-08-06 17:25
+   - /inc-js-openwindow.php wordt steeds opgevraagd, omdat PHP de browsers vraagt niet te cachen. Dat kan voor alle inc-js-*.php uit.
 
 Opmerkingen Johan:
   + Diseases selecteren bij patient moet makkelijker worden, en er moet een voorspelling in zitten afhankelijk van het gen waar je nu in zit.
@@ -133,6 +173,11 @@ Opmerkingen Johan:
     * Johan zegt echter, dat hij één set velden per variant genoeg vindt (alleen de VOGs dus).
       Hij is het niet eens met mijn mening dat je per transcript moet kunnen zeggen of de functie beïnvloed wordt.
     * Als variant gemapped wordt, de nieuwe VOT waardes zetten op de VOG waarde.
+- Probleem rechten: curatoren die submitters zijn mochten hun eigen data niet verwijderen (niet eens een screening die geen vars heeft).
+  + Dit was supermakkelijk te omzeilen, omdat curatoren dan makkelijk een variant in hun gen kunnen koppelen aan hun eigen data, en zo curator rechten kunnen krijgen.
+    Dan kan er wel gedelete worden. Omdat deze beveiliging dus een wassen neus was, is dit verwijderd. Curatoren, die fungeren als submitters, mogen ook hun eigen data
+    verwijderen. Nieuw probleem is nu echter, dat als er aan hun eigen data inmiddels ook gegevens van anderen aan vast zitten
+    (phenotypes, screenings, vars uit andere genen), dat dat dan ook verdwijnt.
 - Het is al eens gebeurd dat de Chr moest worden aangepast van een variant; zelfs een manager kan dat niet. Enable?
 - Waarschuwing voor MySQL type verandering alleen doen als echt het type verandert en/of de lengte minder wordt?
 - (@Ivo:) Indien geen kolommen actief zijn voor aandoening en/of gen, geef aan hoe dat te fixen vanaf het object z'n columns VL. ViewList zou count(*) terug moeten geven, waarna de code kan weten dat er blijkbaar niets te tonen was.
@@ -244,8 +289,12 @@ Opmerkingen Johan:
     * This is related to the "asterisk wildcard" question of Raymond Dalgleish, April 2010.
 - VOG is not correctly generated by LOVD when a VOT of a gene on the reverse strand has a deletion in a repeat region (forward rule).
   + LOVD should "fix" the VOG using the namechecker? VOG by itself should be correct; position converter is wrong in these cases.
+- Bulk delete data, like logs (vanuit VL). Maar moet wel met passwd bevestigd worden.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
+- Voorbeeld gen H19 werkt met NR en geen NM en n. en geen c. Dat werkt niet. Er is geen p. predictie mogelijk, maar dat klopt.
+- Cancel knop op submissie formulieren is altijd hetzelfde; aparte opdracht voor lovd_viewForm() voor submit + cancel knop met URL als argument?
+- Screening verwijderd, doorverwezen naar /screenings. Is dat handig?
 
 
 

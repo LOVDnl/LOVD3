@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-07-23
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-08-31
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -64,7 +64,7 @@ class LOVD_SystemSetting extends LOVD_Object {
 
         // Database URL is mandatory, if the option "Include in the global LOVD listing" is selected.
         if (!empty($aData['include_in_listing']) && empty($aData['location_url'])) {
-            lovd_errorAdd('location_url', 'Please fill in an URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing.');
+            lovd_errorAdd('location_url', 'Please fill in an URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing; otherwise disable the \'Include in the global LOVD listing\' setting below.');
         }
 
         // Database URL should be an URL.
@@ -95,14 +95,27 @@ class LOVD_SystemSetting extends LOVD_Object {
                 $f = @fsockopen($aData['proxy_host'], $aData['proxy_port'], $nError, $sError, 5);
                 if ($f === false) {
                     lovd_errorAdd('proxy_host', 'Could not connect to given proxy server. Please check if the fields are correctly filled in.');
+                    lovd_errorAdd('proxy_port', '');
                 } else {
                     $sRequest = 'GET ' . $_SETT['check_location_URL'] . ' HTTP/1.0' . "\r\n" .
                                 'User-Agent: LOVDv.' . $_SETT['system']['version'] . " Proxy Check\r\n" . // Will be passed on to LOVD.nl.
-                                'Connection: Close' . "\r\n\r\n";
+                        (empty($_POST['proxy_username']) || empty($_POST['proxy_password'])? '' :
+                            'Proxy-Authorization: Basic ' . base64_encode($_POST['proxy_username'] . ':' . $_POST['proxy_password']) . "\r\n") .
+                        'Connection: Close' . "\r\n\r\n";
                     fputs($f, $sRequest);
                     $s = rtrim(fgets($f));
                     if (!preg_match('/^HTTP\/1\.. [23]/', $s, $aRegs)) { // Allowing HTTP 2XX and 3XX.
-                        lovd_errorAdd('proxy_host', 'Unexpected answer from proxy when trying to connect upstream: ' . $s);
+                        if (preg_match('/^HTTP\/1\.. 407/', $s, $aRegs)) { // Proxy needs username and password.
+                            if (!empty($_POST['proxy_username']) && !empty($_POST['proxy_password'])) {
+                                lovd_errorAdd('proxy_username', 'Invalid username/password combination for this proxy server. Please try again.');
+                                lovd_errorAdd('proxy_password', '');
+                            } else {
+                                lovd_errorAdd('proxy_username', 'This proxy server requires a valid username and password. Please make sure you provide them both.');
+                                lovd_errorAdd('proxy_password', '');
+                            }
+                        } else {
+                            lovd_errorAdd('proxy_host', 'Unexpected answer from proxy when trying to connect upstream: ' . $s);
+                        }
                     }
                 }
             }
@@ -127,17 +140,17 @@ class LOVD_SystemSetting extends LOVD_Object {
             // FIXME; this is probably not the best way of doing this...
             $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
         }
-        
+
         // FIXME; Like above, not the best solution, but gets the job done for now.
         if (empty($aData['mutalyzer_soap_url'])) {
             $_POST['mutalyzer_soap_url'] = 'http://www.mutalyzer.nl/2.0/services';
         }
-        
+
         // SSL check.
         if (!empty($aData['use_ssl']) && !SSL) {
             lovd_errorAdd('use_ssl', 'You\'ve selected to force the use of SSL, but SSL is not currently activated for this session. To force SSL, I must be sure it\'s possible to approach LOVD through an SSL connection (use <A href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . ($_SERVER['QUERY_STRING']? '?' . str_replace('&sent=true', '', $_SERVER['QUERY_STRING']) : '') . '" target="_blank">https://</A> instead of http://).');
         }
-        
+
         $_POST['api_feed_history'] = 0;
         $_POST['allow_count_hidden_entries'] = 0;
         $_POST['use_versioning'] = 0;
@@ -182,10 +195,15 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'skip',
                         'skip',
                         array('', '', 'print', '<B>Connection settings (optional)</B>'),
-                        array('', '', 'note', 'Some networks have no access to the outside world except through a proxy. If this applies to the network this server is installed on, please fill in the proxy server information here.'),
+                        array('', '', 'note', 'The following settings apply to how LOVD connects to other resources.<BR>Some networks have no access to the outside world except through a proxy. If this applies to the network this server is installed on, please fill in the proxy server information here.'),
                         'hr',
+//                     array('OMIM API key', 'LOVD can connect to OMIM.org to retrieve information about diseases, genes and phenotypes. Connecting to OMIM requires an API key. OMIM unfortunately does not allow us to use one key for all LOVDs, so you\'ll have to register at OMIM.org to request your own.', 'text', 'proxy_host', 20),
                         array('Proxy server host name', 'The host name of the proxy server, such as www-cache.institution.edu.', 'text', 'proxy_host', 20),
                         array('Proxy server port number', 'The port number of the proxy server, such as 3128.', 'text', 'proxy_port', 4),
+                        'skip',
+                        array('', '', 'note', 'The following two fields only apply if the proxy server requires authentication.'),
+                        array('Proxy server username', 'In case the proxy server requires authentication, please enter the required username here.', 'text', 'proxy_username', 20),
+                        array('Proxy server password', 'In case the proxy server requires authentication, please enter the required password here.', 'password', 'proxy_password', 20),
                         'hr',
                         'skip',
                         'skip',

@@ -490,6 +490,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         $_DATA->setRowLink($sViewListID, 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : ''));
         $_GET['search_transcripts'] = '>0';
         print('      <DIV id="container">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
+        lovd_showInfoTable('Please use the list below to find the gene for which you wish to submit this variant. Use the search fields if needed, and click on the gene entry to proceed to the variant entry form.', 'information', 600);
         $_DATA->viewList($sViewListID, array('transcripts', 'variants', 'diseases_', 'updated_date_'));
         print('      </DIV>' . "\n" .
               '      <SCRIPT type="text/javascript">' . "\n" .
@@ -780,7 +781,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
         $aOptionsList['options'][1]['onclick'] = 'variants/upload?create&amp;type=SeattleSeq' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
         $aOptionsList['options'][1]['option_text'] = '<B>I want to upload a SeattleSeq Annotation file &raquo;&raquo;</B>';
         $aOptionsList['options'][2]['onclick'] = 'variants/?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
-        $aOptionsList['options'][2]['type'] = 'l';        
+        $aOptionsList['options'][2]['type'] = 'l';
         $aOptionsList['options'][2]['option_text'] = '<B>Back</B>';
 
         print(lovd_buildOptionTable($aOptionsList));
@@ -2069,7 +2070,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     define('PAGE_TITLE', 'Edit variant entry #' . $nID);
     define('LOG_EVENT', 'VariantEdit');
 
-    // Require manager clearance.
     lovd_isAuthorized('variant', $nID);
     lovd_requireAUTH(LEVEL_OWNER);
 
@@ -2110,7 +2110,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 foreach ($aSubmit['uploads'] as $aUploadInfo) {
                     $aUploadDates[] = $aUploadInfo['upload_date'];
                 }
-                $bSubmit = $_DB->query('SELECT TRUE FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND created_date IN (?' . str_repeat(', ?', count($aUploadDates) - 1) . ')', array_merge(array($nID), $aUploadDates))->fetchColumn(); 
+                $bSubmit = $_DB->query('SELECT TRUE FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND created_date IN (?' . str_repeat(', ?', count($aUploadDates) - 1) . ')', array_merge(array($nID), $aUploadDates))->fetchColumn();
             }
         }
 
@@ -2150,7 +2150,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
             $aFieldsGenome = array_merge(
-                                array('allele', 'effectid'), 
+                                array('allele', 'effectid'),
                                 (!$bSubmit || !empty($zData['edited_by'])? array('edited_by', 'edited_date') : array()),
                                 $_DATA['Genome']->buildFields());
 
@@ -2206,10 +2206,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 }
             }
 
-            if (!$bSubmit || !empty($zData['edited_by'])) {
-                $_POST['edited_by'] = $_AUTH['id'];
-                $_POST['edited_date'] = date('Y-m-d H:i:s');
-            }
+            // Only actually committed to the database if we're not in a submission, or when they are already filled in.
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
 
             if (!$bSubmit) {
                 // Put $zData with the old values in $_SESSION for mailing.
@@ -2295,7 +2294,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         }
         $_POST['effect_reported'] = $zData['effectid']{0};
         $_POST['effect_concluded'] = $zData['effectid']{1};
-        $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR && $zData['statusid'] >= STATUS_HIDDEN? $zData['statusid'] : STATUS_OK);
+        if ($zData['statusid'] < STATUS_HIDDEN) {
+            $_POST['statusid'] = STATUS_OK;
+        }
         if ($bGene) {
             foreach ($aGenes as $sGene) {
                 foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
@@ -2402,8 +2403,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('PAGE_TITLE', 'Delete variant entry #' . $nID);
     define('LOG_EVENT', 'VariantDelete');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_isAuthorized('variant', $nID);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();

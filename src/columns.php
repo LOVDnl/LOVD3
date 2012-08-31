@@ -131,16 +131,12 @@ if (PATH_COUNT > 2 && !ACTION) {
         // Authorized user (admin or manager, or curator in case of shared column) is logged in. Provide tools.
         // FIXME; needs exact check if there are genes/diseases left that do not have this column.
         // A check on 'active' is way too simple and does not work for shared columns.
-        $aNavigation[CURRENT_PATH . '?add']                         = array('check.png', 'Enable column', (!$zData['active'] || $aTableInfo['shared']? 1 : 0));
-        // Disable column.
+        $aNavigation[CURRENT_PATH . '?add']                         = array('menu_plus.png', 'Enable column', (!$zData['active'] || $aTableInfo['shared']? 1 : 0));
         $aNavigation[CURRENT_PATH . '?remove']                      = array('cross.png', 'Disable column', ($zData['active'] && !$zData['hgvs']? 1 : 0));
-        // Delete column.
         $aNavigation[CURRENT_PATH . '?delete']                      = array('cross.png', 'Delete column', (!$zData['active'] && !$zData['hgvs'] && (int) $zData['created_by']? 1 : 0));
         $aNavigation[CURRENT_PATH . '?edit']                        = array('menu_edit.png', 'Edit custom data column settings', 1);
         $aNavigation[$_PE[0] . '/' . $zData['category'] . '?order'] = array('menu_columns.png', 'Re-order all ' . $zData['category'] . ' columns', 1);
-        /*
-        $aNavigation[$_SERVER['PHP_SELF'] . '?action=edit_colid&amp;edit_colid=' . rawurlencode($zData['colid'])] = array('menu_edit.png', 'Edit column ID', ($zData['created_by'] && !$bSelected? 1 : 0));
-        */
+        // $aNavigation[$_SERVER['PHP_SELF'] . '?action=edit_colid&amp;edit_colid=' . rawurlencode($zData['colid'])] = array('menu_edit.png', 'Edit column ID', ($zData['created_by'] && !$bSelected? 1 : 0));
     }
     lovd_showJGNavigation($aNavigation, 'Columns');
 
@@ -904,7 +900,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
             $aFields = array('width', 'standard', 'mandatory', 'head_column', 'description_form', 'description_legend_short', 'description_legend_full', 'mysql_type', 'form_type', 'select_options', 'preg_pattern', 'public_view', 'public_add', 'allow_count_all', 'edited_by', 'edited_date');
 
             // Prepare values.
-            $_POST['standard'] = (isset($_POST['standard'])? $_POST['standard'] : $zData['standard']); 
+            $_POST['standard'] = (isset($_POST['standard'])? $_POST['standard'] : $zData['standard']);
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
@@ -1445,14 +1441,14 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $nPossibleTargets = count($aPossibleTargets);
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases which do NOT have this column yet.
-            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.name, " (", d.symbol, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
+            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
             $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Maybe a JOIN would be simpler?
-                $sSQL .= ' AND (g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') OR d.id <' . ($_AUTH['level'] == LEVEL_CURATOR? '=' : '') . '"00000")';
+                $sSQL .= ' AND (g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') OR d.id = 0)';
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
-            $sSQL .= ' ORDER BY d.name';
+            $sSQL .= ' ORDER BY d.symbol';
             $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
         }
@@ -1644,7 +1640,7 @@ if (!isset($_GET['in_window'])) {
           '    }' . "\n" .
           '    window.close();' . "\n" .
           '</SCRIPT>');
-    
+
 }
 /*
             }
@@ -1679,7 +1675,7 @@ if (!isset($_GET['in_window'])) {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    
+
     // Table
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
@@ -1777,6 +1773,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
             if ($_AUTH['level'] < LEVEL_MANAGER) {
+                // Curators may only remove this column if there are no longer phenotype entries with data in it.
                 $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")"), (p.`' . $zData['id'] . '` != "" OR p.`' . $zData['id'] . '` IS NOT NULL) AS in_use FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ') OR d.id = 0 GROUP BY d.id HAVING in_use IS NULL';
                 $aSQL = array_merge(array($zData['id']), $_AUTH['curates']);
             } else {
@@ -1986,7 +1983,7 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
     // URL: /columns/VariantOnGenome/DNA?delete
     // URL: /columns/Phenotype/Blood_pressure/Systolic?delete
     // Drop specific custom column.
-    
+
     $aCol = $_PE;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);

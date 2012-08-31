@@ -213,7 +213,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2012-07-19} % I guess it's easier to use this as a "Last modified" column.
+\date{2012-08-28} % I guess it's easier to use this as a "Last modified" column.
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -317,6 +317,12 @@ Please bear with us while we finish this manual.
 
 
 \chapter{Installing LOVD}
+
+\begin{infotable}
+Please note that if you're just going to \emph{use an LOVD installation that already exists}, you do not need to install anything on your computer.
+Any web browser that you already have installed, such as Mozilla Firefox, Google Chrome or Microsoft Internet Explorer, will do.
+This chapter describes how to install a new LOVD.
+\end{infotable}
 
 Installing LOVD is a ``piece of cake''.
 %If you just want to try out LOVD to play around with it a bit, we recommend using the (link) LOVD local install CD, which we currently have available for Windows.
@@ -620,6 +626,10 @@ If this applies to the network this server is installed on, please fill in the p
   The host name of the proxy server, such as ``www-cache.institution.edu''.
   \item[Proxy server port number] \hfill \\
   The port number of the proxy server, such as 3128.
+  \item[Proxy server username] \hfill \\
+  In case the proxy server requires authentication, please enter the required username here.
+  \item[Proxy server password] \hfill \\
+  In case the proxy server requires authentication, please enter the required password here.
 \end{description}
 
 
@@ -1100,7 +1110,7 @@ To complete the removal, you need to fill in your password and submit the form.
 Removing a gene can not be undone, you will need to create the gene database again.
 % TODO: when we have import...
 %If in any doubt, first make a download of the database so that you can re-upload the data .....blabla
-Please note that deleting a gene removes also its transcripts in the database and therefore all variant annotation on the gene in question, but it \emph{does not remove the variants from the database}.
+Please note that deleting a gene removes also its transcripts in the database and therefore all variant annotation on the gene in question, but it \emph{does not remove the genomic variants from the database}.
 %TODO: so how do we delete these variants?
 \end{warntable}
 
@@ -1138,7 +1148,7 @@ Please note that deleting a gene removes also its transcripts in the database an
 Cookies are small text files stored on your computer that help a website identify you. LOVD uses this to keep you identified after you log into the system. If this setting is disabled, LOVD will include a so-called session id in the URL, to keep track of the authenticated users. However, this is much less secure because including the session id in the URL may expose this session id in log files on your computer or on proxy servers. This may allow others to hijack your user's accounts. So leaving this option set is highly recommended.
 
 % Maybe move to create individual?
-List of possible diseases associated with mutations in the available genes: Specify a list of phenotypes that are used in this LOVD installation. This list will appear on the full legend and will allow a submitter to select a phenotype from the list. If no phenotypes are specified, the submitter will need to fill in the phenotype in a common text field.
+List of possible diseases associated with variants in the available genes: Specify a list of phenotypes that are used in this LOVD installation. This list will appear on the full legend and will allow a submitter to select a phenotype from the list. If no phenotypes are specified, the submitter will need to fill in the phenotype in a common text field.
 
 % Move somewhere about the screening data:
 List of available detection techniques: Specify a list of detection techniques appropriate for the genes configured in this LOVD installation. By default, a full set of detection techniques has been put in this list already. This list will appear on the full legend and will allow a submitter to select the used detections technique(s) from the list. If no techniques are specified, the submitter will need to fill in the technique in a common text field.

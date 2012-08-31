@@ -728,13 +728,12 @@ class LOVD_Object {
         // SEARCH: Advanced text search.
         $WHERE = '';
         $HAVING = '';
-        $CLAUSE = '';
         $aArguments = array(
                         'WHERE' => array(),
                         'HAVING' => array()
                            );
         $aBadSyntaxColumns = array();
-        $aColTypes = array();
+        $aColTypes = array(); // For describing the search expressions in the mouseover of the input field.
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
                 $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false? 'HAVING' : 'WHERE');

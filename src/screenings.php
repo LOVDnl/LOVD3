@@ -49,13 +49,10 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     if (!empty($_PE[1])) {
         if (in_array(rawurldecode($_PE[1]), lovd_getGeneList())) {
             $sGene = rawurldecode($_PE[1]);
-            lovd_isAuthorized('gene', $sGene); // To show non public entries.
+            // We need the authorization call if we would show the screenings with VARIANTS in gene X, not before!
+//            lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
-            // Curators are allowed to download this list...
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                define('FORMAT_ALLOW_TEXTPLAIN', true);
-            }
-
+            // FIXME; This doesn't work; searching for gene X also finds XYZ.
             $_GET['search_genes'] = $sGene;
         } else {
             // Command or gene not understood.
@@ -70,9 +67,14 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     $_T->printHeader();
     $_T->printTitle();
 
+    $aColsToHide = array();
+    if (isset($sGene)) {
+        $aColsToHide[] = 'genes';
+    }
+
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
-    $_DATA->viewList('Screenings', array('genes'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $_DATA->viewList('Screenings', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
 
     $_T->printFooter();
     exit;
@@ -97,10 +99,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening($nID);
     $zData = $_DATA->viewEntry($nID);
-    
+
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
-        // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit']                      = array('menu_edit.png', 'Edit screening information', 1);
         if ($zData['variants_found']) {
             $aNavigation['variants?create&amp;target=' . $nID]    = array('menu_plus.png', 'Add variant to screening', 1);
@@ -122,7 +123,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA->viewList('Genes_for_S_VE', array(), true, true);
         unset($_GET['search_geneid']);
     }
-    
+
     if ($zData['variants_found'] || !empty($zData['variants'])) {
         $_GET['search_screeningids'] = $nID;
         print('<BR><BR>' . "\n\n");
@@ -170,10 +171,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
     $_DATA = new LOVD_Screening();
     require ROOT_PATH . 'inc-lib-form.php';
 
-    $bSubmit = false;
-    if (isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']])) {
-        $bSubmit = true;
-    }
+    $bSubmit = (isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]));
 
     if (POST) {
         lovd_errorClean();
@@ -195,7 +193,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created screening information entry ' . $nID);
-            
+
             $aSuccessGenes = array();
             if (!empty($_POST['genes']) && is_array($_POST['genes'])) {
                 foreach ($_POST['genes'] as $sGene) {
@@ -219,13 +217,12 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
             }
 
             if ($bSubmit) {
-
                 if (!isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['screenings'])) {
                     $_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['screenings'] = array();
                 }
                 $_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['screenings'][] = $nID;
-            } else {
 
+            } else {
                 if (!isset($_AUTH['saved_work']['submissions']['screening'])) {
                     $_AUTH['saved_work']['submissions']['screening'] = array();
                 }
@@ -306,10 +303,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    $bSubmit = false;
-    if (isset($_AUTH['saved_work']['submissions']['screening'][$nID]) || (isset($_AUTH['saved_work']['submissions']['individual'][$zData['individualid']]['screenings']) && in_array($nID, $_AUTH['saved_work']['submissions']['individual'][$zData['individualid']]['screenings']))) {
-        $bSubmit = true;
-    }
+    $bSubmit = (isset($_AUTH['saved_work']['submissions']['screening'][$nID]) || (isset($_AUTH['saved_work']['submissions']['individual'][$zData['individualid']]['screenings']) && in_array($nID, $_AUTH['saved_work']['submissions']['individual'][$zData['individualid']]['screenings'])));
 
     if (POST) {
         lovd_errorClean();
@@ -328,10 +322,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFieldsGenome[] = 'owned_by';
             }
-            if (!$bSubmit || !empty($zData['edited_by'])) {
-                $_POST['edited_by'] = $_AUTH['id'];
-                $_POST['edited_date'] = date('Y-m-d H:i:s');
-            }
+            // Only actually committed to the database if we're not in a submission, or when they are already filled in.
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
 
             if (!$bSubmit) {
                 // Put $zData with the old values in $_SESSION for mailing.
@@ -716,11 +709,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
                 lovd_saveWork();
             }
 
-            if ($bSubmit) {
-                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/screening/' . $nID);
-            } else {
-                header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
-            }
+            header('Refresh: 3; url=' . lovd_getInstallURL() . ($bSubmit? 'submit/screening/' . $nID : CURRENT_PATH));
 
             $_T->printHeader();
             $_T->printTitle();
@@ -783,8 +772,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
     define('LOG_EVENT', 'ScreeningDelete');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_isAuthorized('screening', $nID);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();

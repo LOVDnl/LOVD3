@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-08-28
+ * Modified    : 2012-08-30
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -108,7 +108,7 @@ class LOVD_Template {
                         'individuals_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all individuals', 0),
-                                '/individuals/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all individuals for the ' . $_SESSION['currdb'] . ' gene', 0),
+                                '/individuals/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all individuals screened for ' . $_SESSION['currdb'], 0),
                                 'create' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                                 'hr',
                                 '/columns/Individual?search_active_=1' => array('menu_columns.png', 'View active custom columns', LEVEL_MANAGER),
@@ -118,7 +118,7 @@ class LOVD_Template {
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all diseases', 0),
                                 'create' => array('plus.png', 'Create a new disease information entry', LEVEL_CURATOR),
-                                '/columns/Phenotype' => array('menu_columns_add.png', 'View phenotype columns', LEVEL_CURATOR),
+                                '/columns/Phenotype' => array('menu_columns_add.png', 'View available phenotype columns', LEVEL_CURATOR),
                               ),
                         'screenings' => 'View screenings',
                         'screenings_' =>
@@ -438,7 +438,7 @@ function lovd_mapVariants ()
     function printHeaderHTML ($bFull = true)
     {
         // Print the LOVD header, including the menu (if $bFull == true).
-        global $_AUTH, $_CONF, $_DB, $_SETT, $_STAT, $_SESSION;
+        global $_AUTH, $_CONF, $_DB, $_SETT, $_STAT;
 
         // Build menu, if tabs are shown.
         if ($bFull) {
@@ -494,7 +494,7 @@ function lovd_mapVariants ()
     <!--
 
 <?php
-        if (!defined('NOT_INSTALLED')) {
+        if (!empty($_SESSION['currdb'])) {
             // A quick way to switch genes, regardless of on which page you are.
             // FIXME; Currently we don't support "=GENE" matching (for instance, on the disease tab) because changing that value will not trigger a change in CURRDB... Yet.
             //$sGeneSwitchURL = preg_replace('/(\/|=)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
@@ -572,7 +572,7 @@ function lovd_mapVariants ()
         if (!(ROOT_PATH == '../' || defined('NOT_INSTALLED'))) {
             if ($_AUTH) {
                 print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
-                      '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Your submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
+                      '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
                 print('      <A href="users?register"><B>Register as submitter</B></A> | <A href="login"><B>Log in</B></A>' . "\n");
             }

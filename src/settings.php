@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-12
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2012-08-23
+ * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -69,7 +69,7 @@ if (PATH_COUNT == 1 && ACTION == 'edit') {
             //$_POST['api_feed_history'] = 0;
             //$_POST['allow_count_hidden_entries'] = 0;
             //$_POST['use_versioning'] = 0;
-            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'api_feed_history', 'proxy_host', 'proxy_port', 'logo_uri', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
+            $aFields = array('system_title', 'institute', 'location_url', 'email_address', 'send_admin_submissions', 'api_feed_history', 'proxy_host', 'proxy_port', 'proxy_username', 'proxy_password', 'logo_uri', 'send_stats', 'include_in_listing', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'allow_count_hidden_entries', 'use_ssl', 'use_versioning');
 
             // Prepare values.
             // Make sure the database URL ends in a /.

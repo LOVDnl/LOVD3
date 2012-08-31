@@ -99,8 +99,8 @@ function lovd_cleanDirName ($s)
         return false;
     }
 
-    // Clean up the pwd; remove '\'
-    $s = stripcslashes($s);
+    // Clean up the pwd; remove '\' (some PHP versions under Windows seem to escape the slashes with backslashes???)
+    $s = stripslashes($s);
     // Clean up the pwd; remove '//'
     $s = preg_replace('/\/+/', '/', $s);
     // Clean up the pwd; remove '/./'
@@ -630,6 +630,8 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
                     (!$sPOST? '' :
                     'Content-length: ' . strlen($sPOST) . "\r\n" .
                     'Content-Type: application/x-www-form-urlencoded' . "\r\n") .
+            (empty($_CONF['proxy_username']) || empty($_CONF['proxy_password'])? '' :
+                'Proxy-Authorization: Basic ' . base64_encode($_CONF['proxy_username'] . ':' . $_CONF['proxy_password']) . "\r\n") .
                     'Connection: Close' . "\r\n\r\n" .
                     (!$sPOST? '' :
                     $sPOST . "\r\n");
@@ -780,12 +782,12 @@ function lovd_saveWork ()
     global $_AUTH, $_DB;
 
     if ($_AUTH && isset($_AUTH['saved_work'])) {
+        // FIXME; Later when we add a decent json_encode library, we will switch to that.
         $_DB->query('UPDATE ' . TABLE_USERS . ' SET saved_work = ? WHERE id = ?', array(serialize($_AUTH['saved_work']), $_AUTH['id']));
         return true;
     } else {
         return false;
     }
-    
 }
 
 

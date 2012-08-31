@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-08-28
+ * Modified    : 2012-08-30
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -889,21 +889,25 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     $_T->printHeader();
     $_T->printTitle();
 
-    lovd_showInfoTable('Below are lists of your unfinished submissions', 'information');
-
-    if ($_AUTH['id'] == $nID) {
+    if ($_AUTH && $_AUTH['id'] == $nID) {
         // Require submitter clearance.
-        lovd_requireAUTH(LEVEL_SUBMITTER);
+        lovd_requireAUTH();
+
+        lovd_showInfoTable('Below are lists of your unfinished submissions', 'information');
     } else {
         // Require manager clearance.
         lovd_requireAUTH(LEVEL_MANAGER);
+
+        lovd_showInfoTable('Below are lists of this user\'s unfinished submissions', 'information');
     }
 
     $zData = $_DB->query('SELECT saved_work FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID), false)->fetchAssoc();
     if (!empty($zData['saved_work'])) {
         $zData['saved_work'] = unserialize($zData['saved_work']);
+    } else {
+        $zData['saved_work'] = array();
     }
-    
+
     $_T->printTitle('Individuals', 'H4');
     $aUnfinished = (!empty($zData['saved_work']['submissions']['individual'])? array_keys($zData['saved_work']['submissions']['individual']) : array());
     if (!empty($aUnfinished)) {
@@ -920,7 +924,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
 
     $_T->printTitle('Screenings', 'H4');
     $aUnfinished = (!empty($zData['saved_work']['submissions']['screening'])? array_keys($zData['saved_work']['submissions']['screening']) : array());
-    if (!empty($aUnfinished)) {    
+    if (!empty($aUnfinished)) {
         require ROOT_PATH . 'class/object_screenings.php';
         $_DATA = new LOVD_Screening();
         $_GET['search_screeningid'] = implode('|', $aUnfinished);

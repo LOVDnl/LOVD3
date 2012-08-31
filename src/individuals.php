@@ -49,8 +49,10 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     if (!empty($_PE[1])) {
         if (in_array(rawurldecode($_PE[1]), lovd_getGeneList())) {
             $sGene = rawurldecode($_PE[1]);
-            lovd_isAuthorized('gene', $sGene); // To show non public entries.
+            // We need the authorization call once we show the individuals with VARIANTS in gene X, not before!
+//            lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
+            // FIXME; This doesn't work; searching for gene X also finds XYZ.
             $_GET['search_genes_screened_'] = $sGene;
         } else {
             // Command or gene not understood.
@@ -66,7 +68,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View individuals' . (isset($sGene)? ' for gene ' . $sGene : ''));
+    define('PAGE_TITLE', 'View individuals' . (isset($sGene)? ' screened for gene ' . $sGene : ''));
     $_T->printHeader();
     $_T->printTitle();
 
@@ -105,7 +107,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
-        // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit']                     = array('menu_edit.png', 'Edit individual information', 1);
         $aNavigation['screenings?create&amp;target=' . $nID]     = array('menu_plus.png', 'Add screening to individual', 1);
         // You can only add phenotype information to this individual, when there are phenotype columns enabled.
@@ -119,7 +120,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     lovd_showJGNavigation($aNavigation, 'Individuals');
 
     print('<BR><BR>' . "\n\n");
-    
+
 
     if (!empty($zData['diseases'])) {
         // List of phenotype entries associated with this person, per disease.
@@ -307,10 +308,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    $bSubmit = false;
-    if (isset($_AUTH['saved_work']['submissions']['individual'][$nID])) {
-        $bSubmit = true;
-    }
+    $bSubmit = (isset($_AUTH['saved_work']['submissions']['individual'][$nID]));
 
     if (!empty($_POST)) {
         lovd_errorClean();
@@ -332,10 +330,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 $aFields[] = 'statusid';
                 $_POST['statusid'] = STATUS_MARKED;
             }
-            if (!$bSubmit || !empty($zData['edited_by'])) {
-                $_POST['edited_by'] = $_AUTH['id'];
-                $_POST['edited_date'] = date('Y-m-d H:i:s');
-            }
+            // Only actually committed to the database if we're not in a submission, or when they are already filled in.
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
 
             if (!$bSubmit) {
                 // Put $zData with the old values in $_SESSION for mailing.
@@ -416,7 +413,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         $_POST = array_merge($_POST, $zData);
         // Load connected diseases.
         $_POST['active_diseases'] = explode(';', $_POST['active_diseases_']);
-        $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR && $zData['statusid'] >= STATUS_HIDDEN? $zData['statusid'] : STATUS_OK);
+        if ($zData['statusid'] < STATUS_HIDDEN) {
+            $_POST['statusid'] = STATUS_OK;
+        }
     }
 
 
@@ -464,8 +463,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('PAGE_TITLE', 'Delete individual information entry ' . $nID);
     define('LOG_EVENT', 'IndividualDelete');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // FIXME: What if individual also contains other user's data?
+    lovd_isAuthorized('individual', $nID);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();

@@ -56,11 +56,11 @@ function lovd_prepareSubmitData ($sDataType, $aData) {
             if (!empty($aData['aTranscripts'])) {
                 foreach ($aData['aTranscripts'] as $nTranscriptID) {
                     $aData[$nTranscriptID . '_effect_reported'] = $_SETT['var_effect'][$aData[$nTranscriptID . '_effectid']{0}];
-                    $aData[$nTranscriptID . '_effect_concluded'] = $_SETT['var_effect'][$aData[$nTranscriptID . '_effectid']{1}]; 
+                    $aData[$nTranscriptID . '_effect_concluded'] = $_SETT['var_effect'][$aData[$nTranscriptID . '_effectid']{1}];
                 }
             }
             $aData['effect_reported'] = $_SETT['var_effect'][$aData['effectid']{0}];
-            $aData['effect_concluded'] = $_SETT['var_effect'][$aData['effectid']{1}]; 
+            $aData['effect_concluded'] = $_SETT['var_effect'][$aData['effectid']{1}];
             break;
         case 'phenotype':
         default:
@@ -111,7 +111,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
     // URL: /submit/individual/00000001
     // Individual submission
     global $_DB, $_AUTH;
-    
+
     define('LOG_EVENT', 'SubmitIndividual');
 
     lovd_requireAUTH(LEVEL_SUBMITTER);
@@ -334,7 +334,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'screening' && ctype_digit($_PE[2]) && !ACTION
     } else {
         $aOptionsList['options'][1]['onclick'] = 'variants?create&amp;target=' . $nID;
     }
-    $aOptionsList['options'][1]['option_text'] = '<B>I want add a variant to this screening</B>';
+    $aOptionsList['options'][1]['option_text'] = '<B>I want to add a variant to this screening</B>';
 
     //if (!$zData['variants']) {
     //    $aOptionsList['options'][2]['disabled'] = true;
@@ -349,8 +349,9 @@ if (PATH_COUNT == 3 && $_PE[1] == 'screening' && ctype_digit($_PE[2]) && !ACTION
         $aOptionsList['options'][3]['onclick'] = 'javascript:alert(\'You cannot finish your submission, because no variants were added to this screening!\')';
         $aOptionsList['options'][3]['option_text'] = '<B>I want to finish this submission</B>';
     } elseif ($sSubmitType == 'individual') {
-        $aOptionsList['options'][3]['onclick'] = 'submit/individual/' . $zData['individualid'];
-        $aOptionsList['options'][3]['option_text'] = '<B>I want to return to the individual</B>';
+        $aOptionsList['options'][3]['onclick'] = 'javascript:if(window.confirm(\'Are you sure you are done with submitting the variants found with this screening?\')){document.location.href=\'submit/individual/' . $zData['individualid'] . '\';}';
+        $aOptionsList['options'][3]['type'] = 'l';
+        $aOptionsList['options'][3]['option_text'] = '<B>Back to the individual</B>';
     } else {
         $aOptionsList['options'][3]['onclick'] = 'submit/finish/screening/' . $nID;
         $aOptionsList['options'][3]['option_text'] = '<B>I want to finish this submission</B>';

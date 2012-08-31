@@ -431,16 +431,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         }
 
         if (!$bDelete) {
-            // Require manager clearance.
+            // Curator has no delete rights, throw him out.
             lovd_requireAUTH(LEVEL_MANAGER);
         }
     } else {
         // Require manager clearance.
         lovd_requireAUTH(LEVEL_MANAGER);
     }
-    
-    
-    
+
+
 
     require ROOT_PATH . 'inc-lib-form.php';
 

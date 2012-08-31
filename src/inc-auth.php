@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-07-31
+ * Modified    : 2012-08-23
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -57,8 +57,8 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
         }
 
         // Decode saved work.
-        // FIXME; Later when we add a decent php_json_decode library, we want to remove the unserialize() part.
-        $_AUTH['saved_work'] = (!empty($_AUTH['saved_work'])? ($_AUTH['saved_work']{0} == 'a'? unserialize($_AUTH['saved_work']) : php_json_decode($_AUTH['saved_work'])) : array());
+        // FIXME; Later when we add a decent json_decode library, we want to remove the unserialize() part.
+        $_AUTH['saved_work'] = (!empty($_AUTH['saved_work'])? ($_AUTH['saved_work']{0} == 'a'? unserialize($_AUTH['saved_work']) : json_decode($_AUTH['saved_work'])) : array());
     }
 }
 

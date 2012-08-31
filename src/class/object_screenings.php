@@ -68,7 +68,7 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
-                                           'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(s2v.variantid)) AS variants_found_, ' .
+                                           'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT s2v.variantid)) AS variants_found_, ' .
                                            'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -84,7 +84,7 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for viewing the list of screenings
         $this->aSQLViewList['SELECT']   = 's.*, ' .
                                           's.id AS screeningid, ' .
-                                          'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(s2v.variantid)) AS variants_found_, ' .
+                                          'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT s2v.variantid)) AS variants_found_, ' .
                                           'GROUP_CONCAT(s2g.geneid) AS genes, ' .
                                         ($_AUTH['level'] >= LEVEL_COLLABORATOR?
                                           'CASE i.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name, '
@@ -237,7 +237,7 @@ class LOVD_Screening extends LOVD_Custom {
                         'skip',
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
-                      
+
         if (ACTION != 'edit') {
             unset($this->aFormData['authorization']);
         } else {
@@ -268,7 +268,6 @@ class LOVD_Screening extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'entry') {
-            // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
         }
         $zData['variants_found_'] = ($zData['variants_found_'] == -1? 'Not yet submitted' : $zData['variants_found_']);

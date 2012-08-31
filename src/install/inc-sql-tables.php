@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-08-22
+ * Modified    : 2012-08-23
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -243,8 +243,8 @@ $aTableSQL =
           , 'TABLE_INDIVIDUALS' =>
    'CREATE TABLE ' . TABLE_INDIVIDUALS . ' (
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
-    fatherid MEDIUMINT(8) UNSIGNED ZEROFILL DEFAULT NULL,
-    motherid MEDIUMINT(8) UNSIGNED ZEROFILL DEFAULT NULL,
+    fatherid MEDIUMINT(8) UNSIGNED ZEROFILL,
+    motherid MEDIUMINT(8) UNSIGNED ZEROFILL,
     panelid MEDIUMINT(8) UNSIGNED ZEROFILL,
     panel_size MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 1,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -633,8 +633,11 @@ $aTableSQL =
     refseq_build VARCHAR(4) NOT NULL,
     proxy_host VARCHAR(255) NOT NULL,
     proxy_port SMALLINT(5) UNSIGNED,
+    proxy_username VARCHAR(255) NOT NULL,
+    proxy_password VARCHAR(255) NOT NULL,
     logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD_logo130x50.jpg",
     mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "http://www.mutalyzer.nl/2.0/services",
+    omim_apikey VARCHAR(40) NOT NULL,
     send_stats BOOLEAN NOT NULL,
     include_in_listing BOOLEAN NOT NULL,
     lock_users BOOLEAN NOT NULL,

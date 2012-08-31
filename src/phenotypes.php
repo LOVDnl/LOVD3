@@ -91,7 +91,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
-        // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit']   = array('menu_edit.png', 'Edit phenotype information', 1);
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete phenotype entry', 1);
@@ -155,13 +154,11 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         $_DATA = new LOVD_Phenotype($_POST['diseaseid']);
     }
 
-    $bSubmit = false;
-    if (isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']])) {
-        $bSubmit = true;
-    }
+    $bSubmit = (isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]));
 
     if (empty($_POST['diseaseid']) || lovd_error()) {
-        $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY d.id, d.symbol, d.name';
+        // FIXME; Once we're sure there are no longer individuals with Healthy and something else, we can remove (d.id > 0) from the ORDER BY.
+        $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY (d.id > 0), d.symbol, d.name';
         $aSelectDiseases = $_DB->query($sSQL, array($_POST['individualid']))->fetchAllCombine();
         if (!count($aSelectDiseases)) {
             // Wrong individual ID, individual without diseases, or diseases without phenotype columns.
@@ -225,12 +222,24 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
             lovd_writeLog('Event', LOG_EVENT, 'Created phenotype information entry ' . $nID . ' for individual ' . $_POST['individualid'] . ' related to disease ' . $_POST['diseaseid']);
 
             if ($bSubmit) {
+                // Full submission, continue to rest of questions.
                 if (!isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['phenotypes'])) {
                     $_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['phenotypes'] = array();
                 }
                 $_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['phenotypes'][] = $nID;
                 lovd_saveWork();
+
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/individual/' . $_POST['individualid']);
+
+                $_T->printHeader();
+                $_T->printTitle();
+
+                lovd_showInfoTable('Successfully created the phenotype entry!', 'success');
+
+                $_T->printFooter();
+
             } else {
+                // Just added this entry, continue to send an email.
                 if (!isset($_SESSION['work']['submits']['phenotype'])) {
                     $_SESSION['work']['submits']['phenotype'] = array();
                 }
@@ -240,23 +249,10 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
                 }
 
                 $_SESSION['work']['submits']['phenotype'][$nID] = $nID;
-            }
 
-            if ($bSubmit) {
-                // Thank the user...
-                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/individual/' . $_POST['individualid']);
-
-                $_T->printHeader();
-                $_T->printTitle();
-
-                lovd_showInfoTable('Successfully created the phenotype entry!', 'success');
-
-                $_T->printFooter();
-            } else {
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/phenotype/' . $nID);
             }
 
-            $_T->printFooter();
             exit;
         }
 
@@ -321,10 +317,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    $bSubmit = false;
-    if (isset($_AUTH['saved_work']['submissions']['individual'][$zData['individualid']])) {
-        $bSubmit = true;
-    }
+    $bSubmit = (isset($_AUTH['saved_work']['submissions']['individual'][$zData['individualid']]));
 
     if (!empty($_POST)) {
         lovd_errorClean();
@@ -345,10 +338,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 $aFields[] = 'statusid';
                 $_POST['statusid'] = STATUS_MARKED;
             }
-            if (!$bSubmit || !empty($zData['edited_by'])) {
-                $_POST['edited_by'] = $_AUTH['id'];
-                $_POST['edited_date'] = date('Y-m-d H:i:s');
-            }
+            // Only actually committed to the database if we're not in a submission, or when they are already filled in.
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
 
             if (!$bSubmit) {
                 // Put $zData with the old values in $_SESSION for mailing.
@@ -386,7 +378,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     } else {
         // Load current values.
         $_POST = array_merge($_POST, $zData);
-        $_POST['statusid'] = ($_AUTH['level'] >= LEVEL_CURATOR && $zData['statusid'] >= STATUS_HIDDEN? $zData['statusid'] : STATUS_OK);
+        if ($zData['statusid'] < STATUS_HIDDEN) {
+            $_POST['statusid'] = STATUS_OK;
+        }
     }
 
 
@@ -435,8 +429,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('LOG_EVENT', 'PhenotypeDelete');
 
     // FIXME; hier moet een goede controle komen, wanneer lager is toegestaan.
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Load appropiate user level for this phenotype entry.
+    lovd_isAuthorized('phenotype', $nID);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_phenotypes.php';
     $_DATA = new LOVD_Phenotype();
