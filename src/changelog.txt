@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 08
- * 2012-09-???????????????????????????????????????????????????????????????????
+ * 2012-09-05
  *********/
  * Added the "Switch gene database" icon to the LOVD header; it will only be
    shown where appropriate.
@@ -41,14 +41,9 @@
    a username and password can be set in the LOVD system settings.
  * Curators were not able to delete any data, although links to do so were shown
    in the menu.
-
-
-
-
-
-
-
-
+ * The email sent after a submission now also contains the names of the Curators
+   and/or Managers that have received the email, so that it's easier to track if
+   the mail has been forwarded.
  * Fixed bug; The checkbox "Have variants been found?" in screening create &
    edit forms didn't work anymore.
  * It is now possible to add a phenotype to disease "Healthy/Control".

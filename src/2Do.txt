@@ -1,7 +1,6 @@
 Prioritize:
 ===========
 - Na toevoegen variant aan screening, kun je niet makkelijk finishen.
-- VOG pending is niet grijs?
 - Gen pagina: diseases zonder abbreviation staan in de lijst related diseases heel stom. Kan dat dan de volledige naam worden?
   + Ook: diseases worden twee keer getoond, maar twee keer anders, hoewel in dezelfde volgorde = niet handig?
   + Individuals VE disease lijst is beter.
@@ -86,12 +85,16 @@ Prioritize:
     Individual/Gender en VOG/Allele instellingen?
     * Behalve bij geslachts-gemengde groep! Maar zijn er wel dat soort groepen, als het om geslachtschromosomen gaat?
       - Misschien enkel problemen als paper zegt gevonden in X/Y chromosomen?
+    * Voordeel is ook dat we 't individu al kennen, dus we kunnen vragen "Gevonden in: X/160 individuals" wanneer panel_size op 160 staat.
   + Om aan te geven dat een variant niet gevonden is in een controle groep, kan men de "Variant/Times_reported" op 0 zetten, maar dan alleen als de
     Individuals "panel_size" groter dan 1 is (dus dat mag niet in een individu, alleen een panel).
   + LOVD kan nu altijd simpel het aantal gevonden varianten tellen aan de hand van de Variant/Times_reported kolom.
     * Dat moet dan ook gebeuren op de gene homepage.
   + Eigenlijk moet de update checken of het Frequency veld nu gebruikt wordt op de manier waarop wij hebben gezegd dat het tijdelijk moet, en dat daarna de waarde goed wordt overgenomen...
 - Een manager moet de Healthy/Control disease kunnen beheren om bijvoorbeeld de kolommen te kunnen sorteren.
+- We need a lovd_shortenString() in the VLs, at least here:
+  + http://databases.lovd.nl/shared/variants/GLDC
+- Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
 - Kunnen we ook het Exon veld voorspellen?
 - Quick curate option?
@@ -153,6 +156,16 @@ Prioritize:
     + 9       286593  rs529208        C       A       .       PASS    NS=1;DP=1216;AF=0.965;ANNOT=CDS;REFAA=P;AAC=T;GI=DOCK8;TI=NM_203447.3;PI=NP_982272.2    GT:DP:EC:CONFS  1/1:1216:1174:21.600,24.640,1.000,0.880,1.000,1.000,1.000
       * File is in inbox mail; by Ammar Husami, 2012-08-06 17:25
    - /inc-js-openwindow.php wordt steeds opgevraagd, omdat PHP de browsers vraagt niet te cachen. Dat kan voor alle inc-js-*.php uit.
+   - Submissie: voortgang aangeven in progress-type bar bovenaan? Zoals een order, met alle stappen aangegeven en gehighlight was al af is.
+     + Misschien ook in new window, zodat weg navigeren moeilijker wordt? Of JS confirms zetten op alle tabs?
+   - Mail bij edit:
+     + Er moet natuurlijk wel wat veranderd zijn... Geen update uberhaupt, of gewoon niet mailen?
+     + Moet er wel gemailed worden als de gebruiker zelf de enige betrokkene is bij deze edit? (= owner && curator).
+     + De edit mooier aangeven; weer een sterretje bij het gewijzigde veld.
+       * Ook moet de oude waarde mooier worden weergegeven. Als we 't sterretje hebben, mag dat iets onopvallender.
+         - Als oude waarde leeg was, en nieuwe waarde is niet zo groot, kan (was previously empty) er wel achter, toch? Rechts uitgelijnd?
+           + Hoe in te bouwen; velden markeren in bepaalde variabelen, of een markering in de value?
+     - Na mail druk je op back; email wordt gewoon opnieuw gestuurd, SESSION wordt dus niet netjes leeggehaald.
 
 Opmerkingen Johan:
   + Diseases selecteren bij patient moet makkelijker worden, en er moet een voorspelling in zitten afhankelijk van het gen waar je nu in zit.

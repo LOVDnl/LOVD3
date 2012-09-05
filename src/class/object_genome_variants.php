@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-08-30
+ * Modified    : 2012-09-05
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -92,7 +92,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                           'e.name AS effect, ' .
                                           'uo.name AS owned_by_, ' .
                                 ($_AUTH['level'] >= LEVEL_COLLABORATOR?
-                                          'CASE vog.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name,'
+                                          'CASE vog.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,'
                                         : '') .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
@@ -142,15 +142,15 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'effect' => array(
                                     'view' => array('Effect', 70),
                                     'db'   => array('e.name', 'ASC', true)),
+                        'allele_' => array(
+                                    'view' => array('Allele', 120),
+                                    'db'   => array('a.name', 'ASC', true)),
                         'chromosome' => array(
                                     'view' => array('Chr', 50),
                                     'db'   => array('vog.chromosome', 'ASC', true)),
                       ),
                  $this->buildViewList(),
                  array(
-                        'allele_' => array(
-                                    'view' => array('Allele', 120),
-                                    'db'   => array('a.name', 'ASC', true)),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),

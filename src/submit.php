@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-08-30
+ * Modified    : 2012-09-05
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -482,13 +482,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
         } elseif ($_PE[2] != 'individual') {
             $aSubmit[$_PE[2] . 's'] = array($nID);
         }
-    } else {
-        if ($_PE[2] != 'individual') {
-            $aSubmit[$_PE[2] . 's'] = array($nID);
-        }
-    }
 
-    if (ACTION != 'edit') {
         $_DB->beginTransaction();
         if ($_AUTH['level'] == LEVEL_OWNER) {
             // If the user is not a curator or a higher, then the status will be set from "In Progress" to "Pending".
@@ -518,6 +512,11 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             unset($_AUTH['saved_work']['submissions'][$_PE[2]][$nID]);
             lovd_saveWork();
         }
+
+    } else {
+        if ($_PE[2] != 'individual') {
+            $aSubmit[$_PE[2] . 's'] = array($nID);
+        }
     }
 
     session_write_close();
@@ -526,7 +525,10 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
 
     $_T->printHeader();
     $_T->printTitle();
-    $aTo = array();
+    $aCurators = array();
+    $aManagers = array();
+    $sCurators = ''; // For intragenic variants.
+    $sManagers = ''; // For intergenic variants.
     if (!empty($aGenes)) {
         // Check if there are any genomic variants without a variant on transcript entry, in which case we would need to mail all managers.
         switch ($_PE[2]) {
@@ -563,14 +565,22 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
         }
 
         if ($nNullTranscript) {
-            $aTo = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
+            $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
         }
         // Select all curators that need to be mailed.
-        $aTo = array_merge($aTo, $_DB->query('SELECT DISTINCT u.name, u.email FROM ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id ' . (count($aTo)? 'AND u.level != ' . LEVEL_MANAGER . ' ' : '') . 'AND c.geneid IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') AND allow_edit = 1 ORDER BY u.level DESC, u.name', $aGenes)->fetchAllRow());
+        $aCurators = $_DB->query('SELECT DISTINCT u.name, u.email FROM ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id ' . (count($aManagers)? 'AND u.level != ' . LEVEL_MANAGER . ' ' : '') . 'AND c.geneid IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') AND allow_edit = 1 ORDER BY u.level DESC, u.name', $aGenes)->fetchAllRow();
     } else {
         // If there are no genes then we can only mail managers.
-        $aTo = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
+        $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
     }
+    // Put their names in the email also.
+    foreach ($aManagers as $aUser) {
+        $sManagers .= (!$sManagers? '' : ', ') . $aUser[0];
+    }
+    foreach ($aCurators as $aUser) {
+        $sCurators .= (!$sCurators? '' : ', ') . $aUser[0];
+    }
+    $aTo = array_merge($aCurators, $aManagers);
 
     // Arrays containing submitter & data fields.
     $aSubmitterDetails =
@@ -707,13 +717,14 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             $aIndividualFields['edited_date'] = 'Edited date';
         }
         $aIndividualFields['statusid_'] = 'Data status';
+
         if (ACTION == 'edit') {
             $aFields = array_keys($aIndividualFields);
             unset($aFields[0]);
-            if (is_array($aEdits[$sField])) {
-                $aEdits[$sField] = implode(';', $aEdits[$sField]);
-            }
             foreach ($aFields as $sField) {
+                if (is_array($aEdits[$sField])) {
+                    $aEdits[$sField] = implode(';', $aEdits[$sField]);
+                }
                 if ($zIndividualDetails[$sField] != $aEdits[$sField]) {
                     $zIndividualDetails[$sField] .= "\n\t" . (empty($aEdits[$sField])? '(Was previously empty)' : 'Previous value:' . "\n" . $aEdits[$sField]);
                 }
@@ -753,10 +764,10 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             if (ACTION == 'edit') {
                 $aFields = array_keys($a);
                 unset($aFields[0]);
-                if (is_array($aEdits[$sField])) {
-                    $aEdits[$sField] = implode(';', $aEdits[$sField]);
-                }
                 foreach ($aFields as $sField) {
+                    if (is_array($aEdits[$sField])) {
+                        $aEdits[$sField] = implode(';', $aEdits[$sField]);
+                    }
                     if ($z[$sField] != $aEdits[$sField]) {
                         $z[$sField] .= "\n\t" . (empty($aEdits[$sField])? '(Was previously empty)' : 'Previous value:' . "\n" . $aEdits[$sField]);
                     }
@@ -895,7 +906,6 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
                     $aFields = array_keys($aFields);
                     unset($aFields[0]);
                     foreach ($aFields as $sField) {
-                        $sField = $sField;
                         if (is_array($aEdits[$z['transcriptid'] . '_' . $sField])) {
                             $aEdits[$z['transcriptid'] . '_' . $sField] = implode(';', $aEdits[$z['transcriptid'] . '_' . $sField]);
                         }
@@ -954,7 +964,18 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
     }
 
     // Introduction message to curators/managers.
-    $sMessage = 'Dear Curator' . (count($aTo) > 1? 's' : '') . ',' . "\n\n" .
+    $sHead = '';
+    $sMessage = 'Dear ';
+    if ($sCurators) {
+        $sHead .= 'Curator' . (count($aCurators) > 1? 's' : '') . ': ' . $sCurators . "\n";
+        $sMessage .= 'Curator' . (count($aCurators) > 1? 's' : '');
+    }
+    if ($sManagers) {
+        $sHead .= 'Manager' . (count($aManagers) > 1? 's' : '') . ': ' . $sManagers . "\n";
+        $sMessage .= (!$sCurators? '' : ' and ') . 'Manager' . (count($aManagers) > 1? 's' : '');
+    }
+    $sMessage = $sHead . "\n" .
+                $sMessage . ',' . "\n\n" .
                 $_AUTH['name'] . ($_PE[2] == 'confirmedVariants'? ' has indicated that additional variants were also confirmed by an existing screening.' : ' has ' . (ACTION != 'edit'? 'submitted an addition to' : 'made changes to an existing entry in') . ' the LOVD database.') . "\n";
     if ($bUnpublished) {
         $sMessage .= '(Part of) this submission won\'t be viewable to the public until you as curator agree with the additions. Below is a ' . (ACTION != 'edit'? 'copy of the submission.' : 'overview of the changes.') . "\n\n";

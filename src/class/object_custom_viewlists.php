@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-08-29
+ * Modified    : 2012-09-05
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -445,16 +445,17 @@ class LOVD_CustomViewList extends LOVD_Object {
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
 
-        $bVarStatus = (!empty($zData['var_statusid']) && in_array($zData['var_statusid'], array(4, 7)));
-        $bIndStatus = (!empty($zData['ind_statusid']) && in_array($zData['ind_statusid'], array(4, 7)));
+        // Mark all statusses from Marked and lower; Marked will be red, all others gray.
+        $bVarStatus = (!empty($zData['var_statusid']) && $zData['var_statusid'] <= STATUS_MARKED);
+        $bIndStatus = (!empty($zData['ind_statusid']) && $zData['ind_statusid'] <= STATUS_MARKED);
 
         if ($bVarStatus && $bIndStatus) {
             $nStatus = min($zData['var_statusid'], $zData['ind_statusid']);
-            $zData['class_name'] = ($nStatus == 7? 'marked' : 'del');
+            $zData['class_name'] = ($nStatus == STATUS_MARKED? 'marked' : 'del');
         } elseif ($bVarStatus) {
-            $zData['class_name'] = ($zData['var_statusid'] == 7? 'marked' : 'del');
+            $zData['class_name'] = ($zData['var_statusid'] == STATUS_MARKED? 'marked' : 'del');
         } elseif ($bIndStatus) {
-            $zData['class_name'] = ($zData['ind_statusid'] == 7? 'marked' : 'del');
+            $zData['class_name'] = ($zData['ind_statusid'] == STATUS_MARKED? 'marked' : 'del');
         }
 
         if ($sView == 'list') {

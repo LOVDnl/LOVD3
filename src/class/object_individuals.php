@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-08-30
+ * Modified    : 2012-09-05
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -98,7 +98,7 @@ class LOVD_Individual extends LOVD_Custom {
                                           'COUNT(DISTINCT s2v.variantid) AS variants_, ' .
                                           'uo.name AS owned_by_, ' .
                                         ($_AUTH['level'] >= LEVEL_COLLABORATOR?
-                                          'CASE ds.id WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name,'
+                                          'CASE ds.id WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,'
                                         : '') .
                                           'ds.name AS status';
         $this->aSQLViewList['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
