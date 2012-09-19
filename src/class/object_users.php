@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-08-27
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-09-19
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -423,8 +423,18 @@ class LOVD_User extends LOVD_Object {
             }
             // Provide links to gene symbols this user is curator and collaborator for. Easy access to one's own genes.
             $zData['curates_'] = '';
+            $zData['curates_short_'] = '';
+            $i = 0;
             foreach ($zData['curates'] as $key => $sGene) {
                 $zData['curates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
+                if ($i < 20) {
+                    $zData['curates_short_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
+                    $i++;
+                }
+            }
+            if (count($zData['curates']) > 22) {
+                // Replace long gene list by shorter one, allowing expand.
+                $zData['curates_'] = '<SPAN>' . $zData['curates_short_'] . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($zData['curates']) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $zData['curates_'] . '</SPAN>';
             }
             $zData['collaborates_'] = '';
             foreach ($zData['collaborates'] as $key => $sGene) {

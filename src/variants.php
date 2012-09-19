@@ -1130,6 +1130,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     //preg_match('/.*?(\d{1,2}|[XYM]).*?/', $aLine['#CHROM'], $aChromosome); // Tries to extract any chromosome number (0-99, XYM)
                     // Check Chromosome field, allows '##', 'c##' and 'chr##' (where ## = 1-22 or XYM).
                     if (!isset($aLine['#CHROM']) || !preg_match('/^(?:c(?:hr)?)?([XYM]|[1-9]|1[0-9]|2[0-2])$/', $aLine['#CHROM'], $aChromosome) || !$aChromosome) {
+                        // Chromosome not recognized, report & ignore this variant.
                         if (isset($aLine['ALT'])) {
                             $aUploadData['num_variants_unsupported'] += count(explode(',', $aLine['ALT']));
                         } else {
@@ -1190,6 +1191,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                             continue;
                         }
 
+                        // FIXME; Shouldn't we actually skip all variants we don't understand!??!!
                         if (strpos($sAllele, 'N') !== false || strpos($aLine['REF'], 'N') !== false) {
                             // Skip any variants with an 'N'.
                             if ($aUploadData['num_variants_unsupported'] ++ < $nMaxListedUnsupported) {

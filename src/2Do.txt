@@ -1,9 +1,9 @@
 Prioritize:
 ===========
+- Fix Yu's variants in de database.
+  + Fix daarna de VCF importer, zodat die dit format ook aan kan.
+  + Soms kreeg ik tijdens het mappen n. terug, en dan gaat LOVD een totaal verkeerde VOT/DNA invullen; R_110617.1:n.150delins.
 - Na toevoegen variant aan screening, kun je niet makkelijk finishen.
-- Gen pagina: diseases zonder abbreviation staan in de lijst related diseases heel stom. Kan dat dan de volledige naam worden?
-  + Ook: diseases worden twee keer getoond, maar twee keer anders, hoewel in dezelfde volgorde = niet handig?
-  + Individuals VE disease lijst is beter.
 - Het is niet duidelijk, hoe een variant aan een bestaande individu toe te voegen (moet dus via screening). Dat moet duidelijk gemaakt worden.
 
 - Gene delete heeft GEEN CORRECTE reminder bij het verwijderen!!!
@@ -17,10 +17,7 @@ Prioritize:
       - Dus ook een variant in een ander gen, waar ze eigenlijk normaal gesproken geen rechten op heeft!
     * Alleen verwijderen als geen nadelig effect op andere genen?
 
-- Curator detailed view heeft niet alle genen genoteerd staan? Limit?
-- Individu VE; Screenings VL heeft geen "Genes screened" kolom; moet wel.
 - Link to nomenclature page from DNA, RNA and Protein fields... link in help hover?
-- Link naar Mutalyzer pagina werkt niet voor vars met een plus er in, wordt niet goed ge-encode (mutalyzer denkt dat 't een spatie is).
 - Curator mag geen cols zien van disease 0, foutmelding: je moet curator zijn.
   + Disease healthy kan niet beheerd worden (kolommen inzien, hersorteren e.d.)?
 - Als David Baux zijn scripts klaar zijn, mergen met trunk.
@@ -96,6 +93,7 @@ Prioritize:
   + http://databases.lovd.nl/shared/variants/GLDC
 - Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
+- LOVD 3.0 heeft niet hetzelfde wat LOVD 2.0 heeft. Gene not found, are you looking for gene.lovd.nl?
 - Kunnen we ook het Exon veld voorspellen?
 - Quick curate option?
 - Per variant de mapping opties kunnen veranderen?
@@ -165,9 +163,12 @@ Prioritize:
        * Ook moet de oude waarde mooier worden weergegeven. Als we 't sterretje hebben, mag dat iets onopvallender.
          - Als oude waarde leeg was, en nieuwe waarde is niet zo groot, kan (was previously empty) er wel achter, toch? Rechts uitgelijnd?
            + Hoe in te bouwen; velden markeren in bepaalde variabelen, of een markering in de value?
-     - Na mail druk je op back; email wordt gewoon opnieuw gestuurd, SESSION wordt dus niet netjes leeggehaald.
+     + Na mail druk je op back; email wordt gewoon opnieuw gestuurd, SESSION wordt dus niet netjes leeggehaald.
+     + Edited by (tenminste bij variant) wordt als IDs gegeven, niet de namen zoals bij data owner ofzo.
 
-Opmerkingen Johan:
+- Wachtwoord vergeten -> gebruikersnaam invullen. Die ook vergeten, wat nu? Zet er bij dat ze contact kunnen opnemen met de dbadmin en/of managers (hoe contact te leggen?).
+  + Daar direct een contact formuliertje zetten? Vragen naar naam, instituut, wanneer ongeveer voor het laatst ingelogd, vanaf welke PC?
+- Opmerkingen Johan:
   + Diseases selecteren bij patient moet makkelijker worden, en er moet een voorspelling in zitten afhankelijk van het gen waar je nu in zit.
     * Dat wordt dan waarschijnlijk een tag JS library, die in combinatie met een autocomplete de klus zou moeten kunnen klaren.
       - Maar dan moet die wel snel genoeg zijn en je de mogelijkheid geven om met "muscular dystrophy" ook "dystrophy, muscular, duchenne" te vinden.
@@ -308,6 +309,12 @@ From LOVD 2.0:
 - Voorbeeld gen H19 werkt met NR en geen NM en n. en geen c. Dat werkt niet. Er is geen p. predictie mogelijk, maar dat klopt.
 - Cancel knop op submissie formulieren is altijd hetzelfde; aparte opdracht voor lovd_viewForm() voor submit + cancel knop met URL als argument?
 - Screening verwijderd, doorverwezen naar /screenings. Is dat handig?
+- Er is nu niet goed met MT genen te werken; NCBI kent geen transcripten. Mutalyzer heeft wel info, maar nu mist daar het een en ander, juist omdat er geen NMs zijn:
+  + http://localhost/svn/LOVD3/trunk/src/ajax/mutalyzer?getTranscriptsAndInfo&genomicReference=NC_001807.4&geneName=ND1
+  + Ik krijg inderdaad transcript informatie binnen als ik de NC icm het aangepaste gensymbool gebruik, bedankt voor de tip. Ik mis alleen nu, even snel kijkend naar de code, de volgende gegevens die LOVD nodig heeft:
+    * id
+    * chromTransStart
+    * chromTransEnd
 
 
 

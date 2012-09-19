@@ -7,6 +7,34 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 09
+ * 2012-10-   ??????????????????????????????????????????????????????????????????
+ *********/
+ * Fixed bug; The list of variant screenings on the individual's detailed view
+   had gene symbols repeated in the "Genes screened" column, if more than one
+   variants had been found.
+ * Fixed notices after file import.
+ * When an individual has not been screened for variants, the "no screenings
+   found for this individual" message is simply hidden.
+ * We're now nicely handeling diseases without abbreviations in the individuals
+   listing and detailed view, the gene's full data view, the gene homepage, and
+   the gene and individual data entry forms.
+ * When data is updated, the mail sent by LOVD now has a subject different than
+   that of newly submitted data, so those mails can easily be identified based
+   on their subject.
+ * Users being curator for many genes didn't have all genes shown on their
+   account page, because of a default MySQL maximum length setting. LOVD now
+   increased this maximum length, but the list is collapsed by default to keep
+   the page short.
+
+
+
+
+
+
+
+
+/*******************
  * 3.0 Beta 08
  * 2012-09-05
  *********/
