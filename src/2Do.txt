@@ -1,5 +1,6 @@
 Prioritize:
 ===========
+- Phenotype cols opvragen van disease, hersorteer, klik col aan. WTF???
 - Fix Yu's variants in de database.
   + Fix daarna de VCF importer, zodat die dit format ook aan kan.
   + Soms kreeg ik tijdens het mappen n. terug, en dan gaat LOVD een totaal verkeerde VOT/DNA invullen; R_110617.1:n.150delins.
@@ -165,6 +166,7 @@ Prioritize:
            + Hoe in te bouwen; velden markeren in bepaalde variabelen, of een markering in de value?
      + Na mail druk je op back; email wordt gewoon opnieuw gestuurd, SESSION wordt dus niet netjes leeggehaald.
      + Edited by (tenminste bij variant) wordt als IDs gegeven, niet de namen zoals bij data owner ofzo.
+     + Data status staat soms als allerlaatst (individual), soms voor de edited_* velden (var). Huh?
 
 - Wachtwoord vergeten -> gebruikersnaam invullen. Die ook vergeten, wat nu? Zet er bij dat ze contact kunnen opnemen met de dbadmin en/of managers (hoe contact te leggen?).
   + Daar direct een contact formuliertje zetten? Vragen naar naam, instituut, wanneer ongeveer voor het laatst ingelogd, vanaf welke PC?
@@ -315,6 +317,8 @@ From LOVD 2.0:
     * id
     * chromTransStart
     * chromTransEnd
+- DB admin moet kiezen om wel forwards te krijgen van registraties, maar niet van submissies of edits.
+  + Managers ook deze keuze geven? Koppelen aan TABLE_USERS ipv system settings?
 
 
 

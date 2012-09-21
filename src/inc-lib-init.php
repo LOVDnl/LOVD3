@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-08-27
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-09-21
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -277,6 +277,16 @@ function lovd_getColumnLength ($sTable, $sCol)
     }
 
     return 0;
+}
+
+
+
+
+
+function lovd_getColumnList ($sTable)
+{
+    // Returns the list of columns for a certain table.
+    return array_keys(lovd_getColumnData($sTable));
 }
 
 
@@ -1024,8 +1034,8 @@ function lovd_convertIniValueToBytes ($sValue)
     // FIXME; Implement proper checks here? Regexp?
 
     $nValue = (int) $sValue;
-    $sLast = strtolower($sValue[strlen($sValue) - 1]);
-    switch($sLast) {
+    $sLast = strtolower(substr($sValue, -1));
+    switch ($sLast) {
         case 'g':
             $nValue *= 1024;
         case 'm':

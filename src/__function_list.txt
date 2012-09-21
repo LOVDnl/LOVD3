@@ -91,7 +91,7 @@
 4.1.0 $_GET, $_POST, $_COOKIES, $_SESSION, $_FILES.
 4.2.0 $_FILES error codes
 4.2.0 array_search('dont_find', $aEmpty) === false
-4.3.0 auto_detect_line_endings (ini setting, wil ik gaan gebruiken voor importeren)
+4.3.0 auto_detect_line_endings (ini setting, voor het importeren)
 4.3.2 session_regenerate_id (gebruik ik nu alleen, als ie bestaat)
 4.2.0 in_array met array als needle
 5.0.0 As of PHP 5, default values may be passed by reference.
@@ -100,7 +100,7 @@
 5.1.0 PDO built in.
 */
 =====-========
-4.3.0 REQUIRED
+5.1.0 REQUIRED
 
 
 
@@ -118,5 +118,5 @@ MySQL:
 4.1. 1  VALUES() in: INSERT INTO ... ON DUPLICATE KEY UPDATE ... VALUES()
 4.1. 2  ENGINE (instead of TYPE) not really necessary but since we're at 4.1.1 already...
 =======-========
-4.1.2   REQUIRED
+4.1. 2   REQUIRED
 

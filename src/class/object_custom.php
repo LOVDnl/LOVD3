@@ -56,7 +56,7 @@ class LOVD_Custom extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH, $_DB, $_SETT;
+        global $_AUTH, $_DB;
 
         $aArgs = array();
 

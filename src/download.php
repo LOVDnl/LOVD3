@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2012-07-10
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-09-20
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -64,7 +64,7 @@ if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine')) {
     // If we get here, we can print the header already.
     header('Content-Disposition: attachment; filename="LOVD_' . ($nID? 'owned_data' : 'full_download') . '_' . date('Y-m-d_H.i.s') . '.txt"');
     header('Pragma: public');
-    print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . ($nID? 'Owned' : 'Full') . ' data download ### To import, do not remove this header ###' . "\r\n");
+    print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . ($nID? 'Owned' : 'Full') . ' data download ### To import, do not remove or alter this header ###' . "\r\n");
     if ($nID) {
         print('## Filter: (created_by = ' . $nID . ' || owned_by = ' . $nID . ')' . "\r\n");
     }
@@ -260,7 +260,7 @@ foreach ($aObjectsToBeFiltered as $sObject) {
 
 // Now, query the database and print, or just print the data (if already prefetched).
 foreach ($aObjects as $sObject => $aSettings) {
-    print('## ' . (empty($aSettings['label'])? $sObject : $aSettings['label']) . ' ## Do not remove this header ##' . "\r\n");
+    print('## ' . (empty($aSettings['label'])? $sObject : $aSettings['label']) . ' ## Do not remove or alter this header ##' . "\r\n");
 
     // If not prefetched, download the data here. If we do a fetchAll() we can easily get the count and we don't need to do a describe.
     // So saving two queries, and it's easier code, at the cost of additional memory usage.

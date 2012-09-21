@@ -153,7 +153,7 @@ class LOVD_Object {
             $sNameClean = preg_replace('/^\d{5}_/', '', $sName); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
 
             // Trim() all fields. We don't want those spaces in the database anyway.
-            if (isset($aData[$sName]) && !is_array($aData[$sName])) {
+            if (lovd_getProjectFile() != '/import.php' && isset($aData[$sName]) && !is_array($aData[$sName])) {
                 $GLOBALS['_' . $aFormInfo[0]][$sName] = trim($GLOBALS['_' . $aFormInfo[0]][$sName]);
                 $aData[$sName] = trim($aData[$sName]);
             }
