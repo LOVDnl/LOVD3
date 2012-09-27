@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-09-19
+ * Modified    : 2012-09-27
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -176,7 +176,7 @@ class LOVD_Individual extends LOVD_Custom {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         global $_DB;
 
@@ -202,16 +202,12 @@ class LOVD_Individual extends LOVD_Custom {
             }
         }
 
-        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
-        //   De parent checkFields vraagt de getForm() namelijk al op.
-        //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
         if (!empty($aData['active_diseases'])) {
             if (count($aData['active_diseases']) > 1 && in_array('00000', $aData['active_diseases'])) {
                 lovd_errorAdd('active_diseases', 'You cannot select both "Healthy/Control" and a disease for the same individual entry.');
             } else {
-                $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES)->fetchAllColumn();
                 foreach ($aData['active_diseases'] as $nDisease) {
-                    if ($nDisease && !in_array($nDisease, $aDiseases)) {
+                    if ($nDisease && !in_array($nDisease, array_keys($this->aFormData['aDiseases'][5]))) {
                         lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease.');
                     }
                 }
@@ -228,6 +224,12 @@ class LOVD_Individual extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
         global $_AUTH, $_DB, $_SETT;
 
         // Get list of diseases.
@@ -271,7 +273,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
                         'hr',
-                        array('This individual has been diagnosed with these diseases', '', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
+         'aDiseases' => array('This individual has been diagnosed with these diseases', '', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
      'diseases_info' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD. If any disease you would like to select is not in here, please mention this in the remarks, preferably including the omim number. This way, a manager can configure this disease in this LOVD.'),
    'diseases_create' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD.<BR>Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
                      'hr',

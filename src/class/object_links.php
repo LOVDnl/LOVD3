@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-09-24
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -110,7 +110,7 @@ class LOVD_Link extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
         global $_DB;
@@ -146,7 +146,7 @@ class LOVD_Link extends LOVD_Object {
             $_POST['active_columns'] = array();
         } elseif (!empty($aData['active_columns'])) {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
-            // FIXME; eerst een group_concat, daarna een explode()? 
+            // FIXME; eerst een group_concat, daarna een explode()?
             $sSQL = 'SELECT GROUP_CONCAT(id) FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'';
             $sColumns = $_DB->query($sSQL)->fetchColumn();
             $aColumns = explode(',', $sColumns);
@@ -204,10 +204,10 @@ class LOVD_Link extends LOVD_Object {
                 }
 
                 // Check for reference order and/or references missing from the replacement text.
-                reset($aPatternRefs); 
-                for ($i = 1; list(,$nRef) = each($aPatternRefs); $i ++) { 
-                    if ($nRef != $i) { 
-                        lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $i . '] ' . ($i == 1? 'first' : 'after [' . ($i - 1) . ']') . ', got [' . $nRef . '].'); 
+                reset($aPatternRefs);
+                for ($i = 1; list(,$nRef) = each($aPatternRefs); $i ++) {
+                    if ($nRef != $i) {
+                        lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $i . '] ' . ($i == 1? 'first' : 'after [' . ($i - 1) . ']') . ', got [' . $nRef . '].');
                     }
                 }
 
@@ -260,7 +260,7 @@ class LOVD_Link extends LOVD_Object {
             }
         }
         foreach ($aData as $key => $val) {
-            $sSelect .= "\n" . 
+            $sSelect .= "\n" .
                         '              <OPTION value="' . $key . '"' . (!empty($_POST['active_columns']) && in_array($key, $_POST['active_columns'])? ' selected' : '') . '>' . $val . '</OPTION>';
         }
         $sSelect .= '</SELECT>';

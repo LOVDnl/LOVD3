@@ -124,13 +124,13 @@ class LOVD_Disease extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
-        if (ACTION == 'edit') {
-            global $zData; // FIXME; this could be done more elegantly.
-        }
         global $_AUTH, $_DB;
+
+        $bImport = (lovd_getProjectFile() == '/import.php');
+        $bCreate = ((ACTION && ACTION == 'create') || ($bImport && !$zData));
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -144,11 +144,11 @@ class LOVD_Disease extends LOVD_Object {
             lovd_errorAdd('id_omim', 'The OMIM ID has to be six digits long and cannot start with a \'0\'.');
         }
         $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?', array($aData['id_omim']))->fetchColumn();
-        if (!empty($aData['id_omim']) && $bExists && (ACTION == 'create' || (ACTION == 'edit' && $aData['id_omim'] != $zData['id_omim']))) {
+        if (!empty($aData['id_omim']) && $bExists && ($bCreate || $aData['id_omim'] != $zData['id_omim'])) {
             lovd_errorAdd('id_omim', 'Another disease already exists with this OMIM ID!');
         }
 
-        if ($_AUTH['level'] < LEVEL_MANAGER && empty($aData['genes'])) {
+        if (!$bImport && $_AUTH['level'] < LEVEL_MANAGER && empty($aData['genes'])) {
             lovd_errorAdd('genes', 'You should at least select one of the genes you are curator of.');
         }
 
@@ -161,14 +161,14 @@ class LOVD_Disease extends LOVD_Object {
             foreach ($aData['genes'] as $sGene) {
                 if ($sGene && !in_array($sGene, $aGenes)) {
                     lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene.');
-                } elseif (!lovd_isAuthorized('gene', $sGene, false) && ACTION == 'create') {
+                } elseif (!lovd_isAuthorized('gene', $sGene, false) && $bCreate) {
                     lovd_errorAdd('genes', 'You are not authorized to add this disease to gene ' . htmlspecialchars($sGene) . '.');
                 } else {
                     $_POST['genes'][] = $sGene;
                 }
             }
         }
-        if (ACTION == 'edit') {
+        if (!$bCreate) {
             if (is_array($aData['genes']) && isset($zData['genes']) && is_array($zData['genes'])) {
                 foreach ($zData['genes'] as $sGene) {
                     if ($sGene && !in_array($sGene, $aData['genes']) && !lovd_isAuthorized('gene', $sGene, false)) {

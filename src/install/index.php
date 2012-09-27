@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-07-18
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-09-25
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -393,7 +393,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // (3) Creating LOVD user & administrator.
     $aInstallSQL['Creating LOVD account &amp; LOVD database administrator account...'] =
              array(
-                    'INSERT INTO ' . TABLE_USERS . ' (name, created_date) VALUES ("LOVD", NOW())',
+                    'INSERT INTO ' . TABLE_USERS . ' (name, institute, department, telephone, address, city, email, reference, username, password, password_force_change, level, allowed_ip, login_attempts, created_date) VALUES ("LOVD", "", "", "", "", "", "", "", "", "", 0, 0, "", 9, NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
                     'INSERT INTO ' . TABLE_USERS . ' VALUES ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' . $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW(), NULL, NULL)',
                   );
@@ -464,10 +464,10 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
             'ALTER TABLE ' . TABLE_DISEASES . ' auto_increment = 0',
             'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `Phenotype/Length` SMALLINT(3) UNSIGNED',
             'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Length", 0, NOW())',
-            'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, width, description_legend_short, description_legend_full, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Length", 100, "Length of the individual, in cm.", "Length of the individual, in centimeters (cm).", 1, 1, 0, NOW())',
+            'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, col_order, width, mandatory, description_form, description_legend_short, description_legend_full, select_options, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Length", 0, 100, 0, "", "Length of the individual, in cm.", "Length of the individual, in centimeters (cm).", "", 1, 1, 0, NOW())',
             'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `Phenotype/Age` VARCHAR(12)',
             'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Age", 0, NOW())',
-            'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, width, description_form, description_legend_short, description_legend_full, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Age", 100, "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the individual was examined, if known. 04y08m = 4 years and 8 months.", "The age at which the individual was examined, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", 1, 1, 0, NOW())',
+            'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, col_order, width, mandatory, description_form, description_legend_short, description_legend_full, select_options, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Age", 0, 100, 0, "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the individual was examined, if known. 04y08m = 4 years and 8 months.", "The age at which the individual was examined, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", "", 1, 1, 0, NOW())',
         );
 
     // (11) Creating standard custom links.
@@ -580,11 +580,11 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
                 // Empty port number, insert NULL instead of 0.
                 $_POST['proxy_port'] = NULL;
             }
-            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false, true);
+            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['proxy_username'], $_POST['proxy_password'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], "", $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false, true);
             if (!$q) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .
-                      '      I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', '[' . implode('] [', $_DB->errorInfo()) . ']') . '</DIV><BR><BR>' . "\n" .
+                      '      I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $_DB->formatError()) . '</DIV><BR><BR>' . "\n" .
                       '      A failed installation is most likely caused by a bug in LOVD.<BR>' . "\n" .
                       '      Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.<BR>' . "\n\n");
                 $_T->printFooter();

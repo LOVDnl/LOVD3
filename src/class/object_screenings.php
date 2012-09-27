@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-09-13
+ * Modified    : 2012-09-27
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -156,7 +156,7 @@ class LOVD_Screening extends LOVD_Custom {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
 
@@ -167,14 +167,10 @@ class LOVD_Screening extends LOVD_Custom {
                       );
         parent::checkFields($aData);
 
-        $aGenes = lovd_getGeneList();
-        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
-        //   De parent checkFields vraagt de getForm() namelijk al op.
-        //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
         if (!empty($aData['genes']) && is_array($aData['genes'])) {
             if (count($aData['genes']) <= 15) {
                 foreach ($aData['genes'] as $sGene) {
-                    if ($sGene && !in_array($sGene, $aGenes)) {
+                    if ($sGene && !in_array($sGene, array_keys($this->aFormData['aGenes'][5]))) {
                         lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene.');
                     }
                 }
@@ -226,7 +222,7 @@ class LOVD_Screening extends LOVD_Custom {
                       ),
                  $this->buildForm(),
                  array(
-                        array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, true),
+            'aGenes' => array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, true),
     'variants_found' => array('Have variants been found?', 'Please uncheck this box when no variants have been found using this screening.', 'checkbox', 'variants_found'),
                         'hr',
       'general_skip' => 'skip',

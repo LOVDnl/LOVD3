@@ -26,6 +26,11 @@
    account page, because of a default MySQL maximum length setting. LOVD now
    increased this maximum length, but the list is collapsed by default to keep
    the page short.
+ * Fixed bug; LOVD 3.0-beta-08 was actually non-installable due to a change in
+   table structure while the installation process was not updated accordingly.
+ * LOVD is now also installable with MySQL's strict mode on.
+   Closes #17: "installation error LOVD".
+   (thanks to Hana Lango Allen, University of Exeter, UK, for reporting)
 
 
 
