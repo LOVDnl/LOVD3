@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-09-27
+ * Modified    : 2012-09-28
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -202,12 +202,13 @@ class LOVD_Individual extends LOVD_Custom {
             }
         }
 
+        $aDiseases = array_keys($this->aFormData['aDiseases'][5]);
         if (!empty($aData['active_diseases'])) {
             if (count($aData['active_diseases']) > 1 && in_array('00000', $aData['active_diseases'])) {
                 lovd_errorAdd('active_diseases', 'You cannot select both "Healthy/Control" and a disease for the same individual entry.');
             } else {
                 foreach ($aData['active_diseases'] as $nDisease) {
-                    if ($nDisease && !in_array($nDisease, array_keys($this->aFormData['aDiseases'][5]))) {
+                    if ($nDisease && !in_array($nDisease, $aDiseases)) {
                         lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease.');
                     }
                 }

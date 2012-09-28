@@ -31,6 +31,7 @@
  * LOVD is now also installable with MySQL's strict mode on.
    Closes #17: "installation error LOVD".
    (thanks to Hana Lango Allen, University of Exeter, UK, for reporting)
+ * Diseases bearing the same name are no longer allowed.
 
 
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-09-21
+ * Modified    : 2012-09-28
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,6 +37,8 @@ lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
 lovd_requireAUTH(LEVEL_CURATOR);
 
 require ROOT_PATH . 'inc-lib-form.php';
+// FIXME:
+// When importing individuals, the panelid field is not properly checked. Object::checkFields() checks only the database, so this check should be disabled and enabled here in the file.
 
 
 
@@ -44,7 +46,7 @@ require ROOT_PATH . 'inc-lib-form.php';
 
 $aModes =
     array(
-        'update' => 'Update existing data & add new data',
+        'update' => 'Update existing data & add new data (not yet implemented)',
         'insert' => 'Add only, treat all data as new',
     );
 
@@ -67,13 +69,35 @@ $nMaxSize = min(
     lovd_convertIniValueToBytes(ini_get('upload_max_filesize')),
     lovd_convertIniValueToBytes(ini_get('post_max_size')));
 
+function lovd_calculateDiffScore ($zData, $aLine)
+{
+    // Calculates the difference between the data.
+    $nDiffs = 0;
+    $nFields = count($zData);
+    foreach ($zData as $sCol => $sValue) {
+        if ($aLine[$sCol] && !in_array($sCol, array('edited_by', 'edited_date')) && $sValue != $aLine[$sCol]) {
+            // Ignoring empty data in the import file.
+            $nDiffs ++;
+        }
+    }
+    return round(100*($nDiffs / $nFields));
+}
+
 function lovd_endLine ()
 {
     // Ends the current line by cleaning up the memory and changing the line number.
-    global $aData, $i, $nLine;
+    global $aData, $i, $nLine, $_ERROR;
 
     unset($aData[$i]);
     $nLine ++;
+
+    // If we have too many errors, quit here (note that some errors can still flood the page,
+    // since they do a continue or break before reaching this part of the code).
+    if (count($_ERROR['messages']) >= 50) {
+        lovd_errorAdd('import', 'Too many errors, stopping file processing.');
+        return false;
+    }
+    return true;
 }
 
 function utf8_encode_array ($Data)
@@ -113,6 +137,10 @@ if (POST) {
         lovd_errorAdd('import', 'There was an unknown problem with receiving the file properly, possibly because of the current server settings. If the problem persists, please contact the database administrator.');
     }
 
+    if ($_POST['mode'] == 'update') {
+        lovd_errorAdd('mode', 'The "Update & Add" mode is not yet implemented!');
+    }
+
     if (!lovd_error()) {
         // Find out the MIME-type of the uploaded file. Sometimes mime_content_type() seems to return False. Don't stop processing if that happens.
         // However, when it does report something different, mention what type was found so we can debug it.
@@ -131,8 +159,7 @@ if (POST) {
                     lovd_errorAdd('mode', 'Please select the import mode from the list of options.');
                 }
 
-                // Open the file, check line endings and encodings, try to use as little memory as possible.
-                ini_set('auto_detect_line_endings', true); // Also detect Mac line endings.
+                // Open the file using file() to check the line endings, then check the encodings, try to use as little memory as possible.
                 // Reading the entire file in memory, because we need to detect the encoding and possibly convert.
                 $aData = lovd_php_file($_FILES['import']['tmp_name']);
 
@@ -163,7 +190,7 @@ if (POST) {
         // Prepare, find LOVD version and format type.
         $aParsed = array_fill_keys(
             array(
-                'Genes', 'Transcripts', 'Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome', 'Variants_On_Transcripts'
+                'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome', 'Variants_On_Transcripts'
             ), array('allowed_columns' => array(), 'columns' => array(), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
         $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
         $aImportFlags = array();
@@ -172,6 +199,7 @@ if (POST) {
         $nLine = 1;
         $nLines = count($aData);
         $nDataTotal = 0; // To show the second progress bar; how much actual work needs to be done?
+        $sMode = $_POST['mode'];
 
         foreach ($aData as $i => $sLine) {
             $sLine = trim($sLine);
@@ -239,18 +267,28 @@ if (POST) {
                     $aImportFlags[$aRegs[1]] = $aRegs[2];
                 } elseif (preg_match('/^##\s*([A-Za-z_]+)\s*##\s*Do not remove/', $sLine, $aRegs)) {
                     // New section.
+                    // Clean up old section, if available.
+                    if ($sCurrentSection) {
+                        unset($aSection['allowed_columns']);
+                        unset($aSection['columns']);
+                        unset($aSection['nColumns']);
+                        unset($aSection['object']);
+                        unset($aSection['required_columns']);
+                        unset($aSection['settings']);
+                    }
                     $sCurrentSection = $aRegs[1];
                     $bParseColumns = true;
 
+                    // So we can use short variables.
+                    $aSection = &$aParsed[$sCurrentSection];
+                    $aColumns = &$aSection['columns'];
+                    $nColumns = &$aSection['nColumns'];
+
                     // Section-specific settings and definitions.
-                    if (!in_array($sCurrentSection, array())) {
-                        $aParsed[$sCurrentSection]['required_columns'][] = 'id';
+                    if (!in_array($sCurrentSection, array('Genes_To_Diseases'))) {
+                        $aSection['required_columns'][] = 'id';
                     }
-                    if (defined('TABLE_' . strtoupper($sCurrentSection))) {
-                        // TABLE_GENES, TABLE_TRANSCRIPTS, etc.
-                        $aParsed[$sCurrentSection]['allowed_columns'] = lovd_getColumnList(constant('TABLE_' . strtoupper($sCurrentSection)));
-                        $aParsed[$sCurrentSection]['ids'] = $_DB->query('SELECT id FROM ' . constant('TABLE_' . strtoupper($sCurrentSection)))->fetchAllColumn();
-                    }
+                    $sTableName = 'TABLE_' . strtoupper($sCurrentSection);
                     switch ($sCurrentSection) {
                         case 'Genes':
                             break;
@@ -258,15 +296,43 @@ if (POST) {
                             break;
                         case 'Diseases':
                             require_once ROOT_PATH . 'class/object_diseases.php';
-                            // FIXME: If we end up never referencing to the object of a different section, then just call this $Obj and remove object from aParsed array.
-                            $aParsed[$sCurrentSection]['object'] = new LOVD_Disease();
+                            // FIXME: If we end up never referencing to the object from a different section, then just call this $Obj and remove object from aParsed array.
+                            $aSection['object'] = new LOVD_Disease();
+                            break;
+                        case 'Genes_To_Diseases':
+                            $sTableName = 'TABLE_GEN2DIS';
+                            break;
+                        case 'Individuals':
+                            require_once ROOT_PATH . 'class/object_individuals.php';
+                            // FIXME: If we end up never referencing to the object from a different section, then just call this $Obj and remove object from aParsed array.
+                            $aSection['object'] = new LOVD_Individual();
                             break;
                         default:
                             // Category not recognized!
-                            lovd_errorAdd('import', 'Error (line ' . $nLine . '): unknown section "' . $sCurrentSection . '".');
+                            lovd_errorAdd('import', 'Error (line ' . $nLine . '): Unknown section "' . $sCurrentSection . '".');
                             break 2;
                     }
+                    if (defined($sTableName)) {
+                        // TABLE_GENES, TABLE_TRANSCRIPTS, etc.
+                        $sTableName = constant($sTableName);
+                        $aSection['allowed_columns'] = lovd_getColumnList($sTableName);
 
+                        if (strpos($sTableName, '2') !== false) {
+                            // Linking tables (such as GEN2DIS) require all available columns to be present.
+                            $aSection['required_columns'] = $aSection['allowed_columns'];
+                        } else {
+                            // Normal data table, no data links.
+                            $aSection['ids'] = $_DB->query('SELECT id FROM ' . $sTableName)->fetchAllColumn();
+                        }
+                    }
+                    // For custom objects: all mandatory custom columns will be mandatory here, as well.
+                    if (isset($aSection['object']->aColumns)) {
+                        foreach ($aSection['object']->aColumns as $sCol => $aCol) {
+                            if ($aCol['mandatory']) {
+                                $aSection['required_columns'][] = $sCol;
+                            }
+                        }
+                    }
                 } // Else, it's just comments we will ignore.
                 lovd_endLine();
                 continue;
@@ -278,14 +344,9 @@ if (POST) {
                 // We are expecting columns now, because we just started a new section.
                 if (!preg_match('/^(("\{\{[A-Za-z_\/]+\}\}"|\{\{[A-Za-z_\/]+\}\})\t)+$/', $sLine . "\t")) { // FIXME: Can we make this a simpler regexp?
                     // Columns not found; either we have data without a column header, or a malformed column header. Abort import.
-                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): expected column header, got this instead:<BR><BLOCKQUOTE>' . htmlspecialchars($sLine) . '</BLOCKQUOTE>');
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Expected column header, got this instead:<BR><BLOCKQUOTE>' . htmlspecialchars($sLine) . '</BLOCKQUOTE>');
                     break;
                 }
-
-                // So we can use short variables.
-                $aSection = &$aParsed[$sCurrentSection];
-                $aColumns = &$aSection['columns'];
-                $nColumns = &$aSection['nColumns'];
 
                 $aColumns = explode("\t", $sLine);
                 $nColumns = count($aColumns);
@@ -294,8 +355,16 @@ if (POST) {
                 // Do we have all required columns?
                 $aMissingCols = array_diff($aSection['required_columns'], $aColumns);
                 if (count($aMissingCols)) {
-                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): missing required column' . (count($aMissingCols) == 1? '' : 's') . ': ' . implode(', ', $aMissingCols) . '.');
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Missing required column' . (count($aMissingCols) == 1? '' : 's') . ': ' . implode(', ', $aMissingCols) . '.');
                 }
+                // Required, custom. columns that we just reported missing, will cause more errors downstream because we have the object checking for them as well.
+                // So we'll remove them here again, the checkFields() will take care of it.
+                foreach ($aSection['required_columns'] as $nKey => $sCol) {
+                    if (strpos($sCol, '/') !== false) {
+                        unset($aSection['required_columns'][$nKey]);
+                    }
+                }
+
                 // Do we have columns we don't know?
                 $aUnknownCols = array_diff($aColumns, $aSection['allowed_columns']);
                 if (count($aUnknownCols)) {
@@ -310,12 +379,14 @@ if (POST) {
                     }
                 }
                 if (count($aDuplicateColumns)) {
-                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): the following column' . (count($aDuplicateColumns) == 1? ' is' : 's are') . ' present more than once in the list of fields: ' . implode(', ', $aDuplicateColumns) . '. Please inspect your file and make sure that the column headers contain no duplicates.');
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The following column' . (count($aDuplicateColumns) == 1? ' is' : 's are') . ' present more than once in the list of fields: ' . implode(', ', $aDuplicateColumns) . '. Please inspect your file and make sure that the column headers contain no duplicates.');
                 }
 
                 $bParseColumns = false;
-                lovd_endLine();
-                continue;
+                if (!lovd_endLine()) {
+                    break;
+                }
+                continue; // Continue to the next line.
             }
 
 
@@ -324,8 +395,10 @@ if (POST) {
             $aLine = explode("\t", $sLine);
             // For any category, the number of columns should be the same as the number of fields.
             if (count($aLine) != $nColumns) {
-                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): found ' . count($aLine) . ' fields instead of the expected ' . $nColumns . '.');
-                lovd_endLine();
+                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Found ' . count($aLine) . ' fields instead of the expected ' . $nColumns . '.');
+                if (!lovd_endLine()) {
+                    break;
+                }
                 continue; // Continue to the next line.
             }
             $aLine = array_map('trim', $aLine, array_fill(0, $nColumns, '" '));
@@ -338,27 +411,64 @@ if (POST) {
                 unset($aLine[$sCol]);
             }
 
-
-
-            // General checks: checkFields().
-            // FIXME: Not all checks are performed correctly, because checkFields() may depend on ACTION, which is not set right now.
-            //    Example: the OMIM ID of a disease is not checked if it exists in the database already, when we're adding.
-            //    We should also create an $zData if we're editing.
-            if (is_object($aParsed[$sCurrentSection]['object'])) {
-                // Object has been created. Use the object's checkFields() to have the values checked.
-                // FIXME: Highly inefficient, checkFields() calls getForm() which actually runs queries in the database.
-                //   checkFields() is not designed for being used in imports! We still need to improve its efficiency for this type of use.
-                $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
-                $aParsed[$sCurrentSection]['object']->checkFields($aLine);
-                for ($i = $nErrors; isset($_ERROR['messages'][$i]); $i++) {
-                    $_ERROR['fields'][$i] = ''; // It wants to highlight a field that's not here right now.
-                    $_ERROR['messages'][$i] = 'Error (line ' . $nLine . '): ' . $_ERROR['messages'][$i];
+            // Create all the standard column's keys in $aLine, so we can safely reference to it.
+            foreach ($aSection['allowed_columns'] as $sCol) {
+                if (!isset($aLine[$sCol])) {
+                    $aLine[$sCol] = '';
                 }
             }
 
-            // General checks: numerical ID, owned_by, created_* and edited_*.
-            if ($sCurrentSection != 'Genes' && in_array('id', $aColumns) && !ctype_digit($aLine['id'])) {
-                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): id value "' . htmlspecialchars($aLine['id']) . '" is not a numerical value.');
+
+
+            // General checks: required fields defined by import.
+            foreach ($aSection['required_columns'] as $sCol) {
+                if (empty($aLine[$sCol])) {
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Missing value for required column "' . htmlspecialchars($sCol) . '".');
+                }
+            }
+
+            // General checks: checkFields().
+            $zData = false;
+            if (isset($aSection['object']) && is_object($aSection['object'])) {
+                // Object has been created. If we're updating, get the current info from the database.
+                if ($sMode == 'update') {
+                    // FIXME: First check in 'ids' to predict if it exists or not?
+                    $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
+                    if ($zData) {
+                        // Calculate difference score, and check authorization.
+                        $nDiffScore = lovd_calculateDiffScore($zData, $aLine);
+                        if ($nDiffScore > 0 && !lovd_isAuthorized(strtolower(rtrim($sCurrentSection, 's')), $aLine['id'], false)) {
+                            // Not allowed to edit at all!
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" refers to non-existing user.');
+                        } elseif ($nDiffScore > 0) {
+                            // FIXME: TEMPORARY: Deny changes, just like in LOVD 2.0.
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Data is not equal to data in database (diffscore: ' . $nDiffScore . '), editing through import is unfortunately not allowed yet (coming soon).');
+                        } elseif ($nDiffScore > 50) {
+                            // Difference too big, maybe he's trying to change different data.
+                            $_BAR[0]->appendMessage('Warning: Will not edit ' . rtrim($sCurrentSection, 's') . ' "' . htmlspecialchars($aLine['id']) . '", the data in the database differs too much from the data in the import file, this looks like an unintended edit!', 'done');
+                        }
+                    }
+                }
+
+                // Use the object's checkFields() to have the values checked.
+                $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
+                $aSection['object']->checkFields($aLine, $zData);
+                for ($i = $nErrors; isset($_ERROR['messages'][$i]); $i++) {
+                    $_ERROR['fields'][$i] = ''; // It wants to highlight a field that's not here right now.
+                    $_ERROR['messages'][$i] = 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $_ERROR['messages'][$i];
+                }
+            }
+
+            // General checks: numerical ID, have we seen the ID before, owned_by, created_* and edited_*.
+            if (!empty($aLine['id'])) {
+                if ($sCurrentSection != 'Genes' && !ctype_digit($aLine['id'])) {
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" is not a numerical value.');
+                }
+                if (isset($aSection['data'][$aLine['id']])) {
+                    // We saw this ID before in this file!
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$aLine['id']]['nLine'] . '.');
+                    continue; // Skip to next line.
+                }
             }
             foreach (array('owned_by', 'created_by', 'edited_by') as $sCol) {
                 if (in_array($sCol, $aColumns) && $aLine[$sCol] && !in_array($aLine[$sCol], $aUsers)) {
@@ -377,31 +487,100 @@ if (POST) {
             // Per category, verify the data, including precise checks on specific columns.
             switch ($sCurrentSection) {
                 case 'Genes':
-                    // FIXME: right now just assuming we're doing a full import, not a gene import. Disallow genes that do not exist.
-                    if (!in_array($aLine['id'], $aSection['ids'])) {
-                        $_BAR[0]->appendMessage('Warning: gene "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import genes into LOVD using this file format.<BR>', 'done');
-                        break; // Continue to next line.
+                    if ($sFileType != 'Genes' && !in_array($aLine['id'], $aSection['ids'])) {
+                        // Do not allow genes that are not in the database, if we're not importing genes!
+//                        $_BAR[0]->appendMessage('Warning: gene "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import genes into LOVD using this file format.<BR>', 'done');
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Gene "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import genes into LOVD using this file format.');
                     }
                     break;
 
                 case 'Transcripts':
-                    // FIXME: right now just assuming we're doing a full import, not a transcript import. Disallow transcripts that do not exist.
-                    if (!in_array($aLine['id'], $aSection['ids'])) {
-                        $_BAR[0]->appendMessage('Warning: transcript "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['geneid'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import transcripts into LOVD using this file format.<BR>', 'done');
-                        break; // Continue to next line.
+                    if (!in_array($sFileType, array('Genes', 'Transcripts'))) {
+                        // Not importing genes or transcripts. Allowed are references to existing transcripts only!!!
+                        if (!in_array($aLine['id'], $aSection['ids'])) {
+                            // Do not allow transcripts that are not in the database, if we're not importing genes or transcripts!
+//                            $_BAR[0]->appendMessage('Warning: transcript "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['geneid'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import transcripts into LOVD using this file format.<BR>', 'done');
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Transcript "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['geneid'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import transcripts into LOVD using this file format.');
+                        } else {
+                            // FIXME: If we'll allow the creation of transcripts, and we have an object, we can use $zData here.
+                            // Transcript has been found in the database, check if NM and gene are the same. The rest we will ignore.
+                            $bExists = ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ? AND id_ncbi = ?', array($aLine['id'], $aLine['geneid'], $aLine['id_ncbi']))->fetchColumn() > 0);
+                            if (!$bExists) {
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Transcript "' . htmlspecialchars($aLine['id']) . '" does not match the same gene and/or the same NCBI ID as in the database.');
+                            }
+                        }
                     }
                     break;
 
                 case 'Diseases':
-////////////////////////////////////////////////////////////////////////////////
-// How to properly tell checkFields() what we're doing?
-// Make sure proper checks are done on edits, or for now ignore edits?
-// How to make sure this user is allowed to do what he's trying to do???
-// OMIM alread exists? "{{id_omim}}"
-// "{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"
-                    if (!in_array($aLine['id'], $aSection['ids'])) {
-                        $_BAR[0]->appendMessage('Warning: disease "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['symbol'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import diseases into LOVD using this file format.<BR>', 'done');
-                        break; // Continue to next line.
+                    if ($zData) {
+                        if ($nDiffScore && !lovd_isAuthorized('disease', $aLine['id'], false)) {
+                            // Data is being updated, but user is not allowed to edit this entry!
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Disease "' . htmlspecialchars($aLine['id']) . '".');
+                        }
+                    } else {
+                        // We're inserting. Curators at this moment are not allowed to insert diseases.
+                        if ($_AUTH['level'] < LEVEL_MANAGER) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, currently manager level is required to import new disease entries.');
+                        } else {
+                            $aLine['todo'] = 'insert'; // OK, insert.
+                        }
+                    }
+                    break;
+
+                case 'Genes_To_Diseases':
+                    // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
+                    // Create ID, so we can link to the data.
+                    $aLine['id'] = $aLine['geneid'] . '|' . (int) $aLine['diseaseid']; // This also means we lack the check for repeated lines!
+                    // Manually check for repeated lines, to prevent query errors in case of inserts.
+                    if (isset($aSection['data'][$aLine['id']])) {
+                        // We saw this ID before in this file!
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$aLine['id']]['nLine'] . '.');
+                        break; // Stop processing this line.
+                    }
+
+                    // Check references.
+                    $bGeneInDB = in_array($aLine['geneid'], $aParsed['Genes']['ids']);
+                    if ($aLine['geneid'] && !$bGeneInDB) {
+                        // Gene does not exist.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Gene "' . htmlspecialchars($aLine['geneid']) . '" does not exist in the database.');
+                    }
+                    $bDiseaseInDB = in_array($aLine['diseaseid'], $aParsed['Diseases']['ids']);
+                    $bDiseaseInFile = in_array($aLine['diseaseid'], array_keys($aParsed['Diseases']['data']));
+                    if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
+                        // Disease does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Disease "' . htmlspecialchars($aLine['diseaseid']) . '" does not exist in the database and is not defined in this import file.');
+                    } elseif ($bGeneInDB) {
+                        // No problems left, just check now if insert is necessary or not.
+                        if (!$bDiseaseInDB || ($sMode == 'insert' && $bDiseaseInFile)) {
+                            // Disease is in file (will be inserted, or it has generated errors), so flag this to be inserted!
+                            $aLine['todo'] = 'insert';
+                        } else {
+                            // Gene & Disease are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
+                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid = ?', array($aLine['geneid'], $aLine['diseaseid']))->fetchColumn();
+                            if (!$bInDB) {
+                                $aLine['todo'] = 'insert';
+                            }
+                        }
+                    }
+
+                    if (isset($aLine['todo']) && $aLine['todo'] == 'insert') {
+                        // Inserting, check rights.
+                        if ($_AUTH['level'] < LEVEL_MANAGER && !lovd_isAuthorized('gene', $aLine['geneid'])) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, you are not authorized to connect this gene to this disease.');
+                        }
+                    }
+                    break;
+
+                case 'Individuals':
+                    if ($zData) {
+                        if ($nDiffScore && !lovd_isAuthorized('individual', $aLine['id'], false)) {
+                            // Data is being updated, but user is not allowed to edit this entry!
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Individual "' . htmlspecialchars($aLine['id']) . '".');
+                        }
+                    } else {
+                        // FIXME: Default values?
+                        $aLine['todo'] = 'insert'; // OK, insert.
                     }
                     break;
 
@@ -414,22 +593,21 @@ if (POST) {
 
                 default:
                     // Bug in LOVD. Section allowed, but no data verification programmed.
-                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): undefined data verification. Please report this bug.');
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Undefined data verification. Please report this bug.');
                     break 2; // Exit parsing.
             }
 
             // Store line in array, we will run the inserts/updates after parsing the whole file.
-            // FIXME; If the entry already exists, and we're not doing an update, we can just kill this.
-            $aSection['data'][] = $aLine;
-            $nDataTotal ++;
+            if (isset($aLine['todo'])) {
+                $aLine['nLine'] = $nLine;
+                $aSection['data'][$aLine['id']] = $aLine;
+                $nDataTotal ++;
+            }
 
             $_BAR[0]->setProgress(($nLine/$nLines)*100);
-            lovd_endLine();
 
-            // If we have too many errors, quit here (note that some errors can still flood the page,
-            // since they do a continue or break before reaching this part of the code).
-            if (count($_ERROR['messages']) >= 50) {
-                lovd_errorAdd('import', 'Too many errors, stopping file processing.');
+            if (!lovd_endLine()) {
+                // Too many errors.
                 break;
             }
         }
@@ -440,20 +618,22 @@ if (POST) {
 
         // Now we have everything parsed. If there were errors, we are stopping now.
         if (!lovd_error()) {
-            foreach ($aParsed as $sCategory => $aCategory) {
+            foreach ($aParsed as $sSection => $aSection) {
 
 
 
 break;
-//   Keep system wide setting for new IDs or keep per record (+1: ID = 1, but is addition).
-//   A very very important thing here is, that if the file is only partially imported, we can't easily re=import the file if we were adding stuff.
-//     We simply wouldn't know anymore which temporary IDs are now in the database already. The checks need to be perfect.
-// Then, check if we understand everything (genes exist, transcripts exist, diseases exist).
+// Check if we understand all references (genes, transcripts, diseases).
 //   Somehow, the system must be able to in a later time parse diseases etc, but for now we should understand that the disease is not in the file and not in the system, so we don't understand everything.
-//   Also, we must be sure to check if all the keys are unqiue, otherwise we will run into query errors.
 // Then, load all new data.
 // Then, verify and process all edits.
 //   If we die here for some reason, we must be absolutely sure that we can repeat the same import...
+//   Curators are not allowed to set the edited_by to somebody else, managers are? Edited_date is always ignored and set to NOW() when doing an edit.
+//     Seems logical to ignore the edited_* fields anyway.
+//   Curators should also not always be allowed to set the status* field or both pathogenicity fields, it should be based on the individual's data!!!
+//     Check during import maybe difficult. If it is too difficult, maybe first import and then update for the not-authorized data?
+// Curators are allowed to edit diseases if isAuthorized() returns true.
+// In the end, verify if we've been using all of the $aParsed columns. If not, remove some.
 /*******************************************************************************
 
 // Needs to be curator for THIS gene.
@@ -498,42 +678,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             $nPatients = 0;
             $nPat2Var  = 0;
 
-            // 2008-02-12; 2.0-04
-            // Fixed memory consumption problem of import script occuring in large databases when loading all variant data into the memory.
-            // Full variant data will be loaded later on in this script, only when needed, one by one.
-            // $qVar = mysql_query('SELECT * FROM ' . TABLE_CURRDB_VARS);
-            $qVar = mysql_query('SELECT variantid FROM ' . TABLE_CURRDB_VARS);
-            while ($z = mysql_fetch_assoc($qVar)) {
-                $z['indb'] = true;
-                $aVariants[(int) $z['variantid']] = $z;
-            }
-
-            // 2007-06-14; 2.0-beta-04
-            // Fixed problem when importing new entries when already having entries in other gene databases.
-            // $qPat = mysql_query('SELECT p.* FROM ' . TABLE_PATIENTS . ' AS p LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (patientid) WHERE p2v.symbol = "' . $_SESSION['currdb'] . '"');
-            // 2007-09-21; 2.0-beta-09
-            // Fixed memory consumption problem of import script occuring in large databases when loading all patient data into the memory.
-            // Full patient data will be loaded later on in this script, only when needed, one by one.
-            // $qPat = mysql_query('SELECT * FROM ' . TABLE_PATIENTS);
-            $qPat = mysql_query('SELECT patientid FROM ' . TABLE_PATIENTS);
-            while ($z = mysql_fetch_assoc($qPat)) {
-                $z['indb'] = true;
-                $aPatients[(int) $z['patientid']] = $z;
-            }
-
-            // 2008-02-12; 2.0-04
-            // Fixed memory consumption problem of import script occuring in large databases when loading all patient2variant data into the memory.
-            // Full patient2variant data will be loaded later on in this script, only when needed, one by one.
-            // $qPat2Var = mysql_query('SELECT * FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $_SESSION['currdb'] . '"');
-            $qPat2Var = mysql_query('SELECT variantid, patientid, allele FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $_SESSION['currdb'] . '"');
-            while ($z = mysql_fetch_assoc($qPat2Var)) {
-                $z['indb'] = true;
-                $aPat2Var[(int) $z['variantid'] . '|' . (int) $z['patientid'] . '|' . $z['allele']] = $z;
-            }
-
-            // 2008-02-29; 2.0-04; Changed the whole pathogenicity ID code list.
-            $aTransformPathogenicity = array('0' => '1', '1' => '9', '9' => '5');
-
             // 2008-11-13; 2.0-14 added by Gerard
             // Initiate an array to keep track of assigned Variant/DBID numbers
             // use variants already seen in the upload file as keys when you add the number
@@ -554,30 +698,8 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 $aLinePat = array();
                 $aLinePat2Var = array();
 
-                // Clean first.
-                foreach ($aLine as $nKey => $sVal) {
-                    // 2009-07-14; 2.0-20; XSS attack prevention.
-                    if (preg_match('/<.*>/', $sVal)) {
-                        lovd_errorAdd('Disallowed tag found in column "' . $aColumns[$nKey] . '", on line ' . $nLine . '.');
-                    }
-
-                    // 2010-04-13; 2.0-26; Fix problem with getting quoted data in the database, by unquoting what we have here.
-                    // Data from text files is not actually quoted, but when downloading data, LOVD quotes the data.
-                    // LOVD was quoting database contents further on in this file to compare it with the imported data; of course this is removed.
-                    // Since we're using mysql_real_escape_string() later, unquote the data from the text file!
-                    // 2011-09-21; 2.0-33; But this breaks \r, \n, and \t codes in the data!
-                    $sVal = str_replace(array('\r', '\n', '\t'), array('\\\r', '\\\n', '\\\t'), $sVal);
-                    $aLine[$nKey] = stripslashes($sVal);
-                }
-
                 foreach ($aLine as $nKey => $sVal) {
                     // Loop data, and verify it.
-                    if (!isset($aColumns[$nKey])) {
-                        // We're ignoring this column.
-                        continue;
-                    }
-                    $sCol = $aColumns[$nKey];
-
                     // Check given ID's.
                     switch ($sCol) {
                         case 'variant_created_date_':
@@ -788,42 +910,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 
                 // Auto values!
                 $sPat2VarKey = $nVariantID . '|' . $nPatientID . '|' . $aLinePat2Var['allele'];
-
-                // 2008-02-12; 2.0-04
-                // Now load the variant, if necessary. This will keep the $aVariants array small.
-                if (array_key_exists($nVariantID, $aVariants) && $aVariants[$nVariantID]['indb'] && !isset($aVariants[$nVariantID]['sort'])) {
-                    // I could have picked any other standard Variant column basically.
-                    // Variant data is in the database, but not fetched yet. Do this now.
-                    $z = mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_CURRDB_VARS . ' WHERE variantid = "' . $nVariantID . '"'));
-                    // 2011-09-20; 2.0-33; Also tabs are replaced, to prevent problems while importing them (they should not be there but oh well).
-                    $z = str_replace(array("\r", "\n", "\t"), array('\r', '\n', '\t'), $z);
-                    $z['indb'] = true;
-                    $aVariants[$nVariantID] = $z;
-                }
-
-                // 2007-09-21; 2.0-beta-09
-                // Now load the patient, if necessary. This will keep the $aPatients array small.
-                if (array_key_exists($nPatientID, $aPatients) && $aPatients[$nPatientID]['indb'] && !isset($aPatients[$nPatientID]['created_by'])) {
-                    // I could have picked any other standard Patient column basically.
-                    // Patient data is in the database, but not fetched yet. Do this now.
-                    $z = mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_PATIENTS . ' WHERE patientid = "' . $nPatientID . '"'));
-                    // 2011-09-20; 2.0-33; Also tabs are replaced, to prevent problems while importing them (they should not be there but oh well).
-                    $z = str_replace(array("\r", "\n", "\t"), array('\r', '\n', '\t'), $z);
-                    $z['indb'] = true;
-                    $aPatients[$nPatientID] = $z;
-                }
-
-                // 2008-02-12; 2.0-04
-                // Now load the patient2variant entry, if necessary. This will keep the $aPat2Var array small.
-                if (array_key_exists($sPat2VarKey, $aPat2Var) && $aPat2Var[$sPat2VarKey]['indb'] && !isset($aPat2Var[$sPat2VarKey]['created_by'])) {
-                    // I could have picked any other standard Pat2Var column basically.
-                    // Pat2Var data is in the database, but not fetched yet. Do this now.
-                    $z = mysql_fetch_assoc(mysql_query('SELECT * FROM ' . TABLE_PAT2VAR . ' WHERE symbol = "' . $_SESSION['currdb'] . '" AND variantid = "' . $nVariantID . '" AND patientid = "' . $nPatientID . '" AND allele = "' . $aLinePat2Var['allele'] . '"'));
-                    // 2011-09-20; 2.0-33; Also tabs are replaced, to prevent problems while importing them (they should not be there but oh well).
-                    $z = str_replace(array("\r", "\n", "\t"), array('\r', '\n', '\t'), $z);
-                    $z['indb'] = true;
-                    $aPat2Var[$sPat2VarKey] = $z;
-                }
 
                 // If this entry is already in the database, we don't have to do anything 'cause only the first instance
                 // will be loaded into the database. The check for consistency (below) will only complain about an
@@ -1191,12 +1277,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 lovd_writeLog('MySQL:Event', 'VariantImport', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully imported ' . $nPat2Var . ' variant' . ($nVariants == 1? '' : 's') . ' and ' . $nPatients . ' patient' . ($nPatients == 1? '' : 's') . ' (' . $_SESSION['currdb'] . ')');
 
                 print('      Done importing!<BR><BR>' . "\n\n");
-                // 2009-03-18; 2.0-18; Tell the user which columns have been ignored.
-                if ($aIgnoredColumns) {
-                    // 2009-07-14; 2.0-20; Added htmlspecialchars() to prevent XSS attack through column names.
-                    // 2009-08-27; 2.0-21; Funny, that just turned <BR> into &lt;BR&gt;. Fixed that.
-                    print('      The following columns have been ignored, because they are not in the database:<BR>' . "\n" . nl2br(htmlspecialchars(implode($aIgnoredColumns, "\n"))) . "\n\n");
-                }
                 print('      <SCRIPT type="text/javascript">' . "\n" .
                       '        <!--' . "\n" .
                       '        setTimeout("window.location.href = \'' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/config.php' . lovd_showSID() . '\'", ' . (3000 + (count($aIgnoredColumns) * 2000)) . ');' . "\n" .
@@ -1227,6 +1307,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 } else {
     // Default values.
 //    $_POST['charset'] = 'utf8';
+    $_POST['mode'] = 'insert';
 }
 
 
@@ -1240,7 +1321,7 @@ print('      Using this form you can import files in LOVD\'s tab-delimited forma
       '      <BR>' . "\n\n");
 
 // FIXME: Since we can increase the memory limit anyways, maybe we can leave this message out if we nicely handle the memory?
-lovd_showInfoTable('In some cases importing big files can cause LOVD to run out of available memory. In case these errors are hidden, LOVD would return a blank screen. If this happens, split your import file into smaller chunks or ask your system administrator to allow PHP to use more memory (currently allowed: ' . ini_get('memory_limit') . 'B).<BR><A href="http://www.lovd.nl/bugs/?do=details&id=17" target="_blank">More information</A>.', 'warning', 760);
+lovd_showInfoTable('In some cases importing big files can cause LOVD to run out of available memory. In case this server hides these errors, LOVD would return a blank screen. If this happens, split your import file into smaller chunks or ask your system administrator to allow PHP to use more memory (currently allowed: ' . ini_get('memory_limit') . 'B).', 'warning', 760);
 
 lovd_errorPrint();
 
@@ -1263,7 +1344,8 @@ $aForm =
         'hr',
         array('Import mode', 'Available modes:<BR>' .
             '<B>' . $aModes['update'] . '</B>: LOVD will compare all IDs given in the file with the contents of the database. LOVD will try and update entries already found in the database using the data in the file, and LOVD will add entries that exist in the file, but not in the database.<BR>' .
-            '<B>' . $aModes['insert'] . '</B>: LOVD will use the IDs given in the file only to link the data together. All data in the file will be treated as new, and all data will receive new IDs once imported. The biggest advantage of this mode is that you do not need to know which IDs are free.', 'select', 'mode', 1, $aModes, false, false, false),
+            '<B>' . $aModes['insert'] . '</B>: LOVD will use the IDs given in the file only to link the data together. All data in the file will be treated as new, and all data will receive new IDs once imported. The biggest advantage of this mode is that you do not need to know which IDs are free.',
+            'select', 'mode', 1, $aModes, false, false, false),
         array('', '', 'note', 'Please select which import mode LOVD should use; <I>' . implode('</I> or <I>', $aModes) . '</I>. For more information on the modes, move your mouse over the ? icon.'),
         array('Character encoding of imported file', 'If your file contains special characters like &egrave;, &ouml; or even just fancy quotes like &ldquo; or &rdquo;, LOVD needs to know the file\'s character encoding to ensure the correct display of the data.', 'select', 'charset', 1, $aCharSets, false, false, false),
         array('', '', 'note', 'Please only change this setting in case you encounter problems with displaying special characters in imported data. Technical information about character encoding can be found <A href="http://en.wikipedia.org/wiki/Character_encoding" target="_blank">on Wikipedia</A>.'),
@@ -1275,4 +1357,5 @@ lovd_viewForm($aForm);
 print('</FORM>' . "\n\n");
 
 $_T->printFooter();
+//var_dump($aParsed);
 ?>

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2012-08-28
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-09-28
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -143,19 +143,26 @@ class LOVD_Disease extends LOVD_Object {
         if (!empty($aData['id_omim']) && !preg_match('/^[1-9]\d{5}$/', $aData['id_omim'])) {
             lovd_errorAdd('id_omim', 'The OMIM ID has to be six digits long and cannot start with a \'0\'.');
         }
-        $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?', array($aData['id_omim']))->fetchColumn();
-        if (!empty($aData['id_omim']) && $bExists && ($bCreate || $aData['id_omim'] != $zData['id_omim'])) {
-            lovd_errorAdd('id_omim', 'Another disease already exists with this OMIM ID!');
+        // Two diseases with the same OMIM ID are not allowed.
+        if (!empty($aData['id_omim']) && ($bCreate || $aData['id_omim'] != $zData['id_omim'])) {
+            $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?', array($aData['id_omim']))->fetchColumn();
+            if ($bExists) {
+                lovd_errorAdd('id_omim', 'Another disease already exists with this OMIM ID!');
+            }
+        }
+        // We don't like two diseases with the exact same name, either.
+        if (!empty($aData['name']) && ($bCreate || $aData['name'] != $zData['name'])) {
+            $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aData['name']))->fetchColumn();
+            if ($bExists) {
+                lovd_errorAdd('id_omim', 'Another disease already exists with the same name!');
+            }
         }
 
         if (!$bImport && $_AUTH['level'] < LEVEL_MANAGER && empty($aData['genes'])) {
             lovd_errorAdd('genes', 'You should at least select one of the genes you are curator of.');
         }
 
-        $aGenes = lovd_getGeneList();
-        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
-        //   De parent checkFields vraagt de getForm() namelijk al op.
-        //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
+        $aGenes = array_keys($this->aFormData['aGenes'][5]);
         $_POST['genes'] = array();
         if (is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
@@ -225,7 +232,7 @@ class LOVD_Disease extends LOVD_Object {
                         'skip',
                         array('', '', 'print', '<B>Relation to genes (optional)</B>'),
                         'hr',
-                        array('This disease has been linked to these genes', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
+            'aGenes' => array('This disease has been linked to these genes', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
                         'hr',
                         'skip',
                   );
