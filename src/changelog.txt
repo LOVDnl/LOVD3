@@ -32,6 +32,8 @@
    Closes #17: "installation error LOVD".
    (thanks to Hana Lango Allen, University of Exeter, UK, for reporting)
  * Diseases bearing the same name are no longer allowed.
+ * After deleting a phenotype entry, you will be forwarded to the individual's
+   detailed view.
 
 
 

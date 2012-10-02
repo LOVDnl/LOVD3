@@ -200,6 +200,7 @@ if (POST) {
         $nLines = count($aData);
         $nDataTotal = 0; // To show the second progress bar; how much actual work needs to be done?
         $sMode = $_POST['mode'];
+        $sDate = date('Y-m-d H:i:s');
 
         foreach ($aData as $i => $sLine) {
             $sLine = trim($sLine);
@@ -306,6 +307,15 @@ if (POST) {
                             require_once ROOT_PATH . 'class/object_individuals.php';
                             // FIXME: If we end up never referencing to the object from a different section, then just call this $Obj and remove object from aParsed array.
                             $aSection['object'] = new LOVD_Individual();
+                            break;
+                        case 'Individuals_To_Diseases':
+                            $sTableName = 'TABLE_IND2DIS';
+                            break;
+                        case 'Phenotypes':
+                            require_once ROOT_PATH . 'class/object_phenotypes.php';
+                            // FIXME: If we end up never referencing to the object from a different section, then just call this $Obj and remove object from aParsed array.
+                            // We don't create an object here, because we need to do that per disease. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
+                            $aSection['objects'] = array();
                             break;
                         default:
                             // Category not recognized!
@@ -427,6 +437,16 @@ if (POST) {
                 }
             }
 
+            // For shared objects, load the correct object.
+            if ($sCurrentSection == 'Phenotypes') {
+                if ($aLine['diseaseid']) {
+                    if (!isset($aSection['objects'][(int) $aLine['diseaseid']])) {
+                        $aSection['objects'][(int) $aLine['diseaseid']] = new LOVD_Phenotype($aLine['diseaseid']);
+                    }
+                    $aSection['object'] =& $aSection['objects'][(int) $aLine['diseaseid']];
+                }
+            }
+
             // General checks: checkFields().
             $zData = false;
             if (isset($aSection['object']) && is_object($aSection['object'])) {
@@ -445,7 +465,7 @@ if (POST) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Data is not equal to data in database (diffscore: ' . $nDiffScore . '), editing through import is unfortunately not allowed yet (coming soon).');
                         } elseif ($nDiffScore > 50) {
                             // Difference too big, maybe he's trying to change different data.
-                            $_BAR[0]->appendMessage('Warning: Will not edit ' . rtrim($sCurrentSection, 's') . ' "' . htmlspecialchars($aLine['id']) . '", the data in the database differs too much from the data in the import file, this looks like an unintended edit!', 'done');
+                            $_BAR[0]->appendMessage('Warning: Will not edit ' . rtrim($sCurrentSection, 's') . ' "' . htmlspecialchars($aLine['id']) . '", the data in the database differs too much from the data in the import file, this looks like an unintended edit!<BR>', 'done');
                         }
                     }
                 }
@@ -470,16 +490,41 @@ if (POST) {
                     continue; // Skip to next line.
                 }
             }
-            foreach (array('owned_by', 'created_by', 'edited_by') as $sCol) {
-                if (in_array($sCol, $aColumns) && $aLine[$sCol] && !in_array($aLine[$sCol], $aUsers)) {
-                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" refers to non-existing user.');
+            if (in_array($sCurrentSection, array('Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome'))) {
+                foreach (array('owned_by', 'created_by', 'edited_by') as $sCol) {
+                    if (in_array($sCol, $aColumns)) {
+                        if ($aLine[$sCol] && !in_array($aLine[$sCol], $aUsers)) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" refers to non-existing user.');
+                        } elseif (($sCol != 'edited_by' || $aLine['edited_date']) && !$aLine[$sCol]) {
+                            // Edited_by is only filled in if empty and edited_date is filled in.
+                            $aLine[$sCol] = $_AUTH['id'];
+                        }
+                    }
+                }
+                foreach (array('created_date', 'edited_date') as $sCol) {
+                    if (in_array($sCol, $aColumns)) {
+                        if ($aLine[$sCol] && !lovd_matchDate($aLine[$sCol], true)) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" is not a correct date format, use the format YYYY-MM-DD HH:MM:SS.');
+                        } elseif (($sCol == 'created_date' || $aLine['edited_by']) && !$aLine[$sCol]) {
+                            // Edited_date is only filled in if empty and edited_by is filled in.
+                            $aLine[$sCol] = $sDate;
+                        }
+                    }
+                }
+                // Can't be edited earlier than created.
+                if (isset($aLine['edited_date']) && $aLine['edited_date'] && $aLine['edited_date'] < $aLine['created_date']) {
+                    $aLine['edited_date'] = $aLine['created_date'];
+                }
+                // If you're not manager or higher, there are some restrictions.
+                if ($_AUTH['level'] < LEVEL_MANAGER) {
+                    $aLine['created_by'] = $_AUTH['id'];
+                    $aLine['created_date'] = $sDate;
+                    if ($aLine['edited_by']) {
+                        $aLine['edited_by'] = $_AUTH['id'];
+                    }
                 }
             }
-            foreach (array('created_date', 'edited_date') as $sCol) {
-                if (in_array($sCol, $aColumns) && $aLine[$sCol] && !lovd_matchDate($aLine[$sCol], true)) {
-                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" is not a correct date format, use the format YYYY-MM-DD HH:MM:SS.');
-                }
-            }
+
 
 
 
@@ -579,7 +624,75 @@ if (POST) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Individual "' . htmlspecialchars($aLine['id']) . '".');
                         }
                     } else {
-                        // FIXME: Default values?
+                        // FIXME: Default values of custom columns?
+                        $aLine['todo'] = 'insert'; // OK, insert.
+                    }
+                    break;
+
+                case 'Individuals_To_Diseases':
+                    // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
+                    // Create ID, so we can link to the data.
+                    $aLine['id'] = $aLine['individualid'] . '|' . (int) $aLine['diseaseid']; // This also means we lack the check for repeated lines!
+                    // Manually check for repeated lines, to prevent query errors in case of inserts.
+                    if (isset($aSection['data'][$aLine['id']])) {
+                        // We saw this ID before in this file!
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$aLine['id']]['nLine'] . '.');
+                        break; // Stop processing this line.
+                    }
+
+                    // Check references.
+                    $bIndInDB = in_array($aLine['individualid'], $aParsed['Individuals']['ids']);
+                    $bIndInFile = in_array($aLine['individualid'], array_keys($aParsed['Individuals']['data']));
+                    if ($aLine['individualid'] && !$bIndInDB && !$bIndInFile) {
+                        // Individual does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine['individualid']) . '" does not exist in the database and is not defined in this import file.');
+                    }
+                    $bDiseaseInDB = in_array($aLine['diseaseid'], $aParsed['Diseases']['ids']);
+                    $bDiseaseInFile = in_array($aLine['diseaseid'], array_keys($aParsed['Diseases']['data']));
+                    if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
+                        // Disease does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Disease "' . htmlspecialchars($aLine['diseaseid']) . '" does not exist in the database and is not defined in this import file.');
+                    } elseif ($bIndInDB || $bIndInFile) {
+                        // No problems left, just check now if insert is necessary or not.
+                        if (!$bIndInDB || !$bDiseaseInDB || ($sMode == 'insert' && ($bIndInFile || $bDiseaseInFile))) {
+                            // Individual not in database, Disease not in database or we're inserting and one of the two is in the file, so flag this to be inserted!
+                            $aLine['todo'] = 'insert';
+                        } else {
+                            // Individual & Disease are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
+                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid = ?', array($aLine['individualid'], $aLine['diseaseid']))->fetchColumn();
+                            if (!$bInDB) {
+                                $aLine['todo'] = 'insert';
+                            }
+                        }
+                    }
+
+                    if (isset($aLine['todo']) && $aLine['todo'] == 'insert') {
+                        // Inserting, check rights.
+                        if ($_AUTH['level'] < LEVEL_MANAGER && !lovd_isAuthorized('individual', $aLine['individualid'])) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, you are not authorized to connect this individual to this disease.');
+                        }
+                    }
+                    break;
+
+                case 'Phenotypes':
+                    // Check references.
+                    $bDiseaseInDB = in_array($aLine['diseaseid'], $aParsed['Diseases']['ids']);
+                    $bDiseaseInFile = in_array($aLine['diseaseid'], array_keys($aParsed['Diseases']['data']));
+                    if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
+                        // Disease does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Disease "' . htmlspecialchars($aLine['diseaseid']) . '" does not exist in the database and is not defined in this import file.');
+                    } elseif (!$bDiseaseInDB || ($sMode == 'insert' && $bDiseaseInFile)) {
+                        // We're inserting this disease, so we're not sure about the exact columns that will be active. Issue a warning.
+                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): The disease belonging to this phenotype entry is yet to be inserted into the database. Perhaps not all this phenotype entry\'s custom columns will be enabled for this disease!<BR>', 'done');
+                    }
+
+                    if ($zData) {
+                        if ($nDiffScore && !lovd_isAuthorized('phenotype', $aLine['id'], false)) {
+                            // Data is being updated, but user is not allowed to edit this entry!
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Phenotype "' . htmlspecialchars($aLine['id']) . '".');
+                        }
+                    } else {
+                        // FIXME: Default values of custom columns?
                         $aLine['todo'] = 'insert'; // OK, insert.
                     }
                     break;
@@ -628,12 +741,14 @@ break;
 // Then, load all new data.
 // Then, verify and process all edits.
 //   If we die here for some reason, we must be absolutely sure that we can repeat the same import...
-//   Curators are not allowed to set the edited_by to somebody else, managers are? Edited_date is always ignored and set to NOW() when doing an edit.
-//     Seems logical to ignore the edited_* fields anyway.
 //   Curators should also not always be allowed to set the status* field or both pathogenicity fields, it should be based on the individual's data!!!
 //     Check during import maybe difficult. If it is too difficult, maybe first import and then update for the not-authorized data?
 // Curators are allowed to edit diseases if isAuthorized() returns true.
 // In the end, verify if we've been using all of the $aParsed columns. If not, remove some.
+// Important note: we're not checking the format of phenotype fields that are not included for a certain disease. That means data may be ignored while importing, if it is in fields that are not in use for the given disease.
+//   The same holds for VOT fields.
+// Important note: how will we import phenotype data for diseases that we create in the same file? We won't know which fields will be added, thus we can't check anything!
+//   Not mandatory yes/no, field lengths, field formats, etc.
 /*******************************************************************************
 
 // Needs to be curator for THIS gene.
@@ -649,16 +764,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 
 
 
-
-
-        // Mandatory cols missing?
-        // Directly accessing $aColList, since the checkMandatory is not going to help me here.
-        foreach ($_CURRDB->aColList as $sCol => $aCol) {
-            if ($aCol['mandatory'] && !in_array($sCol, $aColumns)) {
-                // Mandatory column is missing from the file.
-                lovd_errorAdd('Bluntly refusing to import this file, as it lacks the mandatory "' . $sCol . '" (' . $aCol['head_column'] . ') column.');
-            }
-        }
 
 
 
@@ -702,32 +807,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     // Loop data, and verify it.
                     // Check given ID's.
                     switch ($sCol) {
-                        case 'variant_created_date_':
-                            if ($sVal && !preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}(\:[0-9]{2})?)?$/', $sVal)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a date I understand.');
-                            }
-                            $aLinePat2Var['created_date'] = $sVal;
-                            break;
-                        case 'patient_created_date_':
-                            if ($sVal && !preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}(\:[0-9]{2})?)?$/', $sVal)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a date I understand.');
-                            }
-                            $aLinePat['created_date'] = $sVal;
-                            break;
-                        case 'variant_edited_date_':
-                            // FIXME; check for edited id?
-                            if ($sVal && !preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}(\:[0-9]{2})?)?$/', $sVal)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a date I understand.');
-                            }
-                            $aLinePat2Var['edited_date'] = $sVal;
-                            break;
-                        case 'patient_edited_date_':
-                            // FIXME; check for edited id?
-                            if ($sVal && !preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}(\:[0-9]{2})?)?$/', $sVal)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a date I understand.');
-                            }
-                            $aLinePat['edited_date'] = $sVal;
-                            break;
                         case 'ID_sort_':
                             // If empty, will be determined at the end of this line's run.
                             $aLineVar['sort'] = $sVal;
@@ -754,120 +833,11 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                             }
                             $aLinePat2Var['pathogenic'] = $sVal;
                             break;
-                        case 'ID_status_':
-                            if ($sVal !== '') {
-                                if (!array_key_exists($sVal, $_SETT['var_status'])) {
-                                    lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a valid status ID.');
-                                }
-                            }
-                            $aLinePat2Var['status'] = $sVal;
-                            break;
-                        case 'ID_submitterid_':
-                            settype($sVal, 'int');
-                            if (!in_array($sVal, $aIDsSubs)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a valid submitter ID.');
-                            }
-                            $aLinePat['submitterid'] = $sVal;
-                            break;
-                        case 'ID_variant_created_by_':
-                            settype($sVal, 'int');
-                            if (!in_array($sVal, $aIDsUsers)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a valid user ID.');
-                            }
-                            $aLinePat2Var['created_by'] = $sVal;
-                            break;
-                        case 'ID_patient_created_by_':
-                            settype($sVal, 'int');
-                            if (!in_array($sVal, $aIDsUsers)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a valid user ID.');
-                            }
-                            $aLinePat['created_by'] = $sVal;
-                            break;
-                        case 'ID_variant_edited_by_':
-                            // FIXME; check for edited date?
-                            settype($sVal, 'int');
-                            if ($sVal && !in_array($sVal, $aIDsUsers)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a valid user ID.');
-                            }
-                            $aLinePat2Var['edited_by'] = $sVal;
-                        case 'ID_patient_edited_by_':
-                            // FIXME; check for edited date?
-                            settype($sVal, 'int');
-                            if ($sVal && !in_array($sVal, $aIDsUsers)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a valid user ID.');
-                            }
-                            $aLinePat['edited_by'] = $sVal;
-                            break;
-                        case 'ID_variantid_':
-                            // 2008-12-23; 2.0-15; adapted by Gerard to allow for empty ID_variantid_ fields
-                            if ($sVal && (!preg_match('/^[0-9]+$/', $sVal) || $sVal < 1)) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not an integer.');
-                            }
-                            settype($sVal, 'int');
-                            $aLineVar['variantid'] = $sVal;
-                            $aLinePat2Var['variantid'] = $sVal;
-                            $nVariantID = $sVal;
-                            break;
-                        case 'ID_patientid_':
-                            if (!preg_match('/^[0-9]+$/', $sVal) || $sVal < 1) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not an integer.');
-                            }
-                            settype($sVal, 'int');
-                            $aLinePat['patientid'] = $sVal;
-                            $aLinePat2Var['patientid'] = $sVal;
-                            $nPatientID = $sVal;
-                            break;
                         default:
                             // Variant or Patient column. Additional checking.
                             // Directly accessing $aColList, since the $_CURRDB methods are not going to help me here.
 
-                            // Mandatory fields.
-                            if ($_CURRDB->aColList[$sCol]['mandatory'] && !$sVal) {
-                                // Mandatory col not filled in. Did we see this line before? If so, just ignore. Empty values are allowed for repeated data.
-                                // 2008-11-05; 2.0-14; && $sCol != 'Variant/DBID' added by Gerard. That column is allowed to be empty and will be generated
-                                // 2009-08-27; 2.0-21; Variant fields are mandatory only if published.
-                                if (substr($sCol, 0, 8) == 'Variant/' && $aLine[array_search('ID_status_', $aColumns)] >= STATUS_MARKED && $sCol != 'Variant/DBID' && !array_key_exists((int) $aLine[array_search('ID_variantid_', $aColumns)], $aVariants)) {
-                                    lovd_errorAdd('Error in line ' . $nLine . ': missing value in mandatory "' . $sCol . '" column.');
-                                }
-                                // 2009-08-27; 2.0-21; Patient fields are always mandatory.
-                                if (substr($sCol, 0, 8) == 'Patient/' && !array_key_exists((int) $aLine[array_search('ID_patientid_', $aColumns)], $aPatients)) {
-                                    lovd_errorAdd('Error in line ' . $nLine . ': missing value in mandatory "' . $sCol . '" column.');
-                                }
-                            }
-
-                            // Field lengths.
-                            $nMaxLength = $_CURRDB->getFieldLength($sCol);
-                            $nLength = strlen($sVal);
-                            if ($nMaxLength < $nLength) {
-                                lovd_errorAdd('Error in line ' . $nLine . ': value of ' . $nLength . ' characters is too long for the "' . $sCol . '" column, which allows ' . $nMaxLength . ' characters.');
-                            }
-
                             if ($sVal) {
-                                // Field types.
-                                $sType = $_CURRDB->getFieldType($sCol);
-                                switch ($sType) {
-                                    case 'INT':
-                                        if (!preg_match('/^[0-9]+$/', $sVal)) {
-                                            lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not an integer.');
-                                        }
-                                        break;
-                                    case 'DEC':
-                                        if (!is_numeric($sVal)) {
-                                            lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not numeric.');
-                                        }
-                                        break;
-                                    case 'DATETIME':
-                                        if (!preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}\:[0-9]{2})?$/', $sVal)) {
-                                            lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a date I understand.');
-                                        }
-                                        break;
-                                    case 'DATE':
-                                        if (!lovd_matchDate($sVal)) {
-                                            lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a date I understand.');
-                                        }
-                                        break;
-                                }
-
                                 // Regular expressions.
                                 if ($_CURRDB->aColList[$sCol]['preg_pattern'] && !preg_match($_CURRDB->aColList[$sCol]['preg_pattern'], $sVal)) {
                                     lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column does not correspond to the required input pattern.');

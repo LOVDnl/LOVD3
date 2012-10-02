@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-09-24
+ * Modified    : 2012-10-02
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -158,6 +158,12 @@ class LOVD_Phenotype extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
         global $_AUTH, $_DB, $_SETT;
 
         if (ACTION == 'edit') {
@@ -165,7 +171,11 @@ class LOVD_Phenotype extends LOVD_Custom {
             $_POST['diseaseid'] = $zData['diseaseid'];
         }
 
-        $sDisease = $_DB->query('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($_POST['diseaseid']))->fetchColumn();
+        if (!empty($_POST['diseaseid'])) {
+            $sDisease = $_DB->query('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($_POST['diseaseid']))->fetchColumn();
+        } else {
+            $sDisease = 'all diseases';
+        }
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id > 0 ORDER BY name')->fetchAllCombine();

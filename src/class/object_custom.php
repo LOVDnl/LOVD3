@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-09-24
+ * Modified    : 2012-10-02
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -90,9 +90,8 @@ class LOVD_Custom extends LOVD_Object {
                             'AND sc.geneid IN(?' . str_repeat(', ?', count($aArgs) - 1) . ') ' .
                             'ORDER BY sc.col_order, sc.colid';
                 }
-            } else {
+            } elseif ($this->nID) {
                 // FIXME; kan er niet wat specifieke info in de objects (e.g. object_phenotypes) worden opgehaald, zodat dit stukje hier niet nodig is?
-                // FIXME; don't we need a way to fetch all active custom column info, so we can make a general phenotype overview?
                 if ($this->sObject == 'Phenotype') {
                     $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
                             'FROM ' . TABLE_COLS . ' AS c ' .
@@ -112,6 +111,11 @@ class LOVD_Custom extends LOVD_Object {
                             'ORDER BY sc.col_order';
                 }
                 $aArgs[] = $this->nID;
+            } else {
+                $sSQL = 'SELECT c.*, c.id AS colid ' .
+                        'FROM ' . TABLE_COLS . ' AS c ' .
+                        'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
+                        'ORDER BY c.col_order';
             }
         }
         $q = $_DB->query($sSQL, $aArgs);
@@ -391,7 +395,7 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Checks if field input corresponds to the given regexp pattern.
         $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
-        if ($this->aColumns[$sColClean]['preg_pattern'] && !empty($_POST[$sCol])) {
+        if ($this->aColumns[$sColClean]['preg_pattern'] && $val) {
             if (!preg_match($this->aColumns[$sColClean]['preg_pattern'], $val)) {
                 lovd_errorAdd($sCol, 'The input in the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' field does not correspond to the required input pattern.');
             }
