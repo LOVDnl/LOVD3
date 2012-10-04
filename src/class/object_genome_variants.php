@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-09-27
+ * Modified    : 2012-10-04
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -204,18 +204,13 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             if (empty($aData['VariantOnGenome/DBID'])) {
                 $aData['VariantOnGenome/DBID'] = $_POST['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
             } elseif (!lovd_checkDBID($aData)) {
-                lovd_errorAdd('VariantOnGenome/DBID', 'Please enter a valid ID in the \'ID\' field or leave it blank and LOVD will predict it.');
+                lovd_errorAdd('VariantOnGenome/DBID', 'Please enter a valid ID in the ' . (lovd_getProjectFile() == '/import.php'? 'VariantOnGenome/DBID' : '\'ID\'') . ' field or leave it blank and LOVD will predict it.');
             }
         }
 
         parent::checkFields($aData);
 
         // Checks fields before submission of data.
-        $aAlleles = $_DB->query('SELECT id FROM ' . TABLE_ALLELES)->fetchAllColumn();
-        if (!isset($aData['allele']) || !in_array($aData['allele'], $aAlleles)) {
-            lovd_errorAdd('allele', 'Please select a proper allele from the \'Allele\' selection box.');
-        }
-
         if (isset($aData['effect_reported']) && !array_key_exists($aData['effect_reported'], $_SETT['var_effect'])) {
             lovd_errorAdd('effect_reported', 'Please select a proper functional effect from the \'Affects function (reported)\' selection box.');
         }

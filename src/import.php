@@ -33,12 +33,14 @@ require ROOT_PATH . 'inc-init.php';
 ini_set('auto_detect_line_endings', true); // So we can work with Mac files also...
 
 // Require curator clearance.
-lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
-lovd_requireAUTH(LEVEL_CURATOR);
+//lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+//lovd_requireAUTH(LEVEL_CURATOR);
+lovd_requireAUTH(LEVEL_MANAGER);
 
 require ROOT_PATH . 'inc-lib-form.php';
 // FIXME:
-// When importing individuals, the panelid field is not properly checked. Object::checkFields() checks only the database, so this check should be disabled and enabled here in the file.
+// When importing individuals, the panelid field is not properly checked. Object::checkFields() checks only the database, so this check should be disabled for imports and enabled here in the file.
+
 
 
 
@@ -297,7 +299,6 @@ if (POST) {
                             break;
                         case 'Diseases':
                             require_once ROOT_PATH . 'class/object_diseases.php';
-                            // FIXME: If we end up never referencing to the object from a different section, then just call this $Obj and remove object from aParsed array.
                             $aSection['object'] = new LOVD_Disease();
                             break;
                         case 'Genes_To_Diseases':
@@ -305,7 +306,6 @@ if (POST) {
                             break;
                         case 'Individuals':
                             require_once ROOT_PATH . 'class/object_individuals.php';
-                            // FIXME: If we end up never referencing to the object from a different section, then just call this $Obj and remove object from aParsed array.
                             $aSection['object'] = new LOVD_Individual();
                             break;
                         case 'Individuals_To_Diseases':
@@ -313,9 +313,20 @@ if (POST) {
                             break;
                         case 'Phenotypes':
                             require_once ROOT_PATH . 'class/object_phenotypes.php';
-                            // FIXME: If we end up never referencing to the object from a different section, then just call this $Obj and remove object from aParsed array.
                             // We don't create an object here, because we need to do that per disease. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
                             $aSection['objects'] = array();
+                            break;
+                        case 'Screenings':
+                            require_once ROOT_PATH . 'class/object_screenings.php';
+                            $aSection['object'] = new LOVD_Screening();
+                            break;
+                        case 'Screenings_To_Genes':
+                            $sTableName = 'TABLE_SCR2GENE';
+                            break;
+                        case 'Variants_On_Genome':
+                            $sTableName = 'TABLE_VARIANTS';
+                            require_once ROOT_PATH . 'class/object_genome_variants.php';
+                            $aSection['object'] = new LOVD_GenomeVariant();
                             break;
                         default:
                             // Category not recognized!
@@ -470,6 +481,14 @@ if (POST) {
                     }
                 }
 
+                // We'll need to split the functional consequence field to have checkFields() function normally.
+                if (in_array($sCurrentSection, array('Variants_On_Genome'))) {
+                    $aLine['effect_reported'] = $aLine['effectid']{0};
+                    $aLine['effect_concluded'] = $aLine['effectid']{1};
+                }
+
+
+
                 // Use the object's checkFields() to have the values checked.
                 $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
                 $aSection['object']->checkFields($aLine, $zData);
@@ -491,7 +510,8 @@ if (POST) {
                 }
             }
             if (in_array($sCurrentSection, array('Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome'))) {
-                foreach (array('owned_by', 'created_by', 'edited_by') as $sCol) {
+                foreach (array('created_by', 'edited_by') as $sCol) {
+                    // Check is not needed for owned_by, because the form should have a selection list (which is checked separately).
                     if (in_array($sCol, $aColumns)) {
                         if ($aLine[$sCol] && !in_array($aLine[$sCol], $aUsers)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" refers to non-existing user.');
@@ -632,7 +652,7 @@ if (POST) {
                 case 'Individuals_To_Diseases':
                     // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
                     // Create ID, so we can link to the data.
-                    $aLine['id'] = $aLine['individualid'] . '|' . (int) $aLine['diseaseid']; // This also means we lack the check for repeated lines!
+                    $aLine['id'] = (int) $aLine['individualid'] . '|' . (int) $aLine['diseaseid']; // This also means we lack the check for repeated lines!
                     // Manually check for repeated lines, to prevent query errors in case of inserts.
                     if (isset($aSection['data'][$aLine['id']])) {
                         // We saw this ID before in this file!
@@ -690,6 +710,67 @@ if (POST) {
                         if ($nDiffScore && !lovd_isAuthorized('phenotype', $aLine['id'], false)) {
                             // Data is being updated, but user is not allowed to edit this entry!
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Phenotype "' . htmlspecialchars($aLine['id']) . '".');
+                        }
+                    } else {
+                        // FIXME: Default values of custom columns?
+                        $aLine['todo'] = 'insert'; // OK, insert.
+                    }
+                    break;
+
+                case 'Screenings':
+                    if ($zData) {
+                        if ($nDiffScore && !lovd_isAuthorized('screening', $aLine['id'], false)) {
+                            // Data is being updated, but user is not allowed to edit this entry!
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Screening "' . htmlspecialchars($aLine['id']) . '".');
+                        }
+                    } else {
+                        // FIXME: Default values of custom columns?
+                        $aLine['todo'] = 'insert'; // OK, insert.
+                    }
+                    break;
+
+                case 'Screenings_To_Genes':
+                    // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
+                    // Create ID, so we can link to the data.
+                    $aLine['id'] = (int) $aLine['screeningid'] . '|' . $aLine['geneid']; // This also means we lack the check for repeated lines!
+                    // Manually check for repeated lines, to prevent query errors in case of inserts.
+                    if (isset($aSection['data'][$aLine['id']])) {
+                        // We saw this ID before in this file!
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$aLine['id']]['nLine'] . '.');
+                        break; // Stop processing this line.
+                    }
+
+                    // Check references.
+                    $bGeneInDB = in_array($aLine['geneid'], $aParsed['Genes']['ids']);
+                    if ($aLine['geneid'] && !$bGeneInDB) {
+                        // Gene does not exist.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Gene "' . htmlspecialchars($aLine['geneid']) . '" does not exist in the database.');
+                    }
+                    $bScreeningInDB = in_array($aLine['screeningid'], $aParsed['Screenings']['ids']);
+                    $bScreeningInFile = in_array($aLine['screeningid'], array_keys($aParsed['Screenings']['data']));
+                    if ($aLine['screeningid'] && !$bScreeningInFile && !$bScreeningInDB) {
+                        // Screening does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Screening "' . htmlspecialchars($aLine['screeningid']) . '" does not exist in the database and is not defined in this import file.');
+                    } elseif ($bGeneInDB) {
+                        // No problems left, just check now if insert is necessary or not.
+                        if (!$bScreeningInDB || ($sMode == 'insert' && $bScreeningInFile)) {
+                            // Screening is in file (will be inserted, or it has generated errors), so flag this to be inserted!
+                            $aLine['todo'] = 'insert';
+                        } else {
+                            // Gene & Screening are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
+                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCR2GENE . ' WHERE geneid = ? AND screeningid = ?', array($aLine['geneid'], $aLine['screeningid']))->fetchColumn();
+                            if (!$bInDB) {
+                                $aLine['todo'] = 'insert';
+                            }
+                        }
+                    }
+                    break;
+
+                case 'Variants_On_Genome':
+                    if ($zData) {
+                        if ($nDiffScore && !lovd_isAuthorized('variant', $aLine['id'], false)) {
+                            // Data is being updated, but user is not allowed to edit this entry!
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Variant "' . htmlspecialchars($aLine['id']) . '".');
                         }
                     } else {
                         // FIXME: Default values of custom columns?

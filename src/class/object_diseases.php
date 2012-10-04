@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2012-09-28
+ * Modified    : 2012-10-04
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -162,13 +162,10 @@ class LOVD_Disease extends LOVD_Object {
             lovd_errorAdd('genes', 'You should at least select one of the genes you are curator of.');
         }
 
-        $aGenes = array_keys($this->aFormData['aGenes'][5]);
         $_POST['genes'] = array();
         if (is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
-                if ($sGene && !in_array($sGene, $aGenes)) {
-                    lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene.');
-                } elseif (!lovd_isAuthorized('gene', $sGene, false) && $bCreate) {
+                if (!lovd_isAuthorized('gene', $sGene, false) && $bCreate) {
                     lovd_errorAdd('genes', 'You are not authorized to add this disease to gene ' . htmlspecialchars($sGene) . '.');
                 } else {
                     $_POST['genes'][] = $sGene;

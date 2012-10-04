@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-09-24
+ * Modified    : 2012-10-04
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -223,18 +223,6 @@ class LOVD_Gene extends LOVD_Object {
 
         if (!in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
             lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, or LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
-        }
-
-        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
-        //   De parent checkFields vraagt de getForm() namelijk al op.
-        // Ivar: Maar de getForm gaat dan toch alsnog de query uitvoeren????
-        $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES)->fetchAllColumn();
-        if (isset($aData['active_diseases']) && is_array($aData['active_diseases'])) {
-            foreach ($aData['active_diseases'] as $nDisease) {
-                if ($nDisease && !in_array($nDisease, $aDiseases)) {
-                    lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease');
-                }
-            }
         }
 
         if (!empty($aData['refseq']) && empty($aData['refseq_url'])) {

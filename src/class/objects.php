@@ -170,6 +170,7 @@ class LOVD_Object {
             // Checking free text fields for max length, data types, etc.
             if (in_array($sType, array('text', 'textarea')) && $sMySQLType = lovd_getColumnType(constant($this->sTable), $sNameClean)) {
                 // FIXME; we're assuming here, that $sName equals the database name. Which is true in probably most/every case, but even so...
+                // FIXME; select fields might also benefit from having this check (especially for import).
 
                 // Check max length.
                 $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
@@ -217,13 +218,30 @@ class LOVD_Object {
                     }
                 }
 
-            } elseif ($sType == 'select' && !empty($aField[7])) {
-                // The browser fails to send value if selection list w/ multiple selection options is left empty.
-                // This is causing notices in the code.
-                // FIXME; is it also with selection lists with a size > 1? Then you should change the check above.
-                if (!isset($aData[$sName])) {
-                    $GLOBALS['_' . $aFormInfo[0]][$sName] = array();
-                    $aData[$sName] = array();
+            } elseif ($sType == 'select') {
+                if (!empty($aField[7])) {
+                    // The browser fails to send value if selection list w/ multiple selection options is left empty.
+                    // This is causing notices in the code.
+                    if (!isset($aData[$sName])) {
+                        $GLOBALS['_' . $aFormInfo[0]][$sName] = array();
+                        $aData[$sName] = array();
+                    }
+                }
+                // Simple check on non-custom columns (custom columns have their own function for this) to see if the given value is actually allowed.
+                if (strpos($sName, '/') === false && !empty($aData[$sName])) {
+                    $Val = $aData[$sName];
+                    $aOptions = array_keys($aField[5]);
+                    if (lovd_getProjectFile() == '/import.php') {
+                        $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
+                    } elseif (!is_array($Val)) {
+                        $Val = array($Val);
+                    }
+                    foreach ($Val as $sValue) {
+                        $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
+                        if (!in_array($sValue, $aOptions)) {
+                            lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                        }
+                    }
                 }
 
             } elseif ($sType == 'checkbox') {

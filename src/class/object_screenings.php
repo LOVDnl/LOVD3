@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-09-27
+ * Modified    : 2012-10-04
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -167,15 +167,8 @@ class LOVD_Screening extends LOVD_Custom {
                       );
         parent::checkFields($aData);
 
-        $aGenes = array_keys($this->aFormData['aGenes'][5]);
         if (!empty($aData['genes']) && is_array($aData['genes'])) {
-            if (count($aData['genes']) <= 15) {
-                foreach ($aData['genes'] as $sGene) {
-                    if ($sGene && !in_array($sGene, $aGenes)) {
-                        lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene.');
-                    }
-                }
-            } else {
+            if (count($aData['genes']) > 15) {
                 lovd_errorAdd('genes', 'Please select no more than 15 genes. For genome-wide analysis, <B>no</B> genes should be selected.');
             }
         }

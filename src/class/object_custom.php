@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-10-02
+ * Modified    : 2012-10-04
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -359,26 +359,13 @@ class LOVD_Custom extends LOVD_Object {
             }
         }
 
-        if (!empty($aData['owned_by'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
-                    // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this data\' selection box.');
-                }
-            } else {
+        if ($_AUTH['level'] < LEVEL_CURATOR) {
+            if (!empty($aData['owned_by'])) {
                 // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
                 lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this data\'.');
             }
-        }
 
-        if (!empty($aData['statusid'])) {
-            $aSelectStatus = $_SETT['data_status'];
-            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_PENDING]);
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                if (!array_key_exists($aData['statusid'], $aSelectStatus)) {
-                    lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
-                }
-            } else {
+            if (!empty($aData['statusid'])) {
                 // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
                 lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
             }
@@ -397,7 +384,7 @@ class LOVD_Custom extends LOVD_Object {
         $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
         if ($this->aColumns[$sColClean]['preg_pattern'] && $val) {
             if (!preg_match($this->aColumns[$sColClean]['preg_pattern'], $val)) {
-                lovd_errorAdd($sCol, 'The input in the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' field does not correspond to the required input pattern.');
+                lovd_errorAdd($sCol, 'The input in the \'' . (lovd_getProjectFile() == '/import.php'? $sColClean : $this->aColumns[$sColClean]['form_type'][0]) . '\' field does not correspond to the required input pattern.');
             }
         }
     }
@@ -413,11 +400,15 @@ class LOVD_Custom extends LOVD_Object {
         if ($this->aColumns[$sColClean]['form_type'][2] == 'select' && $this->aColumns[$sColClean]['form_type'][3] >= 1) {
             if (!empty($Val)) {
                 $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sColClean]['select_options']); // Trim whitespace from the options.
-                (!is_array($Val)? $Val = array($Val) : false);
+                if (lovd_getProjectFile() == '/import.php') {
+                    $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
+                } elseif (!is_array($Val)) {
+                    $Val = array($Val);
+                }
                 foreach ($Val as $sValue) {
                     $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
                     if (!in_array($sValue, $aOptions)) {
-                        lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                        lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . (lovd_getProjectFile() == '/import.php'? $sColClean : $this->aColumns[$sColClean]['form_type'][0]) . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
                         break;
                     }
                 }
