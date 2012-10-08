@@ -87,7 +87,7 @@ class LOVD_Custom extends LOVD_Object {
                             'FROM ' . TABLE_COLS . ' AS c ' .
                             'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
                             'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
-                            'AND sc.geneid IN(?' . str_repeat(', ?', count($aArgs) - 1) . ') ' .
+                            'AND sc.geneid IN (?' . str_repeat(', ?', count($aArgs) - 1) . ') ' .
                             'ORDER BY sc.col_order, sc.colid';
                 }
             } elseif ($this->nID) {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-09-28
+ * Modified    : 2012-10-05
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -36,11 +36,16 @@ ini_set('auto_detect_line_endings', true); // So we can work with Mac files also
 //lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
 //lovd_requireAUTH(LEVEL_CURATOR);
 lovd_requireAUTH(LEVEL_MANAGER);
+// FIXME: How do we implement authorization? First parse everything, THEN using the parsed data we check if user has rights to insert this data?
 
 require ROOT_PATH . 'inc-lib-form.php';
 // FIXME:
 // When importing individuals, the panelid field is not properly checked. Object::checkFields() checks only the database, so this check should be disabled for imports and enabled here in the file.
-
+// Values in custom columns not in use, are stored anyway. They're not checked, because they don't appear on the form and the objects only check fields that are on the form.
+//   The result is that when you enable a column, values may already be in the database, but might completely be wrong (wrong data type, invalid select value, etc).
+//   If we decide to toss the value, report?
+// Default values of position fields of variant? Default values for DBID? Defaults for...?
+// Numerical field, we insert ""? Will become 0, but should be NULL.
 
 
 
@@ -328,6 +333,16 @@ if (POST) {
                             require_once ROOT_PATH . 'class/object_genome_variants.php';
                             $aSection['object'] = new LOVD_GenomeVariant();
                             break;
+                        case 'Variants_On_Transcripts':
+                            $sTableName = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
+                            $aSection['required_columns'][] = 'transcriptid';
+                            require_once ROOT_PATH . 'class/object_transcript_variants.php';
+                            // We don't create an object here, because we need to do that per gene. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
+                            $aSection['objects'] = array();
+                            break;
+                        case 'Screenings_To_Variants':
+                            $sTableName = 'TABLE_SCR2VAR';
+                            break;
                         default:
                             // Category not recognized!
                             lovd_errorAdd('import', 'Error (line ' . $nLine . '): Unknown section "' . $sCurrentSection . '".');
@@ -449,13 +464,33 @@ if (POST) {
             }
 
             // For shared objects, load the correct object.
-            if ($sCurrentSection == 'Phenotypes') {
-                if ($aLine['diseaseid']) {
-                    if (!isset($aSection['objects'][(int) $aLine['diseaseid']])) {
-                        $aSection['objects'][(int) $aLine['diseaseid']] = new LOVD_Phenotype($aLine['diseaseid']);
-                    }
-                    $aSection['object'] =& $aSection['objects'][(int) $aLine['diseaseid']];
+            if ($sCurrentSection == 'Phenotypes' && $aLine['diseaseid']) {
+                if (!isset($aSection['objects'][(int) $aLine['diseaseid']])) {
+                    $aSection['objects'][(int) $aLine['diseaseid']] = new LOVD_Phenotype($aLine['diseaseid']);
                 }
+                $aSection['object'] =& $aSection['objects'][(int) $aLine['diseaseid']];
+            }
+            $sGene = '';
+            if ($sCurrentSection == 'Variants_On_Transcripts' && $aLine['transcriptid']) {
+                // We have to include some checks here instead of below, because we need to verify that we understand the transcriptID and get to the Gene.
+                $bTranscriptInDB = in_array($aLine['transcriptid'], $aParsed['Transcripts']['ids']);
+                $bTranscriptInFile = isset($aParsed['Transcripts']['data'][(int) $aLine['transcriptid']]);
+                if (!$bTranscriptInFile && !$bTranscriptInDB) {
+                    // Transcript does not exist and is not defined in the import file.
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Transcript "' . htmlspecialchars($aLine['transcriptid']) . '" does not exist in the database and is not defined in this import file.');
+                } elseif ($bTranscriptInFile) {
+                    $sGene = $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']]['geneid'];
+                    $bGeneInDB = in_array($sGene, $aParsed['Genes']['ids']);
+                } else {
+                    $sGene = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($aLine['transcriptid']))->fetchColumn();
+                    $bGeneInDB = true;
+                    // Store for the next VOT.
+                    $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']] = array('id' => $aLine['transcriptid'], 'geneid' => $sGene, 'todo' => '');
+                }
+                if (!isset($aSection['objects'][$sGene])) {
+                    $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
+                }
+                $aSection['object'] =& $aSection['objects'][$sGene];
             }
 
             // General checks: checkFields().
@@ -482,7 +517,10 @@ if (POST) {
                 }
 
                 // We'll need to split the functional consequence field to have checkFields() function normally.
-                if (in_array($sCurrentSection, array('Variants_On_Genome'))) {
+                if (in_array($sCurrentSection, array('Variants_On_Genome', 'Variants_On_Transcripts'))) {
+                    if (strlen($aLine['effectid']) != 2) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Please select a valid entry from the \'effect_reported\' selection box.');
+                    }
                     $aLine['effect_reported'] = $aLine['effectid']{0};
                     $aLine['effect_concluded'] = $aLine['effectid']{1};
                 }
@@ -574,6 +612,8 @@ if (POST) {
                                 lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Transcript "' . htmlspecialchars($aLine['id']) . '" does not match the same gene and/or the same NCBI ID as in the database.');
                             }
                         }
+                        // Just store the data in the $aParsed array, such that VOTs can reference to it.
+                        $aLine['todo'] = 'store';
                     }
                     break;
 
@@ -588,6 +628,7 @@ if (POST) {
                         if ($_AUTH['level'] < LEVEL_MANAGER) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, currently manager level is required to import new disease entries.');
                         } else {
+                            // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                             $aLine['todo'] = 'insert'; // OK, insert.
                         }
                     }
@@ -611,7 +652,7 @@ if (POST) {
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Gene "' . htmlspecialchars($aLine['geneid']) . '" does not exist in the database.');
                     }
                     $bDiseaseInDB = in_array($aLine['diseaseid'], $aParsed['Diseases']['ids']);
-                    $bDiseaseInFile = in_array($aLine['diseaseid'], array_keys($aParsed['Diseases']['data']));
+                    $bDiseaseInFile = isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]);
                     if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
                         // Disease does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Disease "' . htmlspecialchars($aLine['diseaseid']) . '" does not exist in the database and is not defined in this import file.');
@@ -645,6 +686,7 @@ if (POST) {
                         }
                     } else {
                         // FIXME: Default values of custom columns?
+                        // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                         $aLine['todo'] = 'insert'; // OK, insert.
                     }
                     break;
@@ -662,13 +704,13 @@ if (POST) {
 
                     // Check references.
                     $bIndInDB = in_array($aLine['individualid'], $aParsed['Individuals']['ids']);
-                    $bIndInFile = in_array($aLine['individualid'], array_keys($aParsed['Individuals']['data']));
+                    $bIndInFile = isset($aParsed['Individuals']['data'][(int) $aLine['individualid']]);
                     if ($aLine['individualid'] && !$bIndInDB && !$bIndInFile) {
                         // Individual does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine['individualid']) . '" does not exist in the database and is not defined in this import file.');
                     }
                     $bDiseaseInDB = in_array($aLine['diseaseid'], $aParsed['Diseases']['ids']);
-                    $bDiseaseInFile = in_array($aLine['diseaseid'], array_keys($aParsed['Diseases']['data']));
+                    $bDiseaseInFile = isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]);
                     if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
                         // Disease does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Disease "' . htmlspecialchars($aLine['diseaseid']) . '" does not exist in the database and is not defined in this import file.');
@@ -697,13 +739,19 @@ if (POST) {
                 case 'Phenotypes':
                     // Check references.
                     $bDiseaseInDB = in_array($aLine['diseaseid'], $aParsed['Diseases']['ids']);
-                    $bDiseaseInFile = in_array($aLine['diseaseid'], array_keys($aParsed['Diseases']['data']));
+                    $bDiseaseInFile = isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]);
                     if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
                         // Disease does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Disease "' . htmlspecialchars($aLine['diseaseid']) . '" does not exist in the database and is not defined in this import file.');
                     } elseif (!$bDiseaseInDB || ($sMode == 'insert' && $bDiseaseInFile)) {
                         // We're inserting this disease, so we're not sure about the exact columns that will be active. Issue a warning.
                         $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): The disease belonging to this phenotype entry is yet to be inserted into the database. Perhaps not all this phenotype entry\'s custom columns will be enabled for this disease!<BR>', 'done');
+                    }
+                    $bIndInDB = in_array($aLine['individualid'], $aParsed['Individuals']['ids']);
+                    $bIndInFile = isset($aParsed['Individuals']['data'][(int) $aLine['individualid']]);
+                    if ($aLine['individualid'] && !$bIndInDB && !$bIndInFile) {
+                        // Individual does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine['individualid']) . '" does not exist in the database and is not defined in this import file.');
                     }
 
                     if ($zData) {
@@ -713,11 +761,20 @@ if (POST) {
                         }
                     } else {
                         // FIXME: Default values of custom columns?
+                        // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                         $aLine['todo'] = 'insert'; // OK, insert.
                     }
                     break;
 
                 case 'Screenings':
+                    // Check references.
+                    $bIndInDB = in_array($aLine['individualid'], $aParsed['Individuals']['ids']);
+                    $bIndInFile = isset($aParsed['Individuals']['data'][(int) $aLine['individualid']]);
+                    if ($aLine['individualid'] && !$bIndInDB && !$bIndInFile) {
+                        // Individual does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine['individualid']) . '" does not exist in the database and is not defined in this import file.');
+                    }
+
                     if ($zData) {
                         if ($nDiffScore && !lovd_isAuthorized('screening', $aLine['id'], false)) {
                             // Data is being updated, but user is not allowed to edit this entry!
@@ -725,6 +782,7 @@ if (POST) {
                         }
                     } else {
                         // FIXME: Default values of custom columns?
+                        // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                         $aLine['todo'] = 'insert'; // OK, insert.
                     }
                     break;
@@ -747,7 +805,7 @@ if (POST) {
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Gene "' . htmlspecialchars($aLine['geneid']) . '" does not exist in the database.');
                     }
                     $bScreeningInDB = in_array($aLine['screeningid'], $aParsed['Screenings']['ids']);
-                    $bScreeningInFile = in_array($aLine['screeningid'], array_keys($aParsed['Screenings']['data']));
+                    $bScreeningInFile = isset($aParsed['Screenings']['data'][(int) $aLine['screeningid']]);
                     if ($aLine['screeningid'] && !$bScreeningInFile && !$bScreeningInDB) {
                         // Screening does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Screening "' . htmlspecialchars($aLine['screeningid']) . '" does not exist in the database and is not defined in this import file.');
@@ -767,6 +825,12 @@ if (POST) {
                     break;
 
                 case 'Variants_On_Genome':
+                    foreach (array('position_g_start', 'position_g_end', 'mapping_flags') as $sCol) {
+                        if ($aLine[$sCol] && !ctype_digit($aLine[$sCol])) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Invalud value in the \'' . $sCol . '\' field: "' . htmlspecialchars($aLine[$sCol]) . '" is not a numerical value.');
+                        }
+                    }
+
                     if ($zData) {
                         if ($nDiffScore && !lovd_isAuthorized('variant', $aLine['id'], false)) {
                             // Data is being updated, but user is not allowed to edit this entry!
@@ -774,16 +838,85 @@ if (POST) {
                         }
                     } else {
                         // FIXME: Default values of custom columns?
+                        // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                         $aLine['todo'] = 'insert'; // OK, insert.
                     }
                     break;
 
+                case 'Variants_On_Transcripts':
+                    // Check references.
+                    $bVariantInDB = in_array($aLine['id'], $aParsed['Variants_On_Genome']['ids']);
+                    $bVariantInFile = isset($aParsed['Variants_On_Genome']['data'][(int) $aLine['id']]);
+                    if ($aLine['id'] && !$bVariantInFile && !$bVariantInDB) {
+                        // Variant does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Genomic Variant "' . htmlspecialchars($aLine['id']) . '" does not exist in the database and is not defined in this import file.');
+                    }
+                    // FIXME: Check if referenced variant is actually on the same chromosome?
 
+                    if (!$bGeneInDB) {
+                        // We're inserting this variant, but the gene does not exist yet, so we're not sure about the exact columns that will be active. For variants, this is fatal.
+                        //   Actually, this error will always come with the error that the gene mentioned in the file is not yet inserted and that it can't be inserted by this script, right?
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The gene this belonging to this variant entry is yet to be inserted into the database. First create the gene and set up the custom columns, then import the variants.');
+                    }
 
+                    foreach (array('position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron') as $sCol) {
+                        if ($aLine[$sCol] && !is_numeric($aLine[$sCol])) {
+                            // No ctype_digit() here, because that doesn't match negative numbers.
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Invalud value in the \'' . $sCol . '\' field: "' . htmlspecialchars($aLine[$sCol]) . '" is not a numerical value.');
+                        }
+                    }
 
+                    if ($zData) {
+                        if ($nDiffScore && !lovd_isAuthorized('variant', $aLine['id'], false)) {
+                            // Data is being updated, but user is not allowed to edit this entry!
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Variant "' . htmlspecialchars($aLine['id']) . '".');
+                        }
+                    } else {
+                        // FIXME: Default values of custom columns?
+                        // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
+                        $aLine['todo'] = 'insert'; // OK, insert.
+                    }
+                    break;
 
+                case 'Screenings_To_Variants':
+                    // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
+                    // Create ID, so we can link to the data.
+                    $aLine['id'] = (int) $aLine['screeningid'] . '|' . $aLine['variantid']; // This also means we lack the check for repeated lines!
+                    // Manually check for repeated lines, to prevent query errors in case of inserts.
+                    if (isset($aSection['data'][$aLine['id']])) {
+                        // We saw this ID before in this file!
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$aLine['id']]['nLine'] . '.');
+                        break; // Stop processing this line.
+                    }
 
+                    // Check references.
+                    $bScreeningInDB = in_array($aLine['screeningid'], $aParsed['Screenings']['ids']);
+                    $bScreeningInFile = isset($aParsed['Screenings']['data'][(int) $aLine['screeningid']]);
+                    if ($aLine['screeningid'] && !$bScreeningInFile && !$bScreeningInDB) {
+                        // Screening does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Screening "' . htmlspecialchars($aLine['screeningid']) . '" does not exist in the database and is not defined in this import file.');
+                    }
+                    $bVariantInDB = in_array($aLine['variantid'], $aParsed['Variants_On_Genome']['ids']);
+                    $bVariantInFile = isset($aParsed['Variants_On_Genome']['data'][(int) $aLine['variantid']]);
+                    if ($aLine['variantid'] && !$bVariantInFile && !$bVariantInDB) {
+                        // Variant does not exist and is not defined in the import file.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Genomic Variant "' . htmlspecialchars($aLine['variantid']) . '" does not exist in the database and is not defined in this import file.');
+                    }
 
+                    if (!lovd_error()) {
+                        // No problems left, just check now if insert is necessary or not.
+                        if (!$bScreeningInDB || !$bVariantInDB || ($sMode == 'insert' && ($bScreeningInFile || $bVariantInFile))) {
+                            // Screening and/or Variant is in file (will be inserted), so flag this to be inserted!
+                            $aLine['todo'] = 'insert';
+                        } else {
+                            // Screening & Variant are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
+                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid = ?', array($aLine['screeningid'], $aLine['variantid']))->fetchColumn();
+                            if (!$bInDB) {
+                                $aLine['todo'] = 'insert';
+                            }
+                        }
+                    }
+                    break;
 
                 default:
                     // Bug in LOVD. Section allowed, but no data verification programmed.
@@ -794,7 +927,8 @@ if (POST) {
             // Store line in array, we will run the inserts/updates after parsing the whole file.
             if (isset($aLine['todo'])) {
                 $aLine['nLine'] = $nLine;
-                $aSection['data'][$aLine['id']] = $aLine;
+                $nID = (ctype_digit($aLine['id'])? (int) $aLine['id'] : $aLine['id']);
+                $aSection['data'][$nID] = $aLine;
                 $nDataTotal ++;
             }
 
@@ -805,6 +939,17 @@ if (POST) {
                 break;
             }
         }
+
+        // Clean up old section, if available.
+        if ($sCurrentSection) {
+            unset($aSection['allowed_columns']);
+            unset($aSection['columns']);
+            unset($aSection['nColumns']);
+            unset($aSection['object']);
+            unset($aSection['required_columns']);
+            unset($aSection['settings']);
+        }
+        $_BAR[0]->setProgress(100); // To make sure we're at 100% (some errors skip the lovd_endLine()).
 
 
 
@@ -817,10 +962,7 @@ if (POST) {
 
 
 break;
-// Check if we understand all references (genes, transcripts, diseases).
-//   Somehow, the system must be able to in a later time parse diseases etc, but for now we should understand that the disease is not in the file and not in the system, so we don't understand everything.
-// Then, load all new data.
-// Then, verify and process all edits.
+// Verify and process all edits.
 //   If we die here for some reason, we must be absolutely sure that we can repeat the same import...
 //   Curators should also not always be allowed to set the status* field or both pathogenicity fields, it should be based on the individual's data!!!
 //     Check during import maybe difficult. If it is too difficult, maybe first import and then update for the not-authorized data?
@@ -868,8 +1010,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             // Initiate an array to keep track of assigned Variant/DBID numbers
             // use variants already seen in the upload file as keys when you add the number
             $aIDAssigned = array();
-            // 2009-01-27; 2.0-15; Keep track of the maximum variantid in use.
-            $nMaxVariantID = 0;
 
 
 
@@ -891,14 +1031,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                         case 'ID_sort_':
                             // If empty, will be determined at the end of this line's run.
                             $aLineVar['sort'] = $sVal;
-                            break;
-                        case 'ID_allele_':
-                            if ($sVal !== '') {
-                                if (!array_key_exists($sVal, $_SETT['var_allele'])) {
-                                    lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a valid allele ID.');
-                                }
-                            }
-                            $aLinePat2Var['allele'] = $sVal;
                             break;
                         case 'ID_pathogenic_':
                             if ($sVal !== '') {
@@ -932,12 +1064,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                                 $aLinePat[$sCol] = $sVal;
                             }
                     }
-
-                    if (substr_count($_ERROR, "\n") >= $nMaxErrors) {
-                        // Too many errors. Quit now.
-                        lovd_errorAdd('Too many errors, stopping file processing.');
-                        break 2;
-                    }
                 }
 
                 // 2009-03-02; 2.0-16; ID_allele_ of course needs a default value.
@@ -945,22 +1071,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 if (empty($aLinePat2Var['allele'])) {
                     $aLinePat2Var['allele'] = 0;
                 }
-
-                // 2009-02-09; 2.0-16; Move this up to prevent notices and failure to import variants.
-                // 2009-01-27; 2.0-15; Generates a new variantid for each variant with an empty field.
-                if (empty($aLineVar['variantid'])) {
-                    // The ID_variantid_ field in the upload file is empty so we need to generate a variantid.
-                    if (!$nMaxVariantID) {
-                        list($nMaxVariantID) = mysql_fetch_row(mysql_query('SELECT MAX(variantid) FROM ' . TABLE_CURRDB_VARS));
-                    }
-                    $nVariantID = ++ $nMaxVariantID;
-                    $aLineVar['variantid'] = $nVariantID;
-                    $aLinePat2Var['variantid'] = $nVariantID;
-                    $sPat2VarKey = $nVariantID . '|' . $nPatientID . '|' . $aLinePat2Var['allele'];
-                }
-
-                // Auto values!
-                $sPat2VarKey = $nVariantID . '|' . $nPatientID . '|' . $aLinePat2Var['allele'];
 
                 // If this entry is already in the database, we don't have to do anything 'cause only the first instance
                 // will be loaded into the database. The check for consistency (below) will only complain about an
@@ -1060,66 +1170,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     // User has filled in an own DBID value that is correct. Let's use it.
                     $aIDAssigned[$sVariant] = substr($aLineVar['Variant/DBID'], 0, strlen($_SESSION['currsymb']) + 6);
                 }
-
-                // This information is not taken from the database.
-                $aLineVar['indb'] = false;
-                $aLinePat['indb'] = false;
-                $aLinePat2Var['indb'] = false;
-                $aLinePat2Var['symbol'] = $_SESSION['currdb'];
-
-                // Save line number.
-                $aLineVar['line'] = $nLine;
-                $aLinePat['line'] = $nLine;
-                $aLinePat2Var['line'] = $nLine;
-
-                // Seen variant before? Check data.
-                if (array_key_exists($nVariantID, $aVariants)) {
-                    foreach ($aLineVar as $sCol => $sVal) {
-                        // 2009-04-16; 2.0-18; Compare values trim()ed to make sure spaces are not a problem anymore.
-                        if (!in_array($sCol, array('indb', 'line')) && $sVal && trim($sVal) != trim($aVariants[$nVariantID][$sCol])) {
-                            // Col should not be indb or line; value should not be empty (otherwise, difference allowed); if value is different: throw error!
-                            lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column does not match value "' . $aVariants[$nVariantID][$sCol] . '" from same variant entry ' . ($aVariants[$nVariantID]['indb']? 'in the database' : 'on line ' . $aVariants[$nVariantID]['line']) . '.');
-                        }
-                    }
-                } else {
-                    // Store information.
-                    $aVariants[$nVariantID] = $aLineVar;
-                    $nVariants ++;
-                }
-
-                // Seen patient before? Check data.
-                if (array_key_exists($nPatientID, $aPatients)) {
-                    foreach ($aLinePat as $sCol => $sVal) {
-                        // 2009-04-16; 2.0-18; Compare values trim()ed to make sure spaces are not a problem anymore.
-                        if (!in_array($sCol, array('indb', 'line')) && $sVal && trim($sVal) != trim($aPatients[$nPatientID][$sCol])) {
-                            // Col should not be indb or line; value should not be empty (otherwise, difference allowed); if value is different: throw error!
-                            lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column does not match value "' . $aPatients[$nPatientID][$sCol] . '" from same patient entry ' . ($aPatients[$nPatientID]['indb']? 'in the database' : 'on line ' . $aPatients[$nPatientID]['line']) . '.');
-                        }
-                    }
-                } else {
-                    // Store information.
-                    $aPatients[$nPatientID] = $aLinePat;
-                    $nPatients ++;
-                }
-
-                // Seen pat2var before? Check data.
-                if (array_key_exists($sPat2VarKey, $aPat2Var)) {
-                    if ($aPat2Var[$sPat2VarKey]['indb'] == false) {
-                        // 2010-07-20; 2.0-28; This information was seen before in the import file
-                        lovd_errorAdd('Error in line ' . $nLine . ': the exact combination of this variant, patient and allele was already seen before in this import file. Note that for expressing homozygous mutations, you need to select a different allele for both variants!');
-                    }
-                    foreach ($aLinePat2Var as $sCol => $sVal) {
-                        // 2009-04-16; 2.0-18; Compare values trim()ed to make sure spaces are not a problem anymore.
-                        if (!in_array($sCol, array('indb', 'line')) && $sVal && trim($sVal) != trim($aPat2Var[$sPat2VarKey][$sCol])) {
-                            // Col should not be indb or line; value should not be empty (otherwise, difference allowed); if value is different: throw error!
-                            lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column does not match value "' . $aPat2Var[$sPat2VarKey][$sCol] . '" from same patients2variants entry ' . ($aPat2Var[$sPat2VarKey]['indb']? 'in the database' : 'on line ' . $aPat2Var[$sPat2VarKey]['line']) . '.');
-                        }
-                    }
-                } else {
-                    // Store information.
-                    $aPat2Var[(int) $nVariantID . '|' . (int) $nPatientID . '|' . $aLinePat2Var['allele']] = $aLinePat2Var;
-                    $nPat2Var ++;
-                }
             }
             fclose($fInput);
 
@@ -1128,21 +1178,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             reset($aVariants);
             reset($aPatients);
             reset($aPat2Var);
-            while (list($sKey, $aVal) = each($aVariants)) {
-                if (!isset($aVal['sort'])) {
-                    unset($aVariants[$sKey]);
-                }
-            }
-            while (list($sKey, $aVal) = each($aPatients)) {
-                if (!isset($aVal['created_by'])) {
-                    unset($aPatients[$sKey]);
-                }
-            }
-            while (list($sKey, $aVal) = each($aPat2Var)) {
-                if (!isset($aVal['created_by'])) {
-                    unset($aPat2Var[$sKey]);
-                }
-            }
 
 
 
@@ -1341,19 +1376,16 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 $_BAR[0]->setProgress(($nLine/$nLines)*100);
             }
             print('<BR><BR><BR>');
-            var_dump($sFileType);
-            var_dump($aImportFlags);
-            var_dump($sCurrentSection);
-            print('<BR>');
+            // FIXME: Why is this not empty?
             var_dump(implode("\n", $aData));
             $_T->printFooter();
             exit;
         }
 
         // Errors...
-//        $_BAR[0]->remove();
-//        $_BAR[0]->setMessageVisibility('', false);
-//        $_BAR[0]->setMessageVisibility('done', false);
+        $_BAR[0]->remove();
+        $_BAR[0]->setMessageVisibility('', false);
+        $_BAR[0]->setMessageVisibility('done', false);
     }
 } else {
     // Default values.

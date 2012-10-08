@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-10-04
+ * Modified    : 2012-10-05
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -266,8 +266,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         $aTranscriptsForm = array();
         if (!empty($_DATA['Transcript'])) {
-            $aTranscriptObject = reset($_DATA['Transcript']);
-            $aTranscriptsForm = $aTranscriptObject->getForm();
+            foreach (array_keys($_DATA['Transcript']) as $sGene) {
+                $aTranscriptsForm = array_merge($aTranscriptsForm, $_DATA['Transcript'][$sGene]->getForm());
+            }
         }
 
         // Add '(hg19)' to VOG/DNA field. NOTE: If you choose to remove this, make sure the additional fix after the aFormData array creation is also removed.
