@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-10-05
+ * Modified    : 2012-10-10
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -197,8 +197,9 @@ if (POST) {
         // Prepare, find LOVD version and format type.
         $aParsed = array_fill_keys(
             array(
-                'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome', 'Variants_On_Transcripts'
+                'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Individuals_To_Diseases', 'Phenotypes', 'Screenings', 'Screenings_To_Genes', 'Variants_On_Genome', 'Variants_On_Transcripts', 'Screenings_To_Variants'
             ), array('allowed_columns' => array(), 'columns' => array(), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
+        $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('data' => array()); // Just the data, nothing else!
         $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
         $aImportFlags = array();
         $sFileVersion = $sFileType = $sCurrentSection = '';
@@ -250,7 +251,7 @@ if (POST) {
         }
 
         $_T->printHeader();
-        $_T->printTitle('Import data in LOVD format');
+        $_T->printTitle('Import data in LOVD format (alpha)');
 
         // Load progress bar.
         require ROOT_PATH . 'class/progress_bar.php';
@@ -277,12 +278,15 @@ if (POST) {
                     // New section.
                     // Clean up old section, if available.
                     if ($sCurrentSection) {
-                        unset($aSection['allowed_columns']);
                         unset($aSection['columns']);
                         unset($aSection['nColumns']);
-                        unset($aSection['object']);
                         unset($aSection['required_columns']);
                         unset($aSection['settings']);
+                        if (lovd_error()) {
+                            unset($aSection['allowed_columns']);
+                            unset($aSection['object']);
+                            unset($aSection['objects']);
+                        }
                     }
                     $sCurrentSection = $aRegs[1];
                     $bParseColumns = true;
@@ -307,14 +311,14 @@ if (POST) {
                             $aSection['object'] = new LOVD_Disease();
                             break;
                         case 'Genes_To_Diseases':
-                            $sTableName = 'TABLE_GEN2DIS';
+                            $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_GEN2DIS';
                             break;
                         case 'Individuals':
                             require_once ROOT_PATH . 'class/object_individuals.php';
                             $aSection['object'] = new LOVD_Individual();
                             break;
                         case 'Individuals_To_Diseases':
-                            $sTableName = 'TABLE_IND2DIS';
+                            $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_IND2DIS';
                             break;
                         case 'Phenotypes':
                             require_once ROOT_PATH . 'class/object_phenotypes.php';
@@ -326,22 +330,22 @@ if (POST) {
                             $aSection['object'] = new LOVD_Screening();
                             break;
                         case 'Screenings_To_Genes':
-                            $sTableName = 'TABLE_SCR2GENE';
+                            $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_SCR2GENE';
                             break;
                         case 'Variants_On_Genome':
-                            $sTableName = 'TABLE_VARIANTS';
+                            $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_VARIANTS';
                             require_once ROOT_PATH . 'class/object_genome_variants.php';
                             $aSection['object'] = new LOVD_GenomeVariant();
                             break;
                         case 'Variants_On_Transcripts':
-                            $sTableName = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
+                            $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
                             $aSection['required_columns'][] = 'transcriptid';
                             require_once ROOT_PATH . 'class/object_transcript_variants.php';
                             // We don't create an object here, because we need to do that per gene. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
                             $aSection['objects'] = array();
                             break;
                         case 'Screenings_To_Variants':
-                            $sTableName = 'TABLE_SCR2VAR';
+                            $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_SCR2VAR';
                             break;
                         default:
                             // Category not recognized!
@@ -473,6 +477,7 @@ if (POST) {
             $sGene = '';
             if ($sCurrentSection == 'Variants_On_Transcripts' && $aLine['transcriptid']) {
                 // We have to include some checks here instead of below, because we need to verify that we understand the transcriptID and get to the Gene.
+                //   Only then can we open the correct object.
                 $bTranscriptInDB = in_array($aLine['transcriptid'], $aParsed['Transcripts']['ids']);
                 $bTranscriptInFile = isset($aParsed['Transcripts']['data'][(int) $aLine['transcriptid']]);
                 if (!$bTranscriptInFile && !$bTranscriptInDB) {
@@ -486,6 +491,7 @@ if (POST) {
                     $bGeneInDB = true;
                     // Store for the next VOT.
                     $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']] = array('id' => $aLine['transcriptid'], 'geneid' => $sGene, 'todo' => '');
+                    $nDataTotal ++; // Otherwise it's messing up our statistics.
                 }
                 if (!isset($aSection['objects'][$sGene])) {
                     $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
@@ -499,6 +505,7 @@ if (POST) {
                 // Object has been created. If we're updating, get the current info from the database.
                 if ($sMode == 'update') {
                     // FIXME: First check in 'ids' to predict if it exists or not?
+                    // FIXME: Doesn't currently work for VOT because its objects are in an array, and it needs the transcriptid in a separate argument.
                     $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
                     if ($zData) {
                         // Calculate difference score, and check authorization.
@@ -613,7 +620,7 @@ if (POST) {
                             }
                         }
                         // Just store the data in the $aParsed array, such that VOTs can reference to it.
-                        $aLine['todo'] = 'store';
+                        $aLine['todo'] = '';
                     }
                     break;
 
@@ -737,6 +744,8 @@ if (POST) {
                     break;
 
                 case 'Phenotypes':
+                    // FIXME: Check references only if we don't have a $zData OR $zData['referenceid'] is different from now?
+                    //   Actually, do we allow references to change during an edit?
                     // Check references.
                     $bDiseaseInDB = in_array($aLine['diseaseid'], $aParsed['Diseases']['ids']);
                     $bDiseaseInFile = isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]);
@@ -767,6 +776,8 @@ if (POST) {
                     break;
 
                 case 'Screenings':
+                    // FIXME: Check references only if we don't have a $zData OR $zData['referenceid'] is different from now?
+                    //   Actually, do we allow references to change during an edit?
                     // Check references.
                     $bIndInDB = in_array($aLine['individualid'], $aParsed['Individuals']['ids']);
                     $bIndInFile = isset($aParsed['Individuals']['data'][(int) $aLine['individualid']]);
@@ -844,19 +855,27 @@ if (POST) {
                     break;
 
                 case 'Variants_On_Transcripts':
-                    // Check references.
-                    $bVariantInDB = in_array($aLine['id'], $aParsed['Variants_On_Genome']['ids']);
-                    $bVariantInFile = isset($aParsed['Variants_On_Genome']['data'][(int) $aLine['id']]);
+                    // Create ID, so we can link to the data.
+                    $aLine['variantid'] = $aLine['id'];
+                    $aLine['id'] = (int) $aLine['id'] . '|' . (int) $aLine['transcriptid'];
+                    // Manually check for repeated lines, to prevent query errors in case of inserts.
+                    if (isset($aSection['data'][$aLine['id']])) {
+                        // We saw this ID before in this file!
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$aLine['id']]['nLine'] . '.');
+                        break; // Stop processing this line.
+                    }
+
+                    // FIXME: Check references only if we don't have a $zData OR $zData['referenceid'] is different from now?
+                    //   Actually, do we allow references to change during an edit?
+                    // Check references. Don't forget that the references to transcripts have already been checked earlier
+                    //   in the code, because we had to initialize the object using the geneid of the given transcript.
+// FIXME: Check if combination is already known in the database, since this is partially also a linking table!!!
+//   Combi already in DB: then no insert mode allowed, otherwise get $zData? Or do we have that already?
+                    $bVariantInDB = in_array($aLine['variantid'], $aParsed['Variants_On_Genome']['ids']);
+                    $bVariantInFile = isset($aParsed['Variants_On_Genome']['data'][(int) $aLine['variantid']]);
                     if ($aLine['id'] && !$bVariantInFile && !$bVariantInDB) {
                         // Variant does not exist and is not defined in the import file.
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Genomic Variant "' . htmlspecialchars($aLine['id']) . '" does not exist in the database and is not defined in this import file.');
-                    }
-                    // FIXME: Check if referenced variant is actually on the same chromosome?
-
-                    if (!$bGeneInDB) {
-                        // We're inserting this variant, but the gene does not exist yet, so we're not sure about the exact columns that will be active. For variants, this is fatal.
-                        //   Actually, this error will always come with the error that the gene mentioned in the file is not yet inserted and that it can't be inserted by this script, right?
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The gene this belonging to this variant entry is yet to be inserted into the database. First create the gene and set up the custom columns, then import the variants.');
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Genomic Variant "' . htmlspecialchars($aLine['variantid']) . '" does not exist in the database and is not defined in this import file.');
                     }
 
                     foreach (array('position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron') as $sCol) {
@@ -873,8 +892,26 @@ if (POST) {
                         }
                     } else {
                         // FIXME: Default values of custom columns?
+
+                        // FIXME: Check if referenced variant is actually on the same chromosome?
+
+                        if (!$bGeneInDB) {
+                            // We're inserting this variant, but the gene does not exist yet, so we're not sure about the exact columns that will be active. For variants, this is fatal.
+                            //   Actually, this error will always come with the error that the gene mentioned in the file is not yet inserted and that it can't be inserted by this script, right?
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The gene this belonging to this variant entry is yet to be inserted into the database. First create the gene and set up the custom columns, then import the variants.');
+                        }
+
                         // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
-                        $aLine['todo'] = 'insert'; // OK, insert.
+                        if (!$bVariantInDB || !$bTranscriptInDB || ($sMode == 'insert' && ($bVariantInFile || $bTranscriptInFile))) {
+                            // Variant and/or Transcript is in file (will be inserted), so flag this to be inserted!
+                            $aLine['todo'] = 'insert';
+                        } else {
+                            // Variant & Transcript are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
+                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid = ?', array($aLine['variantid'], $aLine['transcriptid']))->fetchColumn();
+                            if (!$bInDB) {
+                                $aLine['todo'] = 'insert';
+                            }
+                        }
                     }
                     break;
 
@@ -942,12 +979,15 @@ if (POST) {
 
         // Clean up old section, if available.
         if ($sCurrentSection) {
-            unset($aSection['allowed_columns']);
             unset($aSection['columns']);
             unset($aSection['nColumns']);
-            unset($aSection['object']);
             unset($aSection['required_columns']);
             unset($aSection['settings']);
+        }
+        unset($aSection); // Unlink reference.
+        // Clean up all stored ID lists.
+        foreach ($aParsed as $sSection => $aSection) {
+            unset($aParsed[$sSection]['ids']);
         }
         $_BAR[0]->setProgress(100); // To make sure we're at 100% (some errors skip the lovd_endLine()).
 
@@ -955,13 +995,119 @@ if (POST) {
 
 
 
+        function lovd_findImportedID ($sSection, $nID)
+        {
+            // Returns the ID of a certain object as which it was imported in the database.
+            // If not found, it will return the given ID.
+            global $aParsed;
+
+            if (isset($aParsed[$sSection]['data'][(int) $nID])) {
+                $nID = $aParsed[$sSection]['data'][(int) $nID]['newID'];
+            }
+            return $nID;
+        }
+
+
+
+
+
         // Now we have everything parsed. If there were errors, we are stopping now.
-        if (!lovd_error()) {
+        if (!lovd_error() && $nDataTotal) {
+            define('LOG_EVENT', 'Import');
+            print('<BR>');
+            $_BAR[] = new ProgressBar('sql', 'Applying changes...');
+            $nEntry = 0;
+            $bError = false;
+            $aDone = array();
+            $nDone = 0;
+            $aGenes = array();
+            $_DB->beginTransaction();
+
             foreach ($aParsed as $sSection => $aSection) {
+                $aFields = $aSection['allowed_columns'];
+                if (in_array('id', $aFields) && $sSection != 'Variants_On_Transcripts') {
+                    unset($aFields[array_search('id', $aFields)]);
+                }
+                $aDone[$sSection] = 0;
+
+                foreach ($aSection['data'] as $nID => $aData) {
+                    $nEntry++;
+                    if (!$aData['todo'] || !in_array($aData['todo'], array('insert', 'update'))) {
+                        continue;
+                    }
+
+                    // Carriage returns, new lines, and tabs were encoded in the import file.
+                    foreach ($aData as $key => $val) {
+                        $aData[$key] = str_replace(array('\r', '\n', '\t'), array("\r", "\n", "\t"), $val);
+                    }
+
+                    switch ($sSection) {
+                        case 'Transcripts':
+                            $aParsed[$sSection]['data'][$nID] = array('geneid' => $aData['geneid']); // The rest we don't need anymore.
+                            break;
+
+                        case 'Diseases':
+                        case 'Individuals':
+                        case 'Phenotypes':
+                        case 'Screenings':
+                        case 'Variants_On_Genome':
+                        case 'Variants_On_Transcripts':
+                            if (isset($aData['diseaseid'])) {
+                                $aData['diseaseid'] = lovd_findImportedID('Diseases', $aData['diseaseid']);
+                            }
+                            if (isset($aData['individualid'])) {
+                                $aData['individualid'] = lovd_findImportedID('Individuals', $aData['individualid']);
+                            }
+                            if ($sSection == 'Variants_On_Transcripts') {
+                                $aData['id'] = lovd_findImportedID('Variants_On_Genome', $aData['variantid']);
+                                $aGenes[] = $aParsed['Transcripts']['data'][(int) $aData['transcriptid']]['geneid'];
+                            }
+                            $nNewID = $aSection['object']->insertEntry($aData, $aFields);
+                            $aParsed[$sSection]['data'][$nID]['newID'] = $nNewID;
+                            $aDone[$sSection] ++;
+                            $nDone ++;
+                            break;
+
+                        case 'Genes_To_Diseases':
+                        case 'Individuals_To_Diseases':
+                        case 'Screenings_To_Genes':
+                        case 'Screenings_To_Variants':
+                            if (isset($aData['diseaseid'])) {
+                                $aData['diseaseid'] = lovd_findImportedID('Diseases', $aData['diseaseid']);
+                            }
+                            if (isset($aData['individualid'])) {
+                                $aData['individualid'] = lovd_findImportedID('Individuals', $aData['individualid']);
+                            }
+                            if (isset($aData['screeningid'])) {
+                                $aData['screeningid'] = lovd_findImportedID('Screenings', $aData['screeningid']);
+                            }
+                            if (isset($aData['variantid'])) {
+                                $aData['variantid'] = lovd_findImportedID('Variants_On_Genome', $aData['variantid']);
+                            }
+                            $sSQL = 'INSERT INTO ' . constant($aSection['table_name']) . ' (';
+                            $aSQL = array();
+                            foreach ($aSection['allowed_columns'] as $key => $sField) {
+                                $sSQL .= (!$key? '' : ', ') . '`' . $sField . '`';
+                                $aSQL[] = $aData[$sField];
+                            }
+                            $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
+                            $_DB->query($sSQL, $aSQL, true, true);
+                            $nDone ++;
+                            break;
+
+                        default:
+                            // Somehow we don't catch all sections? Big bug...
+                            $bError = true;
+                            lovd_displayError('Import', 'Undefined data processing for section "' . htmlspecialchars($sSection) . '". Please report this bug.');
+                            $_DB->rollBack();
+                            break 3; // Exit data processing.
+                    }
 
 
 
-break;
+
+
+
 // Verify and process all edits.
 //   If we die here for some reason, we must be absolutely sure that we can repeat the same import...
 //   Curators should also not always be allowed to set the status* field or both pathogenicity fields, it should be based on the individual's data!!!
@@ -985,28 +1131,12 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 
 
 
-
-
-
-
-
         if (!lovd_error()) {
-            // Loop lines.
-            $nLine = 2; // Header = line 2.
             // 2008-09-15; 2.0-12; Added increased execution time to script to help import bigger files.
             if ((int) ini_get('max_execution_time') < 60) {
                 set_time_limit(60);
             }
 
-            // This can be a quite intensive process, but we need to check and verify all the data.
-            $aVariants = array();
-            $aPatients = array();
-            $aPat2Var  = array();
-            $nVariants = 0;
-            $nPatients = 0;
-            $nPat2Var  = 0;
-
-            // 2008-11-13; 2.0-14 added by Gerard
             // Initiate an array to keep track of assigned Variant/DBID numbers
             // use variants already seen in the upload file as keys when you add the number
             $aIDAssigned = array();
@@ -1016,14 +1146,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             // Read rest of the file.
             // 2010-11-24; 2.0-23; Totally empty lines made the while-loop quit. Moving the rtrim() elsewhere.
             while (!feof($fInput) && $sLine = fgets($fInput, 4096)) {
-                $nLine ++;
-                $aLine = explode("\t", $sLine);
-                // 2010-07-21; 2.0-28; Add empty fields to $aLine if necessary, to prevent notices.
-                $aLine = array_pad($aLine, $nColumns, '');
-                $aLineVar = array();
-                $aLinePat = array();
-                $aLinePat2Var = array();
-
                 foreach ($aLine as $nKey => $sVal) {
                     // Loop data, and verify it.
                     // Check given ID's.
@@ -1034,35 +1156,9 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                             break;
                         case 'ID_pathogenic_':
                             if ($sVal !== '') {
-                                if ($sFormatVersion < '2000-040' && in_array($sVal, array('00', '01', '09', '10', '11', '19', '90', '91', '99'))) {
-                                    // 2008-02-29; 2.0-04; Changed the whole pathogenicity ID code list.
-                                    $sVal = $aTransformPathogenicity[$sVal{0}] . $aTransformPathogenicity[$sVal{1}];
-                                }
-                                // Empty value may not default to '00'!
-                                $sVal = str_pad($sVal, 2, '0', STR_PAD_LEFT);
-                                if (!array_key_exists($sVal, $_SETT['var_pathogenic_short'])) {
-                                    lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column is not a valid pathogenicity ID.');
-                                }
                             }
                             $aLinePat2Var['pathogenic'] = $sVal;
                             break;
-                        default:
-                            // Variant or Patient column. Additional checking.
-                            // Directly accessing $aColList, since the $_CURRDB methods are not going to help me here.
-
-                            if ($sVal) {
-                                // Regular expressions.
-                                if ($_CURRDB->aColList[$sCol]['preg_pattern'] && !preg_match($_CURRDB->aColList[$sCol]['preg_pattern'], $sVal)) {
-                                    lovd_errorAdd('Error in line ' . $nLine . ': value "' . htmlspecialchars($sVal) . '" in "' . $sCol . '" column does not correspond to the required input pattern.');
-                                }
-                            }
-
-                            // Store column value.
-                            if (substr($sCol, 0, 7) == 'Variant') {
-                                $aLineVar[$sCol] = $sVal;
-                            } else {
-                                $aLinePat[$sCol] = $sVal;
-                            }
                     }
                 }
 
@@ -1072,9 +1168,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     $aLinePat2Var['allele'] = 0;
                 }
 
-                // If this entry is already in the database, we don't have to do anything 'cause only the first instance
-                // will be loaded into the database. The check for consistency (below) will only complain about an
-                // unequal value if the second value is not empty.
                 // Not in the database? Then auto-fill the value with a useful default!
 
                 // ID_sort_ column (variant).
@@ -1110,35 +1203,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     }
                 }
 
-                // variant_created_by_ (pat2var).
-                if (empty($aLinePat2Var['created_by'])) {
-                    if (!array_key_exists($sPat2VarKey, $aPat2Var)) {
-                        $aLinePat2Var['created_by'] = (!empty($aLinePat['submitterid'])? 0 : $_AUTH['userid']);
-                    }
-                }
-
-                // variant_created_date_ (pat2var).
-                if (empty($aLinePat2Var['created_date'])) {
-                    if (!array_key_exists($sPat2VarKey, $aPat2Var)) {
-                        $aLinePat2Var['created_date'] = date('Y-m-d H:i:s');
-                    }
-                }
-
-                // patient_created_by_ (patient).
-                if (empty($aLinePat['created_by'])) {
-                    if (!array_key_exists($nPatientID, $aPatients)) {
-                        $aLinePat['created_by'] = (!empty($aLinePat['submitterid'])? 0 : $_AUTH['userid']);
-                    }
-                }
-
-                // patient_created_date_ (patient).
-                if (empty($aLinePat['created_date'])) {
-                    if (!array_key_exists($nPatientID, $aPatients)) {
-                        $aLinePat['created_date'] = date('Y-m-d H:i:s');
-                    }
-                }
-
-                // 2008-11-13; 2.0-14 Added by Gerard. Generates a Variant/DBID.
                 $sVariant = str_replace(array('(', ')', '?'), '', $aLineVar[$sMutationCol]);
                 if (empty($aLineVar['Variant/DBID'])) {
                     // The Variant/DBID field in the upload file is empty so we need to generate it.
@@ -1173,184 +1237,10 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             }
             fclose($fInput);
 
-            // 2008-02-12; 2.0-04
-            // Save even more memory. Unset all the unnecessary stuff.
-            reset($aVariants);
-            reset($aPatients);
-            reset($aPat2Var);
-
 
 
             if (!lovd_error()) {
                 // Start importing from the memory!
-                require ROOT_PATH . 'inc-top.php';
-                lovd_printHeader('config', 'LOVD Configuration area');
-
-                $nTotal = $nVariants + $nPatients + $nPat2Var;
-                if (!$nTotal) {
-                    print('      No entries found that need to be imported in the database. Either your uploaded file contains no variants, or all entries are already in the database.<BR>' . "\n\n");
-                    require ROOT_PATH . 'inc-bot.php';
-                    exit;
-                }
-
-                // Progress bar.
-                print('      Input file verified. Importing entries...<BR><BR>' . "\n" .
-                      '      <TABLE border="0" cellpadding="0" cellspacing="0" class="S11" width="250">' . "\n" .
-                      '        <TR style="height : 15px;">' . "\n" .
-                      '          <TD width="100%" style="border : 1px solid black;">' . "\n" .
-                      '            <IMG src="' . ROOT_PATH . 'gfx/trans.png" alt="" title="" width="0%" height="15" id="lovd_progress_import" style="background : #AFC8FA;"></TD>' . "\n" .
-                      '          <TD align="right" width="25"><INPUT type="text" id="lovd_progress_import_value" size="3" value="0%" style="border : 0px; margin : 0px; padding : 0px; text-align : right;"></TD></TR></TABLE><BR>' . "\n\n" .
-                      '      <SCRIPT type="text/javascript">var progressImport = document.getElementById(\'lovd_progress_import\'); var progressImportValue = document.getElementById(\'lovd_progress_import_value\');</SCRIPT>' . "\n");
-
-                // Import...
-                $nProgressPrev = '0%';
-                $n = 0;
-
-                // If using transactional tables; begin transaction.
-                if ($_INI['database']['engine'] == 'InnoDB') {
-                    // FIXME; It's better to use 'START TRANSACTION', but that's only available from 4.0.11.
-                    //   This works from the introduction of InnoDB in 3.23.
-                    @mysql_query('BEGIN WORK');
-                }
-
-
-
-                // Variants.
-                foreach ($aVariants as $nKey => $aVal) {
-                    if ($aVal['indb']) {
-                        continue;
-                    }
-
-                    // 2011-09-21; 2.0-33; Fixed bug; carriage returns, new lines, and tabs were not decoded before importing!
-                    $aVal = str_replace(array('\r', '\n', '\t'), array("\r", "\n", "\t"), $aVal);
-
-                    $n++;
-                    $sQ = 'INSERT INTO ' . TABLE_CURRDB_VARS . ' (';
-                    $sCols = '';
-                    $sVals = '';
-                    foreach ($aVal as $sCol => $sVal) {
-                        if (in_array($sCol, array('indb', 'line'))) {
-                            continue;
-                        }
-                        $sCols .= ($sCols? ', ' : '') . '`' . $sCol . '`';
-                        // 2009-06-11; 2.0-19; Added mysql_real_escape_string() to prevent SQL injection.
-                        $sVals .= ($sVals? ', ' : '') . '"' . mysql_real_escape_string($sVal) . '"';
-                    }
-                    $sQ .= $sCols . ') VALUES (' . $sVals . ')';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        // Save the mysql_error before it disappears.
-                        $sError = mysql_error();
-                        if ($_INI['database']['engine'] == 'InnoDB') {
-                            @mysql_query('ROLLBACK');
-                        }
-                        lovd_dbFout('VariantImportA', $sQ, $sError);
-                    }
-
-                    $nProgress = round(($n*100)/$nTotal) . '%';
-                    if ($nProgress != $nProgressPrev) {
-                        print('      <SCRIPT type="text/javascript">progressImport.style.width = \'' . $nProgress . '\'; progressImportValue.value = \'' . $nProgress . '\';</SCRIPT>' . "\n");
-                    }
-
-                    flush();
-                    usleep(1000);
-                    $nProgressPrev = $nProgress;
-                }
-
-
-
-                // Patients.
-                foreach ($aPatients as $nKey => $aVal) {
-                    if ($aVal['indb']) {
-                        continue;
-                    }
-
-                    // 2011-09-21; 2.0-33; Fixed bug; carriage returns, new lines, and tabs were not decoded before importing!
-                    $aVal = str_replace(array('\r', '\n', '\t'), array("\r", "\n", "\t"), $aVal);
-
-                    $n++;
-                    $sQ = 'INSERT INTO ' . TABLE_PATIENTS . ' (';
-                    $sCols = '';
-                    $sVals = '';
-                    foreach ($aVal as $sCol => $sVal) {
-                        if (in_array($sCol, array('indb', 'line'))) {
-                            continue;
-                        }
-                        $sCols .= ($sCols? ', ' : '') . '`' . $sCol . '`';
-                        // Quick fix; change edited* fields "" to NULL.
-                        // 2009-06-11; 2.0-19; Added mysql_real_escape_string() to prevent SQL injection.
-                        $sVals .= ($sVals? ', ' : '') . (substr($sCol, 0, 7) == 'edited_' && !$sVal? 'NULL' : '"' . mysql_real_escape_string($sVal) . '"');
-                    }
-                    $sQ .= $sCols . ') VALUES (' . $sVals . ')';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        // Save the mysql_error before it disappears.
-                        $sError = mysql_error();
-                        if ($_INI['database']['engine'] == 'InnoDB') {
-                            @mysql_query('ROLLBACK');
-                        }
-                        lovd_dbFout('VariantImportB', $sQ, $sError);
-                    }
-
-                    $nProgress = round(($n*100)/$nTotal) . '%';
-                    if ($nProgress != $nProgressPrev) {
-                        print('      <SCRIPT type="text/javascript">progressImport.style.width = \'' . $nProgress . '\'; progressImportValue.value = \'' . $nProgress . '\';</SCRIPT>' . "\n");
-                    }
-
-                    flush();
-                    usleep(1000);
-                    $nProgressPrev = $nProgress;
-                }
-
-
-
-                // Pat2Var data.
-                foreach ($aPat2Var as $nKey => $aVal) {
-                    if ($aVal['indb']) {
-                        continue;
-                    }
-
-                    $n++;
-                    $sQ = 'INSERT INTO ' . TABLE_PAT2VAR . ' (';
-                    $sCols = '';
-                    $sVals = '';
-                    foreach ($aVal as $sCol => $sVal) {
-                        if (in_array($sCol, array('indb', 'line'))) {
-                            continue;
-                        }
-                        $sCols .= ($sCols? ', ' : '') . '`' . $sCol . '`';
-                        // Quick fix; change edited* fields "" to NULL.
-                        // 2009-06-11; 2.0-19; Added mysql_real_escape_string() to prevent SQL injection.
-                        $sVals .= ($sVals? ', ' : '') . (substr($sCol, 0, 7) == 'edited_' && !$sVal? 'NULL' : '"' . mysql_real_escape_string($sVal) . '"');
-                    }
-                    $sQ .= $sCols . ') VALUES (' . $sVals . ')';
-                    $q = mysql_query($sQ);
-                    if (!$q) {
-                        // Save the mysql_error before it disappears.
-                        $sError = mysql_error();
-                        if ($_INI['database']['engine'] == 'InnoDB') {
-                            @mysql_query('ROLLBACK');
-                        }
-                        lovd_dbFout('VariantImportC', $sQ, $sError);
-                    }
-
-                    $nProgress = round(($n*100)/$nTotal) . '%';
-                    if ($nProgress != $nProgressPrev) {
-                        print('      <SCRIPT type="text/javascript">progressImport.style.width = \'' . $nProgress . '\'; progressImportValue.value = \'' . $nProgress . '\';</SCRIPT>' . "\n");
-                    }
-
-                    flush();
-                    usleep(1000);
-                    $nProgressPrev = $nProgress;
-                }
-
-
-
-                // If we don't do this, we haven't got anything in the DB... duh!
-                if ($_INI['database']['engine'] == 'InnoDB') {
-                    // Could this actually fail?!!??
-                    @mysql_query('COMMIT');
-                }
 
                 // 2007-12-05; 2.0-02; Fixed bug #20 - Gene's "Last update" field not updated.
                 lovd_setUpdatedDate($_SESSION['currdb']);
@@ -1358,26 +1248,43 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 // 2010-08-12; 2.0-29; No imported variants have mapping info, so reset the mapping!
                 $_SESSION['mapping']['time_complete'] = 0; // Redo mapping.
 
-                // Done!!!
-                // 2009-04-16; 2.0-18; Used $nPat2Var instead of $nVariants to count *all* variants, not just the new ones.
-                lovd_writeLog('MySQL:Event', 'VariantImport', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully imported ' . $nPat2Var . ' variant' . ($nVariants == 1? '' : 's') . ' and ' . $nPatients . ' patient' . ($nPatients == 1? '' : 's') . ' (' . $_SESSION['currdb'] . ')');
-
-                print('      Done importing!<BR><BR>' . "\n\n");
-                print('      <SCRIPT type="text/javascript">' . "\n" .
-                      '        <!--' . "\n" .
-                      '        setTimeout("window.location.href = \'' . PROTOCOL . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/config.php' . lovd_showSID() . '\'", ' . (3000 + (count($aIgnoredColumns) * 2000)) . ');' . "\n" .
-                      '        // -->' . "\n" .
-                      '      </SCRIPT>' . "\n\n");
-
                 require ROOT_PATH . 'inc-bot.php';
                 exit;
             }
 *///////////////////////////////////////////////////////////////////////////////
-                $_BAR[0]->setProgress(($nLine/$nLines)*100);
+                    $_BAR[1]->setProgress(($nEntry/$nDataTotal)*100);
+                }
+
+                // Done with all this section!
+                unset($aParsed[$sSection]['allowed_columns']);
+                unset($aParsed[$sSection]['object']);
+                unset($aParsed[$sSection]['objects']);
+                if (!count($aParsed[$sSection]['data'])) {
+                    // We have already individually unset all entries, they are not being referenced anymore.
+                    unset($aParsed[$sSection]);
+                }
+                if (!$aDone[$sSection]) {
+                    unset($aDone[$sSection]);
+                }
             }
-            print('<BR><BR><BR>');
+            if (!$bError) {
+                $_DB->commit();
+                $_BAR[1]->setMessage('Done importing!', 'done');
+                $_BAR[1]->setMessageVisibility('done', true);
+                if (count($aDone)) {
+                    $sMessage = '';
+                    foreach ($aDone as $sSection => $n) {
+                        $sMessage .= (!$sMessage ? '' : ', ') . $n . ' ' . $sSection;
+                    }
+                    $sMessage = preg_replace('/, ([^,])+/', "and $1", $sMessage);
+                } else {
+                    $sMessage = 'new links only';
+                }
+                $aGenes = array_unique($aGenes);
+                lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries (' . implode(', ', $aGenes) . ').');
+            }
             // FIXME: Why is this not empty?
-            var_dump(implode("\n", $aData));
+            //var_dump(implode("\n", $aData));
             $_T->printFooter();
             exit;
         }
@@ -1386,7 +1293,14 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
         $_BAR[0]->remove();
         $_BAR[0]->setMessageVisibility('', false);
         $_BAR[0]->setMessageVisibility('done', false);
+
+        if (!$nDataTotal) {
+            lovd_showInfoTable('No entries found that need to be imported in the database. Either your uploaded file contains no variants, or all entries are already in the database.', 'stop');
+            $_T->printFooter();
+            exit;
+        }
     }
+
 } else {
     // Default values.
 //    $_POST['charset'] = 'utf8';
@@ -1398,7 +1312,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 
 
 $_T->printHeader();
-$_T->printTitle('Import data in LOVD format');
+$_T->printTitle('Import data in LOVD format (alpha)');
 
 print('      Using this form you can import files in LOVD\'s tab-delimited format. Currently supported imports are individual, phenotype, screening and variant data.<BR><I>Genomic positions in your data are assumed to be relative to Human Genome build ' . $_CONF['refseq_build'] . '</I>.<BR>' . "\n" .
       '      <BR>' . "\n\n");
@@ -1427,7 +1341,7 @@ $aForm =
         'hr',
         array('Import mode', 'Available modes:<BR>' .
             '<B>' . $aModes['update'] . '</B>: LOVD will compare all IDs given in the file with the contents of the database. LOVD will try and update entries already found in the database using the data in the file, and LOVD will add entries that exist in the file, but not in the database.<BR>' .
-            '<B>' . $aModes['insert'] . '</B>: LOVD will use the IDs given in the file only to link the data together. All data in the file will be treated as new, and all data will receive new IDs once imported. The biggest advantage of this mode is that you do not need to know which IDs are free.',
+            '<B>' . $aModes['insert'] . '</B>: LOVD will use the IDs given in the file only to link the data together. All data in the file will be treated as new, and all data will receive new IDs once imported. The biggest advantage of this mode is that you do not need to know which IDs are free in the database.',
             'select', 'mode', 1, $aModes, false, false, false),
         array('', '', 'note', 'Please select which import mode LOVD should use; <I>' . implode('</I> or <I>', $aModes) . '</I>. For more information on the modes, move your mouse over the ? icon.'),
         array('Character encoding of imported file', 'If your file contains special characters like &egrave;, &ouml; or even just fancy quotes like &ldquo; or &rdquo;, LOVD needs to know the file\'s character encoding to ensure the correct display of the data.', 'select', 'charset', 1, $aCharSets, false, false, false),
@@ -1440,5 +1354,4 @@ lovd_viewForm($aForm);
 print('</FORM>' . "\n\n");
 
 $_T->printFooter();
-//var_dump($aParsed);
 ?>

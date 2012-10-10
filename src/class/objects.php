@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-09-28
+ * Modified    : 2012-10-09
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -369,6 +369,9 @@ class LOVD_Object {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::insertEntry() - Method didn\'t receive data array');
         } elseif (!is_array($aFields) || !count($aFields)) {
             $aFields = array_keys($aData);
+        } else {
+            // Non-numerical keys or a missing key 0 messes up the SQL creation.
+            $aFields = array_values($aFields);
         }
 
         // Query text.
