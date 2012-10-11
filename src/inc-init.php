@@ -497,7 +497,7 @@ if (!$_CONF) {
     $_CONF =
          array(
                 'system_title' => 'LOVD 3.0 - Leiden Open Variation Database',
-                'logo_uri' => 'gfx/LOVD_logo130x50.jpg',
+                'logo_uri' => 'gfx/LOVD3_logo145x50.jpg',
               );
 }
 

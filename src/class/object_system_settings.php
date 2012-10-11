@@ -138,7 +138,7 @@ class LOVD_SystemSetting extends LOVD_Object {
             }
         } else {
             // FIXME; this is probably not the best way of doing this...
-            $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
+            $_POST['logo_uri'] = 'gfx/LOVD3_logo145x50.jpg';
         }
 
         // FIXME; Like above, not the best solution, but gets the job done for now.
@@ -261,7 +261,7 @@ class LOVD_SystemSetting extends LOVD_Object {
         $_POST['location_url'] = ($_SERVER['HTTP_HOST'] == 'localhost' || lovd_matchIPRange($_SERVER['HTTP_HOST'])? '' : lovd_getInstallURL());
         $_POST['refseq_build'] = 'hg19';
         $_POST['api_feed_history'] = 3;
-        $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
+        $_POST['logo_uri'] = 'gfx/LOVD3_logo145x50.jpg';
         $_POST['mutalyzer_soap_url'] = 'http://www.mutalyzer.nl/2.0/services';
         $_POST['send_stats'] = 1;
         $_POST['include_in_listing'] = 1;
