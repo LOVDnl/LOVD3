@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-08-23
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-10-11
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -299,6 +299,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN omim_apikey VARCHAR(40) NOT NULL AFTER mutalyzer_soap_url',
                             'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_username VARCHAR(255) NOT NULL AFTER proxy_port',
                             'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_password VARCHAR(255) NOT NULL AFTER proxy_username',
+                        ),
+                    '3.0-beta-09' =>
+                        array(
+                            'UPDATE ' . TABLE_CONFIG . ' SET logo_uri = "gfx/LOVD3_logo145x50.jpg" WHERE logo_uri = "gfx/LOVD_logo130x50.jpg"',
                         ),
              );
 

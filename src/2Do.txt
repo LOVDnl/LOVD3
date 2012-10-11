@@ -1,11 +1,24 @@
 Prioritize:
 ===========
+- Logs; column net uitgezet voor 1 gen: Disabled column VariantOnTranscript/Checkbox (Checkbox) for 371 gene(s): DMD
+  + Was gelinkt vanuit gen-specifiek overzicht.
+- Order of checks on VOG/VOT form should be VOT/VOG, not the other way around.
+- CXorf40A_000001 wordt geweigerd door LOVD (regexp), als je hem leeg haalt, geeft hij CXorf40A_000006 als beste optie, die vervolgens ook wordt geweigerd.
+- Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
+- Curator authorize: report diffs in logs, toch wel handig, denk ik.
+- Curator VE: aantal genes in TH aangeven.
+- Updated date van genen klopt niet.
 - Phenotype cols opvragen van disease, hersorteer, klik col aan. WTF???
 - Fix Yu's variants in de database.
   + Fix daarna de VCF importer, zodat die dit format ook aan kan.
   + Soms kreeg ik tijdens het mappen n. terug, en dan gaat LOVD een totaal verkeerde VOT/DNA invullen; R_110617.1:n.150delins.
 - Na toevoegen variant aan screening, kun je niet makkelijk finishen.
 - Het is niet duidelijk, hoe een variant aan een bestaande individu toe te voegen (moet dus via screening). Dat moet duidelijk gemaakt worden.
+- Individual VE: Niet VOG, maar VOG+VOT tonen (Ammar Husami zit r echt op te wachten)
+- Unique variants, ook Ammar Husami. Met counts, waar op gezocht en gesorteerd kan worden.
+- VCF importer:
+  + Negeer varianten zonder frequency (het huidige sample heeft 'm niet, andere samples wel).
+  + Voor multi-sample files, geef aan welke sample je wilt importeren. Dat scheelt gebruikers veel werk.
 
 - Gene delete heeft GEEN CORRECTE reminder bij het verwijderen!!!
   + Disease verwijderen hoort ook een reminder te geven, dat alle phenotype data verdwijnt, mits aanwezig.
@@ -63,11 +76,9 @@ Prioritize:
     * Link from the viewList, after applying search terms, just like in LOVD2?
       - But then, you need to control the viewList from that button, such that the search terms are correct, OR the button is provided by the viewList.
   + DATA IMPORT
-    * Choose character set!
-      - Macintosh input files werken niet goed; heeft http://nl2.php.net/manual/en/filesystem.configuration.php#ini.auto-detect-line-endings
-        nodig... dat werkt vanaf 4.3.0... Alleen laden met config_import.txt?
-        Testfile heb ik in mijn email, van David Bonthron (Wed, 18 Jun 2008 12:28:46 +0100).
-    * Alle velden moeten getrimmed worden voordat er naar gekeken wordt.
+    * Ook voor curatoren, check alles goed na het parsen van de file!
+    * Discuss if OK that created_by and created_date are set by users through import to values other than themselves or today.
+    * Add support for "Owned data download" type download and 'ignore_for_import' setting (is puur ter referentie, niet voor import, dus moet in de DB opgezocht worden)
     * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
       - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
       - Store in session / DB in een col met serialized data?
@@ -167,6 +178,10 @@ Prioritize:
      + Na mail druk je op back; email wordt gewoon opnieuw gestuurd, SESSION wordt dus niet netjes leeggehaald.
      + Edited by (tenminste bij variant) wordt als IDs gegeven, niet de namen zoals bij data owner ofzo.
      + Data status staat soms als allerlaatst (individual), soms voor de edited_* velden (var). Huh?
+       * Idem data owner
+     + Disease toegewezen aan een individu staat er niet tussen.
+     + Owner veranderen staat er niet tussen (individual, phenotype, variant, screening)
+     + Als je een transcript toevoegt, beweert hij dat je enkel exon, rna en protein hebt ingevuld, en dat die leeg waren. DNA lijkt niet veranderd, path. velden zijn eventueel aangepast van Unknown naar wat je ingevuld hebt.
 
 - Wachtwoord vergeten -> gebruikersnaam invullen. Die ook vergeten, wat nu? Zet er bij dat ze contact kunnen opnemen met de dbadmin en/of managers (hoe contact te leggen?).
   + Daar direct een contact formuliertje zetten? Vragen naar naam, instituut, wanneer ongeveer voor het laatst ingelogd, vanaf welke PC?
@@ -319,6 +334,8 @@ From LOVD 2.0:
     * chromTransEnd
 - DB admin moet kiezen om wel forwards te krijgen van registraties, maar niet van submissies of edits.
   + Managers ook deze keuze geven? Koppelen aan TABLE_USERS ipv system settings?
+- LOVD.nl/GENE_000001 link werkend krijgen voor LOVD3s?
+- Tijdens het mappen meer info invullen? RNA? Exon?
 
 
 
@@ -473,9 +490,6 @@ ik moet nog eens kijken naar welke formulieren een password nodig hebben
 
 Waar we echt mee bezig zijn:
 ============================
-checkFields() roept getForm() aan om te bepalen hoe de velden heten. Dus als er een error is, wordt getForm() twee keer aangeroepen.
-    Voor forms met veel queries is dat een beetje vervelend. Kan getForm() niet een static variabele in gebruik nemen,
-    die ziet dat het formulier al eerder gemaakt is (door de checkFields() call) en die dan direct returnen?
 Col add: Er moet nog gekeken worden naar het bevestigingsbericht. Ook moeten diseases goed omschreven worden in messages; bij voorkeur met hun symbol.
 Create genes moet het formulier gaan indelen in secties die geopend en gesloten kunnen worden.
 Overnemen van LOVD2: view users zien in welke genen ze gesubmit hebben?
@@ -484,7 +498,6 @@ USER FORCE LOGOUT
 USERS: stel tijdzone in?
     Maar dan moet je eerst even goed inlezen over die tijdzones, over de nieuwe functies en hoe dat goed te gebruiken...
 Create gene: herstel percentages van voorgang, zodat het logischer verloopt.
-Edit gene: created date kunnen veranderen???? Beetje vreemd, maar sowieso slikt hij de H:i:s niet die er achter staat.
 
 
 
@@ -492,16 +505,12 @@ Edit gene: created date kunnen veranderen???? Beetje vreemd, maar sowieso slikt 
 Tabs, volgorde goed?
     Submitters tab nu Users, ook zodat je db admin en managers kan zien?
         Voor de normale gebruikers moeten we bepaalde kolommen weghalen. En andere toevoegen? Adres staat niet genoemd. Zien de normale mensen de details ook (= doorklikken), of moeten we een nieuwe view maken?
-Submenu's weg, knopjes met uitschuif met opties?
 Gebruik kleuren in ViewLists om te scheiden? Laat zien nu geen verschil zien tussen var + ind; maar straks nog meer categoriën!
     Hide set columns, unhide all columns = algemeen
     Vinkjes voor iedere entry om snel te curaten/deleten/booten/etc oid?
 Suggesties:
-    Includen van de Setup in de Configuration
-    submitters should be able to edit info to whichever individual, but edit only their own data,
     right click on variant -> maybe left click on a small button or mouseover explaining to right-click?,
     show pathogenicity in color values for the whole line?
-        The uniprot format by the way has the advantage to use lines for the data, so adding more lines for a individual's phenotype data is just fine, but the file gets so long...
 
 
 
@@ -527,6 +536,7 @@ Wat moet ik onthouden tijdens het coden?
     Manager
     Database administrator
 * Je hoeft links helemaal niet zo lang te maken, vanwege de BASE in de header.
+* PDO heeft de nare gewoonte argumenten om te zetten in andere data types, als hij dat nodig vindt. Dat betekent dat als je een query doet met WHERE id = "asdf", dat hij van "asdf" 0 maakt, en je dus data terug kunt krijgen.
 
 
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-10-04
+ * Modified    : 2012-10-11
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -203,7 +203,7 @@ class LOVD_Gene extends LOVD_Object {
     function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
-        global $zData, $_DB; // FIXME; this could be done more elegantly.
+        global $_DB;
 
         // No mandatory fields, since all the gene data is in $_SESSION.
 
@@ -282,7 +282,13 @@ class LOVD_Gene extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-        global $_CONF, $_DB, $zData, $_SETT;
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
+        global $_DB, $zData, $_SETT;
 
         // Get list of diseases.
         $aDiseasesForm = $_DB->query('SELECT id, IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")) FROM ' . TABLE_DISEASES . ' WHERE id > 0 ORDER BY (symbol != "" AND symbol != "-") DESC, symbol, name')->fetchAllCombine();

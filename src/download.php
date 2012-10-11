@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2012-09-20
+ * Modified    : 2012-10-11
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -105,6 +105,7 @@ if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine')) {
     // Apply filters and filter order, for user-specific download.
     if ($nID) {
         // In user-specific download, we don't care about the relationship between genes and diseases.
+        // (Genes will be shown if its transcripts are shown, Diseases will be shown if its individuals are shown)
         unset($aObjects['Gen2Dis']);
         // Change the order of filtering, so we can filter the data that's just for reference last.
         $aObjectsToBeFiltered =
@@ -197,13 +198,19 @@ foreach ($aObjectsToBeFiltered as $sObject) {
                     break;
                 default:
                     // By default, we'll assume that this filter is a certain column.
-                    $sWHERE .= '`' . $sFilter . '` ';
-                    if (is_array($Value)) {
-                        $sWHERE .= 'IN (?' . str_repeat(', ?', count($Value) - 1) . ')';
-                        $aArgs = array_merge($aArgs, $Value);
+                    // However, if we have no values to filter on, we must simply return no results.
+                    if (is_array($Value) && !count($Value)) {
+                        // No hits, filter all out.
+                        $sWHERE .= '0=1';
                     } else {
-                        $sWHERE .= '= ?';
-                        $aArgs[] = $Value;
+                        $sWHERE .= '`' . $sFilter . '` ';
+                        if (is_array($Value)) {
+                            $sWHERE .= 'IN (?' . str_repeat(', ?', count($Value) - 1) . ')';
+                            $aArgs = array_merge($aArgs, $Value);
+                        } else {
+                            $sWHERE .= '= ?';
+                            $aArgs[] = $Value;
+                        }
                     }
             }
         }
@@ -296,7 +303,13 @@ foreach ($aObjects as $sObject => $aSettings) {
 
     // Get used columns, so we can print the headers.
     // FIXME; Apply some sorting mechanism. Based on average order?
-    $aColumns = array_keys($aSettings['data'][0]);
+    if ($sObject == 'Variants_On_Transcripts') {
+        // Since we joined to the VOG table to enable filtering, we've got all those columns, too.
+        // Just for VOT, do a describe to find out which columns are VOT.
+        $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
+    } else {
+        $aColumns = array_keys($aSettings['data'][0]);
+    }
 
     // Print headers.
     foreach ($aColumns as $key => $sCol) {

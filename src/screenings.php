@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-08-30
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-10-11
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -320,7 +320,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             // Prepare values.
             $_POST['variants_found'] = (!isset($_POST['variants_found'])? '1' : $_POST['variants_found']);
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $aFieldsGenome[] = 'owned_by';
+                $aFields[] = 'owned_by';
             }
             // Only actually committed to the database if we're not in a submission, or when they are already filled in.
             $_POST['edited_by'] = $_AUTH['id'];

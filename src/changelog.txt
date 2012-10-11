@@ -8,7 +8,7 @@
 
 /*******************
  * 3.0 Beta 09
- * 2012-10-   ??????????????????????????????????????????????????????????????????
+ * 2012-10-11
  *********/
  * Fixed bug; The list of variant screenings on the individual's detailed view
    had gene symbols repeated in the "Genes screened" column, if more than one
@@ -34,12 +34,15 @@
  * Diseases bearing the same name are no longer allowed.
  * After deleting a phenotype entry, you will be forwarded to the individual's
    detailed view.
-
-
-
-
-
-
+ * Fixed bug; Creating a personal data download for a user without submitted
+   data, generated an error.
+ * Fixed bug; In a full data download the Variants_On_Transcripts section also
+   contained data from the Variants_On_Genome section.
+ * Fixed bug; An owner of a screening could not be changed by editing the field.
+ * Implemented first version (alpha) of the data import feature. This requires a
+   new format compared to LOVD 2.0, that can be obtained by making a full data
+   download from the LOVD setup area. Currently implemented is an "insert all"
+   mode that regards any data in the file as new, and tries to import it.
 
 
 /*******************

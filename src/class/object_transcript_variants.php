@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-09-24
+ * Modified    : 2012-10-11
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -160,7 +160,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     {
         // Checks fields before submission of data.
         // Loop through all transcripts to have each transcript's set of columns checked.
-        global $_AUTH, $_SETT;
+        global $_AUTH;
 
         foreach (array_keys($this->aTranscripts) as $nTranscriptID) {
             if (!empty($aData['ignore_' . $nTranscriptID])) {
@@ -198,9 +198,14 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
     function getForm ()
     {
-        global $_SETT, $_AUTH;
+        // Build the form.
 
-        $this->aFormData = array();
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
+        global $_SETT, $_AUTH;
 
         // Create form per gene.
         foreach ($this->aTranscripts as $nTranscriptID => $aTranscript) {

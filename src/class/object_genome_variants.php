@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-10-05
+ * Modified    : 2012-10-11
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -180,7 +180,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
     function checkFields ($aData, $zData = false)
     {
-        global $_AUTH, $_CONF, $_DB, $_SETT;
+        global $_AUTH, $_CONF, $_SETT;
 
         // Mandatory fields.
         $this->aCheckMandatory =

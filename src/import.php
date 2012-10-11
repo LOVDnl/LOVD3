@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-10-10
+ * Modified    : 2012-10-11
  * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -228,8 +228,9 @@ if (POST) {
                     if (!isset($aTypes[$sFileType])) {
                         // We did not understand the file type (Full data download, custom columns, genes, etc).
                         lovd_errorAdd('import', 'File type not recognized; type "' . $sFileType . '" unknown.');
+                    } else {
+                        $sFileType = $aTypes[$sFileType];
                     }
-                    $sFileType = $aTypes[$sFileType];
                     lovd_endLine();
                 }
                 break;
