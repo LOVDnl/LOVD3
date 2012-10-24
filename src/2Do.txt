@@ -1,12 +1,21 @@
 Prioritize:
 ===========
-- Logs; column net uitgezet voor 1 gen: Disabled column VariantOnTranscript/Checkbox (Checkbox) for 371 gene(s): DMD
-  + Was gelinkt vanuit gen-specifiek overzicht.
-- Order of checks on VOG/VOT form should be VOT/VOG, not the other way around.
+- Handling ORCID ID:
+  + orcid_confirmed boolean
+  + email_confirmed boolean
+  + inbouwen in edit
+  + reset password met orcid id!
+- manual changes afmaken
+- submitter register email-foutmelding is dubbel, twee andere texten ook.
+- dbsearch.php: lovd.nl/GENE_00001 link wijst naar LOVD3? Zet er een 0 tussen voor het doorsturen.
+- Import foute file van Myles:
+  + Warning: substr_count(): Empty substring in /www/svn/LOVD3/trunk/src/class/object_transcript_variants.php on line 135
+  + Notice: Undefined offset: 0 in /www/svn/LOVD3/trunk/src/class/objects.php on line 135
+  + Notice: Undefined variable: bGeneInDB in /www/svn/LOVD3/trunk/src/import.php on line 899
+- Download/all/mine failt op shared DB (heeft > 200M && <= 265M nodig), hoewel ik helemaal zoveel data niet heb (1446 genes, 1446 transcripts, 2 diseases, 9 individuals, 9 dis2ind, 10 screenings, 8 scr2gene, 14360 vog, 7739 vot, 14360 scr2var, 3.7 MB file).
 - CXorf40A_000001 wordt geweigerd door LOVD (regexp), als je hem leeg haalt, geeft hij CXorf40A_000006 als beste optie, die vervolgens ook wordt geweigerd.
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
-- Curator VE: aantal genes in TH aangeven.
 - Updated date van genen klopt niet.
 - Phenotype cols opvragen van disease, hersorteer, klik col aan. WTF???
 - Fix Yu's variants in de database.
@@ -31,6 +40,7 @@ Prioritize:
       - Dus ook een variant in een ander gen, waar ze eigenlijk normaal gesproken geen rechten op heeft!
     * Alleen verwijderen als geen nadelig effect op andere genen?
 
+- Hoe er voor zorgen, dat een gezond individu toch phenotype data van een bepaalde ziekte kan hebben? Data model houdt dit niet tegen... dat is de code.
 - Link to nomenclature page from DNA, RNA and Protein fields... link in help hover?
 - Curator mag geen cols zien van disease 0, foutmelding: je moet curator zijn.
   + Disease healthy kan niet beheerd worden (kolommen inzien, hersorteren e.d.)?
@@ -150,7 +160,7 @@ Prioritize:
     + In het geval dat we de browser direct de calls en de interpretatie willen laten doen, hebben we een wrapper script in PHP
       nodig die de calls doet en de JSON controleert (indien we een foutmelding krijgen, een JSON object maakt) en alles doorstuurt.
   - Inbouwen dat LOVD met NR_ accession nummers overweg kan, er staan hier en daar volgens mij wat regex checks op NM_(ajax calls e.d.)
-  - RNA prediction toevoegen aan het variant create & edit formulier.
+  - RNA prediction toevoegen aan het variant create & edit formulier, en aan de mapping.
   - Als $zData['column_'] niet defined is, pakt viewList en viewEntry automatisch $zData['column']? Dat staat ons wat "sloppy" code toe, waar we icoontjes toevoegen speciaal voor text/html, maar dat niet willen voor downloads of XML.
   - Vanaf individual page, phenotype toevoegen, waarom niet terug naar de individu?
     + Op zich OK om op de phenotype pagina te zitten, maar het is niet duidelijk genoeg hoe je nu terug komt naar de individu.

@@ -7,6 +7,36 @@
 // DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
 
 /*******************
+ * 3.0 Beta 10
+ * 2012-11-05 ???????????????????????????????????????????????????????????
+ *********/
+ * Fixed bug; The import page would sometimes hide error messages and say there
+   was nothing to import.
+ * Unset option from the Configuration tab menu when not available because no
+   gene is selected.
+ * Fixed bug; When disabling a shared column in only some objects, the log entry
+   mentioned an incorrect number of objects.
+ * Fixed bug; The fields on the variant create and edit forms were checked in a
+   different order than how they are displayed, which may cause confusion when reading the error messages.
+ * On a user's detailed view, the number of genes he/she curates or is
+   collaborator for, is now printed in the field's header.
+ * Added basic ORCID ID integration; while registering you can provide an ORCID
+   ID which is used to prefill as many fields of the registration form as
+   possible. The ID itself is stored for later use.
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************
  * 3.0 Beta 09
  * 2012-10-11
  *********/

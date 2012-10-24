@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-09-21
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-10-24
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -616,7 +616,7 @@ function lovd_magicUnquoteAll ()
 
 
 
-function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
+function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHeaders = array()) {
     // LOVD's alternative to file(), not dependent on the fopenwrappers, and can do POST requests.
     global $_CONF, $_SETT;
 
@@ -624,6 +624,10 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
         // Normal file() is fine.
         return @file($sURL, FILE_IGNORE_NEW_LINES);
     }
+    if (!is_array($aAdditionalHeaders)) {
+        $aAdditionalHeaders = array($aAdditionalHeaders);
+    }
+    $aAdditionalHeaders[] = ''; // To make sure we end with a \r\n.
 
     $aHeaders = array();
     $aOutput = array();
@@ -642,6 +646,7 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
                     'Content-Type: application/x-www-form-urlencoded' . "\r\n") .
             (empty($_CONF['proxy_username']) || empty($_CONF['proxy_password'])? '' :
                 'Proxy-Authorization: Basic ' . base64_encode($_CONF['proxy_username'] . ':' . $_CONF['proxy_password']) . "\r\n") .
+            implode("\r\n", $aAdditionalHeaders) .
                     'Connection: Close' . "\r\n\r\n" .
                     (!$sPOST? '' :
                     $sPOST . "\r\n");

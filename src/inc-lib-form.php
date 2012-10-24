@@ -125,6 +125,28 @@ function lovd_checkDBID ($aData)
 
 
 
+function lovd_checkORCIDChecksum ($sID)
+{
+    // Partially based on function taken 2012-10-24 from:
+    // http://support.orcid.org/knowledgebase/articles/116780-structure-of-the-orcid-identifier
+    // Checks "check digit" as per ISO 7064 11,2, for a given ORCID ID.
+
+    $sBaseDigits = ltrim(str_replace('-', '', substr($sID, 0, -1)), '0'); // '0000-0002-1368-1939' => 21368193
+    $nTotal = 0;
+    for ($i = 0; $i < strlen($sBaseDigits); $i++) {
+        $nDigit = (int) $sBaseDigits{$i};
+        $nTotal = ($nTotal + $nDigit) * 2;
+    }
+    $nRemainder = $nTotal % 11;
+    $nResult = (12 - $nRemainder) % 11;
+    $sResult = ($nResult == 10 ? 'X' : (string) $nResult);
+    return ($sResult == substr($sID, -1));
+}
+
+
+
+
+
 function lovd_checkXSS ($aInput = '')
 {
     // XSS attack prevention. Deny input of HTML.

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-10-24
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -99,6 +99,7 @@ class LOVD_User extends LOVD_Object {
         $this->aColumnsViewEntry =
                  array(
                         'id' => 'User ID',
+                        'orcid_id_' => 'ORCID ID',
                         'name' => 'Name',
                         'institute' => 'Institute',
                         'department' => 'Department',
@@ -416,6 +417,10 @@ class LOVD_User extends LOVD_Object {
             $zData['level_'] = substr($zData['level_'], 1);
 
         } else {
+            $zData['orcid_id_'] = '';
+            if ($zData['orcid_id']) {
+                $zData['orcid_id_'] = '<A href="http://orcid.org/' . $zData['orcid_id'] . '" target="_blank">' . $zData['orcid_id'] . '</A>';
+            }
             $zData['password_force_change_'] = ($zData['password_force_change']? '<IMG src="gfx/mark_1.png" alt="" width="11" height="11"> Yes' : 'No');
             if (!empty($zData['saved_work'])) {
                 $zData['saved_work'] = unserialize(htmlspecialchars_decode($zData['saved_work']));
@@ -428,6 +433,8 @@ class LOVD_User extends LOVD_Object {
                 $zData['saved_work_'] = 'N/A';
             }
             // Provide links to gene symbols this user is curator and collaborator for. Easy access to one's own genes.
+            $this->aColumnsViewEntry['curates_'] .= ' ' . count($zData['curates']) . ' gene' . (count($zData['curates']) == 1? '' : 's');
+            $this->aColumnsViewEntry['collaborates_'] .= ' ' . count($zData['collaborates']) . ' gene' . (count($zData['collaborates']) == 1? '' : 's');
             $zData['curates_'] = '';
             $zData['curates_short_'] = '';
             $i = 0;

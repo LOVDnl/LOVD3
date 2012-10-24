@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-08-22
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-10-22
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1904,7 +1904,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
             // Write to log...
             if ($aTableInfo['shared']) {
-                lovd_writeLog('Event', LOG_EVENT,  'Disabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . implode(', ', $aTargets));
+                lovd_writeLog('Event', LOG_EVENT,  'Disabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . count($aTargets) . ' ' . $aTableInfo['unit'] . '(s): ' . implode(', ', $aTargets));
             }
 
             // Thank the user...

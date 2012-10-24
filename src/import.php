@@ -1295,7 +1295,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
         $_BAR[0]->setMessageVisibility('', false);
         $_BAR[0]->setMessageVisibility('done', false);
 
-        if (!$nDataTotal) {
+        if (!lovd_error() && !$nDataTotal) {
             lovd_showInfoTable('No entries found that need to be imported in the database. Either your uploaded file contains no variants, or all entries are already in the database.', 'stop');
             $_T->printFooter();
             exit;

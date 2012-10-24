@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-08-30
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-10-22
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -548,11 +548,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     if (POST) {
         lovd_errorClean();
 
-        $_DATA['Genome']->checkFields($_POST);
-
         if (isset($sGene)) {
             $_DATA['Transcript'][$sGene]->checkFields($_POST);
         }
+        $_DATA['Genome']->checkFields($_POST);
 
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
@@ -2141,13 +2140,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     if (POST) {
         lovd_errorClean();
 
-        $_DATA['Genome']->checkFields($_POST);
-
         if ($bGene) {
             foreach ($aGenes as $sGene) {
                 $_DATA['Transcript'][$sGene]->checkFields($_POST);
             }
         }
+        $_DATA['Genome']->checkFields($_POST);
 
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.

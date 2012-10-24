@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-10-24
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -304,6 +304,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         array(
                             'UPDATE ' . TABLE_CONFIG . ' SET logo_uri = "gfx/LOVD3_logo145x50.jpg" WHERE logo_uri = "gfx/LOVD_logo130x50.jpg"',
                         ),
+                    '3.0-beta-09b' =>
+                        array(
+                            'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN orcid_id CHAR(19) AFTER id',
+                            'ALTER TABLE ' . TABLE_USERS . ' ADD UNIQUE (orcid_id)',
+                        ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -466,7 +471,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         foreach ($aUpdates as $sVersion => $aSQL) {
             $_BAR->setMessage('To ' . $sVersion . '...');
 
-            $aSQL[] = 'UPDATE ' . TABLE_STATUS . ' SET version = "' . $sVersion . '", updated_date = NOW()';
+            // Also set update_checked_date to NULL, so LOVD will again check for updates as soon as possible.
+            $aSQL[] = 'UPDATE ' . TABLE_STATUS . ' SET version = "' . $sVersion . '", updated_date = NOW(), update_level = 0, update_checked_date = NULL';
 
             // Loop needed queries...
             foreach ($aSQL as $i => $sSQL) {
