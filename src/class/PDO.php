@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2012-05-02
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-10-28
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -43,7 +43,7 @@ class LOVD_PDO extends PDO {
     // FIXME; lovd_queryDB() provided a $bDebug argument. How to implement that now?
     private $aLastError = array();
 
-    function __construct ($sBackend, $sDSN, $sUsername, $sPassword)
+    function __construct ($sBackend, $sDSN, $sUsername = '', $sPassword = '')
     {
         // Initiate database connection.
 

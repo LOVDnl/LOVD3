@@ -16,22 +16,25 @@
 
 [database]
 
-# MySQL database host. Defaults to 'localhost'.
+# Database driver. Defaults to 'mysql'.
+driver = mysql
+
+# Database host. Defaults to 'localhost'.
 #
 hostname = localhost
 
-# MySQL database username and password (required).
+# Database username and password (required for MySQL).
 #
 username = lovd
 password = lovd_pw
 
-# MySQL database name (required).
+# Database name (required). When using SQLite, specify the filename here.
 #
 database = lovd3
 
 # This is for the table prefixes; if you wish to install more than one LOVD
-# system per MySQL database, use different directories for these installations
-# and change the setting below to a unique value.
+# system per database, use different directories for these installations and
+# change the setting below to a unique value.
 # Please use alphanumeric characters only. Defaults to 'lovd'.
 #
 table_prefix = lovd_v3

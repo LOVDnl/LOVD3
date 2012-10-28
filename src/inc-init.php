@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-10-24
+ * Modified    : 2012-10-28
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -336,6 +336,13 @@ $aConfigValues =
          array(
                 'database' =>
                          array(
+                                'driver' =>
+                                         array(
+                                                'required' => true,
+                                                'default'  => 'mysql',
+                                                'pattern'  => '/^[a-z]+$/',
+                                                'values' => array('mysql' => 'MySQL', 'sqlite' => 'SQLite'),
+                                              ),
                                 'hostname' =>
                                          array(
                                                 'required' => true,
@@ -363,6 +370,11 @@ $aConfigValues =
                                               ),
                               ),
               );
+// SQLite doesn't need an username and password...
+if ($_INI['database']['driver'] == 'sqlite') {
+    unset($aConfigValues['database']['username']);
+    unset($aConfigValues['database']['password']);
+}
 
 foreach ($aConfigValues as $sSection => $aVars) {
     foreach ($aVars as $sVar => $aVar) {
@@ -389,9 +401,6 @@ foreach ($aConfigValues as $sSection => $aVars) {
                 if (!array_key_exists($_INI[$sSection][$sVar], $aVar['values'])) {
                     // Error: a value list is available, but it doesn't match the input!
                     lovd_displayError('Init', 'Error parsing config file: incorrect value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
-                } else {
-                    // Get correct value loaded.
-                    $_INI[$sSection][$sVar] = $aVar['values'][$_INI[$sSection][$sVar]];
                 }
             }
         }
@@ -466,17 +475,26 @@ if (!class_exists('PDO')) {
     lovd_displayError('Init', $sError);
 
 } else {
-    // PDO available, check if we have MySQL.
-    if (!in_array('mysql', PDO::getAvailableDrivers())) {
-        lovd_displayError('Init', 'This PHP installation does not have MySQL support for PDO installed. Without it, LOVD will not function. Please install MySQL support for PHP PDO.');
+    // PDO available, check if we have the requested database driver.
+    if (!in_array($_INI['database']['driver'], PDO::getAvailableDrivers())) {
+        $sDriverName = $aConfigValues['database']['driver']['values'][$_INI['database']['driver']];
+        lovd_displayError('Init', 'This PHP installation does not have ' . $sDriverName . ' support for PDO installed. Without it, LOVD will not function. Please install ' . $sDriverName . ' support for PHP PDO.');
     }
 }
 
 
 
-// Initiate Database Connection (NEW WAY).
+// Initiate Database Connection.
 require ROOT_PATH . 'class/PDO.php';
-$_DB = new LOVD_PDO('mysql', 'host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
+if ($_INI['database']['driver'] == 'mysql') {
+    $_DB = new LOVD_PDO($_INI['database']['driver'], 'host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
+} elseif ($_INI['database']['driver'] == 'sqlite') {
+    // SQLite.
+    $_DB = new LOVD_PDO($_INI['database']['driver'], $_INI['database']['database']);
+} else {
+    // Can't happen.
+    exit;
+}
 
 
 
