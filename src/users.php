@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-10-24
+ * Modified    : 2012-10-29
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -725,8 +725,8 @@ if (PATH_COUNT == 1 && ACTION == 'register') {
 
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (empty($_SESSION['orcid_id']) || isset($_GET['retry_orcid'])) {
-        $_SESSION['orcid_id'] = '';
+    if (!isset($_SESSION['orcid_id']) || isset($_GET['retry_orcid']) || isset($_POST['orcid_id'])) {
+        unset($_SESSION['orcid_id']);
         if (isset($_GET['no_orcid'])) {
             $_SESSION['orcid_id'] = '';
             $_SESSION['orcid_data'] = array();
@@ -734,7 +734,7 @@ if (PATH_COUNT == 1 && ACTION == 'register') {
             // Ask the user if he has an ORCID ID. If not, suggest him to register.
             if (POST) {
                 lovd_errorClean();
-                
+
                 // Check format of ID.
                 if (!preg_match('/^([0-9]{4}-?){3}[0-9]{3}[0-9X]$/', $_POST['orcid_id'])) {
                     lovd_errorAdd('orcid_id', 'The given ORCID ID does not match the ORCID ID format.');
@@ -775,6 +775,9 @@ if (PATH_COUNT == 1 && ACTION == 'register') {
                         $nID = $aORCID['orcid']['value'];
                         $sNameComposed = $aORCID['orcid-bio']['personal-details']['family-name']['value'] . ', ' . $aORCID['orcid-bio']['personal-details']['given-names']['value'];
                         $sNameDisplay = $aORCID['orcid-bio']['personal-details']['credit-name']['value'];
+                        if (!$sNameDisplay) {
+                            $sNameDisplay = $aORCID['orcid-bio']['personal-details']['given-names']['value'] . ' ' . $aORCID['orcid-bio']['personal-details']['family-name']['value'];
+                        }
                         $sEmail = $aORCID['orcid-bio']['contact-details']['email']['value'];
                         $bEmailVerified = $aORCID['orcid-history']['email-verified']['value'];
                         $sCountryCode = $aORCID['orcid-bio']['contact-details']['address']['country']['value'];
@@ -802,7 +805,7 @@ if (PATH_COUNT == 1 && ACTION == 'register') {
                     }
                 }
             }
-            
+
             $_T->printHeader();
             $_T->printTitle();
 
@@ -947,7 +950,7 @@ if (PATH_COUNT == 1 && ACTION == 'register') {
     } else {
         // Default values.
         $_DATA->setDefaultValues();
-        
+
         // ORCID DATA?
         if ($_SESSION['orcid_id']) {
             $_POST['name'] = $_SESSION['orcid_data']['name'];

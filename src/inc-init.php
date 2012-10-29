@@ -108,7 +108,7 @@ define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
-                'PHP'   => '5.1.0',
+                'PHP'   => '5.2.0',
                 'PHP_functions' =>
                      array(
                             'mb_detect_encoding',

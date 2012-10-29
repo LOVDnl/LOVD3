@@ -99,8 +99,9 @@
 5.0.0 microtime(true) ondersteunt argument true.
 5.1.0 PDO built in.
 */
+5.2.0 json_(de|en)code built in (there's only one LOVD3 user on 5.1 right now, and we haven't seen him in 3 months - 2012-10-29).
 =====-========
-5.1.0 REQUIRED
+5.2.0 REQUIRED
 
 
 

@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-09-25
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-10-29
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -395,7 +395,9 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
              array(
                     'INSERT INTO ' . TABLE_USERS . ' (name, institute, department, telephone, address, city, email, reference, username, password, password_force_change, level, allowed_ip, login_attempts, created_date) VALUES ("LOVD", "", "", "", "", "", "", "", "", "", 0, 0, "", 9, NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
-                    'INSERT INTO ' . TABLE_USERS . ' VALUES ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' . $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW(), NULL, NULL)',
+                    'INSERT INTO ' . TABLE_USERS . ' (id, name, institute, department, telephone, address, city, countryid, email, reference, username, password, password_autogen, password_force_change, phpsessid, saved_work, level, allowed_ip, login_attempts, last_login, created_by, created_date) VALUES
+                     ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' .
+                        $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW())',
                   );
     $nInstallSQL ++;
 

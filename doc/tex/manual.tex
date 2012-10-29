@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-beta-07}
+\setLOVDversion{3.0-beta-09}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2012-08-28} % I guess it's easier to use this as a "Last modified" column.
+\date{2012-10-24} % I guess it's easier to use this as a "Last modified" column.
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -830,6 +830,67 @@ Thus, to completely remove LOVD from the system, also remove the files from the 
 
 
 
+\chapter{Authorized users}
+In LOVD 3.0, \emph{authorized users} are everyone who registered for an account at the LOVD installation, including the database administrator who created his account during the installation process.
+The authorized users come in five levels; the database administrator of which there is only one, managers, curators, collaborators and submitters.
+The different levels of users are described in more detail below.
+\par
+Registering for an account is necessary to be able to submit data or to become a gene curator.
+Directly after registering, you are allowed to submit individual, phenotype and variant data to the database, but the data needs to be checked and published by a \emph{curator} or a \emph{manager}.
+Curators and managers can submit and publish data in one step.
+
+
+
+\subsection{User levels}
+\subsubsection{Database administrator}
+The database administrator is the first user within LOVD; this account is created during the installation of LOVD.
+After installation, the database administrator can create other users (managers, curators and submitters) in the system, if desired.
+These users can also register themselves, after which the database administrator can upgrade them.
+\par
+The administrator has full access to all areas and settings of LOVD.
+The administrator is also the only user who can uninstall LOVD, provided the uninstall lock has not been set during LOVD installation.
+\\
+\par
+When the ``Forward messages to database admin'' setting in the LOVD system settings is enabled, the database administrator will receive copies of submitter registrations and data submissions or edits.
+
+\subsubsection{Manager}
+A manager has access to almost everything the database administrator has access to.
+However, the manager is not able to create new managers or to edit existing managers.
+Also, a manager cannot uninstall LOVD even if the uninstall lock is not in place.
+\\
+\par
+A manager can only be created by the administrator and often assists the administrator or takes over the customisation of LOVD for the curators.
+
+\subsubsection{Curator}
+The curator level user is actually a submitter, which has been given curatorship of one or more genes.
+Therefore, a curator only has access to the gene databases he is appointed to, and not to the system-wide setup area.
+However, also the database administrator or a manager can act as a curator by being appointed to certain genes, but in this case there is of course no restriction in access.
+\\
+\par
+To assign a user to become curator, follow the steps explained in section ``\hyperlink{s_gene_assign_curators}{assigning curators and collaborators}'' (available for managers and up).
+
+\subsubsection{Collaborator}
+The collaborator level user is a new type of user, introduced in LOVD 3.0.
+Collaborators are submitters with read access to non-public data on a certain given gene.
+Just like curators, these users must be appointed to genes by managers or the database administrator.
+See section ``\hyperlink{s_gene_assign_curators}{assigning curators and collaborators}'' for more information.
+
+\subsubsection{Submitter}
+Submitters have no special rights except to submit data to the database, which then needs to be checked and published by curators or managers.
+Depending on the LOVD system settings, submitters are also able to edit the data they have submitted previously.
+\par
+Submitter accounts can also be created, edited or deleted by managers or the database administrator, although usually this should not be necessary.
+Curators do not require a separate submitter account; they can use their curator account to submit new data.
+
+
+
+
+
+
+
+
+
+
 \chapter{Gene databases}
 Although in LOVD 3.0 you can enter data into the database without having genes in your installation, the genes still embody an important part of LOVD.
 Configuring genes in LOVD allows you to see the effects of variants on transcript level, and draws submitters with variant data to your installation.
@@ -1118,6 +1179,17 @@ Please note that deleting a gene removes also its transcripts in the database an
 
 
 
+\hypertarget{s_gene_assign_curators}{}
+\section{Assigning curators and collaborators}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+...
+%You can set an authorized user as a gene curator by editing the user's account and selecting the relevant genes in the "Curator for" field.
 
 
 
@@ -1136,7 +1208,8 @@ Please note that deleting a gene removes also its transcripts in the database an
 
 \end{document}
 
-\hypertarget{name_of_label}{}
+%            s (section) ss (subsection)
+\hypertarget{s_name_of_label}{}
 \hyperlink{name_of_label}{name of link}.
 
 \begin{infobox}
@@ -1181,20 +1254,6 @@ $_PAGES =
                             'Deleting custom columns',
                             'Downloading custom column data to text files',
                             'Importing custom columns from text files',
-                          ),
-                    'Authorized users',
-                     array(
-                            'Creating new users',
-                            'Editing users',
-                            'Locking users from the system',
-                            'Deleting users',
-                            'Assigning curators to specific genes',
-                          ),
-                    'Submitters',
-                     array(
-                            'Creating new submitters',
-                            'Editing submitters',
-                            'Deleting submitters',
                           ),
                     'Custom links',
                      array(
