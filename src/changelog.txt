@@ -23,6 +23,10 @@
  * Added basic ORCID ID integration; while registering you can provide an ORCID
    ID which is used to prefill as many fields of the registration form as
    possible. The ID itself is stored for later use.
+ * Changed "Segregates with disease" to "Segregates with phenotype".
+ * Fixed bug; The XSS check protecting fields from unauthorized HTML injection
+   should not have been applied to the 'description_form' field when editing
+   shared columns, since it's not applied when creating the column, either.
 
 
 

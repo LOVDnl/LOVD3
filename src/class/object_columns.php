@@ -208,7 +208,7 @@ class LOVD_Column extends LOVD_Object {
         // FIXME; are we just assuming that form_format is OK?
 
         // XSS attack prevention. Deny input of HTML.
-        // Ignore the 'Description on short legend' and 'Description on full legend' fields.
+        // Ignore some fields that are allowed to contain HTML, or that might cause false positives.
         unset($aData['description_form'], $aData['preg_pattern'], $aData['description_legend_short'], $aData['description_legend_full']);
         lovd_checkXSS($aData);
     }

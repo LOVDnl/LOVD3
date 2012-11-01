@@ -3,6 +3,7 @@ Prioritize:
 - Handling ORCID ID:
   + orcid_confirmed boolean
   + email_confirmed boolean
+  + inbouwen in normale user create
   + inbouwen in edit
   + reset password met orcid id!
 - manual changes afmaken
@@ -156,7 +157,7 @@ Prioritize:
         - Het moet goed te tellen zijn (frequenties!)
         - Wel/niet tonen = instelling?
   - Should we maybe set default_socket_timeout somewhere?
-  - Overstappen naar de JSON API - kiezen van een JSON lib (ZEND?)
+  - Overstappen naar Mutalyzer's JSON API
     + In het geval dat we de browser direct de calls en de interpretatie willen laten doen, hebben we een wrapper script in PHP
       nodig die de calls doet en de JSON controleert (indien we een foutmelding krijgen, een JSON object maakt) en alles doorstuurt.
   - Inbouwen dat LOVD met NR_ accession nummers overweg kan, er staan hier en daar volgens mij wat regex checks op NM_(ajax calls e.d.)
@@ -297,12 +298,11 @@ Prioritize:
 - De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
 - Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - API.
-- ORCID integratie.
+  + Als we pathogenicity gaan delen, dan misschien om alles te verduidelijken, ook aantallen andere vars of andere path vars noemen?
 - How to store functional assays? Functional effect screenings? Separate table, with DBID or something to link to variant in general? Chr,g_pos?
   + Als linken naar een variant (of iemand zegt: ik heb DEZE variant getest), wat doen we dan als de variant wordt bewerkt?
   + Moet ook kunnen linken naar meerdere varianten, als deze tegelijkertijd zijn getest.
   + Must be able to store phenotype like information (not individual-like)
-- Since Objects::checkFields() is running getForm(), can't that code take care of invalid values in selection lists? Now that code is all over the place; object_custom for custom columns and lots of object_* files for each data type.
 - Floating header? Anders: eerst de hele tabel inladen, daarna nieuwe table maken, de TR moven naar de andere tabel met behoud van breedte, en laten floaten.
   + Eventueel code gebruiken gesuggereerd door Ivar (november 2011)
   - Implement lovd_getColumnMaxValue() in inc-lib-init.php.
@@ -337,15 +337,22 @@ From LOVD 2.0:
 - Cancel knop op submissie formulieren is altijd hetzelfde; aparte opdracht voor lovd_viewForm() voor submit + cancel knop met URL als argument?
 - Screening verwijderd, doorverwezen naar /screenings. Is dat handig?
 - Er is nu niet goed met MT genen te werken; NCBI kent geen transcripten. Mutalyzer heeft wel info, maar nu mist daar het een en ander, juist omdat er geen NMs zijn:
-  + http://localhost/svn/LOVD3/trunk/src/ajax/mutalyzer?getTranscriptsAndInfo&genomicReference=NC_001807.4&geneName=ND1
+  + LOVD maakt dan geen UD aan, maar gebruikt de NC direct.
+  + http://localhost/svn/LOVD3/trunk/src/ajax/mutalyzer?getTranscriptsAndInfo&genomicReference=NC_012920.1&geneName=ND1
   + Ik krijg inderdaad transcript informatie binnen als ik de NC icm het aangepaste gensymbool gebruik, bedankt voor de tip. Ik mis alleen nu, even snel kijkend naar de code, de volgende gegevens die LOVD nodig heeft:
     * id
     * chromTransStart
     * chromTransEnd
+  + position converter werkt ook niet, data is wel uit namechecker te halen, maar dat vereist enorm veel aanpassingen overal in LOVD.
 - DB admin moet kiezen om wel forwards te krijgen van registraties, maar niet van submissies of edits.
   + Managers ook deze keuze geven? Koppelen aan TABLE_USERS ipv system settings?
 - LOVD.nl/GENE_000001 link werkend krijgen voor LOVD3s?
 - Tijdens het mappen meer info invullen? RNA? Exon?
+- Submitter er aan herinneren, dat zij consent moeten hebben voor het opslaan van deze data, tenzij de data publiek is (papers)?
+- Christophe Beroud: UMD predictor doet het beter dan SIFT, Polyphen en Mutation Taster.
+- Mauno: PONP doet het beter dan SIFT en Polyphen.
+- Goede check of http://zwarterita/mutalyzer/services en http://www.mutalyzer.nl/2.0/services hetzelfde teruggeven?
+  + Wellicht makkelijker te implementeren dan checken of alle LOVD features nog werken.
 
 
 
@@ -413,7 +420,7 @@ Ook belangrijk, maar iets minder:
   * Het werkelijk toevoegen van een kolom in een functie???
   * Moet in één transaction? If so, implement rollbacks?
   * Sets kolommen activeren per data type? Andersom kan al wel; kolom toevoegen aan sets data types.
-- Pathogenicity los koppelen, zodat "proof" kan worden toegevoegd, maar ook linken aan meerdere varianten.
+- Pathogenicity los koppelen, zodat "proof" kan worden toegevoegd, maar ook linken aan meerdere varianten?
 - (Overleg I&I nodig) Disease -> trait? (eye color, etc)
   * Could we support both?
   * Probleem is dat je dan een speciale diseaseID nodig hebt met een flag = trait, of een flag in TABLE_SHARED_COLUMNS???
@@ -426,6 +433,7 @@ Ook belangrijk, maar iets minder:
   * Lock users after how many failed attempts?
   * Sessions last for how long?
   * Password storage toch in bcrypt? (pas zeker weten beschikbaar met PHP 5.3)
+    + You can check if Bcrypt will work on your server by checking whether or not the CRYPT_BLOWFISH constant is defined and represents 1
   * Na eerste password fail een reCAPTCHA tonen?
   ...
 Lifestyle columns? Smoker yes/no? Where/how to store?

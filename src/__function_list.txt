@@ -100,6 +100,7 @@
 5.1.0 PDO built in.
 */
 5.2.0 json_(de|en)code built in (there's only one LOVD3 user on 5.1 right now, and we haven't seen him in 3 months - 2012-10-29).
+5.3.0 bcrypt built into PHP (before that, availability depends on the system)
 =====-========
 5.2.0 REQUIRED
 

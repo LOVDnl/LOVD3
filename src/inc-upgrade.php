@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-10-24
+ * Modified    : 2012-10-31
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -308,6 +308,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         array(
                             'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN orcid_id CHAR(19) AFTER id',
                             'ALTER TABLE ' . TABLE_USERS . ' ADD UNIQUE (orcid_id)',
+                        ),
+                    '3.0-beta-09c' =>
+                        array(
+                            'UPDATE ' . TABLE_COLS . ' SET description_form         = "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)" WHERE id = "VariantOnGenome/Segregation" AND description_form         = "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)"',
+                            'UPDATE ' . TABLE_COLS . ' SET description_legend_short = "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)" WHERE id = "VariantOnGenome/Segregation" AND description_legend_short = "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)"',
+                            'UPDATE ' . TABLE_COLS . ' SET description_legend_full  = "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)" WHERE id = "VariantOnGenome/Segregation" AND description_legend_full  = "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)"',
+                            'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN mapping_flags TINYINT(3) UNSIGNED NOT NULL DEFAULT 0',
                         ),
              );
 

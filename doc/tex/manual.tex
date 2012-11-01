@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-beta-09}
+\setLOVDversion{3.0-beta-10}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2012-10-24} % I guess it's easier to use this as a "Last modified" column.
+\date{2012-11-01} % I guess it's easier to use this as a "Last modified" column.
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -562,6 +562,8 @@ The other actions available from the LOVD setup are described in their respectiv
 % The effect was that the text was more compressed (ugly!!!) to try and prevent a broken item, but it still breaks and anyway I just want it to leave space at the bottom of the page instead of compressing everything.
 % Writing \nopagebreak in every freaking line is too much, so I checked out "needspace": http://texblog.net/latex-archive/layout/prevent-page-breaks/
 % However, \needspace just dumps space there, so if it's not breaking there because of a change of text in front of it, it now shows a big empty part. Ugly, too.
+% Now settled for \pagebreak[] commands.
+\hypertarget{s_system_settings}{}
 \section{LOVD system settings}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -886,6 +888,107 @@ Curators do not require a separate submitter account; they can use their curator
 
 
 
+\section{Registering a new account}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: None (public)\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+\begin{warntable}
+Please note that you do \textbf{NOT} need to register to view the data available in the database.
+You only need an account for submitting new variant data.
+\end{warntable}
+Anyone can create a new submitter account.
+For collaborators, curators or managers, registering as a submitter is often the first step; their account can then be upgraded by a manager or the database administrator, respectively.
+The major difference between registration and direct creation of a new account by a manager or the database administrator, is that the registration can be performed by the public, and therefore it requires you to be logged out of LOVD.
+The registration form is protected using a \emph{reCAPTCHA} module, which makes sure the form can only be used by humans, and not by spam bots.
+\\
+\par
+To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen, next to the ``Log in'' link.
+First, you are asked to provide an ORCID ID, if you have one.
+\href{http://about.orcid.org/}{ORCID} provides a persistent digital identifier that distinguishes you from every other researcher and, through integration in key research workflows such as manuscript and grant submission, supports automated linkages between you and your professional activities ensuring that your work is recognized.
+If you don't have an ORCID ID yet, you can get one created by using the \href{https://orcid.org/register}{register} link also given on the page.
+If you don't want to register at ORCID at this time, click the ``I don't have an ORCID ID \guillemotright'' button to continue to the registration page.
+If you do have an ORCID ID, fill it in and click the ``Continue \guillemotright'' button.
+Your ORCID ID will be verified, and the associated data is shown on the screen.
+If this data is correct, click ``Yes, this is me \guillemotright'' to continue to the registration page.
+As much information as possibly will be pre-filled for you.
+If the information shown is not correct, click ``\guillemotleft{} No, this is not me'' so you can try and enter a correct ORCID ID or register without using one.
+
+
+
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+\subsection{User details}
+This part of the registration form contains the basic fields with which the user identifies himself.
+\begin{description}
+  \item[Name] \hfill \\
+  Please enter your name in the way you want to be referenced to; usually in the format ``<First name> <Last name>''.
+  \item[Institute] \hfill \\
+  The institute for which you work.
+  \item[Deparment] \hfill \\
+  If your institute consists of department, please enter the department for which you work.
+  \item[Postal address] \hfill \\
+  Please provide the full postal address of your institute.
+  \item[Email address(es), one per line] \hfill \\
+  Your account can hold multiple email addresses, which will all receive notifications sent by LOVD.
+  This is useful if you're sharing an account with a colleague, or when you would like to also get emails on a different account.
+  You can enter as many email addresses as you like, one email address per line, no spaces, quotes or other special characters allowed.
+  \item[Telephone] \hfill \\
+  Optionally, provide your phone number where you can be reached.
+  \item[Username] \hfill \\
+  LOVD requires the username to be 4 to 20 characters long, and starting with a letter followed by letters, numbers, dots, underscores and dashes only.
+  \item[Password] \hfill \\
+  LOVD requires the password to be at least 4 characters long, containing at least one number or special character.
+  Please choose your password wisely; don't use the same password as your username and better not use words that are in a dictionary.
+  \item[Password (confirm)] \hfill \\
+  To make sure you din't make a typo while entering your password, please repeat it so we can check if the two fields are equal.
+\end{description}
+
+
+
+\subsection{Referencing the lab}
+This part describes the reference that LOVD makes to your institute.
+\begin{description}
+  \item[Country] \hfill \\
+  Please select the country from the given list.
+  \item[City] \hfill \\
+  Even though you entered the city also in the address field above, please enter it here as well.
+  It's used for sorting purposes when creating a list of the institutes registered to the installation.
+  \item[Reference] \hfill \\
+  Your submissions will contain a reference to you in the format "Country:City" by default.
+  You may change this to your preferred reference here.
+\end{description}
+
+
+
+\subsection{Security}
+To prevent unauthorized use of your account, we implemented a security feature that you can configure here.
+\begin{description}
+  \item[Allowed IP address list] \hfill \\
+  \emph{
+    Note: Please be extremely careful using this setting.
+    Using this setting too strictly, can deny you access to LOVD, even if the correct credentials have been provided.
+  }
+  \\
+  To help prevent others to try and guess your username/password combination, you can restrict access to your account to a number of IP addresses or ranges.
+  For instance, to make sure your account can only be used when accessed from your institute or from your home.
+  \\
+  Set to ``*'' to allow all IP addresses, use ``-'' to specify a range (like ``192.168.0.1-20'') and use ``;'' to separate addresses or ranges (like ``192.168.0.1;192.168.1.34'').
+\end{description}
+
+
+
+\subsection{Registration authentication}
+To prevent automatic submission of the registration form, we implemented a \href{http://www.google.com/recaptcha}{reCAPTCHA} module.
+In the provided text field, type the two words you see in the image.
+This will proof that you are a human and not a computer.
+\\
+\par
+After completing the form, press the ``Register'' button.
+LOVD sends you a confirmation of your registered information through email.
+If the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled, the database administrator also receives a copy of your data.
 
 
 
