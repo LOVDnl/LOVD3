@@ -140,46 +140,291 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 
-if (PATH_COUNT == 1 && ACTION == 'create') {
+if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     // URL: /users?create
-    // Create a new entry.
+    // URL: users?register
+    // Create a new user, or self-register a new submitter.
 
-    define('PAGE_TITLE', 'Create a new user account');
-    define('LOG_EVENT', 'UserCreate');
+    define('LOG_EVENT', 'User' . ucfirst(ACTION));
+    if (ACTION == 'create') {
+        define('PAGE_TITLE', 'Create a new user account');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_MANAGER);
+
+    } else {
+        define('PAGE_TITLE', 'Register as new submitter');
+
+        if ($_AUTH) {
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('You are already a registered user.', 'stop');
+            $_T->printFooter();
+            exit;
+        }
+    }
+
+    require ROOT_PATH . 'inc-lib-form.php';
+
+
+
+    if (!POST || empty($_POST['orcid_id'])) {
+        if (isset($_GET['no_orcid'])) {
+            $_POST['orcid_id'] = 'none';
+            $_SESSION['orcid_data'] = array();
+        } else {
+            // Ask the user if he has an ORCID ID. If not, suggest him to register.
+            if (POST) {
+                lovd_errorClean();
+
+                // Check format of ID.
+                if (!preg_match('/^([0-9]{4}-?){3}[0-9]{3}[0-9X]$/', $_POST['orcid'])) {
+                    lovd_errorAdd('orcid', 'The given ORCID ID does not match the ORCID ID format.');
+                } elseif (!lovd_checkORCIDChecksum($_POST['orcid'])) {
+                    // Checksum not valid!
+                    lovd_errorAdd('orcid', 'The given ORCID ID is not valid.');
+                } elseif ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE orcid_id = ?', array($_POST['orcid']))->fetchColumn()) {
+                    // ID is not unique!
+                    lovd_errorAdd('orcid', 'There is already an account registered with this ORCID ID.' . (!$_CONF['allow_unlock_accounts']? '' : ' Did you <A href="reset_password">forget your password</A>?'));
+                } else {
+                    // Contact ORCID to retrieve public info.
+                    $aOutput = lovd_php_file('http://pub.orcid.org/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
+                    if (!$aOutput) {
+                        lovd_errorAdd('orcid', 'The given ORCID ID can not be found at ORCID.org.');
+                    } else {
+                        $aORCID = array(
+                            'orcid' => array('value' => ''),
+                            'orcid-bio' => array(
+                                'personal-details' => array(
+                                    'family-name' => array('value' => ''),
+                                    'given-names' => array('value' => ''),
+                                    'credit-name' => array('value' => ''),
+                                ),
+                                'contact-details' => array(
+                                    'email' => array('value' => ''),
+                                    'address' => array(
+                                        'country' => array('value' => ''),
+                                    ),
+                                ),
+                            ),
+                            'orcid-history' => array(
+                                'email-verified' => array('value' => ''),
+                            ),
+                        );
+
+                        $aOutput = json_decode(implode('', $aOutput), true);
+                        $aORCID = array_replace_recursive($aORCID, $aOutput['orcid-profile']);
+                        $nID = $aORCID['orcid']['value'];
+                        $sNameComposed = $aORCID['orcid-bio']['personal-details']['family-name']['value'] . ', ' . $aORCID['orcid-bio']['personal-details']['given-names']['value'];
+                        $sNameDisplay = $aORCID['orcid-bio']['personal-details']['credit-name']['value'];
+                        if (!$sNameDisplay) {
+                            $sNameDisplay = $aORCID['orcid-bio']['personal-details']['given-names']['value'] . ' ' . $aORCID['orcid-bio']['personal-details']['family-name']['value'];
+                        }
+                        $sEmail = $aORCID['orcid-bio']['contact-details']['email']['value'];
+                        $bEmailVerified = $aORCID['orcid-history']['email-verified']['value'];
+                        $sCountryCode = $aORCID['orcid-bio']['contact-details']['address']['country']['value'];
+                        if ($sCountryCode) {
+                            $sCountry = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($sCountryCode))->fetchColumn();
+                        } else {
+                            $sCountry = '';
+                        }
+                        $_SESSION['orcid_data']['name'] = $sNameDisplay;
+                        $_SESSION['orcid_data']['email'] = $sEmail;
+                        $_SESSION['orcid_data']['countryid'] = $sCountryCode;
+
+                        // Report found ID, and have user confirm or deny.
+                        $_T->printHeader();
+                        $_T->printTitle();
+
+                        $sMessage = 'We have retrieved the following information from ORCID. Please verify if this information is correct:<BR>' .
+                            '<B>' . $nID . '</B><BR>' .
+                            $sNameComposed . ' (' . $sNameDisplay . ')<BR>' .
+                            $sCountry . '<BR>' .
+                            $sEmail;
+                        lovd_showInfoTable($sMessage, 'question');
+
+                        print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+                              '        <INPUT type="hidden" name="orcid_id" value="' . $nID . '">' . "\n" .
+                              '        <INPUT type="submit" value="&laquo; No, this is not correct" onclick="window.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '\'; return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Yes, this is correct &raquo;">' . "\n" .
+                              '      </FORM>' . "\n\n");
+
+                        $_T->printFooter();
+                        exit;
+                    }
+                }
+            }
+
+            $_T->printHeader();
+            $_T->printTitle();
+
+            print(      '<A href="http://about.orcid.org/" target="_blank">ORCID</A> provides a persistent digital identifier that distinguishes you from every other researcher and, through integration in key research workflows such as manuscript and grant submission, supports automated linkages between you and your professional activities ensuring that your work is recognized. <A href="http://about.orcid.org/" target="_blank">Find out more.</A><BR>' . "\n" .
+                'Don\'t have an ORCID ID yet? Please consider to <A href="https://orcid.org/register" target="_blank">register</A>, it only takes a minute.<BR><BR>' . "\n\n");
+
+            lovd_errorPrint();
+
+            print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+            // Array which will make up the form table.
+            $aForm = array(
+                array('POST', '', '', '', '40%', '14', '60%'),
+                'hr',
+                array('Please enter ' . (ACTION == 'create'? 'this user\'s' : 'your') . ' ORCID ID', '', 'text', 'orcid', 20),
+                array('', '', 'print', '<INPUT type="submit" value="Continue &raquo;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="' . (ACTION == 'create'? 'This user doesn\'t' : 'I don\'t') . ' have an ORCID ID &raquo;" onclick="if(window.confirm(\'Are you sure you don\\\'t want to register for an ORCID ID first? Press \\\'OK\\\' to continue without ORCID ID.\')){window.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '&amp;no_orcid\';} return false;">'),
+            );
+            lovd_viewForm($aForm);
+
+            print('</FORM>' . "\n\n");
+
+            $_T->printFooter();
+            exit;
+        }
+    }
+
+
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
-    require ROOT_PATH . 'inc-lib-form.php';
+    if (ACTION == 'register') {
+        require ROOT_PATH . 'lib/reCAPTCHA/inc-lib-recaptcha.php';
+        $sCAPTCHAerror = '';
+    }
 
-    if (!empty($_POST)) {
+    if (count($_POST) > 1) { // 'orcid_id' will always be defined here.
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
 
+        if (ACTION == 'register') { // Checking the CAPTCHA response...
+            // If no response has been filled in, we need to complain. Otherwise, we should check the answer.
+            if (empty($_POST['recaptcha_response_field'])) {
+                lovd_errorAdd('', 'Please fill in the two words that you see in the image at the bottom of the form.');
+            } else {
+                // Check answer!
+                $response = recaptcha_check_answer('6Le0JQQAAAAAAB-iLSVi81tR5s8zTajluFFxkTPL', $_SERVER['REMOTE_ADDR'], $_POST['recaptcha_challenge_field'], $_POST['recaptcha_response_field']);
+                if (!($response->is_valid)) {
+                    lovd_errorAdd('', 'Registration authentication failed. Please try again by filling in the two words that you see in the image at the bottom of the form.');
+                    $sCAPTCHAerror = $response->error;
+                }
+            }
+        }
+
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'reference', 'username', 'password', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'created_by', 'created_date');
+            $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'reference', 'username', 'password', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'created_date');
 
             // Prepare values.
+            if ($_POST['orcid_id'] != 'none') {
+                $aFields[] = 'orcid_id';
+            }
             $_POST['password'] = lovd_createPasswordHash($_POST['password_1']);
-            $_POST['login_attempts'] = ($_POST['locked']? 3 : 0);
-            $_POST['created_by'] = $_AUTH['id'];
+            if (ACTION == 'register') {
+                $_POST['password_force_change'] = 0;
+                $_POST['level'] = LEVEL_SUBMITTER;
+                $_POST['login_attempts'] = 0;
+                $aFields[] = 'last_login';
+                $_POST['last_login'] = $_POST['created_date'] = date('Y-m-d H:i:s');
+            }
+            if (ACTION == 'create') {
+                $_POST['login_attempts'] = ($_POST['locked']? 3 : 0);
+                $aFields[] = 'created_by';
+                $_POST['created_by'] = $_AUTH['id'];
+            }
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
+            if (ACTION == 'register') {
+                // Store that user has been created by himself.
+                $_DB->query('UPDATE ' . TABLE_USERS . ' SET created_by = id WHERE id = ?', array($nID));
 
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Created user ' . $nID . ' - ' . $_POST['username'] . ' (' . $_POST['name'] . ') - with level ' . $_SETT['user_levels'][$_POST['level']]);
+                // Load authorization.
+                $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
+                $_AUTH =& $_SESSION['auth'];
+                // To prevent notices in the header for instance...
+                $_AUTH['curates']      = array();
+                $_AUTH['collaborates'] = array();
 
-            // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+                // Write to log...
+                lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
+
+            } else {
+                // Write to log...
+                lovd_writeLog('Event', LOG_EVENT, 'Created user ' . $nID . ' - ' . $_POST['username'] . ' (' . $_POST['name'] . ') - with level ' . $_SETT['user_levels'][$_POST['level']]);
+            }
+
+
+
+            // Mail new user only if we're registering, or an email has been requested.
+            if (ACTION == 'register' || !empty($_POST['send_email'])) {
+                $aTo = array(array($_POST['name'], $_POST['email']));
+                $aCc = array();
+                if (ACTION == 'create') {
+                    $aCc[] = array($_AUTH['name'], $_AUTH['email']);
+                }
+
+                $sMessage = 'Dear ' . $_POST['name'] . ',' . "\n\n" .
+                    (ACTION == 'create'? 'An account for this LOVD system has been created for you by ' . $_AUTH['name'] . '.' :
+                                         'You have registered as a data submitter for this LOVD system.') . "\n" .
+                    'Below is a copy of your registration information.' . "\n\n";
+
+                if ($_CONF['location_url']) {
+                    $sMessage .= 'To log in to LOVD, click this link:' . "\n" .
+                        $_CONF['location_url'] . 'login' . "\n\n" .
+                        'You can also go straight to your account using the following link:' . "\n" .
+                        $_CONF['location_url'] . $_PE[0] . '/' . $_AUTH['id'] . "\n\n";
+                }
+
+                $sMessage .= 'Regards,' . "\n" .
+                    '    LOVD system at ' . $_CONF['institute'] . "\n\n";
+
+                // Array containing the submitter fields.
+                $_POST['id'] = $nID;
+                $_POST['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($_POST['countryid']))->fetchColumn();
+                $aMailFields =
+                    array(
+                        '_POST',
+                        'id' => 'User ID',
+                        'orcid_id' => 'ORCID ID',
+                        'name' => 'Name',
+                        'institute' => 'Institute',
+                        'department' => 'Department',
+                        'address' => 'Address',
+                        'city' => 'City',
+                        'country_' => 'Country',
+                        'email' => 'Email address',
+                        'telephone' => 'Telephone',
+                        'reference' => 'Reference',
+                        'username' => 'Username',
+                        'password_1' => 'Password',
+                    );
+                if ($_POST['orcid_id'] == 'none') {
+                    unset($aMailFields['orcid_id']);
+                }
+
+                $aBody = array($sMessage, 'submitter_details' => $aMailFields);
+
+                $sBody = lovd_formatMail($aBody);
+
+                // Set proper subject.
+                $sSubject = 'LOVD account registration'; // Don't just change this; lovd_sendMail() is parsing it.
+
+                // Send mail.
+                $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], $_CONF['send_admin_submissions'], $aCc);
+            } else {
+                $bMail = 0; // Does not evaluate to True (mention we've sent the email), but doesn't equal False either (mention we failed to send the email).
+            }
+
+            if ($bMail) {
+                // Thank the user...
+                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+            }
 
             $_T->printHeader();
             $_T->printTitle();
-            lovd_showInfoTable('Successfully created the user account!', 'success');
+            lovd_showInfoTable('Successfully created '  . (ACTION == 'create'? 'the user' : 'your') . ' account!' .
+                    (!$bMail? '' : '<BR>We\'ve sent '  . (ACTION == 'create'? 'the user' : 'you') . ' an email containing '  . (ACTION == 'create'? 'the' : 'your') . ' account information.'), 'success');
+            if ($bMail === false) {
+                lovd_showInfoTable('Due to an error, we couldn\'t send an email containing the account information. Our apologies for the inconvenience.', 'stop');
+            }
 
             $_T->printFooter();
             exit;
@@ -192,6 +437,13 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     } else {
         // Default values.
         $_DATA->setDefaultValues();
+
+        // ORCID DATA?
+        if ($_POST['orcid_id'] != 'none') {
+            $_POST['name'] = $_SESSION['orcid_data']['name'];
+            $_POST['email'] = $_SESSION['orcid_data']['email'];
+            $_POST['countryid'] = $_SESSION['orcid_data']['countryid'];
+        }
     }
 
 
@@ -200,24 +452,40 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     $_T->printTitle();
 
     if (GET) {
-        print('      To create a new user, please fill out the form below.<BR>' . "\n" .
-              '      <BR>' . "\n\n");
+        print('      To ' . (ACTION == 'create'? 'create a new user' : 'register as a new submitter') . ', please fill out the form below.<BR>' . "\n" .
+            '      <BR>' . "\n\n");
     }
 
+    if (ACTION == 'register') {
+        lovd_showInfoTable('Please note that you do <B>NOT</B> need to register to view the data available at these pages. You only need an account for submitting new variants.', 'warning');
+    }
     lovd_errorPrint();
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
 
-    // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+          '        <INPUT type="hidden" name="orcid_id" value="' . $_POST['orcid_id'] . '">' . "\n");
 
     // Array which will make up the form table.
+    if (ACTION == 'create') {
+        $aFormBottom = array(
+            array('', '', 'submit', (ACTION == 'create'? 'Create user' : 'Register')),
+        );
+    } else {
+        $aFormBottom = array(
+            'skip',
+            array('', '', 'print', '<B>Registration authentication</B>'),
+            'hr',
+            array('Please fill in the two words that you see in the image', '', 'print', recaptcha_get_html('6Le0JQQAAAAAAPQ55JT0m0_AVX5RqgSnHBplWHxZ', $sCAPTCHAerror, SSL)),
+            'hr',
+            'skip',
+            array('', '', 'submit', 'Register'),
+        );
+    }
     $aForm = array_merge(
-                 $_DATA->getForm(),
-                 array(
-                        array('', '', 'submit', 'Create user'),
-                      ));
+        $_DATA->getForm(),
+        $aFormBottom);
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
@@ -701,300 +969,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
 
     // Return the user where they came from.
     header('Refresh: 0; url=' . lovd_getInstallURL() . CURRENT_PATH);
-    exit;
-}
-
-
-
-
-
-if (PATH_COUNT == 1 && ACTION == 'register') {
-    // URL: users?register
-    // Register a new submitter
-
-    define('PAGE_TITLE', 'Register as new submitter');
-    define('LOG_EVENT', 'UserRegister');
-
-    if ($_AUTH) {
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_showInfoTable('You are already a registered user.', 'stop');
-        $_T->printFooter();
-        exit;
-    }
-
-    require ROOT_PATH . 'inc-lib-form.php';
-
-    if (!isset($_SESSION['orcid_id']) || isset($_GET['retry_orcid']) || isset($_POST['orcid_id'])) {
-        unset($_SESSION['orcid_id']);
-        if (isset($_GET['no_orcid'])) {
-            $_SESSION['orcid_id'] = '';
-            $_SESSION['orcid_data'] = array();
-        } else {
-            // Ask the user if he has an ORCID ID. If not, suggest him to register.
-            if (POST) {
-                lovd_errorClean();
-
-                // Check format of ID.
-                if (!preg_match('/^([0-9]{4}-?){3}[0-9]{3}[0-9X]$/', $_POST['orcid_id'])) {
-                    lovd_errorAdd('orcid_id', 'The given ORCID ID does not match the ORCID ID format.');
-                } elseif (!lovd_checkORCIDChecksum($_POST['orcid_id'])) {
-                    // Checksum not valid!
-                    lovd_errorAdd('orcid_id', 'The given ORCID ID is not valid.');
-                } elseif ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE orcid_id = ?', array($_POST['orcid_id']))->fetchColumn()) {
-                    // ID is not unique!
-                    lovd_errorAdd('orcid_id', 'There is already an account registered with this ORCID ID.' . (!$_CONF['allow_unlock_accounts']? '' : ' Did you <A href="reset_password">forget your password</A>?'));
-                } else {
-                    // Contact ORCID to retrieve public info.
-                    $aOutput = lovd_php_file('http://pub.orcid.org/' . $_POST['orcid_id'], false, '', 'Accept: application/orcid+json');
-                    if (!$aOutput) {
-                        lovd_errorAdd('orcid_id', 'The given ORCID ID can not be found at ORCID.org.');
-                    } else {
-                        $aORCID = array(
-                            'orcid' => array('value' => ''),
-                            'orcid-bio' => array(
-                                'personal-details' => array(
-                                    'family-name' => array('value' => ''),
-                                    'given-names' => array('value' => ''),
-                                    'credit-name' => array('value' => ''),
-                                ),
-                                'contact-details' => array(
-                                    'email' => array('value' => ''),
-                                    'address' => array(
-                                        'country' => array('value' => ''),
-                                    ),
-                                ),
-                            ),
-                            'orcid-history' => array(
-                                'email-verified' => array('value' => ''),
-                            ),
-                        );
-
-                        $aOutput = json_decode(implode('', $aOutput), true);
-                        $aORCID = array_replace_recursive($aORCID, $aOutput['orcid-profile']);
-                        $nID = $aORCID['orcid']['value'];
-                        $sNameComposed = $aORCID['orcid-bio']['personal-details']['family-name']['value'] . ', ' . $aORCID['orcid-bio']['personal-details']['given-names']['value'];
-                        $sNameDisplay = $aORCID['orcid-bio']['personal-details']['credit-name']['value'];
-                        if (!$sNameDisplay) {
-                            $sNameDisplay = $aORCID['orcid-bio']['personal-details']['given-names']['value'] . ' ' . $aORCID['orcid-bio']['personal-details']['family-name']['value'];
-                        }
-                        $sEmail = $aORCID['orcid-bio']['contact-details']['email']['value'];
-                        $bEmailVerified = $aORCID['orcid-history']['email-verified']['value'];
-                        $sCountryCode = $aORCID['orcid-bio']['contact-details']['address']['country']['value'];
-                        $sCountry = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($sCountryCode))->fetchColumn();
-                        $_SESSION['orcid_id'] = $nID;
-                        $_SESSION['orcid_data']['name'] = $sNameDisplay;
-                        $_SESSION['orcid_data']['email'] = $sEmail;
-                        $_SESSION['orcid_data']['countryid'] = $sCountryCode;
-
-                        // Report found ID, and have user confirm or deny.
-                        $_T->printHeader();
-                        $_T->printTitle();
-
-                        $sMessage = 'We have retrieved the following information from ORCID. Please verify if this information is correct:<BR>' .
-                                    '<B>' . $nID . '</B><BR>' .
-                                    $sNameComposed . ' (' . $sNameDisplay . ')<BR>' .
-                                    $sCountry . '<BR>' .
-                                    $sEmail;
-                        lovd_showInfoTable($sMessage, 'question');
-
-                        print('      <INPUT type="submit" value="&laquo; No, this is not me" onclick="window.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '&amp;retry_orcid\';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Yes, this is me &raquo;" onclick="window.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '\';">');
-
-                        $_T->printFooter();
-                        exit;
-                    }
-                }
-            }
-
-            $_T->printHeader();
-            $_T->printTitle();
-
-            print(      '<A href="http://about.orcid.org/" target="_blank">ORCID</A> provides a persistent digital identifier that distinguishes you from every other researcher and, through integration in key research workflows such as manuscript and grant submission, supports automated linkages between you and your professional activities ensuring that your work is recognized. <A href="http://about.orcid.org/" target="_blank">Find out more.</A><BR>' . "\n" .
-                        'Don\'t have an ORCID ID yet? Please consider to <A href="https://orcid.org/register" target="_blank">register</A>, it only takes a minute.<BR><BR>' . "\n\n");
-
-            lovd_errorPrint();
-
-            print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
-
-            // Array which will make up the form table.
-            $aForm = array(
-                            array('POST', '', '', '', '40%', '14', '60%'),
-                            'hr',
-                            array('Please enter your ORCID ID', '', 'text', 'orcid_id', 20),
-                            array('', '', 'print', '<INPUT type="submit" value="Continue &raquo;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="I don\'t have an ORCID ID &raquo;" onclick="if(window.confirm(\'Are you sure you don\\\'t want to register for an ORCID ID first? Press \\\'OK\\\' to continue without ORCID ID.\')){window.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION . '&amp;no_orcid\';} return false;">'),
-                          );
-            lovd_viewForm($aForm);
-
-            print('</FORM>' . "\n\n");
-
-            $_T->printFooter();
-            exit;
-        }
-    }
-
-
-
-    require ROOT_PATH . 'class/object_users.php';
-    $_DATA = new LOVD_User();
-    require ROOT_PATH . 'lib/reCAPTCHA/inc-lib-recaptcha.php';
-    $sCAPTCHAerror = '';
-
-    if (!empty($_POST)) {
-        lovd_errorClean();
-
-        $_DATA->checkFields($_POST);
-
-        // Adding CAPTCHA check on registration form.
-        // If no response has been filled in, we need to complain. Otherwise, we should check the answer.
-        if (empty($_POST['recaptcha_response_field'])) {
-            lovd_errorAdd('', 'Please fill in the two words that you see in the image at the bottom of the form.');
-        } else {
-            // Check answer!
-            $response = recaptcha_check_answer('6Le0JQQAAAAAAB-iLSVi81tR5s8zTajluFFxkTPL', $_SERVER['REMOTE_ADDR'], $_POST['recaptcha_challenge_field'], $_POST['recaptcha_response_field']);
-            if (!($response->is_valid)) {
-                lovd_errorAdd('', 'Registration authentication failed. Please try again by filling in the two words that you see in the image at the bottom of the form.');
-                $sCAPTCHAerror = $response->error;
-            }
-        }
-
-        if (!lovd_error()) {
-            // Fields to be used.
-            $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'reference', 'username', 'password', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'last_login', 'created_date');
-
-            // Prepare values.
-            if ($_SESSION['orcid_id']) {
-                $_POST['orcid_id'] = $_SESSION['orcid_id'];
-                $aFields[] = 'orcid_id';
-            }
-            $_POST['password_force_change'] = 0;
-            $_POST['password'] = lovd_createPasswordHash($_POST['password_1']);
-            $_POST['level'] = LEVEL_SUBMITTER;
-            $_POST['login_attempts'] = 0;
-            $_POST['last_login'] = $_POST['created_date'] = date('Y-m-d H:i:s');
-
-            $nID = $_DATA->insertEntry($_POST, $aFields);
-            $_DB->query('UPDATE ' . TABLE_USERS . ' SET created_by = id WHERE id = ?', array($nID));
-
-            $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
-            $_AUTH =& $_SESSION['auth'];
-            // To prevent notices in the header for instance...
-            $_AUTH['curates']      = array();
-            $_AUTH['collaborates'] = array();
-
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
-
-            $aTo = array(array($_POST['name'], $_POST['email']));
-
-            $sMessage = 'Dear ' . $_POST['name'] . ',' . "\n\n" .
-                        'You have registered as a submitter of sequence variations for this LOVD system.' . "\n" .
-                        'Below is a copy of your registration information.' . "\n\n";
-
-            if ($_CONF['location_url']) {
-                $sMessage .= 'To log in to LOVD, click this link:' . "\n" .
-                             $_CONF['location_url'] . 'login' . "\n\n" .
-                             'You can also go straight to your account using the following link:' . "\n" .
-                             $_CONF['location_url'] . $_PE[0] . '/' . $_AUTH['id'] . "\n\n";
-            }
-            $sMessage .= 'Regards,' . "\n" .
-                         '    LOVD system at ' . $_CONF['institute'] . "\n\n";
-
-            // Array containing the submitter fields.
-            $_POST['id'] = $nID;
-            $_POST['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($_POST['countryid']))->fetchColumn();
-            $aMailFields =
-                     array(
-                            '_POST',
-                            'id' => 'User ID',
-                            'name' => 'Name',
-                            'institute' => 'Institute',
-                            'department' => 'Department',
-                            'address' => 'Address',
-                            'city' => 'City',
-                            'country_' => 'Country',
-                            'email' => 'Email address',
-                            'telephone' => 'Telephone',
-                            'reference' => 'Reference',
-                            'username' => 'Username',
-                            'password_1' => 'Password',
-                          );
-
-            $aBody = array($sMessage, 'submitter_details' => $aMailFields);
-
-            $sBody = lovd_formatMail($aBody);
-
-            // Set proper subject.
-            $sSubject = 'LOVD registration'; // Don't just change this; lovd_sendMail() is parsing it.
-
-            // Send mail.
-            $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers']);
-
-            // Thank the user...
-            header('Refresh: ' . ($bMail? '3' : '5') . '; url=' . lovd_getInstallURL() . 'genes');
-
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Your account has successfully been created!<BR>' . "\n" .
-                               ($bMail? 'We\'ve sent you an email containing your account information.' :
-                               'Due to an error, we couldn\'t send you an email containing your account information. Our apologies for the inconvenience.'),
-                               ($bMail? 'success' : 'information'));
-
-            $_T->printFooter();
-            exit;
-
-        } else {
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password'], $_POST['password_1'], $_POST['password_2']);
-        }
-
-    } else {
-        // Default values.
-        $_DATA->setDefaultValues();
-
-        // ORCID DATA?
-        if ($_SESSION['orcid_id']) {
-            $_POST['name'] = $_SESSION['orcid_data']['name'];
-            $_POST['email'] = $_SESSION['orcid_data']['email'];
-            $_POST['countryid'] = $_SESSION['orcid_data']['countryid'];
-        }
-    }
-
-
-
-    $_T->printHeader();
-    $_T->printTitle();
-
-    if (GET) {
-        print('      To register as a new submitter, please fill out the form below.<BR>' . "\n" .
-              '      <BR>' . "\n\n");
-    }
-
-    lovd_showInfoTable('Please note that you do <B>NOT</B> need to register to view the data available at these pages. You only need an account for submitting new variants.', 'warning');
-    lovd_errorPrint();
-
-    // Tooltip JS code.
-    lovd_includeJS('inc-js-tooltip.php');
-
-    // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
-
-    // Array which will make up the form table.
-    $aForm = array_merge(
-                 $_DATA->getForm(),
-                 array(
-                        'skip',
-                        array('', '', 'print', '<B>Registration authentication</B>'),
-                        'hr',
-                        array('Please fill in the two words that you see in the image', '', 'print', recaptcha_get_html('6Le0JQQAAAAAAPQ55JT0m0_AVX5RqgSnHBplWHxZ', $sCAPTCHAerror, SSL)),
-                        'hr',
-                        'skip',
-                        array('', '', 'submit', 'Register'),
-                      ));
-    lovd_viewForm($aForm);
-
-    print('</FORM>' . "\n\n");
-
-    $_T->printFooter();
     exit;
 }
 

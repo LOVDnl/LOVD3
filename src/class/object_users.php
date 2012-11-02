@@ -357,9 +357,13 @@ class LOVD_User extends LOVD_Object {
             'locked' => array('Locked', '', 'checkbox', 'locked'),
                         'hr',
 'authorization_skip' => 'skip',
+        'send_email' => array('Send email with account details to user', '', 'checkbox', 'send_email'),
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       );
 
+        if ($bInstall || ACTION != 'create') {
+            unset($this->aFormData['send_email']);
+        }
         if ($bInstall || ACTION == 'register') {
             // No need to ask for the user's password when the user is not created yet.
             unset($this->aFormData['authorization_skip'], $this->aFormData['authorization']);
@@ -472,6 +476,7 @@ class LOVD_User extends LOVD_Object {
     {
         // Sets default values of fields in $_POST.
         $_POST['allowed_ip'] = '*';
+        $_POST['send_email'] = 1;
         return true;
     }
 }

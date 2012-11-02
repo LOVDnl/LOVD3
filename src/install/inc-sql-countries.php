@@ -36,6 +36,7 @@ if (!defined('ROOT_PATH')) {
 }
 
 // Country list, taken from http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm at 2009-10-05
+// NOTE: Do not change these queries without verifying that object_users.php still collects the country data correctly. It parses these queries for the DB admin registration form.
 $aCountrySQL =
          array(
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("AF", "Afghanistan")',

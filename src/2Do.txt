@@ -1,9 +1,10 @@
 Prioritize:
 ===========
+- Test LOVD install!
 - Handling ORCID ID:
   + orcid_confirmed boolean
   + email_confirmed boolean
-  + inbouwen in normale user create
+  + inbouwen in LOVD install?
   + inbouwen in edit
   + reset password met orcid id!
 - manual changes afmaken

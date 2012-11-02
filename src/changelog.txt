@@ -20,13 +20,19 @@
    different order than how they are displayed, which may cause confusion when reading the error messages.
  * On a user's detailed view, the number of genes he/she curates or is
    collaborator for, is now printed in the field's header.
- * Added basic ORCID ID integration; while registering you can provide an ORCID
-   ID which is used to prefill as many fields of the registration form as
-   possible. The ID itself is stored for later use.
+ * Added basic ORCID ID integration; while registering as a submitter or when
+   creating a new user account for somebody else, you can provide an ORCID ID
+   which is used to prefill as many fields of the registration form as possible.
+   The ID itself is stored for later use.
  * Changed "Segregates with disease" to "Segregates with phenotype".
  * Fixed bug; The XSS check protecting fields from unauthorized HTML injection
    should not have been applied to the 'description_form' field when editing
    shared columns, since it's not applied when creating the column, either.
+ * Fixed bug; Submitter registration emails were sent to the database
+   administrator always, even if he indicated not wanting them.
+ * After registering a submitter account, you are now forwarded to your account
+   details instead of the gene list.
+ * When creating a new user, you can have the account details mailed to him/her.
 
 
 

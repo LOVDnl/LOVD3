@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-08-28
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-11-01
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -630,7 +630,7 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
         // The admin should have a proper Reply-to header.
         $sAdditionalHeaders = '';
-        if (in_array($sSubject, array('LOVD registration', 'LOVD password reset'))) {
+        if (in_array($sSubject, array('LOVD account registration', 'LOVD password reset'))) {
             // Reply-to should be original addressees.
             $sAdditionalHeaders .= 'Reply-To: ' . $sTo;
         } elseif (strpos($sSubject, 'LOVD submission') === 0) {
