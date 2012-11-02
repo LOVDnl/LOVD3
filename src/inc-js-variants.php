@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2012-08-08
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-11-02
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -164,7 +164,7 @@ function lovd_convertPosition (oElement)
                         aVariants = sData.split(';');
                         var nVariants = aVariants.length;
                         for (i = 0; i < nVariants; i++) {
-                            var aVariant = /^(N[RM]_\d{6,9}\.\d{1,2}):(c\..+)$/.exec(aVariants[i]);
+                            var aVariant = /^(N[RM]_\d{6,9}\.\d{1,2}):([cn]\..+)$/.exec(aVariants[i]);
                             if (aVariant != null) {
                                 var oInput = $('#variantForm input[id_ncbi="' + aVariant[1] + '"]');
                                 if (oInput[0] != undefined) {

@@ -33,6 +33,9 @@
  * After registering a submitter account, you are now forwarded to your account
    details instead of the gene list.
  * When creating a new user, you can have the account details mailed to him/her.
+ * Added support for non-coding genes with NR transcript reference sequences.
+ * Fixed bug; Transcripts could not be added to variants not HGVS compliant on
+   genomic level.
 
 
 

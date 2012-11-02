@@ -2585,6 +2585,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
         if (empty($_POST['transcripts']) || !is_array($_POST['transcripts'])) {
             $_POST['transcripts'] = array();
         } else {
+            // Verify all given IDs; they need to exist in the database, and they need to be on the same chromosome.
             $aTranscripts = $_DB->query('SELECT t.id FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllColumn();
             foreach ($_POST['transcripts'] as $nTranscript) {
                 if (!in_array($nTranscript, $aTranscripts)) {
@@ -2620,16 +2621,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                     $zTranscript = $_DB->query('SELECT id, geneid, name, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscript))->fetchAssoc();
                     // Call the numberConversion module of mutalyzer to get the VariantOnTranscript/DNA value for this variant on this transcript.
                     // Check if we already have the converted positions for this gene, if so, we won't have to call mutalyzer again for this information.
-                    // FIXME; If the variant is not understood, the mapping should still be done!
                     if (!array_key_exists($zTranscript['geneid'], $aVariantDescriptions)) {
                         $aVariantDescriptions[$zTranscript['geneid']] = $_MutalyzerWS->moduleCall('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => 'chr' . $zData['chromosome'] . ':' . $zData['VariantOnGenome/DNA'], 'gene' => $zTranscript['geneid']));
                     }
 
                     if (isset($aVariantDescriptions[$zTranscript['geneid']]['string']) && is_array($aVariantDescriptions[$zTranscript['geneid']]['string'])) {
-                        // Loop through the mutalyzer output for this gene.
+                        // Loop through the mutalyzer output for this gene, see if we can find this transcript.
+                        $bAdded = false;
                         foreach($aVariantDescriptions[$zTranscript['geneid']]['string'] as $key => $aVariant) {
                             // Check if our transcript is in the variant description for each value returned by mutalyzer.
-                            if (!empty($aVariant['v']) && preg_match('/^' . preg_quote($zTranscript['id_ncbi']) . ':(c\..+)$/', $aVariant['v'], $aMatches)) {
+                            if (!empty($aVariant['v']) && preg_match('/^' . preg_quote($zTranscript['id_ncbi']) . ':([cn]\..+)$/', $aVariant['v'], $aMatches)) {
                                 // Call the mappingInfo module of mutalyzer to get the start & stop positions of this variant on the transcript.
                                 $aMapping = $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $zTranscript['id_ncbi'], 'variant' => $aMatches[1]));
                                 if (!empty($aMapping) && empty($aMapping['errorcode'][0]['v'])) {
@@ -2645,10 +2646,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                                 }
                                 // Insert all the gathered information about the variant description into the database.
                                 $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], '55', $aMatches[1]));
-                                // Remove this value from the output from mutalyzer, so we will not check this one again with the next transcript that we will add.
+                                $bAdded = true;
+                                // Speed improvement: remove this value from the output from mutalyzer, so we will not check this one again with the next transcript that we will add.
                                 unset($aVariantDescriptions[$zTranscript['geneid']]['string'][$key]);
                                 break;
                             }
+                        }
+                        if (!$bAdded) {
+                            // Requested transcript was not added to the database! Usually because mutalyzer does not understand the variant.
+                            // Insert simpler version of mapping: no mapping fields, no DNA field predicted.
+                            $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?)', array($nID, $nTranscript, '55'));
                         }
                     }
                 }
