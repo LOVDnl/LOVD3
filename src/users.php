@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-11-02
+ * Modified    : 2012-11-05
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -90,6 +90,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     } elseif ($nID != $_AUTH['id']) {
         // Require manager clearance, if user is not viewing himself.
         lovd_requireAUTH(LEVEL_MANAGER);
+    } elseif ($_AUTH['level'] == LEVEL_SUBMITTER && isset($_GET['new_submitter'])) {
+        // Newly registered? Explain where to submit.
+        lovd_showDialog('dialog_new_submitter', 'Now that you\'ve registered', 'Now that you\'ve registered, you can submit new variant data to this database.<BR>You can do so, by clicking the Submit menu tab just above this message.',
+            'information', array('position' => '{my:"left top",at:"left bottom",of:"#tab_submit"}', 'buttons' => '{"Go there now":function(){window.location.href="' . lovd_getInstallURL() . 'submit";},"Close":function(){$(this).dialog("close");}}'));
     }
 
     require ROOT_PATH . 'class/object_users.php';
@@ -415,7 +419,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
             if ($bMail) {
                 // Thank the user...
-                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+                header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID . '?&new_submitter');
             }
 
             $_T->printHeader();

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-05
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1043,8 +1043,6 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
           '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="' . (isset($_GET['in_window'])? 'self.close(); return false;' : 'window.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . '\'; return false;') . '" style="border : 1px solid #FF4422;">' . "\n" .
           '      </FORM>' . "\n\n");
 
-    lovd_includeJS('lib/jQuery/jquery-ui.sortable.min.js');
-
 ?>
       <SCRIPT type='text/javascript'>
         $(function() {
@@ -1374,7 +1372,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     print("\n" .
           '      </FORM>' . "\n\n");
 
-    lovd_includeJS('lib/jQuery/jquery-ui.sortable.min.js');
     // FIXME; disable JS functions authorize and unauthorize if not authorizing?
 ?>
       <SCRIPT type='text/javascript'>

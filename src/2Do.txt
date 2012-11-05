@@ -1,5 +1,9 @@
 Prioritize:
 ===========
+- After a useful test with LSDB noobs during submission:
+  + Lab ID is not clear.
+  + Put more notice on the mapping button. Pop over?
+  + Put a little help-icon or link somewhere, that explains more info on the format is available under the question marks.
 - Test LOVD install!
 - Handling ORCID ID:
   + orcid_confirmed boolean
@@ -42,6 +46,7 @@ Prioritize:
       - Dus ook een variant in een ander gen, waar ze eigenlijk normaal gesproken geen rechten op heeft!
     * Alleen verwijderen als geen nadelig effect op andere genen?
 
+- Mag manager wel chromosome veranderen van een submissie?
 - Hoe er voor zorgen, dat een gezond individu toch phenotype data van een bepaalde ziekte kan hebben? Data model houdt dit niet tegen... dat is de code.
 - Link to nomenclature page from DNA, RNA and Protein fields... link in help hover?
 - Curator mag geen cols zien van disease 0, foutmelding: je moet curator zijn.

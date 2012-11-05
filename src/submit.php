@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-09-19
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-05
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -352,6 +352,11 @@ if (PATH_COUNT == 3 && $_PE[1] == 'screening' && ctype_digit($_PE[2]) && !ACTION
         $aOptionsList['options'][3]['onclick'] = 'javascript:if(window.confirm(\'Are you sure you are done with submitting the variants found with this screening?\')){document.location.href=\'submit/individual/' . $zData['individualid'] . '\';}';
         $aOptionsList['options'][3]['type'] = 'l';
         $aOptionsList['options'][3]['option_text'] = '<B>Back to the individual</B>';
+        if ($zData['variants_found'] && $zData['variants']) {
+            // If at least one variant has already been submitted, then we can finish as well from here.
+            $aOptionsList['options'][4]['onclick'] = 'submit/finish/individual/' . $zData['individualid'];
+            $aOptionsList['options'][4]['option_text'] = '<B>I want to finish this submission</B>';
+        }
     } else {
         $aOptionsList['options'][3]['onclick'] = 'submit/finish/screening/' . $nID;
         $aOptionsList['options'][3]['option_text'] = '<B>I want to finish this submission</B>';

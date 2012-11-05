@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-05
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -149,7 +149,18 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
     function buildForm ($sPrefix = '')
     {
-        return parent::buildForm($sPrefix);
+        $aForm = parent::buildForm($sPrefix);
+        // Link to HVS for nomenclature.
+        if (isset($aForm[$sPrefix . 'VariantOnTranscript/DNA'])) {
+            $aForm[$sPrefix . 'VariantOnTranscript/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://www.hgvs.org/mutnomen/recs-DNA.html" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/DNA'][0]);
+        }
+        if (isset($aForm[$sPrefix . 'VariantOnTranscript/RNA'])) {
+            $aForm[$sPrefix . 'VariantOnTranscript/RNA'][0] = str_replace('(HGVS format)', '(<A href="http://www.hgvs.org/mutnomen/recs-RNA.html" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/RNA'][0]);
+        }
+        if (isset($aForm[$sPrefix . 'VariantOnTranscript/Protein'])) {
+            $aForm[$sPrefix . 'VariantOnTranscript/Protein'][0] = str_replace('(HGVS format)', '(<A href="http://www.hgvs.org/mutnomen/recs-prot.html" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/Protein'][0]);
+        }
+        return $aForm;
     }
 
 

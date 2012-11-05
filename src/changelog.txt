@@ -42,6 +42,14 @@
  * Fixed bug; When the import script finds less columns in a section than
    expected, the missing columns are now defaulting to an empty field, instead
    of generating error messages.
+ * Updated jQuery from 1.7.1 to 1.8.2 and jQuery UI from 1.8.18 to 1.9.1, also
+   adding the 'dialog' widget and its dependencies.
+ * Newly registered users are shown a message dialog hinting where to start
+   submitting new data.
+ * Rephrased and changed some pages in the submission process, hoping to make it
+   more clear to new users.
+ * The variant data entry forms now have links to the HGVS nomenclature pages
+   from the DNA, RNA and Protein change description fields.
 
 
 

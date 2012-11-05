@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-10-24
+ * Modified    : 2012-11-05
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -824,6 +824,62 @@ function lovd_shortenString ($s, $l = 50)
         $s .= '...' . str_repeat(')', $nClosingParenthesis);
     }
     return $s;
+}
+
+
+
+
+
+function lovd_showDialog ($sID, $sTitle, $sMessage, $sType = 'information', $aSettings = array())
+{
+    $aTypes =
+             array(
+                    'information' => 'Information',
+                    'question' => 'Question',
+                    'save' => 'Save',
+                    'stop' => 'Stop!',
+                    'success' => 'Success!',
+                    'warning' => 'Warning',
+                  );
+
+    if (!array_key_exists($sType, $aTypes)) {
+        $sType = 'information';
+    }
+
+    // Other settings.
+    $aSettingDefaults =
+        array(
+            'modal' => 'false',
+            'position' => '', // Center of dialog on center of screen.
+            'buttons' => '',
+        );
+
+    if (!is_array($aSettings)) {
+        $aSettings = array();
+    }
+    foreach ($aSettings as $sKey => $sVal) {
+        if (!isset($aSettingDefaults[$sKey])) {
+            // Setting does not exist (= has no default).
+            unset($aSettings[$sKey]);
+            continue;
+        }
+        // Overwrite default settings.
+        $aSettingDefaults[$sKey] = $sVal;
+    }
+
+    print('      <DIV id="' . $sID . '" title="' . $sTitle . '" style="display : none;">' . "\n" .
+          '        <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . "\n" .
+          '          <TR>' . "\n" .
+          '            <TD valign="top" align="left" width="50"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
+          '            <TD valign="middle">' . $sMessage . '</TD></TR></TABLE></DIV>' . "\n" .
+          '      <SCRIPT type="text/javascript">$("#' . $sID . '").dialog({draggable:false,resizable:false,minWidth:400,show:"fade",closeOnEscape:true,hide:"fade"');
+    // Add settings.
+    foreach ($aSettingDefaults as $sKey => $sVal) {
+        if ($sVal) {
+            print(',' . $sKey . ':' . $sVal);
+        }
+    }
+    print('});</SCRIPT>' . "\n\n");
 }
 
 

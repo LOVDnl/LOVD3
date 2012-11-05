@@ -471,10 +471,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
         $aOptionsList = array('width' => 600);
         $aOptionsList['options'][0]['onclick'] = 'javascript:$(\'#container\').toggle(); lovd_stretchInputs(\'' . $sViewListID . '\');';
-        $aOptionsList['options'][0]['option_text'] = '<B>A variant that is found within a gene\'s transcript &raquo;&raquo;</B>';
+        $aOptionsList['options'][0]['option_text'] = '<B>A variant that is located within a gene &raquo;&raquo;</B>';
 
         $aOptionsList['options'][1]['onclick'] = 'variants?create&amp;reference=Genome' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
-        $aOptionsList['options'][1]['option_text'] = '<B>A variant that was only detected on genomic level &raquo;&raquo;</B>';
+        $aOptionsList['options'][1]['option_text'] = '<B>A variant that was only described on genomic level &raquo;&raquo;</B>';
 
         if ($_AUTH['level'] >= LEVEL_MANAGER) {
             $aOptionsList['options'][2]['onclick'] = 'variants/upload?create' . ($_GET['target']? '&amp;target=' . $_GET['target'] : '');
@@ -490,13 +490,13 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         $_DATA->setRowLink($sViewListID, 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : ''));
         $_GET['search_transcripts'] = '>0';
         print('      <DIV id="container">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
-        lovd_showInfoTable('Please use the list below to find the gene for which you wish to submit this variant. Use the search fields if needed, and click on the gene entry to proceed to the variant entry form.', 'information', 600);
+        lovd_showInfoTable('Please find the gene for which you wish to submit this variant below, using the search fields if needed. <B>Click on the gene to proceed to the variant entry form</B>.', 'information', 600);
         $_DATA->viewList($sViewListID, array('transcripts', 'variants', 'diseases_', 'updated_date_'));
         print('      </DIV>' . "\n" .
               '      <SCRIPT type="text/javascript">' . "\n" .
               '        $("#container").hide();' . "\n" .
               '      </SCRIPT>' . "\n" .
-   ($bSubmit? '      <INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n" : ''));
+              (!$bSubmit? '' : '      <INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n"));
 
         $_T->printFooter();
         exit;

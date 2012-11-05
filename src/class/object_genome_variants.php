@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-05
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -172,6 +172,20 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->unsetColsByAuthLevel();
 
         $this->sRowLink = 'variants/{{ID}}';
+    }
+
+
+
+
+
+    function buildForm ($sPrefix = '')
+    {
+        $aForm = parent::buildForm($sPrefix);
+        // Link to HVS for nomenclature.
+        if (isset($aForm[$sPrefix . 'VariantOnGenome/DNA'])) {
+            $aForm[$sPrefix . 'VariantOnGenome/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://www.hgvs.org/mutnomen/recs-DNA.html" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnGenome/DNA'][0]);
+        }
+        return $aForm;
     }
 
 

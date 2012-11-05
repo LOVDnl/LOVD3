@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-11-02
+ * Modified    : 2012-11-05
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -465,7 +465,7 @@ function lovd_mapVariants ()
         lovd_includeJS('inc-js-openwindow.php', 1);
         lovd_includeJS('inc-js-toggle-visibility.js', 1); // Used on forms and variant overviews for small info tables.
         lovd_includeJS('lib/jQuery/jquery.min.js', 1);
-        lovd_includeJS('lib/jQuery/jquery-ui.core.min.js', 1);
+        lovd_includeJS('lib/jQuery/jquery-ui.custom.min.js', 1);
 
         if (!$bFull) {
 ?>
