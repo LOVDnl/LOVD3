@@ -36,6 +36,12 @@
  * Added support for non-coding genes with NR transcript reference sequences.
  * Fixed bug; Transcripts could not be added to variants not HGVS compliant on
    genomic level.
+ * Fixed bug; Importing would fail if spreadsheet programs had put quotes around
+   the file section's headers.
+ * Fixed notices while importing files without section headers.
+ * Fixed bug; When the import script finds less columns in a section than
+   expected, the missing columns are now defaulting to an empty field, instead
+   of generating error messages.
 
 
 

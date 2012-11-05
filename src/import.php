@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-05
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -262,6 +262,7 @@ if (POST) {
 
 
         // Now, the actual parsing...
+        $sCurrentSection = '';
         foreach ($aData as $i => $sLine) {
             $sLine = trim($sLine);
             if (!$sLine) {
@@ -271,11 +272,11 @@ if (POST) {
 
 
 
-            if ($sLine{0} == '#') {
-                if (preg_match('/^#\s*([a-z_]+)\s*=\s*(.+)$/', $sLine, $aRegs)) {
+            if (substr(ltrim($sLine, '"'), 0, 1) == '#') {
+                if (preg_match('/^#\s*([a-z_]+)\s*=\s*(.+)$/', ltrim($sLine, '"'), $aRegs)) {
                     // Import flag (setting).
                     $aImportFlags[$aRegs[1]] = $aRegs[2];
-                } elseif (preg_match('/^##\s*([A-Za-z_]+)\s*##\s*Do not remove/', $sLine, $aRegs)) {
+                } elseif (preg_match('/^##\s*([A-Za-z_]+)\s*##\s*Do not remove/', ltrim($sLine, '"'), $aRegs)) {
                     // New section.
                     // Clean up old section, if available.
                     if ($sCurrentSection) {
@@ -432,10 +433,20 @@ if (POST) {
 
 
 
+            if (!$sCurrentSection) {
+                // We got here, without passing a section header first.
+                lovd_errorAdd('import', 'Error (line ' . $nLine . '): Found data before finding section header.');
+                break; // Kill import completely.
+            }
+
             // We've got a line of data here. Isolate the values and check all columns.
             $aLine = explode("\t", $sLine);
             // For any category, the number of columns should be the same as the number of fields.
-            if (count($aLine) != $nColumns) {
+            // However, less fields may be encountered because the spreadsheet program just put tabs and no quotes in empty fields.
+            if (count($aLine) < $nColumns) {
+                $aLine = array_pad($aLine, $nColumns, '');
+            } elseif (count($aLine) != $nColumns) {
+                // More columns found then needed.
                 lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Found ' . count($aLine) . ' fields instead of the expected ' . $nColumns . '.');
                 if (!lovd_endLine()) {
                     break;
