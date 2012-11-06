@@ -850,7 +850,7 @@ if (POST) {
                 case 'Variants_On_Genome':
                     foreach (array('position_g_start', 'position_g_end', 'mapping_flags') as $sCol) {
                         if ($aLine[$sCol] && !ctype_digit($aLine[$sCol])) {
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Invalud value in the \'' . $sCol . '\' field: "' . htmlspecialchars($aLine[$sCol]) . '" is not a numerical value.');
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Invalid value in the \'' . $sCol . '\' field: "' . htmlspecialchars($aLine[$sCol]) . '" is not a numerical value.');
                         }
                     }
 
@@ -893,7 +893,7 @@ if (POST) {
                     foreach (array('position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron') as $sCol) {
                         if ($aLine[$sCol] && !is_numeric($aLine[$sCol])) {
                             // No ctype_digit() here, because that doesn't match negative numbers.
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Invalud value in the \'' . $sCol . '\' field: "' . htmlspecialchars($aLine[$sCol]) . '" is not a numerical value.');
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Invalid value in the \'' . $sCol . '\' field: "' . htmlspecialchars($aLine[$sCol]) . '" is not a numerical value.');
                         }
                     }
 

@@ -505,10 +505,9 @@ The only way to remove this lock is directly through the MySQL database backend.
   \end{shaded}
 \end{figure}
 
-% FIXME
-%For more information on the options of the LOVD system settings, see the LOVD system settings section of the manual.
-%\\
-%\par
+For more information on the options of the LOVD system settings, see the \hyperlink{s_system_settings}{LOVD system settings} section of the manual.
+\\
+\par
 After filling in the form, click ``Continue \guillemotright''.
 If everything was filled in correctly, LOVD will register the LOVD system settings.
 Click ``Next \guillemotright'' to continue to the last step.
@@ -758,7 +757,7 @@ Also errors during an LOVD upgrade, might they occur, will be logged here.
 
 
 \subsection{Viewing and searching through the logs}
-To browse the system logs, click the ``View system logs'' option of the ``Setup'' tab dropdown menu, or the ``View, search and delete system logs'' link on the setup area.
+To browse the system logs, click the ``View system logs'' option of the ``Setup'' tab dropdown menu, or the ``View, search and delete system logs'' link in the setup area.
 The system log overview is fully searchable and sortable, allowing you to find log entries quickly.
 \par
 The ``Log'' column shows the type of log every - \emph{Auth}, \emph{Event}, \emph{Error} or \emph{Install}.
@@ -809,7 +808,7 @@ The uninstall lock is set within the MySQL database and can only be removed by d
 If you know how to handle MySQL, you can also uninstall LOVD through MySQL directly, by removing all LOVD tables, but this is not recommended.
 \\
 \par
-To uninstall LOVD and remove all data stored in LOVD, click on the ``Uninstall LOVD'' link on the setup area.
+To uninstall LOVD and remove all data stored in LOVD, click on the ``Uninstall LOVD'' link in the setup area.
 This link is only available if the uninstall lock is disabled.
 You will need to fill in the database administrator's password twice to complete the uninstallation process.
 
@@ -843,6 +842,7 @@ Curators and managers can submit and publish data in one step.
 
 
 
+\hypertarget{ss_user_levels}{}
 \subsection{User levels}
 \subsubsection{Database administrator}
 The database administrator is the first user within LOVD; this account is created during the installation of LOVD.
@@ -853,7 +853,7 @@ The administrator has full access to all areas and settings of LOVD.
 The administrator is also the only user who can uninstall LOVD, provided the uninstall lock has not been set during LOVD installation.
 \\
 \par
-When the ``Forward messages to database admin'' setting in the LOVD system settings is enabled, the database administrator will receive copies of submitter registrations and data submissions or edits.
+When the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled, the database administrator will receive copies of submitter registrations and data submissions or edits.
 
 \subsubsection{Manager}
 A manager has access to almost everything the database administrator has access to.
@@ -888,6 +888,32 @@ Curators do not require a separate submitter account; they can use their curator
 
 
 
+% FIXME: Create section on how to deal with the user viewlist.
+
+%From the setup area, click the "Manage authorized users" link. This shows a list of the authorized users, sorted by default by the user's level and name.
+
+%The Status column provides a quick view of the user's status:
+% The user is locked.
+% The user is currently logged in.
+% The user is currently logged off.
+%Deleted users show at the bottom of the list and are greyed out.
+
+%Editing submitters
+%From the setup area, click the "Manage submitters" link. This shows a list of the authorized users, sorted by default by the submitter's country and name.
+
+%The Status column provides a quick view of the submitter's status:
+% The submitter is locked.
+% The submitter is currently logged in.
+% The submitter is currently logged off.
+%Deleted submitters show at the bottom of the list and are greyed out.
+
+
+
+
+
+
+
+\hypertarget{s_submitter_register}{}
 \section{Registering a new account}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -913,9 +939,9 @@ If you don't have an ORCID ID yet, you can get one created by using the \href{ht
 If you don't want to register at ORCID at this time, click the ``I don't have an ORCID ID \guillemotright'' button to continue to the registration page.
 If you do have an ORCID ID, fill it in and click the ``Continue \guillemotright'' button.
 Your ORCID ID will be verified, and the associated data is shown on the screen.
-If this data is correct, click ``Yes, this is me \guillemotright'' to continue to the registration page.
+If this data is correct, click ``Yes, this is correct \guillemotright'' to continue to the registration page.
 As much information as possibly will be pre-filled for you.
-If the information shown is not correct, click ``\guillemotleft{} No, this is not me'' so you can try and enter a correct ORCID ID or register without using one.
+If the information shown is not correct, click ``\guillemotleft{} No, this is not correct'' so you can try and enter a correct ORCID ID or register without using one.
 
 
 
@@ -972,6 +998,7 @@ To prevent unauthorized use of your account, we implemented a security feature t
     Using this setting too strictly, can deny you access to LOVD, even if the correct credentials have been provided.
   }
   \\
+  An IP address is an address a computer is known by on the network.
   To help prevent others to try and guess your username/password combination, you can restrict access to your account to a number of IP addresses or ranges.
   For instance, to make sure your account can only be used when accessed from your institute or from your home.
   \\
@@ -989,6 +1016,145 @@ This will proof that you are a human and not a computer.
 After completing the form, press the ``Register'' button.
 LOVD sends you a confirmation of your registered information through email.
 If the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled, the database administrator also receives a copy of your data.
+
+
+
+
+
+\section{Creating new user accounts}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Besides the public registration form, managers can also create new users.
+This offers the advantage that the new user's level can be set to the required level in the same step, and the manager does not need to log out first.
+You can create a new user by clicking on the ``Create a new user account'' option from the ``Users'' tab dropdown menu, or the ``Create a new authorized user or submitter'' link in the setup area.
+The process is largely equal to the submitter registration process, except that there is no reCAPTCHA test but instead you must enter your password for authorization, and the form has some additional fields, explained below.
+
+
+
+\subsection{User details}
+This section contains one additional field, compared to the registration page.
+\begin{description}
+  \item[Must change password at next logon] \hfill \\
+  If you want to force the user to pick a new password after logging in for the first time, select this checkbox.
+  The user will not be able to work with LOVD until he has changed his password.
+\end{description}
+
+
+
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+\subsection{Security}
+This section contains more options when creating a new user account for a new user, compared with when registering your own account.
+\begin{description}
+  \item[Level] \hfill \\
+  Managers only see the option ``Submitter'' here.
+  The database administrator may also select ``Manager'' here.
+  Please note that to create a Curator account, you need to create a Submitter and then grant this user rights on the necessary genes.
+  See section ``\hyperlink{s_gene_assign_curators}{Assigning curators and collaborators}'' for more information.
+  For a complete description on all user levels, see the subsection ``\hyperlink{ss_user_levels}{User levels}''.
+  \item[Locked] \hfill \\
+  Users can be locked, which blocks access to LOVD even if they provide the correct username and password.
+  This locking happens when too many times an invalid password was given while logging in with this username (depending on the \hyperlink{s_system_settings}{LOVD system settings}), or it can be done manually.
+\end{description}
+
+
+
+\subsection{Other fields}
+This option is only available while creating a new user, it's not shown on the submitter registration form.
+\begin{description}
+  \item[Send email with account details to user] \hfill \\
+  When enabled, the user's details will be emailed to the email address(es) given, informing the user immediately about his account details.
+  The submitter registration form does not have this checkbox, but this feature is \emph{always} active for submitter registrations.
+\end{description}
+
+
+
+
+
+\section{Editing user accounts}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Submitter\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Every user in LOVD can edit their own account.
+Editing other user's accounts requires you to have a level higher than the user you are trying to edit.
+Managers can edit submitter accounts (including collaborators and curators).
+The database administrator can edit manager accounts.
+\\
+\par
+To edit your own account, click the ``Your account'' link on the top right-hand side of the screen, which leads directly to your account overview.
+Then, click the ``Options'' button and click ``Update your registration''.
+\\
+To edit someone else's account, click the ``Users'' tab.
+Locate the user you wish to edit by searching or browsing through the given user listing.
+Clicking the entry will direct you to the user's account details.
+If you have permission to edit this account, you'll see an ``Options'' button.
+Click it and click ``Edit user''.
+\\
+\par
+The fields on the form are explained in the section ``\hyperlink{s_submitter_register}{Registering a new account}''.
+Please note that the ``New password'' fields are optional when editing an existing user account.
+You only fill them in when you want to change the password.
+\\
+After you submit the form, LOVD redirects you automatically back to the user's account details.
+
+
+
+
+
+\section{Locking users out of the system}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+A user is automatically locked if a wrong password is used three times while logging in with this username, provided this security setting is enabled (see section ``\hyperlink{s_system_settings}{LOVD system settings}''), but this lock may also be placed onto, or removed from an account manually.
+Locking or unlocking a user account requires you to have a level higher than the user you are trying to lock or unlock.
+Proceed to the user's account details page through the ``Users'' tab.
+Open the ``Options'' menu, and click the ``Lock user'' option.
+If the user is already locked, there will be an ``Unlock user'' option.
+\\
+The ``Lock user'' and ``Unlock user'' menu options are quick ways to deny or allow access to LOVD, although it can also be accomplished through the ``Edit user'' option.
+\\
+\par
+Users who are logged in, can also be booted out of the system.
+If a user is logged in, the option ``Force user log out'' is added to the ``Options'' menu.
+This will destroy the user's session, causing the user to log out.
+Locking the user essentially also causes the user to be logged out of the system the next time the user performs an action, although in that case it's not possible for the user to log back in until the account is unlocked.
+
+
+
+
+
+%\section{Deleting user accounts}
+%\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+%  \vspace{-25pt}
+%  \begin{leftbar}
+%    Required level: Manager\\
+%    Available from: LOVD 3.0 Build 01
+%  \end{leftbar}
+%\end{wrapfigure}
+%Deleting a user account in LOVD 3.0 is a permanent action.
+%
+%
+%
+%Since the user may have created or edited variants, patients, custom columns, custom links etc, permanently deleting the user from the system may leave some references in the database broken. Therefore, deleting a user only disables the user's account and removes the user as a curator from the genes he or she was a curator for, but does not permanently remove the account. A deleted user can therefore be 'revived' by editing the user and unchecking the 'deleted' checkbox.
+%If the user is the only curator for one or more genes, and you delete the user, you inherit the curator rights on these 'orphaned' genes. If you want to prevent this, make sure the gene has at least one other curator.
+%
+%From the user's detailed view, a link named "Delete user" is available if the user has not already been deleted and you have the correct rights on the user account. After clicking that link, you need to confirm deleting the user with your password. Also, if you will take over any genes, this is reported on this confirmation form.
+%
+%Since the submitter may have created or edited variants and patients, permanently deleting the submitter from the system may leave some references in the database broken and is therefore only possible with submitters not linked to any patients. Deleting a submitter disables the submitter's account, but leaves the account dormant. A deleted submitter can be 'revived' by editing the submitter and unchecking the 'deleted' checkbox.
+%
+%From the submitter's detailed view, a link named "Delete submitter" is available if the user has not already been deleted. After clicking that link, you need to confirm deleting the submitter with your password. If the submitter is already deleted and has no associated submissions, the account can be permanently deleted by clicking the "Permanently delete submitter" link.
 
 
 
@@ -1022,13 +1188,18 @@ This chapter describes how to create, edit and delete gene databases in LOVD.
   \end{leftbar}
 \end{wrapfigure}
 Creating a new gene database in LOVD is largely automated.
-Click the ``Create a new gene entry'' option of the ``Genes'' tab dropdown menu, or the ``Create a new gene database'' link on the setup area.
+Click the ``Create a new gene entry'' option of the ``Genes'' tab dropdown menu, or the ``Create a new gene database'' link in the setup area.
 Fill in the HGNC ID or the gene symbol of the gene you want to create, and click ``Continue \guillemotright''.
 LOVD will check if the gene already exists in this LOVD installation, and if the gene symbol or HGNC ID is correct.
 For this, it contacts the \href{http://www.genenames.org/}{HGNC website}.
 If the gene symbol you used has been replaced by a new one, or if LOVD can find genes for which the given symbol is an alias, LOVD will report back the official symbol(s).
-\\
-\par
+
+\begin{infotable}
+Unfortunately, due to some problems on the side of the NCBI, we are unable to handle variants on the mitochondrial genome at this time.
+NCBI does not handle the MT genes by their official names, and doesn't allow for automatic retrieval of reference sequences for the MT genes.
+When the NCBI has fixed this problem, we will implement support for MT genes.
+\end{infotable}
+
 LOVD will show a progress bar while it contacts several webservices to retrieve gene information, reference sequence information and available transcript information.
 Usually retrieving this information takes about 1-3 seconds, but this depends on the internet connection between
 the server and the internet and the current load on the webservices which are contacted.
@@ -1036,6 +1207,7 @@ When LOVD has retrieved all the information, you are forwarded to the data entry
 
 
 
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
 \subsection{General information}
 This part describes the bare essentials of the gene information.
 Therefore, most of the information in this section has been filled in for you, and some values are fixed to ensure the data is correct.
@@ -1119,6 +1291,7 @@ Here you can add links to other resources that will be displayed on the gene's L
   \item[This gene has a human-readable reference sequence] \hfill \\
   Although GenBank files are the official reference sequence, they are not very readable for humans.
   If you have a human-readable format of your reference sequence online, please select the type here; ``Coding DNA'' or ``Genomic''.
+  \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
   \item[Human-readable reference sequence location] \hfill \\
 % TODO: add link to refseq parser section in manual.
   To create a human-readable reference sequence file, you can use our Reference Sequence Parser.
@@ -1158,6 +1331,7 @@ The header and footer will also be shown on the variant listings.
 
 
 
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
 \subsection{Security settings}
 Using the following settings you can control some security settings of LOVD.
 \begin{description}
@@ -1293,12 +1467,24 @@ Please note that deleting a gene removes also its transcripts in the database an
 \end{wrapfigure}
 ...
 %You can set an authorized user as a gene curator by editing the user's account and selecting the relevant genes in the "Curator for" field.
+%If the user is to be a curator, the email address that's filled in will be shown on the gene's homepage and will be used to sent variant submission notifications to.
+%If the curator is actually also of the curator user level, be sure to assign one or more genes to this user otherwise the curator will be rejected access to the LOVD gene configuration area.
 
+%Assigning curators to specific genes
+%All genes in LOVD should have at least one curator, to send the new submission notifications to. All curator-level users should have at least one gene to curate, otherwise they will not be able to access the configuration area.
+%Please note that a curator for a gene is not necessarily a user with the curator user level. A manager, or even the database administrator, can be appointed as a gene curator so that small LOVD installations can be configured and curated by one user account.
 
+%Curator-level users will not be able to switch to any gene other than the genes in their allowed list. Managers and the database administrator will have unrestricted access to all genes. If multiple users are assigned curator for a gene, all those users will receive the submission email.
 
+%To assign genes to curators, edit the user you wish to assign a gene to. At the bottom of the form is a list of available genes. Select the gene(s) you want the user to be curator for in the list "Curator for". To select all genes, click the "Select all" link next to the gene list.
 
+%To select a few genes, you can use the Ctrl and Shift keys on your keyboard. Holding the Ctrl key while clicking on an entry allows you to select or deselect this entry. You can select a range of list entries by selecting the first of the range, then holding Shift and clicking the last of the range. On a Macintosh, use the Command key instead of the the Ctrl key.
 
+%Besides assigning genes to curators, managers and the database administrator can also assign curators to genes, which may be a faster method depending on your specific situation. Please note that you can only assign or remove curators from a gene database if your user level is higher than that of the user you wish to assign/remove.
+%From the setup area, click the "Edit genes" link. This will show a list of all genes in this installation. Then, click the gene you'd wish to assign curators to. Below the gene's detailed information, click on the link "Add/remove curators". There you can select/deselect the gene's curators. The resulting form enables you to add or remove curators.
 
+%After completing this form, you are forwarded to the page where you can sort or hide curators from the list of curators on the gene's home page and on the top of the screen. You can also access this page from the "Sort/hide curator names" link next to the "Add/remove curators" link on the gene's detailed view.
+%To sort the curators active for this gene, simply move your mouse over the icon on the left of the curator name, and click and drag the name up or down. To hide a curator, simply deselect the checkbox on the right of the name. Don't forget to click the "Save" button to save the new sort order!
 
 
 
@@ -1340,6 +1526,7 @@ List of available detection techniques: Specify a list of detection techniques a
 
 
 
+// Add a bit about the overviews of genes, users, ...
 $_PAGES =
      array(
             'LOVD Setup',

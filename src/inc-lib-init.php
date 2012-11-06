@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-11-05
+ * Modified    : 2012-11-06
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -953,7 +953,7 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '          return false;' . "\n" .
           $sPrefix . '        } else if ($(this).find(\'a\').attr(\'href\') != undefined && $(this).find(\'a\').attr(\'href\') != \'\') {' . "\n" .
           $sPrefix . '          window.location = $(this).find(\'a\').attr(\'href\');' . "\n" .
-          $sPrefix . '          return true; // True closes the menu.' . "\n" .
+          $sPrefix . '          return false; // False doesn\'t close the menu, but at least it prevents double hits on the page we\'re going to.' . "\n" .
           $sPrefix . '        } else if ($(this).find(\'a\').attr(\'click\') != undefined) {' . "\n" .
           $sPrefix . '          eval($(this).find(\'a\').attr(\'click\'));' . "\n" .
           $sPrefix . '          return true; // True closes the menu.' . "\n" .

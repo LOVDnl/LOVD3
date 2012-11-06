@@ -180,6 +180,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     if (!empty($aGeneInfo)) {
                         list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim) = array_values($aGeneInfo);
                         list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
+                        // For now, until NCBI has fixed their API, we can't create MT- genes.
+                        if (substr($sSymbol, 0, 3) == 'MT-') {
+                            lovd_errorAdd('', 'Unfortunately, due to some problems on the side of the NCBI, we are unable to handle variants on the mitochondrial genome at this time. When the NCBI has fixed the problem, we will implement support for MT genes.');
+                        }
                     }
                 }
             }

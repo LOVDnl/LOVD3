@@ -725,8 +725,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 
-    // Require valid user.
-    lovd_requireAUTH();
+    lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
@@ -901,7 +900,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     lovd_requireAUTH(LEVEL_MANAGER);
 
     if ($nID == '00000') {
-        $nID = -1;
+        $nID = -1; // Block access to the LOVD account with ID = 0.
     }
 
     $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
@@ -933,7 +932,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'unlock'))) {
-    // users/00001?lock || users/00001?unlock
+    // users/00001?lock
+    // users/00001?unlock
     // Lock / unlock a user.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -944,7 +944,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     lovd_requireAUTH(LEVEL_MANAGER);
 
     if ($nID == '00000') {
-        $nID = -1;
+        $nID = -1; // Block access to the LOVD account with ID = 0.
     }
 
     $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
