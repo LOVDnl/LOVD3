@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-07
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -133,7 +133,7 @@ class LOVD_Gene extends LOVD_Object {
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
                         'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
                         'updated_by_' => array('Last updated by', LEVEL_COLLABORATOR),
-                        'updated_date_' => array('Date last update', LEVEL_COLLABORATOR),
+                        'updated_date_' => array('Date last updated', LEVEL_COLLABORATOR),
                         'TableEnd_General' => '',
                         'HR_1' => '',
                         'TableStart_Graphs' => '',

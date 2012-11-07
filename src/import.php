@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-11-05
+ * Modified    : 2012-11-06
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1254,9 +1254,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             if (!lovd_error()) {
                 // Start importing from the memory!
 
-                // 2007-12-05; 2.0-02; Fixed bug #20 - Gene's "Last update" field not updated.
-                lovd_setUpdatedDate($_SESSION['currdb']);
-
                 // 2010-08-12; 2.0-29; No imported variants have mapping info, so reset the mapping!
                 $_SESSION['mapping']['time_complete'] = 0; // Redo mapping.
 
@@ -1294,6 +1291,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 }
                 $aGenes = array_unique($aGenes);
                 lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries (' . implode(', ', $aGenes) . ').');
+                lovd_setUpdatedDate($aGenes); // FIXME; regardless of variant status... oh, well...
             }
             // FIXME: Why is this not empty?
             //var_dump(implode("\n", $aData));

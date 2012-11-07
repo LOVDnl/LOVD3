@@ -50,6 +50,15 @@
    more clear to new users.
  * The variant data entry forms now have links to the HGVS nomenclature pages
    from the DNA, RNA and Protein change description fields.
+ * Changing a gene database's contents now actually updates the
+   "Last updated by" and "Date last updated" fields (importing new variants
+   through SeattleSeq or LOVD3 format, creating a new variant, editing a
+   variant, deleting a variant, changing the mapping of a variant).
+ * Added new custom link: DOI.
+ * Fixed inconsistency of the PubMed custom link's description between LOVDs
+   older than 3.0-beta-06 or newer.
+ * Fixed bug; Wrong DBIDs were predicted because of a bug introduced in r221
+   (3.0-beta-08) that should have prevented exactly that.
 
 
 

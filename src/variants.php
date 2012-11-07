@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-11-02
+ * Modified    : 2012-11-07
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -489,13 +489,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         $_DATA = new LOVD_Gene();
         $_DATA->setRowLink($sViewListID, 'variants?create&reference=Transcript&geneid=' . $_DATA->sRowID . ($_GET['target']? '&target=' . $_GET['target'] : ''));
         $_GET['search_transcripts'] = '>0';
-        print('      <DIV id="container">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
+        print('      <DIV id="container" style="display : none;">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
         lovd_showInfoTable('Please find the gene for which you wish to submit this variant below, using the search fields if needed. <B>Click on the gene to proceed to the variant entry form</B>.', 'information', 600);
         $_DATA->viewList($sViewListID, array('transcripts', 'variants', 'diseases_', 'updated_date_'));
         print('      </DIV>' . "\n" .
-              '      <SCRIPT type="text/javascript">' . "\n" .
-              '        $("#container").hide();' . "\n" .
-              '      </SCRIPT>' . "\n" .
               (!$bSubmit? '' : '      <INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n"));
 
         $_T->printFooter();
@@ -627,6 +624,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 }
             }
 
+            if (isset($sGene) && $_POST['statusid'] >= STATUS_MARKED) {
+                lovd_setUpdatedDate($sGene);
+            }
+
             $_DB->commit();
 
             if ($bSubmit) {
@@ -634,11 +635,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     $aSubmit['variants'] = array();
                 }
                 $aSubmit['variants'][] = $nID;
-            } else {
-                $_SESSION['work']['submits']['variant'][$nID] = $nID;
-            }
 
-            if ($bSubmit) {
                 lovd_saveWork();
 
                 // Thank the user...
@@ -650,7 +647,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 lovd_showInfoTable('Successfully created the variant entry!', 'success');
 
                 $_T->printFooter();
+
             } else {
+                $_SESSION['work']['submits']['variant'][$nID] = $nID;
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/variant/' . $nID);
             }
             exit;
@@ -1623,7 +1622,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         'show_genetests' => 1,
                                         'disclaimer' => 1,
                                         'created_by' => 0,
-                                        'created_date' => date('Y-m-d H:i:s'));
+                                        'created_date' => date('Y-m-d H:i:s'),
+                                        'updated_by' => $_AUTH['id'],
+                                        'updated_date' => date('Y-m-d H:i:s')); // Set updated date because we're importing variants in it, too.
 
                                     // Remember we've got this gene now.
                                     $aGenesChecked[$sSymbol] = array(
@@ -1879,10 +1880,14 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     }
                 }
 
+                if ($_POST['statusid'] >= STATUS_MARKED) {
+                    $_BAR->setMessage('Setting last updated dates for affected genes...');
+                    lovd_setUpdatedDate(array_keys($aGenesChecked));
+                }
+
                 // Done! Reopen the session. Don't show warnings; session_start() is not going
                 // to be able to send another cookie. But session data is written nontheless.
                 @session_start();
-
             } // End SeattleSeq specific code.
 
 
@@ -2261,6 +2266,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                     $aFieldsTranscripts[$sGene] = array_merge(array('effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'), $_DATA['Transcript'][$sGene]->buildFields());
                 }
                 $aTranscriptID = $_DATA['Transcript'][$sGene]->updateAll($nID, $_POST, $aFieldsTranscripts);
+
+                if (max($_POST['statusid'], $zData['statusid']) >= STATUS_MARKED) {
+                    lovd_setUpdatedDate($aGenes);
+                }
             }
             $_DB->commit();
 
@@ -2424,9 +2433,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         }
 
         if (!lovd_error()) {
-            // Query text.
+            // We will need to update the timestamps of any gene affected by this deletion, if the variant's status is Marked or higher.
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? AND vot.statusid >= ?', array($nID, STATUS_MARKED))->fetchAllColumn();
+
             // This also deletes the entries in TABLE_VARIANTS_ON_TRANSCRIPTS && TABLE_SCR2VAR.
             $_DATA->deleteEntry($nID);
+
+            if ($aGenes) {
+                lovd_setUpdatedDate($aGenes);
+            }
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID);
@@ -2573,7 +2588,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     $_DATA = new LOVD_GenomeVariant();
     $zData = $_DATA->loadEntry($nID);
     // Load all transcript ID's that are currently present in the database connected to this variant.
-    $aCurrentTranscripts = $_DB->query('SELECT t.id FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid', array($nID))->fetchAllColumn();
+    $aCurrentTranscripts = $_DB->query('SELECT t.id, t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid', array($nID))->fetchAllCombine();
 
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -2586,9 +2601,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
             $_POST['transcripts'] = array();
         } else {
             // Verify all given IDs; they need to exist in the database, and they need to be on the same chromosome.
-            $aTranscripts = $_DB->query('SELECT t.id FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllColumn();
+            $aTranscripts = $_DB->query('SELECT t.id, t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllCombine();
             foreach ($_POST['transcripts'] as $nTranscript) {
-                if (!in_array($nTranscript, $aTranscripts)) {
+                if (!isset($aTranscripts[$nTranscript])) {
                     // The user tried to fake a $_POST by inserting an ID that did not come from our code.
                     lovd_errorAdd('', 'Invalid transcript, please select one from the top viewlist!');
                     break;
@@ -2612,9 +2627,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
             $aVariantDescriptions = array();
             require ROOT_PATH . 'class/REST2SOAP.php';
             $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+            $aGenesUpdated = array();
 
             foreach ($_POST['transcripts'] as $nTranscript) {
-                if ($nTranscript && !in_array($nTranscript, $aCurrentTranscripts)) {
+                if ($nTranscript && !isset($aCurrentTranscripts[$nTranscript])) {
                     // If the transcript is not already present in the database connected to this variant, we will add it now.
                     $aNewTranscripts[] = $nTranscript;
                     // Gather all necessary info from this transcript.
@@ -2647,6 +2663,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                                 // Insert all the gathered information about the variant description into the database.
                                 $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], '55', $aMatches[1]));
                                 $bAdded = true;
+                                $aGenesUpdated[] = $aTranscripts[$nTranscript];
                                 // Speed improvement: remove this value from the output from mutalyzer, so we will not check this one again with the next transcript that we will add.
                                 unset($aVariantDescriptions[$zTranscript['geneid']]['string'][$key]);
                                 break;
@@ -2661,16 +2678,21 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                 }
             }
 
-            foreach ($aCurrentTranscripts as $nTranscript) {
+            foreach ($aCurrentTranscripts as $nTranscript => $sGene) {
                 if (!in_array($nTranscript, $_POST['transcripts'])) {
                     // If one of the transcripts currently present in the database is not present in $_POST, we will want to remove it.
                     $aToRemove[] = $nTranscript;
+                    $aGenesUpdated[] = $sGene;
                 }
             }
 
             if (!empty($aToRemove)) {
                 // Remove transcript mapping from variant...
                 $_DB->query('DELETE FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
+            }
+
+            if ($zData['statusid'] >= STATUS_MARKED) {
+                lovd_setUpdatedDate($aGenesUpdated);
             }
 
             // If we get here, it all succeeded.
@@ -2788,7 +2810,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
 
         function lovd_removeTranscript (sViewListID, nID, sNM)
         {
-            var aCurrentTranscripts = '<?php echo implode(';', $aCurrentTranscripts) ?>'.split(";");
+            var aCurrentTranscripts = '<?php echo implode(';', array_keys($aCurrentTranscripts)); ?>'.split(";");
             if ($.inArray(nID, aCurrentTranscripts) == -1 || window.confirm('You are about to remove the variant description of transcript ' + sNM + ' from this variant.\n\nOk:\t\tRemove variant description of this transcript from the database.\nCancel:\tCancel the removal.')) {
                 // Removes the mapping of the variant from this transcript and reloads the viewList with the transcript back in there.
                 objViewListF = document.getElementById('viewlistForm_' + sViewListID);

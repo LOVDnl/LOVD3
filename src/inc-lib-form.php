@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-01
+ * Modified    : 2012-11-07
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -403,9 +403,10 @@ function lovd_fetchDBID ($aData)
 
             if (preg_match('/^(.+)_(\d{6})$/', $aOption[2], $aMatches)) {
                 list($sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
+                // Check this option, if it doesn't pass we'll skip it now.
                 $aDataCopy = $aData;
                 $aDataCopy['VariantOnGenome/DBID'] = $sDBIDoption;
-                if (!lovd_checkDBID($aData)) {
+                if (!lovd_checkDBID($aDataCopy)) {
                     continue;
                 }
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
@@ -653,25 +654,26 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
 
 
-/*
-DMD_SPECIFIC
-function lovd_setUpdatedDate ($sGene)
+function lovd_setUpdatedDate ($aGenes)
 {
     // Updates the updated_date field of the indicated gene.
-    global $_AUTH;
+    global $_AUTH, $_DB;
 
-    // Does this user have rights on this gene? It doesn't really matter that much, but still.
-    if (lovd_isCurator($sGene)) {
-        // Just update the database and we'll see what happens.
-        $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE id = ?', array($sGene), false);
-        if ($q->rowCount()) {
-            return true;
+    if (!is_array($aGenes)) {
+        $aGenes = array($aGenes);
+    }
+
+    // Check if this user have rights on this gene? It doesn't really matter that much, but still.
+    foreach ($aGenes as $nKey => $sGene) {
+        if (!lovd_isAuthorized('gene', $sGene)) {
+            unset($aGenes[$nKey]);
         }
     }
 
-    return false;
+    // Just update the database and we'll see what happens.
+    $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = ?, updated_date = NOW() WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')', array_merge(array($_AUTH['id']), $aGenes), false);
+    return ($q->rowCount());
 }
-*/
 
 
 
