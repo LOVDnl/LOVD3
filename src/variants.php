@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-11-07
+ * Modified    : 2012-11-08
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2672,7 +2672,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                         if (!$bAdded) {
                             // Requested transcript was not added to the database! Usually because mutalyzer does not understand the variant.
                             // Insert simpler version of mapping: no mapping fields, no DNA field predicted.
-                            $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?)', array($nID, $nTranscript, '55'));
+                            $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid) VALUES (?, ?, ?)', array($nID, $nTranscript, '55'));
                         }
                     }
                 }
@@ -2751,11 +2751,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
 
     lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');
 
-    print('      <TABLE class="sortable_head" style="width : 552px;"><TR><TH width="100">Gene</TH>' .
+    print('      <TABLE class="sortable_head" style="width : 652px;"><TR><TH width="100">Gene</TH>' .
           '<TH style="text-align : left;">Name</TH><TH width="123" style="text-align : left;">Transcript ID</TH><TH width="20">&nbsp;</TH>' .
           '</TR></TABLE>' . "\n" .
           '      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
-          '        <UL id="transcript_list" class="sortable" style="margin-top : 0px; width : 550px;">' . "\n");
+          '        <UL id="transcript_list" class="sortable" style="margin-top : 0px; width : 650px;">' . "\n");
     // Now loop the items in the order given.
     foreach ($aVOT as $aTranscript) {
         print('          <LI id="li_' . $aTranscript['id'] . '"><INPUT type="hidden" name="transcripts[]" value="' . $aTranscript['id'] . '"><TABLE width="100%"><TR><TD width="98">' . $aTranscript['geneid'] . '</TD>' .

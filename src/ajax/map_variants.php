@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-06-25
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-11-08
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -64,7 +64,7 @@ function lovd_updateVariantsOnExit ()
 
     // Restore the working directory.
     chdir(WORKING_DIRECTORY);
-    
+
     if (!empty($aVariantUpdates)) {
         $_DB->query('UPDATE '. TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_IN_PROGRESS . ' WHERE id IN(?' . str_repeat(', ?', count($aVariantUpdates) - 1) . ')', array_keys($aVariantUpdates));
     }
@@ -87,16 +87,16 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
     global $_MutalyzerWS, $_CONF, $_SETT;
     static $aVariantsOnTranscripts = array();
 
-    
+
     if (!isset($aVariant['id']) || !isset($aVariant['VariantOnGenome/DNA']) || !is_array($aTranscripts)) {
         // Invalid arguments.
         return false;
     }
-    
-    
+
+
     $aReturn = array();
     if (!empty($aTranscripts)) {
-        
+
         // Get the variant descriptions in c. notation.
         $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$aVariant['chromosome']] . ':' . $aVariant['VariantOnGenome/DNA'];
         if (!isset($aVariantsOnTranscripts[$sVariant])) {
@@ -106,7 +106,7 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
                 $aVariantsOnTranscripts[$sVariant] = $aVariantsOnTranscripts[$sVariant]['string'];
             } // If moduleCall fails (bad variant description?) it will return an empty string, so no 'else' needed here.
         }
-        
+
         if (empty($aVariantsOnTranscripts[$sVariant]) || !is_array($aVariantsOnTranscripts[$sVariant])) {
             return false;
         }
@@ -134,11 +134,12 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
             foreach ($aVariantsOnTranscripts[$sVariant] as $aVariantOnTranscript) {
                 $sVariantOnTranscript = lovd_getValueFromElement('', $aVariantOnTranscript);
                 if (substr($sVariantOnTranscript, 0, strlen($aTranscript['id_ncbi'])) == $aTranscript['id_ncbi']) {
+                    $sVariantPrefix = (substr($aTranscript['id_ncbi'], 0, 3) == 'NR_'? 'n.' : 'c.');
                     // Got the variant description relative to this transcript.
                     $aReturn[$aTranscript['id_ncbi']] =
                          array(
                                 'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, 55, ?, ?, ?, ?, ?, ?)',
-                                array($aVariant['id'], isset($aTranscript['id'])? $aTranscript['id'] : NULL, $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], substr($sVariantOnTranscript, strpos($sVariantOnTranscript, ':c.') + 1), '')
+                                array($aVariant['id'], isset($aTranscript['id'])? $aTranscript['id'] : NULL, $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], substr($sVariantOnTranscript, strpos($sVariantOnTranscript, ':' . $sVariantPrefix) + 1), '')
                               );
                     continue 2;
                 }
@@ -357,7 +358,7 @@ if (!empty($aVariants)) {
             $aVariant['aTranscripts'][$a['id']] = array($a['id_ncbi'], $a['geneid']);
             $aVariant[$a['id'] . '_VariantOnTranscript/DNA'] = $a['dna'];
         }
-        
+
 
         foreach ($aTranscriptData as $sTranscriptNM => $aTranscript) {
             if (!empty($aFailedGenes[$aTranscript['gene']])) {

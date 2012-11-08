@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-11-07
+ * Modified    : 2012-11-08
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -64,7 +64,7 @@ class LOVD_Gene extends LOVD_Object {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, 0), ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
-                                           'COUNT(DISTINCT t.id) AS transcripts, ' .
+                                           'GROUP_CONCAT(DISTINCT t.id, ";", t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";;") AS __transcripts, ' .
                                            'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS __curators, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
@@ -116,6 +116,8 @@ class LOVD_Gene extends LOVD_Object {
                         'chrom_band' => 'Chromosomal band',
                         'imprinting_' => 'Imprinted',
                         'refseq_genomic_' => 'Genomic reference',
+                        'refseq_transcript_' => 'Transcript reference',
+                        'exon_tables' => 'Exon/intron information',
                         'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
                         'allow_download_' => array('Allow public to download all variant entries', LEVEL_COLLABORATOR),
@@ -123,17 +125,18 @@ class LOVD_Gene extends LOVD_Object {
                         'refseq_url_' => 'Refseq URL',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
-                        'note_index' => 'Notes',
                         'variants' => 'Total number of public variants reported',
                         'uniq_variants' => 'Unique public DNA variants reported',
                         'count_individuals' => 'Individuals with public variants',
                         'hidden_variants' => 'Hidden variants',
+                        'note_index' => 'Notes',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
+                        'created_date_' => 'Date created',
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
                         'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
                         'updated_by_' => array('Last updated by', LEVEL_COLLABORATOR),
-                        'updated_date_' => array('Date last updated', LEVEL_COLLABORATOR),
+                        'updated_date_' => 'Date last updated',
+                        'version_' => 'Version',
                         'TableEnd_General' => '',
                         'HR_1' => '',
                         'TableStart_Graphs' => '',
@@ -156,38 +159,38 @@ class LOVD_Gene extends LOVD_Object {
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
-                 array(
-                        'geneid' => array(
-                                    'view' => false, // Copy of the gene's ID for the search terms in the screening's viewEntry.
-                                    'db'   => array('g.id', 'ASC', true)),
-                        'id_' => array(
-                                    'view' => array('Symbol', 100),
-                                    'db'   => array('g.id', 'ASC', true)),
-                        'name' => array(
-                                    'view' => array('Gene', 300),
-                                    'db'   => array('g.name', 'ASC', true)),
-                        'chromosome' => array(
-                                    'view' => array('Chr', 50),
-                                    'db'   => array('g.chromosome', 'ASC', true)),
-                        'chrom_band' => array(
-                                    'view' => array('Band', 70),
-                                    'db'   => array('g.chrom_band', false, true)),
-                        'transcripts' => array(
-                                    'view' => array('Transcripts', 90),
-                                    'db'   => array('transcripts', 'DESC', 'INT_UNSIGNED')),
-                        'variants' => array(
-                                    'view' => array('Variants', 70),
-                                    'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
-                        'uniq_variants' => array(
-                                    'view' => array('Unique variants', 70),
-                                    'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
-                        'updated_date_' => array(
-                                    'view' => array('Last updated', 110),
-                                    'db'   => array('g.updated_date', 'DESC', true)),
-                        'diseases_' => array(
-                                    'view' => array('Associated with diseases', 200),
-                                    'db'   => array('diseases_', false, 'TEXT')),
-                      );
+            array(
+                'geneid' => array(
+                    'view' => false, // Copy of the gene's ID for the search terms in the screening's viewEntry.
+                    'db'   => array('g.id', 'ASC', true)),
+                'id_' => array(
+                    'view' => array('Symbol', 100),
+                    'db'   => array('g.id', 'ASC', true)),
+                'name' => array(
+                    'view' => array('Gene', 300),
+                    'db'   => array('g.name', 'ASC', true)),
+                'chromosome' => array(
+                    'view' => array('Chr', 50),
+                    'db'   => array('g.chromosome', 'ASC', true)),
+                'chrom_band' => array(
+                    'view' => array('Band', 70),
+                    'db'   => array('g.chrom_band', false, true)),
+                'transcripts' => array(
+                    'view' => array('Transcripts', 90),
+                    'db'   => array('transcripts', 'DESC', 'INT_UNSIGNED')),
+                'variants' => array(
+                    'view' => array('Variants', 70),
+                    'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
+                'uniq_variants' => array(
+                    'view' => array('Unique variants', 70),
+                    'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
+                'updated_date_' => array(
+                    'view' => array('Last updated', 110),
+                    'db'   => array('g.updated_date', 'DESC', true)),
+                'diseases_' => array(
+                    'view' => array('Associated with diseases', 200),
+                    'db'   => array('diseases_', false, 'TEXT')),
+            );
         $this->sSortDefault = 'id_';
 
         // Because the gene information is publicly available, remove some columns for the public.
@@ -247,16 +250,11 @@ class LOVD_Gene extends LOVD_Object {
         }
 
         // URL values
-        $aCheck =
-                 array(
-                        'url_homepage' => 'Homepage URL',
-                        'refseq_url' => 'Human-readable reference sequence location',
-                      );
-
-        foreach ($aCheck as $key => $val) {
-            if ($aData[$key] && !lovd_matchURL($aData[$key])) {
-                lovd_errorAdd($key, 'The \'' . $val . '\' field does not seem to contain a correct URL.');
-            }
+        if ($aData['url_homepage'] && !lovd_matchURL($aData['url_homepage'])) {
+            lovd_errorAdd('url_homepage', 'The \'Homepage URL\' field does not seem to contain a correct URL.');
+        }
+        if ($aData['refseq_url'] && !lovd_matchURL($aData['refseq_url'], true)) {
+            lovd_errorAdd('refseq_url', 'The \'Human-readable reference sequence location\' field does not seem to contain a correct URL.');
         }
 
         // List of external links.
@@ -445,7 +443,25 @@ class LOVD_Gene extends LOVD_Object {
             $zData['imprinting_'] = $_SETT['gene_imprinting'][$zData['imprinting']];
 
             // FIXME; zou dit een external source moeten zijn?
-            $zData['refseq_genomic_'] = (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? '<A href="ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml">' : '<A href="http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic'] . '">')  . $zData['refseq_genomic'] . '</A>';
+            $zData['refseq_genomic_'] = '<A href="' . (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml' : 'http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic']) . '" target="_blank">' . $zData['refseq_genomic'] . '</A>';
+
+            // Transcript links and exon/intron info table. Check if files exist, and build link. Otherwise, remove field.
+            $zData['refseq_transcript_'] = '';
+            $zData['exon_tables'] = '';
+            foreach ($zData['transcripts'] as $aTranscript) {
+                list($nTranscriptID, $sNCBI) = $aTranscript;
+                $zData['refseq_transcript_'] .= (!$zData['refseq_transcript_']? '' : ', ') . '<A href="transcripts/' . $nTranscriptID . '">' . $sNCBI . '</A>';
+                $sExonTableFile = ROOT_PATH . 'refseq/' . $zData['id'] . '_' . $sNCBI . '_table.html';
+                if (is_readable($sExonTableFile)) {
+                    $zData['exon_tables'] .= (!$zData['exon_tables']? '' : ', ') . '<A href="' . $sExonTableFile . '" target="_blank">' . $sNCBI . '</A>';
+                }
+            }
+            if (!$zData['refseq_transcript_']) {
+                unset($this->aColumnsViewEntry['refseq_transcript_']);
+            }
+            if (!$zData['exon_tables']) {
+                unset($this->aColumnsViewEntry['exon_tables']);
+            }
 
             // Associated with diseases...
             $zData['diseases_'] = '';
@@ -520,6 +536,12 @@ class LOVD_Gene extends LOVD_Object {
             }
 
             $zData['created_date_'] = str_replace(' 00:00:00', '', $zData['created_date_']);
+            $zData['version_'] = '<B>' . $zData['id'] . date(':ymd', strtotime($zData['updated_date_'])) . '</B>';
+            if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+                // Public, change date timestamps to human readable format.
+                $zData['created_date_'] = date('F d, Y', strtotime($zData['created_date_']));
+                $zData['updated_date_'] = date('F d, Y', strtotime($zData['updated_date_']));
+            }
 
             // Graphs & utilities.
             if ($zData['variants']) {

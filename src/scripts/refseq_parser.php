@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2012-08-30
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-11-08
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -414,7 +414,7 @@ if ($_GET['step'] == 1) {
         $sQ .= ' INNER JOIN ' . TABLE_CURATES . ' AS g2u ON (g.id = g2u.geneid AND g2u.userid = ?)';
         $aArgs[] = $_AUTH['id'];
     }
-    $sQ .= ' ORDER BY g.id';
+    $sQ .= ' ORDER BY g.id, t.id_ncbi';
     $aGenes = $_DB->query($sQ, $aArgs)->fetchAllCombine();
 
     // Print the form for step 1: import a GenBank file

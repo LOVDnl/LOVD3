@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-07
+ * Modified    : 2012-11-08
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -659,7 +659,9 @@ function lovd_setUpdatedDate ($aGenes)
     // Updates the updated_date field of the indicated gene.
     global $_AUTH, $_DB;
 
-    if (!is_array($aGenes)) {
+    if (!$aGenes) {
+        return false;
+    } elseif (!is_array($aGenes)) {
         $aGenes = array($aGenes);
     }
 

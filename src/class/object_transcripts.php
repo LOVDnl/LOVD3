@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-08
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -86,11 +86,12 @@ class LOVD_Transcript extends LOVD_Object {
                         'name' => 'Transcript name',
                         'gene_name_' => 'Gene name',
                         'chromosome' => 'Chromosome',
-                        'id_ncbi' => 'Transcript - NCBI ID',
+                        'id_ncbi_' => 'Transcript - NCBI ID',
                         'id_ensembl' => 'Transcript - Ensembl ID',
                         'id_protein_ncbi' => 'Protein - NCBI ID',
                         'id_protein_ensembl' => 'Protein - Ensembl ID',
                         'id_protein_uniprot' => 'Protein - Uniprot ID',
+                        'exon_table' => 'Exon/intron information',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -99,29 +100,29 @@ class LOVD_Transcript extends LOVD_Object {
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
-                 array(
-                        'id_' => array(
-                                    'view' => array('ID', 70),
-                                    'db'   => array('t.id', 'ASC', true)),
-                        'chromosome' => array(
-                                    'view' => array('Chr', 40),
-                                    'db'   => array('g.chromosome', 'ASC', true)),
-                        'geneid' => array(
-                                    'view' => array('Gene ID', 70),
-                                    'db'   => array('t.geneid', 'ASC', true)),
-                        'name' => array(
-                                    'view' => array('Name', 300),
-                                    'db'   => array('t.name', 'ASC', true)),
-                        'id_ncbi' => array(
-                                    'view' => array('NCBI ID', 120),
-                                    'db'   => array('t.id_ncbi', 'ASC', true)),
-                        'id_protein_ncbi' => array(
-                                    'view' => array('NCBI Protein ID', 120),
-                                    'db'   => array('t.id_protein_ncbi', 'ASC', true)),
-                        'variants' => array(
-                                    'view' => array('Variants', 70),
-                                    'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
-                      );
+            array(
+                'id_' => array(
+                    'view' => array('ID', 70),
+                    'db'   => array('t.id', 'ASC', true)),
+                'chromosome' => array(
+                    'view' => array('Chr', 40),
+                    'db'   => array('g.chromosome', 'ASC', true)),
+                'geneid' => array(
+                    'view' => array('Gene ID', 70),
+                    'db'   => array('t.geneid', 'ASC', true)),
+                'name' => array(
+                    'view' => array('Name', 300),
+                    'db'   => array('t.name', 'ASC', true)),
+                'id_ncbi' => array(
+                    'view' => array('NCBI ID', 120),
+                    'db'   => array('t.id_ncbi', 'ASC', true)),
+                'id_protein_ncbi' => array(
+                    'view' => array('NCBI Protein ID', 120),
+                    'db'   => array('t.id_protein_ncbi', 'ASC', true)),
+                'variants' => array(
+                    'view' => array('Variants', 70),
+                    'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
+            );
         $this->sSortDefault = 'geneid';
 
         // Because the disease information is publicly available, remove some columns for the public.
@@ -192,6 +193,23 @@ class LOVD_Transcript extends LOVD_Object {
             $zData['id_'] = '<A href="' . str_replace('{{ID}}', $zData['id'], $this->sRowLink) . '" class="hide">' . $zData['id'] . '</A>';
         } else {
             $zData['gene_name_'] = '<A href="genes/' . rawurlencode($zData['geneid']) . '">' . $zData['geneid'] . '</A> (' . $zData['gene_name'] . ')';
+            $zData['id_ncbi_'] = '<A href="http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['id_ncbi'] . '" target="_blank">'  . $zData['id_ncbi'] . '</A>';
+
+            // Exon/intron info table. Check if files exist, and build link. Otherwise, remove field.
+            $sExonTable = '';
+            $sExonTableFileHTML = ROOT_PATH . 'refseq/' . $zData['geneid'] . '_' . $zData['id_ncbi'] . '_table.html';
+            $sExonTableFileTXT = ROOT_PATH . 'refseq/' . $zData['geneid'] . '_' . $zData['id_ncbi'] . '_table.txt';
+            if (is_readable($sExonTableFileHTML)) {
+                $sExonTable .= (!$sExonTable? '' : ', ') . '<A href="' . $sExonTableFileHTML . '" target="_blank">HTML</A>';
+            }
+            if (is_readable($sExonTableFileTXT)) {
+                $sExonTable .= (!$sExonTable? '' : ', ') . '<A href="' . $sExonTableFileTXT . '" target="_blank">Txt</A>';
+            }
+            if ($sExonTable) {
+                $zData['exon_table'] = 'Exon/intron information table: ' . $sExonTable;
+            } else {
+                unset($this->aColumnsViewEntry['exon_table']);
+            }
         }
 
         return $zData;

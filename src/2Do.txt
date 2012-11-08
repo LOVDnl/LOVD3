@@ -1,10 +1,10 @@
 Prioritize:
 ===========
+- Even snel LOVD2 api overnemen.
 - After a useful test with LSDB noobs during submission:
   + Lab ID is not clear.
   + Put more notice on the mapping button. Pop over?
   + Put a little help-icon or link somewhere, that explains more info on the format is available under the question marks.
-- Test LOVD install!
 - Handling ORCID ID:
   + orcid_confirmed boolean
   + email_confirmed boolean
@@ -19,10 +19,10 @@ Prioritize:
   + Notice: Undefined offset: 0 in /www/svn/LOVD3/trunk/src/class/objects.php on line 135
   + Notice: Undefined variable: bGeneInDB in /www/svn/LOVD3/trunk/src/import.php on line 899
 - Download/all/mine failt op shared DB (heeft > 200M && <= 265M nodig), hoewel ik helemaal zoveel data niet heb (1446 genes, 1446 transcripts, 2 diseases, 9 individuals, 9 dis2ind, 10 screenings, 8 scr2gene, 14360 vog, 7739 vot, 14360 scr2var, 3.7 MB file).
-- CXorf40A_000001 wordt geweigerd door LOVD (regexp), als je hem leeg haalt, geeft hij CXorf40A_000006 als beste optie, die vervolgens ook wordt geweigerd.
+- CXorf40A_000001 wordt geweigerd door LOVD (regexp).
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
-- Updated date van genen klopt niet.
+- Updated date van genen klopt niet (screening add/edit/delete, phenotype?, individual).
 - Phenotype cols opvragen van disease, hersorteer, klik col aan. WTF???
 - Fix Yu's variants in de database.
   + Fix daarna de VCF importer, zodat die dit format ook aan kan.
@@ -273,7 +273,7 @@ Prioritize:
   * The full data overview moet nog de varianten tonen, die óók in de individu gevonden zijn.
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
-- Delete user verder ontmoedigen?
+- Delete user alleen permanent, wanneer hij geen data heeft?
 - LOVD 3.0 heeft libxml nodig voor REST2SOAP, én we zitten nu op PHP >= 5.1.0, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - Het is niet duidelijk wat object_id nu precies is (gene symbol of disease id, bedoeld om te bepalen welke cc actief zijn)
@@ -339,7 +339,6 @@ Prioritize:
 - Bulk delete data, like logs (vanuit VL). Maar moet wel met passwd bevestigd worden.
 From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
-- Voorbeeld gen H19 werkt met NR en geen NM en n. en geen c. Dat werkt niet. Er is geen p. predictie mogelijk, maar dat klopt.
 - Cancel knop op submissie formulieren is altijd hetzelfde; aparte opdracht voor lovd_viewForm() voor submit + cancel knop met URL als argument?
 - Screening verwijderd, doorverwezen naar /screenings. Is dat handig?
 - Er is nu niet goed met MT genen te werken; NCBI kent geen transcripten. Mutalyzer heeft wel info, maar nu mist daar het een en ander, juist omdat er geen NMs zijn:
@@ -486,7 +485,6 @@ LOVD 3.0
         </script>
     Kan de inc-upgrade intelligenter gemaakt worden zodat na een ALTER TABLE ADD COLUMN de foutmelding "Duplicate column name XXX" netjes wordt afgevangen?
     Fouten tijdens upgraden loggen, zodat na te zoeken is waar 't fout ging?
-    Ondersteuning DOI i.p.v. PubMed? NMDB2 heeft al een DOI custom link.
     Genomische positie velden hernoemen naar hg19_* ?
     Na aanmaken gen, doorsturen naar welke kolommen toevoegen/verwijderen/sorteren
         Idem na disease
