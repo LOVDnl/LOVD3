@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-11-06
+ * Modified    : 2012-11-09
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -536,12 +536,15 @@ if (POST) {
                 }
 
                 // We'll need to split the functional consequence field to have checkFields() function normally.
-                if (in_array($sCurrentSection, array('Variants_On_Genome', 'Variants_On_Transcripts'))) {
+                $aLine['effect_reported'] = 5; // Default value.
+                $aLine['effect_concluded'] = 5; // Default value.
+                if (in_array($sCurrentSection, array('Variants_On_Genome', 'Variants_On_Transcripts')) && in_array('effectid', $aColumns)) {
                     if (strlen($aLine['effectid']) != 2) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Please select a valid entry from the \'effect_reported\' selection box.');
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Please select a valid entry for the \'effectid\' field.');
+                    } else {
+                        $aLine['effect_reported'] = $aLine['effectid']{0};
+                        $aLine['effect_concluded'] = $aLine['effectid']{1};
                     }
-                    $aLine['effect_reported'] = $aLine['effectid']{0};
-                    $aLine['effect_concluded'] = $aLine['effectid']{1};
                 }
 
 
@@ -569,7 +572,7 @@ if (POST) {
             if (in_array($sCurrentSection, array('Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome'))) {
                 foreach (array('created_by', 'edited_by') as $sCol) {
                     // Check is not needed for owned_by, because the form should have a selection list (which is checked separately).
-                    if (in_array($sCol, $aColumns)) {
+                    if (!$zData || in_array($sCol, $aColumns)) {
                         if ($aLine[$sCol] && !in_array($aLine[$sCol], $aUsers)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" refers to non-existing user.');
                         } elseif (($sCol != 'edited_by' || $aLine['edited_date']) && !$aLine[$sCol]) {
@@ -579,7 +582,7 @@ if (POST) {
                     }
                 }
                 foreach (array('created_date', 'edited_date') as $sCol) {
-                    if (in_array($sCol, $aColumns)) {
+                    if (!$zData || in_array($sCol, $aColumns)) {
                         if ($aLine[$sCol] && !lovd_matchDate($aLine[$sCol], true)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" is not a correct date format, use the format YYYY-MM-DD HH:MM:SS.');
                         } elseif (($sCol == 'created_date' || $aLine['edited_by']) && !$aLine[$sCol]) {
@@ -860,6 +863,9 @@ if (POST) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Variant "' . htmlspecialchars($aLine['id']) . '".');
                         }
                     } else {
+                        if ($aLine['mapping_flags'] === '') {
+                            $aLine['mapping_flags'] = 0;
+                        }
                         // FIXME: Default values of custom columns?
                         // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                         $aLine['todo'] = 'insert'; // OK, insert.

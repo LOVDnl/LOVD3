@@ -73,6 +73,12 @@
      is now sorted on NCBI ID.
  * Fixed bug; When manually mapping an unrecognized variant to a transcript,
    LOVD would return a query error.
+ * Fixed notices shown when the "effectid" field was missing during import of
+   variants. This also triggered an error message too many.
+ * Added default values for the columns "effectid" and "mapping_flags" in the
+   import script.
+ * Fixed bug; During import, the created_* and edited_* defaults were only put
+   in place when the columns were defined in the input file.
 
 
 
