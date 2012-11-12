@@ -18,6 +18,7 @@ php_flag mysql.trace_mode Off
     RewriteEngine On
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api(.*)$ api.php
     RewriteRule ^check_update(.*)$ check_update.php
     RewriteRule ^columns(.*)$ columns.php
     RewriteRule ^configuration(.*)$ configuration.php

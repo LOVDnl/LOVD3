@@ -79,6 +79,8 @@
    import script.
  * Fixed bug; During import, the created_* and edited_* defaults were only put
    in place when the columns were defined in the input file.
+ * Ported the LOVD 2.0 RESTful API to LOVD 3.0, maintaining the same URL
+   structure.
 
 
 

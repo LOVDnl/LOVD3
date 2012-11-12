@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-05-11
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-11-09
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -97,7 +97,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         // USING SUBSELECTS                   SELECT variants_without_individuals + SUM(variants_on_individuals) FROM (SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) AS variants_on_individuals FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub1, (SELECT COUNT(DISTINCT v.id) AS variants_without_individuals FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL) AS sub2;
         //$nVariants = array_sum($_DB->query('SELECT variants_without_individuals + SUM(variants_on_individuals) FROM (SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) AS variants_on_individuals FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub1, (SELECT COUNT(DISTINCT v.id) AS variants_without_individuals FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL) AS sub2')->fetchAllColumn());
         // EVEN SHORTER                     SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < 7, 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub
-        $nVariants = array_sum($_DB->query('SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < 7, 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub')->fetchAllColumn());
+        $nVariants = array_sum($_DB->query('SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < ' . STATUS_MARKED . ', 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= ' . STATUS_MARKED . ' GROUP BY i.id) AS sub')->fetchAllColumn());
         $sPOSTVars .= '&variant_count=' . $nVariants;
     }
 
@@ -236,13 +236,13 @@ if (isset($_GET['icon'])) {
 } else {
     // Print what we know about new versions...
     $_T->printHeader(false);
-    
+
     print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="100%" class="info" style="font-size : 11px;">' . "\n" .
           '        <TR>' . "\n" .
           '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_update_' . $sType . '.png" alt="' . ucfirst($sType) . '" title="' . ucfirst($sType) . '" width="32" height="32" hspace="4" vspace="4"></TD>' . "\n" .
           '          <TD valign="middle">Last checked for updates ' . date('Y-m-d H:i:s', strtotime($_STAT['update_checked_date'])) . ' (<A href="check_update?force_check=' . md5($_STAT['update_checked_date']) . '">check now</A>)<BR>' . "\n" .
           '            ' . str_replace("\n", "\n" . '            ', $sMessage) . '</TD></TR></TABLE>' . "\n\n");
-    
+
     $_T->printFooter();
 }
 ?>

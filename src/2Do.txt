@@ -1,6 +1,5 @@
 Prioritize:
 ===========
-- Even snel LOVD2 api overnemen.
 - After a useful test with LSDB noobs during submission:
   + Lab ID is not clear.
   + Put more notice on the mapping button. Pop over?
@@ -18,6 +17,7 @@ Prioritize:
   + Warning: substr_count(): Empty substring in /www/svn/LOVD3/trunk/src/class/object_transcript_variants.php on line 135
   + Notice: Undefined offset: 0 in /www/svn/LOVD3/trunk/src/class/objects.php on line 135
   + Notice: Undefined variable: bGeneInDB in /www/svn/LOVD3/trunk/src/import.php on line 899
+  + Als deze opgelost zijn, kan de (alpha) tag weg van de import.
 - Download/all/mine failt op shared DB (heeft > 200M && <= 265M nodig), hoewel ik helemaal zoveel data niet heb (1446 genes, 1446 transcripts, 2 diseases, 9 individuals, 9 dis2ind, 10 screenings, 8 scr2gene, 14360 vog, 7739 vot, 14360 scr2var, 3.7 MB file).
 - CXorf40A_000001 wordt geweigerd door LOVD (regexp).
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().

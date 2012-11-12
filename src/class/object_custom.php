@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-10-04
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-08
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -414,6 +414,16 @@ class LOVD_Custom extends LOVD_Object {
                 }
             }
         }
+    }
+
+
+
+
+
+    function colExists ($sCol)
+    {
+        // Returns true if column exists.
+        return (isset($this->aColumns[$sCol]));
     }
 
 
