@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-11-06
+ * Modified    : 2012-11-13
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -523,6 +523,8 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         $Data = array($Data);
     }
 
+    // Increase the max group_concat() length, so that lists of many many genes still have all genes mentioned here.
+    $_DB->query('SET group_concat_max_len = 50000');
     switch ($sType) {
         // Queries for every data type.
         case 'transcript':

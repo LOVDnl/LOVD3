@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-07-25
- * Modified    : 2012-06-22
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-10-13
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -147,7 +147,7 @@ assert("lovd_isAuthorized('screening', 'ASDFASDFASDF', false) === false");
 $nIDCurator      = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.created_by != ? AND s.owned_by != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $_AUTH['curates'][0]), false)->fetchColumn();
 $nIDOwner        = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE (s.created_by = ? OR s.owned_by = ?) AND t.geneid NOT IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') LIMIT 1', array_merge(array($_AUTH['id'], $_AUTH['id']), $_AUTH['curates']), false)->fetchColumn();
 $nIDCollaborator = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.created_by != ? AND s.owned_by != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $_AUTH['collaborates'][0]), false)->fetchColumn();
-$nIDSubmitter    = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.created_by != ? AND s.owned_by != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $_AUTH['submits'][0]), false)->fetchColumn();
+$nIDSubmitter    = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.created_by != ? AND s.owned_by != ? AND s.id != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $nIDCollaborator, $_AUTH['submits'][0]), false)->fetchColumn();
 // Don't remove quotes, zerofill will cause issues.
 assert("lovd_isAuthorized('screening', '" . $nIDCurator . "', false) === 1");
 $_CONF['allow_submitter_mods'] = 1;
