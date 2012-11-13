@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-10-09
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-13
+ * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -132,6 +132,9 @@ class LOVD_Object {
         // Checks fields before submission of data.
         global $_AUTH;
         $aForm = $this->getForm();
+        if (!$aForm) {
+            return false;
+        }
         $aFormInfo = $aForm[0];
         if (!in_array($aFormInfo[0], array('GET', 'POST'))) {
             // We're not working on a full form array, possibly an incomplete VOT form.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-11-08
+ * Modified    : 2012-11-13
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,6 +37,19 @@ require ROOT_PATH . 'inc-init.php';
 if ($_AUTH) {
     // If authorized, check for updates.
     require ROOT_PATH . 'inc-upgrade.php';
+}
+
+
+
+
+
+if (!ACTION && !empty($_GET['select_db']) && !empty($_GET['trackid']) && substr_count($_GET['trackid'], ':')) {
+    // URL: /variants.php?select_db=IVD&action=search_all&trackid=IVD%3Ac.465%2B1G>A
+    // Old LOVD2-style way of linking from the genome browsers back to LOVD.
+    $aTrackID = explode(':', $_GET['trackid'], 2);
+    $sDNA = $aTrackID[1];
+    header('Location: ' . lovd_getInstallURL() . 'variants/in_gene?search_geneid=' . $_GET['select_db'] . '&search_VariantOnTranscript/DNA=' . rawurlencode($sDNA));
+    exit;
 }
 
 
@@ -2434,7 +2447,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
         if (!lovd_error()) {
             // We will need to update the timestamps of any gene affected by this deletion, if the variant's status is Marked or higher.
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? AND vot.statusid >= ?', array($nID, STATUS_MARKED))->fetchAllColumn();
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS. ' AS vog ON (vot.id = vog.id) WHERE vog.id = ? AND vog.statusid >= ?', array($nID, STATUS_MARKED))->fetchAllColumn();
 
             // This also deletes the entries in TABLE_VARIANTS_ON_TRANSCRIPTS && TABLE_SCR2VAR.
             $_DATA->deleteEntry($nID);

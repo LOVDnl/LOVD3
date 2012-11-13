@@ -129,6 +129,7 @@ if ($sDataType == 'variants') {
 
     // Get chromosome, reference sequence, and other data.
     // LOVD3 has multiple transcripts maybe, so we just grab the first one.
+    // This is actually not really useful for BED files...
     list($sChromosome, $nRefSeqID, $sRefSeq, $nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $bSense) =
         $_DB->query('SELECT g.chromosome, t.id, t.id_ncbi, t.position_c_mrna_start, t.position_c_mrna_end, t.position_c_cds_end, (t.position_g_mrna_start < t.position_g_mrna_end) AS sense
                      FROM ' . TABLE_GENES . ' as g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid)
@@ -139,7 +140,6 @@ if ($sDataType == 'variants') {
         // We're exporting a BED file for a Genome Browser.
         $sBuild = $_CONF['refseq_build'];
         if ($sRefSeq && isset($_SETT['human_builds'][$sBuild]) && $sBuild != '----') {
-            $sRefSeqAcc = substr($sRefSeq, 0, strpos($sRefSeq, '.'));
             // If requested, show only variants from a certain PMID.
             $nPMID = (empty($_GET['PMID']) || !ctype_digit($_GET['PMID'])? 0 : $_GET['PMID']);
             // If PMID is requested, check in which columns the PMID custom link is active. Through the same query we can join to TABLE_ACTIVE_COLS so we are sure the column can be used in a query.
@@ -156,11 +156,11 @@ if ($sDataType == 'variants') {
             }
             $bQueryPMID = ($nPMID && count($aPMIDCols));
             $sQ = 'SELECT LEAST(vog.position_g_start, vog.position_g_end), GREATEST(vog.position_g_start, vog.position_g_end), vog.type, vot.`VariantOnTranscript/DNA`
-                   FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id)' .
+                   FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
                    (!$bJoinWithPatient? '' : ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ') . '
-                   WHERE vot.transcriptid = ' . $nRefSeqID . ' AND vog.statusid >= ' . STATUS_MARKED . ' AND vog.position_g_start != 0 AND vog.position_g_start IS NOT NULL' .
+                   WHERE t.geneid = "' . $sSymbol . '" AND vog.statusid >= ' . STATUS_MARKED . ' AND vog.position_g_start != 0 AND vog.position_g_start IS NOT NULL' .
                    (!$bQueryPMID? '' : ' AND (`' . implode('` LIKE "%:' . $nPMID . '}%" OR `', $aPMIDCols) . '` LIKE "%:' . $nPMID . '}%") ') . '
-                   GROUP BY vot.`VariantOnTranscript/DNA`';
+                   GROUP BY vog.`VariantOnGenome/DNA` ORDER BY vog.position_g_start, vog.position_g_end';
         } else {
             // Not mappable!
             header('HTTP/1.0 503 Service Unavailable');
@@ -330,7 +330,7 @@ if ($sDataType == 'variants' && FORMAT == 'text/bed') {
                   );
 
     // Print header.
-    header('Content-type: text/plain; charset=ISO-8859-1');
+    header('Content-type: text/plain; charset=UTF-8');
     print('track name="Variants in the LOVD ' . $sSymbol . ' database' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" description="Variants in LOVD ' . $sSymbol . ' db' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" visibility=' . (!empty($_GET['visibility']) && is_numeric($_GET['visibility'])? $_GET['visibility'] : 3) . ' itemRgb="On" db="' . $sBuild . '" offset=-1 url="' . ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants.php?select_db=' . $sSymbol . '&action=search_all&trackid=$$' . '"' . "\n\n");
 
     foreach ($aData as $r) {

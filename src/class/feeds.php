@@ -37,7 +37,7 @@ if (!defined('ROOT_PATH')) {
 
 class Feed {
     // Some member variables.
-    private $sAtomFeed = '<?xml version="1.0" encoding="ISO-8859-1"?>
+    private $sAtomFeed = '<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>
     {{ FEED_TITLE }}
@@ -196,7 +196,7 @@ class Feed {
     function publish ()
     {
         // Publishes the feed, as currently configured, to STDOUT.
-        header('Content-type: application/atom+xml;' . ($this->sType == 'entry'? ' type=entry;' : '') . ' charset=ISO-8859-1');
+        header('Content-type: application/atom+xml;' . ($this->sType == 'entry'? ' type=entry;' : '') . ' charset=UTF-8');
         $this->sAtomFeed = str_replace('{{ ENTRY }}', implode('', $this->aFeedEntries), $this->sAtomFeed);
         die($this->sAtomFeed);
     }

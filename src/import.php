@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-11-09
+ * Modified    : 2012-11-13
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -252,7 +252,7 @@ if (POST) {
         }
 
         $_T->printHeader();
-        $_T->printTitle('Import data in LOVD format (alpha)');
+        $_T->printTitle('Import data in LOVD format');
 
         // Load progress bar.
         require ROOT_PATH . 'class/progress_bar.php';
@@ -495,6 +495,7 @@ if (POST) {
                 if (!$bTranscriptInFile && !$bTranscriptInDB) {
                     // Transcript does not exist and is not defined in the import file.
                     lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Transcript "' . htmlspecialchars($aLine['transcriptid']) . '" does not exist in the database and is not defined in this import file.');
+                    $bGeneInDB = false;
                 } elseif ($bTranscriptInFile) {
                     $sGene = $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']]['geneid'];
                     $bGeneInDB = in_array($sGene, $aParsed['Genes']['ids']);
@@ -1328,7 +1329,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 
 
 $_T->printHeader();
-$_T->printTitle('Import data in LOVD format (alpha)');
+$_T->printTitle('Import data in LOVD format');
 
 print('      Using this form you can import files in LOVD\'s tab-delimited format. Currently supported imports are individual, phenotype, screening and variant data.<BR><I>Genomic positions in your data are assumed to be relative to Human Genome build ' . $_CONF['refseq_build'] . '</I>.<BR>' . "\n" .
       '      <BR>' . "\n\n");

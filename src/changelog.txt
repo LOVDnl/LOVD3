@@ -4,11 +4,9 @@
  *
  *************/
 
-// DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
-
 /*******************
  * 3.0 Beta 10
- * 2012-11-05 ???????????????????????????????????????????????????????????
+ * 2012-11-13
  *********/
  * Fixed bug; The import page would sometimes hide error messages and say there
    was nothing to import.
@@ -81,17 +79,11 @@
    in place when the columns were defined in the input file.
  * Ported the LOVD 2.0 RESTful API to LOVD 3.0, maintaining the same URL
    structure.
-
-
-
-
-
-
-
-
-
-
-
+ * Added links from the gene homepage to the UCSC genome browser, the Ensembl
+   genome browser, and the NCBI sequence viewer.  Those who support it, show the
+   variants currently in the LOVD database as a separate track.  From the track,
+   links are provided to point back to the corresponding entry in LOVD.
+ * Added links to the download and import pages in the Setup tab dropdown menu.
 
 
 /*******************

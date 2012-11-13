@@ -10,14 +10,9 @@ Prioritize:
   + inbouwen in LOVD install?
   + inbouwen in edit
   + reset password met orcid id!
-- manual changes afmaken
+- The next release must include a manual!
 - submitter register email-foutmelding is dubbel, twee andere texten ook.
 - dbsearch.php: lovd.nl/GENE_00001 link wijst naar LOVD3? Zet er een 0 tussen voor het doorsturen.
-- Import foute file van Myles:
-  + Warning: substr_count(): Empty substring in /www/svn/LOVD3/trunk/src/class/object_transcript_variants.php on line 135
-  + Notice: Undefined offset: 0 in /www/svn/LOVD3/trunk/src/class/objects.php on line 135
-  + Notice: Undefined variable: bGeneInDB in /www/svn/LOVD3/trunk/src/import.php on line 899
-  + Als deze opgelost zijn, kan de (alpha) tag weg van de import.
 - Download/all/mine failt op shared DB (heeft > 200M && <= 265M nodig), hoewel ik helemaal zoveel data niet heb (1446 genes, 1446 transcripts, 2 diseases, 9 individuals, 9 dis2ind, 10 screenings, 8 scr2gene, 14360 vog, 7739 vot, 14360 scr2var, 3.7 MB file).
 - CXorf40A_000001 wordt geweigerd door LOVD (regexp).
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
@@ -140,6 +135,7 @@ Prioritize:
     + Redirect: zouden we dan misschien een functie moeten maken? Code voor een knopje met redirect (JS lijkt me het handigst?) in een lovd_showInfoTable() is dan best wel weer lang.
   - HGNC niet te bereiken? Nette foutmelding of mirror gebruiken?
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
+    + 1 transcript? auto select.
   - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
   - "Does not accept external submissions" setting? Dat moet dan ook worden doorgegeven, zodat de LOVD/LSDB lijst dat kan aangeven.
     + Apart veld, niet in data.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-11-07
+ * Modified    : 2012-11-13
  * For LOVD    : 3.0-beta-10
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -124,7 +124,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-beta-09d',
+                            'version' => '3.0-beta-10',
                           ),
                 'user_levels' =>
                      array(
@@ -598,7 +598,7 @@ if (get_magic_quotes_gpc()) {
 //// (SSL not required when exporting data to WikiProfessional because their scripts do not support it)
 //// (The UCSC also has issues with retrieving the BED files through SSL...)
 //if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/export_data.php' && !empty($_GET['format']) && $_GET['format'] == 'wiki') && !(substr(lovd_getProjectFile(), 0, 9) == '/api/rest' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
-if (!empty($_CONF['use_ssl']) && !SSL) {
+if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/api.php' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
     // We were enabled, when SSL was available. So I guess SSL is still available. If not, this line here would be a problem.
     // No, not sending any $_POST values either. Let's just assume no-one is working with LOVD when the ssl setting is activated.
     // FIXME; does not allow for nice URLs.
