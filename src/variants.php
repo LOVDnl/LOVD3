@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-11-13
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-15
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -2007,6 +2007,10 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
               '</SCRIPT>');
     }
 
+    if ($_GET['type'] == 'VCF') {
+        lovd_showInfoTable('Please note that LOVD does not support importing deletions or insertions using the VCF 3.3 format or lower! <B>Please use VCF 4.0 or higher.</B>', 'warning', 760);
+    }
+
     // Display any errors.
     lovd_errorPrint();
 
@@ -2021,7 +2025,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     $aForm = array(array('POST', '', '', '', '60%', '14', '40%'),
                    array('', '', 'print', '<B>File selection</B>'),
                    'hr',
-                   array('File type', '', 'print', ($_GET['type'] == 'VCF'? 'Variant Call Format (VCF)' : 'SeattleSeq Annotation file')));
+                   array('File type', '', 'print', ($_GET['type'] == 'VCF'? 'Variant Call Format (VCF) version >= 4.0' : 'SeattleSeq Annotation file')));
     if ($_GET['type'] == 'SeattleSeq') {
         array_push($aForm,
                    array('', '', 'note', 'Files with \'SeattleSeq Annotation original allele columns\' created from indel-only VCF files are <B>not supported</B>.'));

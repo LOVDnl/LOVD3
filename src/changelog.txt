@@ -5,6 +5,34 @@
  *************/
 
 /*******************
+ * 3.0 Beta 11 (RC1)
+ * 2012-12-?????????????????????????????????????????????????????????????????????
+ *********/
+ * Added spam protection to the submitter registration form using the
+   StopForumSpam.com API.
+ * Fixed bug; '0' was never checked to be a valid entry for selection lists.
+ * Fixed problem with creating genes by the variant mapper with MySQL's strict
+   mode on.
+ * Added warning to the VCF import form that we don't support importing
+   deletions or insertions using VCF format 3.3 or lower.
+ * Fixed bug; The variant mapper miscalculated the progress percentage of all
+   runs except the first.
+ * Added support for XR reference sequences.
+ * Included version 3.0-beta-11 of official LOVD Reference Sequence Parser
+   script.
+   - Added support for transcripts other than NM transcripts.
+
+
+
+
+
+
+
+
+Note: This beta becomes 3.0-01, rename all headers in affected files.
+
+
+/*******************
  * 3.0 Beta 10
  * 2012-11-13
  *********/

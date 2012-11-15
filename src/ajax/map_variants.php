@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-11-08
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-15
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -96,7 +96,6 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
 
     $aReturn = array();
     if (!empty($aTranscripts)) {
-
         // Get the variant descriptions in c. notation.
         $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$aVariant['chromosome']] . ':' . $aVariant['VariantOnGenome/DNA'];
         if (!isset($aVariantsOnTranscripts[$sVariant])) {
@@ -113,7 +112,7 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
 
         // Loop the transcripts and map the variant to them.
         foreach ($aTranscripts as $aTranscript) {
-            if (empty($aTranscript['id_ncbi'])) {
+            if (empty($aTranscript['id']) || empty($aTranscript['id_ncbi'])) {
                 // A transcript without accession number is encountered. Invalid arguments, return false.
                 return false;
             }
@@ -134,12 +133,11 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
             foreach ($aVariantsOnTranscripts[$sVariant] as $aVariantOnTranscript) {
                 $sVariantOnTranscript = lovd_getValueFromElement('', $aVariantOnTranscript);
                 if (substr($sVariantOnTranscript, 0, strlen($aTranscript['id_ncbi'])) == $aTranscript['id_ncbi']) {
-                    $sVariantPrefix = (substr($aTranscript['id_ncbi'], 0, 3) == 'NR_'? 'n.' : 'c.');
                     // Got the variant description relative to this transcript.
                     $aReturn[$aTranscript['id_ncbi']] =
                          array(
                                 'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, 55, ?, ?, ?, ?, ?, ?)',
-                                array($aVariant['id'], isset($aTranscript['id'])? $aTranscript['id'] : NULL, $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], substr($sVariantOnTranscript, strpos($sVariantOnTranscript, ':' . $sVariantPrefix) + 1), '')
+                                array($aVariant['id'], $aTranscript['id'], $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], preg_replace('/^[A-Z]{2}_[0-9.]+:/', '', $sVariantOnTranscript), '')
                               );
                     continue 2;
                 }
@@ -155,7 +153,15 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
 
 
 // Update progress data.
+// Store total variants that need to be mapped in SESSION. We want to nicely show the progress.
+if (!isset($_SESSION['mapping']['total_todo'])) {
+    $_SESSION['mapping']['total_todo'] = 0;
+}
 $_SESSION['mapping']['todo'] = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL')->fetchColumn();
+if ($_SESSION['mapping']['todo'] > $_SESSION['mapping']['total_todo']) {
+    // We didn't have a total set yet, or more variants were added in the process that now need to be mapped as well.
+    $_SESSION['mapping']['total_todo'] = $_SESSION['mapping']['todo'];
+}
 $_SESSION['mapping']['time_complete'] = 0;
 
 // Now we unlock the session. We'll update the unmappable, todo and time_complete values
@@ -562,13 +568,28 @@ if (!empty($aVariants)) {
                                          'chrom_band' => $sChromBand,
                                          'refseq_genomic' => $sRefseqGenomic,
                                          'refseq_UD' => $sRefseqUD,
+                                         'reference' => '',
+                                         'reference' => '',
+                                         'url_homepage' => '',
+                                         'url_external' => '',
+                                         'allow_download' => 0,
+                                         'allow_index_wiki' => 0,
                                          'id_hgnc' => $sHgncID,
                                          'id_entrez' => $sEntrez,
                                          'id_omim' => $sOmim,
                                          'show_hgmd' => 1,
                                          'show_genecards' => 1,
                                          'show_genetests' => 1,
+                                         'note_index' => '',
+                                         'note_listing' => '',
+                                         'refseq' => '',
+                                         'refseq_url' => '',
                                          'disclaimer' => 1,
+                                         'disclaimer_text' => '',
+                                         'header' => '',
+                                         'header_align' => -1,
+                                         'footer' => '',
+                                         'footer_align' => -1,
                                          'created_by' => 0,
                                          'created_date' => date('Y-m-d H:i:s'));
                         $_DB->query('INSERT INTO ' . TABLE_GENES . ' (' . implode(', ', array_keys($aFields)) . ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')', array_values($aFields));
@@ -669,7 +690,7 @@ session_start();
 $_SESSION['mapping']['todo'] -= $nVariants;
 
 // Compute progress percentage - but only percentages for which we have an image (+6.25% each) are possible.
-$nTotalVariants = (int) $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW)->fetchColumn();
+$nTotalVariants = $_SESSION['mapping']['total_todo'];
 $nMappedVariants = $nTotalVariants - $_SESSION['mapping']['todo'];
 if ($nTotalVariants == 0) {
     $nPercentage = 99;
@@ -688,6 +709,7 @@ if ($nMappedVariants >= $nTotalVariants || (!isset($_GET['variantid']) && !defin
     if ($nTotalVariants == 0) {
         exit(AJAX_FALSE . "\t99\tThere are no variants to map in the database");
     }
+    $_SESSION['mapping']['total_todo'] = 0; // Reset the counter for next time.
     exit(AJAX_FALSE . "\t99\tSuccessfully mapped " . $nTotalVariants . ' variant' . ($nTotalVariants == 1? '' : 's'));
 } elseif (defined('MAPPING_NO_RESTART')) {
     // There were network problems during this request.

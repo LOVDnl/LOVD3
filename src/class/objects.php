@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-13
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-14
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -231,7 +231,8 @@ class LOVD_Object {
                     }
                 }
                 // Simple check on non-custom columns (custom columns have their own function for this) to see if the given value is actually allowed.
-                if (strpos($sName, '/') === false && !empty($aData[$sName])) {
+                // 0 is a valid entry for the check for mandatory fields, so we should also check if 0 is a valid entry in the selection list!
+                if (strpos($sName, '/') === false && isset($aData[$sName]) && $aData[$sName] !== '') {
                     $Val = $aData[$sName];
                     $aOptions = array_keys($aField[5]);
                     if (lovd_getProjectFile() == '/import.php') {

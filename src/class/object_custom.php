@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-11-08
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-14
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -347,7 +347,7 @@ class LOVD_Custom extends LOVD_Object {
 
     function checkFields ($aData, $zData = false)
     {
-        global $_AUTH, $_SETT, $_DB;
+        global $_AUTH;
         // Checks fields before submission of data.
         foreach ($this->aColumns as $sCol => $aCol) {
             if ($aCol['mandatory']) {
@@ -366,7 +366,6 @@ class LOVD_Custom extends LOVD_Object {
             }
 
             if (!empty($aData['statusid'])) {
-                // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
                 lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
             }
         }

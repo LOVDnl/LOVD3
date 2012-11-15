@@ -1,5 +1,7 @@
 Prioritize:
 ===========
+- gene homepage: version alleen tonen als updated date niet null is, GENE:700101 ziet er heel knullig uit
+- Import; allele leeg laten geeft query error: Integrity constraint violation: 1048 Column 'allele' cannot be null
 - After a useful test with LSDB noobs during submission:
   + Lab ID is not clear.
   + Put more notice on the mapping button. Pop over?
@@ -17,7 +19,7 @@ Prioritize:
 - CXorf40A_000001 wordt geweigerd door LOVD (regexp).
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
-- Updated date van genen klopt niet (screening add/edit/delete, phenotype?, individual).
+- Updated date van genen klopt niet (variant map, screening add/edit/delete, phenotype?, individual).
 - Phenotype cols opvragen van disease, hersorteer, klik col aan. WTF???
 - Fix Yu's variants in de database.
   + Fix daarna de VCF importer, zodat die dit format ook aan kan.
@@ -95,7 +97,6 @@ Prioritize:
       - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
       - Store in session / DB in een col met serialized data?
     * Daarna: we moeten ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
-- Mapping melding (successfully mapped xxx variants slaat nergens op)
 - VariantOnGenome/Times_reported (or similar)
   + Kolom mag ALLEEN getoond worden op 't formulier, als gekoppeld aan een individu die een panel_size > 1 heeft.
     Anders, standaard invullen; 2 voor homozygoot, 1 voor alles anders.
@@ -124,6 +125,7 @@ Prioritize:
 - Connect existing variant to existing individual; kies individual via viewlist in new window, daarna kies screening?
 
 - Beta-09:
+  - Add option to report registration as spam? Then we need to store IP address? Or track registration event log?
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
@@ -544,7 +546,7 @@ Wat moet ik onthouden tijdens het coden?
     // References anders regelen?
     // Alleles -> Anders noemen? Splitsen?
     // Extra tabel met Gene -> Chromosoom, mapping NG/NC_slice -> NC (1 cijfer genoeg? of strand info?), exon structuur? Data wat nu in die txt table zit?
-    // Allows for orphaned screening. BUT now also, one screening for multiple individuals. (??? still true ???)
+    // Allows for orphaned screening.
 * Add index op DNA!!! (if we know how to insert the DNA information into the db)
 * User levels:
     Submitter
@@ -561,7 +563,6 @@ Wat moet ik onthouden tijdens het coden?
 Not sure yet how to...
 ======================
 - Custom Column database system online
-- GPL 2 only? Of toch 3 houden? Of 3 only maken? ff checken...
 - API HTTP status codes: http://gif.phpnet.org/frederic/programs/http_status_codes/
 - Delete users: Delete optie gewoon weglaten, tenzij er geen children zijn?
 - Consequence (RNA / AA changes) apart van DNA houden?
@@ -574,7 +575,6 @@ Not sure yet how to...
 HANDLEIDING
 ===========
 - Moet zo geschreven worden, dat er van dezelfde source een HTML en PDF gegenereerd kan worden.
-- Per pagina moet duidelijk zijn, welk level nodig is om deze feature te gebruiken, en vanaf welke versie dit is ingevoerd.
 - Vanuit LOVD moet de Help of Documentation tab direct verwijzen naar de pagina in de handleiding over het scherm waar de gebruiker op dat moment in zit.
 
 
@@ -588,8 +588,6 @@ Update process
 
 Needed before release
 =====================
-    Als mensen submitten (wat voor data dan ook), controleren of data al eerder in database gevonden is? Of data bijna gelijk hier aan?
-        Aangevraagd door Raymond, en hij acht dit zeer belangrijk.
     Later een OFFLINE_MODE inbouwen, die geen contact op neemt met remote servers, maar toestaat dat alles handmatig wordt gedaan.
         Dit moet een (tijdelijke?) instelling zijn, en overal lekker irritant aangegeven worden, zodat mensen het niet gebruiken om van de standaarden af te kunnen wijken.
     Hoe kunnen we multiple select velden duidelijker maken?

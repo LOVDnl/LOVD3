@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2012-11-08
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-15
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1936,7 +1936,7 @@ if ($_GET['step'] == 3) {
             $hDir = opendir($sPath);
             if ($hDir) {
                 while (($sFile = (readdir($hDir))) !== false) {
-                    if (preg_match('/^' . $_POST['symbol'] . '_(NM_[0-9.]+)_codingDNA.html$/', $sFile, $aRegs)) {
+                    if (preg_match('/^' . $_POST['symbol'] . '_([A-Z]{2}_[0-9.]+)_codingDNA.html$/', $sFile, $aRegs)) {
                         $aTranscripts[] = $aRegs[1];
                     }
                 }

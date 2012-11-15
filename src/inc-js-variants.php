@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2012-11-02
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-15
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -164,7 +164,7 @@ function lovd_convertPosition (oElement)
                         aVariants = sData.split(';');
                         var nVariants = aVariants.length;
                         for (i = 0; i < nVariants; i++) {
-                            var aVariant = /^(N[RM]_\d{6,9}\.\d{1,2}):([cn]\..+)$/.exec(aVariants[i]);
+                            var aVariant = /^([A-Z]{2}_\d{6,9}\.\d{1,2}):([cn]\..+)$/.exec(aVariants[i]);
                             if (aVariant != null) {
                                 var oInput = $('#variantForm input[id_ncbi="' + aVariant[1] + '"]');
                                 if (oInput[0] != undefined) {
@@ -195,7 +195,7 @@ function lovd_convertPosition (oElement)
 
                     } else {
                         // This function was called from a transcript variant, so fill in the return value from mutalyzer in the genomic DNA field.
-                        var aVariant = /:(g\..+)$/.exec(sData);
+                        var aVariant = /:([gm]\..+)$/.exec(sData);
                         if (aVariant != null) {
                             var oInput = $('#variantForm input[name="VariantOnGenome/DNA"]');
                             oInput.attr('value', aVariant[1]);
@@ -265,6 +265,18 @@ function lovd_getProteinChange (oElement)
                         title: 'Error on mutalyzer request!\nError code: ' + sData
                     }).show();
                 }
+
+            } else if (sData == '||' && oThisDNA.val().lastIndexOf('n.', 0) === 0) {
+                // No data, but no errors either! No wonder... it's an n. variant!
+                // No prediction on protein level possible!
+                oThisProtein.siblings('img:first').attr({
+                    src: 'gfx/cross.png',
+                    onclick: '',
+                    style: '',
+                    alt: 'Unable to predict protein change for non-coding transcripts!',
+                    title: 'Unable to predict protein change for non-coding transcripts!'
+                }).show();
+                oThisProtein.siblings('button:eq(0)').hide();
 
             } else {
                 var aData = sData.split('||'); // aData[0] = errors, aData[1] = actual reply.
