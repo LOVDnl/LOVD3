@@ -21,6 +21,19 @@
  * Included version 3.0-beta-11 of official LOVD Reference Sequence Parser
    script.
    - Added support for transcripts other than NM transcripts.
+ * A gene database's version is only shown on the gene homepage when the
+   database already has an "updated" timestamp.
+ * Fixed bug; The "Sort curators" page never showed any error messages when no
+   curators were selected to be shown on the gene homepage, even though the form
+   was blocked for submission.
+ * Fixed bug; When the "Sort curators" page was submitted, but errors were
+   encountered, all curators were shown as hidden and could not be reselected
+   without restarting the form.
+ * The "Sort curators" page no longer shows collaborators.
+ * Fixed notices in import script when sections had been left out of the import
+   file.
+ * Fixed bug; When leaving the allele value empty in the Variants_On_Genome
+   section, a query error occurred. Now, LOVD will assume a default value.
 
 
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-11-13
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-19
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -199,7 +199,7 @@ if (POST) {
             array(
                 'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Individuals_To_Diseases', 'Phenotypes', 'Screenings', 'Screenings_To_Genes', 'Variants_On_Genome', 'Variants_On_Transcripts', 'Screenings_To_Variants'
             ), array('allowed_columns' => array(), 'columns' => array(), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
-        $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('data' => array()); // Just the data, nothing else!
+        $aParsed['Genes_To_Diseases'] = $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('allowed_columns' => array(), 'data' => array()); // Just the data, nothing else!
         $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
         $aImportFlags = array();
         $sFileVersion = $sFileType = $sCurrentSection = '';
@@ -864,6 +864,9 @@ if (POST) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Variant "' . htmlspecialchars($aLine['id']) . '".');
                         }
                     } else {
+                        if ($aLine['allele'] === '') {
+                            $aLine['allele'] = 0;
+                        }
                         if ($aLine['mapping_flags'] === '') {
                             $aLine['mapping_flags'] = 0;
                         }
@@ -1179,12 +1182,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                             $aLinePat2Var['pathogenic'] = $sVal;
                             break;
                     }
-                }
-
-                // 2009-03-02; 2.0-16; ID_allele_ of course needs a default value.
-                // ID_allele_ (pat2var).
-                if (empty($aLinePat2Var['allele'])) {
-                    $aLinePat2Var['allele'] = 0;
                 }
 
                 // Not in the database? Then auto-fill the value with a useful default!

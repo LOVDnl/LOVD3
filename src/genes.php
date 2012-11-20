@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-11-08
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-19
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -92,7 +92,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
             $aNavigation[CURRENT_PATH . '?delete']       = array('cross.png', 'Delete gene entry', 1);
             $aNavigation[CURRENT_PATH . '?authorize']    = array('', 'Add/remove curators/collaborators', 1);
         } else {
-            $aNavigation[CURRENT_PATH . '?sortCurators'] = array('', 'Sort/hide curators/collaborators names', 1);
+            $aNavigation[CURRENT_PATH . '?sortCurators'] = array('', 'Sort/hide curator names', 1);
         }
         $aNavigation[CURRENT_PATH . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order']    = array('menu_columns.png', 'Re-order enabled variant columns', 1);
@@ -453,11 +453,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_SETT['currdb'] = array('id' => $_POST['id'], 'name' => $_POST['name']);
 
                 // Thank the user...
-                // 2012-02-01; 3.0-beta-02; If there is only one user, don't forward to the Add curators page.
+                // If there is only one user, don't forward to the Add curators page.
                 if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
                     header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id'] . '?authorize');
                 } else {
-                    // FIXME; should be sent to list of columns for this gene, but that page does not exist yet.
                     header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id']);
                 }
 
@@ -1129,7 +1128,8 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
 
 if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && in_array(ACTION, array('authorize', 'sortCurators'))) {
-    // URL: /genes/DMD?authorize or /genes/DMD?sortCurators
+    // URL: /genes/DMD?authorize
+    // URL: /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
     $sID = rawurldecode($_PE[1]);
@@ -1303,7 +1303,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
         // Retrieve current curators and collaborators, order by current order.
         // Special ORDER BY statement makes sure show_order value of 0 is sent to the bottom of the list.
-        $qCurators = $_DB->query('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
+        $qCurators = $_DB->query('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ' . (ACTION == 'authorize'? '' : 'AND c.allow_edit = 1 ') . 'ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
         while ($z = $qCurators->fetchAssoc()) {
             $aCurators[$z['id']] = $z;
         }
@@ -1311,9 +1311,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
 
 
-    if (ACTION == 'authorize') {
-        lovd_errorPrint();
+    lovd_errorPrint();
 
+    if (ACTION == 'authorize') {
         // Show viewList() of users that are NO curator or collaborator at this moment.
         require ROOT_PATH . 'class/object_users.php';
         $_DATA = new LOVD_User();
@@ -1355,7 +1355,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
         if (ACTION == 'authorize') {
             print('<TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' . $aVal['level'] . ' >= ' . LEVEL_MANAGER . ') { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($aVal['allow_edit'] || $aVal['level'] >= LEVEL_MANAGER? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['allow_edit']? ($aVal['shown']? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right">' . ($aVal['level'] >= $_AUTH['level'] && $nID != $_AUTH['id']? '&nbsp;' : '<A href="#" onclick="lovd_unauthorizeUser(\'Genes_AuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A>') . '</TD>');
         } else {
-            print('<TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['allow_edit']? ($aVal['shown']? ' checked' : '') : ' disabled') . '></TD>');
+            print('<TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['shown']? ' checked' : '') . '></TD>');
         }
         print('</TR></TABLE></LI>' . "\n");
     }

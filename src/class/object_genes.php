@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-11-12
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-16
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -542,7 +542,15 @@ class LOVD_Gene extends LOVD_Object {
             }
 
             $zData['created_date_'] = str_replace(' 00:00:00', '', $zData['created_date_']);
-            $zData['version_'] = '<B>' . $zData['id'] . date(':ymd', strtotime($zData['updated_date_'])) . '</B>';
+            if ($zData['updated_date']) {
+                $zData['version_'] = '<B>' . $zData['id'] . date(':ymd', strtotime($zData['updated_date_'])) . '</B>';
+            } else {
+                unset($this->aColumnsViewEntry['version_']);
+                if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+                    // Also unset the empty updated_date field; users lower than collaborator don't see the updated_by field, either.
+                    unset($this->aColumnsViewEntry['updated_date_']);
+                }
+            }
             if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
                 // Public, change date timestamps to human readable format.
                 $zData['created_date_'] = date('F d, Y', strtotime($zData['created_date_']));

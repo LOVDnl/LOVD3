@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-beta-10}
+\setLOVDversion{3.0-beta-11}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2012-11-01} % I guess it's easier to use this as a "Last modified" column.
+\date{2012-11-19} % I guess it's easier to use this as a "Last modified" column.
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -294,7 +294,8 @@ For VCF file imports, LOVD allows for automatic annotation of the variants.
 Both formats support the automatic creation of genes and transcripts in the system,
 greatly reducing the amount of work required by curators to get LOVD set up for their research data.
 \par
-LOVD 3.0 reached beta stage in January 2012. Currently, the latest release is \LOVDversion.
+LOVD 3.0 reached beta stage in January 2012.
+Currently, the latest release is \LOVDversion.
 Keep an eye on our \href{http://www.lovd.nl/3.0/news}{news page} for the latest information on LOVD 3.0 development.
 \\
 \par
@@ -380,7 +381,8 @@ If you use Apache, please check that your version and configuration support this
 Make sure you have the .htaccess file into your LOVD directory, on Unix and Linux systems it's a hidden file so it can be missed easily.
 For the .htaccess file to work, you need to have ``Limit'' and ``Options'' enabled in Apache's ``AllowOverride'' setting.
 \par
-Also, make sure you have MultiViews or mod\_rewrite enabled. This allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.
+Also, make sure you have MultiViews or mod\_rewrite enabled.
+This allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.
 \\
 \par
 \noindent
@@ -520,7 +522,9 @@ Almost done!
 % FIXME; to be honest nothing is done in this step... so... kill it?
 When everything has been filled in and stored correctly, the installation is complete.
 Now that you're done installing LOVD, click the ``Continue to Setup area \guillemotright'' button to be forwarded to the \hyperlink{c_setup}{LOVD setup area}.
-From there, you can perform the most important actions for managers in LOVD, such as creating new gene databases or disease information entries, registering new user accounts or authorizing curators, or manage the custom columns and links.
+From there, you can perform the most important actions for managers in LOVD,
+ such as creating new gene databases or disease information entries,
+ registering new user accounts or authorizing curators, or manage the custom columns and links.
 The button to create a new gene will be highlighted, as a suggestion of your next step!
 \clearpage % Makes the hyper target actually point to the right place.
 
@@ -545,7 +549,8 @@ The LOVD setup shows some statistics on the left of the screen, like date of ins
 Furthermore, there are two columns of options.
 The left column has options for the system settings, authorized users, the custom columns, custom links, full data download and the LOVD system logs.
 The right column has options for genes, transcripts, diseases, individuals and variants.
-Some of the general options from the LOVD setup are also available through the Setup tab's dropdown menu, allowing you to quickly navigate to other setup options without having to go through the setup main page.
+Some of the general options from the LOVD setup are also available through the Setup tab's dropdown menu,
+ allowing you to quickly navigate to other setup options without having to go through the setup main page.
 The other options shown in the setup area are available through their own tab's dropdown menus.
 \\
 \par
@@ -572,7 +577,8 @@ The other actions available from the LOVD setup are described in their respectiv
   \end{leftbar}
 \end{wrapfigure}
 The LOVD system settings allow you to adapt your LOVD installation to your preferences.
-For instance by changing the installation's displayed name or email address (general settings), proxy server settings (connection settings), settings on statistics, or the security settings.
+For instance by changing the installation's displayed name or email address (general settings),
+ proxy server settings (connection settings), settings on statistics, or the security settings.
 \par
 To view or edit the LOVD system settings, click on the ``Setup'' tab, then on ``View and change LOVD System settings (...)'',
 or move your mouse over the ``Setup'' tab and click the ``LOVD system settings'' menu option from the dropdown list.
@@ -590,7 +596,8 @@ or move your mouse over the ``Setup'' tab and click the ``LOVD system settings''
   If it's not specified, LOVD will use the (autodetected) website name LOVD has been installed on.
   \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
   \item[Database URL] \hfill \\
-  This is the URL with which the database can be accessed by the outside world, including ``http://'' or ``https://'', and is not necessarily the URL you are using right now to access the database.
+  This is the URL with which the database can be accessed by the outside world, including ``http://'' or ``https://'',
+   and is not necessarily the URL you are using right now to access the database.
   It will also be used in emails sent by LOVD.
   This field is mandatory if you select the ``Include in the global LOVD listing'' option.
   \\
@@ -599,7 +606,8 @@ or move your mouse over the ``Setup'' tab and click the ``LOVD system settings''
   This email address will be used to send emails from LOVD to users.
   LOVD needs this address to prevent problems with spam filters, to make sure that emails from LOVD arrive.
   Please note that although strictly speaking this email address does not need to exist,
-  we recommend that you use a valid address to make sure that bounces of emails sent from LOVD (to submitters or curators) are still caught by someone, so that they can be handled.
+   we recommend that you use a valid address to make sure that bounces of emails sent from LOVD
+   (to submitters or curators) are still caught by someone, so that they can be handled.
   \item[Forward messages to database admin] \hfill \\
   With this setting enabled, LOVD will forward messages to the database administrator about submitter registrations, submissions, and such.
   \item[Human Build to map to (UCSC/NCBI)] \hfill \\
@@ -620,7 +628,8 @@ or move your mouse over the ``Setup'' tab and click the ``LOVD system settings''
 
 
 \subsection{Connection settings (optional)}
-Some networks have no access to the outside world except through a so-called proxy server (\href{http://en.wikipedia.org/wiki/Proxy_server#Forward_proxies}{more info on WikiPedia}).
+Some networks have no access to the outside world except through a so-called proxy server
+ (\href{http://en.wikipedia.org/wiki/Proxy_server#Forward_proxies}{more info on WikiPedia}).
 If this applies to the network this server is installed on, please fill in the proxy server information here.
 \begin{description}
   \item[Proxy server host name] \hfill \\
@@ -641,7 +650,8 @@ Here you can customize the way LOVD looks.
 Right now, there is only one option included, we will add more later.
 \begin{description}
   \item[System logo] \hfill \\
-  If you wish to have your custom logo on the top left of every page instead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.
+  If you wish to have your custom logo on the top left of every page instead of the default LOVD logo,
+   enter the path to the image here, relative to the LOVD installation path.
   If left empty, it will be set to the default value, which is ``gfx/LOVD\_logo130x50.jpg''.
   Currently, only images already uploaded to the LOVD server are allowed here.
 \end{description}
@@ -651,7 +661,8 @@ Right now, there is only one option included, we will add more later.
 \pagebreak[0] % ``Please'' break the page here (up to 4; 4 is very persistent)
 \subsection{Global LOVD statistics}
 Your LOVD installation can send some general information on your installation back to us.
-We use this information to see how many LOVDs there are worldwide, which versions of LOVD are currently in use, how LOVD is being used (amount of data), to see what type of software is used to run LOVD and to construct the public list of LOVD installs.
+We use this information to see how many LOVDs there are worldwide, which versions of LOVD are currently in use,
+ how LOVD is being used (amount of data), to see what type of software is used to run LOVD and to construct the public list of LOVD installs.
 \begin{description}
   \item[Send statistics] \hfill \\
   When this setting is enabled, LOVD will collect general usage statistics and send this to us.
@@ -659,10 +670,12 @@ We use this information to see how many LOVDs there are worldwide, which version
   No specific information is sent, just the numbers.
   \item[Include in the global LOVD listing] \hfill \\ %% FIXME; When LOVD 3.0 site has such a list, use that URL here.
   On our website, we keep a \href{http://www.lovd.nl/2.0/index_list.php}{list of public LOVD installations}.
-  This list is also feeding our \href{http://www.lovd.nl/LSDBs}{worldwide LSDB list}, through which submitters can locate databases for a specific gene to submit data to.
+  This list is also feeding our \href{http://www.lovd.nl/LSDBs}{worldwide LSDB list},
+   through which submitters can locate databases for a specific gene to submit data to.
   If you enable the ``Include in the global LOVD listing'' setting, your LOVD installation will send us all the information we need to build these lists:
-  the LOVD installation's name, the URL, the available gene databases, the date of last update of the gene databases,
-  the disease abbreviations and names of the diseases related to these genes and finally the names, institutes and email addresses of the curators of these gene databases.
+   the LOVD installation's name, the URL, the available gene databases, the date of last update of the gene databases,
+   the disease abbreviations and names of the diseases related to these genes and finally the names,
+   institutes and email addresses of the curators of these gene databases.
   If you change this setting, please allow one day for the setting to take effect.
 \end{description}
 
@@ -678,7 +691,8 @@ In this section you can control some security settings of LOVD.
   \\
   This does \emph{not} affect the database administrator account.
   \item[Allow (locked) users to retrieve a new password?] \hfill \\
-  If a submitter, curator, or manager has lost his password, enabling this ``I forgot my password'' feature allows them to receive a unlocking code in their email with which they can unlock their account and choose a new password.
+  If a submitter, curator, or manager has lost his password, enabling this ``I forgot my password''
+   feature allows them to receive a unlocking code in their email with which they can unlock their account and choose a new password.
   \item[Enable submitters to change data?] \hfill \\
   This setting allows submitters to make changes to data previously submitted by them or assigned to them.
   % FIXME: implement!
@@ -686,7 +700,8 @@ In this section you can control some security settings of LOVD.
   \item[Enable getting counts of hidden entries?] \hfill \par
   \emph{Note: Not yet implemented!}
   \\
-  Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns.
+  Enabling this feature allows the public to find the number of entries in the database
+   (including hidden entries) matching one or more search terms on a specified set of columns.
   This feature will only mention the number of variant entries matched, without showing them.
   % FIXME: Implement!
   % The columns which can be used for this type of searching, can be configured ....
@@ -694,13 +709,15 @@ In this section you can control some security settings of LOVD.
   \nopagebreak
   SSL is a secure protocol allowing for encryption of data sent between you and LOVD.
   \nopagebreak
-  When you record sensitive individual information in LOVD, you \emph{\textbf{should}} enable this setting, as the individual information can otherwise be ``sniffed'' off the network.
+  When you record sensitive individual information in LOVD, you \emph{\textbf{should}} enable this setting,
+   as the individual information can otherwise be ``sniffed'' off the network.
   \nopagebreak
   If you do not record sensitive information, enabling SSL is \emph{recommended}.
   \item[Use data versioning of biological data?] \hfill \\
   \emph{Note: Not yet implemented!}
   \\
-  Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state.
+  Versioning allows you to see all previous versions of a certain data entry (individuals, variants,
+   phenotype information, etc) and allows you to return the entry to a previous state.
   Please note that this feature requires quite a lot of space in the database.
   Disabling this feature later will not free any space, just prevent more space from being used.
 \end{description}
@@ -731,14 +748,17 @@ In case the event or error was triggered by an authorized user, the username of 
 \subsubsection{Authorization events and errors (``Auth'')}
 This list stores all successful and unsuccessful login attempts and password reset attempts.
 In all cases, the IP address from where the login or password reset attempts have been made, is also logged.
-For successful and unsuccessful login attempts the given username and the length of the given password is stored, so you can easily uncover brute force attempts where in general the attacker will try many random passwords.
+For successful and unsuccessful login attempts the given username and the length of the given password is stored,
+ so you can easily uncover brute force attempts where in general the attacker will try many random passwords.
 If a user can't log in because of the IP restriction on the account, the current IP restriction is also stored in the log entry.
-Please note that it is recommended to have LOVD lock user accounts after three failed login attempts. See subsection \hyperlink{ss_security_settings}{Security settings} for more information.
+Please note that it is recommended to have LOVD lock user accounts after three failed login attempts.
+See subsection \hyperlink{ss_security_settings}{Security settings} for more information.
 
 % TODO: Insert list of possible log options, or at least a link to an appendix where they are mentioned.
 
 \subsubsection{General events (``Event'')}
-General events are logged to show a user's activity, to allow collaborating users to track each other's activities or to check what happened to a certain data entry over time.
+General events are logged to show a user's activity, to allow collaborating users to track each other's
+ activities or to check what happened to a certain data entry over time.
 
 % TODO: Insert list of possible log options, or at least a link to an appendix where they are mentioned.
 
@@ -751,13 +771,15 @@ This is then logged under the name of the event, so any of the event names used 
 
 \subsubsection{Installation and upgrade events (``Install'')}
 LOVD creates a log entry on completion of the LOVD installation procedure.
-Also, after each upgrade, LOVD will add an entry stating from which version to which version it has been upgraded, and how many database queries have been used for the upgrade.
+Also, after each upgrade, LOVD will add an entry stating from which version to which version it has been upgraded,
+ and how many database queries have been used for the upgrade.
 Also errors during an LOVD upgrade, might they occur, will be logged here.
 
 
 
 \subsection{Viewing and searching through the logs}
-To browse the system logs, click the ``View system logs'' option of the ``Setup'' tab dropdown menu, or the ``View, search and delete system logs'' link in the setup area.
+To browse the system logs, click the ``View system logs'' option of the ``Setup'' tab dropdown menu,
+ or the ``View, search and delete system logs'' link in the setup area.
 The system log overview is fully searchable and sortable, allowing you to find log entries quickly.
 \par
 The ``Log'' column shows the type of log every - \emph{Auth}, \emph{Event}, \emph{Error} or \emph{Install}.
@@ -786,7 +808,9 @@ For most event types, it will include the ID of the entry that was created, edit
 \end{wrapfigure}
 To remove a single log entry, click on the red cross in the 6th column.
 To remove multiple log entries at once, first apply as many search terms on the log entries as needed to restrict the view to the entries you want to delete.
-Either manually select the checkboxes next to the entries you want deleted, or click the option button on the top left of the log overview, and select the ``Select all ... entries'' option, after which you can deselect log entries you do not want deleted.
+Either manually select the checkboxes next to the entries you want deleted,
+ or click the option button on the top left of the log overview, and select the ``Select all ... entries'' option,
+ after which you can deselect log entries you do not want deleted.
 Then, open the option menu again and click the ``Delete selected entries'' option.
 Please note that deleting log entries can not be undone.
 
@@ -832,12 +856,14 @@ Thus, to completely remove LOVD from the system, also remove the files from the 
 
 
 \chapter{Authorized users}
-In LOVD 3.0, \emph{authorized users} are everyone who registered for an account at the LOVD installation, including the database administrator who created his account during the installation process.
+In LOVD 3.0, \emph{authorized users} are everyone who registered for an account at the LOVD installation,
+ including the database administrator who created his account during the installation process.
 The authorized users come in five levels; the database administrator of which there is only one, managers, curators, collaborators and submitters.
 The different levels of users are described in more detail below.
 \par
 Registering for an account is necessary to be able to submit data or to become a gene curator.
-Directly after registering, you are allowed to submit individual, phenotype and variant data to the database, but the data needs to be checked and published by a \emph{curator} or a \emph{manager}.
+Directly after registering, you are allowed to submit individual, phenotype and variant data to the database,
+ but the data needs to be checked and published by a \emph{curator} or a \emph{manager}.
 Curators and managers can submit and publish data in one step.
 
 
@@ -853,7 +879,8 @@ The administrator has full access to all areas and settings of LOVD.
 The administrator is also the only user who can uninstall LOVD, provided the uninstall lock has not been set during LOVD installation.
 \\
 \par
-When the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled, the database administrator will receive copies of submitter registrations and data submissions or edits.
+When the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled,
+ the database administrator will receive copies of submitter registrations and data submissions or edits.
 
 \subsubsection{Manager}
 A manager has access to almost everything the database administrator has access to.
@@ -866,10 +893,12 @@ A manager can only be created by the administrator and often assists the adminis
 \subsubsection{Curator}
 The curator level user is actually a submitter, which has been given curatorship of one or more genes.
 Therefore, a curator only has access to the gene databases he is appointed to, and not to the system-wide setup area.
-However, also the database administrator or a manager can act as a curator by being appointed to certain genes, but in this case there is of course no restriction in access.
+However, also the database administrator or a manager can act as a curator by being appointed to certain genes,
+ but in this case there is of course no restriction in access.
 \\
 \par
-To assign a user to become curator, follow the steps explained in section ``\hyperlink{s_gene_assign_curators}{assigning curators and collaborators}'' (available for managers and up).
+To assign a user to become curator, follow the steps explained in section
+ ``\hyperlink{s_gene_assign_curators}{assigning curators and collaborators}'' (available for managers and up).
 
 \subsubsection{Collaborator}
 The collaborator level user is a new type of user, introduced in LOVD 3.0.
@@ -927,21 +956,26 @@ Please note that you do \textbf{NOT} need to register to view the data available
 You only need an account for submitting new variant data.
 \end{warntable}
 Anyone can create a new submitter account.
-For collaborators, curators or managers, registering as a submitter is often the first step; their account can then be upgraded by a manager or the database administrator, respectively.
-The major difference between registration and direct creation of a new account by a manager or the database administrator, is that the registration can be performed by the public, and therefore it requires you to be logged out of LOVD.
+For collaborators, curators or managers, registering as a submitter is often the first step;
+ their account can then be upgraded by a manager or the database administrator, respectively.
+The major difference between registration and direct creation of a new account by a manager or the database administrator,
+ is that the registration can be performed by the public, and therefore it requires you to be logged out of LOVD.
 The registration form is protected using a \emph{reCAPTCHA} module, which makes sure the form can only be used by humans, and not by spam bots.
 \\
 \par
 To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen, next to the ``Log in'' link.
 First, you are asked to provide an ORCID ID, if you have one.
-\href{http://about.orcid.org/}{ORCID} provides a persistent digital identifier that distinguishes you from every other researcher and, through integration in key research workflows such as manuscript and grant submission, supports automated linkages between you and your professional activities ensuring that your work is recognized.
+\href{http://about.orcid.org/}{ORCID} provides a persistent digital identifier that distinguishes you from every other researcher and,
+ through integration in key research workflows such as manuscript and grant submission,
+ supports automated linkages between you and your professional activities ensuring that your work is recognized.
 If you don't have an ORCID ID yet, you can get one created by using the \href{https://orcid.org/register}{register} link also given on the page.
 If you don't want to register at ORCID at this time, click the ``I don't have an ORCID ID \guillemotright'' button to continue to the registration page.
 If you do have an ORCID ID, fill it in and click the ``Continue \guillemotright'' button.
 Your ORCID ID will be verified, and the associated data is shown on the screen.
 If this data is correct, click ``Yes, this is correct \guillemotright'' to continue to the registration page.
 As much information as possibly will be pre-filled for you.
-If the information shown is not correct, click ``\guillemotleft{} No, this is not correct'' so you can try and enter a correct ORCID ID or register without using one.
+If the information shown is not correct, click ``\guillemotleft{} No, this is not correct''
+ so you can try and enter a correct ORCID ID or register without using one.
 
 
 
@@ -1002,7 +1036,8 @@ To prevent unauthorized use of your account, we implemented a security feature t
   To help prevent others to try and guess your username/password combination, you can restrict access to your account to a number of IP addresses or ranges.
   For instance, to make sure your account can only be used when accessed from your institute or from your home.
   \\
-  Set to ``*'' to allow all IP addresses, use ``-'' to specify a range (like ``192.168.0.1-20'') and use ``;'' to separate addresses or ranges (like ``192.168.0.1;192.168.1.34'').
+  Set to ``*'' to allow all IP addresses, use ``-'' to specify a range (like ``192.168.0.1-20'') and use ``;''
+   to separate addresses or ranges (like ``192.168.0.1;192.168.1.34'').
 \end{description}
 
 
@@ -1015,7 +1050,8 @@ This will proof that you are a human and not a computer.
 \par
 After completing the form, press the ``Register'' button.
 LOVD sends you a confirmation of your registered information through email.
-If the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled, the database administrator also receives a copy of your data.
+If the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled,
+ the database administrator also receives a copy of your data.
 
 
 
@@ -1031,8 +1067,10 @@ If the ``Forward messages to database admin'' setting in the \hyperlink{s_system
 \end{wrapfigure}
 Besides the public registration form, managers can also create new users.
 This offers the advantage that the new user's level can be set to the required level in the same step, and the manager does not need to log out first.
-You can create a new user by clicking on the ``Create a new user account'' option from the ``Users'' tab dropdown menu, or the ``Create a new authorized user or submitter'' link in the setup area.
-The process is largely equal to the submitter registration process, except that there is no reCAPTCHA test but instead you must enter your password for authorization, and the form has some additional fields, explained below.
+You can create a new user by clicking on the ``Create a new user account'' option from the ``Users'' tab dropdown menu,
+ or the ``Create a new authorized user or submitter'' link in the setup area.
+The process is largely equal to the submitter registration process, except that there is no reCAPTCHA test but
+ instead you must enter your password for authorization, and the form has some additional fields, explained below.
 
 
 
@@ -1058,7 +1096,8 @@ This section contains more options when creating a new user account for a new us
   For a complete description on all user levels, see the subsection ``\hyperlink{ss_user_levels}{User levels}''.
   \item[Locked] \hfill \\
   Users can be locked, which blocks access to LOVD even if they provide the correct username and password.
-  This locking happens when too many times an invalid password was given while logging in with this username (depending on the \hyperlink{s_system_settings}{LOVD system settings}), or it can be done manually.
+  This locking happens when too many times an invalid password was given while logging in with this username
+   (depending on the \hyperlink{s_system_settings}{LOVD system settings}), or it can be done manually.
 \end{description}
 
 
@@ -1117,19 +1156,23 @@ After you submit the form, LOVD redirects you automatically back to the user's a
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-A user is automatically locked if a wrong password is used three times while logging in with this username, provided this security setting is enabled (see section ``\hyperlink{s_system_settings}{LOVD system settings}''), but this lock may also be placed onto, or removed from an account manually.
+A user is automatically locked if a wrong password is used three times while logging in with this username,
+ provided this security setting is enabled (see section ``\hyperlink{s_system_settings}{LOVD system settings}''),
+ but this lock may also be placed onto, or removed from an account manually.
 Locking or unlocking a user account requires you to have a level higher than the user you are trying to lock or unlock.
 Proceed to the user's account details page through the ``Users'' tab.
 Open the ``Options'' menu, and click the ``Lock user'' option.
 If the user is already locked, there will be an ``Unlock user'' option.
 \\
-The ``Lock user'' and ``Unlock user'' menu options are quick ways to deny or allow access to LOVD, although it can also be accomplished through the ``Edit user'' option.
+The ``Lock user'' and ``Unlock user'' menu options are quick ways to deny or allow access to LOVD,
+ although it can also be accomplished through the ``Edit user'' option.
 \\
 \par
 Users who are logged in, can also be booted out of the system.
 If a user is logged in, the option ``Force user log out'' is added to the ``Options'' menu.
 This will destroy the user's session, causing the user to log out.
-Locking the user essentially also causes the user to be logged out of the system the next time the user performs an action, although in that case it's not possible for the user to log back in until the account is unlocked.
+Locking the user essentially also causes the user to be logged out of the system the next time the user performs an action,
+ although in that case it's not possible for the user to log back in until the account is unlocked.
 
 
 
@@ -1192,7 +1235,8 @@ Click the ``Create a new gene entry'' option of the ``Genes'' tab dropdown menu,
 Fill in the HGNC ID or the gene symbol of the gene you want to create, and click ``Continue \guillemotright''.
 LOVD will check if the gene already exists in this LOVD installation, and if the gene symbol or HGNC ID is correct.
 For this, it contacts the \href{http://www.genenames.org/}{HGNC website}.
-If the gene symbol you used has been replaced by a new one, or if LOVD can find genes for which the given symbol is an alias, LOVD will report back the official symbol(s).
+If the gene symbol you used has been replaced by a new one, or if LOVD can find genes for which the given symbol is an alias,
+ LOVD will report back the official symbol(s).
 
 \begin{infotable}
 Unfortunately, due to some problems on the side of the NCBI, we are unable to handle variants on the mitochondrial genome at this time.
@@ -1200,10 +1244,12 @@ NCBI does not handle the MT genes by their official names, and doesn't allow for
 When the NCBI has fixed this problem, we will implement support for MT genes.
 \end{infotable}
 
-LOVD will show a progress bar while it contacts several webservices to retrieve gene information, reference sequence information and available transcript information.
+LOVD will show a progress bar while it contacts several webservices to retrieve gene information,
+ reference sequence information and available transcript information.
 Usually retrieving this information takes about 1-3 seconds, but this depends on the internet connection between
 the server and the internet and the current load on the webservices which are contacted.
-When LOVD has retrieved all the information, you are forwarded to the data entry form where you can review the retrieved information and complete this gene's settings.
+When LOVD has retrieved all the information, you are forwarded to the data entry form where
+ you can review the retrieved information and complete this gene's settings.
 
 
 
@@ -1219,7 +1265,8 @@ Therefore, most of the information in this section has been filled in for you, a
   \item[Chromosome] \hfill \\
   This information has been filled in for you, and can't be changed.
   \item[Chromosomal band] \hfill \\
-  The chromosomal band on which the gene lies, is retrieved from the HGNC. You may modify it, if you wish.
+  The chromosomal band on which the gene lies, is retrieved from the HGNC.
+  You may modify it, if you wish.
   \item[Imprinting] \hfill \\
   If known, please fill in if this gene is imprinted (maternal or paternal) or not.
   \item[Date of creation] \hfill \\
@@ -1227,7 +1274,8 @@ Therefore, most of the information in this section has been filled in for you, a
   \\
 % TODO: link to gene homepage section of manual.
   The database's date of creation is mentioned on the gene homepage.
-  Today's date will automatically be stored if you leave this field empty, but in case you already had a gene database but you're moving it to this LOVD installation, you may want to fill in a different date.
+  Today's date will automatically be stored if you leave this field empty, but in case you already
+   had a gene database but you're moving it to this LOVD installation, you may want to fill in a different date.
 \end{description}
 
 
@@ -1235,8 +1283,10 @@ Therefore, most of the information in this section has been filled in for you, a
 \subsection{Relation to diseases}
 \begin{description}
   \item[This gene has been linked to these diseases] \hfill \\
-  By linking the gene to disease(s), LOVD can help predicting next steps in data submission, and the link to the disease information will be shown on the gene homepage.
-  If a disease you need is not present in this list, you can click the ``configure more diseases'' link below the selection list to create a new disease now.
+  By linking the gene to disease(s), LOVD can help predicting next steps in data submission,
+   and the link to the disease information will be shown on the gene homepage.
+  If a disease you need is not present in this list, you can click the
+   ``configure more diseases'' link below the selection list to create a new disease now.
   Afterwards, reload the gene form so you can select the new disease.
   \\
   Alternatively, create the disease after the gene has been created.
@@ -1260,19 +1310,22 @@ When properly configured, LOVD will add links to the Ensembl, NCBI and UCSC geno
   LOVD retrieves a list of available transcripts from Mutalyzer.
   Mutalyzer currently only supports NCBI reference sequences.
   Please select which transcript you want to use to name the variants in this gene.
-  If there are more transcripts, usually you would pick the transcript that encodes for the longest protein, or the transcript that is expressed in the tissue you focus your research on.
+  If there are more transcripts, usually you would pick the transcript that encodes for the longest protein,
+   or the transcript that is expressed in the tissue you focus your research on.
 \end{description}
 
 
 
 \subsection{Links to information sources}
-Here you can add links to other resources that will be displayed on the gene's LOVD gene homepage, such as Entrez Gene, OMIM, HGMD or GeneTests, but you can also add links to any website you want.
+Here you can add links to other resources that will be displayed on the gene's LOVD gene homepage,
+ such as Entrez Gene, OMIM, HGMD or GeneTests, but you can also add links to any website you want.
 \begin{description}
   \item[Homepage URL] \hfill \\
   If you have a separate homepage about this gene, you can specify the URL here.
   For the format: use the complete URL, including ``http://'' or ``https://''.
   \item[External links] \hfill \\
-  Here you can provide links to other resources on the internet that you would like to link to, such as other gene variant databases, or websites with more information about diagnostics.
+  Here you can provide links to other resources on the internet that you would like to link to,
+   such as other gene variant databases, or websites with more information about diagnostics.
   If you want to include more than one link, put every link on a new line in this field.
   If you do not want to include a title for this link, simply paste the full URL in this field, such as ``http://DMD.LOVD.nl/''.
   If you do want to include a title, use the format ``Description <URL>'', such as ``Other LOVDs on this gene <http://DMD.LOVD.nl/>''.
@@ -1295,7 +1348,9 @@ Here you can add links to other resources that will be displayed on the gene's L
   \item[Human-readable reference sequence location] \hfill \\
 % TODO: add link to refseq parser section in manual.
   To create a human-readable reference sequence file, you can use our Reference Sequence Parser.
-  It retrieves the reference sequence from Mutalyzer, and formats it into a human-readable format with good annotation of the upstream sequence, the exons, the introns, the downstream sequence, the predicted protein sequence and the alternative stop codons.
+  It retrieves the reference sequence from Mutalyzer, and formats it into a human-readable
+   format with good annotation of the upstream sequence, the exons, the introns, the downstream sequence,
+   the predicted protein sequence and the alternative stop codons.
   Fill in the complete URL of the file, including ``http://'' or ``https://''.
 \end{description}
 
@@ -1324,7 +1379,8 @@ The header and footer will also be shown on the variant listings.
   In case you defined a page footer, here you can select how you want it aligned - left, center or right.
   \item[Notes for the LOVD gene homepage] (HTML enabled) \hfill \\
   Text entered here will appear in the General Information box on the gene's homepage.
-  In general, curators put additional information about the database here, such as how the data in the database was collected, grants supporting this work, or news.
+  In general, curators put additional information about the database here,
+   such as how the data in the database was collected, grants supporting this work, or news.
   \item[Notes for the variant listings] (HTML enabled) \hfill \\
   Text entered here will appear below the gene's variant listings.
 \end{description}
@@ -1359,7 +1415,8 @@ Using the following settings you can control some security settings of LOVD.
 LOVD automatically generates a gene homepage for every gene created within LOVD.
 The gene homepage is the entry point for visitors of a locus-specific database.
 In installations where LOVD is used for next-generation sequencing, the gene homepage serves more as a summary page of the gene-specific data in LOVD.
-Besides showing the basic information known about the gene in question (symbol, name, chromosome band, variant statistics, etc), curators also have quite a few options to customize the gene's homepage.
+Besides showing the basic information known about the gene in question (symbol, name,
+ chromosome band, variant statistics, etc), curators also have quite a few options to customize the gene's homepage.
 \\
 \par
 If the gene you wish to view is already selected (its name is on the top of the page), simply click the ``Genes'' tab to open the gene's homepage.
@@ -1367,7 +1424,8 @@ Otherwise, move your mouse over the ``Genes'' tab, and select the ``View all gen
 Then, locate the gene you wish to edit by searching or browsing through the given genes listing.
 Clicking the entry will direct you to the gene's homepage.
 \par
-Once on the gene's homepage, the gene will be selected (its name will appear on the very top of the page), which allows faster navigation to information related to the gene of interest.
+Once on the gene's homepage, the gene will be selected (its name will appear on the very top of the page),
+ which allows faster navigation to information related to the gene of interest.
 For instance, when a gene is selected and you click the ``Variants'' tab, you are directed to the gene-specific variant overview.
 If no gene is selected, clicking on the same tab shows all genomic variants in the database.
 If you do not like this behavior, simply move your mouse over a tab, and select a different option from the dropdown menu.
@@ -1446,9 +1504,10 @@ To complete the removal, you need to fill in your password and submit the form.
 
 \begin{warntable}
 Removing a gene can not be undone, you will need to create the gene database again.
-% TODO: when we have import...
+% TODO: when we have gene-specific download...
 %If in any doubt, first make a download of the database so that you can re-upload the data .....blabla
-Please note that deleting a gene removes also its transcripts in the database and therefore all variant annotation on the gene in question, but it \emph{does not remove the genomic variants from the database}.
+Please note that deleting a gene removes also its transcripts in the database and therefore
+ all variant annotation on the gene in question, but it \emph{does not remove the genomic variants from the database}.
 %TODO: so how do we delete these variants?
 \end{warntable}
 
@@ -1465,28 +1524,89 @@ Please note that deleting a gene removes also its transcripts in the database an
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-...
-%You can set an authorized user as a gene curator by editing the user's account and selecting the relevant genes in the "Curator for" field.
-%If the user is to be a curator, the email address that's filled in will be shown on the gene's homepage and will be used to sent variant submission notifications to.
-%If the curator is actually also of the curator user level, be sure to assign one or more genes to this user otherwise the curator will be rejected access to the LOVD gene configuration area.
+Managers and up can assign curators and collaborators to gene databases, as well as revoke curator or collaborator rights.
+Directly after creating a new gene database, you are forwarded to the page that allows you to make these changes,
+ but you can access that page at any time by using the ``Add/remove curators/collaborators'' link in the
+ ``Options'' menu on the \hyperlink{s_gene_homepage}{gene's homepage}.
 
-%Assigning curators to specific genes
-%All genes in LOVD should have at least one curator, to send the new submission notifications to. All curator-level users should have at least one gene to curate, otherwise they will not be able to access the configuration area.
-%Please note that a curator for a gene is not necessarily a user with the curator user level. A manager, or even the database administrator, can be appointed as a gene curator so that small LOVD installations can be configured and curated by one user account.
+\begin{figure}[h]
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{c05s05_screenshot_authorize_curators.png}}%
+  \caption{%
+    The ``Authorize curators'' form, with on the top the users who are available to be selected, and on the bottom the selected curators and collaborators.}
+  \label{fig:c05s05_screenshot_authorize_curators}
+  \end{shaded}
+\end{figure}
 
-%Curator-level users will not be able to switch to any gene other than the genes in their allowed list. Managers and the database administrator will have unrestricted access to all genes. If multiple users are assigned curator for a gene, all those users will receive the submission email.
+On the top of the page, you see a listing of all available users in the system, whichever level they have.
+Users that are already selected as curators or collaborators are shown in the bottom.
+To add a user as a curator or collaborator, search for the user in the top user list, and click the user entry.
+The user is then moved to the bottom.
+\par
+In the bottom table, you see two checkboxes for each user.
+Also, you can sort the curators by dragging and dropping them in the list (see subsection \hyperlink{ss_sorting_curators}{Sorting curators}).
+The first checkbox indicates whether or not they are allowed to edit the data in this gene's database.
+Users allowed to edit the data, are curators.
+Unchecking this checkbox turns this user in a collaborator for this gene;
+ he can still see all public and unpublic data in this gene database, but he can't edit it, like curators can.
+If the user is to be a curator, he will receive notifications of variant data submissions and submission updates.
+Collaborators do not receive such emails.
+\par
+The second checkbox indicates whether or not the user's name and email address is
+ shown on the gene homepage and on the top of every page while this gene is selected.
+Curators can be hidden from the gene homepage and the page headers by unchecking this checkbox.
+Collaborators are always hidden, it is therefore not possible to change the second checkbox while the first checkbox is unchecked.
+\par
+To remove an user as a curator or collaborator, click the red cross at the far right side of the table.
+You can only assign or remove curators if your user level is higher than that of the user you wish to assign/remove.
+\\
+\par
+Please note that managers and the database administrator can never be made collaborators, since disallowing them to edit data contradicts their user level.
+They will always be allowed to edit all data in the system.
+Selecting them as curators doesn't grant them additional access rights, but does enable the notification emails.
+\par
+Also, please note that all genes in LOVD should have at least one visible curator.
+To be able to successfully submit the ``Authorize curators'' form, there needs to be at least one user with the ``Allow edit'' and ``Shown'' checkboxes checked.
 
-%To assign genes to curators, edit the user you wish to assign a gene to. At the bottom of the form is a list of available genes. Select the gene(s) you want the user to be curator for in the list "Curator for". To select all genes, click the "Select all" link next to the gene list.
-
-%To select a few genes, you can use the Ctrl and Shift keys on your keyboard. Holding the Ctrl key while clicking on an entry allows you to select or deselect this entry. You can select a range of list entries by selecting the first of the range, then holding Shift and clicking the last of the range. On a Macintosh, use the Command key instead of the the Ctrl key.
-
-%Besides assigning genes to curators, managers and the database administrator can also assign curators to genes, which may be a faster method depending on your specific situation. Please note that you can only assign or remove curators from a gene database if your user level is higher than that of the user you wish to assign/remove.
-%From the setup area, click the "Edit genes" link. This will show a list of all genes in this installation. Then, click the gene you'd wish to assign curators to. Below the gene's detailed information, click on the link "Add/remove curators". There you can select/deselect the gene's curators. The resulting form enables you to add or remove curators.
-
-%After completing this form, you are forwarded to the page where you can sort or hide curators from the list of curators on the gene's home page and on the top of the screen. You can also access this page from the "Sort/hide curator names" link next to the "Add/remove curators" link on the gene's detailed view.
-%To sort the curators active for this gene, simply move your mouse over the icon on the left of the curator name, and click and drag the name up or down. To hide a curator, simply deselect the checkbox on the right of the name. Don't forget to click the "Save" button to save the new sort order!
 
 
+\hypertarget{ss_sorting_curators}{}
+\subsection{Sorting curators}
+
+\begin{figure}[h]
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{c05s05_screenshot_sort_curators.png}}%
+  \caption{%
+    The ``Sort curators'' form, allowing curators to resort the gene's list of curator names,
+     and show or hide curators from the gene homepage and the page headers.}
+  \label{fig:c05s05_screenshot_sort_curators}
+  \end{shaded}
+\end{figure}
+
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Since the curator names are shown on the gene homepage and on the page headers, it is sometimes necessary to sort the curator names in a specific order.
+This can be done on the ``Authorize curators'' form (see figure \ref{fig:c05s05_screenshot_authorize_curators}
+ on page \pageref{fig:c05s05_screenshot_authorize_curators}).
+Curators, who don't have access to that form, use the ``Sort/hide curator names'' option from the ``Options'' dropdown menu on the gene homepage.
+This form greatly resembles the bottom part of the ``Authorize curators'' form, allowing to sort and show or
+ hide the curator names (see figure \ref{fig:c05s05_screenshot_sort_curators} on page \pageref{fig:c05s05_screenshot_sort_curators}).
+
+\begin{wrapfigure}[3]{r}{5cm} % Only wrap for 3 lines
+  \vspace{-26pt}
+  \begin{framed}
+    \raisebox{-0.5mm}{\includegraphics[width=1.5mm]{drag_vertical.png}} Drag/sort handle
+  \end{framed}
+\end{wrapfigure}
+To resort the list of curators, move your mouse over the drag handle (see figure) on the left
+ of the curator name, and click and drag the name up or down the list.
+Release the mouse button in the preferred location.
+Don't forget to click the ``Save'' button to save the new sort order!
 
 
 
@@ -1551,13 +1671,6 @@ $_PAGES =
                             'Editing links',
                             'Deleting links',
                           ),
-                    'Modules',
-                     array(
-                            'Installing modules',
-                            'Enabling or disabling modules',
-                            'Uninstalling modules',
-                            'Available LOVD modules',
-                          ),
                   ),
             'LOVD Gene configuration area',
              array(
@@ -1591,7 +1704,6 @@ $_PAGES =
                   ),
             'Submitters',
              array(
-                    'Registering a new account',
                     'Keeping your account up to date',
                     'Keeping track of your submissions',
                   ),
@@ -1611,9 +1723,7 @@ $_PAGES =
 
 
 (couldn't get color into this one...)
-
 \usepackage{fancybox} % New attempt for fancy boxes...
-
 \newlength{\mylength}
 \newenvironment{infotable}%
 {\setlength{\fboxsep}{15pt}

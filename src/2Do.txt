@@ -1,7 +1,5 @@
 Prioritize:
 ===========
-- gene homepage: version alleen tonen als updated date niet null is, GENE:700101 ziet er heel knullig uit
-- Import; allele leeg laten geeft query error: Integrity constraint violation: 1048 Column 'allele' cannot be null
 - After a useful test with LSDB noobs during submission:
   + Lab ID is not clear.
   + Put more notice on the mapping button. Pop over?
