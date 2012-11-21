@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-09-19
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-21
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -107,7 +107,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
-        $aNavigation[CURRENT_PATH . '?edit']                     = array('menu_edit.png', 'Edit individual information', 1);
+        $aNavigation[CURRENT_PATH . '?edit']                     = array('menu_edit.png', 'Edit individual entry', 1);
+        if ($zData['statusid'] < STATUS_OK) {
+            $aNavigation[CURRENT_PATH . '?publish']              = array('check.png', ($zData['statusid'] == STATUS_MARKED ? 'Removed mark from' : 'Publish (curate)') . ' individual entry', 1);
+        }
         $aNavigation['screenings?create&amp;target=' . $nID]     = array('menu_plus.png', 'Add screening to individual', 1);
         // You can only add phenotype information to this individual, when there are phenotype columns enabled.
         if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID))->fetchColumn()) {
@@ -291,8 +294,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 
-if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'publish'))) {
     // URL: /individuals/00000001?edit
+    // URL: /individuals/00000001?publish
     // Edit an entry.
 
     $nID = sprintf('%08d', $_PE[1]);
@@ -310,7 +314,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
     $bSubmit = (isset($_AUTH['saved_work']['submissions']['individual'][$nID]));
 
-    if (!empty($_POST)) {
+    // If we're publishing... pretend the form has been sent with a different status.
+    if (GET && ACTION == 'publish') {
+        $_POST = $zData;
+        $_POST['active_diseases'] = explode(';', $zData['active_diseases_']);
+        $_POST['statusid'] = STATUS_OK;
+    }
+
+    if (POST || ACTION == 'publish') {
         lovd_errorClean();
 
         $_DATA->checkFields($_POST);
@@ -334,7 +345,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-            if (!$bSubmit) {
+            if (!$bSubmit && !(GET && ACTION == 'publish')) {
                 // Put $zData with the old values in $_SESSION for mailing.
                 // FIXME; change owner to owned_by_ in the load entry query of object_individuals.php.
                 $zData['owned_by_'] = $zData['owner'];
@@ -397,6 +408,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 lovd_showInfoTable('Successfully edited the individual information entry!', 'success');
 
                 $_T->printFooter();
+            } elseif (GET && ACTION == 'publish') {
+                // We'll skip the mailing. But of course only if we're sure no other changes were sent (therefore check GET).
+                header('Location: ' . lovd_getInstallURL() . CURRENT_PATH);
             } else {
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/individual/' . $nID . '?edit');
             }
@@ -434,8 +448,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     lovd_includeJS('inc-js-tooltip.php');
     lovd_includeJS('inc-js-custom_links.php');
 
-    // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    // Hardcoded ACTION because when we're publishing, but we get the form on screen (i.e., something is wrong), we want this to be handled as a normal edit.
+    print('      <FORM action="' . CURRENT_PATH . '?edit" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

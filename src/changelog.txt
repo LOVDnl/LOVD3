@@ -34,6 +34,15 @@
    file.
  * Fixed bug; When leaving the allele value empty in the Variants_On_Genome
    section, a query error occurred. Now, LOVD will assume a default value.
+ * Added color coding to the status field on the detailed views of entries that
+   have a status.
+ * On the VariantOnGenome, Screening and Phenotype detailed views, the
+   individual's status is also shown and color coded.
+ * From the VariantOnGenome, Individual and Phenotype detailed views, you can
+   now directly publish (curate) an unpublished entry by using the publish
+   (curate) option in the Options menu.
+ * The phenotype data listings now also show the status column for those allowed
+   to see it.
 
 
 

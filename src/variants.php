@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-11-15
+ * Modified    : 2012-11-21
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -290,8 +290,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
         // Authorized user is logged in. Provide tools.
-        $aNavigation[CURRENT_PATH . '?edit']       = array('menu_edit.png', 'Edit variant entry</A>', 1);
-        $aNavigation[CURRENT_PATH . '?map']        = array('menu_plus.png', 'Manage transcripts for this variant</A>', 1);
+        $aNavigation[CURRENT_PATH . '?edit']       = array('menu_edit.png', 'Edit variant entry', 1);
+        if ($zData['statusid'] < STATUS_OK) {
+            $aNavigation[CURRENT_PATH . '?publish'] = array('check.png', ($zData['statusid'] == STATUS_MARKED ? 'Removed mark from' : 'Publish (curate)') . ' variant entry', 1);
+        }
+        $aNavigation[CURRENT_PATH . '?map']        = array('menu_transcripts.png', 'Manage transcripts for this variant', 1);
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete variant entry', 1);
         }
@@ -304,6 +307,19 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             $aNavigation['javascript:lovd_openWindow(\'' . ($_CONF['refseq_build'] == 'hg18'?
                  'http://may2009.archive.ensembl.org/Homo_sapiens/Location/View?r=' . $zData['chromosome'] . ':' . ($zData['position_g_start'] - $lMargin) . '-' . ($zData['position_g_end'] + $lMargin) :
                  'http://www.ensembl.org/Homo_sapiens/Location/View?r=' . $zData['chromosome'] . ':' . ($zData['position_g_start'] - $lMargin) . '-' . ($zData['position_g_end'] + $lMargin)) . '\', \'variant_Ensembl\', 1000, 500);'] = array('menu_magnifying_glass.png', 'Visualize in Ensembl genome browser', 1);
+            // FIXME; For loading the BED file, we'll need a gene symbol!
+//            $sURLBedFile = rawurlencode(str_replace('https://', 'http://', ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL())) . 'api/rest/variants/' . $zData['id'] . '?format=text/bed');
+//            $sURLUCSC = 'http://genome.ucsc.edu/cgi-bin/hgTracks?clade=mammal&amp;org=Human&amp;db=' . $_CONF['refseq_build'] . '&amp;position=chr' . $zData['chromosome'] . ':' . ($zData['position_g_mrna_start'] - 50) . '-' . ($zData['position_g_mrna_end'] + 50) . ($zData['sense']? '' : '&amp;complement_hg19=1') . '&amp;hgt.customText=' . $sURLBedFile;
+//            $zData['ucsc'] = 'Show variants in the UCSC Genome Browser (<A href="' . $sURLUCSC . '" target="_blank">full view</A>, <A href="' . $sURLUCSC . rawurlencode('&visibility=4') . '" target="_blank">compact view</A>)';
+//            // The weird addition in the end is to fake a proper name in Ensembl.
+//            if ($_CONF['refseq_build'] == 'hg18') {
+//                $sURLEnsembl = 'http://may2009.archive.ensembl.org/Homo_sapiens/Location/View?r=' . $zData['chromosome'] . ':' . ($zData['position_g_mrna_start'] - 50) . '-' . ($zData['position_g_mrna_end'] + 50) . ';data_URL=' . $sURLBedFile . rawurlencode('&name=/' . $zData['id'] . ' variants');
+//                //} elseif ($_CONF['refseq_build'] == 'hg19') {
+//            } else {
+//                $sURLEnsembl = 'http://www.ensembl.org/Homo_sapiens/Location/View?r=' . $zData['chromosome'] . ':' . ($zData['position_g_mrna_start'] - 50) . '-' . ($zData['position_g_mrna_end'] + 50) . ';contigviewbottom=url:' . $sURLBedFile . rawurlencode('&name=/' . $zData['id'] . ' variants');
+//            }
+//            $zData['ensembl'] = 'Show variants in the Ensembl Genome Browser (<A href="' . $sURLEnsembl . '=labels" target="_blank">full view</A>, <A href="' . $sURLEnsembl . '=normal" target="_blank">compact view</A>)';
+//            $zData['ncbi'] = 'Show distribution histogram of variants in the <A href="http://www.ncbi.nlm.nih.gov/projects/sviewer/?id=' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']] . '&amp;v=' . ($zData['position_g_mrna_start'] - 100) . ':' . ($zData['position_g_mrna_end'] + 100) . '&amp;content=7&amp;url=' . $sURLBedFile . '" target="_blank">NCBI Sequence Viewer</A>';
         }
     }
     lovd_showJGNavigation($aNavigation, 'Variants');
@@ -2085,8 +2101,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
 
 
-if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'publish'))) {
     // URL: /variants/0000000001?edit
+    // URL: /variants/0000000001?publish
     // Edit an entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -2159,7 +2176,20 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (POST) {
+    // If we're publishing... pretend the form has been sent with a different status.
+    if (GET && ACTION == 'publish') {
+        $_POST = $zData;
+        // Now loop through $_POST to find the effectid fields, that need to be split.
+        foreach ($_POST as $key => $val) {
+            if (preg_match('/^(\d+_)?effect(id)$/', $key, $aRegs)) { // (id) instead of id to make sure we have a $aRegs (so to prevent notices).
+                $_POST[$aRegs[1] . 'effect_reported'] = $val{0};
+                $_POST[$aRegs[1] . 'effect_concluded'] = $val{1};
+            }
+        }
+        $_POST['statusid'] = STATUS_OK;
+    }
+
+    if (POST || ACTION == 'publish') {
         lovd_errorClean();
 
         if ($bGene) {
@@ -2232,7 +2262,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-            if (!$bSubmit) {
+            if (!$bSubmit && !(GET && ACTION == 'publish')) {
                 // Put $zData with the old values in $_SESSION for mailing.
                 // FIXME; change owner to owned_by_ in the load entry query of object_genome_variants.php.
                 $zData['owned_by_'] = $zData['owner'];
@@ -2302,6 +2332,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 lovd_showInfoTable('Successfully edited the variant entry!', 'success');
 
                 $_T->printFooter();
+            } elseif (GET && ACTION == 'publish') {
+                // We'll skip the mailing. But of course only if we're sure no other changes were sent (therefore check GET).
+                header('Location: ' . lovd_getInstallURL() . CURRENT_PATH);
             } else {
                 header('Location: ' . lovd_getInstallURL() . 'submit/finish/variant/' . $nID . '?edit');
             }
@@ -2351,8 +2384,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     lovd_includeJS('inc-js-tooltip.php');
     lovd_includeJS('inc-js-custom_links.php');
 
-    // Table.
-    print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['submission'])? '&amp;submission=' . $_GET['submission'] : '') . '" method="post">' . "\n");
+    // Hardcoded ACTION because when we're publishing, but we get the form on screen (i.e., something is wrong), we want this to be handled as a normal edit.
+    print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?edit' . (isset($_GET['submission'])? '&amp;submission=' . $_GET['submission'] : '') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

@@ -102,13 +102,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
-        $aNavigation[CURRENT_PATH . '?edit']                      = array('menu_edit.png', 'Edit screening information', 1);
+        $aNavigation[CURRENT_PATH . '?edit']                   = array('menu_edit.png', 'Edit screening information', 1);
         if ($zData['variants_found']) {
-            $aNavigation['variants?create&amp;target=' . $nID]    = array('menu_plus.png', 'Add variant to screening', 1);
-            $aNavigation[CURRENT_PATH . '?removeVariants']        = array('cross.png', 'Remove variants from screening', ($zData['variants_found_'] > 0? 1 : 0));
+            $aNavigation['variants?create&amp;target=' . $nID] = array('menu_plus.png', 'Add variant to screening', 1);
+            $aNavigation[CURRENT_PATH . '?removeVariants']     = array('cross.png', 'Remove variants from screening', ($zData['variants_found_'] > 0? 1 : 0));
         }
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $aNavigation[CURRENT_PATH . '?delete']                = array('cross.png', 'Delete screening entry', 1);
+            $aNavigation[CURRENT_PATH . '?delete']             = array('cross.png', 'Delete screening entry', 1);
         }
     }
     lovd_showJGNavigation($aNavigation, 'Screenings');

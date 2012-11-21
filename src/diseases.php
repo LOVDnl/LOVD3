@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-11-05
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-21
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -83,7 +83,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
-        $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit disease information</A>', 1);
+        $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit disease information', 1);
         if ($_AUTH['level'] == LEVEL_CURATOR) {
             $bDelete = true;
             foreach ($zData['genes'] as $sGene) {

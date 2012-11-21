@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-10-02
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-21
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -64,15 +64,15 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
+                                           'i.statusid AS individual_statusid, ' .
                                            'd.symbol AS disease, ' .
                                            'uo.name AS owned_by_, ' .
-                                           'ds.name AS status, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
+                                           'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (p.individualid = i.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (p.diseaseid = d.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (p.statusid = ds.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (p.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (p.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'p.id';
@@ -82,9 +82,11 @@ class LOVD_Phenotype extends LOVD_Custom {
                                         ($_AUTH['level'] >= LEVEL_COLLABORATOR?
                                           'CASE p.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,'
                                         : '') .
+                                          'ds.name AS status, ' .
                                           'uo.name AS owned_by_';
         $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
-                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id)';
+                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (p.statusid = ds.id)';
 
         $this->sObjectID = $sObjectID;
         $this->nID = $nID;
@@ -120,6 +122,10 @@ class LOVD_Phenotype extends LOVD_Custom {
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
+                        'status' => array(
+                                    'view' => array('Status', 70),
+                                    'db'   => array('ds.name', false, true),
+                                    'auth' => LEVEL_COLLABORATOR),
                         'individualid' => array(
                                     'view' => array('Individual ID', 70),
                                     'db'   => array('p.individualid', 'ASC', true)),
@@ -210,7 +216,8 @@ class LOVD_Phenotype extends LOVD_Custom {
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
 
-        if (ACTION != 'edit') {
+        if (ACTION == 'create' || (ACTION == 'publish' && GET)) {
+            // When creating, or when publishing without any changes, unset the authorization.
             unset($this->aFormData['authorization']);
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
@@ -237,7 +244,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'entry') {
-            $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
+            $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A> <SPAN style="color : #' . $this->getStatusColor($zData['individual_statusid']) . '">(' . $_SETT['data_status'][$zData['individual_statusid']] . ')</SPAN>';
             $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';
             if (!empty($zData['Phenotype/Age']) && preg_match('/^([<>])?(\d+y)(\d+m)?(\d+d)?(\?)?$/', htmlspecialchars_decode($zData['Phenotype/Age']), $aMatches)) {
                 $aMatches = $aMatches + array_fill(0, 5, ''); // Fill $aMatches with enough values.

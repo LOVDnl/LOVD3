@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-11-14
+ * Modified    : 2012-11-21
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -429,6 +429,24 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
+    function getStatusColor ($nStatusID)
+    {
+        // Returns the color coding that fits the given status.
+
+        if ($nStatusID < STATUS_MARKED) {
+            $sColor = 'F00'; // Red.
+        } elseif ($nStatusID < STATUS_OK) {
+            $sColor = 'A30'; // Dark red.
+        } else {
+            $sColor = '0A0'; // Green.
+        }
+        return $sColor;
+    }
+
+
+
+
+
     function getDefaultValue ($sCol)
     {
         // Returns the column type, so the input can be checked.
@@ -478,7 +496,7 @@ class LOVD_Custom extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data before returning it to the user.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         $zData = parent::prepareData($zData, $sView);
         foreach ($this->aColumns as $sCol => $aCol) {
@@ -495,6 +513,10 @@ class LOVD_Custom extends LOVD_Object {
                     $zData[$aCol['id']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['id']]);
                 }
             }
+        }
+        // Mark the status, if shown on the page.
+        if ($sView == 'entry' && isset($zData['statusid'])) {
+            $zData['status'] = '<SPAN style="color : #' . $this->getStatusColor($zData['statusid']) . '">' . $_SETT['data_status'][$zData['statusid']] . '</SPAN>';
         }
         return $zData;
     }

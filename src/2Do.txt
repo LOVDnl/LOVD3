@@ -9,6 +9,8 @@ Prioritize:
   + email_confirmed boolean
   + inbouwen in LOVD install?
   + inbouwen in edit
+    + inbouwen in VL
+    + speciaal URL format? /users/ORCiD?
   + reset password met orcid id!
 - The next release must include a manual!
 - submitter register email-foutmelding is dubbel, twee andere texten ook.
@@ -118,7 +120,7 @@ Prioritize:
 =============== Below here needs to be re-evaluated for priority ===============
 - LOVD 3.0 heeft niet hetzelfde wat LOVD 2.0 heeft. Gene not found, are you looking for gene.lovd.nl?
 - Kunnen we ook het Exon veld voorspellen?
-- Quick curate option?
+- Curate all option? Geeft popup met vinkje wel/niet alles mee cureren (phenotypes, individuals, etc). Daarna met progress bar de boel cureren... Ajax request output in popup?
 - Per variant de mapping opties kunnen veranderen?
 - Connect existing variant to existing individual; kies individual via viewlist in new window, daarna kies screening?
 
