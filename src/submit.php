@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-11-05
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-21
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -43,7 +43,7 @@ lovd_requireAUTH(LEVEL_SUBMITTER);
 
 function lovd_prepareSubmitData ($sDataType, $aData) {
     // Prepares the data for presentation in the mail to the users.
-    global $_SETT;
+    global $_AUTH, $_DB, $_SETT;
 
     switch ($sDataType) {
         case 'individual':
@@ -68,6 +68,13 @@ function lovd_prepareSubmitData ($sDataType, $aData) {
     }
 
     $aData['statusid_'] = $_SETT['data_status'][$aData['statusid']];
+    if (!empty($aData['edited_by'])) {
+        if ($aData['edited_by'] == $_AUTH['id']) {
+            $aData['edited_by'] = $_AUTH['name'];
+        } else {
+            $aData['edited_by'] = $_DB->query('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['edited_by']))->fetchColumn();
+        }
+    }
 
     return $aData;
 }
@@ -697,6 +704,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
 
     $_AUTH['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($_AUTH['countryid']))->fetchColumn();
 
+    // Build up the arrays that will create the data blocks in the email.
     // Select all data from the database that belong to this submission and put it in a variable.
     $bUnpublished = false;
     if ($_PE[2] == 'individual') {
@@ -707,21 +715,21 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             $aEdits = lovd_prepareSubmitData('individual', $aEdits);
         }
         $bUnpublished = ($bUnpublished || $zIndividualDetails['statusid'] < STATUS_MARKED);
-        $aOwner = array();
-        if ($zIndividualDetails['owned_by'] != $_AUTH['id']) {
-            $aIndividualFields['owned_by_'] = 'Data owner';
-            $aOwner[] = $zIndividualDetails['owned_by'];
-        }
         if ($zIndividualDetails['panel_size'] <= 1) {
             unset($aIndividualFields['panel_size']);
         } else {
             unset($aIndividualFields['panel_']);
         }
+        $aOwner = array();
+        if ($zIndividualDetails['owned_by'] != $_AUTH['id']) {
+            $aIndividualFields['owned_by_'] = 'Data owner';
+            $aOwner[] = $zIndividualDetails['owned_by'];
+        }
+        $aIndividualFields['statusid_'] = 'Data status';
         if ($zIndividualDetails['edited_by'] != null) {
             $aIndividualFields['edited_by'] = 'Edited by';
             $aIndividualFields['edited_date'] = 'Edited date';
         }
-        $aIndividualFields['statusid_'] = 'Data status';
 
         if (ACTION == 'edit') {
             $aFields = array_keys($aIndividualFields);

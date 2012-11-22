@@ -234,7 +234,7 @@ class LOVD_Phenotype extends LOVD_Custom {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
-        global $_SETT;
+        global $_AUTH, $_SETT;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -244,7 +244,10 @@ class LOVD_Phenotype extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'entry') {
-            $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A> <SPAN style="color : #' . $this->getStatusColor($zData['individual_statusid']) . '">(' . $_SETT['data_status'][$zData['individual_statusid']] . ')</SPAN>';
+            $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
+            if ($_AUTH['level'] >= LEVEL_COLLABORATOR) {
+                $zData['individualid_'] .= ' <SPAN style="color : #' . $this->getStatusColor($zData['individual_statusid']) . '">(' . $_SETT['data_status'][$zData['individual_statusid']] . ')</SPAN>';
+            }
             $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';
             if (!empty($zData['Phenotype/Age']) && preg_match('/^([<>])?(\d+y)(\d+m)?(\d+d)?(\?)?$/', htmlspecialchars_decode($zData['Phenotype/Age']), $aMatches)) {
                 $aMatches = $aMatches + array_fill(0, 5, ''); // Fill $aMatches with enough values.

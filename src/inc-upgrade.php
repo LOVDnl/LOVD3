@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-11-07
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-21
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -321,6 +321,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             'INSERT IGNORE INTO ' . TABLE_LINKS . ' VALUES (NULL, "DOI", "{DOI:[1]:[2]}", "<A href=\"http://dx.doi.org/[2]\" target=\"_blank\">[1]</A>", "Links directly to an article using the DOI.\r\n[1] = The name of the author(s), possibly followed by the year of publication.\r\n[2] = The DOI.\r\n\r\nExample:\r\n{DOI:Fokkema et al. (2011):10.1002/humu.21438}", 0, NOW(), NULL, NULL)',
                             'INSERT IGNORE INTO ' . TABLE_COLS2LINKS . ' VALUES ("Individual/Reference", LAST_INSERT_ID())',
                             'UPDATE ' . TABLE_LINKS . ' SET description = "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s), possibly followed by the year of publication.\r\n[2] = The PubMed ID.\r\n\r\nExample:\r\n{PMID:Fokkema et al. (2011):21520333}", edited_by = 0, edited_date = NOW() WHERE id = 1 AND (description = "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s).\r\n[2] = The PubMed ID.\r\n\r\nExample:\r\n{PMID:Fokkema et al. (2011):21520333}" OR description = "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s), possibly including year.\r\n[2] = The PubMed ID.\r\n\r\nExample:\r\n{PMID:Fokkema et al. (2011):21520333}")',
+                        ),
+                    '3.0-beta-10b' =>
+                        array(
+                            'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN orcid_confirmed BOOLEAN NOT NULL DEFAULT 0 AFTER orcid_id',
+                            'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN email_confirmed BOOLEAN NOT NULL DEFAULT 0 AFTER email',
                         ),
              );
 

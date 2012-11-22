@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-08
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-22
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -180,21 +180,21 @@ function lovd_checkXSS ($aInput = '')
 
 
 
-function lovd_emailError ($sErrorCode, $sType, $bHalt = false)
+function lovd_emailError ($sErrorCode, $sSubject, $sTo, $bHalt = false)
 {
     // Formats email errors for the error log, and optionally halts the system.
 
     // Format the error message.
     // FIXME; Kan makkelijker??? // Een str_replace() zou ook wel werken... Deze code staat op minimaal 3 plaatsen.
     $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . $sErrorCode . '.' . "\n" .
-              'Email type : ' . $sType;
+              'Error : Couldn\'t send a mail with subject "' . $sSubject . '" to ' . $sTo;
 
     // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
     // write it to the system log, and halt the system. Otherwise, just log it to the database.
     if ($bHalt) {
-        lovd_displayError('Email', $sError);
+        lovd_displayError('SendMail', $sError);
     } else {
-        lovd_writeLog('Error', 'Email', $sError);
+        lovd_writeLog('Error', 'SendMail', $sError);
     }
 }
 
@@ -641,10 +641,8 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
         return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
     } elseif (!$bMail) {
-        // $sSubject is used here as it can always be used to describe the email type.
-        lovd_emailError(LOG_EVENT, $sSubject);
-        lovd_writeLog('Error', 'SendMail', preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . LOG_EVENT . '.' . "\n" .
-                                           'Error : Couldn\'t send a mail with subject ' . $sSubject . ' to ' . $sTo);
+        // $sSubject is used here as it can always be used to describe the email type. This function also logs the email error.
+        lovd_emailError(LOG_EVENT, $sSubject, $sTo, true);
     }
 
     return $bMail;

@@ -43,6 +43,13 @@
    (curate) option in the Options menu.
  * The phenotype data listings now also show the status column for those allowed
    to see it.
+ * Fixed bug; In emails sent when an entry had been edited, the "Edited by"
+   field was numeric, instead of showing the user's names.
+ * Fixed awkward non-standard order of the "Data status" field in the submission
+   emails.
+ * The users list now shows which users already have their ORCID ID filled in,
+   and you can now sort on username.
+ * Fixed bug; When LOVD could not send an email, the error was logged twice.
 
 
 

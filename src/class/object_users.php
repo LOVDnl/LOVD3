@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-02
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-22
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -133,12 +133,15 @@ class LOVD_User extends LOVD_Object {
                         'id' => array(
                                     'view' => array('ID', 45),
                                     'db'   => array('u.id', 'ASC', true)),
+                        'orcid_id_' => array(
+                                    'view' => array('ORCiD', 60, 'style="text-align : center;"'),
+                                    'db'   => array('(u.orcid_id is not null)', 'DESC', true)),
                         'name' => array(
                                     'view' => array('Name', 160),
                                     'db'   => array('u.name', 'ASC', true)),
                         'username' => array(
                                     'view' => array('Username', 80),
-                                    'db'   => array('u.username', false, true)),
+                                    'db'   => array('u.username', 'ASC', true)),
                         'institute' => array(
                                     'view' => array('Institute', 225),
                                     'db'   => array('u.institute', 'ASC', true)),
@@ -413,6 +416,7 @@ class LOVD_User extends LOVD_Object {
 
         $zData['active'] = file_exists(session_save_path() . '/sess_' . $zData['phpsessid']);
         if ($sView == 'list') {
+            $zData['orcid_id_'] = (!$zData['orcid_id']? '&nbsp;' : '<IMG src="gfx/check.png" alt="' . $zData['orcid_id'] . '" title="' . $zData['orcid_id'] . '">');
             $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['name'] . '</A>';
             $sAlt = ($zData['active']? 'Online' : ($zData['locked']? 'Locked' : 'Offline'));
             $zData['status_'] = ($zData['locked'] || $zData['active']? '<IMG src="gfx/' . ($zData['locked']? 'status_locked' : 'status_online') . '.png" alt="' . $sAlt . '" title="' . $sAlt . '" width="14" height="14">' : '');

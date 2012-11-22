@@ -353,7 +353,10 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             // While in principle a variant should only be connected to one patient, due to database model limitations, through several screenings, one could link a variant to more individuals.
             foreach ($zData['individuals'] as $aIndividual) {
                 list($nID, $nStatusID) = $aIndividual;
-                $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A> <SPAN style="color : #' . $this->getStatusColor($nStatusID) . '">(' . $_SETT['data_status'][$nStatusID] . ')</SPAN>';
+                $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
+                if ($_AUTH['level'] >= LEVEL_COLLABORATOR) {
+                    $zData['individualid_'] .= ' <SPAN style="color : #' . $this->getStatusColor($nStatusID) . '">(' . $_SETT['data_status'][$nStatusID] . ')</SPAN>';
+                }
             }
             if (empty($zData['individualid_'])) {
                 unset($this->aColumnsViewEntry['individualid_']);

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-10-31
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-11-21
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -31,11 +31,7 @@
 
 // STILL TODO:
 // Transcripts misschien niet altijd aan genen vast? microRNA's?
-// All those IDs for the genes!!! Store differently?
-// "Parental_origin and Origin attributes have been merged into one attribute called as genetic_source."
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
-// Allow download staat nu per gen, en de losse varianten dan?
-// Human readable refseq velden staan nu bij gen, moeten naar transcript???
 // Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
 
 // DMD_SPECIFIC
@@ -59,6 +55,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_USERS . ' (
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     orcid_id CHAR(19),
+    orcid_confirmed BOOLEAN NOT NULL DEFAULT 0,
     name VARCHAR(75) NOT NULL,
     institute VARCHAR(255) NOT NULL,
     department VARCHAR(255) NOT NULL,
@@ -67,6 +64,7 @@ $aTableSQL =
     city VARCHAR(255) NOT NULL,
     countryid CHAR(2),
     email TEXT NOT NULL,
+    email_confirmed BOOLEAN NOT NULL DEFAULT 0,
     reference VARCHAR(50) NOT NULL,
     username VARCHAR(20) NOT NULL,
     password CHAR(50) NOT NULL,
