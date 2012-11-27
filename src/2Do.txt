@@ -1,41 +1,24 @@
 Prioritize:
 ===========
-- After a useful test with LSDB noobs during submission:
-  + Lab ID is not clear.
-  + Put more notice on the mapping button. Pop over?
-  + Put a little help-icon or link somewhere, that explains more info on the format is available under the question marks.
 - Handling ORCID ID:
-  + orcid_confirmed boolean
-  + email_confirmed boolean
-  + inbouwen in LOVD install?
-  + inbouwen in edit
-    + inbouwen in VL
-    + speciaal URL format? /users/ORCiD?
+  + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
   + reset password met orcid id!
 - The next release must include a manual!
-- submitter register email-foutmelding is dubbel, twee andere texten ook.
 - dbsearch.php: lovd.nl/GENE_00001 link wijst naar LOVD3? Zet er een 0 tussen voor het doorsturen.
 - Download/all/mine failt op shared DB (heeft > 200M && <= 265M nodig), hoewel ik helemaal zoveel data niet heb (1446 genes, 1446 transcripts, 2 diseases, 9 individuals, 9 dis2ind, 10 screenings, 8 scr2gene, 14360 vog, 7739 vot, 14360 scr2var, 3.7 MB file).
-- CXorf40A_000001 wordt geweigerd door LOVD (regexp).
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
 - Updated date van genen klopt niet (variant map, screening add/edit/delete, phenotype?, individual).
-- Phenotype cols opvragen van disease, hersorteer, klik col aan. WTF???
-- Fix Yu's variants in de database.
-  + Fix daarna de VCF importer, zodat die dit format ook aan kan.
-  + Soms kreeg ik tijdens het mappen n. terug, en dan gaat LOVD een totaal verkeerde VOT/DNA invullen; R_110617.1:n.150delins.
-- Na toevoegen variant aan screening, kun je niet makkelijk finishen.
 - Het is niet duidelijk, hoe een variant aan een bestaande individu toe te voegen (moet dus via screening). Dat moet duidelijk gemaakt worden.
 - Individual VE: Niet VOG, maar VOG+VOT tonen (Ammar Husami zit r echt op te wachten)
 - Unique variants, ook Ammar Husami. Met counts, waar op gezocht en gesorteerd kan worden.
+  + Zoeken met WHERE of HAVING? Eerst WHERE (met waarschuwing), later HAVING?
 - VCF importer:
   + Negeer varianten zonder frequency (het huidige sample heeft 'm niet, andere samples wel).
   + Voor multi-sample files, geef aan welke sample je wilt importeren. Dat scheelt gebruikers veel werk.
 
 - Gene delete heeft GEEN CORRECTE reminder bij het verwijderen!!!
   + Disease verwijderen hoort ook een reminder te geven, dat alle phenotype data verdwijnt, mits aanwezig.
-- Individual ge-edit, disease uitgeklikt, maar daar zat phenotype data aan... en nu?
-  + Niet toestaan disease uit te zetten tenzij phenotype data is verwijderd?
 
 - Authorizatieprobleem voorleggen bij groep;
   + Curator maakt per ongeluk een screening teveel aan bij een patient, die van haar is (en ze is curator hiervan). Screening kan niet verwijderd worden, omdat ze LEVEL_OWNER is.
@@ -45,7 +28,6 @@ Prioritize:
 
 - Mag manager wel chromosome veranderen van een submissie?
 - Hoe er voor zorgen, dat een gezond individu toch phenotype data van een bepaalde ziekte kan hebben? Data model houdt dit niet tegen... dat is de code.
-- Link to nomenclature page from DNA, RNA and Protein fields... link in help hover?
 - Curator mag geen cols zien van disease 0, foutmelding: je moet curator zijn.
   + Disease healthy kan niet beheerd worden (kolommen inzien, hersorteren e.d.)?
 - Als David Baux zijn scripts klaar zijn, mergen met trunk.
@@ -66,10 +48,10 @@ Prioritize:
             X Variants    -> Een submitter mag niet een variant verwijderen; een curator wel? Ook als deze curator alleen owner is van deze variant?
 - BUGS:
   + Submitter mag wel zien dat variant 7 aan individu 1 zit, maar hij mag individu 1 niet zien. Beter niet laten zien dat hij er aan vast zit...
+  + Als je een VL opent, daarna zoekt, dan terug, dan blijven de search terms staan. Kan de hash parser niet alle search terms laten vervallen op het moment dat er geen hash is?
 - Individual viewList: add column "variants in genes" with gene symbols.
   + Then, add option to dropdown menu if we have a currdb (replace: individuals screened for gene X).
   + After that, change the default link when clicking the individual tab.
-- VOG/DNA heeft geen help tekst? Die moet toch de notes on form vervangen?
 - Hoe kan een gebruiker op een zojuist geopend edit formulier de predict triggeren en/of de Mutalyzer namechecker openen in een nieuwe window?
   + Wellicht, voor een losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
 - (@Ivo) DATA DOWNLOAD.
@@ -89,6 +71,7 @@ Prioritize:
     * Link from the gene homepage?
     * Link from the viewList, after applying search terms, just like in LOVD2?
       - But then, you need to control the viewList from that button, such that the search terms are correct, OR the button is provided by the viewList.
+    * Instelling staat per gen, en de intergene varianten dan?
   + DATA IMPORT
     * Ook voor curatoren, check alles goed na het parsen van de file!
     * Discuss if OK that created_by and created_date are set by users through import to values other than themselves or today.
@@ -125,6 +108,7 @@ Prioritize:
 - Connect existing variant to existing individual; kies individual via viewlist in new window, daarna kies screening?
 
 - Beta-09:
+  - Submitter register: confirm email ter beveiliging tegen spam?
   - Add option to report registration as spam? Then we need to store IP address? Or track registration event log?
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
@@ -191,13 +175,15 @@ Prioritize:
          - Als oude waarde leeg was, en nieuwe waarde is niet zo groot, kan (was previously empty) er wel achter, toch? Rechts uitgelijnd?
            + Hoe in te bouwen; velden markeren in bepaalde variabelen, of een markering in de value?
      + Na mail druk je op back; email wordt gewoon opnieuw gestuurd, SESSION wordt dus niet netjes leeggehaald.
-     + Edited by (tenminste bij variant) wordt als IDs gegeven, niet de namen zoals bij data owner ofzo.
-     + Data status staat soms als allerlaatst (individual), soms voor de edited_* velden (var). Huh?
-       * Idem data owner
+     + Data owner staat soms als allerlaatst (variant && individual), soms er niet (als niet veranderd?). Veranderingen worden niet getoond.
      + Disease toegewezen aan een individu staat er niet tussen.
      + Owner veranderen staat er niet tussen (individual, phenotype, variant, screening)
      + Als je een transcript toevoegt, beweert hij dat je enkel exon, rna en protein hebt ingevuld, en dat die leeg waren. DNA lijkt niet veranderd, path. velden zijn eventueel aangepast van Unknown naar wat je ingevuld hebt.
 
+- After a useful test with LSDB noobs during submission:
+  + Lab ID is not clear.
+  + Put more notice on the mapping button. Pop over?
+  + Put a little help-icon or link somewhere, that explains more info on the format is available under the question marks.
 - Wachtwoord vergeten -> gebruikersnaam invullen. Die ook vergeten, wat nu? Zet er bij dat ze contact kunnen opnemen met de dbadmin en/of managers (hoe contact te leggen?).
   + Daar direct een contact formuliertje zetten? Vragen naar naam, instituut, wanneer ongeveer voor het laatst ingelogd, vanaf welke PC?
 - Opmerkingen Johan:
@@ -356,6 +342,8 @@ From LOVD 2.0:
 - Mauno: PONP doet het beter dan SIFT en Polyphen.
 - Goede check of http://zwarterita/mutalyzer/services en http://www.mutalyzer.nl/2.0/services hetzelfde teruggeven?
   + Wellicht makkelijker te implementeren dan checken of alle LOVD features nog werken.
+- /users/ORCiD ?
+- Fix de VCF importer, zodat die VCF 3.3 ook aan kan?
 
 
 

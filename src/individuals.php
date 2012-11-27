@@ -125,23 +125,21 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     print('<BR><BR>' . "\n\n");
 
 
-    if (!empty($zData['diseases'])) {
+    if (!empty($zData['phenotypes'])) {
         // List of phenotype entries associated with this person, per disease.
         $_GET['search_individualid'] = $nID;
         $_T->printTitle('Phenotypes', 'H4');
-        if (!empty($zData['phenotypes'])) {
-            require ROOT_PATH . 'class/object_phenotypes.php';
-            foreach($zData['diseases'] as $aDisease) {
-                list($nDiseaseID, $sSymbol, $sName) = $aDisease;
-                if (in_array($nDiseaseID, $zData['phenotypes'])) {
-                    $_GET['search_diseaseid'] = $nDiseaseID;
-                    $_DATA = new LOVD_Phenotype($nDiseaseID);
-                    print('<B>' . $sName . ' (<A href="diseases/' . $nDiseaseID . '">' . $sSymbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $nDiseaseID . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
-                    $_DATA->viewList('Phenotypes_for_I_VE_' . $nDiseaseID, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
-                }
+        // Repeat searching for diseases, since this individual might have phenotype entry for a disease he doesn't have.
+        $zData['diseases'] = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($zData['phenotypes'])-1) . ')', $zData['phenotypes'])->fetchAllRow();
+        require ROOT_PATH . 'class/object_phenotypes.php';
+        foreach($zData['diseases'] as $aDisease) {
+            list($nDiseaseID, $sSymbol, $sName) = $aDisease;
+            if (in_array($nDiseaseID, $zData['phenotypes'])) {
+                $_GET['search_diseaseid'] = $nDiseaseID;
+                $_DATA = new LOVD_Phenotype($nDiseaseID);
+                print('<B>' . $sName . ' (<A href="diseases/' . $nDiseaseID . '">' . $sSymbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $nDiseaseID . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
+                $_DATA->viewList('Phenotypes_for_I_VE_' . $nDiseaseID, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
             }
-        } else {
-            lovd_showInfoTable('No phenotypes found for this individual!', 'stop');
         }
         unset($_GET['search_individualid']);
         unset($_GET['search_diseaseid']);

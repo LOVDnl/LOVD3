@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-11-21
+ * Modified    : 2012-11-26
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -326,6 +326,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         array(
                             'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN orcid_confirmed BOOLEAN NOT NULL DEFAULT 0 AFTER orcid_id',
                             'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN email_confirmed BOOLEAN NOT NULL DEFAULT 0 AFTER email',
+                            'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9]+))_\\\\d{6}$/" WHERE preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf\\\\d+-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf\\\\d+|[A-Z][A-Z0-9]+))_\\\\d{6}$/" AND id = "VariantOnGenome/DBID"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "Genomic DNA change (HGVS format)|Description of variant at DNA level, based on the genomic DNA reference sequence (following HGVS recommendations); e.g. g.12345678C>T, g.12345678_12345890del, g.12345678_12345890dup.|text|30" WHERE form_type = "Genomic DNA change (HGVS format)||text|30" AND id = "VariantOnGenome/DNA"',
                         ),
              );
 

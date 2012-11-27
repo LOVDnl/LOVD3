@@ -50,6 +50,13 @@
  * The users list now shows which users already have their ORCID ID filled in,
    and you can now sort on username.
  * Fixed bug; When LOVD could not send an email, the error was logged twice.
+ * Fixed bug; DB IDs for ORF genes with additional letters after their number,
+   such as CXorf40A, were always considered incorrect.
+ * Fixed bug; After resorting or filtering the list of enabled phenotype columns
+   for a certain gene or disease, the links would stop working.
+ * The individual's detailed views now also show phenotype entries related to
+   diseases the individual is not or no longer linked to.
+ * Added missing form help text to the VariantOnGenome/DNA field.
 
 
 
