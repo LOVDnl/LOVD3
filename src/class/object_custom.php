@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-11-21
+ * Modified    : 2012-11-27
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -334,8 +334,9 @@ class LOVD_Custom extends LOVD_Object {
 
             $aViewList[$sID] =
                             array(
-                                    'view' => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
-                                    'db'   => array('`' . $aCol['colid'] . '`', 'ASC', true),
+                                    'view'   => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
+                                    'db'     => array('`' . $aCol['colid'] . '`', 'ASC', true),
+                                    'legend' => array($aCol['description_legend_short'], $aCol['description_legend_full']),
                                  );
         }
         return $aViewList;

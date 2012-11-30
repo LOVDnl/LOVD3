@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-09-19
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-11-30
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -64,13 +64,13 @@ class LOVD_CustomViewList extends LOVD_Object {
 
         // Collect custom column information, all active columns (possibly restricted per gene).
         // FIXME; This join is not always needed (it's done for VOT columns, but sometimes they are excluded, or the join is not necessary because of the user level), exclude when not needed to speed up the query?
-        $sSQL = 'SELECT c.id, c.width, c.head_column, c.mysql_type, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = ac.colid) ' .
+        $sSQL = 'SELECT c.id, c.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = ac.colid) ' .
                     'WHERE ' . ($_AUTH['level'] >= LEVEL_MANAGER? '' : '((c.id NOT LIKE "VariantOnTranscript/%" AND c.public_view = 1) OR sc.public_view = 1) AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     (!$sGene? 'GROUP BY c.id ' :
                       // If gene is given, only shown VOT columns active in the given gene! We'll use an UNION for that, so that we'll get the correct width and order also.
                       'AND c.id NOT LIKE "VariantOnTranscript/%" GROUP BY c.id ' . // Exclude the VOT columns from the normal set, we'll load them below.
                       'UNION ' .
-                      'SELECT c.id, sc.width, c.head_column, c.mysql_type, sc.col_order, CONCAT(sc.geneid, ":", sc.public_view) AS public_view FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE sc.geneid = ? ' .
+                      'SELECT c.id, sc.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, sc.col_order, CONCAT(sc.geneid, ":", sc.public_view) AS public_view FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE sc.geneid = ? ' .
                       ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'AND sc.public_view = 1 ')) .
                     'ORDER BY col_order';
         $aSQL = array();
@@ -85,6 +85,8 @@ class LOVD_CustomViewList extends LOVD_Object {
         $q = $_DB->query($sSQL, $aSQL);
         while ($z = $q->fetchAssoc()) {
             $z['custom_links'] = array();
+            $z['form_type'] = explode('|', $z['form_type']);
+            $z['select_options'] = explode("\r\n", $z['select_options']);
             if (substr($z['id'], 0,19) == 'VariantOnTranscript') {
                 $z['public_view'] = explode(';', rtrim(preg_replace('/([A-Za-z0-9-]+:0;|:1)/', '', $z['public_view'] . ';'), ';'));
             }
@@ -295,10 +297,14 @@ class LOVD_CustomViewList extends LOVD_Object {
                                         'db'   => array('vog.chromosome', 'ASC', true)),
                                 'allele_' => array(
                                         'view' => array('Allele', 120),
-                                        'db'   => array('a.name', 'ASC', true)),
+                                        'db'   => array('a.name', 'ASC', true),
+                                        'legend' => array('On which allele is the variant located? Does not necessarily imply inheritance!',
+                                                          'On which allele is the variant located? Does not necessarily imply inheritance! Paternal (confirmed or inferred), Maternal (confirmed or inferred), Parent #1 or #2 for compound heterozygosity without having screened the parents, Both for homozygozity.')),
                                 'vog_effect' => array(
                                         'view' => array('Effect', 70),
-                                        'db'   => array('eg.name', 'ASC', true)),
+                                        'db'   => array('eg.name', 'ASC', true),
+                                        'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                                                          'The variant\'s affect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown.')),
                               ));
                     if (in_array('VariantOnTranscript', $aObjects)) {
                         unset($this->aColumnsViewList['vog_effect']);
@@ -320,7 +326,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                                         'db'   => array('vot.transcriptid', 'ASC', true)),
                                 'vot_effect' => array(
                                         'view' => array('Effect', 70),
-                                        'db'   => array('et.name', 'ASC', true)),
+                                        'db'   => array('et.name', 'ASC', true),
+                                        'legend' => array('The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                                                          'The variant\'s affect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown.')),
                               ));
                     if (!$this->sSortDefault) {
                         // First data table in view.
@@ -369,6 +377,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                          array(
                                 'view' => array($aCol['head_column'], $aCol['width']),
                                 'db'   => array($sPrefix . '`' . $aCol['id'] . '`', 'ASC', lovd_getColumnType('', $aCol['mysql_type'])),
+                                'legend' => array($aCol['description_legend_short'], $aCol['description_legend_full']),
                               );
                 }
             }

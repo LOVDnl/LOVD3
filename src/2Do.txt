@@ -1,9 +1,9 @@
 Prioritize:
 ===========
+- Edit email: Variant/owned_by only shown on edit, and then again, not always?!!??
 - Handling ORCID ID:
   + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
   + reset password met orcid id!
-- The next release must include a manual!
 - dbsearch.php: lovd.nl/GENE_00001 link wijst naar LOVD3? Zet er een 0 tussen voor het doorsturen.
 - Download/all/mine failt op shared DB (heeft > 200M && <= 265M nodig), hoewel ik helemaal zoveel data niet heb (1446 genes, 1446 transcripts, 2 diseases, 9 individuals, 9 dis2ind, 10 screenings, 8 scr2gene, 14360 vog, 7739 vot, 14360 scr2var, 3.7 MB file).
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
@@ -68,6 +68,7 @@ Prioritize:
       dat moet dan maar op basis van de geselecteerde IDs die in SESSION worden opgeslagen. Ik wil niet code voor
       het parsen van zoektermen moeten kopieëren naar download oid.
   + How does the public make downloads?
+    * Beveiliging!!! Alle niet-publieke entries & kolommen zullen moeten worden verwijderd.
     * Link from the gene homepage?
     * Link from the viewList, after applying search terms, just like in LOVD2?
       - But then, you need to control the viewList from that button, such that the search terms are correct, OR the button is provided by the viewList.
@@ -307,8 +308,7 @@ Prioritize:
   + De data kan dan worden geparsed (viewList moet array terug geven ipv count, die gebruiken we toch niet) zodat leeftijd of datum horizontaal,
     en numerieke kolommen (blood pressure, length, etc) verticaal kunnen. Per kolom een aparte grafiek?
 - Be able to change the mapping setting of a certain variant?
-- Legend moet nog gemaakt worden; mouseover column of column header?
-  + Hoe dan ook, moet de full legend nog steeds een aparte file zijn.
+- Legend: standaard kolommen (status, owned_by) centraal instellen? LOVD2 heeft lijst voor status in variants_legend.php.
 - De afhandeling van text/plain voor de verschillende levels voelt nogal fragiel aan, en is behoorlijk irrirant om door te hebben.
 - Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
 - Find & Replace:

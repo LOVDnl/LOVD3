@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-11-21
+ * Modified    : 2012-11-28
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -155,7 +155,8 @@ class LOVD_Individual extends LOVD_Custom {
                                     'db'   => array('variants_', 'ASC', 'INT_UNSIGNED')),
                         'panel_size' => array(
                                     'view' => array('Panel size', 70),
-                                    'db'   => array('i.panel_size', 'DESC', true)),
+                                    'db'   => array('i.panel_size', 'DESC', true),
+                                    'legend' => array('How many individuals does this entry represent?')),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),

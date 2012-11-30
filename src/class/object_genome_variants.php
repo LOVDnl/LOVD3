@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-11-21
+ * Modified    : 2012-11-28
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -140,10 +140,14 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'db'   => array('vog.id', 'ASC', true)),
                         'effect' => array(
                                     'view' => array('Effect', 70),
-                                    'db'   => array('e.name', 'ASC', true)),
+                                    'db'   => array('e.name', 'ASC', true),
+                                    'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                                                      'The variant\'s affect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown.')),
                         'allele_' => array(
                                     'view' => array('Allele', 120),
-                                    'db'   => array('a.name', 'ASC', true)),
+                                    'db'   => array('a.name', 'ASC', true),
+                                    'legend' => array('On which allele is the variant located? Does not necessarily imply inheritance!',
+                                                      'On which allele is the variant located? Does not necessarily imply inheritance! Paternal (confirmed or inferred), Maternal (confirmed or inferred), Parent #1 or #2 for compound heterozygosity without having screened the parents, Both for homozygozity.')),
                         'chromosome' => array(
                                     'view' => array('Chr', 50),
                                     'db'   => array('vog.chromosome', 'ASC', true)),

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-22
+ * Modified    : 2012-11-28
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -135,7 +135,8 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('u.id', 'ASC', true)),
                         'orcid_id_' => array(
                                     'view' => array('ORCiD', 60, 'style="text-align : center;"'),
-                                    'db'   => array('(u.orcid_id is not null)', 'DESC', true)),
+                                    'db'   => array('(u.orcid_id is not null)', 'DESC', true),
+                                    'legend' => array('The user\'s ORCID ID, a unique digital identifier.', 'The user\'s ORCID ID, a persistent digital identifier that distinguishes you from every other researcher and supports automated linkages between you and your professional activities ensuring that your work is recognized.')),
                         'name' => array(
                                     'view' => array('Name', 160),
                                     'db'   => array('u.name', 'ASC', true)),
@@ -150,14 +151,16 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('c.name', 'ASC', true)),
                         'curates' => array(
                                     'view' => array('Curated DBs', 100, 'style="text-align : right;"'),
-                                    'db'   => array('curates', 'DESC', 'INT_UNSIGNED')),
+                                    'db'   => array('curates', 'DESC', 'INT_UNSIGNED'),
+                                    'legend' => array('Shows how many gene databases have this user assigned as curator.')),
 /*
                         'submits' => array(
                                     'view' => array('Submits', 75, 'style="text-align : right;"'),
                                     'db'   => array('submits', 'DESC', 'INT_UNSIGNED')),
 */
                         'status_' => array(
-                                    'view' => array('Status', 50, 'style="text-align : center;"')),
+                                    'view' => array('Status', 50, 'style="text-align : center;"'),
+                                    'legend' => array('Shows whether this user is online (computer screen icon), locked (forbidden entry icon), or offline (no icon).')),
                         'last_login_' => array(
                                     'view' => array('Last login', 80),
                                     'db'   => array('u.last_login', 'DESC', true)),

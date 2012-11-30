@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2012-05-08
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2012-11-30
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -357,6 +357,15 @@ function lovd_AJAX_viewListUpdateEntriesString (sViewListID)
 
 
 
+function lovd_showLegend (sViewListID)
+{
+    // Opens a jQuery Dialog containing a ViewList's full legend.
+
+    $("#viewlistLegend_" + sViewListID).dialog({draggable:false,resizable:false,minWidth:800,modal:true,show:"fade",closeOnEscape:true});
+}
+
+
+
 function lovd_stretchInputs (id)
 {
     // Stretches the input fields for search terms on all columns, since the
@@ -374,7 +383,7 @@ function lovd_stretchInputs (id)
 function cancelParentEvent (event)
 {
     // Cancels the event from the parent element.
-    if ('bubbles' in event) {   
+    if ('bubbles' in event) {
         // All browsers except IE before version 9.
         if (event.bubbles) {
             event.stopPropagation();
@@ -395,7 +404,7 @@ function lovd_recordCheckChanges (element, sViewListID)
     var nIndex = $.inArray(sID, check_list[sViewListID]);
 
     if (nIndex != -1) {
-        // If the checked checkbox is already in the check_list array, remove it! 
+        // If the checked checkbox is already in the check_list array, remove it!
         check_list[sViewListID].splice(nIndex,1);
         return true;
     } else {

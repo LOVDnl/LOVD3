@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-11-21
+ * Modified    : 2012-11-28
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -143,9 +143,6 @@ class LOVD_Screening extends LOVD_Custom {
                         'created_date' => array(
                                     'view' => array('Date created', 130),
                                     'db'   => array('s.created_date', 'ASC', true)),
-                        'edited_date' => array(
-                                    'view' => array('Date edited', 130),
-                                    'db'   => array('s.edited_date', 'ASC', true)),
                       ));
         $this->sSortDefault = 'id';
 

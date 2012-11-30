@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-11-15
+ * Modified    : 2012-11-27
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,7 +72,7 @@ class LOVD_Template {
         // Can't be in the constructor, because that one is called before we have $_SESSION.
         global $_AUTH;
 
-        if (ROOT_PATH == '../' || defined('NOT_INSTALLED')) {
+        if (defined('NOT_INSTALLED') || (ROOT_PATH == '../' && substr(lovd_getProjectFile(), 0, 9) == '/install/')) {
             // In install directory.
             $this->aMenu = array();
             return true;
@@ -181,9 +181,9 @@ class LOVD_Template {
                                 'hr',
                                 '/logs' => array('menu_logs.png', 'View system logs', LEVEL_MANAGER),
                               ),
-//                        'docs' => 'LOVD documentation',
+                        'docs' => 'LOVD documentation',
 //                         array(
-//                                '' => array('', 'LOVD manual table of contents', 0),
+//                                '' => array('', 'LOVD 3.0 manual', 0),
 //                              ),
                     );
 
@@ -614,7 +614,6 @@ function lovd_mapVariants ()
 
         // Loop menu.
         $n         = 0;
-        $bSel      = false;
         $bPrevSel  = false;
         $aMenus    = array();
         $bCurator  = ($_AUTH && (count($_AUTH['curates']) || $_AUTH['level'] > LEVEL_CURATOR)); // We can't check LEVEL_CURATOR since it may not be set.

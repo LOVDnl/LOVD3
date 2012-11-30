@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2012-10-28
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -125,19 +125,24 @@ class LOVD_Column extends LOVD_Object {
                                     'db'   => array('SUBSTRING(c.id, LOCATE("/", c.id)+1)', 'ASC', true)),
                         'head_column' => array(
                                     'view' => array('Heading', 150),
-                                    'db'   => array('c.head_column', 'ASC', true)),
+                                    'db'   => array('c.head_column', 'ASC', true),
+                                    'legend' => array('The header of this column in data listings.')),
                         'active_' => array(
                                     'view' => array('Active', 60, 'style="text-align : center;"'),
-                                    'db'   => array('IFNULL((a.colid IS NOT NULL), 0)', 'DESC', 'INT')),
+                                    'db'   => array('IFNULL((a.colid IS NOT NULL), 0)', 'DESC', 'INT'),
+                                    'legend' => array('Whether this column has been activated in LOVD. For shared columns (Phenotype or VariantOnTranscript columns) this does not mean this column is activated in all diseases or genes, respectively.')),
                         'hgvs_' => array(
                                     'view' => array('HGVS', 50, 'style="text-align : center;"'),
-                                    'db'   => array('c.hgvs', 'DESC', true)),
+                                    'db'   => array('c.hgvs', 'DESC', true),
+                                    'legend' => array('Whether this column is HGVS standard or not. HGVS standard columns can not be removed or disabled.')),
                         'standard_' => array(
                                     'view' => array('Standard', 80, 'style="text-align : center;"'),
-                                    'db'   => array('c.standard', 'DESC', true)),
+                                    'db'   => array('c.standard', 'DESC', true),
+                                    'legend' => array('Whether this column is activated by default. For shared columns (Phenotype or VariantOnTranscript columns) this means newly created diseases or genes, include this column by default.')),
                         'public_view_' => array(
                                     'view' => array('Public', 60, 'style="text-align : center;"'),
-                                    'db'   => array('c.public_view', 'DESC', true)),
+                                    'db'   => array('c.public_view', 'DESC', true),
+                                    'legend' => array('Whether the public can see this column\'s contents or not.')),
                         'col_order' => array(
                                     'view' => array('Order&nbsp;', 60, 'style="text-align : right;"'),
                                     'db'   => array('SUBSTRING_INDEX(c.id, "/", 1), col_order', 'ASC')),

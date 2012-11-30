@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2012-08-17
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2012-11-30
+ * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -146,7 +146,7 @@ function lovd_pagesplitInit ()
 
 
 
-function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
+function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bLegend, $nShownPages = 10)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Initializes page splitting function which converts long lists of results
@@ -157,7 +157,7 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
     global $_PAGESPLIT, $_SETT;
     $_PAGESPLIT['total'] = $nTotal;
     foreach ($_PAGESPLIT as $key => $val) {
-        ${$key} = $val;
+        ${$key} = $val; // Defines $first_entry && $total.
     }
 
     // Last entry of the page.
@@ -196,6 +196,12 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
     }
     print("\n" .
           '            </SELECT></TD>');
+
+    // Put a button here that shows the full legend, if it's available for this VL. We don't know that here, so we use JS to show it if necessary.
+    if ($bLegend) {
+        print("\n" .
+              '          <TD><IMG src="gfx/lovd_form_question.png" alt="Legend" width="14" height="14" title="Click here to see the full legend of this data table." onclick="lovd_showLegend(\'' . $sViewListID . '\');" class="legend"></TD>');
+    }
 
     if ($nPages > 1) {
         // First printed page number.

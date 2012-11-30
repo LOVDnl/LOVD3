@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-14
+ * Modified    : 2012-11-30
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1116,8 +1116,40 @@ class LOVD_Object {
                     print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
                 }
 
+                // If we have a legend, create a hidden DIV that will be used for the full legend.
+                print('      <DIV id="viewlistLegend_' . $sViewListID . '" title="Legend" style="display : none;">' . "\n" .
+                      '        <H2 class="LOVD">Legend</H2>' . "\n\n");
+                $bLegend = false; // We need to check if we have a legend at all.
+                foreach ($this->aColumnsViewList as $sField => $aCol) {
+                    if (!empty($aCol['legend'])) {
+                        $bLegend = true;
+                        if (empty($aCol['legend'][1])) {
+                            $aCol['legend'][1] = $aCol['legend'][0];
+                        }
+                        print('        <B>' . $aCol['view'][0] . '</B>: ' . $aCol['legend'][1]);
+                        if (substr($aCol['legend'][1], -5) == '</UL>') {
+                            // No additional breaks, no possible listing of selection options. Column has its own UL already.
+                            print("\n\n");
+                            continue;
+                        }
+                        if (isset($this->aColumns[$sField]) && $this->aColumns[$sField]['form_type'][2] == 'select') {
+                            // This is a custom column and it has a selection list with options. List the options below.
+                            print('<BR>' . "\n" .
+                                  '        All options:' . "\n" .
+                                  '        <UL style="margin-top : 0px;">' . "\n");
+                            foreach ($this->aColumns[$sField]['select_options'] as $sOption) {
+                                print('          <LI>' . $sOption . '</LI>' . "\n");
+                            }
+                            print('      </UL>' . "\n\n");
+                        } else {
+                            print('<BR><BR>' . "\n\n");
+                        }
+                    }
+                }
+                print('      </DIV>' . "\n\n");
+
                 if (!$bHideNav) {
-                    lovd_pagesplitShowNav($sViewListID, $nTotal);
+                    lovd_pagesplitShowNav($sViewListID, $nTotal, $bLegend);
                 }
 
                 // Table and search headers (if applicable).
@@ -1140,7 +1172,7 @@ class LOVD_Object {
                         $sImg = ($aOrder[1] == 'DESC'? '_desc' : '_asc');
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
-                    print("\n" . '          <TH valign="top"' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . '>' . "\n" .
+                    print("\n" . '          <TH valign="top"' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . $aCol['legend'][0] . '"') . '>' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .
@@ -1313,7 +1345,7 @@ class LOVD_Object {
                       '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                       '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");
 
-                lovd_pagesplitShowNav($sViewListID, $nTotal);
+                lovd_pagesplitShowNav($sViewListID, $nTotal, $bLegend);
             }
             if (!$bAjax) {
                 print('      </DIV></FORM><BR>' . "\n"); // These contents will be replaced by Ajax.
