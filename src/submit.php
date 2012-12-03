@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-11-21
+ * Modified    : 2012-12-03
  * For LOVD    : 3.0-beta-11
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
@@ -720,8 +720,8 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
         } else {
             unset($aIndividualFields['panel_']);
         }
-        $aOwner = array();
-        if ($zIndividualDetails['owned_by'] != $_AUTH['id']) {
+        $aOwner = array(); // Owners krijgen Cc van de email.
+        if ($zIndividualDetails['owned_by'] != $_AUTH['id'] || (ACTION == 'edit' && $zIndividualDetails['owned_by'] != $aEdits['owned_by'])) {
             $aIndividualFields['owned_by_'] = 'Data owner';
             $aOwner[] = $zIndividualDetails['owned_by'];
         }
@@ -743,7 +743,6 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
                 }
             }
             if (!in_array($aEdits['owned_by'], array($_AUTH['id'], $zIndividualDetails['owned_by']))) {
-                $aIndividualFields['owned_by_'] = 'Data owner';
                 $aOwner[] = $aEdits['owned_by'];
             }
         }
@@ -764,8 +763,8 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             $sColNamesPhen = 'PhenCols_' . $z['diseaseid'];
             $a = $$sColNamesPhen;
             $a[0] = $sVariableNamePhen;
-            $aOwner = array();
-            if ($z['owned_by'] != $_AUTH['id']) {
+            $aOwner = array(); // Owners krijgen Cc van de email.
+            if ($z['owned_by'] != $_AUTH['id'] || (ACTION == 'edit' && $z['owned_by'] != $aEdits['owned_by'])) {
                 $a['owned_by_'] = 'Data owner';
                 $aOwner[] = $z['owned_by'];
             }
@@ -786,7 +785,6 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
                     }
                 }
                 if (!in_array($aEdits['owned_by'], array($_AUTH['id'], $z['owned_by']))) {
-                    $a['owned_by_'] = 'Data owner';
                     $aOwner[] = $aEdits['owned_by'];
                 }
             }
@@ -817,8 +815,8 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             } else {
                 ${$sVariableNameSCR}['variants_found_'] = 'None';
             }
-            $aOwner = array();
-            if (${$sVariableNameSCR}['owned_by'] != $_AUTH['id']) {
+            $aOwner = array(); // Owners krijgen Cc van de email.
+            if (${$sVariableNameSCR}['owned_by'] != $_AUTH['id'] || (ACTION == 'edit' && ${$sVariableNameSCR}['owned_by'] != $aEdits['owned_by'])) {
                 $a['owned_by_'] = 'Data owner';
                 $aOwner[] = ${$sVariableNameSCR}['owned_by'];
             }
@@ -838,7 +836,6 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
                     }
                 }
                 if (!in_array($aEdits['owned_by'], array($_AUTH['id'], ${$sVariableNameSCR}['owned_by']))) {
-                    $a['owned_by_'] = 'Data owner';
                     $aOwner[] = $aEdits['owned_by'];
                 }
             }
@@ -876,8 +873,8 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             if (empty(${$sVariableNameVOG}['screeningid'])) {
                 unset($a['screeningid']);
             }
-            $aOwner = array();
-            if (${$sVariableNameVOG}['owned_by'] != $_AUTH['id']) {
+            $aOwner = array(); // Owners krijgen Cc van de email.
+            if (${$sVariableNameVOG}['owned_by'] != $_AUTH['id'] || (ACTION == 'edit' && ${$sVariableNameVOG}['owned_by'] != $aEdits['owned_by'])) {
                 $a['owned_by_'] = 'Data owner';
                 $aOwner[] = ${$sVariableNameVOG}['owned_by'];
             }
@@ -900,7 +897,6 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
                     }
                 }
                 if (!in_array($aEdits['owned_by'], array($_AUTH['id'], ${$sVariableNameVOG}['owned_by']))) {
-                    $a['owned_by_'] = 'Data owner';
                     $aOwner[] = $aEdits['owned_by'];
                 }
             }

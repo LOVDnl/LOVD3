@@ -1,6 +1,6 @@
 Prioritize:
 ===========
-- Edit email: Variant/owned_by only shown on edit, and then again, not always?!!??
+
 - Handling ORCID ID:
   + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
   + reset password met orcid id!
