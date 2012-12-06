@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-12-03
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-06
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -83,7 +83,8 @@ class LOVD_Phenotype extends LOVD_Custom {
                                           'CASE p.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,'
                                         : '') .
                                           'ds.name AS status, ' .
-                                          'uo.name AS owned_by_';
+                                          'uo.name AS owned_by_, ' .
+                                          'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, uo.countryid) AS _owner';
         $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (p.statusid = ds.id)';
@@ -218,7 +219,7 @@ class LOVD_Phenotype extends LOVD_Custom {
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
 
-        if (ACTION == 'create' || (ACTION == 'publish' && GET)) {
+        if (ACTION == 'create' || lovd_getProjectFile() == '/import.php' || (ACTION == 'publish' && GET)) {
             // When creating, or when publishing without any changes, unset the authorization.
             unset($this->aFormData['authorization']);
         }

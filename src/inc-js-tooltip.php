@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-06-25
- * Modified    : 2012-05-30
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-12-06
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -53,7 +53,7 @@ var timer_is_on = 0;
 
 
 
-function lovd_showToolTip (sText, handle)
+function lovd_showToolTip (sText, handle, aDiffPos)
 {
     sText = unescape(sText);
     if (typeof(handle) == 'undefined') {
@@ -68,6 +68,11 @@ function lovd_showToolTip (sText, handle)
             var x = oEvent.pageX;
             var y = oEvent.pageY;
         }
+        // Move tooltip if requested.
+        if (aDiffPos && aDiffPos.length == 2) {
+            x += aDiffPos[0];
+            y += aDiffPos[1];
+        }
 
         x = eval(x + 20); // Move it a little bit to the right.
         oTT.style.left = x + 'px';
@@ -78,11 +83,20 @@ function lovd_showToolTip (sText, handle)
     } else {
         // Link tooltip to element.
         var aPosition = lovd_getPosition(handle);
+        // Move tooltip if requested.
+        if (aDiffPos && aDiffPos.length == 2) {
+            aPosition[0] += aDiffPos[0];
+            aPosition[1] += aDiffPos[1];
+        }
         oTT.style.left = aPosition[0]+'px';
         oTT.style.top = aPosition[1]+13+'px'; // FIXME; can height of element be used here?
         oTT.style.display = 'block';
         oTT.innerHTML = sText;
-        oTT.firstChild.innerHTML = $(oTT).children(0).attr('href'); // oTT.firstChild.href; // Put the href URL in the visible part of the link.
+        // Check if we're having a custom link or other input (such as submitter data box).
+        if (typeof($(oTT).children(0).attr('href')) != 'undefined') {
+            // Custom link usage.
+            oTT.firstChild.innerHTML = $(oTT).children(0).attr('href'); // oTT.firstChild.href; // Put the href URL in the visible part of the link.
+        }
         oTT.appendChild(imgHide); // Hide icon gets lost when setting innerHTML, re-add it.
         oTT.style.width = 'auto'; // Adapt size of tooltip to contents.
         oTT.style.paddingRight = '20px'; // But leave some space for the image.

@@ -5,7 +5,38 @@
  *************/
 
 /*******************
- * 3.0 Beta 11 (RC1)
+ * 3.0 Beta 12 (RC2) (r...)
+ * 2012-12-1????????????????????????????????????????????????????????????????????
+ *********/
+ * Fixed bug; The newly introduced quick curate option in beta-11 (r258) intro-
+   duced a bug that made the import script ask for password verification for the
+   data that was being imported.
+ * Changed the data listing's help icon to "Legend" text to prevent confusion
+   what it provides help for, and added explanation on top of the full legend on
+   how to get the short legend texts.
+ * Fixed bug; Individuals without any diseases selected could not be published
+   using the quick curate option.
+ * The gene-specific data listings now also mention the data owner just like
+   most other data listings, and moving the mouse over the owner's name shows
+   the owner's information.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Note: This beta becomes 3.0-01, rename all headers in affected files.
+
+
+/*******************
+ * 3.0 Beta 11 (RC1) (r264)
  * 2012-12-03
  *********/
  * Added spam protection to the submitter registration form using the

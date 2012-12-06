@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-30
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-06
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -462,6 +462,10 @@ class LOVD_Object {
 
     function prepareData ($zData = '', $sView = 'list')
     {
+        // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        // Also quotes all data with htmlspecialchars(), to prevent XSS.
+        global $_AUTH;
+
         if (!is_array($zData)) {
             $zData = array();
         }
@@ -482,6 +486,12 @@ class LOVD_Object {
             // By default, we put an anchor in the id_ field, if present.
             if ($zData['row_link'] && array_key_exists('id_', $this->aColumnsViewList) && $zData['id']) {
                 $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            }
+            // If we find an owned_by_ field, and an owner array, we set up the popups as well (but not for the "LOVD" user).
+            if (isset($zData['owned_by']) && (int) $zData['owned_by'] && !empty($zData['owner'])) {
+                list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['owner'];
+                // Call the tooltip function with a request to move the tooltip left, because "Owner" is often the last column in the table, and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
+                $zData['owned_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>\', this, [-200, 0]);">' . $zData['owned_by_'] . '</SPAN>';
             }
 
         } else {
@@ -1118,7 +1128,8 @@ class LOVD_Object {
 
                 // If we have a legend, create a hidden DIV that will be used for the full legend.
                 print('      <DIV id="viewlistLegend_' . $sViewListID . '" title="Legend" style="display : none;">' . "\n" .
-                      '        <H2 class="LOVD">Legend</H2>' . "\n\n");
+                      '        <H2 class="LOVD">Legend</H2>' . "\n\n" .
+                      '        <I class="S11">Please note that a short description of a certain column can be displayed when you move your mouse cursor over the column\'s header and hold it still. Below, a more detailed description is shown per column.</I><BR><BR>' . "\n\n");
                 $bLegend = false; // We need to check if we have a legend at all.
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
                     if (!empty($aCol['legend'])) {

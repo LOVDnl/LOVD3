@@ -1,6 +1,9 @@
 Prioritize:
 ===========
 
+
+- Belangrijke features zijn: mass-curate en verbeteren import.
+- Import has some 2Do, such as predicting DBIDs and such.
 - Handling ORCID ID:
   + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
   + reset password met orcid id!
@@ -112,7 +115,6 @@ Prioritize:
   - Submitter register: confirm email ter beveiliging tegen spam?
   - Add option to report registration as spam? Then we need to store IP address? Or track registration event log?
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
-  - Een submitter moet voor 't publiek zichtbaar zijn (in Reference veld, of created_by of owned_by dan toch toevoegen?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
     + Sowieso moeten submissies bekeken kunnen worden; "My submissions", zoals in LOVD 2.0.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
@@ -123,7 +125,6 @@ Prioritize:
   - HGNC niet te bereiken? Nette foutmelding of mirror gebruiken?
   - Gene create: diseases van OMIM mirror van LOVD.nl ophalen?
     + 1 transcript? auto select.
-  - (Ivar) Diseases: zit er een check op, dat er maar 1 OMIM ID mag worden aangemaakt? Code level?
   - "Does not accept external submissions" setting? Dat moet dan ook worden doorgegeven, zodat de LOVD/LSDB lijst dat kan aangeven.
     + Apart veld, niet in data.
   - Werk verder aan manual (eerst alleen nog PDF).
@@ -176,7 +177,6 @@ Prioritize:
          - Als oude waarde leeg was, en nieuwe waarde is niet zo groot, kan (was previously empty) er wel achter, toch? Rechts uitgelijnd?
            + Hoe in te bouwen; velden markeren in bepaalde variabelen, of een markering in de value?
      + Na mail druk je op back; email wordt gewoon opnieuw gestuurd, SESSION wordt dus niet netjes leeggehaald.
-     + Data owner staat soms als allerlaatst (variant && individual), soms er niet (als niet veranderd?). Veranderingen worden niet getoond.
      + Disease toegewezen aan een individu staat er niet tussen.
      + Owner veranderen staat er niet tussen (individual, phenotype, variant, screening)
      + Als je een transcript toevoegt, beweert hij dat je enkel exon, rna en protein hebt ingevuld, en dat die leeg waren. DNA lijkt niet veranderd, path. velden zijn eventueel aangepast van Unknown naar wat je ingevuld hebt.

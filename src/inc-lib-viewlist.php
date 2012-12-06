@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2012-11-30
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-06
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -109,6 +109,35 @@ function lovd_formatSearchExpression ($sExpression, $sColumnType)
 
 
 
+function lovd_hideEmail ($s)
+{
+    // Function kindly provided by Ileos.nl in the interest of Open Source.
+    // Obscure email addresses from spambots.
+
+    $a_replace = array(45 => '-', '.',
+        48 => '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        64 => '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        95 => '_',
+        97 => 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    );
+
+    $s_return = '';
+    for ($i = 0; $i < strlen($s); $i ++) {
+        $s_sub = substr($s, $i, 1);
+        if ($key = array_search($s_sub, $a_replace)) {
+            $s_return .= '&#' . str_pad($key, 3, '0', STR_PAD_LEFT) . ';';
+        } else {
+            $s_return .= $s_sub;
+        }
+    }
+
+    return $s_return;
+}
+
+
+
+
+
 function lovd_pagesplitInit ()
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
@@ -200,7 +229,7 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bLegend, $nShownPages = 
     // Put a button here that shows the full legend, if it's available for this VL. We don't know that here, so we use JS to show it if necessary.
     if ($bLegend) {
         print("\n" .
-              '          <TD><IMG src="gfx/lovd_form_question.png" alt="Legend" width="14" height="14" title="Click here to see the full legend of this data table." onclick="lovd_showLegend(\'' . $sViewListID . '\');" class="legend"></TD>');
+              '          <TD><B onclick="lovd_showLegend(\'' . $sViewListID . '\');" title="Click here to see the full legend of this data table." class="legend">Legend</B>&nbsp;&nbsp;</TD>');
     }
 
     if ($nPages > 1) {

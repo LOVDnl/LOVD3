@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-11-27
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-06
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -315,7 +315,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     // If we're publishing... pretend the form has been sent with a different status.
     if (GET && ACTION == 'publish') {
         $_POST = $zData;
-        $_POST['active_diseases'] = explode(';', $zData['active_diseases_']);
+        if ($zData['active_diseases_']) {
+            $_POST['active_diseases'] = explode(';', $zData['active_diseases_']);
+        } else {
+            // An array with an empty string as a value doesn't get past the checkFields() since '' is not a valid option.
+            $_POST['active_diseases'] = array();
+        }
         $_POST['statusid'] = STATUS_OK;
     }
 

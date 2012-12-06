@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-11-30
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-06
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -123,7 +123,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnGenome':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') . ', dsg.id AS var_statusid, dsg.name AS var_status';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') . (in_array('Individual', $aObjects)? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, uo.countryid) AS _owner') . ', dsg.id AS var_statusid, dsg.name AS var_status';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['SELECT'] .= ', vog.id AS row_id'; // To ensure other table's id columns don't interfere.
@@ -143,6 +143,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id)';
                     if (!in_array('VariantOnTranscript', $aObjects)) {
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS eg ON (vog.effectid = eg.id)';
+                    }
+                    if (!in_array('Individual', $aObjects)) {
+                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)';
                     }
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
                     // If no collaborator, hide lines with hidden variants!
@@ -210,7 +213,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'Individual':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.*, GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, dsi.id AS ind_statusid, dsi.name AS ind_status';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.*, GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, uo.countryid) AS _owner, dsi.id AS ind_statusid, dsi.name AS ind_status';
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';
@@ -245,6 +248,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' .
                                      TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) LEFT OUTER JOIN ' .
                                      TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)';
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)';
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsi ON (i.statusid = dsi.id)';
                     break;
             }
@@ -391,10 +395,16 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                         array(
                             // NOTE: there are more columns defined a little further up.
+                            'owned_by_' => array(
+                                'view' => array('Owner', 160),
+                                'db'   => array('uo.name', 'ASC', true)),
                             'var_status' => array(
                                 'view' => array('Var. status', 70),
                                 'db'   => array('dsg.name', false, true)),
                         ));
+                    if (in_array('Individual', $aObjects)) {
+                        unset($this->aColumnsViewList['owned_by_']);
+                    }
                     if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
                         // Unset status column for non-collaborators. We're assuming here, that lovd_isAuthorized() only gets called for gene-specific overviews.
                         unset($this->aColumnsViewList['var_status']);
@@ -409,6 +419,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                             'panel_size' => array(
                                 'view' => array('Panel size', 70),
                                 'db'   => array('i.panel_size', 'DESC', true)),
+                            'owned_by_' => array(
+                                'view' => array('Owner', 160),
+                                'db'   => array('uo.name', 'ASC', true)),
                             'ind_status' => array(
                                 'view' => array('Ind. status', 70),
                                 'db'   => array('dsi.name', false, true)),
