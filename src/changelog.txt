@@ -19,6 +19,11 @@
  * The gene-specific data listings now also mention the data owner just like
    most other data listings, and moving the mouse over the owner's name shows
    the owner's information.
+ * Modified LOVD scripts to accept changed warning codes from Mutalyzer, which
+   now better reflect if they match the selected gene or not.
+ * LOVD now shows a sensible error message on the variant data entry form when
+   the given transcript is not in Mutalyzer's mapping database.
+ * When mapping variants, LOVD now also predicts the RNA field.
 
 
 

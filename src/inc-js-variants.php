@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2012-11-15
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-07
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -208,11 +208,25 @@ function lovd_convertPosition (oElement)
                             lovd_convertPosition(oInput.siblings('button:eq(0)'));
                         }
                     }
-                    $(oThisDNA).siblings('img:first').attr({
-                        src: 'gfx/check.png',
-                        alt: 'Valid HGVS syntax!',
-                        title: 'Valid HGVS syntax!'
-                    }).show();
+                    if (aVariant != null) {
+                        $(oThisDNA).siblings('img:first').attr({
+                            src: 'gfx/check.png',
+                            alt: 'Valid HGVS syntax!',
+                            title: 'Valid HGVS syntax!'
+                        }).show();
+                    } else {
+                        // Call was successful, but we were unable to get any variant back from Mutalyzer. Probably NM not in mapping DB.
+                        $(oThisDNA).attr('class', 'warn');
+                        $(oThisDNA).siblings('img:first').attr({
+                            src: 'gfx/lovd_form_information.png',
+                            alt: '',
+                            title : '',
+                            className: 'help',
+                            onmouseover : 'lovd_showToolTip(\'Could not map variant using this transcript! Probably Mutalyzer does not have this transcript in its mapping database yet.\');',
+                            onmouseout: 'lovd_hideToolTip();'
+                        }).show();
+                        $(oThisDNA).siblings('button:eq(0)').hide(); // Hide the mapping button.
+                    }
 
                 } else {
                     // Either Mutalyzer says No, our regexp didn't match with the full variant notation or user lost $_AUTH.
@@ -248,6 +262,9 @@ function lovd_getProteinChange (oElement)
     var nTranscriptID = $(oThisProtein).attr('name').substring(0,5);
     var oThisDNA = $(oElement).parent().parent().siblings().find('input[name="' + nTranscriptID + '_VariantOnTranscript/DNA"]');
     var sVariantNotation = aUDrefseqs[aTranscripts[nTranscriptID][1]] + '(' + aTranscripts[nTranscriptID][1] + '_v' + aTranscripts[nTranscriptID][2] + '):' + $(oThisDNA).val();
+    var oThisRNA = $(oElement).parent().parent().siblings().find('input[name="' + nTranscriptID + '_VariantOnTranscript/RNA"]');
+    $(oThisRNA).attr('value', '');
+    $(oThisRNA).removeClass();
 
     $.get('ajax/check_variant.php', { variant: sVariantNotation, gene: aTranscripts[nTranscriptID][1] },
         function(sData) {
@@ -290,11 +307,12 @@ function lovd_getProteinChange (oElement)
                 for (index in aErrors) {
                     // Analyze the messages that Mutalyzer returns.
                     var aError = aErrors[index].split(':');
+                    // aError[0] == Error code, aError[1] = Message.
                     var sErrorCode = aError[0];
                     aError.splice(0,1);
                     var sErrorMessage = aError.join(':');
-                    if (sErrorCode == 'WSPLICE' || (sErrorCode == 'WSTART' && sErrorMessage != 'Mutation in start codon of gene ' + aTranscripts[nTranscriptID][1] + ' transcript ' + aTranscripts[nTranscriptID][2] + '.')) {
-                        // These warnings apply to another transcript than the one of interest.
+                    if (sErrorCode.match(/_OTHER$/)) {
+                        // Whatever error it is, it's not about this gene!
                         continue;
                     } else if (sErrorCode == 'ERANGE') {
                         // Ignore 'ERANGE' as an actual error, because we can always interpret this as p.(=), p.? or p.0.
@@ -303,22 +321,28 @@ function lovd_getProteinChange (oElement)
                         // Check what the variant looks like and act accordingly.
                         if (aVariantRange.length == 2 && /-\d+/.exec(aVariantRange[0]) != null && /-\d+/.exec(aVariantRange[1]) != null) {
                             // Variant has 2 positions. Variant has both the start and end positions upstream of the transcript, we can assume that the product will not be affected.
-                            sPredict = 'p.(=)';
+                            sPredictR = 'r.(=)';
+                            sPredictP = 'p.(=)';
                         } else if (aVariantRange.length == 2 && /-\d+/.exec(aVariantRange[0]) != null && /\*\d+/.exec(aVariantRange[1]) != null) {
                             // Variant has 2 positions. Variant has an upstream start position and a downstream end position, we can assume that the product will not be expressed.
-                            sPredict = 'p.0';
+                            sPredictP = 'r.0?';
+                            sPredictP = 'p.0?';
                         } else if (aVariantRange.length == 2 && /\*\d+/.exec(aVariantRange[0]) != null && /\*\d+/.exec(aVariantRange[1]) != null) {
                             // Variant has 2 positions. Variant has both the start and end positions downstream of the transcript, we can assume that the product will not be affected.
-                            sPredict = 'p.(=)';
+                            sPredictR = 'r.(=)';
+                            sPredictP = 'p.(=)';
                         } else if (aVariantRange.length == 1 && (/-\d+/.exec(aVariantRange[0]) != null || /\*\d+/.exec(aVariantRange[0]) != null)) {
                             // Variant has 1 position and is either upstream or downstream from the transcript, we can assume that the product will not be affected.
-                            sPredict = 'p.(=)';
+                            sPredictR = 'r.(=)';
+                            sPredictP = 'p.(=)';
                         } else {
                             // One of the positions of the variant falls within the transcript, so we can not make any assumptions based on that.
-                            sPredict = 'p.?';
+                            sPredictR = 'r.?';
+                            sPredictP = 'p.?';
                         }
                         // Fill in our assumption in aData to forge that this information came from Mutalyzer.
-                        aData[1] = sPredict;
+                        aData[1] = sPredictP;
+                        aData[2] = sPredictR;
                         continue;
                     }
                     if (sErrorCode.substring(0, 1) == 'E') {
@@ -368,8 +392,11 @@ function lovd_getProteinChange (oElement)
                                 sErrorMessages += '<BR>';
                             }
                             var aWarning = aWarningList[index].split(':');
-                            if (aWarning[0] == 'WSPLICESELECTED') {
+                            if (aWarning[0] == 'WSPLICE') {
+                                // Mutalyzer now (2012-12-07) returns a WSPLICE for <= 5 nucleotides from the site, eventhough there internally is a difference.
+                                // Most likely, they will include two different types of errors in the future.
                                 aData[1] = 'p.?';
+                                aData[2] = 'r.spl?';
                             }
                             sErrorMessages +=  '<B>' + aWarning[0] + ':</B> ' + aWarning[1];
                         }
@@ -392,25 +419,23 @@ function lovd_getProteinChange (oElement)
                             title : 'HGVS compliant!'
                         }).show();
                     }
-                    // Fill in the predicted value in the corresponding protein field.
-                    $(oThisProtein).attr('value', aData[1]);
-
-                    // Highlight the protein input field which has been modified, as long as it's not being done already.
-                    if (!$(oThisProtein).attr('style') || $(oThisProtein).attr('style').search('background') == -1) {
-                        $(oThisProtein).attr('style', 'background : #AAFFAA;');
-
-                        // Fade background to white, then remove the style.
-                        var nColor = 170;
-                        for (i = nColor; i < 255; i++) {
-                            setTimeout(function () {
-                                $(oThisProtein).attr('style', 'background : #' + nColor.toString(16).toUpperCase() + 'FF' + nColor.toString(16).toUpperCase() + ';');
-                                nColor ++;
-                            }, (i - 130) * 40);
+                    // Fill in the predicted value in the corresponding RNA and protein fields.
+                    // Predict RNA change, if not given yet.
+                    if (aData.length == 2) {
+                        // RNA not filled in yet.
+                        if (aData[1] == 'p.?') {
+                            aData[2] = 'r.?';
+                        } else if (aData[1] == 'p.(=)') {
+                            aData[2] = 'r.(=)';
+                        } else {
+                            // RNA will default to r.(?).
+                            aData[2] = 'r.(?)';
                         }
-                        setTimeout(function () {
-                            $(oThisProtein).attr('style', '');
-                        }, (i - 130) * 40);
                     }
+                    $(oThisRNA).attr('value', aData[2]);
+                    $(oThisProtein).attr('value', aData[1]);
+                    lovd_highlightInput(oThisRNA);
+                    lovd_highlightInput(oThisProtein);
 
                     $(oThisProtein).siblings('img:first').attr({
                         src: 'gfx/check.png',
@@ -425,6 +450,30 @@ function lovd_getProteinChange (oElement)
             }
     });
     return false;
+}
+
+
+
+
+
+function lovd_highlightInput (oElement)
+{
+    // Hightlights an element after it was filled in automatically by LOVD.
+    if (!$(oElement).attr('style') || $(oElement).attr('style').search('background') == -1) {
+        $(oElement).attr('style', 'background : #AAFFAA;');
+
+        // Fade background to white, then remove the style.
+        var nColor = 170;
+        for (i = nColor; i < 255; i++) {
+            setTimeout(function () {
+                $(oElement).attr('style', 'background : #' + nColor.toString(16).toUpperCase() + 'FF' + nColor.toString(16).toUpperCase() + ';');
+                nColor ++;
+            }, (i - 130) * 40);
+        }
+        setTimeout(function () {
+            $(oElement).attr('style', '');
+        }, (i - 130) * 40);
+    }
 }
 
 

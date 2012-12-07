@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-11-15
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-07
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -82,7 +82,7 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
     // $aTranscripts is a two-dimensional array; each transcript is an array with keys 'id' (optional) and 'id_ncbi' (mandatory).
     // Returns an associative array of the same length as $aTranscripts with the 'id_ncbi' values as keys, or FALSE on failure.
     // On success, each element contains an array with a ?-filled SQL query and an array of values. If the transcript ID is not given, the value array's element [1] contains NULL.
-    // The value array's element [7], for the VariantOnTranscript/Protein column, contains an empty string and is to be overwritten by runMutalyzer output.
+    // The value array's elements [7] and [8], for the VariantOnTranscript/RNA and VariantOnTranscript/Protein columns, contain empty strings and are to be overwritten by runMutalyzer output.
     // On failure of a single transcript, the corresponding element contains FALSE.
     global $_MutalyzerWS, $_CONF, $_SETT;
     static $aVariantsOnTranscripts = array();
@@ -136,8 +136,8 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
                     // Got the variant description relative to this transcript.
                     $aReturn[$aTranscript['id_ncbi']] =
                          array(
-                                'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, 55, ?, ?, ?, ?, ?, ?)',
-                                array($aVariant['id'], $aTranscript['id'], $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], preg_replace('/^[A-Z]{2}_[0-9.]+:/', '', $sVariantOnTranscript), '')
+                                'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/RNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, 55, ?, ?, ?, ?, ?, ?, ?)',
+                                array($aVariant['id'], $aTranscript['id'], $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], preg_replace('/^[A-Z]{2}_[0-9.]+:/', '', $sVariantOnTranscript), '', '')
                               );
                     continue 2;
                 }
@@ -396,9 +396,10 @@ if (!empty($aVariants)) {
                                 $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $aOutputRunMutalyzer);
                                 $aVariantsOnProteinError = lovd_getAllValuesFromArray('messages/SoapMessage', $aOutputRunMutalyzer);
 
-                                // FIXME; Temporary fix!!! Wait for mutalyzer SOAP to return errors ONLY from the requested transcript.
-                                if (isset($aVariantsOnProteinError['errorcode']) && $aVariantsOnProteinError['errorcode'] == 'WSPLICESELECTED') {
-                                    $aSQL[1][7] = 'p.?';
+                                // FIXME; We should include ERANGE error handling here too, when we can expect large deletions etc.
+                                if (isset($aVariantsOnProteinError['errorcode']) && $aVariantsOnProteinError['errorcode'] == 'WSPLICE') {
+                                    $aSQL[1][7] = 'r.spl?';
+                                    $aSQL[1][8] = 'p.?';
                                 } else {
                                     if (!empty($aVariantsOnProtein['string'])) {
                                         if (!is_array($aVariantsOnProtein['string'])) {
@@ -406,7 +407,17 @@ if (!empty($aVariants)) {
                                         }
                                         foreach ($aVariantsOnProtein['string'] as $sVariantOnProtein) {
                                             if (($nPos = strpos($sVariantOnProtein, '_i' . $sTranscriptNum . '):p.')) !== false) {
-                                                $aSQL[1][7] = substr($sVariantOnProtein, $nPos + strlen('_i' . $sTranscriptNum . '):'));
+                                                $sProtein = substr($sVariantOnProtein, $nPos + strlen('_i' . $sTranscriptNum . '):'));
+                                                $aSQL[1][8] = $sProtein;
+                                                if ($sProtein == 'p.?') {
+                                                    $aSQL[1][7] = 'r.?';
+                                                } else if ($sProtein == 'p.(=)') {
+                                                    $aSQL[1][7] = 'r.(=)';
+                                                } else {
+                                                    // RNA will default to r.(?).
+                                                    $aSQL[1][7] = 'r.(?)';
+                                                }
+
                                                 break;
                                             }
                                         }
@@ -625,7 +636,7 @@ if (!empty($aVariants)) {
                         }
                         foreach ($aVariantsOnProtein['string'] as $sVariantOnProtein) {
                             if (($nPos = strpos($sVariantOnProtein, '_i' . $aFieldsTranscript['id_mutalyzer'] . '):p.')) !== false) {
-                                $aVariantOnTranscriptSQL[1][7] = substr($sVariantOnProtein, $nPos + strlen('_i' . $aFieldsTranscript['id_mutalyzer'] . '):'));
+                                $aVariantOnTranscriptSQL[1][8] = substr($sVariantOnProtein, $nPos + strlen('_i' . $aFieldsTranscript['id_mutalyzer'] . '):'));
                             }
                         }
                     }
