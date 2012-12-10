@@ -4,9 +4,9 @@
  *
  *************/
 
-/*******************
- * 3.0 Beta 12 (RC2) (r...)
- * 2012-12-1????????????????????????????????????????????????????????????????????
+/**************************
+ * 3.0 Beta 12 (RC2) (r268)
+ * 2012-12-10
  *********/
  * Fixed bug; The newly introduced quick curate option in beta-11 (r258) intro-
    duced a bug that made the import script ask for password verification for the
@@ -24,20 +24,6 @@
  * LOVD now shows a sensible error message on the variant data entry form when
    the given transcript is not in Mutalyzer's mapping database.
  * When mapping variants, LOVD now also predicts the RNA field.
-
-
-
-
-
-
-
-
-
-
-
-
-
-Note: This beta becomes 3.0-01, rename all headers in affected files.
 
 
 /*******************

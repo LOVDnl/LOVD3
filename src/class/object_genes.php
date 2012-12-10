@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-11-16
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-10
+ * For LOVD    : 3.0-beta-12
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -119,6 +119,7 @@ class LOVD_Gene extends LOVD_Object {
                         'chrom_band' => 'Chromosomal band',
                         'imprinting_' => 'Imprinted',
                         'refseq_genomic_' => 'Genomic reference',
+                        'refseq_UD_' => array('Mutalyzer genomic reference', LEVEL_ADMIN),
                         'refseq_transcript_' => 'Transcript reference',
                         'exon_tables' => 'Exon/intron information',
                         'diseases_' => 'Associated with diseases',
@@ -450,6 +451,7 @@ class LOVD_Gene extends LOVD_Object {
 
             // FIXME; zou dit een external source moeten zijn?
             $zData['refseq_genomic_'] = '<A href="' . (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml' : 'http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic']) . '" target="_blank">' . $zData['refseq_genomic'] . '</A>';
+            $zData['refseq_UD_'] = '<A href="' . str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $zData['refseq_UD'] . '.gb" target="_blank">' . $zData['refseq_UD'] . '</A>';
 
             // Transcript links and exon/intron info table. Check if files exist, and build link. Otherwise, remove field.
             $zData['refseq_transcript_'] = '';

@@ -1,6 +1,6 @@
 Prioritize:
 ===========
-
+Note: This beta becomes 3.0-01, rename all headers in affected files.
 
 - Belangrijke features zijn: mass-curate en verbeteren import.
 - Import has some 2Do, such as predicting DBIDs and such.
