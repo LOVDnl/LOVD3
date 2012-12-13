@@ -1,7 +1,7 @@
 Prioritize:
 ===========
-Note: This beta becomes 3.0-01, rename all headers in affected files.
-
+- Full data view: geen individu? wel ind_owner! omdat variant owner heeft. suf...
+- Disease aangemaakt door import heeft ID = 2. Waarom geen 1? Is dat altijd zo, of ligt het aan de import?
 - Belangrijke features zijn: mass-curate en verbeteren import.
 - Import has some 2Do, such as predicting DBIDs and such.
 - Handling ORCID ID:
@@ -22,7 +22,6 @@ Note: This beta becomes 3.0-01, rename all headers in affected files.
 
 - Gene delete heeft GEEN CORRECTE reminder bij het verwijderen!!!
   + Disease verwijderen hoort ook een reminder te geven, dat alle phenotype data verdwijnt, mits aanwezig.
-
 - Authorizatieprobleem voorleggen bij groep;
   + Curator maakt per ongeluk een screening teveel aan bij een patient, die van haar is (en ze is curator hiervan). Screening kan niet verwijderd worden, omdat ze LEVEL_OWNER is.
     * We kunnen zeggen: LEVEL_OWNER icm ergens curator van: rechten op screening. NU kan een curator al rechten verwerven door aan deze submissie een variant in haar gen toe te voegen; dan kan ze de hele individu verwijderen.
@@ -57,6 +56,7 @@ Note: This beta becomes 3.0-01, rename all headers in affected files.
   + After that, change the default link when clicking the individual tab.
 - Hoe kan een gebruiker op een zojuist geopend edit formulier de predict triggeren en/of de Mutalyzer namechecker openen in een nieuwe window?
   + Wellicht, voor een losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
+  + Namechecker ook de gekozen refseq laten gebruiken? Of niet, omdat we niet weten of dit transcript daar wel te vinden is?
 - (@Ivo) DATA DOWNLOAD.
   + URLs left to implement:
     * Alle data van een bepaald gen downloaden (curator and up):
@@ -151,7 +151,7 @@ Note: This beta becomes 3.0-01, rename all headers in affected files.
     + In het geval dat we de browser direct de calls en de interpretatie willen laten doen, hebben we een wrapper script in PHP
       nodig die de calls doet en de JSON controleert (indien we een foutmelding krijgen, een JSON object maakt) en alles doorstuurt.
   - Speciale behandeling non-coding (NR) genen: geen protein field?
-
+  - Samenvatting beschikbaar vanaf VL? Zet summary aan, en krijg extra balk met min/mean/max voor numerieke cols, aantallen en percentages voor select velden, etc.
   - Als $zData['column_'] niet defined is, pakt viewList en viewEntry automatisch $zData['column']? Dat staat ons wat "sloppy" code toe, waar we icoontjes toevoegen speciaal voor text/html, maar dat niet willen voor downloads of XML.
   - Vanaf individual page, phenotype toevoegen, waarom niet terug naar de individu?
     + Op zich OK om op de phenotype pagina te zitten, maar het is niet duidelijk genoeg hoe je nu terug komt naar de individu.

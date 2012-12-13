@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-12-13
+ * For LOVD    : 3.0-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -27,7 +27,7 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
- 
+
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
@@ -142,7 +142,7 @@ class LOVD_Graphs {
                 $sType = '>5';
             }
             $aData[$sType] ++;
-        }   
+        }
 
         // Format $aData.
         print('        var data = [');
@@ -163,7 +163,7 @@ class LOVD_Graphs {
             print('{label: "No data to show", data: 1, color: "#000"}');
             $nTotal = 1;
         }
-		print('];' . "\n\n" .
+        print('];' . "\n\n" .
               '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
               '        {' . "\n" .
               '            series: {' . "\n" .
@@ -172,11 +172,11 @@ class LOVD_Graphs {
               '            grid: {hoverable: true}' . "\n" .
 
 /*
-		combine: {
-			threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
-			color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
-			label: any text value of what the combined slice should be labeled
-		}
+        combine: {
+            threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
+            color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
+            label: any text value of what the combined slice should be labeled
+        }
 */
               '        });' . "\n" .
               '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
@@ -193,11 +193,11 @@ class LOVD_Graphs {
 
 
 
-    function genesNumberOfVariants ($sDIV, $Data = array(), $bPublicOnly = true)
+    function genesNumberOfVariants ($sDIV, $Data = array(), $bNonPublic = false)
     {
         // Shows a nice piechart about the number of variants per gene in a certain data set.
         // $Data can be either a * (all genes), or an array of gene symbols.
-        // $bPublicOnly indicates whether or not only the public variants should be used.
+        // $bNonPublic indicates whether or not only the public variants should be used.
         global $_DB;
 
         if (empty($sDIV)) {
@@ -227,16 +227,16 @@ class LOVD_Graphs {
         // Retricting to a certain set of genes, or full database ($Data == '*', although we actually don't check the value of $Data).
         if (!is_array($Data)) {
             $qData = $_DB->query('SELECT t.geneid, COUNT(DISTINCT vot.id) FROM ' .
-                ($bPublicOnly? TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' : TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ') .
+                (!$bNonPublic? TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' : TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ') .
                 'INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
-                (!$bPublicOnly? '' : ' WHERE statusid >= ' . STATUS_MARKED) .
+                ($bNonPublic? '' : ' WHERE statusid >= ' . STATUS_MARKED) .
                 ' GROUP BY t.geneid');
         } elseif (count($Data)) {
             // Using list of gene IDs.
             $qData = $_DB->query('SELECT t.geneid, COUNT(DISTINCT vot.id) FROM ' .
-                (!$bPublicOnly? '' : TABLE_VARIANTS . ' AS vog INNER JOIN ') .
+                ($bNonPublic? '' : TABLE_VARIANTS . ' AS vog INNER JOIN ') .
                 TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid IN (?' . str_repeat(',?', count($Data)-1) . ')' .
-                (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) .
+                ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) .
                 ' GROUP BY t.geneid', array($Data));
         }
 
@@ -259,7 +259,7 @@ class LOVD_Graphs {
                 $sType = '>1000';
             }
             $aData[$sType] ++;
-        }   
+        }
 
         // Format $aData.
         print('        var data = [');
@@ -280,7 +280,7 @@ class LOVD_Graphs {
             print('{label: "No data to show", data: 1, color: "#000"}');
             $nTotal = 1;
         }
-		print('];' . "\n\n" .
+        print('];' . "\n\n" .
               '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
               '        {' . "\n" .
               '            series: {' . "\n" .
@@ -289,11 +289,11 @@ class LOVD_Graphs {
               '            grid: {hoverable: true}' . "\n" .
 
 /*
-		combine: {
-			threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
-			color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
-			label: any text value of what the combined slice should be labeled
-		}
+        combine: {
+            threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
+            color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
+            label: any text value of what the combined slice should be labeled
+        }
 */
               '        });' . "\n" .
               '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
@@ -310,11 +310,11 @@ class LOVD_Graphs {
 
 
 
-    function variantsTypeDNA ($sDIV, $Data = array(), $bPublicOnly = true, $bUnique = false)
+    function variantsTypeDNA ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false)
     {
         // Shows a nice piechart about the variant types on DNA level in a certain data set.
         // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
-        // $bPublicOnly indicates whether or not only the public variants should be used.
+        // $bNonPublic indicates whether or not only the public variants should be used.
         global $_DB;
 
         if (empty($sDIV)) {
@@ -346,9 +346,9 @@ class LOVD_Graphs {
             if ($bUnique) {
                 // FIXME: Double check if multi-transcript genes don't mess up the statistics here.
                 if ($Data == '*') {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog' . (!$bPublicOnly? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog' . ($bNonPublic? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
                 } else {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
                 }
                 $aData = array();
                 while (list($sType, $nCount) = $qData->fetchRow()) {
@@ -360,12 +360,12 @@ class LOVD_Graphs {
                         $aData[$sType] = 0;
                     }
                     $aData[$sType] ++;
-                }   
+                }
             } else {
                 if ($Data == '*') {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog' . (!$bPublicOnly? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY type')->fetchAllCombine();
+                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog' . ($bNonPublic? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY type')->fetchAllCombine();
                 } else {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY type', array($Data))->fetchAllCombine();
+                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY type', array($Data))->fetchAllCombine();
                 }
             }
         } else {
@@ -392,7 +392,7 @@ class LOVD_Graphs {
             print('{label: "No data to show", data: 1, color: "#000"}');
             $nTotal = 1;
         }
-		print('];' . "\n\n" .
+        print('];' . "\n\n" .
               '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
               '        {' . "\n" .
               '            series: {' . "\n" .
@@ -500,6 +500,7 @@ $sPredDel       = "/\([a-zA-Z0-9_]*del(\d)*//*";                                
 
 $sSub           = "/>/";                                                        // substitution
 
+// FIXME: Thinks p.Val123del is a substitution!
 $sProtSub       = "/(^p\.)?[^\[][a-zA-Z]{1,3}\d+[a-zA-Z]{1,3}/";                // protein substitution
 $sPredProtSub   = "/(^p\.)?\([a-zA-Z]{1,3}(\d)+[a-zA-Z]{1,3}\)$/";              // predicted protein substitution
 
@@ -548,7 +549,7 @@ if ($_CURRDB->colExists('Variant/Exon')) {
 
     if ($_CURRDB->colExists('Patient/Times_Reported')) {
         // Use the Times_Reported column to count the number of patients.
-        $sQ = 'SELECT v.`Variant/Exon`, SUM(p.`Patient/Times_Reported`) AS sum' . 
+        $sQ = 'SELECT v.`Variant/Exon`, SUM(p.`Patient/Times_Reported`) AS sum' .
               ' FROM ' . TABLE_CURRDB_VARS . ' AS v' .
               ' LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (variantid)' .
               ' LEFT JOIN ' . TABLE_PATIENTS . ' AS p USING (patientid)';
@@ -604,7 +605,7 @@ if ($_CURRDB->colExists('Variant/Exon')) {
           (isset($aExonTable) ? '          <TH>variants/length</TH>' . "\n" : '          <TH># variants</TH>' . "\n") .
           '          <TH>' . (isset($aExonTable) ? '' : 'percentage of variants per exon') . '</TH></TR>' . "\n");
 
-    
+
     // 2009-08-31; 2.0-21; added variable $nBarFraction to simplify the print the red bar statement
     $nBarFraction = '';
     // 2010-07-05; 2.0-27; Padding length depends on the maximum exon value for this gene.
@@ -690,7 +691,7 @@ if ($_CURRDB->colExists('Variant/DNA')) {
     // 2009-12-16; 2.0-24; added v.type
     if ($_CURRDB->colExists('Patient/Times_Reported')) {
         // Use the Times_Reported column to count the number of patients.
-        $sQ = 'SELECT v.variantid, v.`Variant/DNA`, v.type, SUM(p.`Patient/Times_Reported`) AS sum' . 
+        $sQ = 'SELECT v.variantid, v.`Variant/DNA`, v.type, SUM(p.`Patient/Times_Reported`) AS sum' .
               ' FROM ' . TABLE_CURRDB_VARS . ' AS v' .
               ' LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (variantid)' .
               ' LEFT JOIN ' . TABLE_PATIENTS . ' AS p USING (patientid)';
@@ -705,7 +706,7 @@ if ($_CURRDB->colExists('Variant/DNA')) {
 
     $qDNA = @mysql_query($sQ);
     while (list($nVariantid, $sDNA, $sType, $nCount) = mysql_fetch_row($qDNA)) {
-        // 2009-12-16; 2.0-24; added $sType and use that for counting variant types if possible        
+        // 2009-12-16; 2.0-24; added $sType and use that for counting variant types if possible
         // 2010-05-21; 2.0-27; added cases for duplications and inversions which were lacking
         if ($sType) {
             switch ($sType) {
@@ -812,7 +813,7 @@ if ($_CURRDB->colExists('Variant/DNA')) {
 
     $aAbsentVariants = array(); //2009-06-24; 2.0-19; keep track of non-observed variants
     foreach ($aCounts as $sVariant => $nVariants) {
-        // Print for each variant type a row. 
+        // Print for each variant type a row.
         if (is_array($nVariants)) {
             // The substitutions, deletions, duplications, insertions, indels and inversions
             // can be subdivided according to their location (before the 5' start, coding, intron
@@ -863,13 +864,13 @@ if ($_CURRDB->colExists('Variant/DNA')) {
           '          <TD>totals</TD>' . "\n" .
           '          <TD align="right">' . $nTotalSum . '</TD>' . "\n");
     for ($i = 0; $i < 4; $i++) {
-        print('          <TD align="right">' . 
-              ($aCounts['sub'][$i] + 
-               $aCounts['del'][$i] + 
-               $aCounts['dup'][$i] + 
-               $aCounts['ins'][$i] + 
-               $aCounts['delins'][$i] + 
-               $aCounts['inv'][$i]) . 
+        print('          <TD align="right">' .
+              ($aCounts['sub'][$i] +
+               $aCounts['del'][$i] +
+               $aCounts['dup'][$i] +
+               $aCounts['ins'][$i] +
+               $aCounts['delins'][$i] +
+               $aCounts['inv'][$i]) .
               '</TD>' . "\n");
     }
     print('          <TD><IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="100%" title="100%" width="' . $nBarWidth . '" height="15"></TD></TR></TABLE>' . "\n\n\n\n");
@@ -907,7 +908,7 @@ if ($_CURRDB->colExists('Variant/RNA')) {
 
     if ($_CURRDB->colExists('Patient/Times_Reported')) {
         // Use the Times_Reported column to count the number of patients.
-        $sQ = 'SELECT v.variantid, v.`Variant/RNA`, SUM(p.`Patient/Times_Reported`) AS sum FROM ' . TABLE_CURRDB_VARS . 
+        $sQ = 'SELECT v.variantid, v.`Variant/RNA`, SUM(p.`Patient/Times_Reported`) AS sum FROM ' . TABLE_CURRDB_VARS .
               ' AS v LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (variantid) LEFT JOIN ' . TABLE_PATIENTS . ' AS p USING (patientid)';
     } else {
         // No Times_Reported column found, consider every patient entry to be one case.
@@ -1006,7 +1007,7 @@ if ($_CURRDB->colExists('Variant/RNA')) {
           '          <TD>total</TD>' . "\n" .
           '          <TD align="right">' . array_sum($aCounts) . '</TD>' . "\n" .
           '          <TD><IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="100%" title="100%" width="' . $nBarWidth . '" height="15"></TD></TR></TABLE>' . "\n\n\n\n");
-    
+
     // 2009-06-24; 2.0-19; print non-observed variants
     if (!empty($aAbsentVariants)) {
         print('Variants not observed: ' . implode($aAbsentVariants, ', ') . '<BR><BR>');
@@ -1053,11 +1054,11 @@ if ($_CURRDB->colExists('Variant/Protein')) {
     $aCountsPred['complex']     = 0; // complex variants (predicted)
     $aCounts['unknown']         = 0; // unknown variants
     $aCountsPred['unknown']     = 0; // unknown variants (predicted)
-    
+
 
     if ($_CURRDB->colExists('Patient/Times_Reported')) {
         // Use the Times_Reported column to count the number of patients.
-        $sQ = 'SELECT v.variantid, v.`Variant/Protein`, SUM(p.`Patient/Times_Reported`) AS sum FROM ' . TABLE_CURRDB_VARS . 
+        $sQ = 'SELECT v.variantid, v.`Variant/Protein`, SUM(p.`Patient/Times_Reported`) AS sum FROM ' . TABLE_CURRDB_VARS .
               ' AS v LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (variantid) LEFT JOIN ' . TABLE_PATIENTS . ' AS p USING (patientid)';
     } else {
         // No Times_Reported column found, consider every patient entry to be one case.
@@ -1214,7 +1215,7 @@ if ($_CURRDB->colExists('Variant/Protein')) {
                       ($nPercentage ? '<IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="' . $nPercentage . '%" title="' . $nPercentage . '%" width="' . (round($nVariants/($nSum + 0.0000001) * $nBarWidth, 2)>1?round($nVariants/($nSum + 0.0000001) * $nBarWidth, 2):1) . '" height="15">' : '') .
                       '          </TD></TR>' . "\n");
             }
-                
+
         } else {
             // 2009-06-24; 2.0-19; store non-observed variants
             $aAbsentVariants[] = $aVariants[$sVariant]['header'];

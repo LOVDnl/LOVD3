@@ -5,6 +5,20 @@
  *************/
 
 /**************************
+ * 3.0 Build 01 (RC2) (r...)
+ * 2012-12-1??????????
+ *********/
+ * The list of diseases presented when activating phenotype columns, wasn't sor-
+   ting diseases without abbreviations correctly.
+ * Fixed bug; The variant type graphs analyzed all variants for non-authorized
+   users, and only the public variants for authorized users.
+
+
+
+
+
+
+/**************************
  * 3.0 Beta 12 (RC2) (r268)
  * 2012-12-10
  *********/
