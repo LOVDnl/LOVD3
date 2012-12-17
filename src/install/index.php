@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-10-29
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2012-12-17
+ * For LOVD    : 3.0-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -463,7 +463,8 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
         array(
             'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
             'UPDATE ' . TABLE_DISEASES . ' SET id = 0',
-            'ALTER TABLE ' . TABLE_DISEASES . ' auto_increment = 0',
+            'ALTER TABLE ' . TABLE_DISEASES . ' auto_increment = 1',
+            // FIXME: Rather parse inc-sql-columns then to do this manually.
             'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `Phenotype/Length` SMALLINT(3) UNSIGNED',
             'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Length", 0, NOW())',
             'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, col_order, width, mandatory, description_form, description_legend_short, description_legend_full, select_options, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Length", 0, 100, 0, "", "Length of the individual, in cm.", "Length of the individual, in centimeters (cm).", "", 1, 1, 0, NOW())',

@@ -12,6 +12,9 @@
    ting diseases without abbreviations correctly.
  * Fixed bug; The variant type graphs analyzed all variants for non-authorized
    users, and only the public variants for authorized users.
+ * Fixed bug; In the combined data listings, the individual's owner field was
+   set to the variant's owner field.
+ * Fixed bug; The first disease added to LOVD would have ID 2, instead of 1.
 
 
 

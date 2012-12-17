@@ -1,7 +1,7 @@
 Prioritize:
 ===========
-- Full data view: geen individu? wel ind_owner! omdat variant owner heeft. suf...
-- Disease aangemaakt door import heeft ID = 2. Waarom geen 1? Is dat altijd zo, of ligt het aan de import?
+
+
 - Belangrijke features zijn: mass-curate en verbeteren import.
 - Import has some 2Do, such as predicting DBIDs and such.
 - Handling ORCID ID:
