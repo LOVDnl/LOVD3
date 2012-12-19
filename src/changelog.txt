@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 01 (RC2) (r...)
- * 2012-12-1??????????
+ * 3.0 Build 01 (r272)
+ * 2012-12-19
  *********/
  * The list of diseases presented when activating phenotype columns, wasn't sor-
    ting diseases without abbreviations correctly.
@@ -25,10 +25,9 @@
    a bug introduced in r256.
  * Fixed bug; The RNA field was not predicted when mapping variants onto tran-
    scripts not yet in LOVD.
-
-
-
-
+ * Fixed notices during import of diseases without associated genes.
+ * Fixed bug; Diseases imported did not have the default phenotype columns
+   enabled.
 
 
 /**************************

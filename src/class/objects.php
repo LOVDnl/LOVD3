@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-12-06
- * For LOVD    : 3.0-beta-12
+ * Modified    : 2012-12-19
+ * For LOVD    : 3.0-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -235,7 +235,7 @@ class LOVD_Object {
                 if (strpos($sName, '/') === false && isset($aData[$sName]) && $aData[$sName] !== '') {
                     $Val = $aData[$sName];
                     $aOptions = array_keys($aField[5]);
-                    if (lovd_getProjectFile() == '/import.php') {
+                    if (lovd_getProjectFile() == '/import.php' && !is_array($Val)) {
                         $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
                     } elseif (!is_array($Val)) {
                         $Val = array($Val);

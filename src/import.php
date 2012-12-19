@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2012-11-19
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-19
+ * For LOVD    : 3.0-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -46,6 +46,7 @@ require ROOT_PATH . 'inc-lib-form.php';
 //   If we decide to toss the value, report?
 // Default values of position fields of variant? Default values for DBID? Defaults for...?
 // Numerical field, we insert ""? Will become 0, but should be NULL.
+// Does #ignore_for_import do anything?
 
 
 
@@ -1034,6 +1035,7 @@ if (POST) {
 
 
         // Now we have everything parsed. If there were errors, we are stopping now.
+        require ROOT_PATH . 'inc-lib-actions.php';
         if (!lovd_error() && $nDataTotal) {
             define('LOG_EVENT', 'Import');
             print('<BR>');
@@ -1086,6 +1088,12 @@ if (POST) {
                             }
                             $nNewID = $aSection['object']->insertEntry($aData, $aFields);
                             $aParsed[$sSection]['data'][$nID]['newID'] = $nNewID;
+
+                            if ($sSection == 'Diseases') {
+                                // New diseases need to have the default custom columns enabled.
+                                lovd_addAllDefaultCustomColumns('disease', $nNewID);
+                            }
+
                             $aDone[$sSection] ++;
                             $nDone ++;
                             break;
@@ -1330,6 +1338,8 @@ $_T->printTitle('Import data in LOVD format');
 
 print('      Using this form you can import files in LOVD\'s tab-delimited format. Currently supported imports are individual, phenotype, screening and variant data.<BR><I>Genomic positions in your data are assumed to be relative to Human Genome build ' . $_CONF['refseq_build'] . '</I>.<BR>' . "\n" .
       '      <BR>' . "\n\n");
+
+lovd_showInfoTable('If you\'re looking for importing data files containing variant data only, like VCF files and SeattleSeq annotated files, please <A href="submit">start a new submission</A>.', 'information', 760);
 
 // FIXME: Since we can increase the memory limit anyways, maybe we can leave this message out if we nicely handle the memory?
 lovd_showInfoTable('In some cases importing big files can cause LOVD to run out of available memory. In case this server hides these errors, LOVD would return a blank screen. If this happens, split your import file into smaller chunks or ask your system administrator to allow PHP to use more memory (currently allowed: ' . ini_get('memory_limit') . 'B).', 'warning', 760);
