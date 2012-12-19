@@ -426,6 +426,7 @@ function lovd_getProteinChange (oElement)
                         if (aData[1] == 'p.?') {
                             aData[2] = 'r.?';
                         } else if (aData[1] == 'p.(=)') {
+                            // FIXME: Not correct in case of substitutions e.g. in the third position of the codon, not leading to a protein change.
                             aData[2] = 'r.(=)';
                         } else {
                             // RNA will default to r.(?).

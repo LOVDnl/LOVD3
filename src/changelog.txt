@@ -15,6 +15,16 @@
  * Fixed bug; In the combined data listings, the individual's owner field was
    set to the variant's owner field.
  * Fixed bug; The first disease added to LOVD would have ID 2, instead of 1.
+ * Fixed bug; Genes created when importing SeattleSeq files didn't get their
+   Entrez Gene and OMIM IDs stored.
+ * Fixed problem with creating genes and transcripts when importing SeattleSeq
+   annotated files with MySQL's strict mode on.
+ * Fixed problem with creating transcripts by the variant mapper with MySQL's
+   strict mode on.
+ * Fixed bug; Mapping variants to transcripts not yet in LOVD failed because of
+   a bug introduced in r256.
+ * Fixed bug; The RNA field was not predicted when mapping variants onto tran-
+   scripts not yet in LOVD.
 
 
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-11-19
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-17
+ * For LOVD    : 3.0-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -141,7 +141,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     require ROOT_PATH . 'class/object_genes.php';
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'class/REST2SOAP.php';
-    require ROOT_PATH . 'inc-lib-genes.php';
     $_DATA = new LOVD_Gene();
 
     $sPath = CURRENT_PATH . '?' . ACTION;
@@ -160,6 +159,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     }
 
     if ($_SESSION['work'][$sPath][$_POST['workID']]['step'] == '1') {
+        require ROOT_PATH . 'inc-lib-genes.php';
         if (POST) {
             lovd_errorClean();
 
@@ -347,6 +347,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
     if ($_SESSION['work'][$sPath][$_POST['workID']]['step'] == '2') {
+        require ROOT_PATH . 'inc-lib-actions.php';
         $zData = $_SESSION['work'][$sPath][$_POST['workID']]['values'];
         if (count($_POST) > 1) {
             lovd_errorClean();
@@ -378,7 +379,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_DATA->insertEntry($_POST, $aFields);
 
                 // Add the default custom columns to this gene.
-                lovd_addAllDefaultCustomColumnsForGene($_POST['id']);
+                lovd_addAllDefaultCustomColumns('gene', $_POST['id']);
 
                 // Write to log...
                 lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');

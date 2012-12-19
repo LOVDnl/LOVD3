@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-11-21
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-17
+ * For LOVD    : 3.0-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -156,6 +156,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     lovd_isAuthorized('gene', $_AUTH['curates']);
     lovd_requireAUTH(LEVEL_CURATOR);
 
+    require ROOT_PATH . 'inc-lib-actions.php';
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
     require ROOT_PATH . 'inc-lib-form.php';
@@ -175,17 +176,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
-            // FIXME; add this and next block to a function, just like lovd_addAllDefaultCustomColumnsForGene().
-            $aAdded = $_DB->query('DESCRIBE ' . TABLE_PHENOTYPES)->fetchAllColumn();
-
-            $qStandardCustomCols = $_DB->query('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "Phenotype/%" AND (standard = 1 OR hgvs = 1)');
-            while ($zStandard = $qStandardCustomCols->fetchAssoc()) {
-                if (!in_array($zStandard['id'], $aAdded)) {
-                    $_DB->query('ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `' . $zStandard['id'] . '` ' . $zStandard['mysql_type']);
-                    $_DB->query('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($zStandard['id'], $_AUTH['id']));
-                }
-                $_DB->query('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($nID, $zStandard['id'], $zStandard['col_order'], $zStandard['width'], $zStandard['mandatory'], $zStandard['description_form'], $zStandard['description_legend_short'], $zStandard['description_legend_full'], $zStandard['select_options'], $zStandard['public_view'], $zStandard['public_add'], $_AUTH['id']));
-            }
+            // Add all standard custom columns to this new disease.
+            lovd_addAllDefaultCustomColumns('disease', $nID);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');

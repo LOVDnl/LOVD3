@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2012-07-05
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2012-12-19
+ * For LOVD    : 3.0-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -202,38 +202,5 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
         }
     }
     return false;
-}
-
-
-
-
-
-function lovd_addAllDefaultCustomColumnsForGene ($sGene, $bUseAuthUser = true)
-{
-    // This function enables all custom columns that are standard or HGVS required for the given gene.
-    // If bUseAuthUser is set to false, user 0 ("LOVD") will be used for the created_by fields in TABLE_SHARED COLS and (if needed) in TABLE_ACTIVE_COLS.
-
-    global $_AUTH, $_DB;
-    if ($bUseAuthUser) {
-        $sUser = $_AUTH['id'];
-    } else {
-        $sUser = 0;
-    }
-
-    // Get a list of the columns in TABLE_VARIANTS_ON_TRANSCRIPTS.
-    $aAdded = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
-
-    // Get a list of all columns that are standard or HGVS required.
-    $qStandardCustomCols = $_DB->query('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "VariantOnTranscript/%" AND (standard = 1 OR hgvs = 1)');
-    while ($aStandard = $qStandardCustomCols->fetchAssoc()) {
-        if (!in_array($aStandard['id'], $aAdded)) {
-            // The standard column is not present in TABLE_VARIANTS_ON_TRANSCRIPTS. Add it.
-            $_DB->query('ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD COLUMN `' . $aStandard['id'] . '` ' . stripslashes($aStandard['mysql_type']));
-            $_DB->query('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($aStandard['id'], $sUser));
-        }
-
-        // Add the standard column to the gene.
-        $_DB->query('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($sGene, $aStandard['id'], $aStandard['col_order'], $aStandard['width'], $aStandard['mandatory'], $aStandard['description_form'], $aStandard['description_legend_short'], $aStandard['description_legend_full'], $aStandard['select_options'], $aStandard['public_view'], $aStandard['public_add'], $sUser));
-    }
 }
 ?>

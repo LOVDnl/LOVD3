@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-11-21
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2012-12-17
+ * For LOVD    : 3.0-01
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -1294,6 +1294,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 @set_time_limit(0);
                 $tStart = time();
 
+                require ROOT_PATH . 'inc-lib-actions.php';
                 require ROOT_PATH . 'inc-lib-genes.php';
                 require ROOT_PATH . 'class/REST2SOAP.php';
                 $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
@@ -1587,7 +1588,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                 if (!empty($aGeneInfo[$sSymbol])) {
                                     // Got gene information, prepare to add the gene to the database.
                                     // Extract gene information.
-                                    list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sEntrez, $sOmim) = array_values($aGeneInfo[$sSymbol]);
+                                    list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim) = array_values($aGeneInfo[$sSymbol]);
                                     list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
                                     if ($sChromLocation == 'mitochondria') {
                                         $sChromosome = 'M';
@@ -1636,6 +1637,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     $sRefseqUD = $_MutalyzerWS->moduleCall('sliceChromosomeByGene', array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'));
 
                                     // Not adding the gene just yet, but we remember its data...
+                                    // FIXME: Need to define all fields here to prevent problems with strict mode on. Most of these fields however, can just allow for NULL values.
                                     $aFieldsGene[$sSymbol] = array(
                                         'id' => $sSymbol,
                                         'name' => $sGeneName,
@@ -1643,13 +1645,27 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         'chrom_band' => $sChromBand,
                                         'refseq_genomic' => $sRefseqGenomic,
                                         'refseq_UD' => $sRefseqUD,
+                                        'reference' => '',
+                                        'url_homepage' => '',
+                                        'url_external' => '',
+                                        'allow_download' => 0,
+                                        'allow_index_wiki' => 0,
                                         'id_hgnc' => $sHgncID,
                                         'id_entrez' => $sEntrez,
                                         'id_omim' => $sOmim,
                                         'show_hgmd' => 1,
                                         'show_genecards' => 1,
                                         'show_genetests' => 1,
+                                        'note_index' => '',
+                                        'note_listing' => '',
+                                        'refseq' => '',
+                                        'refseq_url' => '',
                                         'disclaimer' => 1,
+                                        'disclaimer_text' => '',
+                                        'header' => '',
+                                        'header_align' => -1,
+                                        'footer' => '',
+                                        'footer_align' => -1,
                                         'created_by' => 0,
                                         'created_date' => date('Y-m-d H:i:s'),
                                         'updated_by' => $_AUTH['id'],
@@ -1714,7 +1730,10 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                     'name' => str_replace($aGenesChecked[$sSymbol]['name'] . ', ', '', $aTranscriptValues['product']),
                                                     'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscriptValues['name']),
                                                     'id_ncbi' => $aTranscriptValues['id'],
+                                                    'id_ensembl' => '',
                                                     'id_protein_ncbi' => lovd_getValueFromElement('proteinTranscript/id', $aTranscript['c']),
+                                                    'id_protein_ensembl' => '',
+                                                    'id_protein_uniprot' => '',
                                                     'position_c_mrna_start' => $aTranscriptValues['cTransStart'],
                                                     'position_c_mrna_end' => $aTranscriptValues['sortableTransEnd'],
                                                     'position_c_cds_end' => $aTranscriptValues['cCDSStop'],
@@ -1882,7 +1901,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                 // We need to insert its gene first too.
                                                 $_DB->query('INSERT INTO ' . TABLE_GENES . ' (`' . implode('`, `', array_keys($aFieldsGene[$sSymbol])) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsGene[$sSymbol]) - 1) . ')', array_values($aFieldsGene[$sSymbol]));
                                                 $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $sSymbol, 1, 1));
-                                                lovd_addAllDefaultCustomColumnsForGene($sSymbol, false);
+                                                lovd_addAllDefaultCustomColumns('gene', $sSymbol, 0);
                                                 $aUploadData['num_genes'] ++;
 
                                                 // We have it now, don't insert it again.
