@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2013-01-14
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -48,17 +48,21 @@ if (ACTION || PATH_COUNT < 2) {
 
 
 
-if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine')) {
+if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine' || ($_PE[2] == 'user' && ctype_digit($_PE[3]) && $_AUTH['level'] >= LEVEL_MANAGER))) {
     // URL: /download/all
     // URL: /download/all/mine
+    // URL: /download/all/user/00001
     // Download all data from the database, possibly restricted by ownership.
 
     if (empty($_PE[2])) {
         $nID = 0;
         lovd_requireAuth(LEVEL_MANAGER);
-    } else {
+    } elseif ($_PE[2] == 'mine') {
         $nID = $_AUTH['id'];
         lovd_requireAuth();
+    } else {
+        $nID = $_PE[3];
+        lovd_requireAuth(LEVEL_MANAGER);
     }
 
     // If we get here, we can print the header already.

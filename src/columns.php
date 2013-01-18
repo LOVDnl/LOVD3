@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-12-11
- * For LOVD    : 3.0-01
+ * Modified    : 2013-01-18
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -132,7 +132,7 @@ if (PATH_COUNT > 2 && !ACTION) {
         // FIXME; needs exact check if there are genes/diseases left that do not have this column.
         // A check on 'active' is way too simple and does not work for shared columns.
         $aNavigation[CURRENT_PATH . '?add']                         = array('menu_plus.png', 'Enable column', (!$zData['active'] || $aTableInfo['shared']? 1 : 0));
-        $aNavigation[CURRENT_PATH . '?remove']                      = array('cross.png', 'Disable column', ($zData['active'] && !$zData['hgvs']? 1 : 0));
+        $aNavigation[CURRENT_PATH . '?remove']                      = array('cross.png', 'Disable column' . ($aTableInfo['shared']? '' : ' and remove values'), ($zData['active'] && !$zData['hgvs']? 1 : 0));
         $aNavigation[CURRENT_PATH . '?delete']                      = array('cross.png', 'Delete column', (!$zData['active'] && !$zData['hgvs'] && (int) $zData['created_by']? 1 : 0));
         $aNavigation[CURRENT_PATH . '?edit']                        = array('menu_edit.png', 'Edit custom data column settings', 1);
         $aNavigation[$_PE[0] . '/' . $zData['category'] . '?order'] = array('menu_columns.png', 'Re-order all ' . $zData['category'] . ' columns', 1);
@@ -1904,6 +1904,10 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             if ($aTableInfo['shared']) {
                 lovd_writeLog('Event', LOG_EVENT,  'Disabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . count($aTargets) . ' ' . $aTableInfo['unit'] . '(s): ' . implode(', ', $aTargets));
             }
+            // In case this was/were the last objects to have this column, log its removal.
+            if (!$aTableInfo['shared'] || !$nTargets) {
+                lovd_writeLog('Event', LOG_EVENT,  'Removed column ' . $zData['id'] . ' (' . $zData['head_column'] . ') from ' . $aTableInfo['table_name'] . ' table');
+            }
 
             // Thank the user...
             $_BAR->setMessage('Successfully removed column "' . $zData['head_column'] . '"!', 'done');
@@ -1937,7 +1941,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post" id="oRemoveColumn">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -1947,17 +1951,30 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     if ($aTableInfo['shared']) {
         // If the target is received through $_GET do not show the selection list unless there is a problem with the target.
         if (!empty($_POST['target']) && !is_array($_POST['target']) && !in_array('target', $_ERROR['fields'])) {
-            $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '.</B><BR><BR>' . "\n");
+            $sTarget = $_DB->query('SELECT name FROM ' . ($sCategory == 'VariantOnTranscript'? TABLE_GENES : TABLE_DISEASES) . ' WHERE id = ?', array($_POST['target']))->fetchColumn();
+            $nEntriesWithData = $_DB->query('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' WHERE ' . $aTableInfo['unit'] . 'id = ? AND `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"', array($_POST['target']))->fetchColumn();
+            $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '<BR>(' . $sTarget . ')</B><BR><BR>');
             print('      <INPUT type="hidden" name="target" value="' . $_POST['target'] . '">' . "\n");
         } else {
+            $nEntriesWithData = -1; // We need to determine this on the fly.
             print('      Please select the ' . $aTableInfo['unit'] . '(s) for which you want to remove the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
             $nPossibleTargets = ($nPossibleTargets > 15? 15 : $nPossibleTargets);
             $aForm[] = array('Remove this column from', '', 'select', 'target', $nPossibleTargets, $aPossibleTargets, false, true, true);
             $aForm[] = 'skip';
         }
     } else {
-        $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['colid'] . ' column from the ' . $aTableInfo['table_name'] . ' data table</B>');
+        $nEntriesWithData = $_DB->query('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' WHERE `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"')->fetchColumn();
+        $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['colid'] . ' column from the ' . $aTableInfo['table_name'] . ' data table, and removing all values</B>');
     }
+
+    // Show information about number of entries losing data when this column is removed.
+    print('      <DIV id="oEntriesWithData"' . ($nEntriesWithData > -1? '' : ' style="display : none;"') . '>' . "\n");
+    if ($nEntriesWithData) {
+        lovd_showInfoTable('Please note that this will <B id="permanent">' . ($aTableInfo['shared']? '' : 'permanently') . '</B> delete the data in this column. <SPAN id="entries">' . $nEntriesWithData . ' value' . ($nEntriesWithData == 1? '' : 's') . '</SPAN> will be lost.', 'warning');
+    } else {
+        lovd_showInfoTable('There are currently no values stored in this column, you can safely remove it.', 'information');
+    }
+    print('      </DIV>' . "\n\n");
 
     $aForm = array_merge($aForm,
              array(
@@ -1968,6 +1985,55 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
+    flush();
+
+    if ($nEntriesWithData == -1) {
+        // We will determine the number of affected entries dynamically. For each target, we must know how much data will get lost.
+        if ($sCategory == 'VariantOnTranscript') {
+            $aEntriesWithData = $_DB->query('SELECT ' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS vot LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-" GROUP BY ' . $aTableInfo['unit'] . 'id')->fetchAllCombine();
+        } else {
+            $aEntriesWithData = $_DB->query('SELECT ' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' WHERE `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-" GROUP BY ' . $aTableInfo['unit'] . 'id')->fetchAllCombine();
+        }
+        print('      <SCRIPT type="text/javascript">' . "\n" .
+              '        aEntriesWithData = {');
+        $i = 0;
+        foreach ($aEntriesWithData as $sTarget => $nEntries) {
+            if ($i) {
+                print(', ');
+            } else {
+                $i ++;
+            }
+            print('\'' . $sTarget . '\' : ' . $nEntries);
+        }
+        print('};' . "\n" .
+              '      nAllEntriesWithData = ' . array_sum(array_values($aEntriesWithData)) . "\n\n" .
+              '        $("#oRemoveColumn select[name=\'target[]\']").change(
+                            function() {
+                                if ($(this).children(":selected").size() == $(this).children().size()) {
+                                    nEntriesWithData = nAllEntriesWithData;
+                                    $("#oEntriesWithData #permanent").html("permanently");
+                                } else {
+                                    nEntriesWithData = 0;
+                                    $(this).children(":selected").each(function() {
+                                        if (aEntriesWithData[$(this).val()]) {
+                                            nEntriesWithData += aEntriesWithData[$(this).val()];
+                                        }
+                                    });
+                                    $("#oEntriesWithData #permanent").html("");
+                                }
+                                if (nEntriesWithData) {
+                                    $("#oEntriesWithData #entries").html(nEntriesWithData + " value" + (nEntriesWithData == 1? "" : "s"));
+                                    $("#oEntriesWithData").show(400);
+                                } else {
+                                    // FIXME: More correct would be to have the information table saying that the column can safely be removed.
+                                    $("#oEntriesWithData #entries").html("no values");
+                                    $("#oEntriesWithData").hide(400);
+                                }
+                            });' . "\n" .
+              '        // If we got here with options already selected (form was returned from an error, we should handle that, also.' . "\n" .
+              '        $("#oRemoveColumn select[name=\'target[]\']").change();' . "\n" .
+              '      </SCRIPT>' . "\n\n");
+    }
 
     $_T->printFooter();
     exit;

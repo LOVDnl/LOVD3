@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-11-14
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-01-18
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -116,6 +116,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             $aNavigation[CURRENT_PATH . '?lock'] = array('status_locked.png', 'Lock user', 1); // FIXME; this image is actually too small but it doesn't look too bad.
         }
         $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete user', 1);
+        $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     } elseif ($_AUTH['id'] == $nID) {
         // Viewing himself!
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Update your registration', 1);

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2012-11-26
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-01-16
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -76,6 +76,7 @@ class LOVD_SharedColumn extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'sc.*, ' .
+                                           'c.hgvs, ' .
                                            'c.form_type, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';

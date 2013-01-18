@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2012-11-27
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-01-18
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -118,6 +118,7 @@ class LOVD_Template {
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all diseases', 0),
                                 'create' => array('plus.png', 'Create a new disease information entry', LEVEL_CURATOR),
+                                'hr',
                                 '/columns/Phenotype' => array('menu_columns_add.png', 'View available phenotype columns', LEVEL_CURATOR),
                               ),
                         'screenings' => 'View screenings',
@@ -145,15 +146,17 @@ class LOVD_Template {
                         'configuration' => 'LOVD configuration area',
                         'configuration_' =>
                          array(
+                             // The links are only active, when this person has rights on the currently selected gene.
+                             '/view/' . $_SESSION['currdb'] . '?search_var_status=Submitted%7CNon%7CMarked' => array('menu_variants_curate.png', 'View uncurated ' . $_SESSION['currdb'] . ' variants', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
+                             '/view/' . $_SESSION['currdb'] => array('menu_variants.png', 'View ' . $_SESSION['currdb'] . ' variants', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
+                             'hr',
 /*
-                                        array('variants.php', 'search_all&search_status_=Submitted%7CNon_Public%7CMarked', 'Curate', 'Curate', 'lovd_variants_curate'),
-                                        'vr',
                                         array('config_free_edit.php', 'fnr', 'Find &amp; Replace', 'Find &amp; Replace', 'lovd_free_edit_fnr'),
                                         array('config_free_edit.php', 'copy', 'Copy Column', 'Copy Column', 'lovd_free_edit_copy'),
                                         'vr',
 */
-                                '/columns/VariantOnTranscript' => array('menu_columns_add.png', 'Add variant column to ' . ($_SESSION['currdb']? $_SESSION['currdb'] : 'gene'), LEVEL_CURATOR),
-                                '/genes/' . $_SESSION['currdb'] . '/columns' => array('menu_columns.png', 'View variant columns enabled in ' . ($_SESSION['currdb']? $_SESSION['currdb'] : 'gene'), LEVEL_CURATOR),
+                                '/columns/VariantOnTranscript' => array('menu_columns_add.png', 'Add variant column to ' . ($_SESSION['currdb']? $_SESSION['currdb'] : 'gene'), ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
+                                '/genes/' . $_SESSION['currdb'] . '/columns' => array('menu_columns.png', 'View variant columns enabled in ' . ($_SESSION['currdb']? $_SESSION['currdb'] : 'gene'), ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
 /*
                                         'vr',
                                         array('genes', 'manage', 'Edit gene db', 'Manage ' . $_SESSION['currdb'] . ' gene', 'lovd_database_edit'),
@@ -206,7 +209,7 @@ class LOVD_Template {
             unset($this->aMenu['variants_']['/view/']);
             unset($this->aMenu['individuals_']['/individuals/']);
             unset($this->aMenu['screenings_']['/screenings/']);
-            unset($this->aMenu['configuration_']['/genes//columns']);
+            unset($this->aMenu['configuration_']);
         }
 
         if (!defined('PAGE_TITLE')) {
@@ -663,9 +666,9 @@ function lovd_mapVariants ()
                         $bHR = false;
                     }
 // class disabled, disabled. Nu gewoon maar even weggehaald.
-//                    $sUL .= '  <LI' . ($bDisabled? ' class="disabled">' : (!$sIMG? '' : ' class="icon"') . '><A href="' . $sURL . '">') .
-//                        (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
-//                        ($bDisabled? '' : '</A>') . '</LI>' . "\n";
+//                    $sUL .= '  <LI class="disabled">' .
+//                        (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . preg_replace('/(\.[a-z]+)$/', '_disabled' . "$1", $sIMG) . ');"></SPAN>') . $sName .
+//                        '</LI>' . "\n";
                 }
                 $sUL .= '</UL>' . "\n";
 
