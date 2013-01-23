@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-01-18
+ * Modified    : 2013-01-23
  * For LOVD    : 3.0-02
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -121,6 +121,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         // Viewing himself!
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Update your registration', 1);
         $aNavigation['download/all/mine']    = array('menu_save.png', 'Download all my data', 1);
+    } else {
+        // Managers and up, not viewing own account, not higher level than other user.
+        $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     }
     lovd_showJGNavigation($aNavigation, 'Users');
 
