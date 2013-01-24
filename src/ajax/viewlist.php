@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2012-07-03
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2013-01-24
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -81,7 +81,7 @@ if ($nNeededLevel && (!$_AUTH || $_AUTH['level'] < $nNeededLevel)) {
 }
 
 // Managers, and sometimes curators, are allowed to download lists...
-if (ACTION == 'download') {
+if (in_array(ACTION, array('download', 'downloadSelected'))) {
     if ($_AUTH['level'] >= LEVEL_CURATOR) {
         // We need this define() because the Object::viewList() may still throw some error which calls
         // Template::printHeader(), which would then thow a "text/plain not allowed here" error.

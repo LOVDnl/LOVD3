@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2012-12-03
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-01-23
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -49,9 +49,6 @@ function lovd_prepareSubmitData ($sDataType, $aData) {
         case 'individual':
             $aData['panel_'] = ($aData['panel_size'] <= 1? 'No' : 'Yes');
             break;
-        case 'screening':
-            return $aData;
-            break;
         case 'variant':
             if (!empty($aData['aTranscripts'])) {
                 foreach ($aData['aTranscripts'] as $nTranscriptID) {
@@ -62,12 +59,11 @@ function lovd_prepareSubmitData ($sDataType, $aData) {
             $aData['effect_reported'] = $_SETT['var_effect'][$aData['effectid']{0}];
             $aData['effect_concluded'] = $_SETT['var_effect'][$aData['effectid']{1}];
             break;
-        case 'phenotype':
-        default:
-            break;
     }
 
-    $aData['statusid_'] = $_SETT['data_status'][$aData['statusid']];
+    if (isset($aData['statusid'])) {
+        $aData['statusid_'] = $_SETT['data_status'][$aData['statusid']];
+    }
     if (!empty($aData['edited_by'])) {
         if ($aData['edited_by'] == $_AUTH['id']) {
             $aData['edited_by'] = $_AUTH['name'];

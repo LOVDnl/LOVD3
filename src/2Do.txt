@@ -19,7 +19,7 @@ Prioritize:
 - VCF importer:
   + Negeer varianten zonder frequency (het huidige sample heeft 'm niet, andere samples wel).
   + Voor multi-sample files, geef aan welke sample je wilt importeren. Dat scheelt gebruikers veel werk.
-
+- Ensembl compact view toont geen varianten.
 - Gene delete heeft GEEN CORRECTE reminder bij het verwijderen!!!
   + Disease verwijderen hoort ook een reminder te geven, dat alle phenotype data verdwijnt, mits aanwezig.
 - Authorizatieprobleem voorleggen bij groep;
@@ -80,10 +80,13 @@ Prioritize:
     * Ook voor curatoren, check alles goed na het parsen van de file!
     * Discuss if OK that created_by and created_date are set by users through import to values other than themselves or today.
     * Add support for "Owned data download" type download and 'ignore_for_import' setting (is puur ter referentie, niet voor import, dus moet in de DB opgezocht worden)
-    * Import duidelijk anders doen. Overschrijven toestaan indien aangevinkt; scheelt veel tijd en een tijdelijk lege database.
+    * Import: update entries:
       - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
-      - Store in session / DB in een col met serialized data?
+    * Koppelings tabellen (genes2diseases bijvoorbeeld) nemen in de import file veel ruimte in, en maakt 't importeren van veel entries lastig; kunnen de IDs niet comma-separated in een extra col in de data tables? Bijvoorbeeld geneIDs in diseases tabel.
     * Daarna: we moeten ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
+- Hoe kan een curator makkelijk zien welke kolommen nog niet actief zijn voor zijn gen?
+  + Idem voor een bepaalde aandoening.
+  + Cols in groepen toevoegen aan een bepaald gen, beter nog aan meerdere genen.
 - VariantOnGenome/Times_reported (or similar)
   + Kolom mag ALLEEN getoond worden op 't formulier, als gekoppeld aan een individu die een panel_size > 1 heeft.
     Anders, standaard invullen; 2 voor homozygoot, 1 voor alles anders.
@@ -105,6 +108,9 @@ Prioritize:
   + http://databases.lovd.nl/shared/variants/GLDC
 - Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
+- VOG kolommen toch per gen kunnen verbergen? Johan wil écht die dbSNP kolom niet zien.
+  + Op zich is het verbergen van VOG kolommen gelijk aan de huidige VOT implementatie.
+    * Maar hoe dit op te slaan?
 - LOVD 3.0 heeft niet hetzelfde wat LOVD 2.0 heeft. Gene not found, are you looking for gene.lovd.nl?
 - Kunnen we ook het Exon veld voorspellen?
 - Curate all option? Geeft popup met vinkje wel/niet alles mee cureren (phenotypes, individuals, etc). Daarna met progress bar de boel cureren... Ajax request output in popup?
@@ -344,6 +350,8 @@ From LOVD 2.0:
   + Wellicht makkelijker te implementeren dan checken of alle LOVD features nog werken.
 - /users/ORCiD ?
 - Fix de VCF importer, zodat die VCF 3.3 ook aan kan?
+- Entrez ID && OMIM ID: Johan: als er nog geen ID is maar wel komt kan ik die ook niet handmatig toevoegen. Hoe komt die er dan ooit in, automatisch?
+- Searching ranges: '2-4' == '>=2 <=4'
 
 
 
@@ -374,7 +382,7 @@ Doen voordat LOVD 3.0 online gebruikt kan worden:
 Data transfer LOVD 2.0 -> LOVD 3.0:
 ===================================
 - Submitters and users should be imported separately. Their IDs will change, and multiple LOVD 2.0 installs can come together in one LOVD 3.0.
-- Genes and transcripts need to be imported, or regenarated, in LOVD 3.0 separately.
+- Genes and transcripts need to be imported, or regenerated, in LOVD 3.0 separately.
 - Idem diseases?
 - The rest of the data then should go in a LOVD 3.0 format.
 - To make life easier for the users:
@@ -505,6 +513,8 @@ Store list_size per data type in a $_COOKIE, just like hidden columns and stuff
 USER FORCE LOGOUT
 USERS: stel tijdzone in?
     Maar dan moet je eerst even goed inlezen over die tijdzones, over de nieuwe functies en hoe dat goed te gebruiken...
+        MySQL: values for TIMESTAMP columns are converted from the current time zone to UTC for storage, and from UTC to the current time zone for retrieval.
+            (die zijn dus een stuk beter dan datetime cols)
 Create gene: herstel percentages van voorgang, zodat het logischer verloopt.
 
 

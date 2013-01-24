@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2013-01-18
+ * Modified    : 2013-01-23
  * For LOVD    : 3.0-02
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -253,6 +253,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
     // URL: /columns?data_type_wizard
     // Show form type forms and send info back.
 
+    define('TAB_SELECTED', 'setup');
     define('PAGE_TITLE', 'Data type wizard');
 
     // Require manager clearance.
@@ -640,6 +641,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /columns?create
     // Create a new column.
 
+    define('TAB_SELECTED', 'setup');
     define('PAGE_TITLE', 'Create new custom ' . (!empty($_POST['category'])? strtolower($_POST['category']) : '') . ' data column');
     define('LOG_EVENT', 'ColCreate');
 
@@ -845,6 +847,8 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
     // URL: /columns/VariantOnGenome/DNA?edit
     // URL: /columns/Phenotype/Blood_pressure/Systolic?edit
     // Edit specific column.
+
+    define('TAB_SELECTED', 'setup');
 
     $aCol = $_PE;
     unset($aCol[0]); // 'columns';
@@ -1212,6 +1216,8 @@ $(function ()
 /*******************************************************************************
 if ($_GET['action'] == 'edit_colid' && !empty($_GET['edit_colid'])) {
     // Edit specific custom colid.
+
+    define('TAB_SELECTED', 'setup');
 
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
@@ -2047,6 +2053,8 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
     // URL: /columns/VariantOnGenome/DNA?delete
     // URL: /columns/Phenotype/Blood_pressure/Systolic?delete
     // Drop specific custom column.
+
+    define('TAB_SELECTED', 'setup');
 
     $aCol = $_PE;
     unset($aCol[0]); // 'columns';
