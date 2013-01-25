@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2013-01-14
+ * Modified    : 2013-01-25
  * For LOVD    : 3.0-02
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,29 +48,46 @@ if (ACTION || PATH_COUNT < 2) {
 
 
 
-if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine' || ($_PE[2] == 'user' && ctype_digit($_PE[3]) && $_AUTH['level'] >= LEVEL_MANAGER))) {
+if ($_PE[1] == 'all' && (empty($_PE[2]) ||
+    ($_PE[2] == 'gene' && isset($_PE[3]) && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[3]))) ||
+    $_PE[2] == 'mine' || ($_PE[2] == 'user' && isset($_PE[3]) && ctype_digit($_PE[3])))) {
     // URL: /download/all
+    // URL: /download/all/gene/IVD
     // URL: /download/all/mine
     // URL: /download/all/user/00001
     // Download all data from the database, possibly restricted by ownership.
 
+    $sFilter = '';
+    $ID = '';
     if (empty($_PE[2])) {
-        $nID = 0;
+        // Download all.
         lovd_requireAuth(LEVEL_MANAGER);
+    } elseif ($_PE[2] == 'gene') {
+        // Gene database contents.
+        $sFilter = 'gene';
+        $ID = $_PE[3];
+        lovd_isAuthorized('gene', $_PE[3]);
+        lovd_requireAuth(LEVEL_CURATOR);
     } elseif ($_PE[2] == 'mine') {
-        $nID = $_AUTH['id'];
+        // Own data.
+        $sFilter = 'owner';
+        $ID = $_AUTH['id'];
         lovd_requireAuth();
-    } else {
-        $nID = $_PE[3];
+    } elseif ($_PE[2] == 'user') {
+        // Data owned by other.
+        $sFilter = 'owner';
+        $ID = $_PE[3];
         lovd_requireAuth(LEVEL_MANAGER);
     }
 
     // If we get here, we can print the header already.
-    header('Content-Disposition: attachment; filename="LOVD_' . ($nID? 'owned_data' : 'full_download') . '_' . date('Y-m-d_H.i.s') . '.txt"');
+    header('Content-Disposition: attachment; filename="LOVD_' . ($sFilter == 'owner'? 'owned_data' : 'full_download') . '_' . date('Y-m-d_H.i.s') . '.txt"');
     header('Pragma: public');
-    print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . ($nID? 'Owned' : 'Full') . ' data download ### To import, do not remove or alter this header ###' . "\r\n");
-    if ($nID) {
-        print('## Filter: (created_by = ' . $nID . ' || owned_by = ' . $nID . ')' . "\r\n");
+    print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . ($sFilter == 'owner'? 'Owned' : 'Full') . ' data download ### To import, do not remove or alter this header ###' . "\r\n");
+    if ($sFilter == 'owner') {
+        print('## Filter: (created_by = ' . $ID . ' || owned_by = ' . $ID . ')' . "\r\n");
+    } elseif ($sFilter == 'gene') {
+        print('## Filter: (gene = ' . $ID . ')' . "\r\n");
     }
     print('# charset = UTF-8' . "\r\n\r\n");
 
@@ -80,15 +97,17 @@ if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine' || ($_PE[2] == 'use
     // All data types have same settings: optional ownership filter, no columns hidden.
     $aDataTypeSettings =
         array(
-            'comments' => array(),
-            'data' => array(),
-            'filters' => array(),
-            'hide_columns' => array(),
-            'prefetch' => false,
-            'settings' => array(),
+            'comments' => array(),     // Comments to be added to the data block, such as 'For reference only, not part of the selected data set'.
+            'data' => array(),         // Here the data will go, either put there by prefetch or when the data is actually printed.
+            'filters' => array(),      // This is where the filters go for this object, in format: "column" => "value", "filter_name" => "value", or "column" => array("possible", "values").
+            'filter_other' => array(), // This is where the filters go for other objects, implies prefetch=true; in format: "other_object" => array("column_other_object" => "column_this_object").
+            'hide_columns' => array(), // Allows for certain columns to be hidden from the output, if this data block is for reference only anyways.
+            'prefetch' => false,       // Whether or not to prefetch the data, to allow the 'filter_other' settings to be processed.
+            'settings' => array(),     // Settings in the format "setting" => "value" will be output in the data block, for import.
         );
-    if ($nID) {
-        // We need to prefetch the data to be able to filter genes etc, which are just for reference for this type of download.
+    if ($sFilter == 'owner') {
+        // We need to prefetch the filtered data to be able to filter other objects (genes etc).
+        // Note: This will make all objects to be prefetched, which could be a bit of overkill here.
         $aDataTypeSettings['prefetch'] = true;
     }
     $aObjects =
@@ -106,8 +125,9 @@ if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine' || ($_PE[2] == 'use
              'Variants_On_Transcripts' => $aDataTypeSettings,
              'Scr2Var' => array_merge($aDataTypeSettings, array('label' => 'Screenings_To_Variants', 'order_by' => 'screeningid, variantid')),
          );
+
     // Apply filters and filter order, for user-specific download.
-    if ($nID) {
+    if ($sFilter == 'owner') {
         // In user-specific download, we don't care about the relationship between genes and diseases.
         // (Genes will be shown if its transcripts are shown, Diseases will be shown if its individuals are shown)
         unset($aObjects['Gen2Dis']);
@@ -126,7 +146,7 @@ if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine' || ($_PE[2] == 'use
                 'Genes',
                 'Scr2Var',
             );
-        $aObjects['Individuals']['filters']['owner'] = $nID;
+        $aObjects['Individuals']['filters']['owner'] = $ID;
         $aObjects['Individuals']['filter_other']['Ind2Dis']['individualid'] = 'id';
         $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid';
         $aObjects['Diseases']['comments'][] = 'For reference only, not part of the selected data set';
@@ -135,12 +155,12 @@ if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine' || ($_PE[2] == 'use
             array(
                 'created_by', 'created_date', 'edited_by', 'edited_date',
             );
-        $aObjects['Phenotypes']['filters']['owner'] = $nID;
-        $aObjects['Screenings']['filters']['owner'] = $nID;
+        $aObjects['Phenotypes']['filters']['owner'] = $ID;
+        $aObjects['Screenings']['filters']['owner'] = $ID;
         $aObjects['Screenings']['filter_other']['Scr2Gene']['screeningid'] = 'id';
         $aObjects['Screenings']['filter_other']['Scr2Var']['screeningid'] = 'id';
         $aObjects['Scr2Gene']['filter_other']['Genes']['id'] = 'geneid';
-        $aObjects['Variants']['filters']['owner'] = $nID;
+        $aObjects['Variants']['filters']['owner'] = $ID;
         $aObjects['Variants']['filter_other']['Variants_On_Transcripts']['id'] = 'id';
         $aObjects['Variants']['filter_other']['Scr2Var']['variantid'] = 'id';
         $aObjects['Variants_On_Transcripts']['filter_other']['Transcripts']['id'] = 'transcriptid';
@@ -163,6 +183,53 @@ if ($_PE[1] == 'all' && (empty($_PE[2]) || $_PE[2] == 'mine' || ($_PE[2] == 'use
                 'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date',
                 'edited_by', 'edited_date', 'updated_by', 'updated_date',
             );
+
+    } elseif ($sFilter == 'gene') {
+        // Gene-specific download. Can be downloaded by Curator.
+        // Change the order of filtering just a bit, so we can filter the VOGs based on the VOTs, the screenings based on the VOGs and the Individuals based on their Screenings.
+        $aObjectsToBeFiltered =
+            array(
+                'Genes',
+                'Transcripts',
+                'Gen2Dis',
+                'Variants_On_Transcripts',
+                'Variants',    // Will not get applied filters directly, but needs to be defined here because the VOTs are going to filter these.
+                'Scr2Var',
+                'Screenings',
+                'Scr2Gene',    // Will not get applied filters directly, but needs to be defined here because the Scr2Vars are going to filter these.
+                'Individuals', // Will not get applied filters directly, but needs to be defined here because the Screenings are going to filter these.
+                'Ind2Dis',
+                'Diseases',    // Will not get applied filters directly, but needs to be defined here because the Gen2Dis' and Ind2Dis' are going to filter these.
+                'Phenotypes',  // Will not get applied filters directly, but needs to be defined here because the Screenings are going to filter these.
+            );
+
+        $aObjects['Genes']['filters']['id'] = $ID;
+        // Gen2Dis' need to be prefetched because we need their Disease IDs to filter the Diseases (more possible values added to those later, from Ind2Dis).
+        $aObjects['Gen2Dis']['filters']['geneid'] = $ID;
+        $aObjects['Gen2Dis']['prefetch'] = true;
+        $aObjects['Gen2Dis']['filter_other']['Diseases']['id'] = 'diseaseid'; // More values added later, from Ind2Dis!
+        // Transcripts need to be prefetched because we need their Transcript IDs to filter the VOTs.
+        $aObjects['Transcripts']['filters']['geneid'] = $ID;
+        $aObjects['Transcripts']['prefetch'] = true;
+        $aObjects['Transcripts']['filter_other']['Variants_On_Transcripts']['transcriptid'] = 'id';
+        // VOTs have to be prefetched, because the VOGs and Scr2Vars need to be filtered on the Variant IDs.
+        $aObjects['Variants_On_Transcripts']['prefetch'] = true;
+        $aObjects['Variants_On_Transcripts']['filter_other']['Variants']['id'] = 'id';
+        $aObjects['Variants_On_Transcripts']['filter_other']['Scr2Var']['variantid'] = 'id';
+        $aObjects['Variants_On_Transcripts']['comments'][] = 'Please note that not necessarily all variants found in the given individuals are shown. This output is restricted to variants in the selected gene.';
+        $aObjects['Variants']['comments'][] = 'Please note that not necessarily all variants found in the given individuals are shown. This output is restricted to variants in the selected gene.';
+        // Scr2Vars have to be prefetched, because the Screenings and Scr2Genes need to be filtered on the Screening IDs.
+        $aObjects['Scr2Var']['prefetch'] = true;
+        $aObjects['Scr2Var']['filter_other']['Screenings']['id'] = 'screeningid';
+        $aObjects['Scr2Var']['filter_other']['Scr2Gene']['screeningid'] = 'screeningid';
+        // Screenings have to be prefetched, because the Individuals, Ind2Dis' and Phenotypes need to be filtered on the Individual IDs.
+        $aObjects['Screenings']['prefetch'] = true;
+        $aObjects['Screenings']['filter_other']['Individuals']['id'] = 'individualid';
+        $aObjects['Screenings']['filter_other']['Ind2Dis']['individualid'] = 'individualid';
+        $aObjects['Screenings']['filter_other']['Phenotypes']['individualid'] = 'individualid';
+        // Ind2Dis' have to be prefetched, because the Diseases need to be filtered on their IDs.
+        $aObjects['Ind2Dis']['prefetch'] = true;
+        $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid'; // More values were already in, from Gen2Dis!
     }
 }
 
@@ -202,7 +269,7 @@ foreach ($aObjectsToBeFiltered as $sObject) {
                     break;
                 default:
                     // By default, we'll assume that this filter is a certain column.
-                    // However, if we have no values to filter on, we must simply return no results.
+                    // However, if an empty array of possible values was given to filter on, we must simply return no results.
                     if (is_array($Value) && !count($Value)) {
                         // No hits, filter all out.
                         $sWHERE .= '0=1';
@@ -234,35 +301,30 @@ foreach ($aObjectsToBeFiltered as $sObject) {
     $aObjects[$sObject]['query'] = 'SELECT * FROM ' . $sTable . (!$sWHERE? '' : ' WHERE ' . $sWHERE) . ' ORDER BY ' . (empty($aSettings['order_by'])? 'id' : $aSettings['order_by']);
     $aObjects[$sObject]['args']  = $aArgs;
 
-    // If prefetch is requested, request data right here.
-    if ($aSettings['prefetch'] || isset($aSettings['filter_other'])) {
+    // If prefetch is requested, request data right here. We will then loop through the results to create the filters for the other objects.
+    if ($aSettings['prefetch'] || count($aSettings['filter_other'])) {
         $aObjects[$sObject]['data'] = $_DB->query($aObjects[$sObject]['query'], $aObjects[$sObject]['args'])->fetchAllAssoc();
 
         // Check if we, now that we have the data fetched, need to apply other filters,
-        if (isset($aSettings['filter_other']) && is_array($aSettings['filter_other'])) {
-            foreach ($aSettings['filter_other'] as $sObjectToFilter => $aFiltersToRun) {
-                // Check if object that needs to be filtered actually exists or not.
-                if (isset($aObjects[$sObjectToFilter])) {
-                    // Make sure this object has a functional 'filters' array.
-                    if (!isset($aObjects[$sObjectToFilter]['filters']) || !is_array($aObjects[$sObjectToFilter]['filters'])) {
-                        $aObjects[$sObjectToFilter]['filters'] = array();
+        foreach ($aSettings['filter_other'] as $sObjectToFilter => $aFiltersToRun) {
+            // Check if object that needs to be filtered actually exists or not.
+            if (isset($aObjects[$sObjectToFilter])) {
+                // Make sure this object has a functional 'filters' array.
+                if (!isset($aObjects[$sObjectToFilter]['filters']) || !is_array($aObjects[$sObjectToFilter]['filters'])) {
+                    $aObjects[$sObjectToFilter]['filters'] = array();
+                }
+                // Now loop the list of filters to apply.
+                foreach ($aFiltersToRun as $sColumnToFilter => $sColToMatch) {
+                    // Now loop the data to collect all the $sValueToFilter data.
+                    $aValuesToFilter = array();
+                    foreach ($aObjects[$sObject]['data'] as $zData) {
+                        $aValuesToFilter[] = $zData[$sColToMatch];
                     }
-                    // Now loop the list of filters to apply.
-                    foreach ($aFiltersToRun as $sColumnToFilter => $sColToMatch) {
-                        // Now loop the data to collect all the $sValueToFilter data.
-                        $aValuesToFilter = array();
-                        foreach ($aObjects[$sObject]['data'] as $zData) {
-                            $aValuesToFilter[] = $zData[$sColToMatch];
-                        }
-                        $aObjects[$sObjectToFilter]['filters'][$sColumnToFilter] = array_unique($aValuesToFilter);
-                    }
+                    $aObjects[$sObjectToFilter]['filters'][$sColumnToFilter] = array_unique($aValuesToFilter);
                 }
             }
         }
     }
-//    $aObjects[$sObject]['ids'] = array();
-//    while ($z = $q->fetchAssoc()) {
-//        $aObjects[$sObject]['ids'][] = $z['id'];
 }
 
 
@@ -287,8 +349,6 @@ foreach ($aObjects as $sObject => $aSettings) {
     // First, print counts. This is as information for the user, but also it shows easily when there is no data to show.
     $nCount = count($aSettings['data']);
     print('## Count = ' . $nCount . "\r\n");
-//    // Indicates this data has been printed.
-//    $aObjects[$sObject]['count'] = $nCount;
 
     // Print settings.
     if (!empty($aSettings['settings'])) {
@@ -337,5 +397,8 @@ foreach ($aObjects as $sObject => $aSettings) {
         print("\r\n");
     }
     print("\r\n\r\n");
+
+    // Empty data, to free up memory.
+    unset($aSettings['data']);
 }
 ?>

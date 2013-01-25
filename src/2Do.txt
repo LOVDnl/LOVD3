@@ -2,13 +2,17 @@ Prioritize:
 ===========
 
 
+- Over het algemeen: focus op het toevoegen van features die ook al in LOVD2 zaten!!!
 - Belangrijke features zijn: mass-curate en verbeteren import.
 - Import has some 2Do, such as predicting DBIDs and such.
+  + At this time Import cannot work with Owned data sets, because it's missing one section and it has a different name.
+  + Also, some sections are actually labelled as not to be imported. This is not recognized either.
+  + Hij klaagt nu als een disease al in de DB staat, maar als alles hetzelfde is (iig id, id_omim, name), negeer die regel dan en ga gewoon door.
 - Handling ORCID ID:
   + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
   + reset password met orcid id!
 - dbsearch.php: lovd.nl/GENE_00001 link wijst naar LOVD3? Zet er een 0 tussen voor het doorsturen.
-- Download/all/mine failt op shared DB (heeft > 200M && <= 265M nodig), hoewel ik helemaal zoveel data niet heb (1446 genes, 1446 transcripts, 2 diseases, 9 individuals, 9 dis2ind, 10 screenings, 8 scr2gene, 14360 vog, 7739 vot, 14360 scr2var, 3.7 MB file).
+- Download/all/mine gebruikt te veel geheugen, niet alles laten prefetchen!
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
 - Updated date van genen klopt niet (variant map, screening add/edit/delete, phenotype?, individual).
@@ -58,12 +62,8 @@ Prioritize:
   + Wellicht, voor een losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
   + Namechecker ook de gekozen refseq laten gebruiken? Of niet, omdat we niet weten of dit transcript daar wel te vinden is?
 - (@Ivo) DATA DOWNLOAD.
+  + Gen specifieke download: de custom columns beperken?
   + URLs left to implement:
-    * Alle data van een bepaald gen downloaden (curator and up):
-      - /download/all/gene/GENE
-      - We moeten dan zien te achterhalen welke individuen bij dit gen horen, en welke ziektes.
-        Phenotype data van andere ziektes moeten niet gedownload worden, omdat de curator sowieso de rechten niet heeft die data weer terug te importeren.
-        De custom columns moeten nu ook beperkt worden.
     * Alleen bepaalde data downloaden (manager and up):
       - /download/individuals,phenotypes      (voorbeeld)
       - Hier ook restrictie kunnen leggen?
@@ -514,7 +514,7 @@ USER FORCE LOGOUT
 USERS: stel tijdzone in?
     Maar dan moet je eerst even goed inlezen over die tijdzones, over de nieuwe functies en hoe dat goed te gebruiken...
         MySQL: values for TIMESTAMP columns are converted from the current time zone to UTC for storage, and from UTC to the current time zone for retrieval.
-            (die zijn dus een stuk beter dan datetime cols)
+            We moeten dus EERST alles op TIMESTAMP kolommen omzetten, voordat we toestaan dat men de default timezone instelling wijzigt.
 Create gene: herstel percentages van voorgang, zodat het logischer verloopt.
 
 

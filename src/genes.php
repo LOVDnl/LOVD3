@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2013-01-16
+ * Modified    : 2013-01-24
  * For LOVD    : 3.0-02
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -97,6 +97,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
         $aNavigation[CURRENT_PATH . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order']    = array('menu_columns.png', 'Re-order enabled variant columns', 1);
         $aNavigation['columns/VariantOnTranscript']      = array('menu_columns.png', 'View all available variant columns', 1);
+        $aNavigation['download/all/gene/' . $sID]        = array('menu_save.png', 'Download all this gene\'s data', 1);
         $aNavigation['javascript:lovd_openWindow(\'' . lovd_getInstallURL() . 'scripts/refseq_parser.php?step=1&amp;symbol=' . $sID . '\', \'refseq_parser\', 900, 500);'] = array('menu_scripts.png', 'Create human-readable refseq file', ($zData['refseq_UD'] && count($zData['transcripts'])));
     }
     lovd_showJGNavigation($aNavigation, 'Genes');

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-07-11
- * Modified    : 2012-07-23
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2013-01-25
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -242,22 +242,19 @@ $aItems =
                         '                <TD>Empty ' . $_SESSION['currdb'] . ' gene database (remove all variants).</TD></TR>') .
                 */
             ),
-
-
-/*
-// Download & Import.
-print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
-    '              <TR>' . "\n" .
-    '                <TD colspan="2"><B>Download/Import variant and patient data</B></TD></TR>' .
-    (!$nTotalVars? '' : "\n" .
-        '              <TR class="setup" onclick="window.location.href=\'' . ROOT_PATH . 'download.php?action=view_all\';">' . "\n" .
-        '                <TD align="center" width="40"><IMG src="' . ROOT_PATH . 'gfx/lovd_save.png" alt="Download all data from the ' . $_SESSION['currdb'] . ' gene database" width="32" height="32"></TD>' . "\n" .
-        '                <TD>Download all variant and patient data from the ' . $_SESSION['currdb'] . ' gene database.</TD></TR>') . "\n" .
+        'Download<!--/Import--> gene, transcript, variant and individual data' =>
+            array(
+                array('download/all/gene/' . $_SESSION['currdb'], 'lovd_save.png', 'Download all data from the ' . $_SESSION['currdb'] . ' gene database.', 'Download all data from the ' . $_SESSION['currdb'] . ' gene database.'),
+                /*
+                array('', '', '', ''),
     '              <TR class="setup" onclick="window.location.href=\'' . ROOT_PATH . 'config_import.php\';">' . "\n" .
     '                <TD align="center" width="40"><IMG src="' . ROOT_PATH . 'gfx/lovd_database_import.png" alt="Import variants into the ' . $_SESSION['currdb'] . ' gene database" width="32" height="32"></TD>' . "\n" .
     '                <TD>Import new variant and patient data into the ' . $_SESSION['currdb'] . ' gene database.</TD></TR>' .
-    '</TABLE><BR>' . "\n");
+                */
+            ),
 
+
+/*
 // Export central repository format.
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
     '              <TR>' . "\n" .

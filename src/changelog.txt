@@ -26,6 +26,7 @@
  * Fixed bug; The "Download selected entries" option didn't work because of an
    overly strict security feature.
  * Pages belonging to the Setup area now have the Setup tab highlighted.
+ * Curators and up can now download all data specific to the selected gene.
 
 
 
