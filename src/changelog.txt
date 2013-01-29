@@ -27,6 +27,11 @@
    overly strict security feature.
  * Pages belonging to the Setup area now have the Setup tab highlighted.
  * Curators and up can now download all data specific to the selected gene.
+ * Fixed bug; The PubMed custom link was not activated by default for the
+   VariantOnGenome/Reference column.
+ * A link to the gene-specific graphs page is now also included in the Options
+   dropdown menu on the gene homepage.
+ * Implemented the "Empty gene database" feature, also present in LOVD2.
 
 
 

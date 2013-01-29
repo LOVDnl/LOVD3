@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2013-01-25
+ * Modified    : 2013-01-28
  * For LOVD    : 3.0-02
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,7 @@ if ($_PE[1] == 'all' && (empty($_PE[2]) ||
     }
 
     // If we get here, we can print the header already.
-    header('Content-Disposition: attachment; filename="LOVD_' . ($sFilter == 'owner'? 'owned_data' : 'full_download') . '_' . date('Y-m-d_H.i.s') . '.txt"');
+    header('Content-Disposition: attachment; filename="LOVD_' . ($sFilter == 'owner'? 'owned_data' : 'full_download') . ($sFilter != 'gene'? '' : '_' . $ID) . '_' . date('Y-m-d_H.i.s') . '.txt"');
     header('Pragma: public');
     print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . ($sFilter == 'owner'? 'Owned' : 'Full') . ' data download ### To import, do not remove or alter this header ###' . "\r\n");
     if ($sFilter == 'owner') {

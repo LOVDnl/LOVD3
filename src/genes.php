@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2013-01-24
+ * Modified    : 2013-01-29
  * For LOVD    : 3.0-02
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -94,6 +94,8 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
         } else {
             $aNavigation[CURRENT_PATH . '?sortCurators'] = array('', 'Sort/hide curator names', 1);
         }
+        $aNavigation[CURRENT_PATH . '?empty']            = array('menu_empty.png', 'Empty this gene database', (bool) ($zData['variants']));
+        $aNavigation[CURRENT_PATH . '/graphs']           = array('menu_graphs.png', 'View graphs about this gene database', 1);
         $aNavigation[CURRENT_PATH . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order']    = array('menu_columns.png', 'Re-order enabled variant columns', 1);
         $aNavigation['columns/VariantOnTranscript']      = array('menu_columns.png', 'View all available variant columns', 1);
@@ -690,7 +692,168 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
     $_T->printFooter();
     exit;
+}
 
+
+
+
+
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && ACTION == 'empty') {
+    // URL: /genes/DMD?empty
+    // Empty the gene database (delete all variants and associated data).
+
+    $sID = rawurldecode($_PE[1]);
+    define('PAGE_TITLE', 'Empty ' . $sID . ' gene database');
+    define('LOG_EVENT', 'GeneEmpty');
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Load appropiate user level for this gene.
+    lovd_isAuthorized('gene', $sID);
+    lovd_requireAUTH(LEVEL_CURATOR);
+
+    // If there are no variants, why continue?
+    $nVariants = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?', array($sID))->fetchColumn();
+    if (!$nVariants) {
+        lovd_showInfoTable('There are already no variants in this gene database!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        // Mandatory fields.
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        }
+
+        // User had to enter his/her password for authorization.
+        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+            // Throwing away full submissions in one go is unfortunately not an option due to the many-to-many connection between screening and variant.
+            // Deleting an individual does not delete its variants. Therefore, we might as well approach this the LOVD2 way: delete the variants, then delete the empty screenings, then the empty individuals.
+            // Of course we MUST make sure those are at least entries related to the removed variants in question, otherwise we'll be deleting too much data (LOVD2 never allowed orphaned data like we do now).
+            require ROOT_PATH . 'class/progress_bar.php';
+            $_BAR = new ProgressBar('', 'Gathering data...');
+            $aDone = array();
+            $nDone = 0;
+
+            $_DB->beginTransaction();
+            // Determine which transcripts need their data deleted...
+            // We must have transcripts and variants, otherwise we cannot get to this point.
+            $aTranscripts = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ?', array($sID))->fetchAllColumn();
+            // Then determine which VOGs need to be deleted, because they will point to nothing else...
+            $aVOGs = $_DB->query('SELECT DISTINCT vog.id FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot1 ON (vog.id = vot1.id AND vot1.transcriptid IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot2 ON (vog.id = vot2.id AND vot2.transcriptid NOT IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')) WHERE vot2.transcriptid IS NULL', array_merge($aTranscripts, $aTranscripts), true)->fetchAllColumn();
+            $_BAR->setProgress(10);
+            $_BAR->setMessage('Deleting variants...');
+
+            // Delete the VOTs!
+            $q = $_DB->query('DELETE FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE transcriptid IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')', $aTranscripts);
+            $aDone['Variants_On_Transcripts'] = $q->rowCount();
+            $nDone ++;
+            unset($aTranscripts); // Save some memory.
+            $_BAR->setProgress(25);
+
+            // Determine which screenings need to go, based on the VOGs...
+            $aScreenings = $_DB->query('SELECT DISTINCT s2v1.screeningid FROM ' . TABLE_SCR2VAR . ' AS s2v1 LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v2 ON (s2v1.screeningid = s2v2.screeningid AND s2v2.variantid NOT IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ')) WHERE s2v1.variantid IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ') AND s2v2.variantid IS NULL', array_merge($aVOGs, $aVOGs), true)->fetchAllColumn();
+
+            // Delete the VOGs!
+            $q = $_DB->query('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ')', $aVOGs);
+            $aDone['Variants_On_Genome'] = $q->rowCount();
+            $nDone ++;
+            unset($aVOGs); // Save some memory.
+            $_BAR->setProgress(40);
+
+            if ($aScreenings) {
+                // We could have had a gene with only variants and no individuals...
+                $_BAR->setMessage('Deleting screenings...');
+
+                // Determine which individuals need to go, based on the Screenings...
+                $aIndividuals = $_DB->query('SELECT DISTINCT s1.individualid FROM ' . TABLE_SCREENINGS . ' AS s1 LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s2 ON (s1.individualid = s2.individualid AND s2.id NOT IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ')) WHERE s1.id IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ') AND s2.id IS NULL', array_merge($aScreenings, $aScreenings), true)->fetchAllColumn();
+
+                // Delete the Screenings! (NOTE: I could now just drop the individuals and everything will cascade, but I want the statistics...)
+                $q = $_DB->query('DELETE FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ')', $aScreenings);
+                $aDone['Screenings'] = $q->rowCount();
+                $nDone ++;
+                unset($aScreenings); // Save some memory.
+                $_BAR->setProgress(60);
+                $_BAR->setMessage('Deleting phenotypes...');
+
+                // Delete the Phenotypes! (NOTE: Again, just because I want the statistics...)
+                $q = $_DB->query('DELETE FROM ' . TABLE_PHENOTYPES . ' WHERE individualid IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
+                $aDone['Phenotypes'] = $q->rowCount();
+                $nDone ++;
+                $_BAR->setProgress(80);
+                $_BAR->setMessage('Deleting individuals...');
+
+                // And finally, delete the Individuals!
+                $q = $_DB->query('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
+                $aDone['Individuals'] = $q->rowCount();
+                $nDone ++;
+                unset($aIndividuals); // Save some memory.
+            }
+
+            $_BAR->setProgress(100);
+            $_BAR->setMessage('Done!');
+
+            // All successful, now we can commit.
+            $_DB->commit();
+            $sMessage = '';
+            if (count($aDone)) {
+                foreach ($aDone as $sSection => $n) {
+                    $sMessage .= (!$sMessage ? '' : ', ') . $n . ' ' . $sSection;
+                }
+                $sMessage = 'deleted ' . preg_replace('/, ([^,]+)/', " and $1", $sMessage);
+            } else {
+                $sMessage = 'no data to delete';
+            }
+            lovd_writeLog('Event', LOG_EVENT, 'Emptied gene database ' . $sID . '; ' . $sMessage . '; ran ' . $nDone . ' queries.');
+            lovd_setUpdatedDate($sID); // FIXME; regardless of variant status... oh, well...
+
+            // Thank the user...
+            lovd_showInfoTable('Successfully emptied the ' . $sID . ' gene database!', 'success');
+            $_BAR->redirectTo(lovd_getInstallURL() . 'configuration', 3);
+
+            $_T->printFooter();
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+    }
+
+
+
+    lovd_errorPrint();
+
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 array(
+                        array('POST', '', '', '', '40%', '14', '60%'),
+                        array('Emptying ' . $sID . ' gene database', 'All data associated to ' . $sID . ' will be deleted, as long as it\'s not associated with another gene. For instance, a variant that is mapped to ' . $sID . ' as well as another gene, will only lose the mapping to ' . $sID . '. A variant that is only described on ' . $sID . ' however, will be deleted. Also, an individual with a variant in ' . $sID . ', but also in another gene, will not be deleted, but the ' . $sID . ' variant data <I>will</I> be deleted. An individual that only has variants reported in ' . $sID . ' will be removed from the system.',
+                            'print', 'Deleting ' . $nVariants . ' variant' . ($nVariants == 1? '' : 's') . ' and all associated data (screenings, individuals, phenotypes).<BR><B>All data (variants, screenings, individuals and phenotypes) only linked to ' . $sID . ' and not linked to any other gene will be deleted!</B>'),
+                        'skip',
+                        array('Enter your password for authorization', '', 'password', 'password', 20),
+                        array('', '', 'submit', 'Empty gene database'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    $_T->printFooter();
+    exit;
 }
 
 

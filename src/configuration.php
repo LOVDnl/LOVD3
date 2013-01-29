@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-07-11
- * Modified    : 2013-01-25
+ * Modified    : 2013-01-29
  * For LOVD    : 3.0-02
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -234,17 +234,14 @@ $aItems =
             array(
                 array('genes/' . $_SESSION['currdb'] . '?edit', 'lovd_genes_edit.png', 'Edit ' . $_SESSION['currdb'] . ' gene database', 'Edit ' . $_SESSION['currdb'] . ' gene database.'),
                 array('genes/' . $_SESSION['currdb'] . '?authorize', 'lovd_curator_sort.png', 'Sort ' . $_SESSION['currdb'] . ' gene database curator list', 'Edit or sort the list of curators for the ' . $_SESSION['currdb'] . ' gene database, and/or hide curators from the list of curators shown on the gene\'s homepage and in LOVD\'s header.'),
+                array('genes/' . $_SESSION['currdb'] . '?empty', 'lovd_genes_empty.png', 'Empty ' . $_SESSION['currdb'] . ' gene database', 'Delete all variants and associated data from the ' . $_SESSION['currdb'] . ' gene database.<BR>Data associated with other genes as well will be kept.'),
                 /*
-                array('', '', '', ''),
                     (!$nTotalVars? '' : "\n" .
-                        '              <TR class="setup" onclick="window.location.href=\'' . ROOT_PATH . 'config_genes.php?action=empty\';">' . "\n" .
-                        '                <TD align="center" width="40"><IMG src="' . ROOT_PATH . 'gfx/lovd_database_empty.png" alt="Empty ' . $_SESSION['currdb'] . ' gene database" width="32" height="32"></TD>' . "\n" .
-                        '                <TD>Empty ' . $_SESSION['currdb'] . ' gene database (remove all variants).</TD></TR>') .
                 */
             ),
         'Download<!--/Import--> gene, transcript, variant and individual data' =>
             array(
-                array('download/all/gene/' . $_SESSION['currdb'], 'lovd_save.png', 'Download all data from the ' . $_SESSION['currdb'] . ' gene database.', 'Download all data from the ' . $_SESSION['currdb'] . ' gene database.'),
+                array('download/all/gene/' . $_SESSION['currdb'], 'lovd_save.png', 'Download all data from the ' . $_SESSION['currdb'] . ' gene database', 'Download all data from the ' . $_SESSION['currdb'] . ' gene database.'),
                 /*
                 array('', '', '', ''),
     '              <TR class="setup" onclick="window.location.href=\'' . ROOT_PATH . 'config_import.php\';">' . "\n" .
@@ -271,6 +268,10 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
         ),
     );
 
+// Unset items not valid when there are no variants yet.
+if (!$nTotalVars) {
+    unset($aItems['Gene settings'][2]);
+}
 
 
 foreach ($aItems as $sTitle => $aLinks) {

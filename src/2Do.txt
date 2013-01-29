@@ -8,6 +8,9 @@ Prioritize:
   + At this time Import cannot work with Owned data sets, because it's missing one section and it has a different name.
   + Also, some sections are actually labelled as not to be imported. This is not recognized either.
   + Hij klaagt nu als een disease al in de DB staat, maar als alles hetzelfde is (iig id, id_omim, name), negeer die regel dan en ga gewoon door.
+- Mensen curator maken moet op de bekende manier.
+  + Interessante advanced selection list: http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/   (search in options, easy to select multiple, not easy for ranges)
+  + Interessante multiselect (2 lists: selected, unselected): http://quasipartikel.at/multiselect/   (search in options to add (not to remove), easy to see what is already selected and unselected, not easy for ranges)
 - Handling ORCID ID:
   + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
   + reset password met orcid id!
@@ -111,6 +114,9 @@ Prioritize:
 - VOG kolommen toch per gen kunnen verbergen? Johan wil écht die dbSNP kolom niet zien.
   + Op zich is het verbergen van VOG kolommen gelijk aan de huidige VOT implementatie.
     * Maar hoe dit op te slaan?
+- Screening kunnen kopieren, zodat je t niet steeds hoeft te herhalen voor een andere patient in dezelfde groep?
+  + Screening zegt dat gen X is gescreened, maar er is geen variant aan gekoppeld, dus LOVD kan dan toch zelf c.= toevoegen?
+- Auto generate links to dbSNP?
 - LOVD 3.0 heeft niet hetzelfde wat LOVD 2.0 heeft. Gene not found, are you looking for gene.lovd.nl?
 - Kunnen we ook het Exon veld voorspellen?
 - Curate all option? Geeft popup met vinkje wel/niet alles mee cureren (phenotypes, individuals, etc). Daarna met progress bar de boel cureren... Ajax request output in popup?
