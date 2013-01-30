@@ -153,7 +153,10 @@ if (POST) {
     if (!lovd_error()) {
         // Find out the MIME-type of the uploaded file. Sometimes mime_content_type() seems to return False. Don't stop processing if that happens.
         // However, when it does report something different, mention what type was found so we can debug it.
-        $sType = mime_content_type($_FILES['import']['tmp_name']);
+        $sType = '';
+        if (function_exists('mime_content_type')) {
+            $sType = mime_content_type($_FILES['import']['tmp_name']);
+        }
         if ($sType && substr($sType, 0, 5) != 'text/') { // Not all systems report the regular files as "text/plain"; also reported was "text/x-pascal; charset=us-ascii".
             lovd_errorAdd('import', 'The upload file is not a tab-delimited text file and cannot be imported. It seems to be of type "' . htmlspecialchars($sType) . '".');
 
@@ -291,6 +294,19 @@ if (POST) {
                             unset($aSection['object']);
                             unset($aSection['objects']);
                         }
+
+                        // If we had at least one unknown column in the previous section, we will mention in the output the number of values gone lost.
+                        // The column name has already been written to the output, so we should simply add command to append the number of lost values.
+                        if (count($aUnknownCols)) {
+                            print('<SCRIPT type="text/javascript">' . "\n" .
+                                  '  var sMessage = $("#lovd_parser_progress_message_done").html();' . "\n");
+                            foreach ($aLostValues as $sCol => $n) {
+                                print('  sMessage = sMessage.replace(/' . preg_quote($sCol, '/') . '/, "' . $sCol . ' (lost ' . $n . ' value' . ($n == 1? '' : 's') . ')");' . "\n");
+                            }
+                            print('  $("#lovd_parser_progress_message_done").html(sMessage);' . "\n" .
+                                  '</SCRIPT>');
+                            flush();
+                        }
                     }
                     $sCurrentSection = $aRegs[1];
                     $bParseColumns = true;
@@ -414,6 +430,8 @@ if (POST) {
                 if (count($aUnknownCols)) {
                     $_BAR[0]->appendMessage('Warning: the following column' . (count($aUnknownCols) == 1? ' has' : 's have') . ' been ignored from the ' . $sCurrentSection . ' data on line ' . $nLine . ', because ' . (count($aUnknownCols) == 1? 'it is' : 'they are') . ' not in the database: ' . implode(', ', $aUnknownCols) . '.<BR>', 'done');
                 }
+                // Now create array based on $aUnknownCols so we can count how many values are actually lost.
+                $aLostValues = array_fill_keys($aUnknownCols, 0);
                 // Repeated columns? A mistake by the user, which can cause a lot of confusion.
                 $aColumnCounts = array_count_values($aColumns);
                 $aDuplicateColumns = array();
@@ -462,6 +480,9 @@ if (POST) {
 
             // Unset unused columns.
             foreach ($aUnknownCols as $sCol) {
+                if ($aLine[$sCol] !== '') {
+                    $aLostValues[$sCol] ++;
+                }
                 unset($aLine[$sCol]);
             }
 
@@ -1007,6 +1028,20 @@ if (POST) {
             unset($aSection['nColumns']);
             unset($aSection['required_columns']);
             unset($aSection['settings']);
+
+            // If we had at least one unknown column in the previous section, we will mention in the output the number of values gone lost.
+            // The column name has already been written to the output, so we should simply add command to append the number of lost values.
+            if (count($aUnknownCols)) {
+                print('<SCRIPT type="text/javascript">' . "\n" .
+                    '  var sMessage = $("#lovd_parser_progress_message_done").html();' . "\n");
+                foreach ($aLostValues as $sCol => $n) {
+                    print('  sMessage = sMessage.replace(/' . preg_quote($sCol, '/') . '/, "' . $sCol . ' (lost ' . $n . ' value' . ($n == 1? '' : 's') . ')");' . "\n");
+                }
+                print('  $("#lovd_parser_progress_message_done").html(sMessage);' . "\n" .
+                    '</SCRIPT>');
+                flush();
+                exit;
+            }
         }
         unset($aSection); // Unlink reference.
         // Clean up all stored ID lists.

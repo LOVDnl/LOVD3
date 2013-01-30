@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 02 (r...)
- * 2013-01-..
+ * 3.0 Build 02 (r280)
+ * 2013-01-30
  *********/
  * Managers and up can now also download other user's data.
  * Fixed bug; When removing a non-shared column or when removing a shared column
@@ -32,6 +32,14 @@
  * A link to the gene-specific graphs page is now also included in the Options
    dropdown menu on the gene homepage.
  * Implemented the "Empty gene database" feature, also present in LOVD2.
+ * Fixed bug; Importing a file failed when mime_content_type() was not available
+   in PHP.
+ * When certain columns are ignored during import because they are not present
+   in the database, LOVD now reports now many entries had values in these
+   columns.
+ * Added links to dbSNP from the VariantOnGenome/dbSNP column.
+ * Due to the HGNC changing their URL schema, no new genes could be created
+   starting from Wednesday, January 30th.
 
 
 

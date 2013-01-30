@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2012-12-19
- * For LOVD    : 3.0-01
+ * Modified    : 2013-01-30
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -107,7 +107,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
             $aColumns[] = 'gd_app_name';
         }
     }
-    $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
+    $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
 
     // If the HGNC is having database problems, we get an HTML page.
     if (empty($aHgncFile) || stripos(implode($aHgncFile), '<html') !== false) {
@@ -182,7 +182,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
         // We only do this search, if we can report if of course (hence the check for lovd_errorAdd()).
         // Replace WHERE.
         $sWhere = rawurlencode('CONCAT(" ", gd_aliases, ",") LIKE "% ' . $sHgncId . ',%"');
-        $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads.cgi?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
+        $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
 
         // Just quick check if we have a match now...
         if (!empty($aHgncFile) && stripos(implode($aHgncFile), '<html') === false) {

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2012-12-13
- * For LOVD    : 3.0-01
+ * Modified    : 2013-01-29
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -487,6 +487,10 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $zData[$sCol] = implode(', ', array_unique(explode(';', $sVal)));
                 }
             }
+        }
+        // Replace rs numbers with dbSNP links.
+        if (!empty($zData['VariantOnGenome/dbSNP'])) {
+            $zData['VariantOnGenome/dbSNP'] = preg_replace('/(rs\d+)/', '<SPAN' . ($sView != 'list'? '' : ' onclick="cancelParentEvent(event);"') . '><A href="http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=' . "$1" . '" target="_blank">' . "$1" . '</A></SPAN>', $zData['VariantOnGenome/dbSNP']);
         }
 
         foreach ($this->aColumns as $sCol => $aCol) {

@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-12-17
- * For LOVD    : 3.0-01
+ * Modified    : 2013-01-30
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -301,10 +301,17 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // Restart session, now with correct session name.
     session_destroy();
     $sSignature = md5($_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . time());
+// DMD_SPECIFIC
+if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
+    $sSignature = 'ifokkema_local_3.0';
+}
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($sSignature);
     session_name('PHPSESSID_' . $_SETT['cookie_id']);
     session_start();
+    // $_SESSION can still be filled with data from previous session of previous LOVD install
+    // on this location and with the same signature, and it's messing up the install (of course highly unlikely).
+    $_SESSION = array();
 
     $_T->printHeader();
     lovd_printSideBar();

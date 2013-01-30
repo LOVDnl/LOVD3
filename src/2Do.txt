@@ -1,20 +1,24 @@
 Prioritize:
 ===========
-
-
+- Implement an HGNC mirror.
+- RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
+  + Als hele codon wordt vervangen, kan p.(=) ook gebeuren, zonder dat de RNA r.(=) kan zijn.
+- Johan:
+  + VOG/Conservation_score/GERP moet naar VOT, of ook verbergbaar maken?!!?? Check!
+  + VOT/effect verbergen per gen of transcript? Johan wil ze écht niet hebben. Custom Col van maken?
 - Over het algemeen: focus op het toevoegen van features die ook al in LOVD2 zaten!!!
 - Belangrijke features zijn: mass-curate en verbeteren import.
 - Import has some 2Do, such as predicting DBIDs and such.
   + At this time Import cannot work with Owned data sets, because it's missing one section and it has a different name.
   + Also, some sections are actually labelled as not to be imported. This is not recognized either.
   + Hij klaagt nu als een disease al in de DB staat, maar als alles hetzelfde is (iig id, id_omim, name), negeer die regel dan en ga gewoon door.
+  + Ignore (broken, all?) user links and point everything to me? As a setting that you can put in the file? Or only when reporting an error, then allow users to ignore "live"? (js that sets an hidden form field)
 - Mensen curator maken moet op de bekende manier.
   + Interessante advanced selection list: http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/   (search in options, easy to select multiple, not easy for ranges)
   + Interessante multiselect (2 lists: selected, unselected): http://quasipartikel.at/multiselect/   (search in options to add (not to remove), easy to see what is already selected and unselected, not easy for ranges)
 - Handling ORCID ID:
   + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
   + reset password met orcid id!
-- dbsearch.php: lovd.nl/GENE_00001 link wijst naar LOVD3? Zet er een 0 tussen voor het doorsturen.
 - Download/all/mine gebruikt te veel geheugen, niet alles laten prefetchen!
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
@@ -34,7 +38,6 @@ Prioritize:
     * We kunnen zeggen: LEVEL_OWNER icm ergens curator van: rechten op screening. NU kan een curator al rechten verwerven door aan deze submissie een variant in haar gen toe te voegen; dan kan ze de hele individu verwijderen.
       - Dus ook een variant in een ander gen, waar ze eigenlijk normaal gesproken geen rechten op heeft!
     * Alleen verwijderen als geen nadelig effect op andere genen?
-
 - Mag manager wel chromosome veranderen van een submissie?
 - Hoe er voor zorgen, dat een gezond individu toch phenotype data van een bepaalde ziekte kan hebben? Data model houdt dit niet tegen... dat is de code.
 - Curator mag geen cols zien van disease 0, foutmelding: je moet curator zijn.
