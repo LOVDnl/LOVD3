@@ -6,7 +6,7 @@
 \usepackage{graphicx} % For images
 \graphicspath{{../gfx/}}
 %\usepackage[english]{babel} % For correct word hyphenating.
-\usepackage{color}    % For the colored boxes.
+\usepackage{color}    % For colored links and boxes.
 \definecolor{LOVDdark}{RGB}{34, 68, 136} %224488 % Why does the "HTML" color model not work?
 \definecolor{LOVDlight}{RGB}{240, 243, 255} %F0F3FF % Why does the "HTML" color model not work?
 \usepackage{hyperref} % For URLs.
@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-beta-11}
+\setLOVDversion{3.0-02}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2012-11-19} % I guess it's easier to use this as a "Last modified" column.
+\date{2013-02-02} % I guess it's easier to use this as a "Last modified" column.
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -232,6 +232,11 @@
 
 \hypertarget{toc}{}
 \tableofcontents
+
+
+
+
+
 
 
 
@@ -940,8 +945,6 @@ Curators do not require a separate submitter account; they can use their curator
 
 
 
-
-
 \hypertarget{s_submitter_register}{}
 \section{Registering a new account}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -1203,6 +1206,11 @@ Locking the user essentially also causes the user to be logged out of the system
 
 
 
+
+
+
+
+
 \chapter{Gene databases}
 Although in LOVD 3.0 you can enter data into the database without having genes in your installation, the genes still embody an important part of LOVD.
 Configuring genes in LOVD allows you to see the effects of variants on transcript level, and draws submitters with variant data to your installation.
@@ -1214,7 +1222,7 @@ However, this chapter deals with manually creating gene databases.
 You can create new genes through the \hyperlink{c_setup}{LOVD setup area}.
 Editing and deleting genes is done through the ``Genes'' tab.
 Curators assigned to genes can also edit these after they've been created, but can not delete genes.
-%Emptying genes (removing all associated variant and patient data) and managing it's variants is done through the configuration area.
+Emptying genes (removing all associated variant and patient data) and managing its variants is done through the configuration area.
 This chapter describes how to create, edit and delete gene databases in LOVD.
 
 
@@ -1272,8 +1280,7 @@ Therefore, most of the information in this section has been filled in for you, a
   \item[Date of creation] \hfill \\
   \emph{Note: This field can only be filled in when creating a gene database and can never be edited afterwards!}
   \\
-% TODO: link to gene homepage section of manual.
-  The database's date of creation is mentioned on the gene homepage.
+  The database's date of creation is mentioned on the \hyperlink{s_gene_homepage}{gene homepage}.
   Today's date will automatically be stored if you leave this field empty, but in case you already
    had a gene database but you're moving it to this LOVD installation, you may want to fill in a different date.
 \end{description}
@@ -1297,8 +1304,7 @@ Therefore, most of the information in this section has been filled in for you, a
 \subsection{Reference sequences}
 Collecting variants requires a proper reference sequence.
 Without a genomic and a transcript reference sequence the variants in this LOVD database cannot be interpreted properly or mapped to the genome.
-% TODO: once we have BED file export.
-When properly configured, LOVD will add links to the Ensembl, NCBI and UCSC genome browsers from the gene homepage.%, generating a nice visual overview of the variants in the database.
+When properly configured, LOVD will add links to the Ensembl, NCBI and UCSC genome browsers from the gene homepage, generating a nice visual overview of the variants in the database.
 \begin{description}
   \item[Genomic reference sequence] \hfill \\
   Select the genomic reference sequence (NG, NC or LRG accession number).
@@ -1312,6 +1318,8 @@ When properly configured, LOVD will add links to the Ensembl, NCBI and UCSC geno
   Please select which transcript you want to use to name the variants in this gene.
   If there are more transcripts, usually you would pick the transcript that encodes for the longest protein,
    or the transcript that is expressed in the tissue you focus your research on.
+  If you want to add more transcripts later, or change which transcript(s) you want to use
+   for this gene database, see the chapter \hyperlink{c_transcripts}{Gene transcripts}.
 \end{description}
 
 
@@ -1489,6 +1497,7 @@ After you submit the form, LOVD redirects you automatically back to the gene's h
 
 
 
+\hypertarget{s_gene_delete}{}
 \section{Deleting a gene database}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -1504,11 +1513,11 @@ To complete the removal, you need to fill in your password and submit the form.
 
 \begin{warntable}
 Removing a gene can not be undone, you will need to create the gene database again.
-% TODO: when we have gene-specific download...
-%If in any doubt, first make a download of the database so that you can re-upload the data .....blabla
+If in any doubt, first make a download of the database so that you can restore your data if needed.
 Please note that deleting a gene removes also its transcripts in the database and therefore
  all variant annotation on the gene in question, but it \emph{does not remove the genomic variants from the database}.
-%TODO: so how do we delete these variants?
+To remove these as well, you should first empty the gene database, which deletes all its variants and also deletes
+ all other connected data such as individuals and phenotypes, as long as these are not connected to other genes as well.
 \end{warntable}
 
 
@@ -1607,6 +1616,115 @@ To resort the list of curators, move your mouse over the drag handle (see figure
  of the curator name, and click and drag the name up or down the list.
 Release the mouse button in the preferred location.
 Don't forget to click the ``Save'' button to save the new sort order!
+\clearpage % Makes the hyper target actually point to the right place.
+
+
+
+
+
+
+
+
+
+
+\hypertarget{c_transcripts}{}
+\chapter{Gene transcripts}
+LOVD3 handles transcripts very differently from LOVD2.
+In LOVD3, configuring at least one transcript for a certain gene is necessary to be able to add variant data to the gene database.
+Genomic variants can always be added, but to record the effect of a variant on a certain gene, that gene must have at least one transcript defined.
+As a source for transcript information, LOVD relies on Mutalyzer, which gathers transcript information from different sources.
+Therefore, it is possible that new transcripts recently included in the NCBI database, are not yet available in LOVD because
+ either the NCBI hasn't rebuilt its mapping database yet, or Mutalyzer didn't pick up the new mapping information yet.
+LOVD3 does not restrict you in the number of transcripts you can configure per gene, but note that for each transcript added,
+ each variant gains more data fields that need to be filled in by the submitter, so make sure that the additional transcripts are actually needed.
+A good reason for using multiple transcripts is the unavailability of a transcript that contains all exons.
+
+
+
+
+
+\section{Creating new transcripts}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+The simplest way to create a gene transcript in LOVD, is to select it when \hyperlink{s_gene_create}{creating a gene database}.
+However, if you'd like to add more transcripts later, please proceed to the \hyperlink{s_gene_homepage}{gene homepage}.
+Click on the ``Options'' menu button to open up the gene entry's menu.
+If you do not see the ``Options'' menu button, you are not logged in or you do not have rights to edit this gene's settings.
+In the opened menu, click ``Add transcript(s) to gene'' to open up the gene's edit form.
+Please wait while we contact Mutalyzer to provide a list of available transcripts.
+If you get the error message ``No more transcripts available that have not been added yet!'',
+ then all transcripts that are available to Mutalyzer have already been added to this gene.
+\par
+Select the transcript(s) you would like to add, and click the button ``Add transcript(s) to gene''.
+After the confirmation, you will be forwarded to the gene homepage.
+Beneath the header ``Active transcripts'' you can see which transcripts are now active.
+
+
+
+
+
+\section{Editing a transcript}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Because LOVD standardizes the transcript information, there is very little information that is freely editable.
+At this moment, you are only allowed to assign or change Ensembl identifyers to the transcript(s) you use.
+To edit a certain transcript, proceed to the gene homepage, scroll down to ``Active transcripts'' and click the transcript in question.
+Alternatively, click the ``Transcripts'' tab from anywhere in LOVD.
+If you already had a gene database selected, you now see the transcripts active in this gene and you can click one to view its details.
+If you did not have a gene database selected, you now see all transcripts in the database.
+Use the filtering boxes to find the transcript you are looking for, and click it to view its details.
+\\
+\par
+Click on the ``Options'' menu button to open up the transcript entry's menu.
+If you do not see the ``Options'' menu button, you are not logged in or you do not have rights to edit this transcript's settings.
+In the opened menu, click ``Edit transcript information'' to open up the transcript's edit form.
+
+
+
+\subsection{General information}
+This part contains IDs to other sources, to aid in data exchange.
+\begin{description}
+  \item[Transcript Ensembl ID] \hfill \\
+  If this transcript is also known in Ensembl, enter its Ensembl ENST ID here.
+  \item[Protein Ensembl ID] \hfill \\
+  If this transcript's protein product is also known in Ensembl, enter its Ensembl ENSP ID here.
+  \item[Protein Uniprot ID] \hfill \\
+  If this transcript's protein product has an Uniprot ID, enter it here.
+\end{description}
+
+
+
+
+
+\section{Deleting a transcript}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Deleting a transcript removes all information related to the transcript in question from all variants in the database.
+Just like when \hyperlink{s_gene_delete}{deleting a gene}, this \emph{does not remove the genomic variants from the database!}
+From the transcript's detailed view, click on the ``Options'' menu button to open up the transcript's menu, and select the ``Delete transcript entry'' option.
+On the next page, confirm by typing your password in the input box and submit the form to complete the removal.
+
+
+
+
+
+
+
 
 
 
@@ -1644,6 +1762,14 @@ List of available detection techniques: Specify a list of detection techniques a
 %1
 \subsubsection{}
 
+
+
+add emptying gene database
+
+
+
+
+add disease section
 
 
 // Add a bit about the overviews of genes, users, ...
@@ -1716,8 +1842,38 @@ $_PAGES =
                   ),
             'Use of HTML within LOVD',
             'Updating LOVD',
+
+Actually, you are right, -a indeed stands for recursive, amongst other
+things. You can always check the manual with:
+man cp
+(use q to quit the manual)
+>From the manual of my version of cp:
+-a    same as -dR --preserve=all
+-d    same as --no-dereference --preserve=links
+-R    copy directories recursively
+
+So when you use:
+cp -auv LOVD34/LOVDv.2.0/* RB1_LSDB/
+
+All the subdirectories will be selected and everything will copy just
+fine, except for hidden files. LOVD contains one hidden file: .htaccess.
+It doesn't change often, but just in case the full command should then
+be:
+
+cp -auv LOVD34/LOVDv.2.0/* LOVD34/LOVDv.2.0/.htaccess RB1_LSDB/
+
             'Keeping your data secure',
           );
+
+
+For new curators:
+
+Please find attached a recent publication describing what
+can be considered as the obvious tasks of a curator. We
+wrote this paper as a way to answer the questions we
+received on "what should a curator do". When you have
+comments on this document, please do not hesitate to tell
+us; we would appreciate your comments to improve the document.
 
 
 
