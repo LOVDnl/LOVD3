@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-27
- * Modified    : 2012-11-27
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-02-07
+ * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -46,7 +46,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     print('      The LOVD 3.0 documentation is currently still work in progress.<BR>Currently available is the LOVD 3.0 user manual.<BR>' .
           '      <UL>' . "\n" .
-          '        <LI><A href="docs/LOVD_manual_3.0.pdf" target="_blank">LOVD manual 3.0-beta-11</A> (29 pages, 906Kb) - last updated November 19th 2012</LI></UL>' . "\n\n");
+          '        <LI><A href="docs/LOVD_manual_3.0.pdf" target="_blank">LOVD manual 3.0-03</A> (31 pages, 917Kb) - last updated February 7th 2013</LI></UL>' . "\n\n");
 
     $_T->printFooter();
     exit;

@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-02}
+\setLOVDversion{3.0-03}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-02-02} % I guess it's easier to use this as a "Last modified" column.
+\date{2013-02-07} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -1637,7 +1637,23 @@ Therefore, it is possible that new transcripts recently included in the NCBI dat
  either the NCBI hasn't rebuilt its mapping database yet, or Mutalyzer didn't pick up the new mapping information yet.
 LOVD3 does not restrict you in the number of transcripts you can configure per gene, but note that for each transcript added,
  each variant gains more data fields that need to be filled in by the submitter, so make sure that the additional transcripts are actually needed.
-A good reason for using multiple transcripts is the unavailability of a transcript that contains all exons.
+
+
+
+
+
+\section{Which transcript(s) should I pick?}
+In principle, we suggest using the predominant transcript, especially if only changes in this transcript cause a change in phenotype.
+Otherwise we recommend using the longest transcript (i.e., the transcript resulting in the longest protein).
+Using the predominant transcript makes confirmation of the variant effect on RNA level easier and
+ usually the variant numbering on this transcript will be most familiar with other research groups.
+Using the longest transcript has the advantage of being able to annotate all exonic variants with a (predicted) effect on protein level.
+\\
+\par
+As said, LOVD3 allows you to use more than one transcript per gene.
+Good examples that justify using multiple transcripts in LOVD, is when different transcripts are expressed in different tissues,
+ when changes in different transcripts cause different phenotypes, or when different research groups focus on different transcripts
+ (for example, when no transcript is availabile that contains all exons).
 
 
 

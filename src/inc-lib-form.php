@@ -611,7 +611,20 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
         }
     }
     $sBcc = rtrim($sBcc, ', ');
+
+    // 2013-02-06; 3.0-02; Fix for MIME emails that have long lines in the MIME headers.
+    // Lines that are not to be wrapped will have their spaces (and other characters lovd_wrapText()
+    // responds to) replaced with something else; then the body is wrapped, and then the spaces are replaced back in.
+    $sBody = preg_replace_callback('/^(Content-(Type|Description):.+)/im',
+        function ($aRegs) { return str_replace(array(' ', '-', ',', ':', ';'), array('{{SPACE}}', '{{HYPHEN}}', '{{COMMA}}', '{{COLON}}', '{{SEMICOLON}}'), $aRegs[1]);},
+        $sBody);
+    // Normal message body wrapping, which now cannot wrap the headers anymore...
     $sBody = lovd_wrapText($sBody);
+    // Now, let's restore what we replaced.
+    $sBody = preg_replace_callback('/^(Content{{HYPHEN}}(Type|Description){{COLON}}.+)/im',
+        function ($aRegs) { return str_replace(array('{{SPACE}}', '{{HYPHEN}}', '{{COMMA}}', '{{COLON}}', '{{SEMICOLON}}'), array(' ', '-', ',', ':', ';'), $aRegs[1]);},
+        $sBody);
+
     $sHeaders = $sHeaders . (!empty($sCc)? PHP_EOL . 'Cc: ' . $sCc : '') . (!empty($sBcc)? PHP_EOL . 'Bcc: ' . $sBcc : '');
 
     $bSafeMode = ini_get('safe_mode');

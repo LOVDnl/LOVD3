@@ -5,6 +5,20 @@
  *************/
 
 /**************************
+ * 3.0 Build 03 (r2..)
+ * 2013-02-??
+ *********/
+ * Added a chapter about gene transcripts to the manual and various other minor additions.
+ * When during import, columns are being ignored, LOVD no longer stops import, which was introduced in build 02.
+ * Fixed notice in the import procedure, caused when uploading an empty section.
+ * On forms where file uploads are enabled, the reasons for file size restrictions are now explained to the user.
+
+
+
+
+
+
+/**************************
  * 3.0 Build 02 (r280)
  * 2013-01-30
  *********/
@@ -35,15 +49,11 @@
  * Fixed bug; Importing a file failed when mime_content_type() was not available
    in PHP.
  * When certain columns are ignored during import because they are not present
-   in the database, LOVD now reports now many entries had values in these
+   in the database, LOVD now reports how many entries had values in these
    columns.
  * Added links to dbSNP from the VariantOnGenome/dbSNP column.
  * Due to the HGNC changing their URL schema, no new genes could be created
    starting from Wednesday, January 30th.
-
-
-
-
 
 
 /**************************

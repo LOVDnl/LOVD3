@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2013-01-29
- * For LOVD    : 3.0-02
+ * Modified    : 2013-02-06
+ * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -133,13 +133,13 @@ if (POST) {
 
     // If the file does not arrive (too big), it doesn't exist in $_FILES.
     if (empty($_FILES['import']) || ($_FILES['import']['error'] > 0 && $_FILES['import']['error'] < 4)) {
-        lovd_errorAdd('import', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB.');
+        lovd_errorAdd('import', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server.') . '.');
 
     } else if ($_FILES['import']['error'] == 4 || !$_FILES['import']['size']) {
         lovd_errorAdd('import', 'Please select a file to upload.');
 
     } else if ($_FILES['import']['size'] > $nMaxSize) {
-        lovd_errorAdd('import', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB.');
+        lovd_errorAdd('import', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server.') . '.');
 
     } elseif ($_FILES['import']['error']) {
         // Various errors available from 4.3.0 or later.
@@ -297,7 +297,7 @@ if (POST) {
 
                         // If we had at least one unknown column in the previous section, we will mention in the output the number of values gone lost.
                         // The column name has already been written to the output, so we should simply add command to append the number of lost values.
-                        if (count($aUnknownCols)) {
+                        if (isset($aUnknownCols) && count($aUnknownCols)) {
                             print('<SCRIPT type="text/javascript">' . "\n" .
                                   '  var sMessage = $("#lovd_parser_progress_message_done").html();' . "\n");
                             foreach ($aLostValues as $sCol => $n) {
@@ -1040,7 +1040,6 @@ if (POST) {
                 print('  $("#lovd_parser_progress_message_done").html(sMessage);' . "\n" .
                     '</SCRIPT>');
                 flush();
-                exit;
             }
         }
         unset($aSection); // Unlink reference.
@@ -1394,7 +1393,7 @@ $aForm =
         array('', '', 'print', '<B>File selection</B> (LOVD tab-delimited format only!)'),
         'hr',
         array('Select the file to import', '', 'file', 'import', 40),
-        array('', '', 'note', 'The maximum file size accepted is ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server. If you wish to have it increased, contact the server\'s system administrator') . '.'),
+        array('', 'Current file size limits:<BR>LOVD: ' . ($nMaxSizeLOVD/(1024*1024)) . 'M<BR>PHP (upload_max_filesize): ' . ini_get('upload_max_filesize') . '<BR>PHP (post_max_size): ' . ini_get('post_max_size'), 'note', 'The maximum file size accepted is ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server. If you wish to have it increased, contact the server\'s system administrator') . '.'),
         'hr',
         'skip',
         array('', '', 'print', '<B>Import options</B>'),

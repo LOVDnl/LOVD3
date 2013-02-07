@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-12-17
- * For LOVD    : 3.0-01
+ * Modified    : 2013-02-06
+ * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -835,12 +835,13 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     // Calculate maximum uploadable file size.
     // VCF files are approximately 116 bytes per variant, so 50 MB should allow for half a million variants.
     // SeattleSeq variants may take up as much as 750 bytes per variant because they duplicate a lot of information in cases with several transcripts.
-    // Because of this, SeattleSeq files have a much higher limit of 350 MB.
-    // Still, the server settings are probably much lower.
-    $nMaxSize = ($_GET['type'] == 'VCF'? 50 : 350) * 1024 * 1024;
-    $nMaxPHPUpload = lovd_convertIniValueToBytes(ini_get('upload_max_filesize'));
-    $nMaxPHPPost = lovd_convertIniValueToBytes(ini_get('post_max_size'));
-    $nMaxSize = min($nMaxSize, $nMaxPHPUpload, $nMaxPHPPost);
+    // Either way, LOVD has a maximum file size limit of 100 MB.
+    // Anyways, the server settings are probably much lower.
+    $nMaxSizeLOVD = 100*1024*1024; // 100MB LOVD limit.
+    $nMaxSize = min(
+        $nMaxSizeLOVD,
+        lovd_convertIniValueToBytes(ini_get('upload_max_filesize')),
+        lovd_convertIniValueToBytes(ini_get('post_max_size')));
 
 
 
@@ -1079,13 +1080,13 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     if (POST) {
         // The form has been submitted. Detect any errors in the file upload.
         if (empty($_FILES['variant_file']) || ($_FILES['variant_file']['error'] > 0 && $_FILES['variant_file']['error'] < 4)) {
-            lovd_errorAdd('', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB.');
+            lovd_errorAdd('', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server.') . '.');
 
         } elseif ($_FILES['variant_file']['error'] == 4 || !$_FILES['variant_file']['size']) {
             lovd_errorAdd('', 'Please select a file to upload.');
 
         } elseif ($_FILES['variant_file']['size'] > $nMaxSize) {
-            lovd_errorAdd('', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB.');
+            lovd_errorAdd('', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server.') . '.');
 
         } elseif ($_FILES['variant_file']['error']) {
             // Various errors available from 4.3.0 or later.
@@ -2067,7 +2068,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     }
     array_push($aForm,
                    array('Select the file to import', '', 'file', 'variant_file', 25),
-                   array('', '', 'note', 'The maximum file size accepted is ' . round($nMaxSize/pow(1024, 2), 1) . ' MB.'),
+                   array('', 'Current file size limits:<BR>LOVD: ' . ($nMaxSizeLOVD/(1024*1024)) . 'M<BR>PHP (upload_max_filesize): ' . ini_get('upload_max_filesize') . '<BR>PHP (post_max_size): ' . ini_get('post_max_size'), 'note', 'The maximum file size accepted is ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server. If you wish to have it increased, contact the server\'s system administrator') . '.'),
                    array('Imported variants are assumed to be relative to Human Genome build', '', 'select', 'hg_build', 1, array($_CONF['refseq_build']), false, false, false),
                    'hr',
                    'skip',
