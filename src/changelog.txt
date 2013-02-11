@@ -8,10 +8,16 @@
  * 3.0 Build 03 (r2..)
  * 2013-02-??
  *********/
- * Added a chapter about gene transcripts to the manual and various other minor additions.
- * When during import, columns are being ignored, LOVD no longer stops import, which was introduced in build 02.
+ * Added a chapter about gene transcripts to the manual and various other minor
+   additions.
+ * When during import, columns are being ignored, LOVD no longer stops import,
+   which was introduced in build 02.
  * Fixed notice in the import procedure, caused when uploading an empty section.
- * On forms where file uploads are enabled, the reasons for file size restrictions are now explained to the user.
+ * On forms where file uploads are enabled, the reasons for file size
+   restrictions are now explained to the user.
+ * Greatly improved the HGVS syntax checking on the data entry forms, which is
+   instant now.
+ * The HGVS syntax checking script is now also cached by the browser.
 
 
 

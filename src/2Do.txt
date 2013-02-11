@@ -1,5 +1,10 @@
 Prioritize:
 ===========
+- Release LOVD2? So that there is a fix for the HGNC issue?
+  + Other things to take care of there?
+- Work on the manual!
+- Update icon should be very very attention attracting when the update is very important! (new PNG)
+- Ammar vraagt weer naar de VOT op de Screening + Individual view.
 - Implement an HGNC mirror.
 - RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
   + Als hele codon wordt vervangen, kan p.(=) ook gebeuren, zonder dat de RNA r.(=) kan zijn.
@@ -196,6 +201,9 @@ Prioritize:
      + Owner veranderen staat er niet tussen (individual, phenotype, variant, screening)
      + Als je een transcript toevoegt, beweert hij dat je enkel exon, rna en protein hebt ingevuld, en dat die leeg waren. DNA lijkt niet veranderd, path. velden zijn eventueel aangepast van Unknown naar wat je ingevuld hebt.
 
+- Controleer weer, vanaf hoeveel data LOVD eigenlijk niet meer vooruit te branden is. Dan, verwijder even tijdelijk de sorteer code, en controleer weer.
+  + Als dat een groot verschil is, bouw dan in dat vanaf een bepaald aantal, LOVD standaard het sorteren voor die viewlist uit zet.
+    De gebruiker kan 't forceren door op een header te klikken of sorteren via het menu weer aan te zetten. Er zijn dan dus 3 settings: default (LOVD bepaalt), altijd aan, en uit.
 - After a useful test with LSDB noobs during submission:
   + Lab ID is not clear.
   + Put more notice on the mapping button. Pop over?

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2012-11-08
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2013-02-08
+ * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -29,6 +29,7 @@
  *
  *************/
 
+header('Expires: ' . date('r', time()+(24*60*60))); // HGVS syntax check result expires in a day.
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 session_write_close();
