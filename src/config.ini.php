@@ -38,4 +38,4 @@ database = lovd3
 # Please use alphanumeric characters only. Defaults to 'lovd'.
 #
 table_prefix = lovd_v3
-# (test alternative is lovd_v33)
+# (test alternative is lovd_v33, stress install is lovd_stress)

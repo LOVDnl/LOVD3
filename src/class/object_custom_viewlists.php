@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2013-01-29
- * For LOVD    : 3.0-02
+ * Modified    : 2013-02-28
+ * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -82,6 +82,8 @@ class LOVD_CustomViewList extends LOVD_Object {
             $this->nID = $sGene; // We need the ajax script to have the same restrictions!!!
         }
 
+        // Increase the max group_concat() length, so that lists of many many genes still have all genes mentioned here (22.000 genes take 193.940 bytes here).
+        $_DB->query('SET group_concat_max_len = 200000');
         $q = $_DB->query($sSQL, $aSQL);
         while ($z = $q->fetchAssoc()) {
             $z['custom_links'] = array();
@@ -495,8 +497,9 @@ class LOVD_CustomViewList extends LOVD_Object {
 
         foreach ($this->aColumns as $sCol => $aCol) {
             if ($_AUTH['level'] < LEVEL_MANAGER && !$this->nID && substr($sCol, 0, 19) == 'VariantOnTranscript') {
+                // Not a special authorized person, no gene selected, VOT column.
                 // A column that has been disabled for this gene, may still show its value to collaborators and higher.
-                if (!$_AUTH || (!in_array($zData['geneid'], $aCol['public_view']) && !in_array($zData['geneid'], $_AUTH['allowed_to_view']))) {
+                if ((!$_AUTH || !in_array($zData['geneid'], $_AUTH['allowed_to_view'])) && !in_array($zData['geneid'], $aCol['public_view'])) {
                     $zData[$sCol] = '';
                 }
             }

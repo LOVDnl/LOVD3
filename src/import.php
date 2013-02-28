@@ -267,7 +267,6 @@ if (POST) {
 
 
         // Now, the actual parsing...
-        $sCurrentSection = '';
         foreach ($aData as $i => $sLine) {
             $sLine = trim($sLine);
             if (!$sLine) {

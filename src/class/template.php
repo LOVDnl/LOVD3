@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2013-01-23
- * For LOVD    : 3.0-02
+ * Modified    : 2013-02-22
+ * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -308,7 +308,7 @@ class LOVD_Template {
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  &copy;2004-2012 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  &copy;2004-2013 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -385,14 +385,14 @@ function lovd_mapVariants ()
 
             // Not every page request should trigger the mapping...
             if (!empty($_SESSION['mapping']['time_complete']) && $_SESSION['mapping']['time_complete'] >= (time() - 60 * 60 * 24)) {
-                // If it is less than one day ago that mapping was complete, don't start it automatically.
+                // If it is less than one day ago that mapping was complete, don't start it automatically, but allow the user to start it himself.
                 print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
             } elseif (!empty($_SESSION['mapping']['time_error']) && $_SESSION['mapping']['time_error'] >= (time() - 60 * 60)) {
                 // If it is less than one hour ago that an error occurred, don't start it either.
                 print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
                 print('$("#mapping_progress").attr("Title", "Mapping is temporarily suspended because of network problems on the last attempt. Click to retry.");' . "\n");
             } else {
-                // If we won't start it, the user should be able to start it himself.
+                // Start mapping!
                 print('setTimeout("lovd_mapVariants()", 500);' . "\n");
             }
         }

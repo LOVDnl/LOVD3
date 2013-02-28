@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-01-30
- * For LOVD    : 3.0-02
+ * Modified    : 2013-02-18
+ * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -314,7 +314,7 @@ foreach ($aConfig as $nLine => $sLine) {
     // Setting.
     if (preg_match('/^([A-Z_]+) *=(.*)$/i', $sLine, $aRegs)) {
         list(,$sVar, $sVal) = $aRegs;
-        $sVal = trim($sVal);
+        $sVal = trim($sVal, ' "\'“”');
 
         if (!$sVal) {
             $sVal = false;
@@ -359,7 +359,7 @@ $aConfigValues =
                                               ),
                                 'password' =>
                                          array(
-                                                'required' => true,
+                                                'required' => false, // XAMPP and other systems have 'root' without password as default!
                                               ),
                                 'database' =>
                                          array(

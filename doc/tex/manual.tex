@@ -213,7 +213,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-02-07} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-02-20} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -344,13 +344,20 @@ However, you might require help from your system administrator, since there are 
 \section{Before you install}
 LOVD is a web-based software project.
 Therefore, installation requires a correctly set-up webserver.
-LOVD has been extensively tested with the Apache webserver, but any webserver able to run PHP scripts should suffice.
-You'll need PHP 5.1.0 or higher and MySQL 4.1.2 or higher.
+A suitable server with the necessary software installed is available at virtually all academic institutions and countless commercial hosting providers.
+If you don't want to run LOVD on a server but rather want to have it running on your computer, we can recommend the
+ \href{http://www.apachefriends.org/en/xampp.html}{XAMPP} package, which installs all needed software on your computer regardless of whether it's Linux, Windows or Mac.
+Also, at the time of this writing, we are offering free server space if you need to set up an LOVD.
+\href{http://www.LOVD.nl/3.0/contact?new_lsdb}{Contact us} for more information.
+In that case you don't need to install anything and you can skip this chapter.
+\\
+\par
+If you're experienced with web servers and you want to set it up yourself: LOVD has been extensively tested
+ with the Apache webserver, but any webserver able to run PHP scripts should suffice.
+You'll need PHP 5.2.0 or higher (or PHP 5.0.0 with PDO and JSON en/decode enabled) and MySQL 4.1.2 or higher.
 LOVD may work with other database platforms, but we are not developing for other database backends.
 You are welcome to try other database backends and report the results to us, but we can't provide any support for it.
 For more information, see the \href{http://lovd.nl/3.0/faq/software}{FAQ about software needed}.
-\par
-A suitable server with the necessary software installed is available at virtually all (academic) institutions and countless (commercial) hosting providers.
 \\
 \par
 Before installing LOVD, be sure you have the required credentials for connecting to the MySQL database.
@@ -369,13 +376,16 @@ Usually you will be able to open both formats.
 Download the file of your choice and save it to your hard drive.
 Now extract the file using GZIP/TAR or ZIP to the desired location.
 On a server, common directories may be /var/www on Unix or Linux servers, or C:\textbackslash{}htdocs on a Windows server.
+When using XAMPP, the directory is C:\textbackslash{}xampp\textbackslash{}htdocs for Windows, /opt/lampp/htdocs for Linux, or /Applications/XAMPP/htdocs for Mac.
 To be sure, consult the documentation of the webserver software you are using.
 
 
 
 \subsection{Pre-install Setup}
 You will need to rename the standard config file config.ini.php-lovd to config.ini.php and edit it in, for example, a basic text editor.
-This is absolutely mandatory, because you will need to enter the MySQL hostname, database name, username and password here.
+This is absolutely mandatory, because you will need to enter the MySQL hostname, username, password and database name here.
+In case you're using XAMPP, the needed values are ``localhost'', ``root'', ``'' (empty) and ``test'', respectively. No quotes around the values needed.
+Please note that these are not the recommended settings for production environments, but it will help you quickly set up LOVD on your computer.
 \par
 Please go through the entire config.ini.php file to determine if you need to change any of the other settings.
 

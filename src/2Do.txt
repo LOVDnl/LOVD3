@@ -1,16 +1,26 @@
+Release LOVD?
+===========
+Did you run all unit tests?
+Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
+Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
+Run package script, follow instructions.
+(De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
+
 Prioritize:
 ===========
-- Release LOVD2? So that there is a fix for the HGNC issue?
-  + Other things to take care of there?
+- LOVD3 site: how to go back to LOVD2 easily?
+- Nieuwe value voor Phenotype/Inheritance: complex
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
 - Ammar vraagt weer naar de VOT op de Screening + Individual view.
 - Implement an HGNC mirror.
 - RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
   + Als hele codon wordt vervangen, kan p.(=) ook gebeuren, zonder dat de RNA r.(=) kan zijn.
+  + Alleen als in intron en p.(=), r.(=) geven. Anders altijd r.(?) ?
 - Johan:
   + VOG/Conservation_score/GERP moet naar VOT, of ook verbergbaar maken?!!?? Check!
   + VOT/effect verbergen per gen of transcript? Johan wil ze écht niet hebben. Custom Col van maken?
+- in_window actief met VL met menu? Menu werkt niet meer.
 - Over het algemeen: focus op het toevoegen van features die ook al in LOVD2 zaten!!!
 - Belangrijke features zijn: mass-curate en verbeteren import.
 - Import has some 2Do, such as predicting DBIDs and such.
@@ -69,8 +79,8 @@ Prioritize:
 - Individual viewList: add column "variants in genes" with gene symbols.
   + Then, add option to dropdown menu if we have a currdb (replace: individuals screened for gene X).
   + After that, change the default link when clicking the individual tab.
-- Hoe kan een gebruiker op een zojuist geopend edit formulier de predict triggeren en/of de Mutalyzer namechecker openen in een nieuwe window?
-  + Wellicht, voor een losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
+- Hoe kan een gebruiker op een zojuist geopend edit formulier de Mutalyzer namechecker openen in een nieuwe window?
+  + Voor de losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
   + Namechecker ook de gekozen refseq laten gebruiken? Of niet, omdat we niet weten of dit transcript daar wel te vinden is?
 - (@Ivo) DATA DOWNLOAD.
   + Gen specifieke download: de custom columns beperken?
@@ -201,9 +211,9 @@ Prioritize:
      + Owner veranderen staat er niet tussen (individual, phenotype, variant, screening)
      + Als je een transcript toevoegt, beweert hij dat je enkel exon, rna en protein hebt ingevuld, en dat die leeg waren. DNA lijkt niet veranderd, path. velden zijn eventueel aangepast van Unknown naar wat je ingevuld hebt.
 
-- Controleer weer, vanaf hoeveel data LOVD eigenlijk niet meer vooruit te branden is. Dan, verwijder even tijdelijk de sorteer code, en controleer weer.
-  + Als dat een groot verschil is, bouw dan in dat vanaf een bepaald aantal, LOVD standaard het sorteren voor die viewlist uit zet.
-    De gebruiker kan 't forceren door op een header te klikken of sorteren via het menu weer aan te zetten. Er zijn dan dus 3 settings: default (LOVD bepaalt), altijd aan, en uit.
+- Controleer weer, vanaf hoeveel data LOVD eigenlijk niet meer vooruit te branden is. Dan, verwijder even tijdelijk de sorteer code, en controleer weer..
+  + Als dat een groot verschil is, bouw dan in dat vanaf een bepaald aantal, LOVD standaard het sorteren voor die viewlist uit zet..
+    De gebruiker kan 't forceren door op een header te klikken of sorteren via het menu weer aan te zetten. Er zijn dan dus 3 settings: default (LOVD bepaalt), altijd aan, en uit..
 - After a useful test with LSDB noobs during submission:
   + Lab ID is not clear.
   + Put more notice on the mapping button. Pop over?
@@ -239,6 +249,7 @@ Prioritize:
 - (@Ivo:) Indien geen kolommen actief zijn voor aandoening en/of gen, geef aan hoe dat te fixen vanaf het object z'n columns VL. ViewList zou count(*) terug moeten geven, waarna de code kan weten dat er blijkbaar niets te tonen was.
 - Mapping script moet nog genen aanmaken na VCF import, als de HGNC geen transcripten weet.
   * Of betekent dit, dat Mutalyzer er sowieso niet mee overweg kan?
+  * Mapper currently doesn't see the difference between we don't have this gene at all, and we have this gene, but no related transcript.
 - Met betrekking tot het blokkeren van het aanmaken van niet volledig bekende genen:
   + Nadat Mutalyzer komt met een test op alle genen(sliceChromosomeByGene, getTranscriptsAndInfo, numberConversion per gen 1 variant) moeten we
     beslissen wat we ermee gaan doen, nu tijdelijke filter op "rare" LocusType's.

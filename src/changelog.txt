@@ -18,6 +18,15 @@
  * Greatly improved the HGVS syntax checking on the data entry forms, which is
    instant now.
  * The HGVS syntax checking script is now also cached by the browser.
+ * The MySQL password setting in the config.ini.php file is no longer mandatory.
+ * Importing very large VCF files no longer result in a timeout.
+ * Fixed bug; The public could not see any contents in VariantOnTranscript
+   fields in the "View all variants affecting transcripts" custom viewlist due
+   to an over active security feature last changed in r214 (3.0-beta-07).
+ * Fixed bug; Curators could sometimes also not see contents in
+   VariantOnTranscript fields of random genes in the "View all variants
+   affecting transcripts" custom viewlist when the installation contained a lot
+   of genes.
 
 
 

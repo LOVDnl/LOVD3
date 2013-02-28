@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2013-02-06
+ * Modified    : 2013-02-27
  * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1080,13 +1080,13 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     if (POST) {
         // The form has been submitted. Detect any errors in the file upload.
         if (empty($_FILES['variant_file']) || ($_FILES['variant_file']['error'] > 0 && $_FILES['variant_file']['error'] < 4)) {
-            lovd_errorAdd('', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server.') . '.');
+            lovd_errorAdd('', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server') . '.');
 
         } elseif ($_FILES['variant_file']['error'] == 4 || !$_FILES['variant_file']['size']) {
             lovd_errorAdd('', 'Please select a file to upload.');
 
         } elseif ($_FILES['variant_file']['size'] > $nMaxSize) {
-            lovd_errorAdd('', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server.') . '.');
+            lovd_errorAdd('', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server') . '.');
 
         } elseif ($_FILES['variant_file']['error']) {
             // Various errors available from 4.3.0 or later.
@@ -1123,6 +1123,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
             // Let's go...
             $fInput = fopen($_FILES['variant_file']['tmp_name'], 'r');
+            @set_time_limit(0);
             $_DB->beginTransaction();
 
 
@@ -1292,7 +1293,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 // So, other than that it results in two e-mails, it is working just fine actually.
                 // Though maybe we should block submit/finish until we're done here?
                 session_write_close();
-                @set_time_limit(0);
                 $tStart = time();
 
                 require ROOT_PATH . 'inc-lib-actions.php';
@@ -2068,7 +2068,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     }
     array_push($aForm,
                    array('Select the file to import', '', 'file', 'variant_file', 25),
-                   array('', 'Current file size limits:<BR>LOVD: ' . ($nMaxSizeLOVD/(1024*1024)) . 'M<BR>PHP (upload_max_filesize): ' . ini_get('upload_max_filesize') . '<BR>PHP (post_max_size): ' . ini_get('post_max_size'), 'note', 'The maximum file size accepted is ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server. If you wish to have it increased, contact the server\'s system administrator') . '.'),
+                   array('', 'Current file size limits:<BR>LOVD: ' . ($nMaxSizeLOVD/(1024*1024)) . 'M<BR>PHP (upload_max_filesize): ' . ini_get('upload_max_filesize') . '<BR>PHP (post_max_size): ' . ini_get('post_max_size'), 'note', 'The maximum file size accepted is ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server. Move your mouse over the help icon on the left to see the server configuration. If you wish to have it increased, contact the server\'s system administrator') . '.'),
                    array('Imported variants are assumed to be relative to Human Genome build', '', 'select', 'hg_build', 1, array($_CONF['refseq_build']), false, false, false),
                    'hr',
                    'skip',
