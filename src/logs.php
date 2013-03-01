@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-26
- * Modified    : 2013-01-23
- * For LOVD    : 3.0-02
+ * Modified    : 2013-02-28
+ * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -57,7 +57,7 @@ $_DATA = new LOVD_Log();
 
 // Define menu, to delete multiple logs in one go.
 print('      <UL id="viewlistMenu_Logs" class="jeegoocontext jeegooviewlist">' . "\n" .
-      '        <LI class="icon"><A click="lovd_AJAX_viewListSubmit(\'Logs\', function(){$.get(\'ajax/delete_log.php?id=selected\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully deleted \' + sResponse.substring(2) + \' log entries.\');lovd_AJAX_viewListSubmit(\'Logs\');}}).error(function(){alert(\'Log entries could not be deleted.\');});});"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Delete selected entries</A></LI>' . "\n" .
+      '        <LI class="icon"><A click="lovd_AJAX_viewListSubmit(\'Logs\', function(){$.get(\'ajax/delete_log.php?id=selected\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully deleted \' + sResponse.substring(2) + \' log entries.\');lovd_AJAX_viewListSubmit(\'Logs\');}}).fail(function(){alert(\'Log entries could not be deleted.\');});});"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Delete selected entries</A></LI>' . "\n" .
       '      </UL>' . "\n\n");
 $_DATA->viewList('Logs', array(), false, false, true); // Don't change viewListID, the log's prepareData() and ajax/delete_log.php are referring to it.
 

@@ -6,7 +6,7 @@
 
 /**************************
  * 3.0 Build 03 (r2..)
- * 2013-02-??
+ * 2013-03-??
  *********/
  * Added a chapter about gene transcripts to the manual and various other minor
    additions.
@@ -27,6 +27,11 @@
    VariantOnTranscript fields of random genes in the "View all variants
    affecting transcripts" custom viewlist when the installation contained a lot
    of genes.
+ * Improved the variant mapper speed, and greatly sped up the lovd_fetchDBID()
+   function, which together speeds up the variant mapping by about 8-20x with 1M
+   variants.
+ * Fixed bug; For variants spanning the entire gene, the RNA and protein change
+   prediction on the data entry form returned an JavaScript error.
 
 
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2013-02-08
+ * Modified    : 2013-03-01
  * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -29,9 +29,10 @@
  *
  *************/
 
-header('Expires: ' . date('r', time()+(24*60*60))); // HGVS syntax check result expires in a day.
 define('ROOT_PATH', '../');
+session_cache_limiter('public'); // Stops the session from sending any cache or no-cache headers. Alternative: ini_set() session.cache_limiter.
 require ROOT_PATH . 'inc-init.php';
+header('Expires: ' . date('r', time()+(24*60*60))); // HGVS syntax check result expires in a day.
 session_write_close();
 
 if (empty($_GET['variant']) || !preg_match('/^(c:[c|n]|g:g)\..+$/', $_GET['variant'])) {

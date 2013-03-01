@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2013-02-22
+ * Modified    : 2013-03-01
  * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -346,7 +346,7 @@ class LOVD_Template {
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        if (!(ROOT_PATH == '../' || defined('NOT_INSTALLED'))) {
+        if (!((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
             // In install directory.
             print('
 function lovd_mapVariants ()
@@ -357,7 +357,7 @@ function lovd_mapVariants ()
     $("#mapping_progress").unbind();
 
     // Now request the script.
-    $.get("' . ROOT_PATH . 'ajax/map_variants.php", function (sResponse)
+    $.get("ajax/map_variants.php", function (sResponse)
         {
             // The server responded successfully. Let\'s see what he\'s saying.
             aResponse = sResponse.split("\t");
@@ -374,10 +374,10 @@ function lovd_mapVariants ()
                 $("#mapping_progress").click(lovd_mapVariants);
             }
         }
-    ).error(function ()
+    ).fail(function (oObject, sStatus)
         {
             // Something went wrong while contacting the server, don\'t try again.
-            $("#mapping_progress").attr({"src": "gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to transcripts."});
+            $("#mapping_progress").attr({"src": "gfx/lovd_mapping_99.png", "title": "There was a problem with LOVD while mapping variants to transcripts: " + sStatus});
         }
     );
 }

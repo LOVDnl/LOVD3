@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-12-19
- * For LOVD    : 3.0-01
+ * Modified    : 2013-03-01
+ * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -37,6 +37,9 @@ require ROOT_PATH . 'inc-lib-form.php';
 require ROOT_PATH . 'class/REST2SOAP.php';
 $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
 define('LOG_EVENT', 'AutomaticMapping');
+//header('Content-type: text/javascript; charset=UTF-8'); // When this header is enabled, jQuery doesn't like the script anymore because it assumes JSON, see the dataType setting.
+//$tStart = microtime(true);
+//var_dump(__LINE__ . ':' . (microtime(true) - $tStart));
 
 // We want to finish the mapping, even if the connection with the browser is lost while working.
 ignore_user_abort(true);
@@ -158,6 +161,7 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
 if (!isset($_SESSION['mapping']['total_todo'])) {
     $_SESSION['mapping']['total_todo'] = 0;
 }
+// 0.5 sec for 1M variants. Add index to mapping_flags and/or position_g_start to speed up?
 $_SESSION['mapping']['todo'] = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL')->fetchColumn();
 if ($_SESSION['mapping']['todo'] > $_SESSION['mapping']['total_todo']) {
     // We didn't have a total set yet, or more variants were added in the process that now need to be mapped as well.
@@ -180,7 +184,8 @@ $nVariants = 0;
 
 
 // Check if all transcripts have their positions and the mutalyzer ID correctly set; if not, fix before we start to do any type of mapping.
-$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE t.position_g_mrna_end = 0 OR t.id_mutalyzer IS NULL ORDER BY Rand() LIMIT 10')->fetchAllAssoc();
+// 0.12 sec for 22K transcripts.
+$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE t.position_g_mrna_end = 0 OR t.id_mutalyzer IS NULL ORDER BY RAND() LIMIT 10')->fetchAllAssoc();
 if ($zTranscripts) {
     foreach ($zTranscripts as $aTranscript) {
         $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']));
@@ -254,12 +259,13 @@ if (!empty($_GET['variantid'])) {
 // Automatic mapping of variants in the background (not a specifically requested variant).
 } elseif ($_SESSION['mapping']['todo'] > 0) {
     // Randomly select some adjacent variants that await mapping.
+    // Order by RAND() takes >1s with 1M variants, so no random pick when more than 10K variants.
     $aVariants = $_DB->query('SELECT id, vog.chromosome, vog.position_g_start, position_g_end, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
                              'FROM ' . TABLE_VARIANTS . ' AS vog, (' .
                                  'SELECT chromosome, position_g_start ' .
                                  'FROM ' . TABLE_VARIANTS . ' ' .
                                  'WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' AND position_g_start IS NOT NULL ' .
-                                 'ORDER BY RAND() ' .
+                                 ($_SESSION['mapping']['todo'] > 10000? '' : 'ORDER BY RAND() ') .
                                  'LIMIT 1' .
                              ') AS first ' .
                              'WHERE vog.chromosome = first.chromosome AND vog.position_g_start BETWEEN first.position_g_start AND first.position_g_start + ' . $nRange . ' ' .
@@ -302,13 +308,14 @@ if (!empty($aVariants)) {
 
     // We'll need a list of transcripts in the database on this chromosome.
     $aTranscriptsInLOVD = array();
-    // FIXME: Restrict range somewhat based on variant's range?
+    // FIXME: Restrict range somewhat based on variant's range? Query takes 0.03s with 22K transcripts, but we have $nStart and $nEnd available.
     $qTranscriptsInLOVD = $_DB->query('SELECT t.id, geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid) WHERE chromosome = ?', array($sChromosome));
     while ($aTranscriptInLOVD = $qTranscriptsInLOVD->fetchAssoc()) {
         $aTranscriptsInLOVD[$aTranscriptInLOVD['geneid']][$aTranscriptInLOVD['id']] = array('id' => $aTranscriptInLOVD['id'], 'id_ncbi' => $aTranscriptInLOVD['id_ncbi']);
     }
 
     // Ask Mutalyzer about the transcripts within this range.
+    // FIXME: Is this really necessary if all variants only want to be mapped on the transcripts in the database?
     $aTranscriptData = array();
     $aTranscriptsWithinRange = $_MutalyzerWS->moduleCall('getTranscriptsMapping', array('build' => $_CONF['refseq_build'], 'chrom' => 'chr' . $sChromosome, 'pos1' => $nStart, 'pos2' => $nEnd, 'method' => 1));
     if ($aTranscriptsWithinRange === false) {
@@ -387,6 +394,7 @@ if (!empty($aVariants)) {
                         // But only try it once. If Mutalyzer knows more transcripts for this gene, we don't want to do all of this again.
                         // (NOTE: don't merge these if's because that breaks the elseif below!)
 
+                        // FIXME: When mapping multiple variants in one gene, this query is repeated for each variants. Store UD?
                         $sRefseqUD = $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($aTranscript['gene']))->fetchColumn();
                         $aVariantOnTranscriptSQL = lovd_mapVariantToTranscripts($aVariant, $aTranscriptsInLOVD[$aTranscript['gene']]);
                         if (!empty($aVariantOnTranscriptSQL)) {
@@ -396,7 +404,9 @@ if (!empty($aVariants)) {
                                 }
 
                                 // Get the p. description too.
+                                // FIXME: When mapping multiple variants in one gene, this query is repeated for each variants. Store ID?
                                 $sTranscriptNum = $_DB->query('SELECT id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sTranscriptNM))->fetchColumn();
+                                // This takes about 0.9-1.1 second...
                                 $aOutputRunMutalyzer = $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][6]));
                                 $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $aOutputRunMutalyzer);
                                 $aVariantsOnProteinError = lovd_getAllValuesFromArray('messages/SoapMessage', $aOutputRunMutalyzer);

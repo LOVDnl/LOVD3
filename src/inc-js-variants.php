@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2013-02-11
+ * Modified    : 2013-03-01
  * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -372,7 +372,7 @@ function lovd_getProteinChange (oElement)
                             sPredictP = 'p.(=)';
                         } else if (aVariantRange.length == 2 && /-\d+/.exec(aVariantRange[0]) != null && /\*\d+/.exec(aVariantRange[1]) != null) {
                             // Variant has 2 positions. Variant has an upstream start position and a downstream end position, we can assume that the product will not be expressed.
-                            sPredictP = 'r.0?';
+                            sPredictR = 'r.0?';
                             sPredictP = 'p.0?';
                         } else if (aVariantRange.length == 2 && /\*\d+/.exec(aVariantRange[0]) != null && /\*\d+/.exec(aVariantRange[1]) != null) {
                             // Variant has 2 positions. Variant has both the start and end positions downstream of the transcript, we can assume that the product will not be affected.

@@ -17,6 +17,7 @@ Prioritize:
 - RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
   + Als hele codon wordt vervangen, kan p.(=) ook gebeuren, zonder dat de RNA r.(=) kan zijn.
   + Alleen als in intron en p.(=), r.(=) geven. Anders altijd r.(?) ?
+- lovd_checkDBID() kan geoptimaliseerd worden, check lovd_fetchDBID().
 - Johan:
   + VOG/Conservation_score/GERP moet naar VOT, of ook verbergbaar maken?!!?? Check!
   + VOT/effect verbergen per gen of transcript? Johan wil ze écht niet hebben. Custom Col van maken?
@@ -28,6 +29,7 @@ Prioritize:
   + Also, some sections are actually labelled as not to be imported. This is not recognized either.
   + Hij klaagt nu als een disease al in de DB staat, maar als alles hetzelfde is (iig id, id_omim, name), negeer die regel dan en ga gewoon door.
   + Ignore (broken, all?) user links and point everything to me? As a setting that you can put in the file? Or only when reporting an error, then allow users to ignore "live"? (js that sets an hidden form field)
+- Inbouwen op full view, dat de andere varianten in de individu ook worden getoond, tot een bepaalde max
 - Mensen curator maken moet op de bekende manier.
   + Interessante advanced selection list: http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/   (search in options, easy to select multiple, not easy for ranges)
   + Interessante multiselect (2 lists: selected, unselected): http://quasipartikel.at/multiselect/   (search in options to add (not to remove), easy to see what is already selected and unselected, not easy for ranges)
