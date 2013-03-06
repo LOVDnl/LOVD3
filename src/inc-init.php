@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-02-18
+ * Modified    : 2013-03-06
  * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -124,7 +124,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-02',
+                            'version' => '3.0-03',
                           ),
                 'user_levels' =>
                      array(
@@ -622,7 +622,7 @@ if (!empty($_STAT['signature'])) {
 session_name('PHPSESSID_' . $_SETT['cookie_id']);
 
 // Start sessions - use cookies.
-@session_start();
+@session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
 header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version']) || $_STAT['version'] == $_SETT['system']['version']? '' : ' (DB @ ' . $_STAT['version'] . ')'));
 
 

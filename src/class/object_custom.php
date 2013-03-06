@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-11-27
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-03-05
+ * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -152,8 +152,8 @@ class LOVD_Custom extends LOVD_Object {
             } else {
                 $sAlias = strtolower($this->sCategory{0});
             }
-            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '")';
-            $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
+            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '")') . '';
+            $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '")') . ')';
             if ($this->sCategory == 'VariantOnGenome' && $_AUTH && (count($_AUTH['curates']) || count($_AUTH['collaborates']))) {
                 // Added so that Curators and Collaborators can view the variants for which they have viewing rights in the genomic variant viewlist.
                 $this->aSQLViewList['WHERE'] .= ' OR t.geneid IN ("' . implode('", "', array_merge($_AUTH['curates'], $_AUTH['collaborates'])) . '"))';

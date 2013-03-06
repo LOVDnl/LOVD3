@@ -308,7 +308,7 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($sSignature);
     session_name('PHPSESSID_' . $_SETT['cookie_id']);
-    session_start();
+    @session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
     // $_SESSION can still be filled with data from previous session of previous LOVD install
     // on this location and with the same signature, and it's messing up the install (of course highly unlikely).
     $_SESSION = array();

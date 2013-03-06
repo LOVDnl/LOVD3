@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2013-03-01
+ * Modified    : 2013-03-06
  * For LOVD    : 3.0-03
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -729,7 +729,7 @@ if (!empty($aVariants)) {
 
 
 // Get the newest data from the session files and update that.
-session_start();
+@session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
 
 // Update todo counter.
 $_SESSION['mapping']['todo'] -= $nVariants;

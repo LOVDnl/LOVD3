@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 03 (r2..)
- * 2013-03-??
+ * 3.0 Build 03 (r288)
+ * 2013-03-06
  *********/
  * Added a chapter about gene transcripts to the manual and various other minor
    additions.
@@ -32,10 +32,10 @@
    variants.
  * Fixed bug; For variants spanning the entire gene, the RNA and protein change
    prediction on the data entry form returned an JavaScript error.
-
-
-
-
+ * When data overviews get too slow, LOVD automatically disables the sorting
+   feature to reduce the strain on the database.
+ * When data overviews take too much time to load, LOVD speeds the views up by
+   determining the correct number of results only once every 15 minutes.
 
 
 /**************************

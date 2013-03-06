@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-12-19
- * For LOVD    : 3.0-01
+ * Modified    : 2013-03-05
+ * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -725,7 +725,7 @@ class LOVD_Object {
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOptions = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
-        global $_DB, $_SETT;
+        global $_DB, $_INI, $_SETT;
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
@@ -823,7 +823,7 @@ class LOVD_Object {
                                         } else {
                                             $sOperator = '=';
                                         }
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ' . ($_INI['database']['driver'] != 'sqlite'? '?' : 'CAST(? AS NUMERIC)') . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         $aArguments[$CLAUSE][] = $sTerm;
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // INT fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
@@ -980,18 +980,21 @@ class LOVD_Object {
             print("\n");
         }
 
+        // Make a reference variable of the session for cleaner code.
+        $aSessionViewList =& $_SESSION['viewlists'][$sViewListID];
+
         // To make row ids persist when the viewList is refreshed, we must store the row id in $_SESSION.
-        if (!empty($_SESSION['viewlists'][$sViewListID]['row_id'])) {
-            $this->sRowID = $_SESSION['viewlists'][$sViewListID]['row_id'];
+        if (!empty($aSessionViewList['row_id'])) {
+            $this->sRowID = $aSessionViewList['row_id'];
         } else {
-            $_SESSION['viewlists'][$sViewListID]['row_id'] = $this->sRowID; // Implies array creation.
+            $aSessionViewList['row_id'] = $this->sRowID; // Implies array creation.
         }
 
         // To make row links persist when the viewList is refreshed, we must store the row link in $_SESSION.
-        if (!empty($_SESSION['viewlists'][$sViewListID]['row_link'])) {
-            $this->sRowLink = $_SESSION['viewlists'][$sViewListID]['row_link'];
+        if (!empty($aSessionViewList['row_link'])) {
+            $this->sRowLink = $aSessionViewList['row_link'];
         } else {
-            $_SESSION['viewlists'][$sViewListID]['row_link'] = $this->sRowLink; // Implies array creation.
+            $aSessionViewList['row_link'] = $this->sRowLink; // Implies array creation.
         }
 
         $nTotal = 0;
@@ -1012,8 +1015,57 @@ class LOVD_Object {
                 $aArgs[] = $aArg;
             }
 
+            // For ALL viewlists, we store the number of hits that we get, including the current filters.
+            // For large tables, using SQL_CALC_FOUND_ROWS takes a lot of time, also still quite a lot for smaller result sets, since the entire table needs to be read out.
+            // ORDER BY is absolutely killing on large result sets, but when used you might as well use SQL_CALC_FOUND_ROWS, since it needs to read the entire table anyways.
+            // So, long time to retrieve count (>1s) => no SQL_CALC_FOUND_ROWS and no sort.
+            // Count OK (<=1s), but big result set (25K) => no sort.
+
+            // 1) If we don't have a count in memory, request count separately, using SQL_CALC_FOUND_ROWS, since it handles all complex queries.
+            // Also if last count was >30min ago, request again.
+            $bTrueCount = false; // Indicates whether or not we are sure about the number of results.
+            $sFilterMD5 = md5($WHERE . '||' . $HAVING . '||' . implode('|', $aArgs)); // A signature for the filters, NOTE that this depends on the column order!
+            if (!isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
+                $t = microtime(true);
+                if ($_INI['database']['driver'] == 'mysql') {
+                    $_DB->query('SELECT SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'] .
+                        ' FROM ' . $this->aSQLViewList['FROM'] .
+                        (!$this->aSQLViewList['WHERE']? '' :
+                            ' WHERE ' . $this->aSQLViewList['WHERE']) .
+                        (!$this->aSQLViewList['GROUP_BY']? '' :
+                            ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
+                        (!$this->aSQLViewList['HAVING']? '' :
+                            ' HAVING ' . $this->aSQLViewList['HAVING']) .
+                        ' LIMIT 0', $aArgs);
+                    // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
+                    $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+                } else {
+                    // Super inefficient, only for low-volume (sqlite) databases!
+                    $nTotal = count($_DB->query('SELECT ' . $this->aSQLViewList['SELECT'] .
+                        ' FROM ' . $this->aSQLViewList['FROM'] .
+                        (!$this->aSQLViewList['WHERE']? '' :
+                            ' WHERE ' . $this->aSQLViewList['WHERE']) .
+                        (!$this->aSQLViewList['GROUP_BY']? '' :
+                            ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
+                        (!$this->aSQLViewList['HAVING']? '' :
+                            ' HAVING ' . $this->aSQLViewList['HAVING']), $aArgs)->fetchAllColumn());
+                }
+                $tQ = microtime(true) - $t;
+                $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
+                $aSessionViewList['counts'][$sFilterMD5]['t'] = $tQ;
+                $aSessionViewList['counts'][$sFilterMD5]['d'] = time();
+                $bTrueCount = true;
+            }
+
+
+
             // Manipulate SELECT to include SQL_CALC_FOUND_ROWS.
-            $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
+            $bSQLCALCFOUNDROWS = false;
+            if (!$bTrueCount && $_INI['database']['driver'] == 'mysql' && ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 || $aSessionViewList['counts'][$sFilterMD5]['d'] < (time() - (60*15)))) {
+                // But only if we're using MySQL and it takes less than a second to get the correct number of results, or it's been more than 15 minutes since the last check!
+                $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
+                $bSQLCALCFOUNDROWS = true;
+            }
             $sSQL = 'SELECT ' . $this->aSQLViewList['SELECT'] .
                    ' FROM ' . $this->aSQLViewList['FROM'] .
                 (!$this->aSQLViewList['WHERE']? '' :
@@ -1024,9 +1076,6 @@ class LOVD_Object {
                    ' HAVING ' . $this->aSQLViewList['HAVING']);
 
             if ($bOptions) {
-                // Make a reference variable of the session for cleaner code.
-                $aSessionViewList =& $_SESSION['viewlists'][$sViewListID];
-
                 // If the session variable does not exist, create it!
                 if (!isset($aSessionViewList['checked'])) {
                     $aSessionViewList['checked'] = array();
@@ -1069,7 +1118,15 @@ class LOVD_Object {
                 }
             }
 
-            $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
+            // ORDER BY will only occur when we estimate we have time for it.
+            if ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 && $aSessionViewList['counts'][$sFilterMD5]['n'] <= 25000) {
+                $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
+                $bSortableVL = true;
+            } else {
+                // Not sorted, indicate this on the VL...
+                $aOrder = array('', '');
+                $bSortableVL = false;
+            }
 
             if (!$bHideNav && FORMAT == 'text/html') {
                 // Implement LIMIT only if navigation is not hidden.
@@ -1084,8 +1141,16 @@ class LOVD_Object {
             // FIXME; what if using AJAX? Probably we should generate a number here, if this query fails, telling the system to try once more. If that fails also, the JS should throw a general error, maybe.
             $q = $_DB->query($sSQL, $aArgs);
 
-            // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
-            $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+            // Now, get the total number of hits as if no LIMIT was used (when we have used the proper SELECT syntax). Note that $nTotal gets overwritten here.
+            if ($bSQLCALCFOUNDROWS) {
+                $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+                $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
+                $aSessionViewList['counts'][$sFilterMD5]['d'] = time();
+                $bTrueCount = true;
+            } else {
+                // Estimate the number of results!
+                $nTotal = $aSessionViewList['counts'][$sFilterMD5]['n'];
+            }
             $_DB->commit(); // To end the transaction and the locks that come with it.
         }
 
@@ -1160,7 +1225,7 @@ class LOVD_Object {
                 print('      </DIV>' . "\n\n");
 
                 if (!$bHideNav) {
-                    lovd_pagesplitShowNav($sViewListID, $nTotal, $bLegend);
+                    lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
                 // Table and search headers (if applicable).
@@ -1175,7 +1240,7 @@ class LOVD_Object {
                         continue;
                     }
 
-                    $bSortable   = !empty($aCol['db'][1]);
+                    $bSortable   = !empty($aCol['db'][1]) && $bSortableVL; // If we can't sort at all, nothing is sortable.
                     $bSearchable = !empty($aCol['db'][2]);
                     $sImg = '';
                     $sAlt = '';
@@ -1218,7 +1283,7 @@ class LOVD_Object {
                 print('## Filter: ' . $sFilter . "\r\n");
             }
             if (ACTION == 'downloadSelected') {
-                print('## Filter: selected = ' . implode(',', $_SESSION['viewlists'][$sViewListID]['checked']) . "\r\n");
+                print('## Filter: selected = ' . implode(',', $aSessionViewList['checked']) . "\r\n");
             }
             print('# charset=UTF-8' . "\r\n");
             $i = 0;
@@ -1332,7 +1397,7 @@ class LOVD_Object {
 
             } elseif (FORMAT == 'text/plain') {
                 // Download format: print contents.
-                if (ACTION == 'downloadSelected' && !in_array($zData['row_id'], $_SESSION['viewlists'][$sViewListID]['checked'])) {
+                if (ACTION == 'downloadSelected' && !in_array($zData['row_id'], $aSessionViewList['checked'])) {
                     // Only selected entries should be downloaded. And this one is not selected.
                     continue;
                 }
@@ -1356,7 +1421,7 @@ class LOVD_Object {
                       '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                       '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");
 
-                lovd_pagesplitShowNav($sViewListID, $nTotal, $bLegend);
+                lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
             }
             if (!$bAjax) {
                 print('      </DIV></FORM><BR>' . "\n"); // These contents will be replaced by Ajax.

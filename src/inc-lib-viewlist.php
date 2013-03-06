@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2012-12-06
- * For LOVD    : 3.0-beta-12
+ * Modified    : 2013-03-04
+ * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -175,7 +175,7 @@ function lovd_pagesplitInit ()
 
 
 
-function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bLegend, $nShownPages = 10)
+function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bTrueTotal = true, $bSortable = true, $bLegend = true, $nShownPages = 10)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Initializes page splitting function which converts long lists of results
@@ -202,7 +202,8 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bLegend, $nShownPages = 
     if (empty($_PAGESPLIT['printed'])) {
         // First, print the range currently on the screen.
         print('      <SPAN class="S11" id="viewlistPageSplitText_' . $sViewListID . '">' . "\n" .
-              '        ' . $total . ' entr' . ($total == 1? 'y' : 'ies') . ' on ' . $nPages . ' page' . ($nPages == 1? '' : 's') . '.');
+              '        ' . ($bTrueTotal? '' : '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'If LOVD takes too much time to determine the number of results,<BR>LOVD will not recalculate this number on every page view.\', this);">About</SPAN> ') .
+                  $total . ' entr' . ($total == 1? 'y' : 'ies') . ' on ' . $nPages . ' page' . ($nPages == 1? '' : 's') . '.');
 
         // lovd_pagesplitInit() is not run, when we have a BadSyntax error message.
         if (isset($first_entry)) {
@@ -225,6 +226,12 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bLegend, $nShownPages = 
     }
     print("\n" .
           '            </SELECT></TD>');
+
+    // 2013-03-05; 3.0-03; Added an icon that indicates if sorting is not allowed on this VL.
+    if (!$bSortable) {
+        print("\n" .
+              '          <TD><IMG src="gfx/order_arrow_off.png" width="19" height="19" alt="No sorting possible" onmouseover="lovd_showToolTip(\'Sorting is disabled on this result set due to necessary restrictions;<BR> ' . ($bTrueTotal? 'too many results are returned' : 'database takes too much time to generate view') . ', please narrow your search.\', this);" style="margin-right : 5px;"></TD>');
+    }
 
     // Put a button here that shows the full legend, if it's available for this VL. We don't know that here, so we use JS to show it if necessary.
     if ($bLegend) {
