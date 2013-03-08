@@ -89,7 +89,7 @@ if (in_array(ACTION, array('download', 'downloadSelected'))) {
     }
 }
 if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
-    die(AJAX_NO_AUTH); // Temporary fix; whenever curators need to be able to download, we need to fix this somehow...
+    die(AJAX_NO_AUTH);
 }
 
 $sFile = ROOT_PATH . 'class/object_' . strtolower($_GET['object']) . 's.php';

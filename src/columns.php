@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2013-01-23
- * For LOVD    : 3.0-02
+ * Modified    : 2013-03-08
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -93,7 +93,8 @@ if (PATH_COUNT < 3 && !ACTION) {
             print('        <LI><A href="' . CURRENT_PATH . '/' . $sCategory . '">Show only ' . $sCategory . ' columns</A></LI>' . "\n");
         }
     }
-    print('      </UL>' . "\n\n");
+    print('        <LI class="icon"><A click="lovd_openWindow(\'' . lovd_getInstallURL() . 'download/columns' . (empty($_PE[1])? '' : '/' . $_PE[1]) . '\', \'ColumnDownload\', 800, 500);"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries (full data)</A></LI>' . "\n" .
+          '      </UL>' . "\n\n");
     $_DATA->viewList('Columns', $aSkip, false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
 
     $_T->printFooter();

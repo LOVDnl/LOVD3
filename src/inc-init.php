@@ -5,7 +5,7 @@
  *
  * Created     : 2009-10-19
  * Modified    : 2013-03-06
- * For LOVD    : 3.0-03
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -374,7 +374,7 @@ $aConfigValues =
                               ),
               );
 // SQLite doesn't need an username and password...
-if ($_INI['database']['driver'] == 'sqlite') {
+if (isset($_INI['database']['driver']) && $_INI['database']['driver'] == 'sqlite') {
     unset($aConfigValues['database']['username']);
     unset($aConfigValues['database']['password']);
 }

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-11-28
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-03-06
+ * For LOVD    : 3.0-04
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -206,8 +206,8 @@ class LOVD_User extends LOVD_Object {
                         'username', // LOVD will not complain if a mandatory column has not been added to the form.
                       );
 
-        // New password is only mandatory when we're forcing a change to the password.
-        if (ACTION == 'change_password') {
+        // These password fields are only not mandatory when we're editing.
+        if (ACTION != 'edit') {
             $this->aCheckMandatory[] = 'password_1';
             $this->aCheckMandatory[] = 'password_2';
         }

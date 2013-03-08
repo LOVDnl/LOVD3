@@ -5,6 +5,21 @@
  *************/
 
 /**************************
+ * 3.0 Build 04 (r2??)
+ * 2013-04-??
+ *********/
+ * Fixed bug; When registering, the password fields were optional. This bug was
+   introduced over a year ago in r102 (3.0-alpha-07).
+ * Fixed notice in inc-ini.php when using older config.ini file.
+ * Custom columns can now be downloaded in the LOVD import format, to facilitate
+   backups or to share custom column settings with other LOVDs.
+
+
+
+
+
+
+/**************************
  * 3.0 Build 03 (r288)
  * 2013-03-06
  *********/

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2013-03-08
+ * For LOVD    : 3.0-04
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -132,10 +132,8 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                  array(
                         array('columns?create', 'lovd_columns_create.png', 'Create new custom data column', 'Create new custom data column.'),
                         array('columns', 'lovd_columns_view.png', 'Browse all custom data columns', 'Browse all custom data columns already available and view or edit their settings.'),
+                        array('download/columns', 'lovd_save.png', 'Download all LOVD custom columns', 'Download all LOVD custom columns in the LOVD import format.'),
 /*
-      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_download.php\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_save.png" alt="Download all LOVD custom columns" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Download all LOVD custom columns.</TD></TR>' . "\n" .
       '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_import.php\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_import.png" alt="Import new LOVD custom columns" width="32" height="32"></TD>' . "\n" .
       '                <TD>Import new LOVD custom columns.</TD></TR>
@@ -164,8 +162,8 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
 */
             'Download & Import' =>
                  array(
-                        array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD (genes, transcripts, diseases, individuals, phenotypes, screenings &amp; variants).'),
-                        array('import', 'lovd_import.png', 'Import data', 'Import data into LOVD using the LOVD 3.0 format (diseases, individuals, phenotypes, screenings &amp; variants).'),
+                        array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD import format (genes, transcripts, diseases, individuals, phenotypes, screenings &amp; variants).'),
+                        array('import', 'lovd_import.png', 'Import data', 'Import data using the LOVD import format (diseases, individuals, phenotypes, screenings &amp; variants).'),
                       ),
             'System logs' =>
                  array(
