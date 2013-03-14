@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2013-02-06
- * For LOVD    : 3.0-03
+ * Modified    : 2013-03-13
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1052,6 +1052,16 @@ if (POST) {
 
 
 
+        // Intercept simulate (dry run).
+        if (!empty($_POST['simulate']) && !lovd_error()) {
+            // Stop here.
+            lovd_errorAdd('', 'Simulation successful: no errors found.');
+        }
+
+
+
+
+
         function lovd_findImportedID ($sSection, $nID)
         {
             // Returns the ID of a certain object as which it was imported in the database.
@@ -1404,6 +1414,7 @@ $aForm =
         array('', '', 'note', 'Please select which import mode LOVD should use; <I>' . implode('</I> or <I>', $aModes) . '</I>. For more information on the modes, move your mouse over the ? icon.'),
         array('Character encoding of imported file', 'If your file contains special characters like &egrave;, &ouml; or even just fancy quotes like &ldquo; or &rdquo;, LOVD needs to know the file\'s character encoding to ensure the correct display of the data.', 'select', 'charset', 1, $aCharSets, false, false, false),
         array('', '', 'note', 'Please only change this setting in case you encounter problems with displaying special characters in imported data. Technical information about character encoding can be found <A href="http://en.wikipedia.org/wiki/Character_encoding" target="_blank">on Wikipedia</A>.'),
+        array('Simulate (don\'t actually import the data)', 'To check your file for errors, without actually importing anything, select this checkbox.', 'checkbox', 'simulate', 1),
         'skip',
         array('', '', 'submit', 'Import file'));
 

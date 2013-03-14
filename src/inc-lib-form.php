@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-03-01
- * For LOVD    : 3.0-03
+ * Modified    : 2013-03-11
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -604,7 +604,7 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
         list($sName, $sEmails) = array_values($aRecipient);
         $aEmails = explode("\r\n", $sEmails);
         foreach ($aEmails as $sEmail) {
-            if (!in_array($sEmail, $aEmailsUsed)) {
+            if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
                 $sTo .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
                 $aEmailsUsed[] = $sEmail;
             }
@@ -616,7 +616,7 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
         list($sName, $sEmails) = array_values($aRecipient);
         $aEmails = explode("\r\n", $sEmails);
         foreach ($aEmails as $sEmail) {
-            if (!in_array($sEmail, $aEmailsUsed)) {
+            if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
                 $sCc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
                 $aEmailsUsed[] = $sEmail;
             }
@@ -628,7 +628,7 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
         list($sName, $sEmails) = array_values($aRecipient);
         $aEmails = explode("\r\n", $sEmails);
         foreach ($aEmails as $sEmail) {
-            if (!in_array($sEmail, $aEmailsUsed)) {
+            if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
                 $sBcc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
                 $aEmailsUsed[] = $sEmail;
             }

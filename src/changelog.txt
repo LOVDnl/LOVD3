@@ -13,6 +13,13 @@
  * Fixed notice in inc-ini.php when using older config.ini file.
  * Custom columns can now be downloaded in the LOVD import format, to facilitate
    backups or to share custom column settings with other LOVDs.
+ * Fixed bug; The function retrieving the NG ID for a gene also matched gene
+   symbols that end with the requested symbol.
+ * Fixed bug; When data owned by the LOVD user is edited, the email sent returns
+   due to the lack of an email address. LOVD will now never attempt an email
+   again if no address is known.
+ * The import script now supports a "simulate" mode, where the file is checked
+   for errors, but no import is done if no errors are found.
 
 
 

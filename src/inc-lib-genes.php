@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2013-01-30
- * For LOVD    : 3.0-02
+ * Modified    : 2013-03-08
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -55,7 +55,7 @@ function lovd_getLRGbyGeneSymbol ($sGeneSymbol)
 
 function lovd_getNGbyGeneSymbol ($sGeneSymbol)
 {
-    preg_match('/' . $sGeneSymbol . '\s+(NG_\d+\.\d+)/', implode(' ', lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt')), $aMatches);
+    preg_match('/^' . $sGeneSymbol . '\s+(NG_\d+\.\d+)/m', implode("\n", lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt')), $aMatches);
     if (!empty($aMatches)) {
         return $aMatches[1];
     }
