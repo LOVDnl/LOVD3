@@ -9,7 +9,6 @@ Run package script, follow instructions.
 Prioritize:
 ===========
 - LOVD3 site: how to go back to LOVD2 easily?
-- Nieuwe value voor Phenotype/Inheritance: complex
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
 - Ammar vraagt weer naar de VOT op de Screening + Individual view.
@@ -78,6 +77,8 @@ Prioritize:
 - BUGS:
   + Submitter mag wel zien dat variant 7 aan individu 1 zit, maar hij mag individu 1 niet zien. Beter niet laten zien dat hij er aan vast zit...
   + Als je een VL opent, daarna zoekt, dan terug, dan blijven de search terms staan. Kan de hash parser niet alle search terms laten vervallen op het moment dat er geen hash is?
+  + http://grenada.lumc.nl/LOVD2/mendelian_genes/refseq/CYP2C19_codingDNA.html  (NM_000769.1)
+    Gen waar de ATG meteen het start van het transcript is. g. nummering gaat helemaal fout op de cDNA pagina.
 - Individual viewList: add column "variants in genes" with gene symbols.
   + Then, add option to dropdown menu if we have a currdb (replace: individuals screened for gene X).
   + After that, change the default link when clicking the individual tab.

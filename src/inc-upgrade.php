@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-01-28
- * For LOVD    : 3.0-02
+ * Modified    : 2013-03-14
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -332,6 +332,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-02' =>
                  array(
                      'INSERT IGNORE INTO ' . TABLE_COLS2LINKS . ' VALUES ("VariantOnGenome/Reference", 001)',
+                 ),
+                 '3.0-04' =>
+                 array(
+                     'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("Phenotype/Age/Onset", 1, 100, 0, 0, 0, "Age of onset", "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the first symptoms of the disease appeared in the individual, if known. 04y08m = 4 years and 8 months.", "The age at which the first symptoms appeared in the individual, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", "VARCHAR(12)", "Age of onset|The age at which the first symptoms appeared in the individual, if known. Numbers lower than 10 should be prefixed by a zero and the field should always begin with years, to facilitate sorting on this column.|text|10", "", "/^([<>]?\\\\d{2,3}y(\\\\d{2}m(\\\\d{2}d)?)?)?\\\\??$/", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                     'UPDATE ' . TABLE_COLS . ' SET description_form = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial), isolated (sporadic) or complex" WHERE description_form = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)" AND id = "Phenotype/Inheritance"',
+                     'UPDATE ' . TABLE_COLS . ' SET description_legend_short = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial), isolated (sporadic) or complex" WHERE description_legend_short = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)" AND id = "Phenotype/Inheritance"',
+                     'UPDATE ' . TABLE_COLS . ' SET description_legend_full = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial), isolated (sporadic) or complex" WHERE description_legend_full = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)" AND id = "Phenotype/Inheritance"',
+                     'UPDATE ' . TABLE_COLS . ' SET select_options = "Unknown\r\nFamilial\r\nFamilial, autosomal dominant\r\nFamilial, autosomal recessive\r\nFamilial, X-linked dominant\r\nFamilial, X-linked dominant, male sparing\r\nFamilial, X-linked recessive\r\nPaternal, Y-linked\r\nMaternal, mitochondrial\r\nIsolated (sporadic)\r\nComplex" WHERE select_options = "Unknown\r\nFamilial\r\nFamilial, autosomal dominant\r\nFamilial, autosomal recessive\r\nFamilial, X-linked dominant\r\nFamilial, X-linked dominant, male sparing\r\nFamilial, X-linked recessive\r\nPaternal, Y-linked\r\nMaternal, mitochondrial\r\nIsolated (sporadic)" AND id = "Phenotype/Inheritance"',
                  ),
              );
 
