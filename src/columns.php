@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2013-03-08
+ * Modified    : 2013-03-15
  * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1409,9 +1409,10 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     }
 
     if ($aTableInfo['shared']) {
+        // Get count for targets, then verify that number of targets the column is already added to is smaller.
         // FIXME; If, for curator level users, we'd made a JOIN here, we could see beforehand that there will be no targets left, instead of having to check it some 50 lines below here.
         $nCount = $_DB->query('SELECT COUNT(id) FROM ' . constant(strtoupper('table_' . $aTableInfo['unit'] . 's')))->fetchColumn();
-        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
+        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, count(sc.colid) AS targets FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
     } else {
         $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ? AND ac.colid IS NULL', array($sColumnID))->fetchAssoc();
     }
@@ -1470,7 +1471,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
     // Check if column is enabled for target.
     lovd_errorClean();
-    if (!empty($_POST['target'])) {
+    if ($aTableInfo['shared'] && !empty($_POST['target'])) {
         $aTargets = $_POST['target'];
         if (!is_array($aTargets)) {
             $aTargets = array($aTargets);
@@ -1484,14 +1485,19 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     }
 
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
-    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
-    $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
-    $nSizeIndexes = $zStatus['Index_length'];
-    // Calculating time it could take to rebuild the table. This is just an estimate and it depends
-    // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
-    // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
-    // (results of some quick benchmarks in September 2010 by ifokkema)
-    $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
+    if ($aTableInfo['shared'] && $zData['targets']) {
+        // We're not going to run an ALTER TABLE!
+        $tAlter = 0;
+    } else {
+        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
+        $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
+        $nSizeIndexes = $zStatus['Index_length'];
+        // Calculating time it could take to rebuild the table. This is just an estimate and it depends
+        // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
+        // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
+        // (results of some quick benchmarks in September 2010 by ifokkema)
+        $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
+    }
 
     if (POST) {
         lovd_errorClean();
@@ -1802,7 +1808,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
     // Check if column is enabled for target.
     lovd_errorClean();
-    if (!empty($_POST['target'])) {
+    if ($aTableInfo['shared'] && !empty($_POST['target'])) {
         $aTargets = $_POST['target'];
         if (!is_array($aTargets)) {
             $aTargets = array($aTargets);
@@ -1816,14 +1822,19 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     }
 
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
-    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
-    $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
-    $nSizeIndexes = $zStatus['Index_length'];
-    // Calculating time it could take to rebuild the table. This is just an estimate and it depends
-    // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
-    // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
-    // (results of some quick benchmarks in September 2010 by ifokkema)
-    $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
+    if ($aTableInfo['shared'] && !empty($_POST['target']) && !is_array($_POST['target']) && !lovd_error() && count($aTargets) < $nPossibleTargets) {
+        // We're not going to run an ALTER TABLE!
+        $tAlter = 0;
+    } else {
+        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
+        $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
+        $nSizeIndexes = $zStatus['Index_length'];
+        // Calculating time it could take to rebuild the table. This is just an estimate and it depends
+        // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
+        // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
+        // (results of some quick benchmarks in September 2010 by ifokkema)
+        $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
+    }
 
     if (POST) {
         // Mandatory fields.
@@ -1847,8 +1858,9 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
 
             // If ALTER time is large enough, mention something about it.
-            if ($tAlter > $tAlterMax) {
-                lovd_showInfoTable('Please note that the time estimated to add this column to the ' . $aInfoTable['table_name'] . ' data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table are possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
+            // ... but only if we're running it...
+            if (!($aTableInfo['shared'] && count($aTargets) < $nPossibleTargets) && $tAlter > $tAlterMax) {
+                lovd_showInfoTable('Please note that the time estimated to remove this column from the ' . $aTableInfo['table_name'] . ' data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table are possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
             }
 
             require ROOT_PATH . 'class/progress_bar.php';
@@ -1959,7 +1971,8 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         // If the target is received through $_GET do not show the selection list unless there is a problem with the target.
         if (!empty($_POST['target']) && !is_array($_POST['target']) && !in_array('target', $_ERROR['fields'])) {
             $sTarget = $_DB->query('SELECT name FROM ' . ($sCategory == 'VariantOnTranscript'? TABLE_GENES : TABLE_DISEASES) . ' WHERE id = ?', array($_POST['target']))->fetchColumn();
-            $nEntriesWithData = $_DB->query('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' WHERE ' . $aTableInfo['unit'] . 'id = ? AND `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"', array($_POST['target']))->fetchColumn();
+            // General query for phenotype data and VOT columns, but for VOT we need to put a join to table_transcripts...
+            $nEntriesWithData = $_DB->query('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ($sCategory != 'VariantOnTranscript'? '' : ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)') . ' WHERE ' . $aTableInfo['unit'] . 'id = ? AND `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"', array($_POST['target']))->fetchColumn();
             $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '<BR>(' . $sTarget . ')</B><BR><BR>');
             print('      <INPUT type="hidden" name="target" value="' . $_POST['target'] . '">' . "\n");
         } else {

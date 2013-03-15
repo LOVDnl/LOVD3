@@ -24,6 +24,14 @@
    though LOVD does allow such column IDs.
  * Added the Phenotype/Age/Onset custom column.
  * Added the option "Complex" for the "Phenotype/Inheritance" column.
+ * Fixed bug; When opening the configuration area without having selected a gene
+   first, the gene selection list only allowed managers to select genes they
+   curate.
+ * Fixed bug; Using a trick, curators could open the configuration area of genes
+   they do not curate, although this did not grant them any authorization.
+ * Fixed bug; Removing a Variant On Transcript column resulted in a query error.
+ * When removing or adding a shared custom column, LOVD now more intelligently
+   checks if there is a risk for a long duration of the query.
 
 
 

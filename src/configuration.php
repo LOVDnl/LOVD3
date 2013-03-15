@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-07-11
- * Modified    : 2013-01-29
- * For LOVD    : 3.0-02
+ * Modified    : 2013-03-15
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -37,11 +37,9 @@ if ($_AUTH) {
 }
 
 define('PAGE_TITLE', (!$_SESSION['currdb']? 'Gene' : $_SESSION['currdb']) . ' configuration');
-$_T->printHeader();
-$_T->printTitle();
 
 // Require curator clearance (any).
-if (!lovd_isAuthorized('gene', $_AUTH['curates'], false)) {
+if (!lovd_isAuthorized('gene', $_AUTH['curates'])) {
     lovd_requireAUTH(LEVEL_CURATOR);
 }
 
@@ -51,6 +49,8 @@ if (!lovd_isAuthorized('gene', $_AUTH['curates'], false)) {
 
 if (ACTION) {
     // We're receiving an action, but we're not designed to handle one on this page...
+    $_T->printHeader();
+    $_T->printTitle();
     lovd_showInfoTable('Can\'t perform requested action.', 'stop');
     $_T->printFooter();
     exit;
@@ -60,65 +60,64 @@ if (ACTION) {
 
 
 
-if (PATH_COUNT != 2 || !$_SESSION['currdb']) {
-    // URL: /configuration
-    // URL: /configuration/GENETHATDOESNOTEXIST
-    // URL: /configuration/DMD/something_that_should_not_be_there
-    // Force user to select different gene.
+// URL: /configuration
+// URL: /configuration/DMD
+// URL: /configuration/GENETHATDOESNOTEXIST
+// URL: /configuration/DMD/something_that_should_not_be_there
+// Force user to select different gene.
 
-    // Print LOVD2-style type of selection list with genes this person is curator of (if LEVEL_CURATOR). If only one gene exists, select that gene inmediately.
-    if (!$_SESSION['currdb']) {
-        if (LEVEL_CURATOR) {
-            $qGenes = $_DB->query('SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_GENES . ' AS g ON (c.geneid = g.id) WHERE c.userid = ? AND c.allow_edit = 1 ORDER BY g.id', array($_AUTH['id']));
-        } else {
-            $qGenes = $_DB->query('SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_GENES . ' AS g ORDER BY g.id', array());
-        }
-        $aGenes = $qGenes->fetchAllRow();
-        $nGenes = count($aGenes);
+// Only when the path is correct (gene given that exists or no gene given but we've got one in session) and authorization is OK, we don't block.
+if (!(PATH_COUNT <= 2 && $_SESSION['currdb'] && lovd_isAuthorized('gene', $_SESSION['currdb']))) {
+    $bWrongGeneSelected = (bool) $_SESSION['currdb'];
+    $_SESSION['currdb'] = ''; // This will unset the links in the top menu.
+    $_T->printHeader();
+    $_T->printTitle();
 
-        // If there are no genes, we're done here.
-        if (!$nGenes) {
-            lovd_showInfoTable('There is currently no gene configured in LOVD yet.<BR>Maybe you want to <A href="genes?create">create a new gene</A> now?', 'stop');
-            $_T->printFooter();
-            exit;
-
-        } else {
-            print('    Please select a gene database:<BR>' . "\n" .
-                  '    <FORM action="' . CURRENT_PATH . '" id="formSelectGeneDB" onsubmit="window.location.href = \'' . lovd_getInstallURL() . $_PE[0] . '/\' + $(this).children(\'select\').val(); return false;" method="GET">' . "\n" .
-                  '      <SELECT name="select_db" onchange="$(\'#formSelectGeneDB\').submit();">' . "\n");
-            foreach ($aGenes as $aGene) {
-                list($sID, $sName) = $aGene;
-                // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
-                $sName = lovd_shortenString($sName, 100);
-                if (substr($sName, -3) == '...') {
-                    $sName .= str_repeat(')', substr_count($sName, '('));
-                }
-                print('      <OPTION value="' . $sID . '">' . $sName . '</OPTION>' . "\n");
-            }
-            print('      </SELECT><BR>' . "\n" .
-                  '      <INPUT type="submit" value="Select gene database">' . "\n" .
-                  '    </FORM>' . "\n\n");
-
-            if ($nGenes == 1) {
-                // Just one gene, submit form now.
-                print('      <SCRIPT type="text/javascript">' . "\n" .
-                      '        $("#formSelectGeneDB").submit();' . "\n" .
-                      '      </SCRIPT>' . "\n\n");
-            }
-            $_T->printFooter();
-            exit;
-        }
+    if ($bWrongGeneSelected) {
+        lovd_showInfoTable('You are not allowed access to the configuration of this gene database. If you think this is an error, please contact your manager or the database administrator to grant you access.', 'stop');
     }
 
-} else {
-    // Needs to be curator for THIS gene.
-    if (!lovd_isAuthorized('gene', $_SESSION['currdb'])) {
-        // NOTE that this does not unset certain links in the top menu. Links are still available.
-        lovd_showInfoTable('You are not allowed access to the configuration of this gene database. If you think this is an error, please contact your manager or the database administrator to grant you access.', 'stop');
+    // Print LOVD2-style type of selection list with genes this person is curator of (if LEVEL_CURATOR). If only one gene exists, select that gene inmediately.
+    if ($_AUTH['level'] == LEVEL_CURATOR) {
+        $qGenes = $_DB->query('SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_GENES . ' AS g ON (c.geneid = g.id) WHERE c.userid = ? AND c.allow_edit = 1 ORDER BY g.id', array($_AUTH['id']));
+    } else {
+        $qGenes = $_DB->query('SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_GENES . ' AS g ORDER BY g.id', array());
+    }
+    $aGenes = $qGenes->fetchAllRow();
+    $nGenes = count($aGenes);
+
+    // If there are no genes, we're done here.
+    if (!$nGenes) {
+        lovd_showInfoTable('There is currently no gene configured in LOVD yet' . ($_AUTH['level'] == LEVEL_CURATOR? ' that you have access to.' : '.<BR>Maybe you want to <A href="genes?create">create a new gene</A> now?'), 'stop');
+        $_T->printFooter();
+        exit;
+
+    } else {
+        print('    Please select a gene database:<BR>' . "\n" .
+              '    <FORM action="' . CURRENT_PATH . '" id="formSelectGeneDB" onsubmit="window.location.href = \'' . lovd_getInstallURL() . $_PE[0] . '/\' + $(this).children(\'select\').val(); return false;" method="GET">' . "\n" .
+              '      <SELECT name="select_db" onchange="$(\'#formSelectGeneDB\').submit();">' . "\n");
+        foreach ($aGenes as $aGene) {
+            list($sID, $sName) = $aGene;
+            // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
+            $sName = lovd_shortenString($sName, 100);
+            if (substr($sName, -3) == '...') {
+                $sName .= str_repeat(')', substr_count($sName, '('));
+            }
+            print('      <OPTION value="' . $sID . '">' . $sName . '</OPTION>' . "\n");
+        }
+        print('      </SELECT><BR>' . "\n" .
+              '      <INPUT type="submit" value="Select gene database">' . "\n" .
+              '    </FORM>' . "\n\n");
+
+        if ($nGenes == 1) {
+            // Just one gene, submit form now.
+            print('      <SCRIPT type="text/javascript">' . "\n" .
+                  '        $("#formSelectGeneDB").submit();' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+        }
         $_T->printFooter();
         exit;
     }
-
 }
 
 
@@ -127,6 +126,9 @@ if (PATH_COUNT != 2 || !$_SESSION['currdb']) {
 
 // URL: /configuration/DMD
 // View all gene-specific configuration options, like downloads, graphs, custom column settings, etc.
+
+$_T->printHeader();
+$_T->printTitle();
 
 // Some info & statistics.
 $aVarStatuses = array_combine(array_keys($_SETT['data_status']), array_fill(0, count($_SETT['data_status']), 0));

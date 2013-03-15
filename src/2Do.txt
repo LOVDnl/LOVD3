@@ -12,6 +12,8 @@ Prioritize:
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
 - Ammar vraagt weer naar de VOT op de Screening + Individual view.
+- Unique variants (Ammar Husami, Anne Polvi). Met counts, waar op gezocht en gesorteerd kan worden.
+  + Zoeken met WHERE of HAVING? Eerst WHERE (met waarschuwing), later HAVING?
 - Implement an HGNC mirror.
 - RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
   + Als hele codon wordt vervangen, kan p.(=) ook gebeuren, zonder dat de RNA r.(=) kan zijn.
@@ -41,8 +43,6 @@ Prioritize:
 - Updated date van genen klopt niet (variant map, screening add/edit/delete, phenotype?, individual).
 - Het is niet duidelijk, hoe een variant aan een bestaande individu toe te voegen (moet dus via screening). Dat moet duidelijk gemaakt worden.
 - Individual VE: Niet VOG, maar VOG+VOT tonen (Ammar Husami zit r echt op te wachten)
-- Unique variants, ook Ammar Husami. Met counts, waar op gezocht en gesorteerd kan worden.
-  + Zoeken met WHERE of HAVING? Eerst WHERE (met waarschuwing), later HAVING?
 - VCF importer:
   + Negeer varianten zonder frequency (het huidige sample heeft 'm niet, andere samples wel).
   + Voor multi-sample files, geef aan welke sample je wilt importeren. Dat scheelt gebruikers veel werk.
@@ -108,6 +108,11 @@ Prioritize:
       - Dat moet dan ongelofelijk goed gecontroleerd worden!!!
     * Koppelings tabellen (genes2diseases bijvoorbeeld) nemen in de import file veel ruimte in, en maakt 't importeren van veel entries lastig; kunnen de IDs niet comma-separated in een extra col in de data tables? Bijvoorbeeld geneIDs in diseases tabel.
     * Daarna: we moeten ergens een tekst zetten waarop staat dat als je als submitter een hoop varianten wil submitten dat je dan ook contact kunt opnemen met de curator, zodat hij/zij deze via een upload kan importeren.
+- Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
+- Columns hersorteren met mooie interface (drag en drop?), daarna VL herladen. Opslaan in SESSION en/of in user table, zodat na inloggen het bewaard wordt.
+  + Voor niet-ingelogden moet hij in de session staan natuurlijk, dus aparte var binnen session en de auth settings daar naar kopieren in de inc-auth.
+  + Bij het hersorteren van de cols moeten de instellingen dus zowel in table_users worden opgeslagen, als gekopieerd worden naar deze var.
+  + Inlichten na implementatie: i.r.phillips@qmul.ac.uk
 - Hoe kan een curator makkelijk zien welke kolommen nog niet actief zijn voor zijn gen?
   + Idem voor een bepaalde aandoening.
   + Cols in groepen toevoegen aan een bepaald gen, beter nog aan meerdere genen.
@@ -214,9 +219,6 @@ Prioritize:
      + Owner veranderen staat er niet tussen (individual, phenotype, variant, screening)
      + Als je een transcript toevoegt, beweert hij dat je enkel exon, rna en protein hebt ingevuld, en dat die leeg waren. DNA lijkt niet veranderd, path. velden zijn eventueel aangepast van Unknown naar wat je ingevuld hebt.
 
-- Controleer weer, vanaf hoeveel data LOVD eigenlijk niet meer vooruit te branden is. Dan, verwijder even tijdelijk de sorteer code, en controleer weer..
-  + Als dat een groot verschil is, bouw dan in dat vanaf een bepaald aantal, LOVD standaard het sorteren voor die viewlist uit zet..
-    De gebruiker kan 't forceren door op een header te klikken of sorteren via het menu weer aan te zetten. Er zijn dan dus 3 settings: default (LOVD bepaalt), altijd aan, en uit..
 - After a useful test with LSDB noobs during submission:
   + Lab ID is not clear.
   + Put more notice on the mapping button. Pop over?
@@ -322,7 +324,6 @@ Prioritize:
 - (@Ivo) De Oostenrijkse DB sluit:
   http://grenada.lumc.nl/LSDB_list/lsdb.php?action=view_all&symbol_start=DHCR7
   (zie email van 9 jan)
-- Columns hiden door Javascript -> instant hide. Kolommen een class mee geven daarvoor.
 - De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
 - Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - API.
