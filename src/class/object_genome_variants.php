@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2013-01-29
- * For LOVD    : 3.0-02
+ * Modified    : 2013-03-25
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -90,7 +90,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                           'a.name AS allele_, ' .
                                           'e.name AS effect, ' .
                                           'uo.name AS owned_by_, ' .
-                                          'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, uo.countryid) AS _owner, ' .
+                                          'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
                                 ($_AUTH['level'] >= LEVEL_COLLABORATOR?
                                           'CASE vog.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,'
                                         : '') .

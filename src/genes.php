@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2013-01-29
- * For LOVD    : 3.0-02
+ * Modified    : 2013-03-19
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1402,7 +1402,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
                     //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
                 } else {
                     // Just sort and update visibility!
-                    $_DB->query('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $nUserID));
+                    $_DB->query('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE geneid = ? AND userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $sID, $nUserID));
                 }
             }
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2013-03-01
- * For LOVD    : 3.0-03
+ * Modified    : 2013-03-25
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -261,7 +261,7 @@ class LOVD_Template {
         // Print the LOVD footer, including the update checker and mapper (if $bFull == true).
         global $_AUTH, $_SETT, $_STAT;
 
-        if (ROOT_PATH == '../') {
+        if (ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) {
             // In the install directory, closing the tables opened by /install/index.php that /install/inc-bot.php used to close.
             print("\n\n" .
                   '    </TD>' . "\n" .
@@ -614,6 +614,7 @@ function lovd_mapVariants ()
 
 
         // Build menu tabs...
+        $nTotalTabWidth = 0; // Will stretch the page at least this far, so the tabs don't "break" if the window is narrow.
         print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo"' . (count($this->aMenu)? '' : ' style="border-bottom : 2px solid #000000;"') . '>' . "\n" .
               '  <TR>' . "\n" .
               '    <TD align="left" style="background : url(\'gfx/tab_fill.png\'); background-repeat : repeat-x;">' . "\n");
@@ -688,11 +689,12 @@ function lovd_mapVariants ()
             $sFile = 'tab_' . $sPrefix;
 
             // Print transition.
+            $nTotalTabWidth += 25;
             print('      <IMG src="gfx/tab_' . (!$n? '0' : ($bPrevSel? 'F' : 'B')) . ($bSel? 'F' : 'B') . '.png" alt="" width="25" height="25" align="left">' . "\n");
 
             // Get header info.
             $sFileName = 'gfx/' . $sFile . '_' . ($bSel? 'F' : 'B') . '.png';
-            $aImage = @getimagesize($sFileName);
+            $aImage = @getimagesize(ROOT_PATH . $sFileName);
             $sSize = $aImage[3];
 
             // Print header.
@@ -705,6 +707,7 @@ function lovd_mapVariants ()
                     $sURL = $sPrefix . '?search_genes_=' . $_SESSION['currdb'];
                 }
             }
+            $nTotalTabWidth += $aImage[0];
             print('      <A href="' . $sURL . '"><IMG src="' . $sFileName . '" alt="' . $Title . '" id="' . $sFile . '" ' . $sSize . ' align="left"></A>' . "\n");
 
             $bPrevSel = $bSel;
@@ -713,12 +716,14 @@ function lovd_mapVariants ()
 
         // If we've had tabs at all, close the transition.
         if (count($this->aMenu)) {
+            $nTotalTabWidth += 25;
             print('      <IMG src="gfx/tab_' . ($bPrevSel? 'F' : 'B') . '0.png" alt="" width="25" height="25" align="left">' . "\n");
         }
         // Close menu table.
         print('    </TD>' . "\n" .
               '  </TR>' . "\n" .
-              '</TABLE>' . "\n\n");
+              '</TABLE>' . "\n\n" .
+              '<IMG src="gfx/trans.png" alt="" width="' . $nTotalTabWidth . '" height="0">' . "\n\n");
 
         // Attach dropdown menus.
         print('<!-- Start drop down menu definitions -->' . "\n");

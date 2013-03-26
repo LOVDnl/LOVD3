@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2012-12-06
- * For LOVD    : 3.0-beta-12
+ * Modified    : 2013-03-25
+ * For LOVD    : 3.0-04
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -84,7 +84,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                                         : '') .
                                           'ds.name AS status, ' .
                                           'uo.name AS owned_by_, ' .
-                                          'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, uo.countryid) AS _owner';
+                                          'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner';
         $this->aSQLViewList['FROM']     = TABLE_PHENOTYPES . ' AS p ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (p.statusid = ds.id)';
