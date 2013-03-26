@@ -36,6 +36,11 @@
    system wide.
    (thanks to Anne Polvi, University of Helsinki, Finland, for reporting)
  * On smaller screens, the menu tabs will no longer wrap.
+ * Added a chapter about custom columns to the manual, containing the sections
+   "Custom column categories" and "Creating a new custom column".
+ * The hint on the custom column definition form displaying the column's width,
+   now updates instantaneous. The minimum width is now set to 20 pixels, and the
+   maximum to 500 pixels.
 
 
 

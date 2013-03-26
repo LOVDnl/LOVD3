@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-10-28
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-03-26
+ * For LOVD    : 3.0-04
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -199,10 +199,14 @@ class LOVD_Column extends LOVD_Object {
             }
         }
 
-        // Width can not be more than 3 digits.
-        if (!empty($aData['width']) && $aData['width'] > 999) {
-            $aData['width'] = 999;
-            lovd_errorAdd('width', 'The width can not be more than 3 digits!');
+        // Width can not be less than 20 or more than 500.
+        // These numbers are also defined in object_shared_columns.php and inc-js-columns.php.
+        if (isset($aData['width']) && strlen($aData['width']) > 0) {
+            if ($aData['width'] > 500) {
+                lovd_errorAdd('width', 'The width can not be more than 500 pixels!');
+            } elseif ($aData['width'] < 20) {
+                lovd_errorAdd('width', 'The width can not be less than 20 pixels!');
+            }
         }
 
         // MySQL type format.

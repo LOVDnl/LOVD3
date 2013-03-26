@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2013-01-16
- * For LOVD    : 3.0-02
+ * Modified    : 2013-03-26
+ * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -651,6 +651,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    lovd_includeJS('inc-js-columns.php');
 
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
@@ -667,29 +668,6 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
-
-?>
-<SCRIPT type="text/javascript">
-function lovd_setWidth ()
-{
-    var line = $(this).parent().parent().next().children(':last').children(':first');
-    if ($(this).attr('value') > 999) {
-        $(this).attr('value', 999);
-        alert('The width cannot be more than 3 digits!');
-        return false;
-    }
-    $(line).attr('width', $(this).attr('value'));
-    $(line).next().next().html('(This is ' + $(this).attr('value') + ' pixels)');
-    return false;
-}
-
-$(function ()
-{
-    $('input[name="width"]').change(lovd_setWidth);
-});
-
-</SCRIPT>
-<?php
 
     $_T->printFooter();
     exit;

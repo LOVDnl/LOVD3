@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-03}
+\setLOVDversion{3.0-04}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-02-20} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-03-26} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -430,7 +430,7 @@ Next, point your web browser to the directory where you've uploaded the LOVD fil
 This could, for instance, be \emph{http://localhost/LOVDv.3.0/} or \emph{http://www.your-domain.org/LOVD/}.
 LOVD will tell you it's not installed yet, and include a link to the install directory.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_not_installed.png}}%
   \caption{%
@@ -448,7 +448,7 @@ If all looks well, LOVD will tell you all requirements are OK and you're ready t
 \par
 Installing LOVD consists of only 4 simple steps and will take only a couple of minutes, or less.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_01.png}}%
   \caption{If all requirements are OK, you're ready to start installing LOVD.}
@@ -463,7 +463,7 @@ The database administrator will be the first user registered with LOVD and has f
 The database administrator is the only user capable of creating manager accounts.
 Managers can only create curator and submitter accounts.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_02.png}}%
   \caption{The database administrator registration form, with example data filled in.}
@@ -498,7 +498,7 @@ the standard columns enabled, and the custom links generated.
 This may take a while on non-optimal conditions, so please be patient.
 When everything is done, a ``Next \guillemotright'' button appears - click it to continue.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_03.png}}%
   \caption{Watch the progress bar complete while LOVD informs you which part of the database table installation is currently in progress.}
@@ -515,7 +515,7 @@ The only setting that cannot be changed at a later time, is the install lock, wh
 Setting the uninstall lock will prevent uninstallation of LOVD by the database administrator.
 The only way to remove this lock is directly through the MySQL database backend.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_04.png}}%
   \caption{The system settings form, with example data filled in.}
@@ -1548,7 +1548,7 @@ Directly after creating a new gene database, you are forwarded to the page that 
  but you can access that page at any time by using the ``Add/remove curators/collaborators'' link in the
  ``Options'' menu on the \hyperlink{s_gene_homepage}{gene's homepage}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c05s05_screenshot_authorize_curators.png}}%
   \caption{%
@@ -1592,7 +1592,7 @@ To be able to successfully submit the ``Authorize curators'' form, there needs t
 \hypertarget{ss_sorting_curators}{}
 \subsection{Sorting curators}
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c05s05_screenshot_sort_curators.png}}%
   \caption{%
@@ -1754,6 +1754,234 @@ On the next page, confirm by typing your password in the input box and submit th
 
 
 
+\chapter{Custom columns}
+To make sure LOVD can be used by a great variety of users who all focus on storing different data,
+ LOVD allows great flexibility in the form of \emph{custom columns}; data fields that can be personalized by the curators,
+ or even completely newly defined.
+All standard LOVD columns can be edited and removed, except for the HGVS recommended columns,
+ which can only be edited but not removed.
+Besides this default set of selected columns which are added by default,
+ LOVD also comes with a set of columns that have not been added to the data tables yet,
+ but can be added with a click of a button.
+Additional columns can be created to suit your every need.
+
+
+
+
+
+\hypertarget{s_custom_column_categories}{}
+\section{Custom column categories}
+In LOVD3, custom columns come in five different categories.
+\begin{description}
+  \item[Individual] \hfill \\
+  Information on the individual, not related to disease, not changing over time, such as date of birth, geograpic or ethnic origin.
+  \item[Phenotype] \hfill \\
+  Information on the phenotype, related to disease, possibly changing over time, such as blood pressure, body length or date seen by specialist.
+  \item[Screening] \hfill \\
+  Information on the detection of new variants, such as detection technique, laboratory conditions or type of sample taken from the individual.
+  \item[Variant On Genome] \hfill \\
+  Information on the variant(s) found, in general or on the genomic level, such as restriction site change, DNA change on genomic level, or reference describing the variant.
+  \item[Variant On Transcript] \hfill \\
+  Information on the variant(s) found, specific for the transcript level, such as predicted effect on protein level, DNA change on mRNA level, or exon number.
+\end{description}
+
+Of these five different categories, two are \emph{shared}: they can be turned on or off by curators for specific diseases or genes, their so-called \emph{parent objects}.
+Some these columns' settings can also be changed per parent object they are enabled in.
+The two shared custom column types are ``Phenotype'', configurable per disease, and ``Variant On Transcript'', configurable per gene.
+\\
+\par
+The other three categories are system-wide; meaning they are either \emph{always} on (enabled), or \emph{always} off (disabled).
+These column are referred to as \emph{non-shared} columns, and can only be enabled, disabled and managed by Manager level users, or the Database administrator.
+The three non-shared custom column types are ``Individual'', ``Screening'' and ``Variant On Genome''.
+
+
+
+
+
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+\section{Creating a new custom column}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+By creating a new custom column, you can define what kind of information you want to store in the database.
+Please note that \emph{defining} this type of information, does not automatically make LOVD \emph{store} this information.
+You will need to enable the column after defining it, so it actually gets added to the data entry form and show up in the data tables.
+\\
+\par
+To create a new custom column, click on the ``Create new custom data column'' option from the ``Setup'' tab dropdown menu,
+ or the ``Create new custom data column'' link in the setup area.
+Firstly, you will need to choose which type of column you would like to create.
+For more information on the different column types, see the \hyperlink{s_custom_column_categories}{previous section}.
+Please note that you can never change the type of a column once it has been chosen.
+Select the type of column you would like to create, by clicking its description.
+You are then forwarded to the entry form specific for this type of custom column.
+
+
+
+\subsection{Column name and descriptions}
+Here the description of the new column is defined; its displayed name and the explanation of its contents to the users.
+\begin{description}
+  \item[Column ID] \hfill \\
+  Choose a simple unique name for your column, consisting of only letters, numbers and underscores.
+  Subcategories must be divided by a slash (/), such as ``Geograpic\_origin/Country'', ``Blood\_pressure/Systolic'', ``Protocol/Date\_updated'', ``Frequency/dbSNP'' or ``Protein/Codon''.
+  \item[Column heading] \hfill \\
+  This will appear above the column in data tables and on the legend.
+  In principle, this is free text, but try to keep it short, because a long name will increase the width of the column.
+  \item[Description on short legend] (HTML enabled)\hfill \\
+  Describe the meaning of the column in short.
+  This will appear when a user moves his mouse over the column header in the data tables.
+  \item[Description on full legend] (HTML enabled)\hfill \\
+  Describe the meaning of the column.
+  You can be very elaborate here.
+  This text will be shown on the full legend of the data table.
+\end{description}
+
+
+
+\subsection{Data and form settings}
+Here you define what the column looks like on the data entry form, and what kind of data it will store.
+There are two ways to define the data type of your custom column.
+The recommended way is to use the data type wizard, which will fill in the MySQL and the form type values.
+Only if you really know what you're doing, you can edit the MySQL data type and the form type directly.
+Its formats are out of the scope of this manual, and therefore not explained here.
+
+\subsubsection{Using the data type wizard}
+To start the data type wizard, click the ``Start data type wizard'' button.
+The wizard will open in a new window.
+\par
+Firstly, you need to select what type of data entry field you want to create for your custom column.
+In the ``Basic form style'' field, choose from one of these options:
+\begin{description}
+  \item[Text/numeric input field] \hfill \\
+  A standard input field allowing textual or numerical free text input.
+  \item[Integer input field] \hfill \\
+  A standard input field, visually similar to the text/numeric input field, but allowing only whole numbers to be filled in.
+  \item[Decimal input field] \hfill \\
+  A standard input field, visually similar to the text/numeric input field, but allowing only numbers with a configurable number of decimals.
+  \item[Large multi-row textual input field] \hfill \\
+  A large text field with multiple rows, allowing large amounts of text to be filled in.
+  \item[Drop down list (one option selected)] \hfill \\
+  A drop down list with a set of options of which the user must choose one value.
+  \item[Selection list (multiple options selected)] \hfill \\
+  A selection list where the user can select one or more options or ranges.
+  \item[Date input field] \hfill \\
+  A standard input field, visually similar to the text/numeric input field, but allowing only dates (year, month, day), optionally also storing time (hours, minutes, seconds).
+  The input format is YYYY-MM-DD or YYYY-MM-DD HH:MM:SS.
+  \item[On/off checkbox] \hfill \\
+  A simple checkbox allowing only a yes/no answer.
+\end{description}
+
+\noindent
+Select the wanted data entry type and click ``Next \guillemotright''.
+
+\vskip 1cm
+
+\noindent
+The next page shows you some additional options that depend on the type of field you've chosen.
+\begin{description}
+  \item[Column name on form] (all field types)\hfill \\
+  The name the column will have on the data entry form.
+  This is usually the same as the ``Column heading'' field.
+  \item[Help text] (all field types)\hfill \\
+  If you think the data field needs clarification for users, especially those who don't know this field well, add such clarification here.
+  By filling in this field, LOVD will add a questionmark icon next to the field on the data entry form.
+  When the user moves his mouse over the questionmark icon, the text entered here is shown.
+  Since the text is shown as a highlight, it does not disrupt the structure of the data entry form, so feel free to type lengthy texts.
+  \item[Notes on form] (all field types, HTML enabled)\hfill \\
+  If you think the data field needs clarification for all users, add such clarification here.
+  The text given here will be shown directly underneath the data entry field.
+  Therefore, keep it short, since long texts will make the data entry form very long.
+  \item[Width on form (characters)] (all input fields and text area)\hfill \\
+  The input field width on the form, in number of characters.
+  \item[Height on form (lines)] (text area and multiple selection list)\hfill \\
+  The height of your field on the data entry form, in lines.
+  For multiple selection lists, this implies the number of options visible at the same time.
+  \item[Maximum input length (characters)] (text and integer input field types)\hfill \\
+  The maximum number of characters allowed the be filled in.
+  If a user tries to enter more characters in your field, an error is issued.
+  For the integer input type, this implies the maximum value that can be filled in.
+  \item[Number of digits before the decimal point] (decimal field only)\hfill \\
+  The maximum number of digits allowed before the decimal point.
+  This practically limits the maximum value of the field.
+  \item[Number of digits following the decimal point] (decimal field only)\hfill \\
+  The maximum number of digits allowed at the right of the decimal point.
+  This limits the maximum precision of values in the field.
+  \item[Regular expression pattern] (text input only)\hfill \\
+  For advanced users only.
+  You can enter a full regular expression pattern (PHP's Perl-compatible regular expression syntax), including `/' delimiters and possible modifiers.
+  Using this, you can force a certain format for the input.
+  Make sure it's valid, otherwise you risk getting all this column's data input rejected.
+  \item[Allow only positive values] (integer and decimal fields)\hfill \\
+  Select this to allow only positive numbers to be entered.
+  \item[Provide ``-- select --'' option] (drop down list only)\hfill \\
+  This will add an option named ``-- select --'' to the list of options, that will be selected by default and will be regarded as an empty value.
+  If this option is not set, the first option of the list will be the default selected option.
+  \item[Provide ``select all'' link] (multiple selection list only)\hfill \\
+  This will add a link next to the selection list that allows the user to instantly select all available options.
+  \item[List of possible options] (both list types)\hfill \\
+  Enter the options available for this field, one options per line.
+  If you want to use abbreviations, use: Abbreviation = Long name, like ``DMD = Duchenne Muscular Dystrophy''.
+  In that case the user will see the long name in the selection list, but the abbreviation will be stored in the database.
+  \item[Also store time?] (date field only)\hfill \\
+  Select this to also store time (hours, minutes, seconds) in this date field.
+  \item[Default value] (all input fields except text area)\hfill \\
+  A default value that will appear in the field when creating a new data entry.
+\end{description}
+
+\noindent
+Click the ``Finish'' button to have the data type wizard fill in the ``MySQL data type'' and ``Form type'' fields for you,
+ based on the information you provided.
+
+
+
+\subsection{Column settings}
+Here you can change some of the column's settings.
+For shared columns (see section ``\hyperlink{s_custom_column_categories}{Custom column categories}''),
+ most of these settings can also be changed per parent object where this column has been added to.
+\begin{description}
+  \item[Include this column for newly configured genes/diseases] (shared columns only)\hfill \\
+  When this is selected, new genes (for VariantOnTranscript columns) or diseases (for Phenotype columns) will have this custom column enabled by default.
+  When you leave this off, the curators of new genes or diseases will have to enable the column themselves, should they want to use it.
+  \item[Column display width in pixels] \hfill \\
+  \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
+  \\
+  Here you can define how wide the column should be in data listings.
+  This is measured in pixels.
+  Since the width depends on the screen's resolution, a hint is provided how wide the currently selected width is on the current screen.
+  \item[Mandatory field] \hfill \\
+  \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
+  \\
+  With this option selected, users can't leave this column empty.
+  \item[Show contents to public] \hfill \\
+  \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
+  \\
+  This controls whether or not users with no specific authorization on the data entry can see the contents of this column.
+  \item[Show field on submission form] \hfill \\
+  If you don't want submitters to fill in this column, but reserve the use for curators, disable this checkbox.
+  Please note that unsetting this will not hide the contents of the column from the public, it merely stops them from entering data in it.
+% IMPLEMENT
+%Include in search form: This option controls whether or not this column shows on the special search overview that allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns.
+\end{description}
+
+
+
+\subsection{Link settings}
+Here you can select which custom links will be active in this custom column.
+% For more information on custom links, see.....
+\begin{description}
+  \item[Active custom links] \hfill \\
+  Select any number of custom links, or leave all unselected if you do not wish to use custom links in this field.
+  Note that the use of custom links only makes sense for fields that accept text input.
+\end{description}
+
+\noindent
+Enter your password at the bottom of the form and submit it.
+Your custom column is now created, and you can choose to enable the column if you wish.
+
 
 
 
@@ -1809,9 +2037,7 @@ $_PAGES =
                           ),
                     'Custom columns',
                      array(
-                            'Variant vs. patient columns',
                             'Managing patient columns',
-                            'Creating new columns',
                             'Editing custom column default settings',
                             'Deleting custom columns',
                             'Downloading custom column data to text files',
