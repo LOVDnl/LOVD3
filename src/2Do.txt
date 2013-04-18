@@ -8,6 +8,8 @@ Run package script, follow instructions.
 
 Prioritize:
 ===========
+- Submission emails don't show diseases.
+- Submissions emails easily get sent twice when you reload the URL (no POST data!). Bad, bad. Empty session var?
 - LOVD3 site: how to go back to LOVD2 easily?
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
@@ -137,6 +139,7 @@ Prioritize:
   + http://databases.lovd.nl/shared/variants/GLDC
 - Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
+- MariaDB noemen als alternatief, en uitleggen dat ze dan vooralsnog 'mysql' als driver moeten kiezen. Config.ini, handleiding, en website. Maar hoe zit dat dan met InnoDB?
 - VOG kolommen toch per gen kunnen verbergen? Johan wil écht die dbSNP kolom niet zien.
   + Op zich is het verbergen van VOG kolommen gelijk aan de huidige VOT implementatie.
     * Maar hoe dit op te slaan?

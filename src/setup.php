@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2013-03-08
+ * Modified    : 2013-04-06
  * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -116,22 +116,10 @@ $aItems =
                         array('users?create', 'lovd_users_create.png', 'Create new authorized user', 'Create a new authorized user or submitter.'),
                         array('users', 'lovd_users_edit.png', 'View all users', 'Manage authorized users and submitters.'),
                       ),
-/*
-// Custom individual columns.
-print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
-      '              <TR>' . "\n" .
-      '                <TD colspan="2"><B>Custom individual columns</B></TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns.php?action=add\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_add.png" alt="Add pre-configured custom individual column" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Add unselected pre-configured custom individual column.</TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns.php?action=view_all\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_edit.png" alt="Manage custom individual columns" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Manage selected custom individual columns.</TD></TR></TABLE><BR>' . "\n");
-*/
             'Custom data columns' =>
                  array(
                         array('columns?create', 'lovd_columns_create.png', 'Create new custom data column', 'Create new custom data column.'),
-                        array('columns', 'lovd_columns_view.png', 'Browse all custom data columns', 'Browse all custom data columns already available and view or edit their settings.'),
+                        array('columns', 'lovd_columns_view.png', 'Browse all custom data columns', 'Browse all custom data columns already available to enable or disable them, or view or edit their settings.'),
                         array('download/columns', 'lovd_save.png', 'Download all LOVD custom columns', 'Download all LOVD custom columns in the LOVD import format.'),
 /*
       '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_import.php\';">' . "\n" .

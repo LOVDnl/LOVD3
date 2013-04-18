@@ -213,7 +213,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-03-26} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-04-16} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -1138,7 +1138,7 @@ This option is only available while creating a new user, it's not shown on the s
 Every user in LOVD can edit their own account.
 Editing other user's accounts requires you to have a level higher than the user you are trying to edit.
 Managers can edit submitter accounts (including collaborators and curators).
-The database administrator can edit manager accounts.
+The database administrator can also edit manager accounts.
 \\
 \par
 To edit your own account, click the ``Your account'' link on the top right-hand side of the screen, which leads directly to your account overview.
@@ -1774,7 +1774,7 @@ Additional columns can be created to suit your every need.
 In LOVD3, custom columns come in five different categories.
 \begin{description}
   \item[Individual] \hfill \\
-  Information on the individual, not related to disease, not changing over time, such as date of birth, geograpic or ethnic origin.
+  Information on the individual, not related to disease, not changing over time, such as date of birth, geographic or ethnic origin.
   \item[Phenotype] \hfill \\
   Information on the phenotype, related to disease, possibly changing over time, such as blood pressure, body length or date seen by specialist.
   \item[Screening] \hfill \\
@@ -1798,6 +1798,7 @@ The three non-shared custom column types are ``Individual'', ``Screening'' and `
 
 
 
+\hypertarget{s_custom_column_create}{}
 \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
 \section{Creating a new custom column}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -1827,7 +1828,7 @@ Here the description of the new column is defined; its displayed name and the ex
 \begin{description}
   \item[Column ID] \hfill \\
   Choose a simple unique name for your column, consisting of only letters, numbers and underscores.
-  Subcategories must be divided by a slash (/), such as ``Geograpic\_origin/Country'', ``Blood\_pressure/Systolic'', ``Protocol/Date\_updated'', ``Frequency/dbSNP'' or ``Protein/Codon''.
+  Subcategories must be divided by a slash (/), such as ``Geographic\_origin/Country'', ``Blood\_pressure/Systolic'', ``Protocol/Date\_updated'', ``Frequency/dbSNP'' or ``Protein/Codon''.
   \item[Column heading] \hfill \\
   This will appear above the column in data tables and on the legend.
   In principle, this is free text, but try to keep it short, because a long name will increase the width of the column.
@@ -1888,8 +1889,8 @@ The next page shows you some additional options that depend on the type of field
   This is usually the same as the ``Column heading'' field.
   \item[Help text] (all field types)\hfill \\
   If you think the data field needs clarification for users, especially those who don't know this field well, add such clarification here.
-  By filling in this field, LOVD will add a questionmark icon next to the field on the data entry form.
-  When the user moves his mouse over the questionmark icon, the text entered here is shown.
+  By filling in this field, LOVD will add a question mark icon next to the field on the data entry form.
+  When the user moves his mouse over the question mark icon, the text entered here is shown.
   Since the text is shown as a highlight, it does not disrupt the structure of the data entry form, so feel free to type lengthy texts.
   \item[Notes on form] (all field types, HTML enabled)\hfill \\
   If you think the data field needs clarification for all users, add such clarification here.
@@ -1982,6 +1983,86 @@ Here you can select which custom links will be active in this custom column.
 Enter your password at the bottom of the form and submit it.
 Your custom column is now created, and you can choose to enable the column if you wish.
 
+
+
+
+
+\section{Enabling custom columns}
+Directly after creating a new custom column, or at any later time, you can enable a custom column.
+It must already exist in the database, otherwise you first need to \hyperlink{s_custom_column_create}{create it}.
+\emph{Non-shared} custom columns (Individual, Screening and Variant On Genome categories) are enabled system-wide, which requires manager access.
+\emph{Shared} custom columns (Phenotype and Variant On Transcript categories) can be enabled by parent-object (disease or gene, respectively) and require curator access.
+
+
+
+\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+\subsection{Enabling non-shared custom columns}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+The non-shared, system-wide custom column types are Individual, Screening and Variant On Genome.
+To enable a non-shared custom column, you should start from the list of currently available columns.
+You can get there in two ways:
+\begin{itemize}
+  \item Depending on which type of column you wish to enable,
+   click the ``Enable more custom columns'' link in the ``Individuals'' or ``Screenings'' menu tabs' dropdown menu,
+   or the ``Enable more genomic custom columns'' link from the ``Variants'' menu tab dropdown menu.
+  \item Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+   click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
+  This is the list of all custom columns.
+  To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
+  You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+  To further filter the list for columns not yet added to the data table, fill in a zero (`0') in the ``Active'' column filter box and press the ``Enter'' key.
+\end{itemize}
+From the column overview, click the column you wish to enable.
+\\
+\par
+In the detailed view of the custom column, you can review all the column's settings to verify that it suits your needs.
+Click the ``Options'' menu button to open up the column's menu, and click on ``Enable column''.
+Please note that when your database already contains a lot of information, enabling a new non-shared column may take some time.
+If this is the case, LOVD will display a warning.
+Type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
+The column is now enabled and visible in the data entry forms and the data listings and detailed views.
+
+
+
+\subsection{Enabling shared custom columns}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+The shared custom column types are Phenotype and Variant On Transcript.
+To enable a shared custom column, you should start from the list of currently available columns.
+You can get there in two ways:
+\begin{itemize}
+  \item From any disease or gene that you have authorization of open the ``Options'' menu button and click the
+   ``View all available phenotype columns'' or ``View all available variant columns'' link, depending on which type of column you wish to enable.
+  \item Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+     click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
+    This is the list of all custom columns.
+    To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
+    You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+\end{itemize}
+Please note that in this custom column overview, the ``Active'' field simply states whether or not this column has been added to the data table, i.e. is active for \emph{any} parent object.
+\\
+From the column overview, click the column you wish to enable.
+\\
+\par
+In the detailed view of the custom column, you can review all the column's settings to verify that it suits your needs.
+Click the ``Options'' menu button to open up the column's menu, and click on ``Enable column''.
+Please note that if this shared custom column was not active yet and your database already contains a lot of information, enabling this column may take some time.
+If this is the case, LOVD will display a warning.
+From the ``Add this column'' selection list, select the parent objects (diseases or genes) you wish to enable this column for.
+For help on how to use this type of selection list, move your mouse over the blue help icon.
+Type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
+The column is now enabled and visible in the data entry forms and the data listings and detailed views.
 
 
 

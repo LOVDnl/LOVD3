@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 04 (r2??)
- * 2013-04-??
+ * 3.0 Build 04 (r297)
+ * 2013-04-18
  *********/
  * Fixed bug; When registering, the password fields were optional. This bug was
    introduced over a year ago in r102 (3.0-alpha-07).
@@ -25,7 +25,7 @@
  * Added the Phenotype/Age/Onset custom column.
  * Added the option "Complex" for the Phenotype/Inheritance column.
  * Fixed bug; When opening the configuration area without having selected a gene
-   first, the gene selection list only allowed managers to select genes they
+   first, the gene selection list allowed managers to select only genes they
    curate.
  * Fixed bug; Using a trick, curators could open the configuration area of genes
    they do not curate, although this did not grant them any authorization.
@@ -37,14 +37,13 @@
    (thanks to Anne Polvi, University of Helsinki, Finland, for reporting)
  * On smaller screens, the menu tabs will no longer wrap.
  * Added a chapter about custom columns to the manual, containing the sections
-   "Custom column categories" and "Creating a new custom column".
+   "Custom column categories", "Creating a new custom column" and
+   "Enabling custom columns".
  * The hint on the custom column definition form displaying the column's width,
    now updates instantaneous. The minimum width is now set to 20 pixels, and the
    maximum to 500 pixels.
-
-
-
-
+ * From the documentation page, none of the information usually on the top right
+   hand side of the screen were available.
 
 
 /**************************

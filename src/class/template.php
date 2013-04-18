@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2013-03-25
+ * Modified    : 2013-04-18
  * For LOVD    : 3.0-04
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -579,7 +579,7 @@ function lovd_mapVariants ()
               '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] .
               (!defined('NOT_INSTALLED')? ' [ <A href="status">Current LOVD status</A> ]' : '') .
               '<BR>' . "\n");
-        if (!(ROOT_PATH == '../' || defined('NOT_INSTALLED'))) {
+        if (!(defined('NOT_INSTALLED') || (ROOT_PATH == '../' && substr(lovd_getProjectFile(), 0, 9) == '/install/'))) {
             if ($_AUTH) {
                 print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");

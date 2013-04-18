@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-22
- * Modified    : 2011-12-27
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2013-03-29
+ * For LOVD    : 3.0-04
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -41,8 +41,9 @@ class Pedigree {
     // Creates a pedigree tree around the given individual, calculates withs, and prints it on the screen.
     private $individuals = array();
     private $tree = array();
+    public $sMode = 'pedigree';
 
-    function __construct ($nID, $nGenerations = 5)
+    function __construct ($nID, $nGenerations = 5, $sMode = 'pedigree')
     {
         // Default constructor.
         global $_DB;
@@ -60,6 +61,12 @@ class Pedigree {
             lovd_displayError('ObjectError', 'Pedigree::__construct() called with non-valid number of generations.');
         }
 
+        if (!is_string($sMode) || !in_array($sMode, array('pedigree', 'family_tree'))) {
+            $this->sMode = 'pedigree';
+        } else {
+            $this->sMode = $sMode;
+        }
+
         // Make sure the individual actually exists.
         if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nID))->fetchColumn()) {
             lovd_displayError('ObjectError', 'Pedigree::__construct() called with non-existing Individual ID ' . $nID . '.');
@@ -73,8 +80,8 @@ class Pedigree {
         do {
             // I don't think I can do a prepared statement, because the IN () range can change over time.
             $sFROM = 'AS parent FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($aParentIDs)-1) . ') HAVING parent IS NOT NULL';
-            $q = $_DB->query('SELECT DISTINCT `Individual/Parents/Father` ' . $sFROM . ' UNION ' .
-                             'SELECT DISTINCT `Individual/Parents/Mother` ' . $sFROM, array_merge($aParentIDs, $aParentIDs));
+            $q = $_DB->query('SELECT DISTINCT `fatherid` ' . $sFROM . ' UNION ' .
+                             'SELECT DISTINCT `motherid` ' . $sFROM, array_merge($aParentIDs, $aParentIDs));
             $aIDs = $q->fetchAllColumn();
             if ($aIDs) {
                 // Only overwrite parent IDs when we have found the parents of these IDs.
@@ -111,22 +118,27 @@ class Pedigree {
             // Try and find a spouse.
             $nID = $aIDs[0];
             // Unfortunately, we don't know the gender yet!
-            $aSpouseIDs = array_unique($_DB->query('SELECT DISTINCT `Individual/Parents/Father` FROM ' . TABLE_INDIVIDUALS . ' WHERE `Individual/Parents/Mother` = ? UNION
-                                                    SELECT DISTINCT `Individual/Parents/Mother` FROM ' . TABLE_INDIVIDUALS . ' WHERE `Individual/Parents/Father` = ?', array($nID, $nID))->fetchAllColumn());
+            $aSpouseIDs = array_unique($_DB->query('SELECT DISTINCT `fatherid` FROM ' . TABLE_INDIVIDUALS . ' WHERE `motherid` = ? UNION
+                                                    SELECT DISTINCT `motherid` FROM ' . TABLE_INDIVIDUALS . ' WHERE `fatherid` = ?', array($nID, $nID))->fetchAllColumn());
             // Because this is a fake column, I need to str_pad the IDs.
             foreach ($aSpouseIDs as $key => $val) {
+                if (!$val) {
+                    // An unknown spouse.
+                    unset($aSpouseIDs[$key]);
+                    continue;
+                }
                 $aSpouseIDs[$key] = sprintf('%08d', $val);
             }
             $aIDs = array_merge($aIDs, $aSpouseIDs); // Should of course only be one spouse.
         }
         
         // Get information about the individual(s) itself.
-        $q = $_DB->query('SELECT i.id, i.`Individual/Name` AS name, CASE i.`Individual/Gender` WHEN "Male" THEN "m" WHEN "Female" THEN "f" END AS gender, i.`Individual/Parents/Father` AS father, i.`Individual/Parents/Mother` AS mother, GROUP_CONCAT(i2d.diseaseid SEPARATOR ";") AS _diseases FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i.id IN (?' . str_repeat(', ?', count($aIDs)-1) . ') GROUP BY i.id', $aIDs);
+        $q = $_DB->query('SELECT i.id, i.`Individual/Name` AS name, i.`Individual/Gender` AS gender, i.`fatherid` AS father, i.`motherid` AS mother, GROUP_CONCAT(i2d.diseaseid SEPARATOR ";") AS _diseases FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i.id IN (?' . str_repeat(', ?', count($aIDs)-1) . ') GROUP BY i.id', $aIDs);
         while ($z = $q->fetchAssoc()) {
             $this->individuals[$z['id']] =
                  array(
                         'name'   => $z['name'],
-                        'gender' => $z['gender'],
+                        'gender' => strtolower($z['gender']),
                         'father' => ($z['father']? sprintf('%08d', $z['father']) : NULL),
                         'mother' => ($z['mother']? sprintf('%08d', $z['mother']) : NULL),
                         'diseases' => ($z['_diseases']? explode(';', $z['_diseases']) : array()),
@@ -141,8 +153,9 @@ class Pedigree {
         // Try and locate children.
         $sSQLChildren = 'SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE';
         foreach ($aIDs as $nKey => $nID) {
-            $sSQLChildren .= ($nKey? ' AND' : '') . ' `Individual/Parents/' . ($this->individuals[$nID]['gender'] == 'm'? 'Father' : 'Mother') . '` = ?';
+            $sSQLChildren .= ($nKey? ' AND' : '') . ' `' . ($this->individuals[$nID]['gender'] == 'm'? 'father' : 'mother') . 'id` = ?';
         }
+        $sSQLChildren .= ' ORDER BY (`Individual/Date_of_birth` IS NOT NULL) DESC, `Individual/Date_of_birth`, id';
         $aChildren = $_DB->query($sSQLChildren, $aIDs)->fetchAllColumn();
         $aChildrenTree = array();
         if ($aChildren) {
@@ -202,7 +215,8 @@ class Pedigree {
         // Print the tree!
         $a = $this->tree;
         $aNextTree = array(); // The next drawn line are just branches, no individuals.
-        print('<TABLE border="0" cellspacing="0" cellpadding="0">' . "\n");
+        print('<DIV id="pedigreeIndividualDetail" title="Individual" style="display : none;"></DIV>' . "\n" .
+              '<TABLE border="0" cellspacing="0" cellpadding="0" style="margin-right : 400px;">' . "\n");
         while ($a) {
             print('  <TR>' . "\n"); // Open generation line.
 
@@ -213,7 +227,7 @@ class Pedigree {
                         // Empty set, to make space.
                         print('    <TD>&nbsp;</TD>' . "\n");
                     } else {
-                        print('    <TD><IMG src="gfx/pedigree/l' . $sVal . '.png"></TD>' . "\n");
+                        print('    <TD><IMG src="gfx/pedigree/' . ($this->sMode == 'pedigree'? '' : '100x100/') . 'l' . $sVal . '.png"></TD>' . "\n");
                     }
                 }
                 print('  </TR>' . "\n");
@@ -249,7 +263,7 @@ class Pedigree {
                         $aI = $this->individuals[$nID]; 
                         if ($nKey) {
                             // Not the first.
-                            print('    <TD><IMG src="gfx/pedigree/l14.png"></TD>' . "\n");
+                            print('    <TD><IMG src="gfx/pedigree/' . ($this->sMode == 'pedigree'? '' : '100x100/') . 'l14.png"></TD>' . "\n");
                         }
 
                         // What kind of line should this individual have in the background?
@@ -262,11 +276,39 @@ class Pedigree {
                         } elseif ($nKey) {
                             $nLine += 8; // Not the first, add line to left.
                         }
+                        // Individual with children but without spouse, gets a line to the bottom.
+                        if (count($aIndividual['ids']) == 1 && count($aIndividual['children'])) {
+                            $nLine += 4;
+                        }
 
-                        // And what do we have to say about this person?
-                        $sDescription = '<IMG src="gfx/individuals/' . (!is_readable(ROOT_PATH . 'gfx/individuals/' . $nID . '.jpg')? 'unknown_' . $aI['gender'] : $nID) . '.jpg" alt="" height="250" align="left" style="margin-right : 10px;">' .
-                                        '<B>' . $aI['name'] . '</B><BR>';
-                        print('    <TD><A href="#" onmouseover="lovd_showToolTip(\'' . str_replace('"', '\\\'', $sDescription) . '\');" onmouseout="lovd_hideToolTip();" onclick="return false;"><IMG src="gfx/pedigree/u' . $aI['gender'] . ($aI['diseases']? 'a' : 'u') . '.png" style="background : url(\'gfx/pedigree/l0' . $nLine . '.png\');"></A></TD>' . "\n");
+                        // Print the individuals themselves as well.
+                        if ($this->sMode == 'pedigree') {
+                            // And what do we have to say about this person?
+                            $sDescription = '<B>' . $aI['name'] . '</B><BR>';
+                            print('    <TD><A href="#"' . "\n" .
+                                  '      onmouseover="lovd_showToolTip(\'' . str_replace('"', '\\\'', $sDescription) . '\');" onmouseout="lovd_hideToolTip();"' . "\n" .
+    // Fixme; how do I define what happens on the open event trigger??? Then I can use AJAX to load the individual page in the dialog...
+    //                              '      onclick="$(\'#pedigreeIndividualDetail\').dialog({draggable:false,resizable:false,minWidth:800,modal:true,show:\'fade\',closeOnEscape:true}); return false;">' . "\n" .
+                                  '      onclick="lovd_openWindow(\'' . lovd_getInstallURL(). 'individuals/' . $nID . '\', \'pedigreeIndividualDetail\', 900, 450); return false;">' . "\n" .
+                                  '        <IMG src="gfx/pedigree/u' . $aI['gender'] . ($aI['diseases']? 'a' : 'u') . '.png" style="background : url(\'gfx/pedigree/l0' . $nLine . '.png\');"></A></TD>' . "\n");
+                        } else {
+                            // Family tree style.
+                            $sImage = 'gfx/individuals/' . (!is_readable(ROOT_PATH . 'gfx/individuals/' . $nID . '.jpg')? 'unknown_' . $aI['gender'] : $nID) . '.jpg';
+                            list($nWidth, $nHeight) = getimagesize(ROOT_PATH . $sImage);
+                            if ($nWidth > $nHeight && $nWidth > 100) {
+                                $nHeight = (100/$nWidth)*$nHeight;
+                            } else {
+                                $nHeight = 100;
+                            }
+                            
+                            // FIXME: Display the name nicely (shorten in intelligent way).
+                            $sName = $aI['name'];
+                            print('    <TD align="center" style="position : relative;"><A href="#"' . "\n" . // Relative position is needed to have the DIV stick to the TD.
+                                  '      onclick="lovd_openWindow(\'' . lovd_getInstallURL(). 'individuals/' . $nID . '\', \'pedigreeIndividualDetail\', 900, 450); return false;">' . "\n" .
+                                  '        <IMG src="' . $sImage . '" alt="' . $aI['name'] . '" title="' . $aI['name'] . '" height="' . $nHeight . '" style="background : url(\'gfx/pedigree/100x100/l0' . $nLine . '.png\');"></A>' . "\n" .
+                                  '      <DIV style="width : 100%; height : 10px; background : #000; color : #FFF; opacity : 0.6; position : absolute; bottom : 0px; z-index : 100; font-size:10px; text-align : center;"><B>' . $sName . '</B></DIV>' . "\n" .
+                                  '    </TD>' . "\n");
+                        }
                     }
 
                     // Space at right?
@@ -288,9 +330,13 @@ class Pedigree {
                     $aNextGeneration[] = ''; // We need one for the padding anyway, of course.
 
                 } else {
-                    // The children need space around them, if the parents are wider than the children
-                    // (thus, one child, no spouse).
-                    if ($aIndividual['tree_width'] < $aIndividual['own_width']) {
+                    if ($aIndividual['own_width'] == 1 && $aIndividual['tree_width'] == 1) {
+                        // Single parent with one child.
+                        $aNextTree[] = '05';
+
+                    } elseif ($aIndividual['tree_width'] < $aIndividual['own_width']) {
+                        // The children need space around them, if the parents are wider than the children
+                        // (thus, two parents but one child which has no spouse).
                         $aNextTree[] = '';
                         $aNextTree[] = '05';
                         $aNextTree[] = '';
@@ -302,7 +348,9 @@ class Pedigree {
                         $aNextTreeChildren = array(); // To be merged to $aNextTree.
                         foreach ($aIndividual['children'] as $nChild => $aChild) {
                             $bSpouse = ($aChild['own_width'] > 1);
-                            $nPosition = ($this->individuals[$aChild['ids'][0]]['father']? 0 : 2);
+                            // $nPosition indicates the position where we need to draw the line up.
+                            // Does the first person in this child node have parents? If yes, then it's the child (pos: 0). Otherwise, it's the spouse and the child is at position 2.
+                            $nPosition = (($this->individuals[$aChild['ids'][0]]['father'] || $this->individuals[$aChild['ids'][0]]['mother'])? 0 : 2);
                             // Space at left?
                             $nSpace = ($aChild['tree_width'] < $aChild['own_width']? 0 : $aChild['tree_width'] - $aChild['own_width']); // 0 or more.
                             for ($i = (($nSpace/2) + $nPosition + (int) ($nChild > 0)); $i > 0; $i --) {
@@ -312,7 +360,7 @@ class Pedigree {
                             $aNextTreeChildren[] = (!$nChild? '06' : ($nChild == $nChildren - 1? '12' : '14'));
                             // If there is a spouse on the right, fill the gap.
                             if ($bSpouse && !$nPosition) {
-                                $s = ($nChild == $nChildren - 1? '' : '10');
+                                $s = ($nChild == ($nChildren - 1)? '' : '10');
                                 $aNextTreeChildren[] = $s;
                                 $aNextTreeChildren[] = $s;
                             }
