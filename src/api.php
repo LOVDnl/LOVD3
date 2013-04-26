@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2012-11-12
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2013-04-24
+ * For LOVD    : 3.0-05
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -28,7 +28,7 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -277,7 +277,7 @@ if ($sDataType == 'variants') {
                         } else {
                             // Actually, $sPositionStart still was the range.
                             list($sPositionStart, $sPositionEnd) = explode('_', $sPositionStart);
-                            // Very important in genomic positions: genes on antisense will have positions like g.5678_1234 in the database!!!
+                            // Very important in genomic positions: transcripts on antisense will have positions like g.5678_1234 in the database!!!
                             $nPositionMin = min($sPositionStart, $sPositionEnd);
                             $nPositionMax = max($sPositionStart, $sPositionEnd);
                             if (!empty($_GET['position_match'])) {
@@ -431,8 +431,9 @@ if ($sDataType == 'variants') {
                     'symbol:' . $zData['id'] . "\n" .
                     'name:' . $zData['name'] . "\n" .
                     'chromosome_location:' . $zData['chromosome'] . $zData['chrom_band'] . "\n" .
-                    'position_start:chr' . $sChromosome . ':' . $zData['position_g_mrna_start'] . "\n" .
-                    'position_end:chr' . $sChromosome . ':' . $zData['position_g_mrna_end'] . "\n" .
+                    // In LOVD3, we couldn't get the start and end positions in the correct order because of the multiple transcripts, so they are always in sense. Switch them if necessary.
+                    'position_start:chr' . $sChromosome . ':' . ($zData['sense']? $zData['position_g_mrna_start'] : $zData['position_g_mrna_end']) . "\n" .
+                    'position_end:chr' . $sChromosome . ':' . ($zData['sense']? $zData['position_g_mrna_end'] : $zData['position_g_mrna_start']) . "\n" .
                     'refseq_genomic:' . $zData['refseq_genomic'] . "\n" .
                     'refseq_mrna:' . $zData['id_ncbi'] . "\n" .
                     'refseq_build:' . $_CONF['refseq_build'];

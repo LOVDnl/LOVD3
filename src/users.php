@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-02-28
- * For LOVD    : 3.0-03
+ * Modified    : 2013-04-23
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -266,7 +266,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
             $_T->printTitle();
 
             print(      '<A href="http://about.orcid.org/" target="_blank">ORCID</A> provides a persistent digital identifier that distinguishes you from every other researcher and, through integration in key research workflows such as manuscript and grant submission, supports automated linkages between you and your professional activities ensuring that your work is recognized. <A href="http://about.orcid.org/" target="_blank">Find out more.</A><BR>' . "\n" .
-                'Don\'t have an ORCID ID yet? Please consider to <A href="https://orcid.org/register" target="_blank">register</A>, it only takes a minute.<BR><BR>' . "\n\n");
+                'Don\'t have an ORCID ID yet? Please consider to <A href="https://orcid.org/register" target="_blank">get one</A>, it only takes a minute.<BR><BR>' . "\n\n");
 
             lovd_errorPrint();
 

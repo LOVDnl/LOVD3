@@ -5,6 +5,31 @@
  *************/
 
 /**************************
+ * 3.0 Build 05 (r???)
+ * 2013-05-??
+ *********/
+ * Added note on VCF import page about pre-filtering the data.
+ * Changed wording somewhat on the user registration page.
+ * Fixed bug; The API didn't reveal the strand of the genes, like the LOVD2 API.
+ * Fixed bug; In the import script, the check for repeated IDs in each object's
+   data section was not working.
+ * Fixed bug; The import script resulted in a query error when two diseases were
+   added having the same OMIM ID, and adding two diseases with the same name was
+   not prevented.
+ * Fixed bug; When importing data, the diseaseid field in the Phenotypes section
+   was not mandatory.
+ * Variants can now be imported without specifying the DBID; it will be
+   automatically generated when left empty.
+ * While importing many phenotype entries of a disease not yet in the database,
+   the warning about this is no longer repeated for each phenotype entry.
+ * When the importer rejects a field's input because its value is not part of
+   the selection list's options, the allowed values are now listed in the error
+   message.
+ * When importing individuals with a fatherid or motherid, the IDs were not
+   matched with individuals in the import file.
+
+
+/**************************
  * 3.0 Build 04 (r297)
  * 2013-04-18
  *********/

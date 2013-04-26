@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2013-03-14
- * For LOVD    : 3.0-04
+ * Modified    : 2013-04-26
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -214,6 +214,7 @@ if (POST) {
         $nDataTotal = 0; // To show the second progress bar; how much actual work needs to be done?
         $sMode = $_POST['mode'];
         $sDate = date('Y-m-d H:i:s');
+        $aDiseasesAlreadyWarnedFor = array(); // To prevent lots and lots of error messages for each phenotype entry created for the same disease that is not yet inserted into the database.
 
         foreach ($aData as $i => $sLine) {
             $sLine = trim($sLine);
@@ -340,6 +341,7 @@ if (POST) {
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_IND2DIS';
                             break;
                         case 'Phenotypes':
+                            $aSection['required_columns'][] = 'diseaseid';
                             require_once ROOT_PATH . 'class/object_phenotypes.php';
                             // We don't create an object here, because we need to do that per disease. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
                             $aSection['objects'] = array();
@@ -402,7 +404,7 @@ if (POST) {
             if ($bParseColumns) {
                 // We are expecting columns now, because we just started a new section.
                 if (!preg_match('/^(("\{\{[A-Za-z0-9_\/]+\}\}"|\{\{[A-Za-z0-9_\/]+\}\})\t)+$/', $sLine . "\t")) { // FIXME: Can we make this a simpler regexp?
-                        // Columns not found; either we have data without a column header, or a malformed column header. Abort import.
+                    // Columns not found; either we have data without a column header, or a malformed column header. Abort import.
                     lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Expected column header, got this instead:<BR><BLOCKQUOTE>' . htmlspecialchars($sLine) . '</BLOCKQUOTE>');
                     break;
                 }
@@ -559,14 +561,16 @@ if (POST) {
                 }
 
                 // We'll need to split the functional consequence field to have checkFields() function normally.
-                $aLine['effect_reported'] = 5; // Default value.
-                $aLine['effect_concluded'] = 5; // Default value.
-                if (in_array($sCurrentSection, array('Variants_On_Genome', 'Variants_On_Transcripts')) && in_array('effectid', $aColumns)) {
-                    if (strlen($aLine['effectid']) != 2) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Please select a valid entry for the \'effectid\' field.');
-                    } else {
-                        $aLine['effect_reported'] = $aLine['effectid']{0};
-                        $aLine['effect_concluded'] = $aLine['effectid']{1};
+                if (in_array($sCurrentSection, array('Variants_On_Genome', 'Variants_On_Transcripts'))) {
+                    $aLine['effect_reported'] = 5; // Default value.
+                    $aLine['effect_concluded'] = 5; // Default value.
+                    if (in_array('effectid', $aColumns)) {
+                        if (strlen($aLine['effectid']) != 2) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Please select a valid entry for the \'effectid\' field.');
+                        } else {
+                            $aLine['effect_reported'] = $aLine['effectid']{0};
+                            $aLine['effect_concluded'] = $aLine['effectid']{1};
+                        }
                     }
                 }
 
@@ -583,12 +587,17 @@ if (POST) {
 
             // General checks: numerical ID, have we seen the ID before, owned_by, created_* and edited_*.
             if (!empty($aLine['id'])) {
-                if ($sCurrentSection != 'Genes' && !ctype_digit($aLine['id'])) {
-                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" is not a numerical value.');
+                if ($sCurrentSection == 'Genes') {
+                    $ID = $aLine['id'];
+                } else {
+                    if (!ctype_digit($aLine['id'])) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" is not a numerical value.');
+                    }
+                    $ID = (int) $aLine['id'];
                 }
-                if (isset($aSection['data'][$aLine['id']])) {
+                if (isset($aSection['data'][$ID])) {
                     // We saw this ID before in this file!
-                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$aLine['id']]['nLine'] . '.');
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$ID]['nLine'] . '.');
                     continue; // Skip to next line.
                 }
             }
@@ -673,6 +682,18 @@ if (POST) {
                         if ($_AUTH['level'] < LEVEL_MANAGER) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, currently manager level is required to import new disease entries.');
                         } else {
+                            // We actually need to perform the same checks that are in the checkFields() to prevent double diseases, here, but then compare to the other diseases in this file.
+                            foreach ($aSection['data'] as $nID => $aDisease) {
+                                // Two diseases with the same OMIM ID are not allowed.
+                                if ($aLine['id_omim'] && $aLine['id_omim'] == $aDisease['id_omim']) {
+                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID at line ' . $aSection['data'][$nID]['nLine'] . '.');
+                                }
+                                // We don't like two diseases with the exact same name, either.
+                                if ($aLine['name'] && $aLine['name'] == $aDisease['name']) {
+                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name at line ' . $aSection['data'][$nID]['nLine'] . '.');
+                                }
+                            }
+
                             // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                             $aLine['todo'] = 'insert'; // OK, insert.
                         }
@@ -790,9 +811,10 @@ if (POST) {
                     if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
                         // Disease does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Disease "' . htmlspecialchars($aLine['diseaseid']) . '" does not exist in the database and is not defined in this import file.');
-                    } elseif (!$bDiseaseInDB || ($sMode == 'insert' && $bDiseaseInFile)) {
+                    } elseif ((!$bDiseaseInDB || ($sMode == 'insert' && $bDiseaseInFile)) && !in_array($aLine['diseaseid'], $aDiseasesAlreadyWarnedFor)) {
                         // We're inserting this disease, so we're not sure about the exact columns that will be active. Issue a warning.
                         $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): The disease belonging to this phenotype entry is yet to be inserted into the database. Perhaps not all this phenotype entry\'s custom columns will be enabled for this disease!<BR>', 'done');
+                        $aDiseasesAlreadyWarnedFor[] = $aLine['diseaseid'];
                     }
                     $bIndInDB = in_array($aLine['individualid'], $aParsed['Individuals']['ids']);
                     $bIndInFile = isset($aParsed['Individuals']['data'][(int) $aLine['individualid']]);
@@ -1093,6 +1115,7 @@ if (POST) {
 
             foreach ($aParsed as $sSection => $aSection) {
                 $aFields = $aSection['allowed_columns'];
+                // We will unset the IDs, and generate new ones. All, but the VOT section, which doesn't have an PK AUTO_INCREMENT.
                 if (in_array('id', $aFields) && $sSection != 'Variants_On_Transcripts') {
                     unset($aFields[array_search('id', $aFields)]);
                 }
@@ -1125,6 +1148,20 @@ if (POST) {
                             }
                             if (isset($aData['individualid'])) {
                                 $aData['individualid'] = lovd_findImportedID('Individuals', $aData['individualid']);
+                            }
+                            if (isset($aData['fatherid'])) {
+                                $aData['fatherid'] = lovd_findImportedID('Individuals', $aData['fatherid']);
+                            }
+                            if (isset($aData['motherid'])) {
+                                $aData['motherid'] = lovd_findImportedID('Individuals', $aData['motherid']);
+                            }
+                            if ($sSection == 'Variants_On_Genome') {
+                                // We want the DBID to be generated automatically, but it relies on the database contents, so we have to do it just before inserting the data.
+                                // In theory, we should be first importing the variants which have their DBID set, since the IDs that will be generated here might conflict
+                                // with these, but the chances are slim and we can put the responsibility of not doing this in the hands of the uploaders.
+                                if (!$aData['VariantOnGenome/DBID']) {
+                                    $aData['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
+                                }
                             }
                             if ($sSection == 'Variants_On_Transcripts') {
                                 $aData['id'] = lovd_findImportedID('Variants_On_Genome', $aData['variantid']);

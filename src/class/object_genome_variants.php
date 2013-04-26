@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2013-03-25
- * For LOVD    : 3.0-04
+ * Modified    : 2013-04-25
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -220,7 +220,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 $aData['VariantOnGenome/DBID'] = '';
             }
             if (empty($aData['VariantOnGenome/DBID'])) {
-                $aData['VariantOnGenome/DBID'] = $_POST['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
+                if (lovd_getProjectFile() !== '/import.php') {
+                    // Why predict an DBID, what we're not going to use anyway?
+                    $aData['VariantOnGenome/DBID'] = '-'; // I just need the mandatory field checker off my back!
+                } else {
+                    $aData['VariantOnGenome/DBID'] = $_POST['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
+                }
             } elseif (!lovd_checkDBID($aData)) {
                 lovd_errorAdd('VariantOnGenome/DBID', 'Please enter a valid ID in the ' . (lovd_getProjectFile() == '/import.php'? 'VariantOnGenome/DBID' : '\'ID\'') . ' field or leave it blank and LOVD will predict it.');
             }

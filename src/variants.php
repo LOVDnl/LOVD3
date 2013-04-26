@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2013-02-28
- * For LOVD    : 3.0-03
+ * Modified    : 2013-04-24
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -2045,6 +2045,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
     if ($_GET['type'] == 'VCF') {
         lovd_showInfoTable('Please note that LOVD does not support importing deletions or insertions using the VCF 3.3 format or lower! <B>Please use VCF 4.0 or higher.</B>', 'warning', 760);
+        lovd_showInfoTable('To prevent long waiting times while mapping variants and in general prevent slowness in using LOVD, we suggest pre-filtering your variants somewhat (for instance on allele frequency in the <A href="http://www.1000genomes.org/" target="_blank">1000 genomes project</A>).', 'information', 760);
     }
 
     // Display any errors.

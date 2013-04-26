@@ -8,7 +8,7 @@ Run package script, follow instructions.
 
 Prioritize:
 ===========
-- Submission emails don't show diseases.
+- Submission emails don't show diseases connected to individual, or genes connected to screening.
 - Submissions emails easily get sent twice when you reload the URL (no POST data!). Bad, bad. Empty session var?
 - LOVD3 site: how to go back to LOVD2 easily?
 - Work on the manual!
@@ -387,6 +387,7 @@ From LOVD 2.0:
 - Fix de VCF importer, zodat die VCF 3.3 ook aan kan?
 - Entrez ID && OMIM ID: Johan: als er nog geen ID is maar wel komt kan ik die ook niet handmatig toevoegen. Hoe komt die er dan ooit in, automatisch?
 - Searching ranges: '2-4' == '>=2 <=4'
+- JMOL koppeling, om variant te highlighten, zoals op http://p53.iarc.fr/TP53GeneVariations.aspx
 
 
 
