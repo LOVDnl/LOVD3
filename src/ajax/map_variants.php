@@ -260,6 +260,7 @@ if (!empty($_GET['variantid'])) {
 } elseif ($_SESSION['mapping']['todo'] > 0) {
     // Randomly select some adjacent variants that await mapping.
     // Order by RAND() takes >1s with 1M variants, so no random pick when more than 10K variants.
+    // Nonetheless, with 2M variants, this Q shows up in the slow log thousands of times.
     $aVariants = $_DB->query('SELECT id, vog.chromosome, vog.position_g_start, position_g_end, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
                              'FROM ' . TABLE_VARIANTS . ' AS vog, (' .
                                  'SELECT chromosome, position_g_start ' .

@@ -14,6 +14,9 @@ Prioritize:
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
 - Ammar vraagt weer naar de VOT op de Screening + Individual view.
+  + Sirisha Hesketh vraagt hier ook naar (april 2013)
+  + Implementeer met HAVING, want zo zijn we continue bezig nu (groeperen Screenings en SCR2GENE in full view en screenings view)
+  + Voor eind mei!!!!!!!!!!!!!!!
 - Unique variants (Ammar Husami, Anne Polvi). Met counts, waar op gezocht en gesorteerd kan worden.
   + Zoeken met WHERE of HAVING? Eerst WHERE (met waarschuwing), later HAVING?
 - Implement an HGNC mirror.
@@ -77,6 +80,7 @@ Prioritize:
             X Screenings  -> Een submitter mag niet een screening verwijderen; een curator wel? Ook als deze curator alleen owner is van deze screening? Wat als anderen data aan deze screening hebben toegevoegd?
             X Variants    -> Een submitter mag niet een variant verwijderen; een curator wel? Ook als deze curator alleen owner is van deze variant?
 - BUGS:
+  + Column create or import: VARCHAR(999) wordt niet afgevangen door de MySQL type check.
   + Submitter mag wel zien dat variant 7 aan individu 1 zit, maar hij mag individu 1 niet zien. Beter niet laten zien dat hij er aan vast zit...
   + Als je een VL opent, daarna zoekt, dan terug, dan blijven de search terms staan. Kan de hash parser niet alle search terms laten vervallen op het moment dat er geen hash is?
   + http://grenada.lumc.nl/LOVD2/mendelian_genes/refseq/CYP2C19_codingDNA.html  (NM_000769.1)
@@ -486,6 +490,7 @@ LOVD 3.0
     Both deadlocks and lock wait timeouts are normal on busy servers and it is necessary for applications to be aware that they may happen and handle them by retrying.
         You can make them less likely by doing as little work as possible between the first change to data during a transaction and the commit, so the locks are held
         for the shortest possible time and for the smallest possible number of rows. Sometimes splitting work between different transactions may be practical and helpful.
+            Error die je dan krijgt is: SQLSTATE[HY000]: General error: 1205 Lock wait timeout exceeded; try restarting transaction
     When a transaction rollback occurs due to a deadlock or lock wait timeout, it cancels the effect of the statements within the transaction. But if the
         start-transaction statement was START TRANSACTION or BEGIN statement, rollback does not cancel that statement. Further SQL statements become part
         of the transaction until the occurrence of COMMIT, ROLLBACK, or some SQL statement that causes an implicit commit.

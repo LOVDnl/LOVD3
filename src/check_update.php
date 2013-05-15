@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-11-09
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2013-05-03
+ * For LOVD    : 3.0-05
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -31,6 +31,7 @@
 
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+set_time_limit(0); // Can take a long time on large installations.
 
 if (!isset($_GET['icon'])) {
     // Only authorized people...
@@ -133,9 +134,11 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $aDiseaseIDs = array_values(array_unique($aDiseaseIDs)); // Keys must be in order, otherwise PDO returns a query error.
 
         // Then, get the actual curator data (name, email, institute).
-        $q = $_DB->query('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' WHERE id IN (?' . str_repeat(', ?', count($aUserIDs)-1) . ') ORDER BY id', $aUserIDs, false);
-        while ($z = $q->fetchAssoc()) {
-            $aData['users'][$z['id']] = array('name' => $z['name'], 'email' => $z['email'], 'institute' => $z['institute']);
+        if ($aUserIDs) {
+            $q = $_DB->query('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' WHERE id IN (?' . str_repeat(', ?', count($aUserIDs)-1) . ') ORDER BY id', $aUserIDs, false);
+            while ($z = $q->fetchAssoc()) {
+                $aData['users'][$z['id']] = array('name' => $z['name'], 'email' => $z['email'], 'institute' => $z['institute']);
+            }
         }
 
         // Finally, get the actual disease data (ID, symbol, name).

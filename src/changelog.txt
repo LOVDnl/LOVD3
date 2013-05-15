@@ -27,6 +27,13 @@
    message.
  * When importing individuals with a fatherid or motherid, the IDs were not
    matched with individuals in the import file.
+ * Fixed bug; The update checker failed in installations without curators.
+ * Fixed bug; Internet Explorer did not reload the data listings correctly, when
+   using the browser's back button. Also fixed other issues with using the
+   browser's back button while navigating data listings.
+   Closes #20: "Going back in browser does not change the view back to how it
+   was on Windows".
+   (thanks to Sirisha Hesketh, Oxford University Hospitals, UK, for reporting)
 
 
 /**************************

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2013-04-24
+ * Modified    : 2013-05-08
  * For LOVD    : 3.0-05
  *
  * Supported URIs:
@@ -352,6 +352,8 @@ if ($sFeedType == 'feed') {
     if ($sDataType == 'variants') {
         $sTitle = ($bSearching? ($n? 'R' : 'No r') . 'esults for your query of' : 'Listing of all public variants in') . ' the ' . $sSymbol . ' gene database';
     } elseif ($sDataType == 'genes') {
+        // This overview needs some more time to be generated.
+        set_time_limit(60);
         $sTitle = ($bSearching? ($n? 'R' : 'No r') . 'esults for your query of' : 'Listing of all genes in') . ' the database';
     }
     $sLink = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'api/rest.php/' . $sDataType . ($sSymbol? '/' . $sSymbol : '') . (empty($bUnique)? '' : '/unique');
