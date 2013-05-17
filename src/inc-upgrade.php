@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-03-14
- * For LOVD    : 3.0-04
+ * Modified    : 2013-05-13
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -75,7 +75,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
                                 'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN edited_date',
                                 'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
-/////////////////// DMD_SPECIFIC: I would expect these to fail if I don't remove the FKs first. But they don't.
                                 'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN id VARCHAR(20) NOT NULL',
                                 'ALTER TABLE ' . TABLE_CURATES . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                                 'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
@@ -340,6 +339,17 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'UPDATE ' . TABLE_COLS . ' SET description_legend_short = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial), isolated (sporadic) or complex" WHERE description_legend_short = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)" AND id = "Phenotype/Inheritance"',
                      'UPDATE ' . TABLE_COLS . ' SET description_legend_full = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial), isolated (sporadic) or complex" WHERE description_legend_full = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)" AND id = "Phenotype/Inheritance"',
                      'UPDATE ' . TABLE_COLS . ' SET select_options = "Unknown\r\nFamilial\r\nFamilial, autosomal dominant\r\nFamilial, autosomal recessive\r\nFamilial, X-linked dominant\r\nFamilial, X-linked dominant, male sparing\r\nFamilial, X-linked recessive\r\nPaternal, Y-linked\r\nMaternal, mitochondrial\r\nIsolated (sporadic)\r\nComplex" WHERE select_options = "Unknown\r\nFamilial\r\nFamilial, autosomal dominant\r\nFamilial, autosomal recessive\r\nFamilial, X-linked dominant\r\nFamilial, X-linked dominant, male sparing\r\nFamilial, X-linked recessive\r\nPaternal, Y-linked\r\nMaternal, mitochondrial\r\nIsolated (sporadic)" AND id = "Phenotype/Inheritance"',
+                 ),
+                 '3.0-05' =>
+                 array(
+/////////////////// DMD_SPECIFIC: I would expect these to fail if I don't remove the FKs first. But they don't.
+                     'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN id VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_CURATES . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_GEN2DIS . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_SCR2GENE . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(25)',
+                     'DROP TABLE ' . TABLE_HITS,
                  ),
              );
 

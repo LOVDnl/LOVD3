@@ -92,6 +92,7 @@
 5.2.0 json_(de|en)code built in (there's only one LOVD3 user on 5.1 right now, and we haven't seen him in 3 months - 2012-10-29).
 5.2.0 array_fill_keys() available.
 5.3.0 array_replace_recursive() available (already in use in users.php in two places and we have two PHP 5.2 users!)
+5.3.0 anonymous functions introduced. I got parse errors in inc-lib-form (needed to log in even!) so I now realize that 5.3.0 is required, which means we could use bcrypt as well!!!
 5.3.0 bcrypt built into PHP (before that, availability depends on the system)
 =====-========
 5.2.0 REQUIRED

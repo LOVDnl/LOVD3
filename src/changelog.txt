@@ -45,6 +45,8 @@
    backslashes were not handled properly.
  * When downloading the full LOVD data set, the custom column data is now also
    included.
+ * Now allowing gene symbols longer than 20 characters, since
+   DTX2P1-UPK3BP1-PMS2P11 needs the space.
 
 
 /**************************

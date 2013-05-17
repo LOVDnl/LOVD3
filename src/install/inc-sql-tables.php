@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-11-21
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-05-13
+ * For LOVD    : 3.0-05
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -102,7 +102,7 @@ $aTableSQL =
 
          , 'TABLE_GENES' =>
    'CREATE TABLE ' . TABLE_GENES . ' (
-    id VARCHAR(20) NOT NULL,
+    id VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
     chromosome VARCHAR(2),
     chrom_band VARCHAR(20) NOT NULL,
@@ -151,7 +151,7 @@ $aTableSQL =
          , 'TABLE_CURATES' =>
    'CREATE TABLE ' . TABLE_CURATES . ' (
     userid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    geneid VARCHAR(20) NOT NULL,
+    geneid VARCHAR(25) NOT NULL,
     allow_edit BOOLEAN NOT NULL,
     show_order TINYINT(2) UNSIGNED NOT NULL DEFAULT 1,
     PRIMARY KEY (userid, geneid),
@@ -163,7 +163,7 @@ $aTableSQL =
          , 'TABLE_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_TRANSCRIPTS . ' (
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
-    geneid VARCHAR(20) NOT NULL,
+    geneid VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
     id_mutalyzer TINYINT(3) UNSIGNED ZEROFILL,
     id_ncbi VARCHAR(255) NOT NULL,
@@ -210,7 +210,7 @@ $aTableSQL =
 
          , 'TABLE_GEN2DIS' =>
    'CREATE TABLE ' . TABLE_GEN2DIS . ' (
-    geneid VARCHAR(20) NOT NULL,
+    geneid VARCHAR(25) NOT NULL,
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
     PRIMARY KEY (geneid, diseaseid),
     INDEX (diseaseid),
@@ -502,7 +502,7 @@ $aTableSQL =
          , 'TABLE_SCR2GENE' =>
    'CREATE TABLE ' . TABLE_SCR2GENE . ' (
     screeningid INT(10) UNSIGNED ZEROFILL NOT NULL,
-    geneid VARCHAR(20) NOT NULL,
+    geneid VARCHAR(25) NOT NULL,
     PRIMARY KEY (screeningid, geneid),
     INDEX (screeningid),
     INDEX (geneid),
@@ -564,7 +564,7 @@ $aTableSQL =
 
          , 'TABLE_SHARED_COLS' =>
    'CREATE TABLE ' . TABLE_SHARED_COLS . ' (
-    geneid VARCHAR(20),
+    geneid VARCHAR(25),
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL,
     colid VARCHAR(100) NOT NULL,
     col_order TINYINT(3) UNSIGNED NOT NULL,
@@ -694,17 +694,6 @@ $aTableSQL =
     installed_date DATE NOT NULL,
     updated_date DATE,
     PRIMARY KEY (id))
-    ' . $sSettings
-
-         , 'TABLE_HITS' =>
-   'CREATE TABLE ' . TABLE_HITS . ' (
-    geneid VARCHAR(20) NOT NULL,
-    type VARCHAR(10) NOT NULL,
-    year SMALLINT(4) UNSIGNED NOT NULL,
-    month TINYINT(2) UNSIGNED NOT NULL,
-    hits SMALLINT(5) UNSIGNED NOT NULL,
-    PRIMARY KEY (geneid, type, year, month),
-    CONSTRAINT ' . TABLE_HITS . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE)
     ' . $sSettings
           );
 
