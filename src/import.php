@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2013-04-26
+ * Modified    : 2013-05-17
  * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,11 +41,11 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 require ROOT_PATH . 'inc-lib-form.php';
 // FIXME:
-// When importing individuals, the panelid field is not properly checked. Object::checkFields() checks only the database, so this check should be disabled for imports and enabled here in the file.
+// When importing individuals, the panelid, fatherid and motherid fields are not properly checked, if the reference exists or not. Object::checkFields() checks only the database, so this check should be disabled for imports and enabled here in the file.
 // Values in custom columns not in use, are stored anyway. They're not checked, because they don't appear on the form and the objects only check fields that are on the form.
 //   The result is that when you enable a column, values may already be in the database, but might completely be wrong (wrong data type, invalid select value, etc).
 //   If we decide to toss the value, report?
-// Default values of position fields of variant? Default values for DBID? Defaults for...?
+// Default values of position fields of variant? Default values for ...?
 // Numerical field, we insert ""? Will become 0, but should be NULL.
 // Does #ignore_for_import do anything?
 
@@ -69,6 +69,7 @@ $aCharSets =
 $aTypes =
     array(
         'Full data download' => 'Full',
+        'Custom column download' => 'Col',
     );
 
 // Calculate maximum uploadable file size.
@@ -109,6 +110,18 @@ function lovd_endLine ()
     return true;
 }
 
+function lovd_trimField ($sVal)
+{
+    // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
+    // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
+
+    $sVal = trim($sVal);
+    if ($sVal{0} == '"' && substr($sVal, -1) == '"') {
+        $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
+    }
+    return trim($sVal);
+}
+
 function utf8_encode_array ($Data)
 {
     // Recursively loop array to encode values.
@@ -127,6 +140,7 @@ function utf8_encode_array ($Data)
 
 
 
+$nWarnings = 0;
 if (POST) {
     // Form sent, first check the file itself.
     lovd_errorClean();
@@ -202,7 +216,7 @@ if (POST) {
         // Prepare, find LOVD version and format type.
         $aParsed = array_fill_keys(
             array(
-                'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Individuals_To_Diseases', 'Phenotypes', 'Screenings', 'Screenings_To_Genes', 'Variants_On_Genome', 'Variants_On_Transcripts', 'Screenings_To_Variants'
+                'Columns', 'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Individuals_To_Diseases', 'Phenotypes', 'Screenings', 'Screenings_To_Genes', 'Variants_On_Genome', 'Variants_On_Transcripts', 'Screenings_To_Variants'
             ), array('allowed_columns' => array(), 'columns' => array(), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
         $aParsed['Genes_To_Diseases'] = $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('allowed_columns' => array(), 'data' => array()); // Just the data, nothing else!
         $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
@@ -236,6 +250,10 @@ if (POST) {
                         lovd_errorAdd('import', 'File type not recognized; type "' . $sFileType . '" unknown.');
                     } else {
                         $sFileType = $aTypes[$sFileType];
+                        // Clean $aParsed a bit, depending on the file type.
+                        if ($sFileType == 'Col') {
+                            $aParsed = array('Columns' => $aParsed['Columns']);
+                        }
                     }
                     lovd_endLine();
                 }
@@ -322,6 +340,11 @@ if (POST) {
                     }
                     $sTableName = 'TABLE_' . strtoupper($sCurrentSection);
                     switch ($sCurrentSection) {
+                        case 'Columns':
+                            $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_COLS';
+                            require_once ROOT_PATH . 'class/object_columns.php';
+                            $aSection['object'] = new LOVD_Column();
+                            break;
                         case 'Genes':
                             break;
                         case 'Transcripts':
@@ -430,6 +453,7 @@ if (POST) {
                 $aUnknownCols = array_diff($aColumns, $aSection['allowed_columns']);
                 if (count($aUnknownCols)) {
                     $_BAR[0]->appendMessage('Warning: the following column' . (count($aUnknownCols) == 1? ' has' : 's have') . ' been ignored from the ' . $sCurrentSection . ' data on line ' . $nLine . ', because ' . (count($aUnknownCols) == 1? 'it is' : 'they are') . ' not in the database: ' . implode(', ', $aUnknownCols) . '.<BR>', 'done');
+                    $nWarnings ++;
                 }
                 // Now create array based on $aUnknownCols so we can count how many values are actually lost.
                 $aLostValues = array_fill_keys($aUnknownCols, 0);
@@ -474,7 +498,7 @@ if (POST) {
                 }
                 continue; // Continue to the next line.
             }
-            $aLine = array_map('trim', $aLine, array_fill(0, $nColumns, '" '));
+            $aLine = array_map('lovd_trimField', $aLine);
 
             // Tag all fields with their respective column name. Then check data.
             $aLine = array_combine($aColumns, array_values($aLine));
@@ -555,9 +579,15 @@ if (POST) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Data is not equal to data in database (diffscore: ' . $nDiffScore . '), editing through import is unfortunately not allowed yet (coming soon).');
                         } elseif ($nDiffScore > 50) {
                             // Difference too big, maybe he's trying to change different data.
+                            // FIXME: Shouldn't this be a hard error?
                             $_BAR[0]->appendMessage('Warning: Will not edit ' . rtrim($sCurrentSection, 's') . ' "' . htmlspecialchars($aLine['id']) . '", the data in the database differs too much from the data in the import file, this looks like an unintended edit!<BR>', 'done');
                         }
                     }
+                }
+
+                // For custom columns, we need to split the ID in category and colid.
+                if ($sCurrentSection == 'Columns') {
+                    list($aLine['category'], $aLine['colid']) = explode('/', $aLine['id'], 2);
                 }
 
                 // We'll need to split the functional consequence field to have checkFields() function normally.
@@ -587,7 +617,7 @@ if (POST) {
 
             // General checks: numerical ID, have we seen the ID before, owned_by, created_* and edited_*.
             if (!empty($aLine['id'])) {
-                if ($sCurrentSection == 'Genes') {
+                if (in_array($sCurrentSection, array('Columns', 'Genes'))) {
                     $ID = $aLine['id'];
                 } else {
                     if (!ctype_digit($aLine['id'])) {
@@ -601,7 +631,7 @@ if (POST) {
                     continue; // Skip to next line.
                 }
             }
-            if (in_array($sCurrentSection, array('Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome'))) {
+            if (in_array($sCurrentSection, array('Columns', 'Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome'))) {
                 foreach (array('created_by', 'edited_by') as $sCol) {
                     // Check is not needed for owned_by, because the form should have a selection list (which is checked separately).
                     if (!$zData || in_array($sCol, $aColumns)) {
@@ -643,6 +673,64 @@ if (POST) {
 
             // Per category, verify the data, including precise checks on specific columns.
             switch ($sCurrentSection) {
+                case 'Columns':
+                    // Columns normally not on the form, are not checked properly...
+                    // Col_order; numeric and 0 <= col_order <= 255.
+                    if ($aLine['col_order'] === '') {
+                        $aLine['col_order'] = 0;
+                    } elseif (!ctype_digit($aLine['col_order']) || $aLine['col_order'] < 0 || $aLine['col_order'] > 255) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'col_order\', which needs to be numeric, between 0 and 255.');
+                    }
+                    if (!ctype_digit($aLine['standard']) || $aLine['standard'] > 1) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'standard\', which should be 0 or 1.');
+                    }
+                    if (!ctype_digit($aLine['mandatory']) || $aLine['mandatory'] > 1) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'mandatory\', which should be 0 or 1.');
+                    }
+                    // Select_options.
+                    if (!empty($aLine['select_options'])) {
+                        $aOptions = explode('\r\n', $aLine['select_options']);
+                        foreach ($aOptions as $n => $sOption) {
+                            if (!preg_match('/^([^=]+|[A-Z0-9 \/\()?._+-]+ *= *[^=]+)$/i', $sOption)) {
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Select option #' . ($n + 1) . ' &quot;' . htmlspecialchars($sOption) . '&quot; not understood.');
+                            }
+                        }
+                    }
+                    // Check regexp syntax.
+                    if (!empty($aLine['preg_pattern']) && ($aLine['preg_pattern']{0} != '/' || @preg_match($aLine['preg_pattern'], '') === false)) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'Regular expression pattern\' field does not seem to contain valid PHP Perl compatible regexp syntax.');
+                    }
+                    if (!ctype_digit($aLine['public_view']) || $aLine['public_view'] > 1) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'public_view\', which should be 0 or 1.');
+                    }
+                    if (!ctype_digit($aLine['public_add']) || $aLine['public_add'] > 1) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'public_add\', which should be 0 or 1.');
+                    }
+                    if (!ctype_digit($aLine['allow_count_all']) || $aLine['allow_count_all'] > 1) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'allow_count_all\', which should be 0 or 1.');
+                    }
+
+                    if ($zData) {
+                        if ($nDiffScore && $_AUTH['level'] < LEVEL_MANAGER) {
+                            // Data is being updated, but user is not allowed to edit this entry!
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Column "' . htmlspecialchars($aLine['id']) . '".');
+                        }
+                        // Now allowed to change HGVS status.
+                        if ($aLine['hgvs'] != $zData['hgvs']) {
+                            // FIXME: Perhaps the DBA should be allowed to do this?
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Not allowed to change the HGVS standard status of any column.');
+                        }
+                    } else {
+                        // HGVS, never allowed when not editing.
+                        if ($aLine['hgvs']) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Not allowed to create new HGVS standard columns. Change the value for \'hgvs\' to 0.');
+                        }
+                        // FIXME: Default values?
+                        // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
+                        $aLine['todo'] = 'insert'; // OK, insert.
+                    }
+                    break;
+
                 case 'Genes':
                     if ($sFileType != 'Genes' && !in_array($aLine['id'], $aSection['ids'])) {
                         // Do not allow genes that are not in the database, if we're not importing genes!
@@ -814,6 +902,7 @@ if (POST) {
                     } elseif ((!$bDiseaseInDB || ($sMode == 'insert' && $bDiseaseInFile)) && !in_array($aLine['diseaseid'], $aDiseasesAlreadyWarnedFor)) {
                         // We're inserting this disease, so we're not sure about the exact columns that will be active. Issue a warning.
                         $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): The disease belonging to this phenotype entry is yet to be inserted into the database. Perhaps not all this phenotype entry\'s custom columns will be enabled for this disease!<BR>', 'done');
+                        $nWarnings ++;
                         $aDiseasesAlreadyWarnedFor[] = $aLine['diseaseid'];
                     }
                     $bIndInDB = in_array($aLine['individualid'], $aParsed['Individuals']['ids']);
@@ -1115,8 +1204,8 @@ if (POST) {
 
             foreach ($aParsed as $sSection => $aSection) {
                 $aFields = $aSection['allowed_columns'];
-                // We will unset the IDs, and generate new ones. All, but the VOT section, which doesn't have an PK AUTO_INCREMENT.
-                if (in_array('id', $aFields) && $sSection != 'Variants_On_Transcripts') {
+                // We will unset the IDs, and generate new ones. All, but the Column and VOT sections, which don't have an PK AUTO_INCREMENT.
+                if (in_array('id', $aFields) && !in_array($sSection, array('Columns', 'Variants_On_Transcripts'))) {
                     unset($aFields[array_search('id', $aFields)]);
                 }
                 $aDone[$sSection] = 0;
@@ -1127,9 +1216,12 @@ if (POST) {
                         continue;
                     }
 
-                    // Carriage returns, new lines, and tabs were encoded in the import file.
-                    foreach ($aData as $key => $val) {
-                        $aData[$key] = str_replace(array('\r', '\n', '\t'), array("\r", "\n", "\t"), $val);
+                    // Data from LOVD downloads are escaped. Besides tabs, carriage returns and new lines, also quotes (both single and double) and backslashes are escaped.
+                    foreach ($aData as $key => $sVal) {
+                        // First prepare the \t, \r and \n codes, so they won't get lost.
+                        $sVal = str_replace(array('\r', '\n', '\t'), array('\\\r', '\\\n', '\\\t'), $sVal);
+                        $sVal = stripslashes($sVal);
+                        $aData[$key] = str_replace(array('\r', '\n', '\t'), array("\r", "\n", "\t"), $sVal);
                     }
 
                     switch ($sSection) {
@@ -1137,6 +1229,7 @@ if (POST) {
                             $aParsed[$sSection]['data'][$nID] = array('geneid' => $aData['geneid']); // The rest we don't need anymore.
                             break;
 
+                        case 'Columns':
                         case 'Diseases':
                         case 'Individuals':
                         case 'Phenotypes':
@@ -1307,38 +1400,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                         $aLinePat2Var['status'] = 1;
                     }
                 }
-
-                $sVariant = str_replace(array('(', ')', '?'), '', $aLineVar[$sMutationCol]);
-                if (empty($aLineVar['Variant/DBID'])) {
-                    // The Variant/DBID field in the upload file is empty so we need to generate it.
-                    $sIDGenerated = lovd_fetchDBID($_SESSION['currdb'], $sVariant, $sMutationCol); // Finds an existing number or generates a new one BUT EACH TIME THE SAME
-
-                    // If the variant is already in the database (ID_variantid_), then the other part of the code will check the DBID.
-                    if (!array_key_exists($nVariantID, $aVariants)) {
-                        // Not in the database yet.
-                        if (!array_key_exists($sVariant, $aIDAssigned)) {
-                            // This variant (DNA level) has not been found earlier in this imported file.
-                            if (!in_array($sIDGenerated, $aIDAssigned)) {
-                                // The generated DBID (IDgenerated) was not already used, so we can use it.
-                                $aIDAssigned[$sVariant] = $sIDGenerated;
-                            } else {
-                                // The IDgenerated (Variant/DBID number) is already in use by a different variant, so we need a new IDGenerated
-                                // This newly generated number is already in use, so add 1 to the highest value
-                                $sIDGenerated = max($aIDAssigned);
-                                $sIDGenerated ++;
-                                $aIDAssigned[$sVariant] = $sIDGenerated;
-                            }
-                        } else {
-                            // We've seen this variant (DNA level) before in the file. Se we know an ID already!
-                            $sIDGenerated = $aIDAssigned[$sVariant];
-                        }
-                        $aLineVar['Variant/DBID'] = $sIDGenerated;
-                    }
-
-                } elseif (isset($aLineVar['Variant/DBID']) && preg_match('/^' . $_SESSION['currsymb'] . '_[0-9]{5}/', $aLineVar['Variant/DBID'])) {
-                    // User has filled in an own DBID value that is correct. Let's use it.
-                    $aIDAssigned[$sVariant] = substr($aLineVar['Variant/DBID'], 0, strlen($_SESSION['currsymb']) + 6);
-                }
             }
             fclose($fInput);
 
@@ -1417,13 +1478,18 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 $_T->printHeader();
 $_T->printTitle('Import data in LOVD format');
 
-print('      Using this form you can import files in LOVD\'s tab-delimited format. Currently supported imports are individual, phenotype, screening and variant data.<BR><I>Genomic positions in your data are assumed to be relative to Human Genome build ' . $_CONF['refseq_build'] . '</I>.<BR>' . "\n" .
+print('      Using this form you can import files in LOVD\'s tab-delimited format. Currently supported imports are custom column, individual, phenotype, screening and variant data.<BR><I>Genomic positions in your data are assumed to be relative to Human Genome build ' . $_CONF['refseq_build'] . '</I>.<BR>' . "\n" .
       '      <BR>' . "\n\n");
 
 lovd_showInfoTable('If you\'re looking for importing data files containing variant data only, like VCF files and SeattleSeq annotated files, please <A href="submit">start a new submission</A>.', 'information', 760);
 
 // FIXME: Since we can increase the memory limit anyways, maybe we can leave this message out if we nicely handle the memory?
-lovd_showInfoTable('In some cases importing big files can cause LOVD to run out of available memory. In case this server hides these errors, LOVD would return a blank screen. If this happens, split your import file into smaller chunks or ask your system administrator to allow PHP to use more memory (currently allowed: ' . ini_get('memory_limit') . 'B).', 'warning', 760);
+lovd_showInfoTable('In some cases importing big files or importing files into big databases can cause LOVD to run out of available memory. In case this server hides these errors, LOVD would return a blank screen. If this happens, split your import file into smaller chunks or ask your system administrator to allow PHP to use more memory (currently allowed: ' . ini_get('memory_limit') . 'B).', 'warning', 760);
+
+// Warnings were shown in the progress bar, but I'd like to have them here too. They are still in the source, so we can use JS.
+if ($nWarnings) {
+    lovd_errorAdd('', '<A href="#" onclick="$(\'#warnings\').toggle(); if ($(\'#warnings_action\').html() == \'Show\') { $(\'#warnings_action\').html(\'Hide\'); } else { $(\'#warnings_action\').html(\'Show\') } return false;"><SPAN id="warnings_action">Show</SPAN> ' . $nWarnings . ' warning' . ($nWarnings == 1? '' : 's') . '</A><DIV id="warnings"></DIV><SCRIPT type="text/javascript">$("#warnings").hide();$("#warnings").html($("#lovd_parser_progress_message_done").html());</SCRIPT>');
+}
 
 lovd_errorPrint();
 

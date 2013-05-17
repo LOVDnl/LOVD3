@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2013-04-25
+ * Modified    : 2013-05-16
  * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -220,10 +220,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 $aData['VariantOnGenome/DBID'] = '';
             }
             if (empty($aData['VariantOnGenome/DBID'])) {
-                if (lovd_getProjectFile() !== '/import.php') {
-                    // Why predict an DBID, what we're not going to use anyway?
-                    $aData['VariantOnGenome/DBID'] = '-'; // I just need the mandatory field checker off my back!
-                } else {
+                if (lovd_getProjectFile() != '/import.php') {
+                    // Only predict an DBID, if we're actually going to use it (which doesn't happen when we're importing).
                     $aData['VariantOnGenome/DBID'] = $_POST['VariantOnGenome/DBID'] = lovd_fetchDBID($aData);
                 }
             } elseif (!lovd_checkDBID($aData)) {
@@ -330,7 +328,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
 
-        if (ACTION == 'create' || lovd_getProjectFile() == '/import.php' || (ACTION == 'publish' && GET)) {
+        if (ACTION == 'create' || (ACTION == 'publish' && GET)) {
             // When creating, or when publishing without any changes, unset the authorization.
             unset($this->aFormData['authorization']);
         }

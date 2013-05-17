@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2013-03-25
- * For LOVD    : 3.0-04
+ * Modified    : 2013-04-26
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -119,6 +119,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'panelid_' => 'Panel ID',
                         'panel_size' => 'Panel size',
                         'diseases_' => 'Diseases',
+                        'parents_' => 'Parent(s)',
                         'owned_by_' => 'Owner name',
                         'status' => array('Individual data status', LEVEL_COLLABORATOR),
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -290,7 +291,7 @@ class LOVD_Individual extends LOVD_Custom {
       'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
 
-        if (ACTION == 'create' || lovd_getProjectFile() == '/import.php' || (ACTION == 'publish' && GET)) {
+        if (ACTION == 'create' || (ACTION == 'publish' && GET)) {
             unset($this->aFormData['authorization']);
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
@@ -342,6 +343,17 @@ class LOVD_Individual extends LOVD_Custom {
             foreach($zData['diseases'] as $aDisease) {
                 list($nID, $sSymbol, $sName) = $aDisease;
                 $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '" title="' . $sName . '">' . $sSymbol . '</A>';
+            }
+            // Parents...
+            if (empty($zData['fatherid']) && empty($zData['motherid'])) {
+                unset($this->aColumnsViewEntry['parents_']);
+            } else {
+                if ($zData['fatherid']) {
+                    $zData['parents_'] = '<A href="individuals/' . $zData['fatherid'] . '">Father</A>';
+                }
+                if ($zData['motherid']) {
+                    $zData['parents_'] .= (empty($zData['parents_'])? '' : ', ') . '<A href="individuals/' . $zData['motherid'] . '">Mother</A>';
+                }
             }
         }
 

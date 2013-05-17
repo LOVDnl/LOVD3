@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-03-08
- * For LOVD    : 3.0-04
+ * Modified    : 2013-04-26
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -143,8 +143,10 @@ class LOVD_Object {
             unset($aForm[0]);
         }
 
-        // Always mandatory.
-        $this->aCheckMandatory[] = 'password';
+        if (lovd_getProjectFile() != '/import.php') {
+            // Always mandatory... unless importing.
+            $this->aCheckMandatory[] = 'password';
+        }
 
         // Validate form by looking at the form itself, and check what's needed.
         foreach ($aForm as $aField) {
@@ -1017,6 +1019,7 @@ class LOVD_Object {
 
             // For ALL viewlists, we store the number of hits that we get, including the current filters.
             // For large tables, using SQL_CALC_FOUND_ROWS takes a lot of time, also still quite a lot for smaller result sets, since the entire table needs to be read out.
+            //   Unfortunately, we can't automatically get us an SQL_CALC_FOUND_ROWS which leaves out unnecessary joins. Is there a way to do this?
             // ORDER BY is absolutely killing on large result sets, but when used you might as well use SQL_CALC_FOUND_ROWS, since it needs to read the entire table anyways.
             // So, long time to retrieve count (>1s) => no SQL_CALC_FOUND_ROWS and no sort.
             // Count OK (<=1s), but big result set (25K) => no sort.
@@ -1143,6 +1146,7 @@ class LOVD_Object {
 
             // Now, get the total number of hits as if no LIMIT was used (when we have used the proper SELECT syntax). Note that $nTotal gets overwritten here.
             if ($bSQLCALCFOUNDROWS) {
+                // FIXME: 't' needs to be recalculated as well!
                 $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
                 $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
                 $aSessionViewList['counts'][$sFilterMD5]['d'] = time();

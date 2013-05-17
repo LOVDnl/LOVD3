@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2013-04-06
- * For LOVD    : 3.0-04
+ * Modified    : 2013-05-17
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -150,8 +150,8 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
 */
             'Download & Import' =>
                  array(
-                        array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD import format (genes, transcripts, diseases, individuals, phenotypes, screenings &amp; variants).'),
-                        array('import', 'lovd_import.png', 'Import data', 'Import data using the LOVD import format (diseases, individuals, phenotypes, screenings &amp; variants).'),
+                        array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD import format (custom columns, genes, transcripts, diseases, individuals, phenotypes, screenings &amp; variants).'),
+                        array('import', 'lovd_import.png', 'Import data', 'Import data using the LOVD import format (custom columns, diseases, individuals, phenotypes, screenings &amp; variants).'),
                       ),
             'System logs' =>
                  array(

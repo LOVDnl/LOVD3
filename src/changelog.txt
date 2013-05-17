@@ -34,6 +34,17 @@
    Closes #20: "Going back in browser does not change the view back to how it
    was on Windows".
    (thanks to Sirisha Hesketh, Oxford University Hospitals, UK, for reporting)
+ * Custom column data can now also be imported using the LOVD3 import format.
+ * When creating, editing or importing a custom column, the form type field is
+   now properly checked.
+ * The detailed view of an individual entry now shows links to the parents when
+   they are in the database as well.
+ * When during import non-fatal warnings occur with simulation mode on, the
+   warnings can be shown on the import form.
+ * Fixed bug; When re-importing previously downloaded data, quotes and
+   backslashes were not handled properly.
+ * When downloading the full LOVD data set, the custom column data is now also
+   included.
 
 
 /**************************

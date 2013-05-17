@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2013-03-07
- * For LOVD    : 3.0-04
+ * Modified    : 2013-05-17
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -143,6 +143,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     if ($_PE[1] == 'all') {
         $aObjects =
             array(
+                'Columns' => $aDataTypeSettings,
                 'Genes' => $aDataTypeSettings,
                 'Transcripts' => $aDataTypeSettings,
                 'Diseases' => $aDataTypeSettings,
@@ -177,6 +178,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     'Genes',
                     'Scr2Var',
                 );
+            unset($aObjects['Columns']); // Custom columns don't matter when it's about somebody's data only.
             $aObjects['Individuals']['filters']['owner'] = $ID;
             $aObjects['Individuals']['filter_other']['Ind2Dis']['individualid'] = 'id';
             $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid';
@@ -234,6 +236,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     'Phenotypes',  // Will not get applied filters directly, but needs to be defined here because the Screenings are going to filter these.
                 );
 
+            unset($aObjects['Columns']); // Custom columns don't matter (yet) when it's about one gene's data only. Although shared_cols would be useful now...
             $aObjects['Genes']['filters']['id'] = $ID;
             // Gen2Dis' need to be prefetched because we need their Disease IDs to filter the Diseases (more possible values added to those later, from Ind2Dis).
             $aObjects['Gen2Dis']['filters']['geneid'] = $ID;

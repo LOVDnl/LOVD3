@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2013-04-18
- * For LOVD    : 3.0-04
+ * Modified    : 2013-05-17
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -178,6 +178,7 @@ class LOVD_Template {
                                 'hr',
                                 '/columns?create' => array('menu_columns_create.png', 'Create new custom data column', LEVEL_MANAGER),
                                 '/columns' => array('menu_columns.png', 'Browse all custom data columns', LEVEL_MANAGER),
+                                '/download/columns' => array('menu_save.png', 'Download all LOVD custom columns', LEVEL_MANAGER),
                                 'hr',
                                 '/links?create' => array('menu_links.png', 'Create a new custom link', LEVEL_MANAGER),
                                 '/links' => array('menu_links.png', 'Browse all available custom links', LEVEL_MANAGER),

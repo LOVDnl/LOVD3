@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2013-03-25
- * For LOVD    : 3.0-04
+ * Modified    : 2013-04-26
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -219,7 +219,7 @@ class LOVD_Phenotype extends LOVD_Custom {
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
 
-        if (ACTION == 'create' || lovd_getProjectFile() == '/import.php' || (ACTION == 'publish' && GET)) {
+        if (ACTION == 'create' || (ACTION == 'publish' && GET)) {
             // When creating, or when publishing without any changes, unset the authorization.
             unset($this->aFormData['authorization']);
         }

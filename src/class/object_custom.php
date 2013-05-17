@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2013-04-25
+ * Modified    : 2013-05-16
  * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -369,6 +369,11 @@ class LOVD_Custom extends LOVD_Object {
             if (!empty($aData['statusid'])) {
                 lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
             }
+        }
+
+        if (lovd_getProjectFile() == '/import.php' && $this->sObject == 'Genome_Variant' && ($nIndex = array_search('VariantOnGenome/DBID', $this->aCheckMandatory)) !== false) {
+            // Importing, and in VOG. Make the DBID non-mandatory, because it will be predicted by the import script when it's empty.
+            unset($this->aCheckMandatory[$nIndex]);
         }
 
         parent::checkFields($aData);

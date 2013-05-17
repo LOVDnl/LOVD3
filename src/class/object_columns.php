@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2013-03-26
- * For LOVD    : 3.0-04
+ * Modified    : 2013-04-26
+ * For LOVD    : 3.0-05
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -187,6 +187,11 @@ class LOVD_Column extends LOVD_Object {
 
         parent::checkFields($aData);
 
+        // Category; not chosen on this form, but we want to make sure it's correct anyways.
+        if (!empty($aData['category']) && !in_array($aData['category'], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
+            lovd_errorAdd('category', 'The category is not correct. Please choose one of the following: Individual, Phenotype, Screening, VariantOnGenome or VariantOnTranscript.');
+        }
+
         // ColID format.
         if (!empty($aData['colid']) && !preg_match('/^[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)*$/', $aData['colid'])) {
             lovd_errorAdd('colid', 'The column ID is not of the correct format. It can contain only letters, numbers and underscores. Subcategories must be divided by a slash (/).');
@@ -214,7 +219,10 @@ class LOVD_Column extends LOVD_Object {
             lovd_errorAdd('mysql_type', 'The MySQL data type is not recognized. Please use the data type wizard to generate a proper MySQL data type.');
         }
 
-        // FIXME; are we just assuming that form_format is OK?
+        // Form type.
+        if ($aData['form_type'] && !preg_match('/^[^|]+\|[^|]*\|(checkbox|text\|[0-9]+|textarea\|[0-9]+\|[0-9]+|select\|[0-9]+\|[^|]*\|(false|true)\|(false|true))$/i', $aData['form_type'])) {
+            lovd_errorAdd('form_type', 'The form type is not recognized. Please use the data type wizard to generate a proper form type.');
+        }
 
         // XSS attack prevention. Deny input of HTML.
         // Ignore some fields that are allowed to contain HTML, or that might cause false positives.
