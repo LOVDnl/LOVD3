@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 05 (r???)
- * 2013-05-??
+ * 3.0 Build 05 (r302)
+ * 2013-05-30
  *********/
  * Added note on VCF import page about pre-filtering the data.
  * Changed wording somewhat on the user registration page.
@@ -47,6 +47,12 @@
    included.
  * Now allowing gene symbols longer than 20 characters, since
    DTX2P1-UPK3BP1-PMS2P11 needs the space.
+ * The list of diseases now shows the number of individuals in the database
+   linked to these diseases.
+ * The list of individuals on the disease detailed view is now split in pages
+   and can be navigated.
+ * Fixed bug; On large installations, the check_update.php script took quite
+   some time and locked the session of the current user.
 
 
 /**************************

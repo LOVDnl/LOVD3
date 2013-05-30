@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2012-12-17
- * For LOVD    : 3.0-01
+ * Modified    : 2013-05-30
+ * For LOVD    : 3.0-05
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -73,9 +73,10 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'd.*, ' .
-                                          'd.id AS diseaseid, ' .
-                                          'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
+                                          'd.id AS diseaseid, COUNT(DISTINCT i2d.individualid) AS individuals, ' .
+                                          'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
+                                          'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
         $this->aSQLViewList['WHERE']    = 'd.id > 0';
         $this->aSQLViewList['GROUP_BY'] = 'd.id';
@@ -108,6 +109,9 @@ class LOVD_Disease extends LOVD_Object {
                         'id_omim' => array(
                                     'view' => array('OMIM ID', 75),
                                     'db'   => array('d.id_omim', 'ASC', true)),
+                        'individuals' => array(
+                                    'view' => array('Individuals', 80),
+                                    'db'   => array('individuals', 'DESC', true)),
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
                                     'db'   => array('genes_', false, 'TEXT')),

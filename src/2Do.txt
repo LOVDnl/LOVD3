@@ -5,9 +5,11 @@ Changed something? Change the manual, too! Don't forget setting the LOVD version
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
 Run package script, follow instructions.
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
+/whole_genome/ heeft een aangepaste users.php en class/template.php.
 
 Prioritize:
 ===========
+- Waarom werkt dit niet? http://databases.lovd.nl/whole_genome/api/rest.php/variants/LDLR?search_position=c.81
 - 5.3.0 required. Check 5.2.0 users, adapt __function_list.php, adapt inc-init.php, adapt software faq and normal faq, publish somewhere else, use bcrypt!
 - BUG: Curator removes column from his genes, he has no values. Selects both genes, LOVD warns that deletion is permanent (NOT CORRECT!) and 63 values will be lost (NOT CORRECT!) as if the alter table is run! :S
 - Import: Als db admin moet ik toch wel iets kunnen importeren en zeggen dat LOVD de owner is? Kan nu niet, want LOVD staat niet in de owner selection list.
