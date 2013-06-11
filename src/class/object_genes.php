@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2012-12-10
- * For LOVD    : 3.0-beta-12
+ * Modified    : 2013-06-06
+ * For LOVD    : 3.0-06
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -520,7 +520,14 @@ class LOVD_Gene extends LOVD_Object {
             foreach ($aCurators as $nUserID => $aUser) {
                 $i ++;
                 list($sName, $nOrder) = $aUser;
-                $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ' and ' : ', ')) . ($nOrder? '<B><A href="users/' . $nUserID . '">' . $sName . '</A></B>' : '<I><A href="users/' . $nUserID . '">' . $sName . '</A> (hidden)</I>');
+                // 2013-06-05; 3.0-06; There should be no link for users not logged in; they can't access these anyways.
+                if ($_AUTH) {
+                    // Use links, hidden curators possibly in the list (depends on exact user level).
+                    $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ' and ' : ', ')) . ($nOrder? '<B><A href="users/' . $nUserID . '">' . $sName . '</A></B>' : '<I><A href="users/' . $nUserID . '">' . $sName . '</A> (hidden)</I>');
+                } else {
+                    // Don't use links, and we never see hidden users anyways.
+                    $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ' and ' : ', ')) . '<B>' . $sName . '</B>';
+                }
             }
             $this->aColumnsViewEntry['curators_'] .= ' (' . $nCurators . ')';
 

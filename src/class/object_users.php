@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-03-06
- * For LOVD    : 3.0-04
+ * Modified    : 2013-06-06
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -103,28 +103,28 @@ class LOVD_User extends LOVD_Object {
                         'name' => 'Name',
                         'institute' => 'Institute',
                         'department' => 'Department',
-                        'telephone' => 'Telephone',
-                        'address' => 'Address',
+                        'telephone' => array('Telephone', LEVEL_CURATOR),
+                        'address' => array('Address', LEVEL_CURATOR),
                         'city' => 'City',
                         'country_' => 'Country',
-                        'email' => 'Email address',
+                        'email' => array('Email address', LEVEL_CURATOR),
                         'reference' => 'Reference',
-                        'username' => array('Username', LEVEL_CURATOR),
+                        'username' => array('Username', LEVEL_MANAGER),
                         'password_force_change_' => array('Force change password', LEVEL_MANAGER),
                         'phpsessid' => array('Session ID', LEVEL_MANAGER),
-                        'saved_work_' => 'Saved work',
+                        'saved_work_' => array('Saved work', LEVEL_MANAGER),
                         'curates_' => 'Curator for',
-                        'collaborates_' => 'Collaborator for',
+                        'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
 //                        'submits' => 'Submits',
-                        'level_' => 'User level',
-                        'allowed_ip_' => 'Allowed IP address list',
-                        'status_' => 'Status',
-                        'locked_' => 'Locked',
+                        'level_' => array('User level', LEVEL_CURATOR),
+                        'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
+                        'status_' => array('Status', LEVEL_MANAGER),
+                        'locked_' => array('Locked', LEVEL_MANAGER),
                         'last_login' => array('Last login', LEVEL_MANAGER),
                         'created_by_' => array('Created by', LEVEL_CURATOR),
                         'created_date' => array('Date created', LEVEL_CURATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_CURATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_CURATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_MANAGER),
+                        'edited_date_' => array('Date last edited', LEVEL_MANAGER),
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -445,7 +445,10 @@ class LOVD_User extends LOVD_Object {
             }
             // Provide links to gene symbols this user is curator and collaborator for. Easy access to one's own genes.
             $this->aColumnsViewEntry['curates_'] .= ' ' . count($zData['curates']) . ' gene' . (count($zData['curates']) == 1? '' : 's');
-            $this->aColumnsViewEntry['collaborates_'] .= ' ' . count($zData['collaborates']) . ' gene' . (count($zData['collaborates']) == 1? '' : 's');
+            if (isset($this->aColumnsViewEntry['collaborates_'])) {
+                // This is only visible for Curators, so we don't want to mess around with aColumnsViewEntry when this field is no longer there.
+                $this->aColumnsViewEntry['collaborates_'][0] .= ' ' . count($zData['collaborates']) . ' gene' . (count($zData['collaborates']) == 1? '' : 's');
+            }
             $zData['curates_'] = '';
             $zData['curates_short_'] = '';
             $i = 0;

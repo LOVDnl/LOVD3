@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2013-04-26
- * For LOVD    : 3.0-05
+ * Modified    : 2013-06-11
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -69,13 +69,15 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
                                            'i.statusid AS individual_statusid, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
-                                           'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT s2v.variantid)) AS variants_found_, ' .
+                                           'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
                                            'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
+                                           ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND vog.statusid >= ' . STATUS_MARKED . ') ') .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (s.created_by = uc.id) ' .
@@ -85,15 +87,16 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for viewing the list of screenings
         $this->aSQLViewList['SELECT']   = 's.*, ' .
                                           's.id AS screeningid, ' .
-                                          'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT s2v.variantid)) AS variants_found_, ' .
+                                          'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
                                           'GROUP_CONCAT(DISTINCT s2g.geneid SEPARATOR ", ") AS genes, ' .
-                                        ($_AUTH['level'] >= LEVEL_COLLABORATOR?
-                                          'CASE i.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name, '
-                                        : '') .
+                                          ($_AUTH['level'] < LEVEL_COLLABORATOR? '' :
+                                              'CASE i.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name, ') .
                                           'uo.name AS owned_by_, ' .
                                           'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
+                                          ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND vog.statusid >= ' . STATUS_MARKED . ') ') .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id)';

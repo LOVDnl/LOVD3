@@ -30,7 +30,6 @@
  *************/
 
 // STILL TODO:
-// Transcripts misschien niet altijd aan genen vast? microRNA's?
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
 // Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-04-23
- * For LOVD    : 3.0-05
+ * Modified    : 2013-06-06
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -54,6 +54,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
+    // FIXME; we need to think about this. To create a public submitters list, will we have a modified viewList()?
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
@@ -78,19 +79,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
-    // FIXME; we need to think about this. To create a public submitters list, will we have a modified viewList() without viewEntry() or what?
-    // Allow everybody to see certain details, but only managers to view all? Hide username, certain info from others?
     // Require valid user.
+    // If not viewing himself, the user may see very little information (low level) or all data (high level).
     lovd_requireAUTH();
 
     lovd_isAuthorized('gene', $_AUTH['curates']); // Enables LEVEL_COLLABORATOR and LEVEL_CURATOR for object_users.php.
 
     if ($nID == '00000') {
         $nID = -1;
-    } elseif ($nID != $_AUTH['id']) {
-        // Require manager clearance, if user is not viewing himself.
-        lovd_requireAUTH(LEVEL_MANAGER);
-    } elseif ($_AUTH['level'] == LEVEL_SUBMITTER && isset($_GET['new_submitter'])) {
+    } elseif ($nID == $_AUTH['id'] && $_AUTH['level'] == LEVEL_SUBMITTER && isset($_GET['new_submitter'])) {
         // Newly registered? Explain where to submit.
         lovd_showDialog('dialog_new_submitter', 'Now that you\'ve registered', 'Now that you\'ve registered, you can submit new variant data to this database.<BR>You can do so, by clicking the Submit menu tab just above this message.',
             'information', array('position' => '{my:"left top",at:"left bottom",of:"#tab_submit"}', 'buttons' => '{"Go there now":function(){window.location.href="' . lovd_getInstallURL() . 'submit";},"Close":function(){$(this).dialog("close");}}'));

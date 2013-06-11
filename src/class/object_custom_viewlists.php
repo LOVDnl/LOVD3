@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2013-03-25
- * For LOVD    : 3.0-04
+ * Modified    : 2013-06-11
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -158,24 +158,36 @@ class LOVD_CustomViewList extends LOVD_Object {
 
                 case 'VariantOnTranscript':
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.*, et.name as vot_effect';
+                    $nKeyVOG = array_search('VariantOnGenome', $aObjects);
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['SELECT'] .= ', vot.id AS row_id'; // To ensure other table's id columns don't interfere.
                         $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
                         $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vot.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
+                    } elseif ($nKeyVOG !== false && $nKeyVOG < $nKey) {
+                        // Previously, VOG was used. We will join VOT with VOG, using GROUP_CONCAT.
+                        // SELECT will be different: we will GROUP_CONCAT the whole lot, per column.
+                        // Sort GROUP_CONCAT() based on transcript name. We'll have to join Transcripts for that.
+                        //   That will break if somebody wants to join transcripts themselves, but why would somebody want that?
+                        $sGCOrderBy = 't.id_ncbi';
+                        foreach ($this->aColumns as $sCol => $aCol) {
+                            if (substr($sCol, 0, 19) == 'VariantOnTranscript') {
+                                $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT ' . ($sCol != 'VariantOnTranscript/DNA'? '`' . $sCol . '`' : 'CONCAT(t.id_ncbi, ":", `' . $sCol . '`)') . ' ORDER BY ' . $sGCOrderBy . ' SEPARATOR ", ") AS `' . $sCol . '`';
+                            }
+                        }
+                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (';
+                        // Earlier, VOG was used, join to that.
+                        $aSQL['FROM'] .= 'vog.id = vot.id)';
+                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)';
                     } else {
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (';
                         $nKeyT   = array_search('Transcript', $aObjects);
-                        $nKeyVOG = array_search('VariantOnGenome', $aObjects);
                         if ($nKeyT !== false && $nKeyT < $nKey) {
                             // Earlier, T was used, join to that.
                             $aSQL['FROM'] .= 't.id = vot.transcriptid)';
                             // Nice, but if we're showing transcripts and variants on transcripts in one viewList, we'd only want to see the transcripts that HAVE variants.
                             $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vot.id IS NOT NULL';
-                        } elseif ($nKeyVOG !== false && $nKeyVOG < $nKey) {
-                            // Earlier, VOG was used, join to that.
-                            $aSQL['FROM'] .= 'vog.id = vot.id)';
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
                     }
@@ -209,6 +221,22 @@ class LOVD_CustomViewList extends LOVD_Object {
                         } elseif ($nKeyI !== false && $nKeyI < $nKey) {
                             // Earlier, I was used, join to that.
                             $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid)';
+                        }
+                        // We have no fallback, so it won't join if we messed up somewhere!
+                    }
+                    break;
+
+                case 'Scr2Var':
+                    if ($aSQL['FROM']) {
+                        // Not allowed to be the first data table in query, because entries are usually grouped by the first table.
+                        $nKeyVOG = array_search('VariantOnGenome', $aObjects);
+                        $nKeyVOT = array_search('VariantOnTranscript', $aObjects);
+                        if ($nKeyVOG !== false && $nKeyVOG < $nKey) {
+                            // Earlier, VOG was used, join to that.
+                            $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)';
+                        } elseif ($nKeyVOT !== false && $nKeyVOT < $nKey) {
+                            // Earlier, VOT was used, join to that.
+                            $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid)';
                         }
                         // We have no fallback, so it won't join if we messed up somewhere!
                     }
@@ -328,7 +356,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                          array(
                                 'transcriptid' => array(
-                                        'view' => array('TranscriptID', 50),
+                                        'view' => false,
                                         'db'   => array('vot.transcriptid', 'ASC', true)),
                                 'vot_effect' => array(
                                         'view' => array('Effect', 70),
@@ -356,6 +384,17 @@ class LOVD_CustomViewList extends LOVD_Object {
                                   ));
                         $this->sSortDefault = 'id';
                     }
+                    break;
+
+                case 'Scr2Var':
+                    $sPrefix = 's2v.';
+                    // No fixed columns, is only used to filter variants based on screening ID.
+                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
+                         array(
+                                'screeningid' => array(
+                                        'view' => false,
+                                        'db'   => array('s2v.screeningid', false, true)),
+                              ));
                     break;
 
                 case 'Individual':

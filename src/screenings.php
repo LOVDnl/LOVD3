@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2013-06-11
+ * For LOVD    : 3.0-06
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -125,13 +125,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     }
 
     if ($zData['variants_found'] || !empty($zData['variants'])) {
-        $_GET['search_screeningids'] = $nID;
+        $_GET['search_screeningid'] = $nID;
         print('<BR><BR>' . "\n\n");
         $_T->printTitle('Variants found', 'H4');
-        require ROOT_PATH . 'class/object_genome_variants.php';
-        $_DATA = new LOVD_GenomeVariant();
-        $_DATA->setSortDefault('id');
-        $_DATA->viewList('VOG_for_S_VE', array('id', 'screeningids'));
+        require ROOT_PATH . 'class/object_custom_viewlists.php';
+        // VOG needs to be first, so it groups by the VOG ID.
+        $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
+        $_DATA->viewList('CustomVL_VOT_for_I_VE', array('transcriptid'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
     }
 
     $_T->printFooter();

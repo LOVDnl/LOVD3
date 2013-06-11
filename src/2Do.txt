@@ -3,14 +3,22 @@ Release LOVD?
 Did you run all unit tests?
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
+Commit, svn update, svn log, create svn tag.
+ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /whole_genome/ heeft een aangepaste users.php en class/template.php.
 
 Prioritize:
 ===========
+- Gene homepage: disease zonder abbrevition: volle naam staat er twee keer.
 - Waarom werkt dit niet? http://databases.lovd.nl/whole_genome/api/rest.php/variants/LDLR?search_position=c.81
 - 5.3.0 required. Check 5.2.0 users, adapt __function_list.php, adapt inc-init.php, adapt software faq and normal faq, publish somewhere else, use bcrypt!
+- !!! Nieuw overzicht: individual met alle phenotype kolommen
+- Allele uitleg in legend: unknown is heterozygous!
+- Optimalisatie in VL: als een view traag WORDT (dus niet was!), hoe vangen we dat dan op? En andersom? Maak settings instelbaar!
+- LOVD will move to use NGs and LRGs as much as possible for transcript information and the name checker, to reduce the use of UD slices.
+- Pedigree tree: finish and implement. Mark currently selected individual with asterisk? Perhaps implement more icons?
 - BUG: Curator removes column from his genes, he has no values. Selects both genes, LOVD warns that deletion is permanent (NOT CORRECT!) and 63 values will be lost (NOT CORRECT!) as if the alter table is run! :S
 - Import: Als db admin moet ik toch wel iets kunnen importeren en zeggen dat LOVD de owner is? Kan nu niet, want LOVD staat niet in de owner selection list.
 - BUG: Curate individual: error: geographic origin: '' is not a correct value. Do nothing, submit form: error: no password filled in (but it was not asked).
@@ -19,10 +27,6 @@ Prioritize:
 - LOVD3 site: how to go back to LOVD2 easily?
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
-- Ammar vraagt weer naar de VOT op de Screening + Individual view.
-  + Sirisha Hesketh vraagt hier ook naar (april 2013)
-  + Implementeer met HAVING, want zo zijn we continue bezig nu (groeperen Screenings en SCR2GENE in full view en screenings view)
-  + Voor eind mei!!!!!!!!!!!!!!!
 - Unique variants (Ammar Husami, Anne Polvi). Met counts, waar op gezocht en gesorteerd kan worden.
   + Zoeken met WHERE of HAVING? Eerst WHERE (met waarschuwing), later HAVING?
 - Implement an HGNC mirror.
@@ -150,6 +154,7 @@ Prioritize:
   + http://databases.lovd.nl/shared/variants/GLDC
 - Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
+- Diseases hebben alias field nodig (lange tekst), maar nog geen speciale handelingen nodig op het moment.
 - MariaDB noemen als alternatief, en uitleggen dat ze dan vooralsnog 'mysql' als driver moeten kiezen. Config.ini, handleiding, en website. Maar hoe zit dat dan met InnoDB?
 - VOG kolommen toch per gen kunnen verbergen? Johan wil écht die dbSNP kolom niet zien.
   + Op zich is het verbergen van VOG kolommen gelijk aan de huidige VOT implementatie.

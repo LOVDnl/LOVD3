@@ -5,6 +5,23 @@
  *************/
 
 /**************************
+ * 3.0 Build 06 (r3??)
+ * 2013-06-??
+ *********/
+ * Fixed bug; The individual user pages were not open for submitters,
+   collaborators and curators, even though links to these pages were given.
+   These pages are now open to authorized users, and for users not logged in,
+   the links have been removed.
+   (thanks to Raymond Dalgleish, University of Leicester, UK, for reporting)
+ * Fixed bug; The individuals and screenings listings, as well as the screenings
+   detailed view, showed the total number of variants to the public, instead of
+   the number of public variants.
+ * The variant listings below individiual and screenings detailed views now also
+   show the variant's effect on transcript level.
+   Closes #18: "View variants affecting transcripts in screening view".
+
+
+/**************************
  * 3.0 Build 05 (r302)
  * 2013-05-30
  *********/

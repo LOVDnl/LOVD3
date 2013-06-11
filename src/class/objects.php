@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-04-26
- * For LOVD    : 3.0-05
+ * Modified    : 2013-06-06
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -502,7 +502,7 @@ class LOVD_Object {
             foreach($aUserColumns as $sUserColumn) {
                 if (empty($zData[$sUserColumn])) {
                     $zData[$sUserColumn . '_'] = 'N/A';
-                } elseif ($zData[$sUserColumn] != '00000') {
+                } elseif ($_AUTH && $zData[$sUserColumn] != '00000') {
                     $zData[$sUserColumn . '_'] = '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>';
                 }
             }
