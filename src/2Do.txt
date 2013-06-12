@@ -11,12 +11,19 @@ Run package script, follow instructions.
 
 Prioritize:
 ===========
-- Gene homepage: disease zonder abbrevition: volle naam staat er twee keer.
-- Waarom werkt dit niet? http://databases.lovd.nl/whole_genome/api/rest.php/variants/LDLR?search_position=c.81
-- 5.3.0 required. Check 5.2.0 users, adapt __function_list.php, adapt inc-init.php, adapt software faq and normal faq, publish somewhere else, use bcrypt!
 - !!! Nieuw overzicht: individual met alle phenotype kolommen
-- Allele uitleg in legend: unknown is heterozygous!
+- in_gene combineren met scr2var, screenings, individuals en ind2dis net zoals de full data view?
+- 2013-03-06 Had random logouts while mapping and preparing my release for 3.0-03, but they disappeared and I could not find a connection, seemed total random. $_SESSION was intact, but $_SESSION['auth'] was gone.
+  + 2013-05-03 Exactly same here on whole_genome installation, helft ingeladen, tijdens mappen verdwijnt auth randomly; maar een refresh brengt 'm soms terug... !@#!@$!!#
+    Mapper zei dan ook, dat hij klaar was... terwijl in een andere tab hij nog bezig was. Mapper resultaten slaan dan nergens op:
+    "1	99	Mapped 0% of 0 variants"
+    "0	99	Successfully mapped 1985411 variants"
+    "0	99	There are no variants to map in the database"
+    Correct zou zijn:
+    "1	00	Mapped 0% of 1982330 variants"
 - Optimalisatie in VL: als een view traag WORDT (dus niet was!), hoe vangen we dat dan op? En andersom? Maak settings instelbaar!
+- LOVD site: index_list: genen uniek maken?
+- Merge code from Peikuan?
 - LOVD will move to use NGs and LRGs as much as possible for transcript information and the name checker, to reduce the use of UD slices.
 - Pedigree tree: finish and implement. Mark currently selected individual with asterisk? Perhaps implement more icons?
 - BUG: Curator removes column from his genes, he has no values. Selects both genes, LOVD warns that deletion is permanent (NOT CORRECT!) and 63 values will be lost (NOT CORRECT!) as if the alter table is run! :S
@@ -154,6 +161,7 @@ Prioritize:
   + http://databases.lovd.nl/shared/variants/GLDC
 - Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
+- 5.3.0 required, use bcrypt!
 - Diseases hebben alias field nodig (lange tekst), maar nog geen speciale handelingen nodig op het moment.
 - MariaDB noemen als alternatief, en uitleggen dat ze dan vooralsnog 'mysql' als driver moeten kiezen. Config.ini, handleiding, en website. Maar hoe zit dat dan met InnoDB?
 - VOG kolommen toch per gen kunnen verbergen? Johan wil écht die dbSNP kolom niet zien.

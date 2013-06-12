@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2013-06-06
+ * Modified    : 2013-06-12
  * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -96,7 +96,8 @@ class LOVD_Gene extends LOVD_Object {
         // SQL code for viewing the list of genes
         $this->aSQLViewList['SELECT']   = 'g.*, ' .
                                           'g.id AS geneid, ' .
-                                          'GROUP_CONCAT(DISTINCT d.symbol ORDER BY g2d.diseaseid SEPARATOR ", ") AS diseases_, ' .
+                                          // FIXME; Can we get this order correct, such that diseases without abbreviation nicely mix with those with? Right now, the diseases without symbols are in the back.
+                                          'GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, ' .
                                           'COUNT(DISTINCT t.id) AS transcripts, ' .
                                           'COUNT(DISTINCT vog.id) AS variants, ' .
                                           'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants';
@@ -480,7 +481,7 @@ class LOVD_Gene extends LOVD_Object {
                 $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
                 if ($nOMIMID) {
                     // Add link to OMIM for each disease that has an OMIM ID.
-                    $zData['disease_omim_'] .= (!$zData['disease_omim_'] ? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sSymbol . ' (' . $sName . ')</A>';
+                    $zData['disease_omim_'] .= (!$zData['disease_omim_'] ? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sSymbol . ($sSymbol == $sName? '' : ' (' . $sName . ')') . '</A>';
                 }
             }
 

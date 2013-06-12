@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-05-30
- * For LOVD    : 3.0-05
+ * Modified    : 2013-06-12
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -111,7 +111,7 @@ define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
-                'PHP'   => '5.2.0',
+                'PHP'   => '5.3.0',
                 'PHP_functions' =>
                      array(
                             'mb_detect_encoding',

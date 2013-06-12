@@ -39,7 +39,7 @@ function lovd_convertDNAPositionToDB ($nPositionMRNAStart, $nPositionMRNAEnd, $n
     // 500+d50  to  500, +50
     // *50+d50  to  500, +50
     // (Examples are valid when $nPositionMRNAStart = -100, $nPositionMRNAEnd = 500, $nPositionCDSEnd = 450)
-    // It's antagonist is lovd_convertDNAPositionToHR().
+    // Its antagonist is lovd_convertDNAPositionToHR().
     $aReturn = array(0, 0);
 
     if (preg_match('/^([*-]?[0-9]+)([+-][du]?([0-9]+))?$/', $sPosition, $aRegs)) {
