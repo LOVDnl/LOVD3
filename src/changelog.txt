@@ -8,7 +8,8 @@
  * 3.0 Build 06 (r3??)
  * 2013-06-??
  *********/
- * LOVD3 now requires PHP/5.3.0 although some code was already incompatible with 5.2.0.
+ * LOVD3 now requires PHP/5.3.0 although some code was already incompatible with
+   5.2.0.
  * Fixed bug; The individual user pages were not open for submitters,
    collaborators and curators, even though links to these pages were given.
    These pages are now open to authorized users, and for users not logged in,
@@ -20,9 +21,13 @@
  * The variant listings below individiual and screenings detailed views now also
    show the variant's effect on transcript level.
    Closes #18: "View variants affecting transcripts in screening view".
- * Diseases with OMIM ID but without abbreviation, now no longer have their full name printed twice on the gene homepage.
- * In the genes listing, diseases without abbreviation now have their full name printed.
+ * Diseases with OMIM ID but without abbreviation, now no longer have their full
+   name printed twice on the gene homepage.
+ * In the genes listing, diseases without abbreviation now have their full name
+   printed.
  * Improved description on legend about Allele field.
+ * Added section "Editing custom column settings" to the custom column chapter
+   in the manual.
 
 
 /**************************

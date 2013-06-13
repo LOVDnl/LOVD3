@@ -9,12 +9,12 @@
 \usepackage{color}    % For colored links and boxes.
 \definecolor{LOVDdark}{RGB}{34, 68, 136} %224488 % Why does the "HTML" color model not work?
 \definecolor{LOVDlight}{RGB}{240, 243, 255} %F0F3FF % Why does the "HTML" color model not work?
-\usepackage{hyperref} % For URLs.
 \usepackage{float}    % For custom floats (the info boxes).
 \usepackage{wrapfig}  % For floating boxes meant for small notes.
 % When loaded before float, doesn't work.
 % For figures, maybe not do an frame but a box without border and with background color?
 \usepackage[format=hang,font=footnotesize,labelfont=bf,skip=5pt]{caption} % To format captions.
+\usepackage{hyperref} % For URLs.
 
 % Include all of this in a separate file!
 \newcommand{\HRule}{\rule{\linewidth}{1mm}} % Doet height (zie style) hetzelfde?
@@ -522,7 +522,7 @@ The only way to remove this lock is directly through the MySQL database backend.
   \end{shaded}
 \end{figure}
 
-For more information on the options of the LOVD system settings, see the \hyperlink{s_system_settings}{LOVD system settings} section of the manual.
+For more information on the options of the LOVD system settings, see the \hyperlink{sec:system_settings}{LOVD system settings} section of the manual.
 \\
 \par
 After filling in the form, click ``Continue \guillemotright''.
@@ -536,7 +536,7 @@ Almost done!
 \subsection{Done}
 % FIXME; to be honest nothing is done in this step... so... kill it?
 When everything has been filled in and stored correctly, the installation is complete.
-Now that you're done installing LOVD, click the ``Continue to Setup area \guillemotright'' button to be forwarded to the \hyperlink{c_setup}{LOVD setup area}.
+Now that you're done installing LOVD, click the ``Continue to Setup area \guillemotright'' button to be forwarded to the \hyperlink{chap:setup}{LOVD setup area}.
 From there, you can perform the most important actions for managers in LOVD,
  such as creating new gene databases or disease information entries,
  registering new user accounts or authorizing curators, or manage the custom columns and links.
@@ -552,7 +552,7 @@ The button to create a new gene will be highlighted, as a suggestion of your nex
 
 
 
-\hypertarget{c_setup}{}
+\hypertarget{chap:setup}{}
 \chapter{LOVD Setup}
 
 To change system-wide settings, but also to perform actions with system-wide effects, start at the LOVD setup area.
@@ -582,7 +582,7 @@ The other actions available from the LOVD setup are described in their respectiv
 % Writing \nopagebreak in every freaking line is too much, so I checked out "needspace": http://texblog.net/latex-archive/layout/prevent-page-breaks/
 % However, \needspace just dumps space there, so if it's not breaking there because of a change of text in front of it, it now shows a big empty part. Ugly, too.
 % Now settled for \pagebreak[] commands.
-\hypertarget{s_system_settings}{}
+\hypertarget{sec:system_settings}{}
 \section{LOVD system settings}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -696,7 +696,7 @@ We use this information to see how many LOVDs there are worldwide, which version
 
 
 
-\hypertarget{ss_security_settings}{}
+\hypertarget{ssec:security_settings}{}
 \subsection{Security settings}
 In this section you can control some security settings of LOVD.
 \begin{description}
@@ -767,7 +767,7 @@ For successful and unsuccessful login attempts the given username and the length
  so you can easily uncover brute force attempts where in general the attacker will try many random passwords.
 If a user can't log in because of the IP restriction on the account, the current IP restriction is also stored in the log entry.
 Please note that it is recommended to have LOVD lock user accounts after three failed login attempts.
-See subsection \hyperlink{ss_security_settings}{Security settings} for more information.
+See subsection \hyperlink{ssec:security_settings}{Security settings} for more information.
 
 % TODO: Insert list of possible log options, or at least a link to an appendix where they are mentioned.
 
@@ -883,7 +883,7 @@ Curators and managers can submit and publish data in one step.
 
 
 
-\hypertarget{ss_user_levels}{}
+\hypertarget{ssec:user_levels}{}
 \subsection{User levels}
 \subsubsection{Database administrator}
 The database administrator is the first user within LOVD; this account is created during the installation of LOVD.
@@ -894,7 +894,7 @@ The administrator has full access to all areas and settings of LOVD.
 The administrator is also the only user who can uninstall LOVD, provided the uninstall lock has not been set during LOVD installation.
 \\
 \par
-When the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled,
+When the ``Forward messages to database admin'' setting in the \hyperlink{sec:system_settings}{LOVD system settings} is enabled,
  the database administrator will receive copies of submitter registrations and data submissions or edits.
 
 \subsubsection{Manager}
@@ -913,13 +913,13 @@ However, also the database administrator or a manager can act as a curator by be
 \\
 \par
 To assign a user to become curator, follow the steps explained in section
- ``\hyperlink{s_gene_assign_curators}{assigning curators and collaborators}'' (available for managers and up).
+ ``\hyperlink{sec:gene_assign_curators}{assigning curators and collaborators}'' (available for managers and up).
 
 \subsubsection{Collaborator}
 The collaborator level user is a new type of user, introduced in LOVD 3.0.
 Collaborators are submitters with read access to non-public data on a certain given gene.
 Just like curators, these users must be appointed to genes by managers or the database administrator.
-See section ``\hyperlink{s_gene_assign_curators}{assigning curators and collaborators}'' for more information.
+See section ``\hyperlink{sec:gene_assign_curators}{assigning curators and collaborators}'' for more information.
 
 \subsubsection{Submitter}
 Submitters have no special rights except to submit data to the database, which then needs to be checked and published by curators or managers.
@@ -955,7 +955,7 @@ Curators do not require a separate submitter account; they can use their curator
 
 
 
-\hypertarget{s_submitter_register}{}
+\hypertarget{sec:submitter_register}{}
 \section{Registering a new account}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -1063,7 +1063,7 @@ This will proof that you are a human and not a computer.
 \par
 After completing the form, press the ``Register'' button.
 LOVD sends you a confirmation of your registered information through email.
-If the ``Forward messages to database admin'' setting in the \hyperlink{s_system_settings}{LOVD system settings} is enabled,
+If the ``Forward messages to database admin'' setting in the \hyperlink{sec:system_settings}{LOVD system settings} is enabled,
  the database administrator also receives a copy of your data.
 
 
@@ -1105,12 +1105,12 @@ This section contains more options when creating a new user account for a new us
   Managers only see the option ``Submitter'' here.
   The database administrator may also select ``Manager'' here.
   Please note that to create a Curator account, you need to create a Submitter and then grant this user rights on the necessary genes.
-  See section ``\hyperlink{s_gene_assign_curators}{Assigning curators and collaborators}'' for more information.
-  For a complete description on all user levels, see the subsection ``\hyperlink{ss_user_levels}{User levels}''.
+  See section ``\hyperlink{sec:gene_assign_curators}{Assigning curators and collaborators}'' for more information.
+  For a complete description on all user levels, see the subsection ``\hyperlink{ssec:user_levels}{User levels}''.
   \item[Locked] \hfill \\
   Users can be locked, which blocks access to LOVD even if they provide the correct username and password.
   This locking happens when too many times an invalid password was given while logging in with this username
-   (depending on the \hyperlink{s_system_settings}{LOVD system settings}), or it can be done manually.
+   (depending on the \hyperlink{sec:system_settings}{LOVD system settings}), or it can be done manually.
 \end{description}
 
 
@@ -1151,7 +1151,7 @@ If you have permission to edit this account, you'll see an ``Options'' button.
 Click it and click ``Edit user''.
 \\
 \par
-The fields on the form are explained in the section ``\hyperlink{s_submitter_register}{Registering a new account}''.
+The fields on the form are explained in the section ``\hyperlink{sec:submitter_register}{Registering a new account}''.
 Please note that the ``New password'' fields are optional when editing an existing user account.
 You only fill them in when you want to change the password.
 \\
@@ -1170,7 +1170,7 @@ After you submit the form, LOVD redirects you automatically back to the user's a
   \end{leftbar}
 \end{wrapfigure}
 A user is automatically locked if a wrong password is used three times while logging in with this username,
- provided this security setting is enabled (see section ``\hyperlink{s_system_settings}{LOVD system settings}''),
+ provided this security setting is enabled (see section ``\hyperlink{sec:system_settings}{LOVD system settings}''),
  but this lock may also be placed onto, or removed from an account manually.
 Locking or unlocking a user account requires you to have a level higher than the user you are trying to lock or unlock.
 Proceed to the user's account details page through the ``Users'' tab.
@@ -1229,7 +1229,7 @@ Gene databases can also be created automatically for you, when you are importing
 However, this chapter deals with manually creating gene databases.
 %TODO
 %For more information on how to import VCF or SeattleSeq annotated files, see ...
-You can create new genes through the \hyperlink{c_setup}{LOVD setup area}.
+You can create new genes through the \hyperlink{chap:setup}{LOVD setup area}.
 Editing and deleting genes is done through the ``Genes'' tab.
 Curators assigned to genes can also edit these after they've been created, but can not delete genes.
 Emptying genes (removing all associated variant and patient data) and managing its variants is done through the configuration area.
@@ -1239,7 +1239,7 @@ This chapter describes how to create, edit and delete gene databases in LOVD.
 
 
 
-\hypertarget{s_gene_create}{}
+\hypertarget{sec:gene_create}{}
 \section{Creating a new gene database}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -1290,7 +1290,7 @@ Therefore, most of the information in this section has been filled in for you, a
   \item[Date of creation] \hfill \\
   \emph{Note: This field can only be filled in when creating a gene database and can never be edited afterwards!}
   \\
-  The database's date of creation is mentioned on the \hyperlink{s_gene_homepage}{gene homepage}.
+  The database's date of creation is mentioned on the \hyperlink{sec:gene_homepage}{gene homepage}.
   Today's date will automatically be stored if you leave this field empty, but in case you already
    had a gene database but you're moving it to this LOVD installation, you may want to fill in a different date.
 \end{description}
@@ -1329,7 +1329,7 @@ When properly configured, LOVD will add links to the Ensembl, NCBI and UCSC geno
   If there are more transcripts, usually you would pick the transcript that encodes for the longest protein,
    or the transcript that is expressed in the tissue you focus your research on.
   If you want to add more transcripts later, or change which transcript(s) you want to use
-   for this gene database, see the chapter \hyperlink{c_transcripts}{Gene transcripts}.
+   for this gene database, see the chapter \hyperlink{chap:transcripts}{Gene transcripts}.
 \end{description}
 
 
@@ -1421,7 +1421,7 @@ Using the following settings you can control some security settings of LOVD.
 
 
 
-\hypertarget{s_gene_homepage}{}
+\hypertarget{sec:gene_homepage}{}
 \section{The gene homepage}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -1489,7 +1489,7 @@ If you do not like this behavior, simply move your mouse over a tab, and select 
 \end{wrapfigure}
 Curators, appointed to a gene database, have the rights to edit its settings.
 Managers and up can edit all gene databases in the LOVD installation.
-To edit the gene's settings, first proceed to the \hyperlink{s_gene_homepage}{gene's homepage}.
+To edit the gene's settings, first proceed to the \hyperlink{sec:gene_homepage}{gene's homepage}.
 \par
 \begin{wrapfigure}[4]{r}{5cm} % Only wrap for 4 lines
   \vspace{-26pt}
@@ -1500,14 +1500,14 @@ To edit the gene's settings, first proceed to the \hyperlink{s_gene_homepage}{ge
 Click on the ``Options'' menu button to open up the gene entry's menu.
 If you do not see the ``Options'' menu button, you are not logged in or you do not have rights to edit this gene's settings.
 In the opened menu, click ``Edit gene information'' to open up the gene's edit form.
-The fields on the form are explained in the section ``\hyperlink{s_gene_create}{Creating a new gene database}''.
+The fields on the form are explained in the section ``\hyperlink{sec:gene_create}{Creating a new gene database}''.
 After you submit the form, LOVD redirects you automatically back to the gene's homepage.
 
 
 
 
 
-\hypertarget{s_gene_delete}{}
+\hypertarget{sec:gene_delete}{}
 \section{Deleting a gene database}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -1517,7 +1517,7 @@ After you submit the form, LOVD redirects you automatically back to the gene's h
   \end{leftbar}
 \end{wrapfigure}
 Only managers and up can delete gene databases from LOVD.
-To delete the gene database in question, first proceed to the \hyperlink{s_gene_homepage}{gene's homepage}.
+To delete the gene database in question, first proceed to the \hyperlink{sec:gene_homepage}{gene's homepage}.
 Click on the ``Options'' menu button to open up the gene entry's menu, and select the ``Delete gene entry'' option.
 To complete the removal, you need to fill in your password and submit the form.
 
@@ -1534,7 +1534,7 @@ To remove these as well, you should first empty the gene database, which deletes
 
 
 
-\hypertarget{s_gene_assign_curators}{}
+\hypertarget{sec:gene_assign_curators}{}
 \section{Assigning curators and collaborators}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -1546,7 +1546,7 @@ To remove these as well, you should first empty the gene database, which deletes
 Managers and up can assign curators and collaborators to gene databases, as well as revoke curator or collaborator rights.
 Directly after creating a new gene database, you are forwarded to the page that allows you to make these changes,
  but you can access that page at any time by using the ``Add/remove curators/collaborators'' link in the
- ``Options'' menu on the \hyperlink{s_gene_homepage}{gene's homepage}.
+ ``Options'' menu on the \hyperlink{sec:gene_homepage}{gene's homepage}.
 
 \begin{figure}[ht]
   \begin{shaded}
@@ -1563,7 +1563,7 @@ To add a user as a curator or collaborator, search for the user in the top user 
 The user is then moved to the bottom.
 \par
 In the bottom table, you see two checkboxes for each user.
-Also, you can sort the curators by dragging and dropping them in the list (see subsection \hyperlink{ss_sorting_curators}{Sorting curators}).
+Also, you can sort the curators by dragging and dropping them in the list (see subsection \hyperlink{ssec:sorting_curators}{Sorting curators}).
 The first checkbox indicates whether or not they are allowed to edit the data in this gene's database.
 Users allowed to edit the data, are curators.
 Unchecking this checkbox turns this user in a collaborator for this gene;
@@ -1589,7 +1589,7 @@ To be able to successfully submit the ``Authorize curators'' form, there needs t
 
 
 
-\hypertarget{ss_sorting_curators}{}
+\hypertarget{ssec:sorting_curators}{}
 \subsection{Sorting curators}
 
 \begin{figure}[ht]
@@ -1637,7 +1637,7 @@ Don't forget to click the ``Save'' button to save the new sort order!
 
 
 
-\hypertarget{c_transcripts}{}
+\hypertarget{chap:transcripts}{}
 \chapter{Gene transcripts}
 LOVD3 handles transcripts very differently from LOVD2.
 In LOVD3, configuring at least one transcript for a certain gene is necessary to be able to add variant data to the gene database.
@@ -1677,8 +1677,8 @@ Good examples that justify using multiple transcripts in LOVD, is when different
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-The simplest way to create a gene transcript in LOVD, is to select it when \hyperlink{s_gene_create}{creating a gene database}.
-However, if you'd like to add more transcripts later, please proceed to the \hyperlink{s_gene_homepage}{gene homepage}.
+The simplest way to create a gene transcript in LOVD, is to select it when \hyperlink{sec:gene_create}{creating a gene database}.
+However, if you'd like to add more transcripts later, please proceed to the \hyperlink{sec:gene_homepage}{gene homepage}.
 Click on the ``Options'' menu button to open up the gene entry's menu.
 If you do not see the ``Options'' menu button, you are not logged in or you do not have rights to edit this gene's settings.
 In the opened menu, click ``Add transcript(s) to gene'' to open up the gene's edit form.
@@ -1741,7 +1741,7 @@ This part contains IDs to other sources, to aid in data exchange.
   \end{leftbar}
 \end{wrapfigure}
 Deleting a transcript removes all information related to the transcript in question from all variants in the database.
-Just like when \hyperlink{s_gene_delete}{deleting a gene}, this \emph{does not remove the genomic variants from the database!}
+Just like when \hyperlink{sec:gene_delete}{deleting a gene}, this \emph{does not remove the genomic variants from the database!}
 From the transcript's detailed view, click on the ``Options'' menu button to open up the transcript's menu, and select the ``Delete transcript entry'' option.
 On the next page, confirm by typing your password in the input box and submit the form to complete the removal.
 
@@ -1769,7 +1769,7 @@ Additional columns can be created to suit your every need.
 
 
 
-\hypertarget{s_custom_column_categories}{}
+\hypertarget{sec:custom_column_categories}{}
 \section{Custom column categories}
 In LOVD3, custom columns come in five different categories.
 \begin{description}
@@ -1798,8 +1798,8 @@ The three non-shared custom column types are ``Individual'', ``Screening'' and `
 
 
 
-\hypertarget{s_custom_column_create}{}
 \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+\hypertarget{sec:custom_column_create}{}
 \section{Creating a new custom column}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -1816,7 +1816,7 @@ You will need to enable the column after defining it, so it actually gets added 
 To create a new custom column, click on the ``Create new custom data column'' option from the ``Setup'' tab dropdown menu,
  or the ``Create new custom data column'' link in the setup area.
 Firstly, you will need to choose which type of column you would like to create.
-For more information on the different column types, see the \hyperlink{s_custom_column_categories}{previous section}.
+For more information on the different column types, see the \hyperlink{sec:custom_column_categories}{previous section}.
 Please note that you can never change the type of a column once it has been chosen.
 Select the type of column you would like to create, by clicking its description.
 You are then forwarded to the entry form specific for this type of custom column.
@@ -1833,9 +1833,13 @@ Here the description of the new column is defined; its displayed name and the ex
   This will appear above the column in data tables and on the legend.
   In principle, this is free text, but try to keep it short, because a long name will increase the width of the column.
   \item[Description on short legend] (HTML enabled)\hfill \\
+  \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
+  \\
   Describe the meaning of the column in short.
   This will appear when a user moves his mouse over the column header in the data tables.
   \item[Description on full legend] (HTML enabled)\hfill \\
+  \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
+  \\
   Describe the meaning of the column.
   You can be very elaborate here.
   This text will be shown on the full legend of the data table.
@@ -1893,6 +1897,8 @@ The next page shows you some additional options that depend on the type of field
   When the user moves his mouse over the question mark icon, the text entered here is shown.
   Since the text is shown as a highlight, it does not disrupt the structure of the data entry form, so feel free to type lengthy texts.
   \item[Notes on form] (all field types, HTML enabled)\hfill \\
+  \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
+  \\
   If you think the data field needs clarification for all users, add such clarification here.
   The text given here will be shown directly underneath the data entry field.
   Therefore, keep it short, since long texts will make the data entry form very long.
@@ -1924,6 +1930,8 @@ The next page shows you some additional options that depend on the type of field
   \item[Provide ``select all'' link] (multiple selection list only)\hfill \\
   This will add a link next to the selection list that allows the user to instantly select all available options.
   \item[List of possible options] (both list types)\hfill \\
+  \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
+  \\
   Enter the options available for this field, one options per line.
   If you want to use abbreviations, use: Abbreviation = Long name, like ``DMD = Duchenne Muscular Dystrophy''.
   In that case the user will see the long name in the selection list, but the abbreviation will be stored in the database.
@@ -1941,7 +1949,7 @@ Click the ``Finish'' button to have the data type wizard fill in the ``MySQL dat
 
 \subsection{Column settings}
 Here you can change some of the column's settings.
-For shared columns (see section ``\hyperlink{s_custom_column_categories}{Custom column categories}''),
+For shared columns (see section ``\hyperlink{sec:custom_column_categories}{Custom column categories}''),
  most of these settings can also be changed per parent object where this column has been added to.
 \begin{description}
   \item[Include this column for newly configured genes/diseases] (shared columns only)\hfill \\
@@ -1962,6 +1970,8 @@ For shared columns (see section ``\hyperlink{s_custom_column_categories}{Custom 
   \\
   This controls whether or not users with no specific authorization on the data entry can see the contents of this column.
   \item[Show field on submission form] \hfill \\
+  \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
+  \\
   If you don't want submitters to fill in this column, but reserve the use for curators, disable this checkbox.
   Please note that unsetting this will not hide the contents of the column from the public, it merely stops them from entering data in it.
 % IMPLEMENT
@@ -1989,13 +1999,12 @@ Your custom column is now created, and you can choose to enable the column if yo
 
 \section{Enabling custom columns}
 Directly after creating a new custom column, or at any later time, you can enable a custom column.
-It must already exist in the database, otherwise you first need to \hyperlink{s_custom_column_create}{create it}.
+It must already exist in the database, otherwise you first need to \hyperlink{sec:custom_column_create}{create it}.
 \emph{Non-shared} custom columns (Individual, Screening and Variant On Genome categories) are enabled system-wide, which requires manager access.
 \emph{Shared} custom columns (Phenotype and Variant On Transcript categories) can be enabled by parent-object (disease or gene, respectively) and require curator access.
 
 
 
-\pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
 \subsection{Enabling non-shared custom columns}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -2044,6 +2053,7 @@ You can get there in two ways:
 \begin{itemize}
   \item From any disease or gene that you have authorization of open the ``Options'' menu button and click the
    ``View all available phenotype columns'' or ``View all available variant columns'' link, depending on which type of column you wish to enable.
+  % This text is copied below.
   \item Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
      click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
     This is the list of all custom columns.
@@ -2068,11 +2078,83 @@ The column is now enabled and visible in the data entry forms and the data listi
 
 
 
+\section{Editing custom column settings}
+Shared columns have some settings, mostly related to the display of the column, which can be set per parent object (a certain disease or gene).
+We will refer to these settings as \emph{object-specific settings}.
+All other settings are system-wide and can only be performed by a manager or higher.
+Non-shared columns only have system-wide settings and can not be configured per disease or gene.
+
+
+
+\subsection{Editing object-specific (shared) custom column settings}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+The object-specific settings, editable per gene or disease, are (also see section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''):
+\tightlists
+\begin{itemize}
+  \item Description on short legend
+  \item Description on full legend
+  \item Notes on form
+  \item List of possible options (for selection list type columns)
+  \item Column display width in pixels
+  \item Mandatory field
+  \item Show contents to public
+  \item Show field on submission form
+\end{itemize}
+\defaultlists
+
+\vskip 1em
+To change these settings, first you need to proceed to the detailed view of the disease or gene in question.
+For Phenotype columns, move your mouse over the ``Diseases'' menu tab, and click the ``View all diseases'' link from the dropdown menu.
+For Variant On Transcript columns, move your mouse over the ``Genes'' menu tab, and click the ``View all genes'' link from the dropdown menu.
+Then, select the parent object you would like to change the object-specific settings for.
+\par
+From the parent object's detailed view, open the ``Options'' menu and click the ``View enabled phenotype columns'' or ``View enabled variant columns'' link.
+From the list of enabled columns, click the one you wish to edit the settings for.
+Open up the ``Options'' menu and then click ``Edit settings for this disease only'' for Phenotype columns, or ``Edit settings for this gene only'' for Variant On Transcript columns.
+For explaination of the available fields, please see the section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+After submitting the form, the changes are effective immediately, but applied to the chosen parent object only.
+
+
+
+\subsection{Editing system-wide custom column settings}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Both shared and non-shared columns have system-wide settings that can be changed by a manager or higher.
+However, the way these columns respond to changes to the system-wide settings are not the same.
+For non-shared columns, each change to the system-wide settings will be effective immediately.
+For shared columns, only the settings that are not \emph{object-specific} (see above) are effective immediately.
+All changes to object-specific settings however, come to serve as new default values for when the custom column in question is activated for new genes or diseases.
+Already enabled shared custom columns will not have their object-specific settings reset, unless they are explicitly reset to the (new) default settings.
+\\
+\par
+To edit a custom column's system-wide settings, you should start from the list of currently available columns.
+% This text is copied above.
+Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+ click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
+This is the list of all custom columns.
+To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
+You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+% Until here.
+Now, click the column which settings you wish to edit.
+Click the ``Options'' menu button to open up the column's menu, and click on ``Edit custom data column settings''.
+The form to edit the system-wide settings is equal to the form used to create a new custom column, with the exception of the ``Column ID'' field, which is not present here.
+All fields are explained in the section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
 \end{document}
 
 %            s (section) ss (subsection)
-\hypertarget{s_name_of_label}{}
-\hyperlink{name_of_label}{name of link}.
+\hypertarget{sec:name_of_label}{}
+\hyperlink{sec:name_of_label}{name of link}.
 
 \begin{infobox}
   \caption{\textbf{Caption}}
@@ -2087,6 +2169,11 @@ List of possible diseases associated with variants in the available genes: Speci
 
 % Move somewhere about the screening data:
 List of available detection techniques: Specify a list of detection techniques appropriate for the genes configured in this LOVD installation. By default, a full set of detection techniques has been put in this list already. This list will appear on the full legend and will allow a submitter to select the used detections technique(s) from the list. If no techniques are specified, the submitter will need to fill in the technique in a common text field.
+
+% Reset column to current defaults
+This will reset the column to the default settings, forgetting all your changes you may have made to the column's appearance. Please note that you can edit the default settings, too.
+You can (one by one) reset a selected column to the (new) default settings, to easily apply your changes to a selected column in a variant table or the patient table.
+You can have your changes applied immediately by overriding all local display settings, by selecting the checkbox "Apply changes to patient table where this column is active" in case of a patient table or "Apply changes to all genes where this column is active" in case of a variant table. This checkbox will only appear if the column has actually been added to any of the tables.
 
 %10
 \chapter{}
@@ -2196,7 +2283,7 @@ be:
 cp -auv LOVD34/LOVDv.2.0/* LOVD34/LOVDv.2.0/.htaccess RB1_LSDB/
 
             'Keeping your data secure',
-          );
+          );$
 
 
 For new curators:
