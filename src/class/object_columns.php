@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2013-04-26
- * For LOVD    : 3.0-05
+ * Modified    : 2013-06-13
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -308,6 +308,7 @@ class LOVD_Column extends LOVD_Object {
                 $this->aFormData['width'][0] .= ' *';
                 $this->aFormData['mandatory'][0] .= ' *';
                 $this->aFormData['public_view'][0] .= ' *';
+                $this->aFormData['public_add'][0] .= ' *';
                 $this->aFormData['apply_to_all'][0] = str_replace('{{ UNIT }}', 'diseases', $this->aFormData['apply_to_all'][0]);
                 break;
             case 'Screening':
@@ -329,6 +330,7 @@ class LOVD_Column extends LOVD_Object {
                 $this->aFormData['width'][0] .= ' *';
                 $this->aFormData['mandatory'][0] .= ' *';
                 $this->aFormData['public_view'][0] .= ' *';
+                $this->aFormData['public_add'][0] .= ' *';
                 $this->aFormData['apply_to_all'][0] = str_replace('{{ UNIT }}', 'genes', $this->aFormData['apply_to_all'][0]);
                 break;
         }

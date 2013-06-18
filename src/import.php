@@ -681,11 +681,14 @@ if (POST) {
                     } elseif (!ctype_digit($aLine['col_order']) || $aLine['col_order'] < 0 || $aLine['col_order'] > 255) {
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'col_order\', which needs to be numeric, between 0 and 255.');
                     }
-                    if (!ctype_digit($aLine['standard']) || $aLine['standard'] > 1) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'standard\', which should be 0 or 1.');
-                    }
-                    if (!ctype_digit($aLine['mandatory']) || $aLine['mandatory'] > 1) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'mandatory\', which should be 0 or 1.');
+                    // All integer columns that are checkboxes on the form, are turned into empty strings by checkFields, but we'll verify them here.
+                    // FIXME: Define this array elsewhere?
+                    foreach (array('standard', 'mandatory', 'public_view', 'public_add', 'allow_count_all') as $sCol) {
+                        if ($aLine[$sCol] === '') {
+                            $aLine[$sCol] = 0;
+                        } elseif (!ctype_digit($aLine[$sCol]) || $aLine[$sCol] > 1) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'' . $sCol . '\', which should be 0 or 1.');
+                        }
                     }
                     // Select_options.
                     if (!empty($aLine['select_options'])) {
@@ -699,15 +702,6 @@ if (POST) {
                     // Check regexp syntax.
                     if (!empty($aLine['preg_pattern']) && ($aLine['preg_pattern']{0} != '/' || @preg_match($aLine['preg_pattern'], '') === false)) {
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'Regular expression pattern\' field does not seem to contain valid PHP Perl compatible regexp syntax.');
-                    }
-                    if (!ctype_digit($aLine['public_view']) || $aLine['public_view'] > 1) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'public_view\', which should be 0 or 1.');
-                    }
-                    if (!ctype_digit($aLine['public_add']) || $aLine['public_add'] > 1) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'public_add\', which should be 0 or 1.');
-                    }
-                    if (!ctype_digit($aLine['allow_count_all']) || $aLine['allow_count_all'] > 1) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'allow_count_all\', which should be 0 or 1.');
                     }
 
                     if ($zData) {

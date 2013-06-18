@@ -24,6 +24,7 @@ Prioritize:
 - Optimalisatie in VL: als een view traag WORDT (dus niet was!), hoe vangen we dat dan op? En andersom? Maak settings instelbaar!
 - LOVD site: index_list: genen uniek maken?
 - Merge code from Peikuan?
+- Doe iets met HVP status? Johan: kun je er niet een opvallende ster (geel of zo) van maken waarvoor je uitlegt krijg als je er op klikt?
 - LOVD will move to use NGs and LRGs as much as possible for transcript information and the name checker, to reduce the use of UD slices.
 - Pedigree tree: finish and implement. Mark currently selected individual with asterisk? Perhaps implement more icons?
 - BUG: Curator removes column from his genes, he has no values. Selects both genes, LOVD warns that deletion is permanent (NOT CORRECT!) and 63 values will be lost (NOT CORRECT!) as if the alter table is run! :S
@@ -161,6 +162,7 @@ Prioritize:
   + http://databases.lovd.nl/shared/variants/GLDC
 - Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
+- Shared columns VE: add "active for parent objects" with list. Make sure you treat the list as the curator's gene list, so that it is shortened when necessary.
 - 5.3.0 required, use bcrypt!
 - Diseases hebben alias field nodig (lange tekst), maar nog geen speciale handelingen nodig op het moment.
 - MariaDB noemen als alternatief, en uitleggen dat ze dan vooralsnog 'mysql' als driver moeten kiezen. Config.ini, handleiding, en website. Maar hoe zit dat dan met InnoDB?

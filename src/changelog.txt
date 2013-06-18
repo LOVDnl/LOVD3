@@ -28,6 +28,9 @@
  * Improved description on legend about Allele field.
  * Added section "Editing custom column settings" to the custom column chapter
    in the manual.
+ * Fixed bug; When creating new shared custom column, "Show field on submission
+   form" was incorrectly not tagged as updatable per parent object (gene or
+   disease).
 
 
 /**************************
