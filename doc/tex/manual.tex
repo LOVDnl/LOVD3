@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-04}
+\setLOVDversion{3.0-05}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-04-16} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-06-20} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -247,47 +247,47 @@
 This is the manual for the Leiden Open (source) Variation Database (LOVD) version 3.0.
 LOVD 3.0 is a partial rewrite of LOVD 2.0, which first stable release was completed in 2007.
 Also, LOVD 3.0 has a greatly improved database model, and includes lots of new features aimed at making LOVD useful for more research environments.
-\par
+
 LOVD is designed to provide a flexible, freely available tool for gene-centered collection and display of DNA variations.
 LOVD 3.0 extends this idea to also provide patient-centered data storage and storage of NGS data, even of variants outside of genes.
-\\
-\par
+\vskip \baselineskip
+
 LOVD was developed approaching the ``LSDB-in-a-Box'' idea for the easy creation and maintenance of a fully web-based gene sequence variation database,
-that is platform-independent and uses PHP and MySQL open source software only.
+that is platform-in\-de\-pen\-dent and uses PHP and MySQL open source software only.
 The design of the database follows the recommendations of the \href{http://www.hgvs.org/}{Human Genome Variation Society} (HGVS)
 and focuses on the collection and display of DNA sequence variations, but it has fully implemented methods for storing complete clinical data as well.
 The open LOVD setup also facilitates functional extensions with scripts written by the community.
-\\
-\par
+\vskip \baselineskip
+
 The development of (then nameless) LOVD started in late 2002, while it was first officially released in January, 2004.
 Before that LOVD was only in use by the \href{http://www.DMD.nl/}{Leiden Muscular Dystrophy pages},
 as a not-so-modular system with lots of characteristics specific for that website only.
 With the official release of LOVD in 2004 the system had become much more dynamic and customizing LOVD was made easy mostly by editing text-files.
-\par
+
 In 2004, LOVD became available under the open source license GPL and with the 1.1.0 release most of the text-files had been replaced by online forms
 so customizations can be performed through the web interface.
 Early in 2005 the \href{http://www.ncbi.nlm.nih.gov/pubmed/15977173}{first LOVD article} was published,
 and in 2005 the development of LOVD was more targeted at improving the ease of use of the system.
-\\
-\par
+\vskip \baselineskip
+
 In 2006 the development of LOVD 2.0 started after the decision was made to rewrite all of LOVD from scratch
 to be able to include a long list of upgrade suggestions that were hard to implement in LOVD 1.1.0.
 Aimed at modularity and data redundancy, LOVD 2.0 was meant to be a more flexible and more powerful successor of the popular 1.1.0 version
 and soon it received the interest of LOVD users eager to try out the all-new version.
-\par
+
 With more features being added and bugs fixed rapidly, LOVD 2.0 reached beta stage in April 2007,
 after which more and more users started to upgrade their 1.1.0 databases to 2.0.
 Finally, in October 2007 LOVD 2.0 reached the stable stage, after which LOVD 2.0 was continuously improved with monthly releases for two years,
 after which the releases became less frequent.
 LOVD 2.0 is described in the \href{http://www.ncbi.nlm.nih.gov/pubmed/21520333}{second LOVD paper}.
-\\
-\par
+\vskip \baselineskip
+
 By 2009 it had became clear that although LOVD 2.0 was a great step forward, there were still key improvements to be made.
 Since the complexity of necessary changes had become to great to gradually upgrade LOVD 2.0 systems to include these options,
 it was again decided to start from scratch writing LOVD 3.0.
 This allowed us to redesign the complete data model in full freedom,
 although it should still be possible for existing LOVD 2.0 databases to have all data transferred to LOVD 3.0.
-\par
+
 LOVD 3.0 adds even more flexibility, allowing users to focus exclusively on sequence variants,
 whilst also allowing an exclusive focus on individuals and clinical data, and anything in between.
 It will be possible for different submitters to work together cooperatively on the same data.
@@ -298,13 +298,13 @@ with the ability to import VCF or SeattleSeq formats.
 For VCF file imports, LOVD allows for automatic annotation of the variants.
 Both formats support the automatic creation of genes and transcripts in the system,
 greatly reducing the amount of work required by curators to get LOVD set up for their research data.
-\par
+
 LOVD 3.0 reached beta stage in January 2012.
 Currently, the latest release is \LOVDversion.
 Keep an eye on our \href{http://www.lovd.nl/3.0/news}{news page} for the latest information on LOVD 3.0 development.
-\\
-\par
-Where ever you see ``he'' or ``his'' written in this manual, it should read ``he or she'' and ``his or her'' respectively.
+\vskip \baselineskip
+
+Wherever you see ``he'' or ``his'' written in this manual, it should read ``he or she'' and ``his or her'' respectively.
 
 \begin{infotable}
 Please note that this manual is work in progress.
@@ -350,16 +350,16 @@ If you don't want to run LOVD on a server but rather want to have it running on 
 Also, at the time of this writing, we are offering free server space if you need to set up an LOVD.
 \href{http://www.LOVD.nl/3.0/contact?new_lsdb}{Contact us} for more information.
 In that case you don't need to install anything and you can skip this chapter.
-\\
-\par
+\vskip \baselineskip
+
 If you're experienced with web servers and you want to set it up yourself: LOVD has been extensively tested
  with the Apache webserver, but any webserver able to run PHP scripts should suffice.
 You'll need PHP 5.2.0 or higher (or PHP 5.0.0 with PDO and JSON en/decode enabled) and MySQL 4.1.2 or higher.
 LOVD may work with other database platforms, but we are not developing for other database backends.
 You are welcome to try other database backends and report the results to us, but we can't provide any support for it.
 For more information, see the \href{http://lovd.nl/3.0/faq/software}{FAQ about software needed}.
-\\
-\par
+\vskip \baselineskip
+
 Before installing LOVD, be sure you have the required credentials for connecting to the MySQL database.
 You need a \emph{hostname}, \emph{username}, \emph{password} and a \emph{database name} to be able to install LOVD.
 If you are installing LOVD on a remote server, be sure to have the FTP username and password to be able to copy the necessary files to the server.
@@ -371,8 +371,8 @@ To download LOVD, go to the \href{http://www.LOVD.nl/3.0/}{LOVD website} and cli
 You can download LOVD in two formats; GZIPped TARball and ZIP archive.
 The first format is common for Unix and Linux systems while the ZIP archive is popular on the Windows platform.
 Usually you will be able to open both formats.
-\\
-\par
+\vskip \baselineskip
+
 Download the file of your choice and save it to your hard drive.
 Now extract the file using GZIP/TAR or ZIP to the desired location.
 On a server, common directories may be /var/www on Unix or Linux servers, or C:\textbackslash{}htdocs on a Windows server.
@@ -386,7 +386,7 @@ You will need to rename the standard config file config.ini.php-lovd to config.i
 This is absolutely mandatory, because you will need to enter the MySQL hostname, username, password and database name here.
 In case you're using XAMPP, the needed values are ``localhost'', ``root'', ``'' (empty) and ``test'', respectively. No quotes around the values needed.
 Please note that these are not the recommended settings for production environments, but it will help you quickly set up LOVD on your computer.
-\par
+
 Please go through the entire config.ini.php file to determine if you need to change any of the other settings.
 
 \begin{warntable}
@@ -395,21 +395,19 @@ This will prevent the config file from being accessed by others on Apache HTTP s
 If you use Apache, please check that your version and configuration support this feature.
 Make sure you have the .htaccess file into your LOVD directory, on Unix and Linux systems it's a hidden file so it can be missed easily.
 For the .htaccess file to work, you need to have ``Limit'' and ``Options'' enabled in Apache's ``AllowOverride'' setting.
-\par
+
 Also, make sure you have MultiViews or mod\_rewrite enabled.
 This allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.
-\\
-\par
-\noindent
+\vspace{1em} % vspace doesn't introduce new \par, therefore no \noindent is needed
+
 More information about .htaccess files:\\
 \url{http://httpd.apache.org/docs/2.0/howto/htaccess.html}
-\\
-\par
-\noindent
+\vspace{1em} % vspace doesn't introduce new \par, therefore no \noindent is needed
+
 More information about AllowOverride:\\
 \url{http://httpd.apache.org/docs/2.0/mod/core.html\#allowoverride}
-\\
-\par
+\vskip \baselineskip
+
 \textbf{If you use a different webserver}, make sure to configure it to deny access to the config.ini.php file.
 LOVD will access the file through the filesystem.
 Also, the .htaccess file sets a couple of PHP options and enables mod\_rewrite.
@@ -424,8 +422,8 @@ Also make sure there is ``MultiViews'' functionality, which allows a PHP file li
 \section{Install process}
 To install LOVD on a remote webserver, upload the LOVD directory with all the files to the webserver by, for instance, FTP.
 If you install LOVD on your own computer, you do not need to follow this step.
-\\
-\par
+\vskip \baselineskip
+
 Next, point your web browser to the directory where you've uploaded the LOVD files.
 This could, for instance, be \emph{http://localhost/LOVDv.3.0/} or \emph{http://www.your-domain.org/LOVD/}.
 LOVD will tell you it's not installed yet, and include a link to the install directory.
@@ -444,8 +442,8 @@ Both the PHP and MySQL versions will be checked, to make sure your LOVD will fun
 Also some settings of the web server, PHP and MySQL will be checked.
 Finally, LOVD will check if your config file has been hidden.
 If all looks well, LOVD will tell you all requirements are OK and you're ready to start installing LOVD.
-\\
-\par
+\vskip \baselineskip
+
 Installing LOVD consists of only 4 simple steps and will take only a couple of minutes, or less.
 
 \begin{figure}[ht]
@@ -510,7 +508,7 @@ When everything is done, a ``Next \guillemotright'' button appears - click it to
 \subsection{Configuring LOVD system settings}
 The final form in the installation process is completing the initial configuration of the LOVD system settings.
 These settings can be changed after installation at any time through the LOVD setup.
-\par
+
 The only setting that cannot be changed at a later time, is the install lock, which is checked by default.
 Setting the uninstall lock will prevent uninstallation of LOVD by the database administrator.
 The only way to remove this lock is directly through the MySQL database backend.
@@ -523,8 +521,8 @@ The only way to remove this lock is directly through the MySQL database backend.
 \end{figure}
 
 For more information on the options of the LOVD system settings, see the \hyperlink{sec:system_settings}{LOVD system settings} section of the manual.
-\\
-\par
+\vskip \baselineskip
+
 After filling in the form, click ``Continue \guillemotright''.
 If everything was filled in correctly, LOVD will register the LOVD system settings.
 Click ``Next \guillemotright'' to continue to the last step.
@@ -558,8 +556,8 @@ The button to create a new gene will be highlighted, as a suggestion of your nex
 To change system-wide settings, but also to perform actions with system-wide effects, start at the LOVD setup area.
 The setup area is only available for managers and the database administrator and can be accessed by clicking on the ``Setup'' tab in the menu.
 If you do not see a ``Setup'' tab, you first need to log into the system with a manager or administrator account.
-\\
-\par
+\vskip \baselineskip
+
 The LOVD setup shows some statistics on the left of the screen, like date of installation, number of registered users and variant counts, separated by status.
 Furthermore, there are two columns of options.
 The left column has options for the system settings, authorized users, the custom columns, custom links, full data download and the LOVD system logs.
@@ -567,8 +565,8 @@ The right column has options for genes, transcripts, diseases, individuals and v
 Some of the general options from the LOVD setup are also available through the Setup tab's dropdown menu,
  allowing you to quickly navigate to other setup options without having to go through the setup main page.
 The other options shown in the setup area are available through their own tab's dropdown menus.
-\\
-\par
+\vskip \baselineskip
+
 In this chapter, we will describe changing the LOVD system settings, how to check, search and clean up the LOVD system logs, and how to uninstall LOVD.
 The other actions available from the LOVD setup are described in their respective chapters (\hyperlink{toc}{see the table of contents}).
 
@@ -594,7 +592,7 @@ The other actions available from the LOVD setup are described in their respectiv
 The LOVD system settings allow you to adapt your LOVD installation to your preferences.
 For instance by changing the installation's displayed name or email address (general settings),
  proxy server settings (connection settings), settings on statistics, or the security settings.
-\par
+
 To view or edit the LOVD system settings, click on the ``Setup'' tab, then on ``View and change LOVD System settings (...)'',
 or move your mouse over the ``Setup'' tab and click the ``LOVD system settings'' menu option from the dropdown list.
 
@@ -721,12 +719,9 @@ In this section you can control some security settings of LOVD.
   % FIXME: Implement!
   % The columns which can be used for this type of searching, can be configured ....
   \item[Force SSL-only access to LOVD?] \hfill \\
-  \nopagebreak
   SSL is a secure protocol allowing for encryption of data sent between you and LOVD.
-  \nopagebreak
   When you record sensitive individual information in LOVD, you \emph{\textbf{should}} enable this setting,
    as the individual information can otherwise be ``sniffed'' off the network.
-  \nopagebreak
   If you do not record sensitive information, enabling SSL is \emph{recommended}.
   \item[Use data versioning of biological data?] \hfill \\
   \emph{Note: Not yet implemented!}
@@ -796,7 +791,7 @@ Also errors during an LOVD upgrade, might they occur, will be logged here.
 To browse the system logs, click the ``View system logs'' option of the ``Setup'' tab dropdown menu,
  or the ``View, search and delete system logs'' link in the setup area.
 The system log overview is fully searchable and sortable, allowing you to find log entries quickly.
-\par
+
 The ``Log'' column shows the type of log every - \emph{Auth}, \emph{Event}, \emph{Error} or \emph{Install}.
 The ``Date'' column shows the date the log entry was created.
 The ``User'' column shows, if available, which user caused the log entry to be created.
@@ -845,8 +840,8 @@ Please note that deleting log entries can not be undone.
 Only the database administrator can uninstall LOVD, provided the uninstall lock has not been set during installation of LOVD.
 The uninstall lock is set within the MySQL database and can only be removed by directly accessing MySQL.
 If you know how to handle MySQL, you can also uninstall LOVD through MySQL directly, by removing all LOVD tables, but this is not recommended.
-\\
-\par
+\vskip \baselineskip
+
 To uninstall LOVD and remove all data stored in LOVD, click on the ``Uninstall LOVD'' link in the setup area.
 This link is only available if the uninstall lock is disabled.
 You will need to fill in the database administrator's password twice to complete the uninstallation process.
@@ -875,7 +870,7 @@ In LOVD 3.0, \emph{authorized users} are everyone who registered for an account 
  including the database administrator who created his account during the installation process.
 The authorized users come in five levels; the database administrator of which there is only one, managers, curators, collaborators and submitters.
 The different levels of users are described in more detail below.
-\par
+
 Registering for an account is necessary to be able to submit data or to become a gene curator.
 Directly after registering, you are allowed to submit individual, phenotype and variant data to the database,
  but the data needs to be checked and published by a \emph{curator} or a \emph{manager}.
@@ -889,11 +884,11 @@ Curators and managers can submit and publish data in one step.
 The database administrator is the first user within LOVD; this account is created during the installation of LOVD.
 After installation, the database administrator can create other users (managers, curators and submitters) in the system, if desired.
 These users can also register themselves, after which the database administrator can upgrade them.
-\par
+
 The administrator has full access to all areas and settings of LOVD.
 The administrator is also the only user who can uninstall LOVD, provided the uninstall lock has not been set during LOVD installation.
-\\
-\par
+\vskip \baselineskip
+
 When the ``Forward messages to database admin'' setting in the \hyperlink{sec:system_settings}{LOVD system settings} is enabled,
  the database administrator will receive copies of submitter registrations and data submissions or edits.
 
@@ -901,8 +896,8 @@ When the ``Forward messages to database admin'' setting in the \hyperlink{sec:sy
 A manager has access to almost everything the database administrator has access to.
 However, the manager is not able to create new managers or to edit existing managers.
 Also, a manager cannot uninstall LOVD even if the uninstall lock is not in place.
-\\
-\par
+\vskip \baselineskip
+
 A manager can only be created by the administrator and often assists the administrator or takes over the customisation of LOVD for the curators.
 
 \subsubsection{Curator}
@@ -910,8 +905,8 @@ The curator level user is actually a submitter, which has been given curatorship
 Therefore, a curator only has access to the gene databases he is appointed to, and not to the system-wide setup area.
 However, also the database administrator or a manager can act as a curator by being appointed to certain genes,
  but in this case there is of course no restriction in access.
-\\
-\par
+\vskip \baselineskip
+
 To assign a user to become curator, follow the steps explained in section
  ``\hyperlink{sec:gene_assign_curators}{assigning curators and collaborators}'' (available for managers and up).
 
@@ -924,7 +919,7 @@ See section ``\hyperlink{sec:gene_assign_curators}{assigning curators and collab
 \subsubsection{Submitter}
 Submitters have no special rights except to submit data to the database, which then needs to be checked and published by curators or managers.
 Depending on the LOVD system settings, submitters are also able to edit the data they have submitted previously.
-\par
+
 Submitter accounts can also be created, edited or deleted by managers or the database administrator, although usually this should not be necessary.
 Curators do not require a separate submitter account; they can use their curator account to submit new data.
 
@@ -974,8 +969,8 @@ For collaborators, curators or managers, registering as a submitter is often the
 The major difference between registration and direct creation of a new account by a manager or the database administrator,
  is that the registration can be performed by the public, and therefore it requires you to be logged out of LOVD.
 The registration form is protected using a \emph{reCAPTCHA} module, which makes sure the form can only be used by humans, and not by spam bots.
-\\
-\par
+\vskip \baselineskip
+
 To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen, next to the ``Log in'' link.
 First, you are asked to provide an ORCID ID, if you have one.
 \href{http://about.orcid.org/}{ORCID} provides a persistent digital identifier that distinguishes you from every other researcher and,
@@ -1059,8 +1054,8 @@ To prevent unauthorized use of your account, we implemented a security feature t
 To prevent automatic submission of the registration form, we implemented a \href{http://www.google.com/recaptcha}{reCAPTCHA} module.
 In the provided text field, type the two words you see in the image.
 This will proof that you are a human and not a computer.
-\\
-\par
+\vskip \baselineskip
+
 After completing the form, press the ``Register'' button.
 LOVD sends you a confirmation of your registered information through email.
 If the ``Forward messages to database admin'' setting in the \hyperlink{sec:system_settings}{LOVD system settings} is enabled,
@@ -1139,8 +1134,8 @@ Every user in LOVD can edit their own account.
 Editing other user's accounts requires you to have a level higher than the user you are trying to edit.
 Managers can edit submitter accounts (including collaborators and curators).
 The database administrator can also edit manager accounts.
-\\
-\par
+\vskip \baselineskip
+
 To edit your own account, click the ``Your account'' link on the top right-hand side of the screen, which leads directly to your account overview.
 Then, click the ``Options'' button and click ``Update your registration''.
 \\
@@ -1149,8 +1144,8 @@ Locate the user you wish to edit by searching or browsing through the given user
 Clicking the entry will direct you to the user's account details.
 If you have permission to edit this account, you'll see an ``Options'' button.
 Click it and click ``Edit user''.
-\\
-\par
+\vskip \baselineskip
+
 The fields on the form are explained in the section ``\hyperlink{sec:submitter_register}{Registering a new account}''.
 Please note that the ``New password'' fields are optional when editing an existing user account.
 You only fill them in when you want to change the password.
@@ -1179,8 +1174,8 @@ If the user is already locked, there will be an ``Unlock user'' option.
 \\
 The ``Lock user'' and ``Unlock user'' menu options are quick ways to deny or allow access to LOVD,
  although it can also be accomplished through the ``Edit user'' option.
-\\
-\par
+\vskip \baselineskip
+
 Users who are logged in, can also be booted out of the system.
 If a user is logged in, the option ``Force user log out'' is added to the ``Options'' menu.
 This will destroy the user's session, causing the user to log out.
@@ -1224,7 +1219,7 @@ Locking the user essentially also causes the user to be logged out of the system
 \chapter{Gene databases}
 Although in LOVD 3.0 you can enter data into the database without having genes in your installation, the genes still embody an important part of LOVD.
 Configuring genes in LOVD allows you to see the effects of variants on transcript level, and draws submitters with variant data to your installation.
-\par
+
 Gene databases can also be created automatically for you, when you are importing VCF or SeattleSeq annotated files in LOVD.
 However, this chapter deals with manually creating gene databases.
 %TODO
@@ -1435,13 +1430,13 @@ The gene homepage is the entry point for visitors of a locus-specific database.
 In installations where LOVD is used for next-generation sequencing, the gene homepage serves more as a summary page of the gene-specific data in LOVD.
 Besides showing the basic information known about the gene in question (symbol, name,
  chromosome band, variant statistics, etc), curators also have quite a few options to customize the gene's homepage.
-\\
-\par
+\vskip \baselineskip
+
 If the gene you wish to view is already selected (its name is on the top of the page), simply click the ``Genes'' tab to open the gene's homepage.
 Otherwise, move your mouse over the ``Genes'' tab, and select the ``View all genes'' menu option.
 Then, locate the gene you wish to edit by searching or browsing through the given genes listing.
 Clicking the entry will direct you to the gene's homepage.
-\par
+
 Once on the gene's homepage, the gene will be selected (its name will appear on the very top of the page),
  which allows faster navigation to information related to the gene of interest.
 For instance, when a gene is selected and you click the ``Variants'' tab, you are directed to the gene-specific variant overview.
@@ -1490,7 +1485,7 @@ If you do not like this behavior, simply move your mouse over a tab, and select 
 Curators, appointed to a gene database, have the rights to edit its settings.
 Managers and up can edit all gene databases in the LOVD installation.
 To edit the gene's settings, first proceed to the \hyperlink{sec:gene_homepage}{gene's homepage}.
-\par
+
 \begin{wrapfigure}[4]{r}{5cm} % Only wrap for 4 lines
   \vspace{-26pt}
   \begin{framed}
@@ -1570,20 +1565,20 @@ Unchecking this checkbox turns this user in a collaborator for this gene;
  he can still see all public and unpublic data in this gene database, but he can't edit it, like curators can.
 If the user is to be a curator, he will receive notifications of variant data submissions and submission updates.
 Collaborators do not receive such emails.
-\par
+
 The second checkbox indicates whether or not the user's name and email address is
  shown on the gene homepage and on the top of every page while this gene is selected.
 Curators can be hidden from the gene homepage and the page headers by unchecking this checkbox.
 Collaborators are always hidden, it is therefore not possible to change the second checkbox while the first checkbox is unchecked.
-\par
+
 To remove an user as a curator or collaborator, click the red cross at the far right side of the table.
 You can only assign or remove curators if your user level is higher than that of the user you wish to assign/remove.
-\\
-\par
+\vskip \baselineskip
+
 Please note that managers and the database administrator can never be made collaborators, since disallowing them to edit data contradicts their user level.
 They will always be allowed to edit all data in the system.
 Selecting them as curators doesn't grant them additional access rights, but does enable the notification emails.
-\par
+
 Also, please note that all genes in LOVD should have at least one visible curator.
 To be able to successfully submit the ``Authorize curators'' form, there needs to be at least one user with the ``Allow edit'' and ``Shown'' checkboxes checked.
 
@@ -1658,8 +1653,8 @@ Otherwise we recommend using the longest transcript (i.e., the transcript result
 Using the predominant transcript makes confirmation of the variant effect on RNA level easier and
  usually the variant numbering on this transcript will be most familiar with other research groups.
 Using the longest transcript has the advantage of being able to annotate all exonic variants with a (predicted) effect on protein level.
-\\
-\par
+\vskip \baselineskip
+
 As said, LOVD3 allows you to use more than one transcript per gene.
 Good examples that justify using multiple transcripts in LOVD, is when different transcripts are expressed in different tissues,
  when changes in different transcripts cause different phenotypes, or when different research groups focus on different transcripts
@@ -1685,7 +1680,7 @@ In the opened menu, click ``Add transcript(s) to gene'' to open up the gene's ed
 Please wait while we contact Mutalyzer to provide a list of available transcripts.
 If you get the error message ``No more transcripts available that have not been added yet!'',
  then all transcripts that are available to Mutalyzer have already been added to this gene.
-\par
+
 Select the transcript(s) you would like to add, and click the button ``Add transcript(s) to gene''.
 After the confirmation, you will be forwarded to the gene homepage.
 Beneath the header ``Active transcripts'' you can see which transcripts are now active.
@@ -1709,8 +1704,8 @@ Alternatively, click the ``Transcripts'' tab from anywhere in LOVD.
 If you already had a gene database selected, you now see the transcripts active in this gene and you can click one to view its details.
 If you did not have a gene database selected, you now see all transcripts in the database.
 Use the filtering boxes to find the transcript you are looking for, and click it to view its details.
-\\
-\par
+\vskip \baselineskip
+
 Click on the ``Options'' menu button to open up the transcript entry's menu.
 If you do not see the ``Options'' menu button, you are not logged in or you do not have rights to edit this transcript's settings.
 In the opened menu, click ``Edit transcript information'' to open up the transcript's edit form.
@@ -1788,8 +1783,8 @@ In LOVD3, custom columns come in five different categories.
 Of these five different categories, two are \emph{shared}: they can be turned on or off by curators for specific diseases or genes, their so-called \emph{parent objects}.
 Some these columns' settings can also be changed per parent object they are enabled in.
 The two shared custom column types are ``Phenotype'', configurable per disease, and ``Variant On Transcript'', configurable per gene.
-\\
-\par
+\vskip \baselineskip
+
 The other three categories are system-wide; meaning they are either \emph{always} on (enabled), or \emph{always} off (disabled).
 These column are referred to as \emph{non-shared} columns, and can only be enabled, disabled and managed by Manager level users, or the Database administrator.
 The three non-shared custom column types are ``Individual'', ``Screening'' and ``Variant On Genome''.
@@ -1811,8 +1806,8 @@ The three non-shared custom column types are ``Individual'', ``Screening'' and `
 By creating a new custom column, you can define what kind of information you want to store in the database.
 Please note that \emph{defining} this type of information, does not automatically make LOVD \emph{store} this information.
 You will need to enable the column after defining it, so it actually gets added to the data entry form and show up in the data tables.
-\\
-\par
+\vskip \baselineskip
+
 To create a new custom column, click on the ``Create new custom data column'' option from the ``Setup'' tab dropdown menu,
  or the ``Create new custom data column'' link in the setup area.
 Firstly, you will need to choose which type of column you would like to create.
@@ -1828,7 +1823,7 @@ Here the description of the new column is defined; its displayed name and the ex
 \begin{description}
   \item[Column ID] \hfill \\
   Choose a simple unique name for your column, consisting of only letters, numbers and underscores.
-  Subcategories must be divided by a slash (/), such as ``Geographic\_origin/Country'', ``Blood\_pressure/Systolic'', ``Protocol/Date\_updated'', ``Frequency/dbSNP'' or ``Protein/Codon''.
+  Subcategories must be divided by a slash (/), such as ``Geographic\_origin\slash Country'', ``Blood\_pressure/Systolic'', ``Protocol/Date\_updated'', ``Frequency/dbSNP'' or ``Protein/Codon''.
   \item[Column heading] \hfill \\
   This will appear above the column in data tables and on the legend.
   In principle, this is free text, but try to keep it short, because a long name will increase the width of the column.
@@ -1857,7 +1852,7 @@ Its formats are out of the scope of this manual, and therefore not explained her
 \subsubsection{Using the data type wizard}
 To start the data type wizard, click the ``Start data type wizard'' button.
 The wizard will open in a new window.
-\par
+
 Firstly, you need to select what type of data entry field you want to create for your custom column.
 In the ``Basic form style'' field, choose from one of these options:
 \begin{description}
@@ -2028,8 +2023,8 @@ You can get there in two ways:
   To further filter the list for columns not yet added to the data table, fill in a zero (`0') in the ``Active'' column filter box and press the ``Enter'' key.
 \end{itemize}
 From the column overview, click the column you wish to enable.
-\\
-\par
+\vskip \baselineskip
+
 In the detailed view of the custom column, you can review all the column's settings to verify that it suits your needs.
 Click the ``Options'' menu button to open up the column's menu, and click on ``Enable column''.
 Please note that when your database already contains a lot of information, enabling a new non-shared column may take some time.
@@ -2063,8 +2058,8 @@ You can get there in two ways:
 Please note that in this custom column overview, the ``Active'' field simply states whether or not this column has been added to the data table, i.e. is active for \emph{any} parent object.
 \\
 From the column overview, click the column you wish to enable.
-\\
-\par
+\vskip \baselineskip
+
 In the detailed view of the custom column, you can review all the column's settings to verify that it suits your needs.
 Click the ``Options'' menu button to open up the column's menu, and click on ``Enable column''.
 Please note that if this shared custom column was not active yet and your database already contains a lot of information, enabling this column may take some time.
@@ -2107,13 +2102,12 @@ The object-specific settings, editable per gene or disease, are (also see sectio
   \item Show field on submission form
 \end{itemize}
 \defaultlists
-
-\vskip 1em
+\vspace{\baselineskip}
 To change these settings, first you need to proceed to the detailed view of the disease or gene in question.
 For Phenotype columns, move your mouse over the ``Diseases'' menu tab, and click the ``View all diseases'' link from the dropdown menu.
 For Variant On Transcript columns, move your mouse over the ``Genes'' menu tab, and click the ``View all genes'' link from the dropdown menu.
 Then, select the parent object you would like to change the object-specific settings for.
-\par
+
 From the parent object's detailed view, open the ``Options'' menu and click the ``View enabled phenotype columns'' or ``View enabled variant columns'' link.
 From the list of enabled columns, click the one you wish to edit the settings for.
 Open up the ``Options'' menu and then click ``Edit settings for this disease only'' for Phenotype columns, or ``Edit settings for this gene only'' for Variant On Transcript columns.
@@ -2130,14 +2124,14 @@ After submitting the form, the changes are effective immediately, but applied to
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-Both shared and non-shared columns have system-wide settings that can be changed by a manager or higher.
+Both shared and non-shared columns have sys\-tem-wide settings that can be changed by a manager or higher.
 However, the way these columns respond to changes to the system-wide settings are not the same.
 For non-shared columns, each change to the system-wide settings will be effective immediately.
 For shared columns, only the settings that are not \emph{object-specific} (see above) are effective immediately.
 All changes to object-specific settings however, come to serve as new default values for when the custom column in question is activated for new genes or diseases.
-Already enabled shared custom columns will not have their object-specific settings reset, unless they are explicitly reset to the (new) default settings.
-\\
-\par
+Already enabled shared custom columns will not have their object-specific settings reset, unless they are explicitly reset to the (new) default settings (described in the paragraph below).
+\vskip \baselineskip
+
 To edit a custom column's system-wide settings, you should start from the list of currently available columns.
 % This text is copied above.
 Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
@@ -2148,8 +2142,12 @@ You can also filter for category by typing (part of) the name in the ``Category'
 % Until here.
 Now, click the column which settings you wish to edit.
 Click the ``Options'' menu button to open up the column's menu, and click on ``Edit custom data column settings''.
-The form to edit the system-wide settings is equal to the form used to create a new custom column, with the exception of the ``Column ID'' field, which is not present here.
-All fields are explained in the section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+
+The form to edit the system-wide settings is equal to the form used to create a new custom column, with two exceptions.
+The ``Column ID'' field is not present here, since you can not change a column's ID once you created it.
+Also, for shared columns, at the bottom of the form a checkbox is present labeled ``Apply changes to all genes/diseases where this column is active''.
+Checking this checkbox effectively resets all enabled instances of the column and applies all changes you make on this form to them, overwriting possible modifications of object-specific settings.
+All other fields on this form are explained in the section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
 \end{document}
 
 %            s (section) ss (subsection)
@@ -2173,7 +2171,7 @@ List of available detection techniques: Specify a list of detection techniques a
 % Reset column to current defaults
 This will reset the column to the default settings, forgetting all your changes you may have made to the column's appearance. Please note that you can edit the default settings, too.
 You can (one by one) reset a selected column to the (new) default settings, to easily apply your changes to a selected column in a variant table or the patient table.
-You can have your changes applied immediately by overriding all local display settings, by selecting the checkbox "Apply changes to patient table where this column is active" in case of a patient table or "Apply changes to all genes where this column is active" in case of a variant table. This checkbox will only appear if the column has actually been added to any of the tables.
+You can have your changes applied immediately by overriding all local display settings, by selecting the checkbox "Apply changes to all genes where this column is active" in case of a variant table.
 
 %10
 \chapter{}
