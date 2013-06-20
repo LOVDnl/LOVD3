@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2013-05-30
- * For LOVD    : 3.0-05
+ * Modified    : 2013-06-20
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -62,21 +62,27 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'd.*, ' .
+                                           'COUNT(DISTINCT i2d.individualid) AS individuals, ' .
+                                           'COUNT(DISTINCT p.id) AS phenotypes, ' .
                                            'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d ' .
+                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (d.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (d.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
 
         // SQL code for viewing a list of entries.
-        $this->aSQLViewList['SELECT']   = 'd.*, ' .
-                                          'd.id AS diseaseid, COUNT(DISTINCT i2d.individualid) AS individuals, ' .
+        $this->aSQLViewList['SELECT']   = 'd.*, d.id AS diseaseid, ' .
+                                          'COUNT(DISTINCT i2d.individualid) AS individuals, ' .
+                                          'COUNT(DISTINCT p.id) AS phenotypes, ' .
                                           'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
         $this->aSQLViewList['WHERE']    = 'd.id > 0';
         $this->aSQLViewList['GROUP_BY'] = 'd.id';
@@ -87,6 +93,8 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol' => 'Official abbreviation',
                         'name' => 'Name',
                         'id_omim' => 'OMIM ID',
+                        'individuals' => 'Individuals reported having this disease',
+                        'phenotypes_' => 'Phenotype entries for this disease',
                         'genes_' => 'Associated with genes',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
@@ -110,8 +118,11 @@ class LOVD_Disease extends LOVD_Object {
                                     'view' => array('OMIM ID', 75),
                                     'db'   => array('d.id_omim', 'ASC', true)),
                         'individuals' => array(
-                                    'view' => array('Individuals', 80),
+                                    'view' => array('Individuals', 80, 'style="text-align : right;"'),
                                     'db'   => array('individuals', 'DESC', true)),
+                        'phenotypes' => array(
+                                    'view' => array('Phenotypes', 80, 'style="text-align : right;"'),
+                                    'db'   => array('phenotypes', 'DESC', true)),
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
                                     'db'   => array('genes_', false, 'TEXT')),
@@ -264,11 +275,14 @@ class LOVD_Disease extends LOVD_Object {
 
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'diseases/' . rawurlencode($zData['id']);
             $zData['symbol'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['symbol'] . '</A>';
         } else {
             if (!empty($zData['id_omim'])) {
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
+            }
+            $zData['phenotypes_'] = $zData['phenotypes'];
+            if ($zData['phenotypes']) {
+                $zData['phenotypes_'] = '<A href="phenotypes/disease/' . $zData['id'] . '">' . $zData['phenotypes'] . '</A>';
             }
             $zData['genes_'] = '';
             if (!empty($zData['genes'])) {

@@ -31,6 +31,13 @@
  * Fixed bug; When creating new shared custom column, "Show field on submission
    form" was incorrectly not tagged as updatable per parent object (gene or
    disease).
+ * Some numbers on the gene homepage (public variants, hidden variants) are now
+   clickable in case you are authorized to see these subsets.
+ * The disease listing now shows the number of phenotype entries associated with
+   each disease.
+ * The disease detailed view now shows the number of individuals reported having
+   this disease, and the number of phenotype entries associated with this
+   disease. The latter is a link leading to the phenotype data listing.
 
 
 /**************************

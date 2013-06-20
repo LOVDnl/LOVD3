@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2013-05-30
- * For LOVD    : 3.0-05
+ * Modified    : 2013-06-20
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -99,16 +99,19 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $aNavigation[CURRENT_PATH . '/columns']       = array('menu_columns.png', 'View enabled phenotype columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order'] = array('menu_columns.png', 'Re-order enabled phenotype columns', 1);
         $aNavigation['columns/Phenotype'] = array('menu_columns.png', 'View all available phenotype columns', 1);
+        $aNavigation['phenotypes/disease/' . $nID] = array('menu_magnifying_glass.png', 'View all phenotype entries for this disease', 1);
     }
     lovd_showJGNavigation($aNavigation, 'Diseases');
 
-    $_GET['search_diseaseids'] = $nID;
-    print('<BR><BR>' . "\n\n");
-    $_T->printTitle('Individuals', 'H4');
-    require ROOT_PATH . 'class/object_individuals.php';
-    $_DATA = new LOVD_Individual();
-    $_DATA->setSortDefault('id');
-    $_DATA->viewList('Individuals_for_D_VE', array('panelid', 'diseaseids'), true);
+    if ($zData['individuals']) {
+        $_GET['search_diseaseids'] = $nID;
+        print('<BR><BR>' . "\n\n");
+        $_T->printTitle('Individuals', 'H4');
+        require ROOT_PATH . 'class/object_individuals.php';
+        $_DATA = new LOVD_Individual();
+        $_DATA->setSortDefault('id');
+        $_DATA->viewList('Individuals_for_D_VE', array('panelid', 'diseaseids'), true);
+    }
 
     $_T->printFooter();
     exit;

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2012-11-21
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2013-06-20
+ * For LOVD    : 3.0-06
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -43,27 +43,52 @@ if ($_AUTH) {
 
 if (PATH_COUNT == 1 && !ACTION) {
     // URL: /phenotypes
-    // View all entries.
+    // Not supported, forward user to disease-specific overview.
+    header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/disease');
+    exit;
+}
 
-    define('PAGE_TITLE', 'View phenotypes');
+
+
+
+
+if (PATH_COUNT == 2 && $_PE[1] == 'disease' && !ACTION) {
+    // URL: /phenotypes/disease
+    // Present users the list of diseases to choose from, to view the phenotype entries for this disease.
+
+    define('PAGE_TITLE', 'Select a disease to view all phenotype entries');
+    $_T->printHeader();
+    $_T->printTitle();
+
+    require ROOT_PATH . 'class/object_diseases.php';
+    $_DATA = new LOVD_Disease();
+    $sViewListID = 'Diseases_for_Phenotype_VL';
+    $_GET['search_phenotypes'] = '!0';
+    $_DATA->setRowLink($sViewListID, CURRENT_PATH . '/' . $_DATA->sRowID);
+    $_DATA->viewList($sViewListID);
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) {
+    // URL: /phenotypes/disease/00001
+    // View all phenotype entries for a certain disease.
+
+    $nDiseaseID = sprintf('%05d', $_PE[2]);
+    define('PAGE_TITLE', 'View phenotypes for disease #' . $nDiseaseID);
     $_T->printHeader();
     $_T->printTitle();
 
     require ROOT_PATH . 'class/object_phenotypes.php';
 
-    $aDiseases = $_DB->query('SELECT * FROM ' . TABLE_DISEASES)->fetchAllAssoc();
-    if (count($aDiseases)) {
-        foreach ($aDiseases as $aDisease) {
-            $_GET['search_diseaseid'] = $aDisease['id'];
-            $_DATA = new LOVD_Phenotype($aDisease['id']);
-            $_DATA->setSortDefault('phenotypeid');
-            print('<B>' . $aDisease['name'] . ' (<A href="diseases/' . $aDisease['id'] . '">' . $aDisease['symbol'] . '</A>)</B>');
-            $_DATA->viewList('Phenotypes_' . $aDisease['id'], array('phenotypeid', 'individualid', 'diseaseid'), true, true);
-        }
-    } else {
-        print('<BR>' . "\n");
-        lovd_showInfoTable('No disease entries found.', 'stop');
-    }
+    $_DATA = new LOVD_Phenotype($nDiseaseID);
+    $_GET['search_diseaseid'] = $nDiseaseID;
+    $_DATA->viewList('Phenotypes_for_Disease_' . $nDiseaseID, array('diseaseid'));
 
     $_T->printFooter();
     exit;

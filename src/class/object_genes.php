@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2013-06-12
+ * Modified    : 2013-06-18
  * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -130,10 +130,10 @@ class LOVD_Gene extends LOVD_Object {
                         'refseq_url_' => 'Refseq URL',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
-                        'variants' => 'Total number of public variants reported',
+                        'variants_' => 'Total number of public variants reported',
                         'uniq_variants' => 'Unique public DNA variants reported',
                         'count_individuals' => 'Individuals with public variants',
-                        'hidden_variants' => 'Hidden variants',
+                        'hidden_variants_' => 'Hidden variants',
                         'note_index' => 'Notes',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => 'Date created',
@@ -540,6 +540,18 @@ class LOVD_Gene extends LOVD_Object {
                     $zData['collaborators_'] .= ($i == 1? '' : ($i == $nCollaborators? ' and ' : ', ')) . '<A href="users/' . $nUserID . '">' . $sName . '</A>';
                 }
                 $this->aColumnsViewEntry['collaborators_'][0] .= ' (' . $nCollaborators . ')';
+            }
+
+            // Links on the stats numbers that lead to their views.
+            $zData['variants_'] = 0;
+            if ($zData['variants']) {
+                $zData['variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['variants'] . '</A>';
+            }
+            //'uniq_variants' => 'Unique public DNA variants reported',
+            //'count_individuals' => 'Individuals with public variants',
+            $zData['hidden_variants_'] = 0;
+            if ($zData['hidden_variants'] && $_AUTH['level'] >= LEVEL_CURATOR) {
+                $zData['hidden_variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Pending%22%7C%3D%22Non%20public%22">' . $zData['hidden_variants'] . '</A>';
             }
 
             $zData['note_index'] = html_entity_decode($zData['note_index']);
