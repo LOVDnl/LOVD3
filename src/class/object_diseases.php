@@ -51,6 +51,7 @@ class LOVD_Disease extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT d.*, ' .
@@ -62,14 +63,15 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'd.*, ' .
-                                           'COUNT(DISTINCT i2d.individualid) AS individuals, ' .
+                                           'COUNT(DISTINCT i.id) AS individuals, ' .
                                            'COUNT(DISTINCT p.id) AS phenotypes, ' .
-                                           'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, ' .
+                                           'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d ' .
                                            'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') ' .
+                                           'LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (d.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (d.edited_by = ue.id)';
@@ -77,12 +79,13 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'd.*, d.id AS diseaseid, ' .
-                                          'COUNT(DISTINCT i2d.individualid) AS individuals, ' .
+                                          'COUNT(DISTINCT i.id) AS individuals, ' .
                                           'COUNT(DISTINCT p.id) AS phenotypes, ' .
                                           'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid) ' .
+                                          'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ') ' .
+                                          'LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid AND p.statusid >= ' . STATUS_MARKED . ') ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
         $this->aSQLViewList['WHERE']    = 'd.id > 0';
         $this->aSQLViewList['GROUP_BY'] = 'd.id';
