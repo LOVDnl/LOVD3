@@ -213,7 +213,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-06-20} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-06-21} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -810,7 +810,7 @@ For most event types, it will include the ID of the entry that was created, edit
 
 \subsection{Removing log entries}
 \begin{wrapfigure}[4]{r}{5cm} % Only wrap for 4 lines
-  \vspace{-26pt}
+  \vspace{-25pt}
   \begin{framed}
     \raisebox{-0.5mm}{\includegraphics[width=4mm]{cross.png}} Delete log entry\\
     \raisebox{-0.5mm}{\includegraphics[width=4mm]{options.png}} Options menu button
@@ -1487,7 +1487,7 @@ Managers and up can edit all gene databases in the LOVD installation.
 To edit the gene's settings, first proceed to the \hyperlink{sec:gene_homepage}{gene's homepage}.
 
 \begin{wrapfigure}[4]{r}{5cm} % Only wrap for 4 lines
-  \vspace{-26pt}
+  \vspace{-25pt}
   \begin{framed}
     \raisebox{-0.5mm}{\includegraphics[width=2.1cm]{options_button.png}}\\Options menu button
   \end{framed}
@@ -1612,7 +1612,7 @@ This form greatly resembles the bottom part of the ``Authorize curators'' form, 
  hide the curator names (see figure \ref{fig:c05s05_screenshot_sort_curators} on page \pageref{fig:c05s05_screenshot_sort_curators}).
 
 \begin{wrapfigure}[3]{r}{5cm} % Only wrap for 3 lines
-  \vspace{-26pt}
+  \vspace{-25pt}
   \begin{framed}
     \raisebox{-0.5mm}{\includegraphics[width=1.5mm]{drag_vertical.png}} Drag/sort handle
   \end{framed}
@@ -1987,6 +1987,7 @@ Here you can select which custom links will be active in this custom column.
 \noindent
 Enter your password at the bottom of the form and submit it.
 Your custom column is now created, and you can choose to enable the column if you wish.
+Also, you might want to check the \hyperlink{sec:columns_order}{column order}, since newly created custom columns are appended to be the last column.
 
 
 
@@ -2031,6 +2032,7 @@ Please note that when your database already contains a lot of information, enabl
 If this is the case, LOVD will display a warning.
 Type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
 The column is now enabled and visible in the data entry forms and the data listings and detailed views.
+You may want to review or \hyperlink{ssec:columns_order_system-wide}{change the order of the custom columns} now.
 
 
 
@@ -2043,6 +2045,9 @@ The column is now enabled and visible in the data entry forms and the data listi
   \end{leftbar}
 \end{wrapfigure}
 The shared custom column types are Phenotype and Variant On Transcript.
+Before enabling more shared columns, you might first want to check out the default order in which they will appear.
+To change the default order for shared custom columns, see subsection ``\hyperlink{ssec:columns_order_system-wide}{Changing the system-wide custom column order}''.
+
 To enable a shared custom column, you should start from the list of currently available columns.
 You can get there in two ways:
 \begin{itemize}
@@ -2068,6 +2073,8 @@ From the ``Add this column'' selection list, select the parent objects (diseases
 For help on how to use this type of selection list, move your mouse over the blue help icon.
 Type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
 The column is now enabled and visible in the data entry forms and the data listings and detailed views.
+To make sure the column ended up in the right order between the already enabled ones,
+ you may want to review or \hyperlink{ssec:columns_order_shared}{change the object-specific order of shared custom columns}.
 
 
 
@@ -2103,6 +2110,7 @@ The object-specific settings, editable per gene or disease, are (also see sectio
 \end{itemize}
 \defaultlists
 \vspace{\baselineskip}
+% Copied this text to below.
 To change these settings, first you need to proceed to the detailed view of the disease or gene in question.
 For Phenotype columns, move your mouse over the ``Diseases'' menu tab, and click the ``View all diseases'' link from the dropdown menu.
 For Variant On Transcript columns, move your mouse over the ``Genes'' menu tab, and click the ``View all genes'' link from the dropdown menu.
@@ -2148,6 +2156,104 @@ The ``Column ID'' field is not present here, since you can not change a column's
 Also, for shared columns, at the bottom of the form a checkbox is present labeled ``Apply changes to all genes/diseases where this column is active''.
 Checking this checkbox effectively resets all enabled instances of the column and applies all changes you make on this form to them, overwriting possible modifications of object-specific settings.
 All other fields on this form are explained in the section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+
+
+
+
+
+\pagebreak
+\hypertarget{sec:columns_order}{}
+\section{Changing the order of custom columns}
+Custom columns are shown in a predefined, but adaptable order.
+This order determines how custom columns are shown in the data tables, in the download files, and on data entry forms.
+It is therefore important that the columns are sorted in a sensible order.
+
+Just like the custom column settings, shared columns can have an object-specific order, different from the default order.
+Similarly, the order of non-shared columns is system-wide and needs to be configured by a manager or up.
+\vskip \baselineskip
+
+Please note that columns from different categories can not be mixed.
+% FIXME: add link to info on the overview?
+Some data listings show overviews of different types of data joined together, such as variants on genomic level joined with the variant's effect on transcript level.
+In this case, the columns representing genomic data, such as chromosome, DNA description on genomic level and the allele field,
+ can not be mixed with columns representing data related to the change on the transcript, such as exon number, DNA description on the transcript level or the effect on protein level.
+Only the order in which each category's columns are shown, can be changed.
+
+
+
+\hypertarget{ssec:columns_order_shared}{}
+\subsection{Changing the object-specific order of shared custom columns}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+When a new gene or disease is created, the current system-wide order of Variant On Transcript or Phenotype columns respectively, is copied and becomes this object's order of columns.
+Curators and up can change this order, for instance when a new column has been enabled, since newly enabled columns are very likely to end up as the last column which may not be desired.
+
+% Copied this text from above.
+To change the order, first you need to proceed to the detailed view of the disease or gene in question.
+For Phenotype columns, move your mouse over the ``Diseases'' menu tab, and click the ``View all diseases'' link from the dropdown menu.
+For Variant On Transcript columns, move your mouse over the ``Genes'' menu tab, and click the ``View all genes'' link from the dropdown menu.
+Then, select the parent object you would like to change the order of the custom columns of.
+
+From the parent object's detailed view, open the ``Options'' menu and click the ``Re-order enabled phenotype columns'' or ``Re-order enabled variant columns'' link.
+Alternatively, click the ``View enabled phenotype columns'' or ``View enabled variant columns'' link from the menu,
+ and on the page that follows open the ``Options'' menu to click the ``Change order of columns'' link.
+\vskip \baselineskip
+
+\begin{wrapfigure}[3]{r}{5cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{framed}
+    \raisebox{-0.5mm}{\includegraphics[width=1.5mm]{drag_vertical.png}} Drag/sort handle
+  \end{framed}
+\end{wrapfigure}
+You now see the enabled columns for the selected parent object, with on the left of each column's header a handle (see figure) to drag the column up or down.
+To change the order in which the columns are shown, move your mouse over the drag handle, and click and drag the name up or down the list.
+Release the mouse button where you wish to drop the column.
+Don't forget to click the ``Save'' button to save the new sort order!
+
+
+
+\hypertarget{ssec:columns_order_system-wide}{}
+\subsection{Changing the system-wide custom column order}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+For non-shared columns, changing the system-wide custom column order will effectively change the current order in which they are shown in data listings and data entry forms.
+For shared columns, changing the system-wide order will merely change the default order in which the columns appear when new parent objects (diseases, genes) are created.
+It also influences where a newly enabled column will show up amidst the columns already active for the object it just got added to.
+The order of already enabled shared custom columns will not be affected.
+\vskip \baselineskip
+
+To change the custom column's system-wide order, you should start from the list of currently available columns.
+% This text is copied above.
+Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+ click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
+This is the list of all custom columns.
+To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
+% Until here.
+Now, click the options wheel icon again, and click the ``Change order of columns'' link.
+Alternatively, first select one of the columns from the selected category, and on the detailed view open the ``Options'' menu and click the ``Re-order all \guillemotleft\emph{category}\guillemotright\ columns'' link.
+\vskip \baselineskip
+
+\begin{wrapfigure}[3]{r}{5cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{framed}
+    \raisebox{-0.5mm}{\includegraphics[width=1.5mm]{drag_vertical.png}} Drag/sort handle
+  \end{framed}
+\end{wrapfigure}
+You now see all custom columns in this category, both active and not active.
+On the left of each column's header you see a handle (see figure) to drag the column up or down.
+To change the order in which the columns are shown, move your mouse over the drag handle, and click and drag the name up or down the list.
+Release the mouse button where you wish to drop the column.
+Don't forget to click the ``Save'' button to save the new sort order!
 \end{document}
 
 %            s (section) ss (subsection)
