@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2013-03-26
- * For LOVD    : 3.0-04
+ * Modified    : 2013-06-24
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -236,7 +236,8 @@ class LOVD_SharedColumn extends LOVD_Object {
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Form settings</B>'),
-                        array('Notes on form (optional)', '', 'textarea', 'description_form', 50, 2),
+                        array('Notes on form (optional)<BR>(HTML enabled)', '', 'textarea', 'description_form', 50, 2),
+                        array('', '', 'note', 'If you think the data field needs clarification on the data entry form, add it here - it will appear below the field on the data entry form just like this piece of text.'),
            'options' => array('List of possible options', '', 'textarea', 'select_options', 50, 5),
       'options_note' => array('', '', 'note', 'This is used to build the available options for the selection list.<BR>One option per line.<BR>If you want to use abbreviations, use: Abbreviation = Long name<BR>Example: &quot;DMD = Duchenne Muscular Dystrophy&quot;'),
                         'hr',

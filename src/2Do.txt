@@ -12,6 +12,7 @@ Run package script, follow instructions.
 Prioritize:
 ===========
 - !!! Nieuw overzicht: individual met alle phenotype kolommen
+- Position_c_start & position_c_end staan in de volgorde op 't genoom; dus voor antisense genen in de niet-oplopende volgorde, dus niet correct vergeleken met de c. nomenclatuur. Willen we dat?!!??
 - in_gene combineren met scr2var, screenings, individuals en ind2dis net zoals de full data view?
 - 2013-03-06 Had random logouts while mapping and preparing my release for 3.0-03, but they disappeared and I could not find a connection, seemed total random. $_SESSION was intact, but $_SESSION['auth'] was gone.
   + 2013-05-03 Exactly same here on whole_genome installation, helft ingeladen, tijdens mappen verdwijnt auth randomly; maar een refresh brengt 'm soms terug... !@#!@$!!#
@@ -24,10 +25,11 @@ Prioritize:
 - Optimalisatie in VL: als een view traag WORDT (dus niet was!), hoe vangen we dat dan op? En andersom? Maak settings instelbaar!
 - LOVD site: index_list: genen uniek maken?
 - Merge code from Peikuan?
+- Age cols: allow 01d input, and change silently to 00y00m01d.
+- Age cols: allow hours also.
 - Doe iets met HVP status? Johan: kun je er niet een opvallende ster (geel of zo) van maken waarvoor je uitlegt krijg als je er op klikt?
 - LOVD will move to use NGs and LRGs as much as possible for transcript information and the name checker, to reduce the use of UD slices.
 - Pedigree tree: finish and implement. Mark currently selected individual with asterisk? Perhaps implement more icons?
-- BUG: Curator removes column from his genes, he has no values. Selects both genes, LOVD warns that deletion is permanent (NOT CORRECT!) and 63 values will be lost (NOT CORRECT!) as if the alter table is run! :S
 - Import: Als db admin moet ik toch wel iets kunnen importeren en zeggen dat LOVD de owner is? Kan nu niet, want LOVD staat niet in de owner selection list.
 - BUG: Curate individual: error: geographic origin: '' is not a correct value. Do nothing, submit form: error: no password filled in (but it was not asked).
 - Submission emails don't show diseases connected to individual, or genes connected to screening.
@@ -69,6 +71,7 @@ Prioritize:
 - VCF importer:
   + Negeer varianten zonder frequency (het huidige sample heeft 'm niet, andere samples wel).
   + Voor multi-sample files, geef aan welke sample je wilt importeren. Dat scheelt gebruikers veel werk.
+  + Homozygoot gevonden? Dat weet je niet, kan ook hemizygoot zijn. Dus: allele=4? (homo/hemizygous)
 - Ensembl compact view toont geen varianten.
 - Gene delete heeft GEEN CORRECTE reminder bij het verwijderen!!!
   + Disease verwijderen hoort ook een reminder te geven, dat alle phenotype data verdwijnt, mits aanwezig.
@@ -658,7 +661,6 @@ Needed before release
     Astrid Out en Carli Tops zouden graag de mogelijkheid hebben om een overzicht te krijgen van individuals naar mutaties, i.e.
         in de database van GenX kunnen zoeken op (aanwezigheid van?) varianten in GenY.
     Default list_size moet onthouden worden in COOKIE, net zoals de hidden cols.
-++++Check alle queries 'ns.
     Cols - check huidige omschrijvingen in DMD of shared LOVD install, wellicht anders nu.
         DB-ID column heet ID op het formulier.
 +++ Kolommen verkeerd gemapped.
@@ -666,11 +668,10 @@ Needed before release
             Individual/Origin/Geographic, Individual/Origin/Ethnic, Individual/Origin/Population
                 Ertussen dan maar? Wacht ff hoor... de speciale variant overview werkt alleen op de Individual cols...
             (...) veel naar gevraagd wordt (Variant_Amino_acid_SIFT, Variant_Amino_acid_PolyPhen, Variant_Amino_acid_AlignGVGD, DNA-reported).
-            Er is verwarring en overlap over de onderwerpen Allele, Individual/Occurence, Individual/Mutation/Origin, Individual/Mutation/Origin_De_Novo.
     Techniek nodig om de database dicht te zetten, tijdens de update.
         Johan wil een installatie dicht kunnen gooien (behalve hem en de DBA ofzo?), om tijdelijk te voorkomen dat submitters iets editen.
     Column type wizard:
-        Select: waarde i.p.v. yes (-- select --) or no.
+        Select: waarde i.p.v. yes (-- select --) or no..
     Gebruikers de external sources laten beheren?
     Kunnen we bij de upgrade zien of een upgrade al gedaan is? Dat een foutmelding "duplicate key" ofzo ondervangen wordt, zodat ie doorgaat?
 

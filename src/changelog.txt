@@ -38,6 +38,13 @@
  * The disease detailed view now shows the number of individuals reported having
    this disease, and the number of phenotype entries associated with this
    disease. The latter is a link leading to the phenotype data listing.
+ * Fixed bug; When curators removed custom columns from all genes or diseases
+   they control, the number of values reported to be lost could be too high.
+ * Now that LOVD provides information on values lost when removing custom
+   columns, curators are allowed again to delete phenotype columns containing
+   data.
+ * Clarified data entry form notes on the object-specific custom column edit
+   form.
 
 
 /**************************

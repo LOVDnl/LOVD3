@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2013-03-26
- * For LOVD    : 3.0-04
+ * Modified    : 2013-06-24
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1745,13 +1745,13 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
+            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
+            $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
-                // Curators may only remove this column if there are no longer phenotype entries with data in it.
-                $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")"), (p.`' . $zData['id'] . '` != "" OR p.`' . $zData['id'] . '` IS NOT NULL) AS in_use FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ') OR d.id = 0 GROUP BY d.id HAVING in_use IS NULL';
-                $aSQL = array_merge(array($zData['id']), $_AUTH['curates']);
-            } else {
-                $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
-                $aSQL = array($zData['id']);
+                // FIXME: Before today (2013-06-24), this code contained a check if the column had values or not. Removal was then disallowed. Perhaps we should be checking here if there are values in
+                //   entries that this user does not have access to. If two curators share access on the disease, but do not share a gene, one curator should not have rights to delete the other's data.
+                $sSQL .= ' LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ') OR d.id = 0 GROUP BY d.id';
+                $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
             $sSQL .= ' ORDER BY d.symbol';
             $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
@@ -1971,12 +1971,17 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
     if ($nEntriesWithData == -1) {
         // We will determine the number of affected entries dynamically. For each target, we must know how much data will get lost.
+        // 2013-06-24; 3.0-06; BUT make sure you only select genes and diseases that still have this column, otherwise you get really weird results (1+1=5?).
+        //   When selecting all from the options list, LOVD will take the sum of the values, which may not match the sum of the individually selected entries.
         if ($sCategory == 'VariantOnTranscript') {
-            $aEntriesWithData = $_DB->query('SELECT ' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS vot LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-" GROUP BY ' . $aTableInfo['unit'] . 'id')->fetchAllCombine();
+            $aEntriesWithData = $_DB->query('SELECT sc.' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS data INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (data.transcriptid = t.id) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (t.geneid = sc.geneid) WHERE sc.colid = ? AND data.`' . $zData['id'] . '` IS NOT NULL AND data.`' . $zData['id'] . '` != "" AND data.`' . $zData['id'] . '` != "-" GROUP BY sc.' . $aTableInfo['unit'] . 'id', array($zData['id']))->fetchAllCombine();
         } else {
-            $aEntriesWithData = $_DB->query('SELECT ' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' WHERE `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-" GROUP BY ' . $aTableInfo['unit'] . 'id')->fetchAllCombine();
+            $aEntriesWithData = $_DB->query('SELECT sc.' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS data INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING (' . $aTableInfo['unit'] . 'id) WHERE sc.colid = ? AND data.`' . $zData['id'] . '` IS NOT NULL AND data.`' . $zData['id'] . '` != "" AND data.`' . $zData['id'] . '` != "-" GROUP BY sc.' . $aTableInfo['unit'] . 'id', array($zData['id']))->fetchAllCombine();
         }
+        $nParentObjects = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id']))->fetchColumn();
         print('      <SCRIPT type="text/javascript">' . "\n" .
+              '        nParentObjects = ' . $nParentObjects . "\n" .
+              '        nAllEntriesWithData = ' . array_sum(array_values($aEntriesWithData)) . "\n" .
               '        aEntriesWithData = {');
         $i = 0;
         foreach ($aEntriesWithData as $sTarget => $nEntries) {
@@ -1987,13 +1992,16 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             }
             print('\'' . $sTarget . '\' : ' . $nEntries);
         }
-        print('};' . "\n" .
-              '      nAllEntriesWithData = ' . array_sum(array_values($aEntriesWithData)) . "\n\n" .
+        print('};' . "\n\n" .
               '        $("#oRemoveColumn select[name=\'target[]\']").change(
                             function() {
-                                if ($(this).children(":selected").size() == $(this).children().size()) {
-                                    nEntriesWithData = nAllEntriesWithData;
+                                if ($(this).children(":selected").size() == nParentObjects) {
                                     $("#oEntriesWithData #permanent").html("permanently");
+                                } else {
+                                    $("#oEntriesWithData #permanent").html("");
+                                }
+                                if ($(this).children(":selected").size() >= aEntriesWithData.length) {
+                                    nEntriesWithData = nAllEntriesWithData;
                                 } else {
                                     nEntriesWithData = 0;
                                     $(this).children(":selected").each(function() {
@@ -2001,7 +2009,6 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                                             nEntriesWithData += aEntriesWithData[$(this).val()];
                                         }
                                     });
-                                    $("#oEntriesWithData #permanent").html("");
                                 }
                                 if (nEntriesWithData) {
                                     $("#oEntriesWithData #entries").html(nEntriesWithData + " value" + (nEntriesWithData == 1? "" : "s"));
