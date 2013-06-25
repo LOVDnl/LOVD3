@@ -26,8 +26,9 @@
  * In the genes listing, diseases without abbreviation now have their full name
    printed.
  * Improved description on legend about Allele field.
- * Added sections "Editing custom column settings" and "Changing the order of
-   custom columns" to the custom column chapter in the manual.
+ * Added sections "Editing custom column settings", "Changing the order of
+   custom columns" and "Disabling custom columns" to the custom column chapter
+   in the manual.
  * Fixed bug; When creating new shared custom column, "Show field on submission
    form" was incorrectly not tagged as updatable per parent object (gene or
    disease).

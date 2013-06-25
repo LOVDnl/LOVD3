@@ -213,7 +213,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-06-21} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-06-25} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -1781,7 +1781,7 @@ In LOVD3, custom columns come in five different categories.
 \end{description}
 
 Of these five different categories, two are \emph{shared}: they can be turned on or off by curators for specific diseases or genes, their so-called \emph{parent objects}.
-Some these columns' settings can also be changed per parent object they are enabled in.
+Some of these columns' settings can also be changed per parent object they are enabled in.
 The two shared custom column types are ``Phenotype'', configurable per disease, and ``Variant On Transcript'', configurable per gene.
 \vskip \baselineskip
 
@@ -2011,6 +2011,7 @@ It must already exist in the database, otherwise you first need to \hyperlink{se
 \end{wrapfigure}
 The non-shared, system-wide custom column types are Individual, Screening and Variant On Genome.
 To enable a non-shared custom column, you should start from the list of currently available columns.
+% This text is also used for disabling custom columns.
 You can get there in two ways:
 \begin{itemize}
   \item Depending on which type of column you wish to enable,
@@ -2021,6 +2022,7 @@ You can get there in two ways:
   This is the list of all custom columns.
   To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
   You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+% Until here.
   To further filter the list for columns not yet added to the data table, fill in a zero (`0') in the ``Active'' column filter box and press the ``Enter'' key.
 \end{itemize}
 From the column overview, click the column you wish to enable.
@@ -2069,9 +2071,11 @@ In the detailed view of the custom column, you can review all the column's setti
 Click the ``Options'' menu button to open up the column's menu, and click on ``Enable column''.
 Please note that if this shared custom column was not active yet and your database already contains a lot of information, enabling this column may take some time.
 If this is the case, LOVD will display a warning.
-From the ``Add this column'' selection list, select the parent objects (diseases or genes) you wish to enable this column for.
+From the ``Add this column to'' selection list, select the parent objects (diseases or genes) you wish to enable this column for.
 For help on how to use this type of selection list, move your mouse over the blue help icon.
-Type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
+If the parent object you are looking for is not shown in this list, you have no authorization on the object to change its column's settings.
+
+Finally, type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
 The column is now enabled and visible in the data entry forms and the data listings and detailed views.
 To make sure the column ended up in the right order between the already enabled ones,
  you may want to review or \hyperlink{ssec:columns_order_shared}{change the object-specific order of shared custom columns}.
@@ -2085,6 +2089,41 @@ Shared columns have some settings, mostly related to the display of the column, 
 We will refer to these settings as \emph{object-specific settings}.
 All other settings are system-wide and can only be performed by a manager or higher.
 Non-shared columns only have system-wide settings and can not be configured per disease or gene.
+
+
+
+\subsection{Editing system-wide custom column settings}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Both shared and non-shared columns have sys\-tem-wide settings that can be changed by a manager or higher.
+However, the way these columns respond to changes to the system-wide settings are not the same.
+For non-shared columns, each change to the system-wide settings will be effective immediately.
+For shared columns, only the settings that are not \emph{object-specific} (see above) are effective immediately.
+All changes to object-specific settings however, come to serve as new default values for when the custom column in question is activated for new genes or diseases.
+Already enabled shared custom columns will not have their object-specific settings reset, unless they are explicitly reset to the (new) default settings (described in the paragraph below).
+\vskip \baselineskip
+
+To edit a custom column's system-wide settings, you should start from the list of currently available columns.
+% This text is copied above.
+Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+ click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
+This is the list of all custom columns.
+To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
+You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+% Until here.
+Now, click the column which settings you wish to edit.
+Click the ``Options'' menu button to open up the column's menu, and click on ``Edit custom data column settings''.
+
+The form to edit the system-wide settings is equal to the form used to create a new custom column, with two exceptions.
+The ``Column ID'' field is not present here, since you can not change a column's ID once you created it.
+Also, for shared columns, at the bottom of the form a checkbox is present labeled ``Apply changes to all genes/diseases where this column is active''.
+Checking this checkbox effectively resets all enabled instances of the column and applies all changes you make on this form to them, overwriting possible modifications of object-specific settings.
+All other fields on this form are explained in the section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
 
 
 
@@ -2124,41 +2163,6 @@ After submitting the form, the changes are effective immediately, but applied to
 
 
 
-\subsection{Editing system-wide custom column settings}
-\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
-  \vspace{-25pt}
-  \begin{leftbar}
-    Required level: Manager\\
-    Available from: LOVD 3.0 Build 01
-  \end{leftbar}
-\end{wrapfigure}
-Both shared and non-shared columns have sys\-tem-wide settings that can be changed by a manager or higher.
-However, the way these columns respond to changes to the system-wide settings are not the same.
-For non-shared columns, each change to the system-wide settings will be effective immediately.
-For shared columns, only the settings that are not \emph{object-specific} (see above) are effective immediately.
-All changes to object-specific settings however, come to serve as new default values for when the custom column in question is activated for new genes or diseases.
-Already enabled shared custom columns will not have their object-specific settings reset, unless they are explicitly reset to the (new) default settings (described in the paragraph below).
-\vskip \baselineskip
-
-To edit a custom column's system-wide settings, you should start from the list of currently available columns.
-% This text is copied above.
-Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
- click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
-This is the list of all custom columns.
-To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
-You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
-% Until here.
-Now, click the column which settings you wish to edit.
-Click the ``Options'' menu button to open up the column's menu, and click on ``Edit custom data column settings''.
-
-The form to edit the system-wide settings is equal to the form used to create a new custom column, with two exceptions.
-The ``Column ID'' field is not present here, since you can not change a column's ID once you created it.
-Also, for shared columns, at the bottom of the form a checkbox is present labeled ``Apply changes to all genes/diseases where this column is active''.
-Checking this checkbox effectively resets all enabled instances of the column and applies all changes you make on this form to them, overwriting possible modifications of object-specific settings.
-All other fields on this form are explained in the section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
-
-
-
 
 
 \pagebreak
@@ -2178,42 +2182,6 @@ Some data listings show overviews of different types of data joined together, su
 In this case, the columns representing genomic data, such as chromosome, DNA description on genomic level and the allele field,
  can not be mixed with columns representing data related to the change on the transcript, such as exon number, DNA description on the transcript level or the effect on protein level.
 Only the order in which each category's columns are shown, can be changed.
-
-
-
-\hypertarget{ssec:columns_order_shared}{}
-\subsection{Changing the object-specific order of shared custom columns}
-\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
-  \vspace{-25pt}
-  \begin{leftbar}
-    Required level: Curator\\
-    Available from: LOVD 3.0 Build 01
-  \end{leftbar}
-\end{wrapfigure}
-When a new gene or disease is created, the current system-wide order of Variant On Transcript or Phenotype columns respectively, is copied and becomes this object's order of columns.
-Curators and up can change this order, for instance when a new column has been enabled, since newly enabled columns are very likely to end up as the last column which may not be desired.
-
-% Copied this text from above.
-To change the order, first you need to proceed to the detailed view of the disease or gene in question.
-For Phenotype columns, move your mouse over the ``Diseases'' menu tab, and click the ``View all diseases'' link from the dropdown menu.
-For Variant On Transcript columns, move your mouse over the ``Genes'' menu tab, and click the ``View all genes'' link from the dropdown menu.
-Then, select the parent object you would like to change the order of the custom columns of.
-
-From the parent object's detailed view, open the ``Options'' menu and click the ``Re-order enabled phenotype columns'' or ``Re-order enabled variant columns'' link.
-Alternatively, click the ``View enabled phenotype columns'' or ``View enabled variant columns'' link from the menu,
- and on the page that follows open the ``Options'' menu to click the ``Change order of columns'' link.
-\vskip \baselineskip
-
-\begin{wrapfigure}[3]{r}{5cm} % Only wrap for 3 lines
-  \vspace{-25pt}
-  \begin{framed}
-    \raisebox{-0.5mm}{\includegraphics[width=1.5mm]{drag_vertical.png}} Drag/sort handle
-  \end{framed}
-\end{wrapfigure}
-You now see the enabled columns for the selected parent object, with on the left of each column's header a handle (see figure) to drag the column up or down.
-To change the order in which the columns are shown, move your mouse over the drag handle, and click and drag the name up or down the list.
-Release the mouse button where you wish to drop the column.
-Don't forget to click the ``Save'' button to save the new sort order!
 
 
 
@@ -2254,6 +2222,132 @@ On the left of each column's header you see a handle (see figure) to drag the co
 To change the order in which the columns are shown, move your mouse over the drag handle, and click and drag the name up or down the list.
 Release the mouse button where you wish to drop the column.
 Don't forget to click the ``Save'' button to save the new sort order!
+
+
+
+\pagebreak
+\hypertarget{ssec:columns_order_shared}{}
+\subsection{Changing the object-specific order of shared custom columns}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+When a new gene or disease is created, the current system-wide order of Variant On Transcript or Phenotype columns respectively, is copied and becomes this object's order of columns.
+Curators and up can change this order, for instance when a new column has been enabled, since newly enabled columns are very likely to end up as the last column which may not be desired.
+
+% Copied this text from above.
+To change the order, first you need to proceed to the detailed view of the disease or gene in question.
+For Phenotype columns, move your mouse over the ``Diseases'' menu tab, and click the ``View all diseases'' link from the dropdown menu.
+For Variant On Transcript columns, move your mouse over the ``Genes'' menu tab, and click the ``View all genes'' link from the dropdown menu.
+Then, select the parent object you would like to change the order of the custom columns of.
+
+From the parent object's detailed view, open the ``Options'' menu and click the ``Re-order enabled phenotype columns'' or ``Re-order enabled variant columns'' link.
+Alternatively, click the ``View enabled phenotype columns'' or ``View enabled variant columns'' link from the menu,
+ and on the page that follows open the ``Options'' menu to click the ``Change order of columns'' link.
+\vskip \baselineskip
+
+\begin{wrapfigure}[3]{r}{5cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{framed}
+    \raisebox{-0.5mm}{\includegraphics[width=1.5mm]{drag_vertical.png}} Drag/sort handle
+  \end{framed}
+\end{wrapfigure}
+You now see the enabled columns for the selected parent object, with on the left of each column's header a handle (see figure) to drag the column up or down.
+To change the order in which the columns are shown, move your mouse over the drag handle, and click and drag the name up or down the list.
+Release the mouse button where you wish to drop the column.
+Don't forget to click the ``Save'' button to save the new sort order!
+
+
+
+
+
+\section{Disabling custom columns}
+Custom columns that you no longer wish to use, can in most circumstances be removed by disabling the column.
+Exceptions in this case are \emph{HGVS standard} columns.
+HGVS standard custom columns are columns that are part of the mandatory minimal data set as defined by the HGVS for Locus-Specific DataBases (LSDBs).
+This is to preserve the minimal quality of the data within the database, and LOVD will not allow you to remove these columns.
+Disabling non-shared custom columns is a system-wide change, which requires manager access.
+Disabling shared custom columns can be done per parent-object and requires curator access.
+
+
+
+\subsection{Disabling non-shared custom columns}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+To disable a non-shared custom column, you should start from the list of currently active columns.
+% This text is also used for enabling custom columns.
+You can get there in two ways:
+\begin{itemize}
+  \item Depending on which type of column you wish to enable,
+   click the ``View active custom columns'' link in the ``Individuals'' or ``Screenings'' menu tabs' dropdown menu,
+   or the ``View active genomic custom columns'' link from the ``Variants'' menu tab dropdown menu.
+  \item Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+   click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
+  This is the list of all custom columns.
+  To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
+  You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+% Until here.
+  To further filter the list for columns currently enabled, fill in a one (`1') in the ``Active'' column filter box and press the ``Enter'' key.
+\end{itemize}
+From the column overview, click the column you wish to disable.
+\vskip \baselineskip
+
+Click the ``Options'' menu button to open up the column's menu, and click on ``Disable column and remove values''.
+Please note that when your database already contains a lot of information, disabling a non-shared column may take some time.
+If this is the case, LOVD will display a warning.
+Type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
+The column is now disabled and removed from the data entry forms and the data listings and detailed views.
+
+If the ``Disable column and remove values'' link is not enabled, i.e.\ you see it, but you can't click it, the column is an HGVS standard column, and it can not be removed.
+
+
+
+\subsection{Disabling shared custom columns}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Shared custom columns can be disabled for one parent object only, or from multiple parent objects at the same time.
+\vskip \baselineskip
+
+To disable the given column \emph{for one parent object only}, proceed to the detailed view of this parent object (disease or gene).
+Then, open the ``Options'' menu button and click the ``View enabled phenotype columns'' or ``View enabled variant columns'' link, depending on the type of column you wish to disable.
+Click the column, then from its ``Options'' menu button, select ``Remove column from this disease'' or ``Remove column from this gene'', depending on the type of column.
+Please note that if this shared custom column will no longer be active for any parent object and your database already contains a lot of information, disabling this column may take some time.
+If this is the case, LOVD will display a warning.
+Type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
+
+If the ``Remove column'' link is not enabled, i.e.\ you see it, but you can't click it, the column is an HGVS standard column, and it can not be removed.
+\vskip \baselineskip
+
+To disable the given column \emph{for multiple parent objects at the same time}, click the ``Browse all custom data columns'' link of the setup menu tab,
+ or from the setup area, click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
+This is the list of all custom columns.
+To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
+You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+To further filter the list for columns currently enabled, fill in a one (`1') in the ``Active'' column filter box and press the ``Enter'' key.
+
+Click the column, then from its ``Options'' menu button, select ``Disable column''.
+Please note that if this shared custom column will no longer be active for any parent object and your database already contains a lot of information, disabling this column may take some time.
+If this is the case, LOVD will display a warning.
+From the ``Remove this column from'' selection list, select the parent objects (diseases or genes) you wish to remove this column from.
+For help on how to use this type of selection list, move your mouse over the blue help icon.
+If the parent object you are looking for is not shown in this list, you have no authorization on the object to change its column's settings.
+Finally, type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
+The column is now disabled and removed from the data entry forms and the data listings and detailed views.
+
+If the ``Disable column'' link is not enabled, i.e.\ you see it, but you can't click it, the column is an HGVS standard column, and it can not be removed.
 \end{document}
 
 %            s (section) ss (subsection)
@@ -2309,8 +2403,6 @@ $_PAGES =
                           ),
                     'Custom columns',
                      array(
-                            'Managing patient columns',
-                            'Editing custom column default settings',
                             'Deleting custom columns',
                             'Downloading custom column data to text files',
                             'Importing custom columns from text files',
