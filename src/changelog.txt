@@ -46,6 +46,12 @@
    data.
  * Clarified data entry form notes on the object-specific custom column edit
    form.
+ * Fixed bug; The gene-specific overviews (variants and full data view) were not
+   showing non-public non-shared (Variants On Genome, Screenings, Individuals)
+   columns to curator level users due to a overly strict security check.
+ * Fixed notice in lovd_trimField() function during import.
+ * Fixed bug; Not specifying the HGVS column in the custom column import file
+   caused a fatal query error in LOVD.
 
 
 /**************************

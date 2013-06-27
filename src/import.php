@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2013-05-17
- * For LOVD    : 3.0-05
+ * Modified    : 2013-06-27
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -116,7 +116,7 @@ function lovd_trimField ($sVal)
     // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
 
     $sVal = trim($sVal);
-    if ($sVal{0} == '"' && substr($sVal, -1) == '"') {
+    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
         $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
     }
     return trim($sVal);
@@ -718,6 +718,8 @@ if (POST) {
                         // HGVS, never allowed when not editing.
                         if ($aLine['hgvs']) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Not allowed to create new HGVS standard columns. Change the value for \'hgvs\' to 0.');
+                        } else {
+                            $aLine['hgvs'] = 0; // In case it doesn't exist in the file, which creates a query error.
                         }
                         // FIXME: Default values?
                         // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
