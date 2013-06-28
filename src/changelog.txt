@@ -52,6 +52,9 @@
  * Fixed notice in lovd_trimField() function during import.
  * Fixed bug; Not specifying the HGVS column in the custom column import file
    caused a fatal query error in LOVD.
+ * Fixed bug; Through certain manipulations, collaborators and curators would be
+   able to see (not edit) non-public data of genes they had no authorization
+   for.
 
 
 /**************************

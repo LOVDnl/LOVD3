@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2013-01-24
- * For LOVD    : 3.0-02
+ * Modified    : 2013-06-28
+ * For LOVD    : 3.0-06
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -61,6 +61,17 @@ if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = LEVEL_ADMIN;
 }
 
+// 2013-06-28; 3.0-06; We can't allow just any custom viewlist without actually checking the shown objects. Screenings, for instance, does not have a built-in status check (since it doesn't have a status).
+// Building list of allowed combinations of objects for custom viewlists.
+if ($_GET['object'] == 'Custom_ViewList' && (!isset($_GET['object_id']) || !in_array($_GET['object_id'],
+            array(
+                'VariantOnGenome,Scr2Var,VariantOnTranscript', // Variants on I and S VEs.
+                'Transcript,VariantOnTranscript,VariantOnGenome', // IN_GENE.
+                'VariantOnTranscript,VariantOnGenome', // Gene-specific variant view.
+                'VariantOnTranscript,VariantOnGenome,Screening,Individual')))) { // Gene-specific full data view.
+    die(AJAX_DATA_ERROR);
+}
+
 // We can't authorize Curators without loading their level!
 if ($_AUTH['level'] < LEVEL_MANAGER && !empty($_AUTH['curates'])) {
     if ($_GET['object'] == 'Column') {
@@ -70,6 +81,16 @@ if ($_AUTH['level'] < LEVEL_MANAGER && !empty($_AUTH['curates'])) {
     } elseif ($_GET['object'] == 'Shared_Column' && isset($_GET['object_id'])) {
         lovd_isAuthorized('gene', $_GET['object_id']); // Authorize for the gene currently loaded.
     } elseif ($_GET['object'] == 'Custom_ViewList' && isset($_GET['id'])) {
+        // 2013-06-28; 3.0-06; We can't just authorize users based on the given ID without actually checking the shown objects and checking if the search results are actually limited or not.
+        // CustomVL_VOT_for_I_VE has no ID and does not require authorization (only public VOGs loaded).
+        // CustomVL_VOT_for_S_VE has no ID and does not require authorization (only public VOGs loaded).
+        // CustomVL_IN_GENE has no ID and does not require authorization (only public VOGs loaded).
+
+        // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
+        // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
+        if (in_array($_GET['object_id'], array('VariantOnTranscript,VariantOnGenome', 'VariantOnTranscript,VariantOnGenome,Screening,Individual')) && (!isset($_GET['search_transcriptid']) || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_GET['search_transcriptid'], $_GET['id']))->fetchColumn())) {
+            die(AJAX_NO_AUTH);
+        }
         lovd_isAuthorized('gene', $_GET['id']); // Authorize for the gene currently loaded.
     }
 }
