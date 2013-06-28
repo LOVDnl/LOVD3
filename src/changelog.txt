@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 06 (r3??)
- * 2013-06-??
+ * 3.0 Build 06 (r316)
+ * 2013-06-28
  *********/
  * LOVD3 now requires PHP/5.3.0 although some code was already incompatible with
    5.2.0.
