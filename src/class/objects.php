@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-06-26
- * For LOVD    : 3.0-06
+ * Modified    : 2013-07-03
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1126,9 +1126,22 @@ class LOVD_Object {
                 $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
                 $bSortableVL = true;
             } else {
-                // Not sorted, indicate this on the VL...
+                // Not sortable, indicate this on the VL...
                 $aOrder = array('', '');
                 $bSortableVL = false;
+                // 2013-07-03; 3.0-07; However, we do try and sort because in principle, the order is random and this may cause confusion while paginating.
+                //   So, as a result we'll try and sort on the PK. We attempt to determine this from the GROUP BY or ID col in the VL columns list.
+                $sCol= '';
+                if (isset($this->aSQLViewList['GROUP_BY'])) {
+                    $sCol = $this->aSQLViewList['GROUP_BY'];
+                } elseif ($this->aColumnsViewList['id']) {
+                    $sCol = $this->aColumnsViewList['id']['db'][0];
+                } elseif ($this->aColumnsViewList['id_']) {
+                    $sCol = $this->aColumnsViewList['id_']['db'][0];
+                }
+                if ($sCol) {
+                    $sSQL .= ' ORDER BY ' . $sCol;
+                }
             }
 
             if (!$bHideNav && FORMAT == 'text/html') {

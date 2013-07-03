@@ -5,6 +5,16 @@
  *************/
 
 /**************************
+ * 3.0 Build 07 (r3??)
+ * 2013-0?-??
+ *********/
+ * Fixed bug; When importing data not directly associated to a gene, the log
+   entry describing the import seemed incomplete.
+ * When LOVD no longer sorts the data views, it now tries to sort on the primary
+   key, which should be fast and should keep the results in a reliable order.
+
+
+/**************************
  * 3.0 Build 06 (r316)
  * 2013-06-28
  *********/
@@ -18,7 +28,7 @@
  * Fixed bug; The individuals and screenings listings, as well as the screenings
    detailed view, showed the total number of variants to the public, instead of
    the number of public variants.
- * The variant listings below individiual and screenings detailed views now also
+ * The variant listings below individual and screenings detailed views now also
    show the variant's effect on transcript level.
    Closes #18: "View variants affecting transcripts in screening view".
  * Diseases with OMIM ID but without abbreviation, now no longer have their full

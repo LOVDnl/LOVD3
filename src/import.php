@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2013-06-27
- * For LOVD    : 3.0-06
+ * Modified    : 2013-07-03
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1440,7 +1440,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     $sMessage = 'new links only';
                 }
                 $aGenes = array_unique($aGenes);
-                lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries (' . implode(', ', $aGenes) . ').');
+                lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries' . (!$aGenes? '' : ' (' . implode(', ', $aGenes) . ')') . '.');
                 lovd_setUpdatedDate($aGenes); // FIXME; regardless of variant status... oh, well...
             }
             // FIXME: Why is this not empty?
