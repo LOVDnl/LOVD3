@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-05}
+\setLOVDversion{3.0-06}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-06-25} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-07-23} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -308,7 +308,7 @@ Wherever you see ``he'' or ``his'' written in this manual, it should read ``he o
 
 \begin{infotable}
 Please note that this manual is work in progress.
-Since LOVD 3.0 is still under development and the development is the focus of our efforts, most features in LOVD 3.0 are not yet described in this manual.
+Since LOVD 3.0 is still under development and the development is the focus of our efforts, many features in LOVD 3.0 are not yet described in this manual.
 Also, features described in this manual may become inaccurate or even incorrect in later versions of LOVD 3.0.
 Please bear with us while we finish this manual.
 \end{infotable}
@@ -348,13 +348,15 @@ A suitable server with the necessary software installed is available at virtuall
 If you don't want to run LOVD on a server but rather want to have it running on your computer, we can recommend the
  \href{http://www.apachefriends.org/en/xampp.html}{XAMPP} package, which installs all needed software on your computer regardless of whether it's Linux, Windows or Mac.
 Also, at the time of this writing, we are offering free server space if you need to set up an LOVD.
-\href{http://www.LOVD.nl/3.0/contact?new_lsdb}{Contact us} for more information.
+\href{http://www.LOVD.nl/3.0/faq/server_space}{See our website} for more information.
 In that case you don't need to install anything and you can skip this chapter.
 \vskip \baselineskip
 
 If you're experienced with web servers and you want to set it up yourself: LOVD has been extensively tested
  with the Apache webserver, but any webserver able to run PHP scripts should suffice.
-You'll need PHP 5.2.0 or higher (or PHP 5.0.0 with PDO and JSON en/decode enabled) and MySQL 4.1.2 or higher.
+You'll need PHP 5.3.0 or higher and MySQL 4.1.2 or higher.
+LOVD will force the use of the UTF-8 character set, but we recommend setting this as the default value for your software nonetheless.
+Also, you'll need to install a properly configured Mail Transfer Agent for sending emails (such as registration information).\\
 LOVD may work with other database platforms, but we are not developing for other database backends.
 You are welcome to try other database backends and report the results to us, but we can't provide any support for it.
 For more information, see the \href{http://lovd.nl/3.0/faq/software}{FAQ about software needed}.
@@ -2017,7 +2019,7 @@ You can get there in two ways:
   \item Depending on which type of column you wish to enable,
    click the ``Enable more custom columns'' link in the ``Individuals'' or ``Screenings'' menu tabs' dropdown menu,
    or the ``Enable more genomic custom columns'' link from the ``Variants'' menu tab dropdown menu.
-  \item Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+  \item Click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
    click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
   This is the list of all custom columns.
   To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
@@ -2056,7 +2058,7 @@ You can get there in two ways:
   \item From any disease or gene that you have authorization of open the ``Options'' menu button and click the
    ``View all available phenotype columns'' or ``View all available variant columns'' link, depending on which type of column you wish to enable.
   % This text is copied below.
-  \item Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+  \item Click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
      click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
     This is the list of all custom columns.
     To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
@@ -2110,7 +2112,7 @@ Already enabled shared custom columns will not have their object-specific settin
 
 To edit a custom column's system-wide settings, you should start from the list of currently available columns.
 % This text is copied above.
-Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+Click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
  click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
 This is the list of all custom columns.
 To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
@@ -2202,13 +2204,14 @@ The order of already enabled shared custom columns will not be affected.
 
 To change the custom column's system-wide order, you should start from the list of currently available columns.
 % This text is copied above.
-Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+Click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
  click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
 This is the list of all custom columns.
 To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
 % Until here.
 Now, click the options wheel icon again, and click the ``Change order of columns'' link.
-Alternatively, first select one of the columns from the selected category, and on the detailed view open the ``Options'' menu and click the ``Re-order all \guillemotleft\emph{category}\guillemotright\ columns'' link.
+Alternatively, first select one of the columns from the selected category,
+ and on the detailed view open the ``Options'' menu and click the ``Re-order all \guillemotleft\emph{category}\guillemotright\ columns'' link.
 \vskip \baselineskip
 
 \begin{wrapfigure}[3]{r}{5cm} % Only wrap for 3 lines
@@ -2264,6 +2267,7 @@ Don't forget to click the ``Save'' button to save the new sort order!
 
 
 
+\hypertarget{sec:columns_disable}{}
 \section{Disabling custom columns}
 Custom columns that you no longer wish to use, can in most circumstances be removed by disabling the column.
 Exceptions in this case are \emph{HGVS standard} columns.
@@ -2289,7 +2293,7 @@ You can get there in two ways:
   \item Depending on which type of column you wish to enable,
    click the ``View active custom columns'' link in the ``Individuals'' or ``Screenings'' menu tabs' dropdown menu,
    or the ``View active genomic custom columns'' link from the ``Variants'' menu tab dropdown menu.
-  \item Click the ``Browse all custom data columns'' link of the setup menu tab, or from the setup area,
+  \item Click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
    click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
   This is the list of all custom columns.
   To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
@@ -2348,6 +2352,390 @@ Finally, type in your password in the ``Enter your password for authorization'' 
 The column is now disabled and removed from the data entry forms and the data listings and detailed views.
 
 If the ``Disable column'' link is not enabled, i.e.\ you see it, but you can't click it, the column is an HGVS standard column, and it can not be removed.
+
+
+
+
+
+\section{Deleting custom columns}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+Custom columns, which are created by users (managers or the database administrator), can also be deleted permanently from the system,
+ for instance if they were for testing purposes only or if they are no longer needed.
+First, you need to make sure the column is no longer active.
+See section ``\hyperlink{sec:columns_disable}{Disabling custom columns}'' on how to inactivate a column.
+\vskip \baselineskip
+
+First, proceed to the column's detailed view; access the custom data columns listing through the setup menu tab dropdown menu or setup area,
+ find the column you wish to delete, and click on its entry.
+Then, from its ``Options'' menu button, select ``Delete column''.
+Type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
+
+If the ``Delete column'' link is not enabled, i.e.\ you see it, but you can't click it, the column is either still active (check the `Active in LOVD?' field),
+ it's an HGVS standard column (check the `HGVS required column' field), or it is created by LOVD itself (check the `Created by' field).
+In any of these cases, the column can not be removed.
+
+
+
+
+
+\hypertarget{sec:columns_download}{}
+\section{Downloading custom column data to text files}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 04
+  \end{leftbar}
+\end{wrapfigure}
+LOVD supports exporting the custom data col\-umns, including the columns' system-wide settings, to \hyperlink{sec:download_import_format}{LOVD import format}.
+This file can then be used as a backup or to share the custom columns specifications with other LOVD3 installations,
+ by (re)\hyperlink{sec:download_importing_data}{importing the file into LOVD} (from LOVD 3.0-05).
+Please note that from LOVD 3.0-05, the custom column data is also included in the \hyperlink{ssec:download_full_data}{full LOVD download}, available from the setup area.
+
+To download all custom column specifications, click the ``Download all LOVD custom columns'' link in the setup menu tab dropdow menu,
+ or from the setup area, click the ``Download all LOVD custom columns in the LOVD import format'' link listed under ``Custom data columns''.
+We do not recommend you to edit this file.
+\vskip \baselineskip
+
+For more information on the format, please see section ``\hyperlink{sec:download_import_format}{The LOVD3 import format}''.
+\pagebreak
+
+
+
+
+
+\hypertarget{sec:columns_import}{}
+\section{Importing custom column data from text files}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 05
+  \end{leftbar}
+\end{wrapfigure}
+Custom columns downloaded in the \hyperlink{sec:download_import_format}{LOVD import format} can be reimported into LOVD.
+LOVD will only import the custom columns from the file which are not already in the system.
+LOVD does not compare the column's settings in the file versus what is in the database, LOVD just checks if the column IDs are present in the database or not.
+\vskip \baselineskip
+
+Please see section ``\hyperlink{sec:download_importing_data}{Importing data into LOVD}'' on how to import data into LOVD.
+\clearpage % Makes the hyper target actually point to the right place.
+
+
+
+
+
+
+
+
+
+
+\hypertarget{chap:download_n_import}{}
+\chapter{Downloading \& importing data}
+\hypertarget{sec:download_import_format}{}
+\section{The LOVD3 import format}
+The LOVD3 import format is based on the LOVD2 tab-delimited import format, but all data is split into separate sections, preventing data duplication.
+Examples of sections are Genes, Transcripts, and Diseases.
+Each section has its own set of fields.
+Sections refer to each other using IDs.
+For instance, the Transcripts section has a \emph{geneid} field that refers to an entry in the Genes section with the same value in its \emph{id} field.
+This way, transcripts are connected to genes.
+
+\begin{figure}[ht]
+  \begin{shaded}
+    \scriptsize
+    \begin{verbatim}
+### LOVD-version 3000-010 ### Full data download ### To import, do not remove or alter this header ###
+# charset = UTF-8
+
+## Genes ## Do not remove or alter this header ##
+"{{id}}"	"{{name}}"	"{{chromosome}}"	"{{chrom_band}}"	"{{id_hgnc}}"	"{{id_entrez}}"	"{{id_omim}}"
+"IVD"	"isovaleryl-CoA dehydrogenase"	"15"	"q14-q15"	"6186"	"3712"	"607036"
+
+
+## Transcripts ## Do not remove or alter this header ##
+"{{id}}"	"{{geneid}}"	"{{name}}"	"{{id_ncbi}}"	"{{id_protein_ncbi}}"
+"00001"	"IVD"	"isovaleryl-CoA dehydrogenase, transcript variant 1"	"NM_002225.3"	"NP_002216.2"
+
+
+## Diseases ## Do not remove or alter this header ##
+"{{id}}"	"{{symbol}}"	"{{name}}"	"{{id_omim}}"
+"00001"	"IVA"	"isovaleric acidemia"	"243500"
+
+
+## Genes_To_Diseases ## Do not remove or alter this header ##
+"{{geneid}}"	"{{diseaseid}}"
+"IVD"	"00001"
+    \end{verbatim}
+  \caption{%
+    Example LOVD import format file.
+    It contains information about the IVD gene, its first transcript variant, the IVA disease, and the link between the IVD gene and the IVA disease.
+    Note the \emph{geneid} field in the Transcripts section, which links a transcript to a gene.
+    The link between genes and diseases are in a separate section because each disease can be linked to multiple genes.
+    Please note that a full LOVD download contains many more sections.}
+  \end{shaded}
+\end{figure}
+
+The first line of the file contains the file's header line, which indicates the LOVD version number as well as the type of file.
+The LOVD version number is encoded and provided by LOVD when creating a download.
+When importing, LOVD can decode the version and in case the download format has changed between versions, convert the data into the correct format.
+When this line is not included in the file that is imported, LOVD cannot process the file, and halt.
+
+The file's data sections are indicated by lines starting with two hash characters (\#\#),
+ followed by the name, again two hash characters, and a note that the header should not be modified or removed.
+Other lines starting with two hash characters are regarded comments.
+A downloaded file may contain comments, like the number of entries for each section.
+
+\pagebreak[4]
+\noindent
+The following sections are currently recognized:
+\begin{description}
+  \item[Columns] \hfill \\
+    Custom columns and their system-wide settings
+  \item[Genes] \hfill \\
+    Genes, including external IDs
+  \item[Transcripts] \hfill \\
+    Transcript variants, including external IDs
+  \item[Diseases] \hfill \\
+    General disease information
+  \item[Genes\_To\_Diseases] \hfill \\
+    Links genes and diseases by referring to their IDs
+  \item[Individuals]* \hfill \\
+    Individuals and related information, like links to the parents of the individual
+  \item[Individuals\_To\_Diseases] \hfill \\
+    Links individuals to diseases
+  \item[Phenotypes]* \hfill \\
+    Phenotype information of a certain individual, related to a certain disease
+  \item[Screenings]* \hfill \\
+    Variant screening information, with which variants are detected
+  \item[Screenings\_To\_Genes] \hfill \\
+    Linking screenings to genes, indicating which genes were screened using a certain screening
+  \item[Variants\_On\_Genome]* \hfill \\
+    Genomic information of all variants detected
+  \item[Variants\_On\_Transcripts]* \hfill \\
+    Possible effects on a transcript caused by a genomic variant
+  \item[Screenings\_To\_Variants] \hfill \\
+    Linking screenings to variants, indicating which variants were detected using a certain screening
+\end{description}
+\noindent
+Categories indicated with an asterisk (*) are data types with custom columns (also see ``\hyperlink{sec:custom_column_categories}{Custom column categories}''),
+ and the exact list of fields in this category depend on the LOVD settings.
+
+Lines in the import file starting with one hash character are settings.
+The following settings are currently recognized:
+\begin{description}
+  \item[charset] \hfill \\
+    Indicates which carset was used when creating the file.
+    During import, usually the file encoding is detected given the file's contents, in which case this setting is ignored.
+\end{description}
+
+\pagebreak[4]
+Each section header is followed immediately by a line that indicates the names of the fields used in this section.
+When reading a downloaded file, this nicely indicates which column represents which data.
+When importing a file, being able to change this line allows you to skip certain columns or decide yourself in which order you would like to display the columns in the file.
+To clearly separate the line with column names from the data lines, the column names are surrounded by two curly braces on each side (\{\{ and \}\}).
+Field names can not contain spaces, match the field's name in the database exactly, and the field names are separated by exactly one tab character from each other.
+\vskip \baselineskip
+
+The section's data is also in tab-delimited format.
+Each field is preferably enclosed by double quotes.
+All existing quotes in the data, are escaped by the backslash character (\textbackslash), so \texttt{\symbol{34}} becomes \texttt{\textbackslash\symbol{34}}.
+Other special characters are \texttt{\textbackslash{}t} for a tab character, and \texttt{\textbackslash{}r\textbackslash{}n} for a linebreak.
+
+
+
+
+
+\hypertarget{sec:download_data}{}
+\section{Downloading data from LOVD}
+
+% Subsection here about the downloading of all overviews. Quick download, not usable for import.
+\begin{comment}
+In case you provided search terms, only the results will be included in the download file.
+Also the order in the downloaded file is equal to the order of the entries on the screen.
+\end{comment}
+
+
+
+\hypertarget{ssec:download_full_data}{}
+\subsection{Downloading the complete data set from LOVD}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+For backup purposes or to move data sets from one LOVD into another, LOVD supports a full download that contains most (currently not all) data stored in LOVD.
+The data sections included in the download file are: Columns, Genes, Transcripts, Diseases, Genes\_To\_Diseases, Individuals, Individuals\_To\_Diseases,
+ Phenotypes, Screenings, Screenings\_To\_Genes, Variants\_On\_Genome, Variants\_On\_Transcripts, and Screenings\_To\_Variants.
+In order to have a full backup, for instance to restore LOVD in case of a hardware failure,
+ the download file lacks the LOVD system settings, registered user accounts, and object-specific custom column settings.
+
+To download the full dataset from LOVD, click the ``Download all data'' link from the setup menu tab dropdown menu, or from the setup area,
+ click the ``Download all data in LOVD import format (custom columns, genes, transcripts, diseases, individuals, phenotypes, screenings \& variants)'' link listed under ``Download \& Import''.
+The download begins immediately.
+Depending on your browser, it will save the file to a default location on your hard disk, or ask you whether to open or to save the file.
+
+
+
+\hypertarget{ssec:download_owned_data}{}
+\subsection{Downloading own data set from LOVD}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Submitter\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+LOVD allows any user to collect a file containing all information in LOVD that has been submitted by this user, or is currently owned by this user.
+Proceed to your account details by clicking the ``Your account'' link on the top right-hand side of the screen.
+Then, click the ``Options'' button and click ``Download all my data''.
+The download begins immediately.
+Depending on your browser, it will save the file to a default location on your hard disk, or ask you whether to open or to save the file.
+
+This file, compared to the full data download that LOVD offers to managers and the database administrator, lacks the Columns data section.
+The following sections contain data that is not owned by the user in question, but merely serve as a reference to allow interpretation of all data:
+ Genes and Transcripts (the ones where variants were reported in are shown), and Diseases (the ones linked to submitted Individuals are shown).
+These section are marked with ``\#\# For reference only, not part of the selected data set''.
+
+%Please note that this file can not directly be imported, ...... % WHY, AGAIN?
+
+
+
+\hypertarget{ssec:download_gene_data}{}
+\subsection{Downloading a gene's data set from LOVD}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 02
+  \end{leftbar}
+\end{wrapfigure}
+Curators can download a file containing all information related to a gene they have authorization on.
+From the gene homepage, click the ``Options'' button and click ``Download all this gene's data''.
+The download begins immediately.
+Depending on your browser, it will save the file to a default location on your hard disk, or ask you whether to open or to save the file.
+
+This file, compared to the full data download that LOVD offers to managers and the database administrator, lacks the Columns data section.
+All sections are filtered to show only data related to the gene in question.
+The following sections are perhaps not obvious: Diseases (the ones related to the gene in question, as well as the ones linked to the individuals in this file, are shown),
+ Phenotypes (the ones linked to the individuals in this file are shown), and Screenings (the ones which found variants in the gene is question are shown).
+The individuals in this file may have more variants reported, which are not affecting this gene and therefore not shown in this file.
+\clearpage % Makes the hyper target actually point to the right place.
+
+
+
+
+
+
+
+
+
+
+\hypertarget{chap:security}{}
+\chapter{Keeping your data secure}
+LOVD contains several important security measures to protect your data from unauthorized access.
+This page explains IT experts what kind of security measures are implemented in LOVD, but it also shows what you as a LOVD user can do to protect your data.
+
+
+
+
+
+\section{Built-in security measures}
+After a public request on a programmer's internet forum a LOVD installation had been subjected to various attacks and hack attempts.
+Furthermore, the source code has been security audited by three different software packages to ensure no security holes were left open.\\
+Some of the security risks LOVD protects you against, are displayed below.
+
+
+
+\subsection{Safe login procedure}
+If someone tries to break into LOVD by repeatedly trying different passwords (brute-forcing) for a correct username, this account will be locked, preventing unauthorized access.
+The account can be unlocked by a manager or the database administrator.
+They can also check the LOVD logs which IP address was responsible of the locking of the account, which can be used by the server's system administrator to block access to LOVD from this IP address entirely.
+
+As an additional security measure, each user can restrict access to their account from only a certain IP address or a range of IP addresses, preventing unauthorized access, even with the correct password, from unauthorized IP addresses.
+
+
+
+\subsection{Protection against SQL injection}
+SQL injection is the process of including unwanted SQL database commands into a database through the manipulation of online web forms.
+SQL injection can be used for, amongst other things, unauthorized modification of database contents or unauthorized access to the administrator account.
+
+
+
+\subsection{Protection against Cross-site scripting (XSS)}
+Cross-site scripting is a vulnerability where malicious users can include Javascript code into webpages,
+ through entering a script in web forms, or including code in variables which are being printed on the web page.
+This can, for instance, be used to forward a user unnoticed to a different site.
+The protection against XSS is the reason most forms in LOVD do not allow HTML content.
+
+
+
+\subsection{Password protected data manipulation forms}
+To prevent manipulation of your variant or patient data when your computer is used by someone else while you are logged into LOVD, all data manipulation forms are password protected.
+Before the form can be submitted and processed, your password is required to confirm the changes.
+This also protects you against Cross-site request forgery (CSRF) attacks.
+
+
+
+
+
+\pagebreak
+\section{What you can do to protect your data}
+A chain is only as strong as the weakest link.
+Even with all the effort we have put into making LOVD as safe as possible, some weak links may still exists.
+Read this section to learn about how to protect your data in LOVD further.
+\begin{enumerate}
+  \item Choose your password carefully and protect it.
+    Even though LOVD does include a password quality check, please take care in choosing a password that can not be guessed by others and you don't use for other systems as well.
+    Also, don't write it down on a sticky note stuck near your computer.
+    In case you're the system administrator who installed LOVD, make sure the MySQL password is also chose securely.
+  \item Don't leave your computer unattended while logged in.
+    This will give anyone who uses your computer in your absence access to the data stored in LOVD.
+    Also, don't leave your computer unattended if you're not logged in but had your browser remember your password for you.
+    Once you're done using LOVD, log out.
+  \item Be careful where you leave your backup files.
+    Making backups of your data in LOVD is a smart thing to do.
+    Errors made by both machine (hardware error) or man (accidentally deleting data) can be solved easily if you have proper backups.
+    However, these backups do contain all your sensitive patient and variant data in a non-encrypted way.
+    Be careful where you store your backup files.
+    Don't store them on network drives accessible by more people than the ones who you would allow to access LOVD itself.
+  \item Use SSL.
+    Ask your systems administrator to enable SSL (https) on the server your LOVD is installed on, and enable the ``Use SSL only to access LOVD'' option in the LOVD system settings.
+    This encrypts any data exchange between you and LOVD, such as your password and sensitive patient information.
+  \item Don't allow access to your LOVD files or the database to other users on the server.
+    If there are other users on the server you have LOVD hosted on, make sure they cannot access the LOVD directory or get access to the same database LOVD stores its information in.
+\end{enumerate}
+\clearpage % Makes the hyper target actually point to the right place.
+
+
+
+
+
+
+
+
+
+
+\hypertarget{chap:troubleshooting}{}
+\chapter{Troubleshooting}
+In case you run into any kind of problem or when you have a question, we recommend you first check in the manual to see if perhaps the answer can be found there.
+A newer version of the manual may be available online, on \href{http://www.lovd.nl/3.0/docs/}{the LOVD website}.
+If that doesn't resolve your problem or answer your question, please follow the following steps:
+\begin{itemize}
+  \item Check the \href{http://www.lovd.nl/3.0/faq}{Frequently Asked Questions} on our website to see if that provides you any answers.
+  \item If not, check the \href{https://humgenprojects.lumc.nl/trac/LOVD3/discussion}{LOVD forum} to see if that helps you.
+  \item If not, please submit your question to the \href{https://humgenprojects.lumc.nl/trac/LOVD3/discussion/forum/1}{LOVD3 support forum}.
+  \item If you're sure the problem you are having is an LOVD bug, please \href{https://humgenprojects.lumc.nl/trac/LOVD3/report/1}{use our bug tracking system} report your issue.  
+  \item Only in case you don't want to publicly put your problem or question on the forum or bug tracking system, you can contact us also directly through \href{http://www.lovd.nl/3.0/contact}{the website}.
+\end{itemize}
 \end{document}
 
 %            s (section) ss (subsection)
@@ -2401,12 +2789,6 @@ $_PAGES =
                      array(
                             'Emptying genes',
                           ),
-                    'Custom columns',
-                     array(
-                            'Deleting custom columns',
-                            'Downloading custom column data to text files',
-                            'Importing custom columns from text files',
-                          ),
                     'Custom links',
                      array(
                             'Creating new links',
@@ -2458,6 +2840,7 @@ $_PAGES =
                   ),
             'Use of HTML within LOVD',
             'Updating LOVD',
+            'Making backups of LOVD', (explain here not to use downloads, because they are not complete (refer to subsection).
 
 Actually, you are right, -a indeed stands for recursive, amongst other
 things. You can always check the manual with:
@@ -2478,7 +2861,6 @@ be:
 
 cp -auv LOVD34/LOVDv.2.0/* LOVD34/LOVDv.2.0/.htaccess RB1_LSDB/
 
-            'Keeping your data secure',
           );$
 
 

@@ -12,6 +12,16 @@
    entry describing the import seemed incomplete.
  * When LOVD no longer sorts the data views, it now tries to sort on the primary
    key, which should be fast and should keep the results in a reliable order.
+ * Updated minor parts of the manual.
+ * Added sections "Deleting custom columns", "Downloading custom column data to
+   text files" and "Importing custom column data from text files" to the custom
+   column chapter in the manual.
+ * Added a chapter about downloading & importing data to the manual, containing
+   the sections "The LOVD3 import format" and "Downloading data from LOVD".
+ * Added a chapter about data security to the manual, containing the sections
+   "Keeping your data secure", "Built-in security measures" and "What you can do
+   to protect your data".
+ * Added a chapter about troubleshooting to the manual.
 
 
 /**************************
