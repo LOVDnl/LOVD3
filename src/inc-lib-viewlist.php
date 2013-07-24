@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2013-03-04
- * For LOVD    : 3.0-03
+ * Modified    : 2013-07-03
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -230,7 +230,7 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bTrueTotal = true, $bSor
     // 2013-03-05; 3.0-03; Added an icon that indicates if sorting is not allowed on this VL.
     if (!$bSortable) {
         print("\n" .
-              '          <TD><IMG src="gfx/order_arrow_off.png" width="19" height="19" alt="No sorting possible" onmouseover="lovd_showToolTip(\'Sorting is disabled on this result set due to necessary restrictions;<BR> ' . ($bTrueTotal? 'too many results are returned' : 'database takes too much time to generate view') . ', please narrow your search.\', this);" style="margin-right : 5px;"></TD>');
+              '          <TD><IMG src="gfx/order_arrow_off.png" width="19" height="19" alt="No sorting possible" onmouseover="lovd_showToolTip(\'Sorting is disabled on this result set due to necessary restrictions;<BR> ' . ($nTotal > $_SETT['lists']['max_sortable_rows']? 'too many results are returned' : 'database takes too much time to generate view') . ', please narrow your search.\', this);" style="margin-right : 5px;"></TD>');
     }
 
     // Put a button here that shows the full legend, if it's available for this VL. We don't know that here, so we use JS to show it if necessary.

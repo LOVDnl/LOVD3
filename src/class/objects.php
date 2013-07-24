@@ -1122,7 +1122,7 @@ class LOVD_Object {
             }
 
             // ORDER BY will only occur when we estimate we have time for it.
-            if ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 && $aSessionViewList['counts'][$sFilterMD5]['n'] <= 25000) {
+            if ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 && $aSessionViewList['counts'][$sFilterMD5]['n'] <= $_SETT['lists']['max_sortable_rows']) {
                 $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
                 $bSortableVL = true;
             } else {

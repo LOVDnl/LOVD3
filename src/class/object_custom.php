@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2013-05-16
- * For LOVD    : 3.0-05
+ * Modified    : 2013-07-21
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -353,6 +353,21 @@ class LOVD_Custom extends LOVD_Object {
         foreach ($this->aColumns as $sCol => $aCol) {
             if ($aCol['mandatory']) {
                 $this->aCheckMandatory[] = $sCol;
+            }
+            // Make it easier for users to fill in the age fields. Change 5d into 00y00m05d, for instance.
+            if (preg_match('/\/Age(\/.+|_.+)?$/', $sCol) && $aData[$sCol] && preg_match('/^([<>])?(\d{1,2}y)?(\d{1,2}m)?(\d{1,2}d)?(\?)?$/', $aData[$sCol], $aRegs)) {
+                $aRegs = array_pad($aRegs, 6, '');
+                if ($aRegs[2] || $aRegs[3] || $aRegs[4]) {
+                    // At least some data needs to be filled in!
+                    // First, pad the numbers.
+                    foreach ($aRegs as $key => $val) {
+                        if (preg_match('/^\d{1}[ymd]$/', $val)) {
+                            $aRegs[$key] = '0' . $val;
+                        }
+                    }
+                    // Then, glue everything together.
+                    $aData[$sCol] = $_POST[$sCol] = $aRegs[1] . (!$aRegs[2]? '00y' : $aRegs[2]) . (!$aRegs[3] && $aRegs[4]? '00m' : $aRegs[3]) . (!$aRegs[4]? '' : $aRegs[4]) . (!$aRegs[5]? '' : $aRegs[5]);
+                }
             }
             if (isset($aData[$sCol])) {
                 $this->checkInputRegExp($sCol, $aData[$sCol]);

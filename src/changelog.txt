@@ -22,6 +22,16 @@
    "Keeping your data secure", "Built-in security measures" and "What you can do
    to protect your data".
  * Added a chapter about troubleshooting to the manual.
+ * Fixed bug; When a data listing can't be sorted because it's too slow, LOVD on
+   first load claimed it's not sortable because of the number of results instead
+   of the loading time.
+ * Fixed typo in column legend.
+ * Fixed bug; Data owners had an option in the menu to publish their data, but
+   clicking this resulted in an unclear error message. Removed the menu option
+   to prevent confusion, but also improved the error message.
+ * All known age fields now support shorter input formats, which are converted
+   by LOVD to the full format. For instance; 5d is converted into 00y00m05d for
+   you automatically.
 
 
 /**************************
