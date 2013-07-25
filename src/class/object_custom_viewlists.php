@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2013-06-26
- * For LOVD    : 3.0-06
+ * Modified    : 2013-07-25
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -408,7 +408,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                              // NOTE: there are more columns defined a little further below.
                              'diseases_' => array(
                                             'view' => array('Disease', 175),
-                                            'db'   => array('diseases_', false, true)),
+                                            'db'   => array('diseases_', 'ASC', true)),
                               ));
                     if (!$this->sSortDefault) {
                         $this->sSortDefault = 'id';

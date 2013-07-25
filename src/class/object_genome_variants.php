@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2013-06-12
- * For LOVD    : 3.0-06
+ * Modified    : 2013-07-25
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -349,7 +349,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
 
-        global $_AUTH, $_SETT;
+        global $_AUTH, $_DB, $_SETT;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -373,6 +373,24 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
             $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
             $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
+
+            if (!empty($zData['VariantOnGenome/DBID'])) {
+                // Allow linking to view of all these variants.
+                $sQ = 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE chromosome = ? AND `VariantOnGenome/DBID` = ?';
+                $aArgs = array($zData['chromosome'], $zData['VariantOnGenome/DBID']);
+                if ($_AUTH['level'] < LEVEL_CURATOR) {
+                    $sQ .= ' AND statusid >= ?';
+                    $aArgs[] = STATUS_MARKED;
+                }
+                $n = $_DB->query($sQ, $aArgs)->fetchColumn();
+                if ($n > 1) {
+                    list($sPrefix,) = explode('_', $zData['VariantOnGenome/DBID'], 2);
+                    $sLink = '<A href="' . (substr($sPrefix, 0, 3) == 'chr'? 'variants' : 'view/' . $sPrefix) . '?search_VariantOnGenome%2FDBID=%3D%22' . $zData['VariantOnGenome/DBID'] . '%22">See all ' . $n . ' reported entries</A>';
+                    // This is against our coding policy of never modifying actual contents of values (we always create a copy with _ appended), but now I simply can't without
+                    // modifying the column list manually. If only array_splice() would work on associative arrays... I'm not going to create a workaround here.
+                    $zData['VariantOnGenome/DBID'] .= ' <SPAN style="float:right">' . $sLink . '</SPAN>';
+                }
+            }
 
             if ($zData['mapping_flags'] & MAPPING_ALLOW) {
                 $sMappingLinkText  = '';

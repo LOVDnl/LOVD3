@@ -32,6 +32,12 @@
  * All known age fields now support shorter input formats, which are converted
    by LOVD to the full format. For instance; 5d is converted into 00y00m05d for
    you automatically.
+ * The individuals view and the gene-specific full data view now allow sorting
+   on the disease column as well.
+ * Fixed bug; Searching full-match on text including an underscore didn't return
+   the expected results.
+ * When viewing a variant that was reported more than once, a link is displayed
+   next to the DBID field that allows viewing all reports.
 
 
 /**************************
