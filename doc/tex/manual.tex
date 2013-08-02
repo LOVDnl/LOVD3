@@ -213,7 +213,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-07-23} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-08-01} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -2458,27 +2458,43 @@ This way, transcripts are connected to genes.
 "{{id}}"	"{{name}}"	"{{chromosome}}"	"{{chrom_band}}"	"{{id_hgnc}}"	"{{id_entrez}}"	"{{id_omim}}"
 "IVD"	"isovaleryl-CoA dehydrogenase"	"15"	"q14-q15"	"6186"	"3712"	"607036"
 
-
 ## Transcripts ## Do not remove or alter this header ##
 "{{id}}"	"{{geneid}}"	"{{name}}"	"{{id_ncbi}}"	"{{id_protein_ncbi}}"
-"00001"	"IVD"	"isovaleryl-CoA dehydrogenase, transcript variant 1"	"NM_002225.3"	"NP_002216.2"
-
+"00064"	"IVD"	"isovaleryl-CoA dehydrogenase, transcript variant 1"	"NM_002225.3"	"NP_002216.2"
 
 ## Diseases ## Do not remove or alter this header ##
 "{{id}}"	"{{symbol}}"	"{{name}}"	"{{id_omim}}"
-"00001"	"IVA"	"isovaleric acidemia"	"243500"
-
+"00006"	"IVA"	"isovaleric acidemia"	"243500"
 
 ## Genes_To_Diseases ## Do not remove or alter this header ##
 "{{geneid}}"	"{{diseaseid}}"
-"IVD"	"00001"
+"IVD"	"00006"
+
+## Individuals ## Do not remove or alter this header ##
+"{{id}}"	"{{owned_by}}"	"{{statusid}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"
+"00000124"	"00001"	"9"	"FB102"	"{PMID:Vockley et al (2000):10677295}"
+
+## Individuals_To_Diseases ## Do not remove or alter this header ##
+"{{individualid}}"	"{{diseaseid}}"
+"00000124"	"00006"
+
+## Screenings ## Do not remove or alter this header ##
+"{{id}}"	"{{individualid}}"	"{{owned_by}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"
+"0000000116"	"00000124"	"00001"	"RT-PCR;SEQ"	"DNA;RNA"
+
+## Screenings_To_Genes ## Do not remove or alter this header ##
+"{{screeningid}}"	"{{geneid}}"
+"0000000116"	"IVD"
     \end{verbatim}
   \caption{%
     Example LOVD import format file.
-    It contains information about the IVD gene, its first transcript variant, the IVA disease, and the link between the IVD gene and the IVA disease.
-    Note the \emph{geneid} field in the Transcripts section, which links a transcript to a gene.
-    The link between genes and diseases are in a separate section because each disease can be linked to multiple genes.
-    Please note that a full LOVD download contains many more sections.}
+    This example file contains information about the IVD gene, its first transcript variant, the IVA disease, the link between the IVD gene and the IVA disease,
+     and an individual linked to the IVA disease and screened for variants in the IVD gene.
+    Note the \emph{geneid} field in the Transcripts section, which links a transcript to a gene, and the \emph{individualid} field in the Screenings section, which links a screening to an individual.
+    The link between genes and diseases and between screenings and genes are in a separate section because
+     each gene can be linked to multiple diseases, and each screening can test for variants in multiple genes.
+    Please note that a full LOVD download contains many more sections, and more columns.
+    This file has been shortened to fit this page.}
   \end{shaded}
 \end{figure}
 
@@ -2491,42 +2507,43 @@ The file's data sections are indicated by lines starting with two hash character
  followed by the name, again two hash characters, and a note that the header should not be modified or removed.
 Other lines starting with two hash characters are regarded comments.
 A downloaded file may contain comments, like the number of entries for each section.
+\vskip \baselineskip
 
-\pagebreak[4]
 \noindent
 The following sections are currently recognized:
 \begin{description}
   \item[Columns] \hfill \\
-    Custom columns and their system-wide settings
+    Custom columns and their system-wide settings.
   \item[Genes] \hfill \\
-    Genes, including external IDs
+    Genes, including external IDs.
   \item[Transcripts] \hfill \\
-    Transcript variants, including external IDs
+    Transcript variants, including external IDs.
   \item[Diseases] \hfill \\
-    General disease information
+    General disease information.
   \item[Genes\_To\_Diseases] \hfill \\
-    Links genes and diseases by referring to their IDs
+    Links genes and diseases by referring to their IDs.
   \item[Individuals]* \hfill \\
-    Individuals and related information, like links to the parents of the individual
+    Individuals and related information, like links to the parents of the individual.
   \item[Individuals\_To\_Diseases] \hfill \\
-    Links individuals to diseases
+    Links individuals to diseases.
   \item[Phenotypes]* \hfill \\
-    Phenotype information of a certain individual, related to a certain disease
+    Phenotype information of a certain individual, related to a certain disease.
   \item[Screenings]* \hfill \\
-    Variant screening information, with which variants are detected
+    Variant screening information, with which variants are detected.
   \item[Screenings\_To\_Genes] \hfill \\
-    Linking screenings to genes, indicating which genes were screened using a certain screening
+    Linking screenings to genes, indicating which genes were screened using a certain screening.
   \item[Variants\_On\_Genome]* \hfill \\
-    Genomic information of all variants detected
+    Genomic information of all variants detected.
   \item[Variants\_On\_Transcripts]* \hfill \\
-    Possible effects on a transcript caused by a genomic variant
+    Possible effects on a transcript caused by a genomic variant.
   \item[Screenings\_To\_Variants] \hfill \\
-    Linking screenings to variants, indicating which variants were detected using a certain screening
+    Linking screenings to variants, indicating which variants were detected using a certain screening.
 \end{description}
 \noindent
 Categories indicated with an asterisk (*) are data types with custom columns (also see ``\hyperlink{sec:custom_column_categories}{Custom column categories}''),
  and the exact list of fields in this category depend on the LOVD settings.
 
+\pagebreak
 Lines in the import file starting with one hash character are settings.
 The following settings are currently recognized:
 \begin{description}
@@ -2535,7 +2552,6 @@ The following settings are currently recognized:
     During import, usually the file encoding is detected given the file's contents, in which case this setting is ignored.
 \end{description}
 
-\pagebreak[4]
 Each section header is followed immediately by a line that indicates the names of the fields used in this section.
 When reading a downloaded file, this nicely indicates which column represents which data.
 When importing a file, being able to change this line allows you to skip certain columns or decide yourself in which order you would like to display the columns in the file.
@@ -2547,6 +2563,124 @@ The section's data is also in tab-delimited format.
 Each field is preferably enclosed by double quotes.
 All existing quotes in the data, are escaped by the backslash character (\textbackslash), so \texttt{\symbol{34}} becomes \texttt{\textbackslash\symbol{34}}.
 Other special characters are \texttt{\textbackslash{}t} for a tab character, and \texttt{\textbackslash{}r\textbackslash{}n} for a linebreak.
+
+
+
+\subsection{Specific fields explained}
+For each section, the import format contains all fields that are stored in the database.
+Some of these fields are not displayed on the normal LOVD data entry forms, and therefore may cause confusion.
+Others are displayed, but for the user appear as selection lists with human-readable values, whereas in the database only numbers are stored.
+To aid in understanding these fields and their values, all fields that may cause confusion are listed here.
+
+Custom columns are not listed here, since every LOVD installation has different columns enabled and custom columns provide explanations about their use by themselves.
+
+\begin{description}
+%  \item[allow\_count\_all] (from section Columns)\hfill \\
+  \item[chromosome] (from sections Genes and Variants\_On\_Genome)\hfill \\
+  The chromosome related to this entry (gene or variant).
+  When importing, do not fill `chr' here as prefix, just the chromosome number or letter.
+  \item[chrom\_band] (from section Genes)\hfill \\
+  The chomosome band, like `q15'.
+  \item[col\_order] (from section Columns)\hfill \\
+  The order in which the columns of this column's category are shown.
+  Low values are shown before higher values.
+  \item[created\_by] (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes, Screenings and Variants\_On\_Genome)\hfill \\
+  The internal ID of the user that created this data entry.
+  If left empty during import, the current user performing the import will be selected as the creator of this data entry.
+  Creators are allowed to edit the entry and add new data to the entry.
+  They are fixed, and can not be re-assigned at a later time.
+  \item[created\_date] (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes, Screenings and Variants\_On\_Genome)\hfill \\
+  The date the entry was created, in the format YYYY-MM-DD HH:MM:SS.
+  \item[description\_form] (from section Columns)\hfill \\
+  The column's notes on the data entry form.
+  This text is shown on the data entry form, just below the data field, for instance as clarification.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[description\_legend\_short] (from section Columns)\hfill \\
+  Description on short legend for this custom column.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[description\_legend\_full] (from section Columns)\hfill \\
+  Description on full legend for this custom column.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[fatherid] (from section Individuals)\hfill \\
+  Optional; The internal ID of the individual in the database that is the father of this individual.
+  \item[form\_type] (from section Columns)\hfill \\
+  The custom column's form type definition.
+  When importing new custom columns, we recommend you use the Data type wizard available when creating a new custom column, and to use the form type definition generated by the wizard.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[head\_column] (from section Columns)\hfill \\
+  The custom column's header, shown above the column in data views.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[hgvs] (from section Columns)\hfill \\
+  If set to 1, this column is HGVS recommended.
+  These columns can not be removed.
+  This setting can not be set when importing columns.
+  Default value is 0.
+  \item[imprinting] (from section Genes)\hfill \\
+  Whether or not a gene is imprinted (either maternal or paternal).
+  \item[mandatory] (from section Columns)\hfill \\
+  If set to 1, this column is mandatory.
+  When entering new data, this custom column's field must be filled in.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  Default value is 0.
+  \item[motherid] (from section Individuals)\hfill \\
+  Optional; The internal ID of the individual in the database that is the mother of this individual.
+  \item[mysql\_type] (from section Columns)\hfill \\
+  The custom column's MySQL data type.
+  When importing new custom columns, we recommend you use the Data type wizard available when creating a new custom column, and to use the MySQL data type generated by the wizard.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[note\_index] (from section Genes)\hfill \\
+  Notes that should appear on the gene home page.
+  \item[note\_listing] (from section Genes)\hfill \\
+  Notes that should appear on gene-specific data listings.
+  \item[owned\_by] (from section Individuals, Phenotypes, Screenings and Variants\_On\_Genome)\hfill \\
+  The internal ID of the user that owns this data entry.
+  Owners are allowed to edit the entry and add new data to the entry.
+  Owners are not fixed, and can be re-assigned.
+  \item[panelid] (from section Individuals)\hfill \\
+  Optional; The internal ID of the individual in the database that represents the group to which this individual or group of individuals belong to.
+  \item[panel\_size] (from section Individuals)\hfill \\
+  The number of individuals represented by this entry (default: 1).
+  Only used when multiple individuals, for instance from one family, are aggregated into one entry in the database.
+  \item[preg\_pattern] (from section Columns)\hfill \\
+  For text field custom columns, regular expression checks can be performed.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[public\_view] (from section Columns)\hfill \\
+  If set to 1, this column's contents are visible to the public (only for public entries).
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[public\_add] (from section Columns)\hfill \\
+  If set to 1, submitters can fill in this field.
+  Otherwise, only curators and higher level users can enter data in this field.
+  \item[refseq\_UD] (from section Genes)\hfill \\
+  This is an internal ID for the genomic reference sequence, generated by Mutalyzer.
+  \item[select\_options] (from section Columns)\hfill \\
+  When the custom column is a selection field, the selection options are listed here.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}'' for the format.
+  Please remember that linebreaks in the LOVD import format are displayed as \texttt{\textbackslash{}r\textbackslash{}n}.
+  \item[standard] (from section Columns)\hfill \\
+  If set to 1, this column is enabled by default.
+  When importing, this is only useful for shared custom columns.
+  When set, the column will then be enabled by default for a new disease or gene, depending on the column category.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  Default value is 0.
+  \item[statusid] (from section Individuals, Phenotypes and Variants\_On\_Genome)\hfill \\
+  This numeric status ID defines if the data is public or not.\\
+  \begin{tabular}{>{\bfseries}p{0.6cm} p{2.3cm} p{11.7cm}}
+    ID & \textbf{Name} & \textbf{Description}\\ \hline \hline
+    1 & In progress & \emph{Not used when importing}; data entry is in the process of being submitted\\ \hline
+    2 & Pending & \emph{Not used when importing}; data entry has been submitted, awaiting approval of curator\\ \hline
+    4 & Non public & Data entry is not public, hidden from view for non-authorized users\\ \hline
+    7 & Marked & Data entry is public but marked, shows up as red for authorized users\\ \hline
+    9 & Public & Data entry is public
+  \end{tabular}
+  \item[symbol] (from section Diseases) \hfill \\
+  The disease's abbreviation, preferably the most commonly used one.
+  \item[width] (from section Columns)\hfill \\
+  The displayed column width in pixels.
+  See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+%  
+%  \item[] (from section )\hfill \\
+%  \item[] (from section )\hfill \\
+\end{description}
 
 
 
@@ -2575,8 +2709,10 @@ Also the order in the downloaded file is equal to the order of the entries on th
 For backup purposes or to move data sets from one LOVD into another, LOVD supports a full download that contains most (currently not all) data stored in LOVD.
 The data sections included in the download file are: Columns, Genes, Transcripts, Diseases, Genes\_To\_Diseases, Individuals, Individuals\_To\_Diseases,
  Phenotypes, Screenings, Screenings\_To\_Genes, Variants\_On\_Genome, Variants\_On\_Transcripts, and Screenings\_To\_Variants.
-In order to have a full backup, for instance to restore LOVD in case of a hardware failure,
- the download file lacks the LOVD system settings, registered user accounts, and object-specific custom column settings.
+In order to have a full backup, for instance to restore LOVD in case of a hardware failure, more information is needed.
+The download file lacks the LOVD system settings, registered user accounts, and object-specific custom column settings.
+It is therefore recommended not to rely only on this feature for a full backup of LOVD.
+However, it works perfectly as a backup for your variant and patient data, for instance if you accidentally deleted the wrong entry or the wrong column.
 
 To download the full dataset from LOVD, click the ``Download all data'' link from the setup menu tab dropdown menu, or from the setup area,
  click the ``Download all data in LOVD import format (custom columns, genes, transcripts, diseases, individuals, phenotypes, screenings \& variants)'' link listed under ``Download \& Import''.
@@ -2628,6 +2764,9 @@ All sections are filtered to show only data related to the gene in question.
 The following sections are perhaps not obvious: Diseases (the ones related to the gene in question, as well as the ones linked to the individuals in this file, are shown),
  Phenotypes (the ones linked to the individuals in this file are shown), and Screenings (the ones which found variants in the gene is question are shown).
 The individuals in this file may have more variants reported, which are not affecting this gene and therefore not shown in this file.
+
+If you're planning large parallel changes to data entries in LOVD using spreadsheet software such as OpenOffice.org Calc or MS Excel, you could use this file as a starting point.
+In that case, read the instructions at ``\hyperlink{sec:download_importing_data}{Importing data into LOVD}'' before you begin.
 \clearpage % Makes the hyper target actually point to the right place.
 
 
