@@ -42,6 +42,10 @@
    in the BED file, the variants were displayed on the wrong position.
    Closes #23: "Variant offset is wrong in Ensembl genome browser".
    (thanks to Rajaram Kaliyaperumal, LUMC, Leiden, Netherlands, for reporting)
+ * The number of variants in the individuals and screenings views did not show
+   non-public, but owned, variants for submitters.
+ * Submitters could not see their non-public data in the gene-specific variant
+   views.
 
 
 /**************************

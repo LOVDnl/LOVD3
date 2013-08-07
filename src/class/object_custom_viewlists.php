@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2013-07-25
+ * Modified    : 2013-08-07
  * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -153,7 +153,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
                     // If no collaborator, hide lines with hidden variants!
                     if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
-                        $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vog.statusid >= ' . STATUS_MARKED;
+                        $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . '(vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by = "' . $_AUTH['id'] . '"') . ')';
                     }
                     break;
 
@@ -274,7 +274,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id';
                         // If no collaborator, hide hidden individuals (from the join, don't hide the line)!
                         if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
-                            $aSQL['FROM'] .= ' AND i.statusid >= ' . STATUS_MARKED;
+                            $aSQL['FROM'] .= ' AND (i.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR i.created_by = "' . $_AUTH['id'] . '" OR i.owned_by = "' . $_AUTH['id'] . '"') . ')';
                         }
                         $aSQL['FROM'] .= ')';
                     }
