@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2013-05-08
- * For LOVD    : 3.0-05
+ * Modified    : 2013-08-07
+ * For LOVD    : 3.0-07
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -331,7 +331,7 @@ if ($sDataType == 'variants' && FORMAT == 'text/bed') {
 
     // Print header.
     header('Content-type: text/plain; charset=UTF-8');
-    print('track name="Variants in the LOVD ' . $sSymbol . ' database' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" description="Variants in LOVD ' . $sSymbol . ' db' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" visibility=' . (!empty($_GET['visibility']) && is_numeric($_GET['visibility'])? $_GET['visibility'] : 3) . ' itemRgb="On" db="' . $sBuild . '" offset=-1 url="' . ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants.php?select_db=' . $sSymbol . '&action=search_all&trackid=$$' . '"' . "\n\n");
+    print('track name="Variants in the LOVD ' . $sSymbol . ' database' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" description="Variants in LOVD ' . $sSymbol . ' db' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" visibility=' . (!empty($_GET['visibility']) && is_numeric($_GET['visibility'])? $_GET['visibility'] : 3) . ' itemRgb="On" db="' . $sBuild . '" url="' . ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants.php?select_db=' . $sSymbol . '&action=search_all&trackid=$$' . '"' . "\n\n");
 
     foreach ($aData as $r) {
         list($nPositionStart, $nPositionEnd, $sVariantType, $sDNA) = array_values($r);
@@ -341,7 +341,7 @@ if ($sDataType == 'variants' && FORMAT == 'text/bed') {
         $sVariantTypeColor = $aVariantTypeColors[$sVariantType];
 
         // Print the data.
-        print('chr' . $sChromosome . "\t" . $nPositionStart . "\t" . ($nPositionEnd+1) . "\t" . $sSymbol . ':' . preg_replace('/\s+/', '', $sDNA) . "\t" . '0' . "\t" . ($bSense? '+' : '-') . "\t" . $nPositionStart . "\t" . ($nPositionEnd+1) . "\t" . $sVariantTypeColor . "\n");
+        print('chr' . $sChromosome . "\t" . ($nPositionStart-1) . "\t" . $nPositionEnd . "\t" . $sSymbol . ':' . preg_replace('/\s+/', '', $sDNA) . "\t" . '0' . "\t" . ($bSense? '+' : '-') . "\t" . ($nPositionStart-1) . "\t" . $nPositionEnd . "\t" . $sVariantTypeColor . "\n");
     }
     exit;
 }

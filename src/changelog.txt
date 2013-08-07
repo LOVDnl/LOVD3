@@ -38,6 +38,10 @@
    the expected results.
  * When viewing a variant that was reported more than once, a link is displayed
    next to the DBID field that allows viewing all reports.
+ * Fixed bug; Because the Ensembl genome browser doesn't support the offset tag
+   in the BED file, the variants were displayed on the wrong position.
+   Closes #23: "Variant offset is wrong in Ensembl genome browser".
+   (thanks to Rajaram Kaliyaperumal, LUMC, Leiden, Netherlands, for reporting)
 
 
 /**************************
