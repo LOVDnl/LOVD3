@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2013-08-07
+ * Modified    : 2013-08-08
  * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -224,7 +224,8 @@ class LOVD_Screening extends LOVD_Custom {
                       ),
                  $this->buildForm(),
                  array(
-            'aGenes' => array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, true),
+            'aGenes' => array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
+                        array('', '', 'note', 'Please select no more than 15 genes. For genome-wide analysis, <B>no</B> genes should be selected.'),
     'variants_found' => array('Have variants been found?', 'Please uncheck this box when no variants have been found using this screening.', 'checkbox', 'variants_found'),
                         'hr',
       'general_skip' => 'skip',

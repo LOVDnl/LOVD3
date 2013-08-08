@@ -46,6 +46,9 @@
    non-public, but owned, variants for submitters.
  * Submitters could not see their non-public data in the gene-specific variant
    views.
+ * Minor changes to the screening data entry form.
+ * Improved labels on "Map variant" button to more clearly indicate its function
+   to users using the variant data entry form for the first time.
 
 
 /**************************

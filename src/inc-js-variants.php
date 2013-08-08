@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2013-03-01
- * For LOVD    : 3.0-03
+ * Modified    : 2013-08-08
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -531,18 +531,18 @@ function lovd_highlightInput (oElement)
 $(function ()
 {
     var oGenomicVariant = $('#variantForm input[name="VariantOnGenome/DNA"]');
+    var oTranscriptVariants = $('#variantForm input[name$="_VariantOnTranscript/DNA"]');
     // Add the button and image at the end of the genomic DNA field.
-    oGenomicVariant.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>');
+    oGenomicVariant.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to transcript' + (oTranscriptVariants.length == 1? '' : 's') + '</BUTTON>');
     // Add an onChange event that runs lovd_checkHGVS.
     oGenomicVariant.change(lovd_checkHGVS);
     // Add same function to the onKeyUp event, but then it will check itself if the variant is likely to be complete.
     oGenomicVariant.keyup(lovd_checkHGVS);
     // Then, trigger it already because if we're on an edit form we want the buttons to be ready.
     oGenomicVariant.change();
-    var oTranscriptVariants = $('#variantForm input[name$="_VariantOnTranscript/DNA"]');
     if (oTranscriptVariants[0] != undefined) {
         // Add the buttons and images at the end of the transcripts DNA fields.
-        oTranscriptVariants.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map variant</BUTTON>');
+        oTranscriptVariants.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to genome</BUTTON>');
         var nTranscriptVariants = oTranscriptVariants.size();
         for (i=0; i < nTranscriptVariants; i++) {
             // Add an artificial attribute "id_ncbi" to the transcripts DNA input field. This is needed to link the response from Mutalyzer to this field, if needed.

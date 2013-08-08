@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2013-06-24
- * For LOVD    : 3.0-06
+ * Modified    : 2013-07-27
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -572,7 +572,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
                     array('POST', '', '', '', '40%', '14', '60%'),
                     array('', '', 'print', '<B>Column options</B>'),
                     array('Column name on form', '', 'text', 'name', 30),
-                    array('Help text', 'If you think the data field needs clarification given as an icon such as this one, add it here.', 'text', 'help_text', 50),
+                    array('Help text (optional)', 'If you think the data field needs clarification given as an icon such as this one, add it here.', 'text', 'help_text', 50),
                     array('Notes on form (optional)<BR>(HTML enabled)', '', 'textarea', 'description_form', 40, 2),
                     array('', '', 'note', 'If you think the data field needs clarification on the data entry form, add it here - it will appear below the field on the data entry form just like this piece of text.'),
                   );

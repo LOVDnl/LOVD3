@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-07-25
+ * Modified    : 2013-07-27
  * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -256,7 +256,7 @@ class LOVD_Object {
                 // columns can't receive an empty string if STRICT is on.
                 if (!isset($aData[$sName])) {
                     $GLOBALS['_' . $aFormInfo[0]][$sName] = 0;
-                    $aData[$sName] = array();
+                    $aData[$sName] = 0;
                 }
             }
 
