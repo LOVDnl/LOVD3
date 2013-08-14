@@ -209,11 +209,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-06}
+\setLOVDversion{3.0-07}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-08-01} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-08-14} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -2575,6 +2575,24 @@ To aid in understanding these fields and their values, all fields that may cause
 Custom columns are not listed here, since every LOVD installation has different columns enabled and custom columns provide explanations about their use by themselves.
 
 \begin{description}
+  \item[allele] (from section Variants\_On\_Genome)\hfill \\
+  Indicates on which allele the variant is located.
+  Does not necessarily imply inheritance!\\
+  \begin{tabular}{>{\bfseries}p{0.6cm} p{4.0cm} p{10.0cm}}
+    ID & \textbf{Name} & \textbf{Description}\\ \hline \hline
+    0 & Unknown & Heterozygous, parents not screened, or de novo and allele couldn't be confirmed\\ \hline
+    1 & Parent \#1 & Heterozygous, parents not screened, but useful in combination with `Parent \#2` to indicate cis or
+      trans compound heterozygosity\\ \hline
+    2 & Parent \#2 & Heterozygous, parents not screened, but useful in combination with `Parent \#1` to indicate cis or
+      trans compound heterozygosity\\ \hline
+    3 & Both (homozygous) & Variant is present on both alleles\\ \hline
+    10 & Paternal (inferred) & Variant is on paternal allele, not confirmed in father but inferred from other
+      information\\ \hline
+    11 & Paternal (confirmed) & Variant is on paternal allele, confirmed in father\\ \hline
+    20 & Maternal (inferred) & Variant is on maternal allele, not confirmed in mother but inferred from other
+      information\\ \hline
+    21 & Maternal (confirmed) & Variant is on maternal allele, confirmed in mother\\ \hline
+  \end{tabular}
 %  \item[allow\_count\_all] (from section Columns)\hfill \\
   \item[chromosome] (from sections Genes and Variants\_On\_Genome)\hfill \\
   The chromosome related to this entry (gene or variant).
@@ -2601,6 +2619,72 @@ Custom columns are not listed here, since every LOVD installation has different 
   \item[description\_legend\_full] (from section Columns)\hfill \\
   Description on full legend for this custom column.
   See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
+  \item[effectid] (from sections Variants\_On\_Genome and Variants\_On\_Transcripts)\hfill \\
+  The variant's affect on a protein's function.
+  The first digit indicates the reported variant's effect.
+  The second digit indicates the variant's effect as concluded by the curator.
+  The possible values of each digit:\\
+  \begin{tabular}{>{\bfseries}p{0.6cm} p{2.3cm} p{11.7cm}}
+    ID & \textbf{Name} & \textbf{Description}\\ \hline \hline
+    1 & - & Does not affect function, strong proof\\ \hline
+    3 & -? & Probably does not affect function, strong evidence\\ \hline
+    5 & ? & Effect unknown\\ \hline
+    7 & +? & Probably affects function, strong evidence\\ \hline
+    9 & + & Affects function, strong proof\\ \hline
+  \end{tabular}
+
+  A score of 97 means a variant is reported to effect the function of the protein having strong proof, but the curator
+   thinks more proof is needed, still accepting there is strong evidence for the variant's effect.
+  All options are:\\
+
+  \begin{minipage}[t]{3.15cm}
+    \begin{tabular}{>{\bfseries}p{0.6cm} p{1.4cm}}
+      ID & \textbf{Name}\\ \hline \hline
+      11 & -/-\\ \hline
+      13 & -/-?\\ \hline
+      15 & -/?\\ \hline
+      17 & -/+?\\ \hline
+      19 & -/+\\ \hline
+    \end{tabular}
+  \end{minipage}
+  \begin{minipage}[t]{3.15cm}
+    \begin{tabular}{>{\bfseries}p{0.6cm} p{1.4cm}}
+      ID & \textbf{Name}\\ \hline \hline
+      31 & -?/-\\ \hline
+      33 & -?/-?\\ \hline
+      35 & -?/?\\ \hline
+      37 & -?/+?\\ \hline
+      39 & -?/+\\ \hline
+    \end{tabular}
+  \end{minipage}
+  \begin{minipage}[t]{3.15cm}
+    \begin{tabular}{>{\bfseries}p{0.6cm} p{1.4cm}}
+      ID & \textbf{Name}\\ \hline \hline
+      51 & ?/-\\ \hline
+      53 & ?/-?\\ \hline
+      55 & ?/?\\ \hline
+      57 & ?/+?\\ \hline
+      59 & ?/+\\ \hline
+    \end{tabular}
+  \end{minipage}
+  \begin{minipage}[t]{3.15cm}
+    \begin{tabular}{>{\bfseries}p{0.6cm} p{1.4cm}}
+      ID & \textbf{Name}\\ \hline \hline
+      71 & +?/-\\ \hline
+      73 & +?/-?\\ \hline
+      75 & +?/?\\ \hline
+      77 & +?/+?\\ \hline
+      79 & +?/+\\ \hline
+    \end{tabular}
+  \end{minipage}
+  \begin{tabular}{>{\bfseries}p{0.6cm} p{1.4cm}}
+    ID & \textbf{Name}\\ \hline \hline
+    91 & +/-\\ \hline
+    93 & +/-?\\ \hline
+    95 & +/?\\ \hline
+    97 & +/+?\\ \hline
+    99 & +/+\\ \hline
+  \end{tabular}
   \item[fatherid] (from section Individuals)\hfill \\
   Optional; The internal ID of the individual in the database that is the father of this individual.
   \item[form\_type] (from section Columns)\hfill \\
@@ -2615,6 +2699,7 @@ Custom columns are not listed here, since every LOVD installation has different 
   These columns can not be removed.
   This setting can not be set when importing columns.
   Default value is 0.
+%  \item[id\_mutalyzer] (from section Transcripts)\hfill \\
   \item[imprinting] (from section Genes)\hfill \\
   Whether or not a gene is imprinted (either maternal or paternal).
   \item[mandatory] (from section Columns)\hfill \\
@@ -2622,6 +2707,30 @@ Custom columns are not listed here, since every LOVD installation has different 
   When entering new data, this custom column's field must be filled in.
   See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
   Default value is 0.
+  \item[mapping\_flags] (from section Variants\_On\_Genome)\hfill \\
+  Information about how LOVD handles the mapping of this variant.
+  LOVD has an automatic mapping script that finds transcripts in the range of a genomic variant, and can annotate the
+    genomic variant on the transcript using the Mutalyzer web service.
+  Whether or not LOVD is allowed to map the variant, and how LOVD will handle the mapping, is stored in this field.
+  This field is a boolean flag column; multiple options can be grouped in this field by adding the numbers up.
+  Possible values:\\
+  \begin{tabular}{>{\bfseries}p{0.6cm} p{7.7cm} p{6.3cm}}
+    ID & \textbf{Name} & \textbf{Description}\\ \hline \hline
+    1 & MAPPING\_ALLOW & When set, the variant can be map\-ped by the LOVD mapping script\\ \hline
+    2 & MAPPING\_ALLOW\_CREATE\_GENES & When set, LOVD is allowed to create new genes in the database if needed to
+      annotate the variant\\ \hline
+    4 & MAPPING\_IN\_PROGRESS & \emph{Not used when importing}; when set, LOVD is currently busy mapping the
+      variant\\ \hline
+    8 & MAPPING\_NOT\_RECOGNIZED & \emph{Not used when importing}; when set, LOVD did not recognize the variant, and
+      was therefore unable to map the variant\\ \hline
+    16 & MAPPING\_ERROR & \emph{Not used when importing}; when set, LOVD has encountered an error while mapping\\ \hline
+    32 & MAPPING\_DONE & \emph{Not used when importing}; when set, LOVD is done mapping the variant, regardless of
+      whether the variant actually got mapped\\ \hline
+  \end{tabular}
+
+  For instance, a value of 11 means for this variant mapping has been enabled (1), LOVD is allowed to create new genes
+    while mapping the variant (2), but LOVD does not recognize the variant and therefore can not map it (8). 1 + 2 + 8
+    = 11.
   \item[motherid] (from section Individuals)\hfill \\
   Optional; The internal ID of the individual in the database that is the mother of this individual.
   \item[mysql\_type] (from section Columns)\hfill \\
@@ -2641,6 +2750,39 @@ Custom columns are not listed here, since every LOVD installation has different 
   \item[panel\_size] (from section Individuals)\hfill \\
   The number of individuals represented by this entry (default: 1).
   Only used when multiple individuals, for instance from one family, are aggregated into one entry in the database.
+  \item[position\_c\_cds\_end] (from section Transcripts)\hfill \\
+  The position, relative to the translation start site, of where the translation ends.
+  Is always a positive whole number, should always be dividable by three.
+  \item[position\_c\_mrna\_start] (from section Transcripts)\hfill \\
+  The position, relative to the translation start site, of where the transcript starts.
+  Is always a negative whole number.
+  \item[position\_c\_mrna\_end] (from section Transcripts)\hfill \\
+  The position, relative to the translation start site, of where the transcript ends.
+  Is always a positive whole number.
+  \item[position\_c\_start] (from section Variants\_On\_Transcripts)\hfill \\
+  The position, relative to the translation start site, of the first base of the variant.
+  The first base of the variant is defined by the HGVS nomenclature rules, and may be the same as the last base.
+  \item[position\_c\_start\_intron] (from section Variants\_On\_Transcripts)\hfill \\
+  The position, relative to the start or end (whichever is closest) of the intron, of the first base of the variant.
+  The first base of the variant is defined by the HGVS nomenclature rules, and may be the same as the last base.
+  This field only applies to variants that start or end in an intron.
+  \item[position\_c\_end] (from section Variants\_On\_Transcripts)\hfill \\
+  The position, relative to the translation start site, of the last base of the variant.
+  The last base of the variant is defined by the HGVS nomenclature rules, and may be the same as the first base.
+  \item[position\_c\_end\_intron] (from section Variants\_On\_Transcripts)\hfill \\
+  The position, relative to the start or end (whichever is closest) of the intron, of the last base of the variant.
+  The last base of the variant is defined by the HGVS nomenclature rules, and may be the same as the first base.
+  This field only applies to variants that start or end in an intron.
+  \item[position\_g\_mrna\_start] (from section Transcripts)\hfill \\
+  The genomic position, relative to the chromosome, of where the transcript starts.
+  \item[position\_g\_mrna\_end] (from section Transcripts)\hfill \\
+  The genomic position, relative to the chromosome, of where the transcript ends.
+  \item[position\_g\_start] (from section Variants\_On\_Genome)\hfill \\
+  The genomic position, relative to the chromosome, of the first base of the variant.
+  The first base of the variant is defined by the HGVS nomenclature rules, and may be the same as the last base.
+  \item[position\_g\_end] (from section Variants\_On\_Genome)\hfill \\
+  The genomic position, relative to the chromosome, of the last base of the variant.
+  The last base of the variant is defined by the HGVS nomenclature rules, and may be the same as the first base.
   \item[preg\_pattern] (from section Columns)\hfill \\
   For text field custom columns, regular expression checks can be performed.
   See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
@@ -2670,16 +2812,32 @@ Custom columns are not listed here, since every LOVD installation has different 
     2 & Pending & \emph{Not used when importing}; data entry has been submitted, awaiting approval of curator\\ \hline
     4 & Non public & Data entry is not public, hidden from view for non-authorized users\\ \hline
     7 & Marked & Data entry is public but marked, shows up as red for authorized users\\ \hline
-    9 & Public & Data entry is public
+    9 & Public & Data entry is public\\ \hline
   \end{tabular}
   \item[symbol] (from section Diseases) \hfill \\
   The disease's abbreviation, preferably the most commonly used one.
+  \item[type] (from section Variants\_On\_Genome)\hfill \\
+  The type of variant on DNA level, as defined by the Mutalyzer web service.
+  All possible values are:\\
+  \begin{tabular}{>{\bfseries}p{2.2cm} p{3.4cm} p{9cm}}
+    ID & \textbf{Name} & \textbf{Description}\\ \hline \hline
+    compound & Compound variant & \emph{Not normally in use}; multiple variants grouped together\\ \hline
+    del & Deletion & One or more DNA bases have been deleted\\ \hline
+    delins & Deletion/Insertion & One or more DNA bases have been deleted, while others have been inserted; when not a
+      substitution\\ \hline
+    dup & Duplication & Duplication of one or more DNA bases\\ \hline
+    ins & Insertion & Insertion of one or more DNA bases; when not a duplication\\ \hline
+    subst & Substitution & One DNA base has been replaced by another\\ \hline
+  \end{tabular}
+  \item[variants\_found] (from section Screenings)\hfill \\
+  If set to 1, this screening is reported to have found variants.
+  If set to 0, this screening is reported to not have found variants.
+  Please note that other values are not allowed.
   \item[width] (from section Columns)\hfill \\
   The displayed column width in pixels.
   See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
-%  
-%  \item[] (from section )\hfill \\
-%  \item[] (from section )\hfill \\
+%  \item[] (from section Genes)\hfill \\
+%"{{refseq}}"	"{{refseq\_url}}"	"{{disclaimer}}"	"{{disclaimer\_text}}"	"{{header}}"	"{{header\_align}}"	"{{footer}}"	"{{footer\_align}}"	"{{updated\_by}}"	"{{updated\_date}}"
 \end{description}
 
 
@@ -2872,7 +3030,7 @@ If that doesn't resolve your problem or answer your question, please follow the 
   \item Check the \href{http://www.lovd.nl/3.0/faq}{Frequently Asked Questions} on our website to see if that provides you any answers.
   \item If not, check the \href{https://humgenprojects.lumc.nl/trac/LOVD3/discussion}{LOVD forum} to see if that helps you.
   \item If not, please submit your question to the \href{https://humgenprojects.lumc.nl/trac/LOVD3/discussion/forum/1}{LOVD3 support forum}.
-  \item If you're sure the problem you are having is an LOVD bug, please \href{https://humgenprojects.lumc.nl/trac/LOVD3/report/1}{use our bug tracking system} report your issue.  
+  \item If you're sure the problem you are having is an LOVD bug, please \href{https://humgenprojects.lumc.nl/trac/LOVD3/report/1}{use our bug tracking system} to report your issue.
   \item Only in case you don't want to publicly put your problem or question on the forum or bug tracking system, you can contact us also directly through \href{http://www.lovd.nl/3.0/contact}{the website}.
 \end{itemize}
 \end{document}
@@ -3033,4 +3191,4 @@ us; we would appreciate your comments to improve the document.
 {\endminipage\endSbox
 \[\fbox{\TheSbox}\]}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% NEW MAXIMUM LINE LENGTH (120 char) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
