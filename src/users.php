@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-06-06
- * For LOVD    : 3.0-06
+ * Modified    : 2013-08-13
+ * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -416,7 +416,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                     $sMessage .= 'To log in to LOVD, click this link:' . "\n" .
                         $_CONF['location_url'] . 'login' . "\n\n" .
                         'You can also go straight to your account using the following link:' . "\n" .
-                        $_CONF['location_url'] . $_PE[0] . '/' . $_AUTH['id'] . "\n\n";
+                        $_CONF['location_url'] . $_PE[0] . '/' . $nID . "\n\n";
                 }
 
                 $sMessage .= 'Regards,' . "\n" .

@@ -1,5 +1,5 @@
 Release LOVD?
-===========
+=============
 Did you run all unit tests?
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
@@ -11,6 +11,9 @@ Run package script, follow instructions.
 
 Prioritize:
 ===========
+- Age cols: allow hours also.
+- Can we check if we have a mail server on installation? If not, disallow LOVD install, or at least a big warning message?
+- NRs en NXs horen geen protein description te hebben.
 - LOVD2: als je eenmaal gelocked bent, zegt ie dat je naar de manager moet. je krijgt dan geen link meer om je eigen password te resetten. Doet LOVD3 dat ook zo?
 - Als we voor een bepaalde patient slechts 100 varianten hebben o.i.d., check met een query welke cols uit moeten staan omdat de geselecteerde genen ze niet hebben, en verberg die cols.
 - Probleem met emails die niet werken, omdat er een vreemd karakter in een user's naam staat? SMTP regels nalezen om te kijken hoe ik dat moet encoden (daar is een speciale manier voor).
@@ -28,11 +31,18 @@ Prioritize:
 - Optimalisatie in VL: als een view traag WORDT (dus niet was!), hoe vangen we dat dan op? En andersom? Maak settings instelbaar!
 - LOVD site: index_list: genen uniek maken?
 - Merge code from Peikuan?
-- Age cols: allow 01d input, and change silently to 00y00m01d.
-- Age cols: allow hours also.
+- Kaart maken met LOVD gebruikers voor op de site? We hebben dan "stad, land" nodig per curator en/of submitter (submitter = ander kleurtje), en deze moeten gemapped worden op een geographische lokatie.
+  Daarvoor kun je gebruiken: https://developers.google.com/maps/documentation/geocoding/index?hl=nl
+  Voor de kaart zelf: google "google maps with markers". Zie ook Decipher website.
+- Link naar VariOtator van Gerard? Heeft nu ook "suggesties voor annotatie voor function and structure".
 - Doe iets met HVP status? Johan: kun je er niet een opvallende ster (geel of zo) van maken waarvoor je uitlegt krijg als je er op klikt?
 - LOVD will move to use NGs and LRGs as much as possible for transcript information and the name checker, to reduce the use of UD slices.
+  + Als iemand dan wil overstappen, controleren of alle huidig gekozen transcripten wel in die genomische referentie sequentie voorkomen!
 - Pedigree tree: finish and implement. Mark currently selected individual with asterisk? Perhaps implement more icons?
+- Import: Variant aan screening koppelen mag niet, als screening geen varianten heeft gevonden.
+  + Default value voor deze flag? (verander dan ook in de manual).
+  + Meer values horen niet te mogen in deze kolom, is daar een check op? Direct in checkFields als het goed is?
+- Import: Mapping_flags moet goed gecontroleerd worden. Numeriek? Een geldige combinatie gezien de beschikbare waardes (1-((hoogste waarde*2)-1))? Slaat de specifieke combi ergens op? Geen in progess samen met done, bijvoorbeeld.
 - Import: Als db admin moet ik toch wel iets kunnen importeren en zeggen dat LOVD de owner is? Kan nu niet, want LOVD staat niet in de owner selection list.
 - BUG: Curate individual: error: geographic origin: '' is not a correct value. Do nothing, submit form: error: no password filled in (but it was not asked).
 - Submission emails don't show diseases connected to individual, or genes connected to screening.
@@ -54,7 +64,8 @@ Prioritize:
 - Over het algemeen: focus op het toevoegen van features die ook al in LOVD2 zaten!!!
 - Belangrijke features zijn: mass-curate en verbeteren import.
 - Import has some 2Do, such as predicting DBIDs and such.
-  + At this time Import cannot work with Owned data sets, because it's missing one section and it has a different name.
+  + At this time Import cannot work with Owned data sets, because it's missing one section (Genes_To_Diseases), some columns (in Genes, Transcripts, Diseases) and it has a different name.
+    Actually, so what?
   + Also, some sections are actually labelled as not to be imported. This is not recognized either.
   + Hij klaagt nu als een disease al in de DB staat, maar als alles hetzelfde is (iig id, id_omim, name), negeer die regel dan en ga gewoon door.
   + Ignore (broken, all?) user links and point everything to me? As a setting that you can put in the file? Or only when reporting an error, then allow users to ignore "live"? (js that sets an hidden form field)

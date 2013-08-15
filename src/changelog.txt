@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 07 (r3??)
- * 2013-0?-??
+ * 3.0 Build 07 (r327)
+ * 2013-08-15
  *********/
  * Fixed bug; When importing data not directly associated to a gene, the log
    entry describing the import seemed incomplete.
@@ -49,6 +49,8 @@
  * Minor changes to the screening data entry form.
  * Improved labels on "Map variant" button to more clearly indicate its function
    to users using the variant data entry form for the first time.
+ * Fixed bug; When creating a user account for somebody else, the email sent to
+   the new user contained a link to the creator's account instead of the created account.
 
 
 /**************************
