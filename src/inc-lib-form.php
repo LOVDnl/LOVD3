@@ -618,11 +618,13 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
     $sHeaders = $sHeaders . (!empty($sCc)? PHP_EOL . 'Cc: ' . $sCc : '') . (!empty($sBcc)? PHP_EOL . 'Bcc: ' . $sBcc : '');
 
+    // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
+    $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
     $bSafeMode = ini_get('safe_mode');
     if (!$bSafeMode) {
-        $bMail = @mail($sTo, $sSubject, $sBody, $sHeaders, '-f ' . $_CONF['email_address']);
+        $bMail = @mail($sTo, $sSubjectEncoded, $sBody, $sHeaders, '-f ' . $_CONF['email_address']);
     } else {
-        $bMail = @mail($sTo, $sSubject, $sBody, $sHeaders);
+        $bMail = @mail($sTo, $sSubjectEncoded, $sBody, $sHeaders);
     }
 
     if ($bMail && $bFwdAdmin) {
@@ -643,7 +645,10 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
             $sAdditionalHeaders .= 'Reply-To: ' . $sCc;
         }
 
-        return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
+        $sSubject = 'FW: ' . $sSubject;
+        // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
+        $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
+        return lovd_sendMail(array($_SETT['admin']), $sSubjectEncoded, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
     } elseif (!$bMail) {
         // $sSubject is used here as it can always be used to describe the email type. This function also logs the email error.
         lovd_emailError(LOG_EVENT, $sSubject, $sTo, true);
@@ -673,7 +678,26 @@ function lovd_sendMailFormatAddresses ($aRecipients, & $aEmailsUsed)
         $aEmails = explode("\r\n", $sEmails);
         foreach ($aEmails as $sEmail) {
             if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
-                $sRecipients .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+                // Plain mb_encode_mimeheader() has some limitations:
+                // - It doesn't know the length of the header, which is needed because lines can be no longer than 76 chars.
+                // - It encodes the email address which it should not do, breaking the sending of email.
+                // - It doesn't handle spaces well.
+                // Solution is to split on spaces first, and encode the name only, each word on a different line to be relatively sure we don't cross the line border.
+                if (preg_match('/[\x80-\xFF]/', $sName)) {
+                    // Special characters. Encode the name, split on each word. This technique will not be sufficient in case of very
+                    // long names (longer than 24 chars with many special chars). In that case it could cross the 76-char line boundary.
+                    $aName = explode(' ', trim($sName));
+                    foreach ($aName as $nKey => $sWord) {
+                        // To include spaces where they belong, include a space in the encoded name.
+                        if ($nKey) {
+                            $sWord = ' ' . $sWord;
+                        }
+                        $sRecipients .= (!$sRecipients? '' : PHP_EOL . ' ') . mb_encode_mimeheader($sWord, 'UTF-8');
+                    }
+                    $sRecipients .= PHP_EOL . ' <' . trim($sEmail) . '>, ';
+                } else {
+                    $sRecipients .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+                }
                 $aEmailsUsed[] = $sEmail;
             }
         }

@@ -4,7 +4,7 @@ Did you run all unit tests?
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
 Commit, svn update, svn log, create svn tag.
-ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP, TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
+ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /whole_genome/ heeft een aangepaste users.php en class/template.php.
@@ -16,7 +16,6 @@ Prioritize:
 - NRs en NXs horen geen protein description te hebben.
 - LOVD2: als je eenmaal gelocked bent, zegt ie dat je naar de manager moet. je krijgt dan geen link meer om je eigen password te resetten. Doet LOVD3 dat ook zo?
 - Als we voor een bepaalde patient slechts 100 varianten hebben o.i.d., check met een query welke cols uit moeten staan omdat de geselecteerde genen ze niet hebben, en verberg die cols.
-- Probleem met emails die niet werken, omdat er een vreemd karakter in een user's naam staat? SMTP regels nalezen om te kijken hoe ik dat moet encoden (daar is een speciale manier voor).
 - !!! Nieuw overzicht: individual met alle phenotype kolommen
 - Position_c_start & position_c_end staan in de volgorde op 't genoom; dus voor antisense genen in de niet-oplopende volgorde, dus niet correct vergeleken met de c. nomenclatuur. Willen we dat?!!??
 - in_gene combineren met scr2var, screenings, individuals en ind2dis net zoals de full data view?
