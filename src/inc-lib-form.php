@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-03-11
- * For LOVD    : 3.0-04
+ * Modified    : 2013-08-26
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -599,42 +599,9 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
     global $_SETT, $_CONF;
 
     $aEmailsUsed = array(); // Make sure no email address is used more than once.
-    $sTo = '';
-    foreach ($aTo as $aRecipient) {
-        list($sName, $sEmails) = array_values($aRecipient);
-        $aEmails = explode("\r\n", $sEmails);
-        foreach ($aEmails as $sEmail) {
-            if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
-                $sTo .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
-                $aEmailsUsed[] = $sEmail;
-            }
-        }
-    }
-    $sTo = rtrim($sTo, ', ');
-    $sCc = '';
-    foreach ($aCc as $aRecipient) {
-        list($sName, $sEmails) = array_values($aRecipient);
-        $aEmails = explode("\r\n", $sEmails);
-        foreach ($aEmails as $sEmail) {
-            if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
-                $sCc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
-                $aEmailsUsed[] = $sEmail;
-            }
-        }
-    }
-    $sCc = rtrim($sCc, ', ');
-    $sBcc = '';
-    foreach ($aBcc as $aRecipient) {
-        list($sName, $sEmails) = array_values($aRecipient);
-        $aEmails = explode("\r\n", $sEmails);
-        foreach ($aEmails as $sEmail) {
-            if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
-                $sBcc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
-                $aEmailsUsed[] = $sEmail;
-            }
-        }
-    }
-    $sBcc = rtrim($sBcc, ', ');
+    $sTo = lovd_sendMailFormatAddresses($aTo, $aEmailsUsed);
+    $sCc = lovd_sendMailFormatAddresses($aCc, $aEmailsUsed);
+    $sBcc = lovd_sendMailFormatAddresses($aBcc, $aEmailsUsed);
 
     // 2013-02-06; 3.0-02; Fix for MIME emails that have long lines in the MIME headers.
     // Lines that are not to be wrapped will have their spaces (and other characters lovd_wrapText()
@@ -683,6 +650,35 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
     }
 
     return $bMail;
+}
+
+
+
+
+
+function lovd_sendMailFormatAddresses ($aRecipients, & $aEmailsUsed)
+{
+    // Formats the To, Cc or Bcc headers for emails sent by LOVD.
+
+    if (!is_array($aRecipients) || !count($aRecipients)) {
+        return false;
+    }
+    if (!is_array($aEmailsUsed)) {
+        $aEmailsUsed = array();
+    }
+
+    $sRecipients = '';
+    foreach ($aRecipients as $aRecipient) {
+        list($sName, $sEmails) = array_values($aRecipient);
+        $aEmails = explode("\r\n", $sEmails);
+        foreach ($aEmails as $sEmail) {
+            if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
+                $sRecipients .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+                $aEmailsUsed[] = $sEmail;
+            }
+        }
+    }
+    return rtrim($sRecipients, ', ');
 }
 
 

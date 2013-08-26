@@ -5,6 +5,14 @@
  *************/
 
 /**************************
+ * 3.0 Build 08 (r...)
+ * 2013-09-??
+ *********/
+ * Importing no longer has PHP's time limit imposed.
+
+
+
+/**************************
  * 3.0 Build 07 (r327)
  * 2013-08-15
  *********/
@@ -50,7 +58,8 @@
  * Improved labels on "Map variant" button to more clearly indicate its function
    to users using the variant data entry form for the first time.
  * Fixed bug; When creating a user account for somebody else, the email sent to
-   the new user contained a link to the creator's account instead of the created account.
+   the new user contained a link to the creator's account instead of the created
+   account.
 
 
 /**************************

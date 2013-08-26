@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2013-07-03
- * For LOVD    : 3.0-07
+ * Modified    : 2013-08-15
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -32,6 +32,7 @@ define('ROOT_PATH', './');
 define('TAB_SELECTED', 'setup');
 require ROOT_PATH . 'inc-init.php';
 ini_set('auto_detect_line_endings', true); // So we can work with Mac files also...
+set_time_limit(0); // Disable time limit, parsing may take a long time.
 
 // Require curator clearance.
 //lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
