@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-08-26
+ * Modified    : 2013-08-27
  * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -107,6 +107,9 @@ define('MAPPING_IN_PROGRESS', 4);
 define('MAPPING_NOT_RECOGNIZED', 8);    // FIXME; Create a button in Setup which clears all NOT_RECOGNIZED flags in the database to retry them.
 define('MAPPING_ERROR', 16);            // FIXME; Create a button in Setup which clears all ERROR flags in the database to retry them.
 define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which clears all DONE flags in the database to retry them.
+
+// Define constant to quickly check if we're on Windows, since sending emails on Windows requires different settings.
+define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
@@ -717,14 +720,7 @@ if (!defined('NOT_INSTALLED')) {
             $_CONF['email_address'] = 'noreply@' . (substr($_SERVER['HTTP_HOST'], 0, 4) == 'www.'? substr($_SERVER['HTTP_HOST'], 4) : $_SERVER['HTTP_HOST']);
         }
 
-        // Determine email header line endings.
-        // Define constant to quickly check if we're on Windows, since sending emails on Windows requires yet one more adaptation.
-        if (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')) {
-            define('ON_WINDOWS', true);
-        } else {
-            define('ON_WINDOWS', false);
-        }
-
+        // Set email headers.
         $_SETT['email_mime_boundary'] = md5('PHP_MIME');
         $_SETT['email_headers'] = 'MIME-Version: 1.0' . PHP_EOL .
                                   'Content-Type: text/plain; charset=UTF-8' . PHP_EOL .

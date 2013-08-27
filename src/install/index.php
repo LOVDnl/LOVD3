@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-01-30
- * For LOVD    : 3.0-02
+ * Modified    : 2013-08-27
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -160,6 +160,23 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     $bInnoDB = ($sInnoDB == 'YES');
     $sInnoDB = '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bInnoDB . '.png" alt="" width="11" height="11">&nbsp;MySQL InnoDB support ' . ($bInnoDB? 'en' : 'dis') . 'abled (required)';
 
+    // 2013-08-27; 3.0-08; Check for a mail server.
+    // On Windows, you must specify the server address.
+    $bSMTP = false;
+    if (ON_WINDOWS) {
+        $sHost = (ini_get('SMTP')? ini_get('SMTP') : 'localhost');
+        $nPort = (ini_get('smtp_port')? ini_get('smtp_port') : '25');
+        if ($f = @fsockopen($sHost, $nPort, $nError, $sError, 5)) {
+            $bSMTP = true;
+            fclose($f);
+        }
+    } else {
+        $sPath = (ini_get('sendmail_path')? ini_get('sendmail_path') : '/usr/sbin/sendmail');
+        $sPath = substr($sPath, 0, strpos($sPath . ' ', ' '));
+        $bSMTP = is_executable($sPath);
+    }
+    $sSMTP = '<IMG src="gfx/mark_' . (int) $bSMTP . '.png" alt="" width="11" height="11">&nbsp;' . ($bSMTP? 'R' : 'No r') . 'esponse from mail server (recommended' . ($bSMTP? '' : ', please check your PHP configuration') . ')';
+
     // 2012-02-01; 3.0-beta-02; Check for "MultiViews" or Apache's mod_rewrite, or anything some other webserver may have that does the same.
     $aResultNoExt = @lovd_php_file(lovd_getInstallURL() . 'setup');
     $aResultExt   = @lovd_php_file(lovd_getInstallURL() . 'setup.php');
@@ -174,6 +191,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
                            $sPHPFunctions .
                            $sMySQL . '<BR>' .
                            $sInnoDB . '<BR>' .
+                           $sSMTP . '<BR>' .
                            $sMultiViews, 'stop');
         $_T->printFooter();
         exit;
@@ -184,6 +202,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
                            $sPHPFunctions .
                            $sMySQL . '<BR>' .
                            $sInnoDB . '<BR>' .
+                           $sSMTP . '<BR>' .
                            $sMultiViews, 'success');
     }
 

@@ -9,6 +9,9 @@
  * 2013-09-??
  *********/
  * Importing no longer has PHP's time limit imposed.
+ * Fixed bug; Users with special characters in their name could sometimes not
+   receive email from LOVD, because LOVD did not encode the names correctly.
+ * During installation, LOVD now checks for a valid mail server.
 
 
 
