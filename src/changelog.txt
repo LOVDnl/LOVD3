@@ -12,7 +12,8 @@
  * Fixed bug; Users with special characters in their name could sometimes not
    receive email from LOVD, because LOVD did not encode the names correctly.
  * During installation, LOVD now checks for a valid mail server.
-
+ * Fixed bug; The StopForumSpam check at user registration could not deal with
+   multiple email addresses in the email field.
 
 
 /**************************

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-06-06
- * For LOVD    : 3.0-06
+ * Modified    : 2013-09-02
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -218,7 +218,7 @@ class LOVD_User extends LOVD_Object {
             $aEmail = explode("\r\n", $aData['email']);
             foreach ($aEmail as $sEmail) {
                 if (!lovd_matchEmail($sEmail)) {
-                    lovd_errorAdd('email', 'Email "' . htmlspecialchars($sEmail) . '" is not a correct email address.');
+                    lovd_errorAdd('email', 'Email "' . htmlspecialchars($sEmail) . '" is not a correct email address' . (($sEmail && $sEmail == trim($sEmail))? '' : '. Make sure there are no spaces or empty lines left in the email field') . '.');
                 }
             }
         }

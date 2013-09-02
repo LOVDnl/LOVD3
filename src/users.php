@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-08-13
- * For LOVD    : 3.0-07
+ * Modified    : 2013-09-02
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -315,37 +315,60 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
             // This function checks the given data for use by spammers.
             if (!lovd_error()) {
-                $aOutput = lovd_php_file('http://www.stopforumspam.com/api?ip=' . $_SERVER['REMOTE_ADDR'] . '&email=' . $_POST['email'] . '&username=' . $_POST['username'] . '&f=json');
+                $sRequest = 'http://www.stopforumspam.com/api?ip=' . $_SERVER['REMOTE_ADDR'];
+                foreach (explode("\r\n", $_POST['email']) as $sEmail) {
+                    $sRequest .= '&email[]=' . $sEmail;
+                }
+                $sRequest .= '&username=' . $_POST['username'] . '&f=json';
+                $aOutput = lovd_php_file($sRequest);
                 if ($aOutput) {
                     $aStopSpamResponse = array(
                         'success' => 0,
                         'ip' => array(
-                            'appears' => 0,
-                            'lastseen' => '',
-                            'frequency' => 0,
-                            'confidence' => 0,
+                            array(
+                                'appears' => 0,
+                                'lastseen' => '',
+                                'frequency' => 0,
+                                'confidence' => 0,
+                            )
                         ),
                         'email' => array(
-                            'appears' => 0,
-                            'lastseen' => '',
-                            'frequency' => 0,
-                            'confidence' => 0,
+                            array(
+                                'appears' => 0,
+                                'lastseen' => '',
+                                'frequency' => 0,
+                                'confidence' => 0,
+                            )
                         ),
                         'username' => array(
-                            'appears' => 0,
-                            'lastseen' => '',
-                            'frequency' => 0,
-                            'confidence' => 0,
+                            array(
+                                'appears' => 0,
+                                'lastseen' => '',
+                                'frequency' => 0,
+                                'confidence' => 0,
+                            )
                         ),
                     );
+                    $aStopSpamEmailTemplate = $aStopSpamResponse['email'][0];
 
                     $aOutput = json_decode(implode('', $aOutput), true);
                     $aStopSpamResponse = array_replace_recursive($aStopSpamResponse, $aOutput);
+                    // Since we might have sent multiple email addresses, we need to apply the array_replace() on each email result.
+                    foreach ($aStopSpamResponse['email'] as $nKey => $aEmail) {
+                        if ($nKey) {
+                            // Key [0] has already been replaced, of course.
+                            $aStopSpamResponse['email'][$nKey] = array_replace($aStopSpamEmailTemplate, $aEmail);
+                        }
+                    }
                     if ($aStopSpamResponse['success']) {
-                        $nFrequency = ($aStopSpamResponse['ip']['frequency'] + $aStopSpamResponse['email']['frequency'] + $aStopSpamResponse['username']['frequency']);
-                        $nConfidence = max($aStopSpamResponse['ip']['confidence'], $aStopSpamResponse['email']['confidence'], $aStopSpamResponse['username']['confidence']);
+                        $nFrequency = $aStopSpamResponse['ip'][0]['frequency'] + $aStopSpamResponse['username'][0]['frequency'];
+                        $nConfidence = max($aStopSpamResponse['ip'][0]['confidence'], $aStopSpamResponse['username'][0]['confidence']);
+                        foreach ($aStopSpamResponse['email'] as $aEmail) {
+                            $nFrequency += $aEmail['frequency'];
+                            $nConfidence = max($nConfidence, $aEmail['confidence']);
+                        }
                         if ($nFrequency >= 10 || $nConfidence >= 75) {
-                            lovd_writeLog('Event', LOG_EVENT, 'User registration blocked based on frequency (' . $nFrequency . ') and confidence (' . $nConfidence . ') in spam database: ' . $_SERVER['REMOTE_ADDR'] . ', ' . $_POST['email'] . ', ' . $_POST['username']);
+                            lovd_writeLog('Event', LOG_EVENT, 'User registration blocked based on frequency (' . $nFrequency . ') and confidence (' . $nConfidence . ') in spam database: ' . $_SERVER['REMOTE_ADDR'] . ', ' . str_replace("\r\n", ';', $_POST['email']) . ', ' . $_POST['username']);
                             lovd_errorAdd('', 'Your registration has been blocked based on suspicion of spamming. If you feel this is an error, please contact us.');
                             $_POST = array('orcid' => 'none'); // Empty all fields (except for the orcid_id, to prevent notices).
                         }
