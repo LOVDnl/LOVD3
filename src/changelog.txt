@@ -14,6 +14,7 @@
  * During installation, LOVD now checks for a valid mail server.
  * Fixed bug; The StopForumSpam check at user registration could not deal with
    multiple email addresses in the email field.
+ * Minor changes to the manual, improving clarity.
 
 
 /**************************

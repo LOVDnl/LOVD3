@@ -213,7 +213,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-08-14} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2013-09-03} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
@@ -2055,10 +2055,10 @@ To change the default order for shared custom columns, see subsection ``\hyperli
 To enable a shared custom column, you should start from the list of currently available columns.
 You can get there in two ways:
 \begin{itemize}
-  \item From any disease or gene that you have authorization of open the ``Options'' menu button and click the
+  \item From any disease or gene that you have authorization of, open the ``Options'' menu button and click the
    ``View all available phenotype columns'' or ``View all available variant columns'' link, depending on which type of column you wish to enable.
   % This text is copied below.
-  \item Click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
+  \item If you're a manager or higher, click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
      click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
     This is the list of all custom columns.
     To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
@@ -2290,7 +2290,7 @@ To disable a non-shared custom column, you should start from the list of current
 % This text is also used for enabling custom columns.
 You can get there in two ways:
 \begin{itemize}
-  \item Depending on which type of column you wish to enable,
+  \item Depending on which type of column you wish to disable,
    click the ``View active custom columns'' link in the ``Individuals'' or ``Screenings'' menu tabs' dropdown menu,
    or the ``View active genomic custom columns'' link from the ``Variants'' menu tab dropdown menu.
   \item Click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
@@ -2335,14 +2335,23 @@ Type in your password in the ``Enter your password for authorization'' field for
 If the ``Remove column'' link is not enabled, i.e.\ you see it, but you can't click it, the column is an HGVS standard column, and it can not be removed.
 \vskip \baselineskip
 
-To disable the given column \emph{for multiple parent objects at the same time}, click the ``Browse all custom data columns'' link of the setup menu tab,
- or from the setup area, click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
-This is the list of all custom columns.
-To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
-You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+To disable the given column \emph{for multiple parent objects at the same time}, start with one of the following steps.
+\begin{itemize}
+  \item From any disease or gene that you have authorization of, open the ``Options'' menu button and click the
+   ``View all available phenotype columns'' or ``View all available variant columns'' link, depending on which type of column you wish to disable.
+  \item If you're a manager or higher, click the ``Browse all custom data columns'' link of the setup menu tab dropdown menu, or from the setup area,
+     click the ``Browse all custom data columns already available to enable or disable them, or view or edit their settings'' link listed under ``Custom data columns''.
+    This is the list of all custom columns.
+    To filter this list for category, click the options wheel icon on the top left hand side of the columns listing to open up the menu, and select the category you are interested in.
+    You can also filter for category by typing (part of) the name in the ``Category'' column filter box, and press the ``Enter'' key.
+\end{itemize}
 To further filter the list for columns currently enabled, fill in a one (`1') in the ``Active'' column filter box and press the ``Enter'' key.
+Please note that in this custom column overview, the ``Active'' field simply states whether or not this column has been added to the data table, i.e. is active for \emph{any} parent object.
+\\
+From the column overview, click the column you wish to disable.
+\vskip \baselineskip
 
-Click the column, then from its ``Options'' menu button, select ``Disable column''.
+In the detailed view of the custom column, open its ``Options'' menu button, then select ``Disable column''.
 Please note that if this shared custom column will no longer be active for any parent object and your database already contains a lot of information, disabling this column may take some time.
 If this is the case, LOVD will display a warning.
 From the ``Remove this column from'' selection list, select the parent objects (diseases or genes) you wish to remove this column from.
@@ -2404,7 +2413,6 @@ We do not recommend you to edit this file.
 \vskip \baselineskip
 
 For more information on the format, please see section ``\hyperlink{sec:download_import_format}{The LOVD3 import format}''.
-\pagebreak
 
 
 
