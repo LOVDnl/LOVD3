@@ -15,6 +15,11 @@
  * Fixed bug; The StopForumSpam check at user registration could not deal with
    multiple email addresses in the email field.
  * Minor changes to the manual, improving clarity.
+ * Fixed bug; Custom links could not be assigned to all custom columns when the
+   number of columns had increased to large numbers.
+ * Applied speed improvements to the disease viewlist, and the numbers for the
+   "Individuals" and "Phenotypes" columns now also show non-public entries for
+   authorized users.
 
 
 /**************************
