@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2013-07-20
- * For LOVD    : 3.0-07
+ * Modified    : 2013-09-10
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -2203,7 +2203,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
     // If we're publishing... pretend the form has been sent with a different status.
     if (GET && ACTION == 'publish') {
-        $_POST = $zData;
+        // 2013-09-10; 3.0-08; Don't just throw away $_POST, because it contains info we need (such as for DB-ID prediction).
+        $_POST = array_replace($_POST, $zData);
         // Now loop through $_POST to find the effectid fields, that need to be split.
         foreach ($_POST as $key => $val) {
             if (preg_match('/^(\d+_)?effect(id)$/', $key, $aRegs)) { // (id) instead of id to make sure we have a $aRegs (so to prevent notices).

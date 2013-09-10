@@ -20,6 +20,10 @@
  * Applied speed improvements to the disease viewlist, and the numbers for the
    "Individuals" and "Phenotypes" columns now also show non-public entries for
    authorized users.
+ * On the genes data listing, the "Variants" and "Unique variants" columns now
+   also show non-public entries for authorized users.
+ * Fixed bug; When directly publishing a variant, the DBID assigned to it was
+   ignoring the mapping to any transcripts.
 
 
 /**************************
