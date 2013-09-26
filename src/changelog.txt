@@ -30,6 +30,8 @@
    this column, so nearly transcripts are easily picked.
  * Fixed bug; Whenever a variant is not recognized because it's not correct HGVS
    syntax, it couldn't be manually mapped to a different transcript.
+ * Clarified error messages related to panel size and panel ID on the data entry
+   form for individuals.
 
 
 /**************************

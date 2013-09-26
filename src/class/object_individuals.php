@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2013-08-07
- * For LOVD    : 3.0-07
+ * Modified    : 2013-09-26
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -194,13 +194,15 @@ class LOVD_Individual extends LOVD_Custom {
         parent::checkFields($aData);
 
         if (isset($aData['panelid']) && ctype_digit($aData['panelid'])) {
-            $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ? AND panel_size > 1', array($aData['panelid']))->fetchColumn();
+            $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData['panelid']))->fetchColumn();
             if (empty($nPanel)) {
                 lovd_errorAdd('panelid', 'No Panel found with this \'Panel ID\'.');
+            } elseif ($nPanel == 1) {
+                lovd_errorAdd('panelid', 'The \'Panel ID\' you entered refers to an individual, not a panel (group of individuals). If you want to configure that individual as a panel, set its \'Panel size\' field to a value higher than 1.');
             } elseif ($nPanel <= $aData['panel_size']) {
-                lovd_errorAdd('panel_size', 'The entered \'Panel size\' must be lower than the \'Panel size\' of the panel with the entered \'Panel ID\'.');
+                lovd_errorAdd('panel_size', 'The entered \'Panel size\' must be lower than the \'Panel size\' of the panel you refer to with the entered \'Panel ID\'.');
             } elseif ($aData['panelid'] == $this->nID) {
-                lovd_errorAdd('panel_size', 'The \'Panel ID\' should not link to itself.');
+                lovd_errorAdd('panel_size', 'The \'Panel ID\' can not link to itself; this field is used to indicate which group of individuals (\'panel\') this entry belongs to.');
             }
         }
 
