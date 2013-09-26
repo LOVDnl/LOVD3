@@ -355,6 +355,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  array(
                      'UPDATE ' . TABLE_COLS . ' SET description_legend_short = REPLACE(description_legend_short, "/76 chomosomes", "/760 chromosomes"), description_legend_full = REPLACE(description_legend_full, "/76 chomosomes", "/760 chromosomes"), form_type = REPLACE(form_type, "/76 chomosomes", "/760 chromosomes") WHERE id = "VariantOnGenome/Frequency"',
                  ),
+                 '3.0-08' =>
+                 array(
+                     'UPDATE ' . TABLE_COLS . ' SET standard = 0 WHERE id = "VariantOnGenome/Restriction_site"',
+                 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

@@ -24,6 +24,7 @@
    also show non-public entries for authorized users.
  * Fixed bug; When directly publishing a variant, the DBID assigned to it was
    ignoring the mapping to any transcripts.
+ * The restriction site column is no longer enabled by default.
 
 
 /**************************

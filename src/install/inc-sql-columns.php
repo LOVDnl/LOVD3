@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2013-07-05
- * For LOVD    : 3.0-07
+ * Modified    : 2013-09-25
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -72,7 +72,7 @@ $aColSQL =
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Reference",                    6, 200, 1, 1, 0, "Reference",            "", "Reference to publication describing the variant.", "Reference to publication describing the variant, including links to OMIM (when available), PubMed or or other source, e.g. \"den Dunnen ASHG2003 P2346\".", "VARCHAR(255)", "Reference||text|50", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 // Add remarks non public? Add remarks column(s) to VariantOnTranscript???
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Remarks",                     10, 200, 0, 0, 0, "Variant remarks",      "Remarks regarding the variant described, e.g. germline mosaicism in mother, 345 kb deletion, muscle RNA analysed, not in 200 control chromosomes tested, on founder haplotype, etc.", "Remarks regarding the variant described.", "Remarks regarding the variant described, e.g. germline mosaicism in mother, 345 kb deletion, muscle RNA analysed, not in 200 control chromosomes tested, on founder haplotype, etc.", "TEXT", "Remarks||textarea|50|3", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
-                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Restriction_site",             5,  75, 0, 1, 0, "Re-site",              "", "Restriction enzyme recognition site created (+) or destroyed (-).", "Restriction enzyme recognition site created (+) or destroyed (-); e.g. BglII+, BamHI-.", "VARCHAR(25)", "Re-site|Restriction enzyme recognition site created (+) or destroyed (-); e.g. BglII+, BamHI-|text|10", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Restriction_site",             5,  75, 0, 0, 0, "Re-site",              "", "Restriction enzyme recognition site created (+) or destroyed (-).", "Restriction enzyme recognition site created (+) or destroyed (-); e.g. BglII+, BamHI-.", "VARCHAR(25)", "Re-site|Restriction enzyme recognition site created (+) or destroyed (-); e.g. BglII+, BamHI-|text|10", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Segregation",                 12,  40, 0, 0, 0, "Segregation",          "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)", "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)", "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)", "VARCHAR(100)", "Segregation||select|1|--Not specified--|false|false", "? = Unknown\r\nyes = Segregates with phenotype\r\nno = Does not segregate with phenotype", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 // FIXME; link this one to an ontology?
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Type",                         1, 200, 0, 0, 1, "Type",                 "", "Type of variant at DNA level.", "Type of variant at DNA level; note that the variant type can also be derived from the variant description (for all levels).", "VARCHAR(100)", "Type of variant (DNA level)|Type of variant at DNA level; note that the variant type can also be derived from the variant description (for all levels).|select|1|true|false|false", "Substitution\r\nDeletion\r\nDuplication\r\nInsertion\r\nInversion\r\nInsertion/Deletion\r\nTranslocation\r\nOther/Complex", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
