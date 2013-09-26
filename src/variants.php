@@ -2717,9 +2717,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                         $aVariantDescriptions[$zTranscript['geneid']] = $_MutalyzerWS->moduleCall('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => 'chr' . $zData['chromosome'] . ':' . $zData['VariantOnGenome/DNA'], 'gene' => $zTranscript['geneid']));
                     }
 
+                    $bAdded = false;
                     if (isset($aVariantDescriptions[$zTranscript['geneid']]['string']) && is_array($aVariantDescriptions[$zTranscript['geneid']]['string'])) {
                         // Loop through the mutalyzer output for this gene, see if we can find this transcript.
-                        $bAdded = false;
                         foreach($aVariantDescriptions[$zTranscript['geneid']]['string'] as $key => $aVariant) {
                             // Check if our transcript is in the variant description for each value returned by mutalyzer.
                             if (!empty($aVariant['v']) && preg_match('/^' . preg_quote($zTranscript['id_ncbi']) . ':([cn]\..+)$/', $aVariant['v'], $aMatches)) {
@@ -2745,11 +2745,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                                 break;
                             }
                         }
-                        if (!$bAdded) {
-                            // Requested transcript was not added to the database! Usually because mutalyzer does not understand the variant.
-                            // Insert simpler version of mapping: no mapping fields, no DNA field predicted.
-                            $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid) VALUES (?, ?, ?)', array($nID, $nTranscript, '55'));
-                        }
+                    }
+                    if (!$bAdded) {
+                        // Requested transcript was not added to the database! Usually because mutalyzer does not understand the variant.
+                        // Insert simpler version of mapping: no mapping fields, no DNA field predicted.
+                        $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid) VALUES (?, ?, ?)', array($nID, $nTranscript, '55'));
                     }
                 }
             }
