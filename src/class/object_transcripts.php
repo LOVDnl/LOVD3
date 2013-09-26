@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2012-11-08
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2013-09-11
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -108,7 +108,7 @@ class LOVD_Transcript extends LOVD_Object {
                     'view' => array('Chr', 40),
                     'db'   => array('g.chromosome', 'ASC', true)),
                 'geneid' => array(
-                    'view' => array('Gene ID', 70),
+                    'view' => array('Gene ID', 100),
                     'db'   => array('t.geneid', 'ASC', true)),
                 'name' => array(
                     'view' => array('Name', 300),

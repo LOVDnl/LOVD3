@@ -1554,8 +1554,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
             lovd_AJAX_viewListHideRow(sViewListID, nID);
             objViewListF.total.value --;
             lovd_AJAX_viewListUpdateEntriesString(sViewListID);
-// FIXME; disable for IE or try to fix?
-            // This one doesn't really work in IE 7 and IE 8. Other versions not known.
             lovd_AJAX_viewListAddNextRow(sViewListID);
 
             // Also change the search terms in the viewList such that submitting it will not reshow this item.

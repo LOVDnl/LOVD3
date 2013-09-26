@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2013-08-07
- * For LOVD    : 3.0-07
+ * Modified    : 2013-09-26
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -43,6 +43,7 @@ require_once ROOT_PATH . 'class/objects.php';
 class LOVD_CustomViewList extends LOVD_Object {
     // This class extends the basic Object class and it handles pre-configured custom viewLists.
     var $sObject = 'Custom_ViewList';
+    var $nOtherID = 0; // Some objects (like DistanceToVar) need an additional ID.
     var $aColumns = array();
     var $aCustomLinks = array();
     var $nCount = 0; // Necessary for tricking Objects::getCount() that is run in viewList().
@@ -51,7 +52,7 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
 
-    function __construct ($aObjects = array(), $sGene = '')
+    function __construct ($aObjects = array(), $sOtherID = '')
     {
         // Default constructor.
         global $_DB, $_AUTH;
@@ -60,8 +61,16 @@ class LOVD_CustomViewList extends LOVD_Object {
             $aObjects = explode(',', $aObjects);
         }
         $this->sObjectID = implode(',', $aObjects);
+        // Receive OtherID or Gene.
+        if (ctype_digit($sOtherID)) {
+            $sGene = '';
+            $this->nOtherID = $sOtherID;
+        } else {
+            $sGene = $sOtherID;
+        }
 
 
+        // FIXME: Disable this part when not using any of the custom column data types...
         // Collect custom column information, all active columns (possibly restricted per gene).
         // FIXME; This join is not always needed (it's done for VOT columns, but sometimes they are excluded, or the join is not necessary because of the user level), exclude when not needed to speed up the query?
         //   Also, the select of public_view makes no sense of VOTs are restricted by gene.
@@ -80,7 +89,9 @@ class LOVD_CustomViewList extends LOVD_Object {
         }
         if ($sGene) {
             $aSQL[] = $sGene;
-            $this->nID = $sGene; // We need the ajax script to have the same restrictions!!!
+        }
+        if ($sOtherID) {
+            $this->nID = $sOtherID; // We need the AJAX script to have the same restrictions!!!
         }
 
         // Increase the max group_concat() length, so that lists of many many genes still have all genes mentioned here (22.000 genes take 193.940 bytes here).
@@ -108,6 +119,15 @@ class LOVD_CustomViewList extends LOVD_Object {
         // Loop requested data types, and keep columns in order indicated by request.
         foreach ($aObjects as $nKey => $sObject) {
             switch ($sObject) {
+                case 'Gene':
+                    // $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'g.';
+                    if (!$aSQL['FROM']) {
+                        // First data table in query.
+                        $aSQL['FROM'] = TABLE_GENES . ' AS g';
+                        $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES)->fetchColumn();
+                    }
+                    break;
+
                 case 'Transcript':
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 't.*';
                     if (!$aSQL['FROM']) {
@@ -115,13 +135,28 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['FROM'] = TABLE_TRANSCRIPTS . ' AS t';
                         $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS)->fetchColumn();
                     } else {
-                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (';
+                        $aSQL['FROM'] .= ' INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (';
+                        $nKeyG   = array_search('Gene', $aObjects);
                         $nKeyVOT = array_search('VariantOnTranscript', $aObjects);
-                        if ($nKeyVOT !== false && $nKeyVOT < $nKey) {
+                        if ($nKeyG !== false && $nKeyG < $nKey) {
+                            // Earlier, Gene was used, join to that.
+                            $aSQL['FROM'] .= 'g.id = t.geneid)';
+                        } elseif ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                             // Earlier, VOT was used, join to that.
                             $aSQL['FROM'] .= 'vot.transcriptid = t.id)';
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
+                    }
+                    break;
+
+                case 'DistanceToVar':
+                    $nKeyT = array_search('Transcript', $aObjects);
+                    if ($nKeyT !== false && $nKeyT < $nKey && $this->nOtherID) {
+                        // Earlier, Transcript was used, join to that.
+                        // First, retrieve information of variant.
+                        list($nPosStart, $nPosEnd) = $_DB->query('SELECT position_g_start, position_g_end FROM ' . TABLE_VARIANTS . ' WHERE id = ?', array($this->nOtherID))->fetchRow();
+                        // Specific modifications for this overview; distance between variant and transcript in question.
+                        $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'IF(t.position_g_mrna_start > ' . $nPosEnd . ', t.position_g_mrna_start - ' . $nPosEnd . ', IF(t.position_g_mrna_end < ' . $nPosStart . ', ' . $nPosStart . ' - t.position_g_mrna_start, 0)) AS distance_to_var';
                     }
                     break;
 
@@ -305,22 +340,59 @@ class LOVD_CustomViewList extends LOVD_Object {
         // Now build $this->aColumnsViewList, from the order given by $aObjects and TABLE_COLS.col_order.
         foreach ($aObjects as $nKey => $sObject) {
             switch ($sObject) {
+                case 'Gene':
+                    $sPrefix = 'g.';
+                    // The fixed columns.
+                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
+                         array(
+                             'chromosome' => array(
+                                 'view' => false,
+                                 'db'   => array('g.chromosome', 'ASC', true)),
+                              ));
+                    break;
+
                 case 'Transcript':
                     $sPrefix = 't.';
                     // The fixed columns.
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                          array(
-                                'geneid' => array(
-                                        'view' => array('Gene', 100),
-                                        'db'   => array('t.geneid', 'ASC', true)),
-                                'id_ncbi' => array(
-                                        'view' => array('Transcript', 120),
-                                        'db'   => array('t.id_ncbi', 'ASC', true)),
+                             'id' => array(
+                                 'view' => false,
+                                 'db'   => array('t.id', 'ASC', true)),
+                             'geneid' => array(
+                                 'view' => array('Gene', 100),
+                                 'db'   => array('t.geneid', 'ASC', true)),
+                             'name' => array(
+                                 'view' => array('Name', 300),
+                                 'db'   => array('t.name', 'ASC', true)),
+                             'id_ncbi' => array(
+                                 'view' => array('NCBI ID', 120),
+                                 'db'   => array('t.id_ncbi', 'ASC', true)),
+                             'id_protein_ncbi' => array(
+                                 'view' => array('NCBI Protein ID', 120),
+                                 'db'   => array('t.id_protein_ncbi', 'ASC', true)),
                               ));
                     if (!$this->sSortDefault) {
                         // First data table in view.
                         $this->sSortDefault = 'geneid';
                     }
+                    // The custom ViewList with transcripts and variants also names the id_ncbi field differently.
+                    if ($nKey == 0 && in_array('VariantOnTranscript', $aObjects)) {
+                        // Object [0] is Transcripts, [1] is VOT; this is the in_gene view.
+                        $this->aColumnsViewList['id_ncbi']['view'][0] = 'Transcript';
+                    }
+                    break;
+
+                case 'DistanceToVar':
+                    // The fixed columns.
+                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
+                         array(
+                             'distance_to_var' => array(
+                                 'view' => array('Distance (bp)', 90),
+                                 'db'   => array('distance_to_var', 'ASC', false)),
+                              ));
+                    // Always force default sorting...
+                    $this->sSortDefault = 'distance_to_var';
                     break;
 
                 case 'VariantOnGenome':

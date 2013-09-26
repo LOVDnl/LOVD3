@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2013-06-28
- * For LOVD    : 3.0-06
+ * Modified    : 2013-09-26
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -68,7 +68,8 @@ if ($_GET['object'] == 'Custom_ViewList' && (!isset($_GET['object_id']) || !in_a
                 'VariantOnGenome,Scr2Var,VariantOnTranscript', // Variants on I and S VEs.
                 'Transcript,VariantOnTranscript,VariantOnGenome', // IN_GENE.
                 'VariantOnTranscript,VariantOnGenome', // Gene-specific variant view.
-                'VariantOnTranscript,VariantOnGenome,Screening,Individual')))) { // Gene-specific full data view.
+                'VariantOnTranscript,VariantOnGenome,Screening,Individual', // Gene-specific full data view.
+                'Gene,Transcript,DistanceToVar')))) { // Map variant to transcript.
     die(AJAX_DATA_ERROR);
 }
 

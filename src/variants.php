@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2013-09-10
+ * Modified    : 2013-09-26
  * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -108,7 +108,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
 
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
-    $_DATA->viewList('CustomVL_IN_GENE', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $_DATA->viewList('CustomVL_IN_GENE', array('name', 'id_protein_ncbi'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
 
     $_T->printFooter();
     exit;
@@ -2812,17 +2812,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     }
 
     $_GET['page_size'] = 10;
-    $_GET['search_id_'] = '';
+    $_GET['search_id'] = '';
     foreach ($aVOT as $aTranscript) {
-        $_GET['search_id_'] .= '!' . $aTranscript['id'] . ' ';
+        $_GET['search_id'] .= '!' . $aTranscript['id'] . ' ';
     }
-    // FIXME; maybe also check if the variant is close to the transcripts?
-    $_GET['search_id_'] = (!empty($_GET['search_id_'])? rtrim($_GET['search_id_']) : '!0');
+    $_GET['search_id'] = (!empty($_GET['search_id'])? rtrim($_GET['search_id']) : '!0');
     $_GET['search_chromosome'] = '="' . $zData['chromosome'] . '"';
-    require ROOT_PATH . 'class/object_transcripts.php';
-    $_DATA = new LOVD_Transcript();
+    require ROOT_PATH . 'class/object_custom_viewlists.php';
+    $_DATA = new LOVD_CustomViewList(array('Gene', 'Transcript', 'DistanceToVar'), $zData['id']); // DistanceToVar needs the VariantID.
     $_DATA->setRowLink('VOT_map', 'javascript:lovd_addTranscript(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_geneid}}\', \'{{zData_name}}\', \'{{zData_id_ncbi}}\'); return false;');
-    $_DATA->viewList('VOT_map', array('id_', 'chromosome'), true);
+    $_DATA->viewList('VOT_map', array(), true);
     print('      <BR><BR>' . "\n\n");
 
     lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');
@@ -2872,14 +2871,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
             lovd_AJAX_viewListHideRow(sViewListID, nID);
             objViewListF.total.value --;
             lovd_AJAX_viewListUpdateEntriesString(sViewListID);
-// FIXME; disable for IE or try to fix?
-            // This one doesn't really work in IE 7 and IE 8. Other versions not known.
-            lovd_AJAX_viewListAddNextRow(sViewListID);
-
+            // 2013-09-26; 3.0-08; First do this, THEN add the next row, otherwise you're just duplicating the last visible row all the time.
             // Also change the search terms in the viewList such that submitting it will not reshow this item.
-            objViewListF.search_id_.value += ' !' + nID;
+            objViewListF.search_id.value += ' !' + nID;
             // Does an ltrim, too. But trim() doesn't work in IE < 9.
-            objViewListF.search_id_.value = objViewListF.search_id_.value.replace(/^\s*/, '');
+            objViewListF.search_id.value = objViewListF.search_id.value.replace(/^\s*/, '');
+
+            lovd_AJAX_viewListAddNextRow(sViewListID);
             return true;
         }
 
@@ -2897,7 +2895,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
 
                 // Reset the viewList.
                 // Does an ltrim, too. But trim() doesn't work in IE < 9.
-                objViewListF.search_id_.value = objViewListF.search_id_.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
+                objViewListF.search_id.value = objViewListF.search_id.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
                 lovd_AJAX_viewListSubmit(sViewListID);
 
                 return true;

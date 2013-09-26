@@ -25,6 +25,9 @@
  * Fixed bug; When directly publishing a variant, the DBID assigned to it was
    ignoring the mapping to any transcripts.
  * The restriction site column is no longer enabled by default.
+ * While managing the transcripts for a certain variant, the distance between
+   the variant and the transcripts are now shown. The default sort order is on
+   this column, so nearly transcripts are easily picked.
 
 
 /**************************
