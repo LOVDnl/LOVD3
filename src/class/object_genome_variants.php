@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2013-07-25
- * For LOVD    : 3.0-07
+ * Modified    : 2013-09-27
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -122,6 +122,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                  $this->buildViewEntry(),
                  array(
                         'mapping_flags_' => array('Automatic mapping', LEVEL_COLLABORATOR),
+                        'average_frequency_' => 'Average frequency (large NGS studies)',
                         'owned_by_' => 'Owner',
                         'status' => array('Variant data status', LEVEL_COLLABORATOR),
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -423,6 +424,17 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 }
             } else {
                 $zData['mapping_flags_'] = 'Off';
+            }
+
+            // 2013-09-27; 3.0-08; Frequences retrieved from the LOVD WGS install.
+            if (!$zData['chromosome'] || !$zData['position_g_start'] || !$zData['position_g_end']) {
+                $zData['average_frequency_'] = 'Genomic location of variant could not be determined';
+            } elseif ($zData['average_frequency'] === '') {
+                $zData['average_frequency_'] = '<A href="#" onclick="lovd_openWindow(\'' . ROOT_PATH . 'scripts/fetch_frequencies.php\', \'FetchFrequencies\', \'500\', \'150\'); return false;">Retrieve</A>';
+            } elseif ($zData['average_frequency'] === '0') {
+                $zData['average_frequency_'] = 'Variant not found in online data sets';
+            } else {
+                $zData['average_frequency_'] = round($zData['average_frequency'], 5) . ' <SPAN style="float: right"><A href="http://databases.lovd.nl/whole_genome/variants/chr' . $zData['chromosome'] . '?search_VariantOnGenome/DNA=' . $zData['VariantOnGenome/DNA'] . '" title="" target="_blank">View details</A></SPAN>';
             }
         }
         // Replace rs numbers with dbSNP links.

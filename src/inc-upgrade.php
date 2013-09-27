@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-07-05
- * For LOVD    : 3.0-07
+ * Modified    : 2013-09-27
+ * For LOVD    : 3.0-08
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *
@@ -355,9 +355,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  array(
                      'UPDATE ' . TABLE_COLS . ' SET description_legend_short = REPLACE(description_legend_short, "/76 chomosomes", "/760 chromosomes"), description_legend_full = REPLACE(description_legend_full, "/76 chomosomes", "/760 chromosomes"), form_type = REPLACE(form_type, "/76 chomosomes", "/760 chromosomes") WHERE id = "VariantOnGenome/Frequency"',
                  ),
-                 '3.0-08' =>
+                 '3.0-07b' => /////////// DMD_SPECIFIC
                  array(
                      'UPDATE ' . TABLE_COLS . ' SET standard = 0 WHERE id = "VariantOnGenome/Restriction_site"',
+                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN average_frequency FLOAT UNSIGNED AFTER mapping_flags',
+                 ),
+                 '3.0-07c' => /////////// DMD_SPECIFIC
+                 array(
+                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (average_frequency)',
                  ),
              );
 

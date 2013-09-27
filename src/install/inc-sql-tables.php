@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2013-05-13
- * For LOVD    : 3.0-05
+ * Modified    : 2013-09-26
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -310,6 +310,7 @@ $aTableSQL =
     position_g_end INT(10) UNSIGNED,
     type VARCHAR(10),
     mapping_flags TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
+    average_frequency FLOAT UNSIGNED,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -320,6 +321,7 @@ $aTableSQL =
     INDEX (allele),
     INDEX (effectid),
     INDEX (chromosome, position_g_start, position_g_end),
+    INDEX (average_frequency),
     INDEX (owned_by),
     INDEX (statusid),
     INDEX (created_by),
