@@ -32,6 +32,11 @@
    syntax, it couldn't be manually mapped to a different transcript.
  * Clarified error messages related to panel size and panel ID on the data entry
    form for individuals.
+ * Added script that fetches the average variant frequency of any variant in the
+   database from the LOVD whole genome installation, which stores variant
+   frequencies from various studies and populations. The variant's average
+   frequency can be viewed in the variant's detailed view, and includes a link
+   to the whole genome LOVD installation for a detailed view.
 
 
 /**************************
