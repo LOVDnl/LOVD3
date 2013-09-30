@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2012-05-07
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2013-09-30
+ * For LOVD    : 3.0-08
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -105,6 +105,68 @@ class LOVD_Log extends LOVD_Object {
         $zData['del'] = '<A href="#" onclick="lovd_AJAX_deleteLogEntry(\'Logs\', \'' . $zData['row_id'] . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Delete" title="Delete" width="11" height="11" style="margin-top : 3px;"/></A>';
         $zData['entry'] = str_replace(array("\r\n", "\r", "\n"), '<BR/>', $zData['log']);
         $zData['entry'] = str_replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;", $zData['entry']);
+
+        // 2013-09-30; 3.0-08; Make log entry texts clickable.
+        switch ($zData['event']) {
+            case 'ColCreate':
+                $zData['entry'] = preg_replace('/(link) ([0-9]+) /', '$1 <A href="links/$2">$2</A> ', $zData['entry']);
+            case 'ColAdd':
+            case 'ColEdit':
+            case 'ColRemove':
+                $zData['entry'] = preg_replace('/olumn ([A-Z][A-Za-z\/_]+) /', 'olumn <A href="columns/$1">$1</A> ', $zData['entry']);
+                break;
+            case 'DiseaseCreate':
+            case 'DiseaseEdit':
+                $zData['entry'] = preg_replace('/(disease|entry) ([0-9]+)( .+)?$/', '$1 <A href="diseases/$2">$2</A>$3', $zData['entry']);
+                break;
+            case 'CuratorAuthorize':
+            case 'CuratorSort':
+            case 'GeneCreate':
+            case 'GeneEdit':
+            case 'GeneEmpty':
+            case 'TranscriptCreate':
+                $zData['entry'] = preg_replace('/(database|entry|gene|the) ([A-Z][A-Za-z0-9-]+)([ ;].+)?$/', '$1 <A href="genes/$2">$2</A>$3', $zData['entry']);
+                break;
+            case 'IndividualCreate':
+            case 'IndividualEdit':
+                $zData['entry'] = preg_replace('/(entry|individual) ([0-9]{8})( .+)?$/', '$1 <A href="individuals/$2">$2</A>$3', $zData['entry']);
+                break;
+            case 'LinkCreate':
+            case 'LinkEdit':
+                $zData['entry'] = preg_replace('/(link) ([0-9]+) /', '$1 <A href="links/$2">$2</A> ', $zData['entry']);
+                break;
+            case 'PhenotypeCreate':
+                $zData['entry'] = preg_replace('/(entry) ([0-9]+) /', '$1 <A href="phenotypes/$2">$2</A> ', $zData['entry']);
+                $zData['entry'] = preg_replace('/(individual) ([0-9]+) /', '$1 <A href="individuals/$2">$2</A> ', $zData['entry']);
+                $zData['entry'] = preg_replace('/(disease) ([0-9]+)$/', '$1 <A href="diseases/$2">$2</A>', $zData['entry']);
+                break;
+            case 'PhenotypeEdit':
+                $zData['entry'] = preg_replace('/(entry) ([0-9]+)$/', '$1 <A href="phenotypes/$2">$2</A>', $zData['entry']);
+                break;
+            case 'ScreeningCreate':
+            case 'ScreeningEdit':
+            case 'VariantConfirm':
+            case 'VariantRemove':
+                $zData['entry'] = preg_replace('/(entry|screening) (#)?([0-9]+)$/', '$1 $2<A href="screenings/$3">$3</A>', $zData['entry']);
+                break;
+            case 'TranscriptEdit':
+                $zData['entry'] = preg_replace('/(entry) (#)?([0-9]+) /', '$1 $2<A href="transcripts/$3">$3</A> ', $zData['entry']);
+                break;
+            case 'UserBoot':
+            case 'UserCreate':
+            case 'UserEdit':
+            case 'UserLock':
+            case 'UserRegister':
+            case 'UserResetPassword':
+            case 'UserUnlock':
+                $zData['entry'] = preg_replace('/(ID|user) (#)?([0-9]+)( .+)?$/', '$1 $2<A href="users/$3">$3</A>$4', $zData['entry']);
+                break;
+            case 'VariantCreate':
+            case 'VariantEdit':
+            case 'VariantMap':
+                $zData['entry'] = preg_replace('/(entry|variant) (#)?([0-9]+)( .+)?$/', '$1 $2<A href="variants/$3">$3</A>$4', $zData['entry']);
+                break;
+        }
 
         return $zData;
     }

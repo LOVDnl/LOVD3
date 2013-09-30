@@ -37,6 +37,8 @@
    frequencies from various studies and populations. The variant's average
    frequency can be viewed in the variant's detailed view, and includes a link
    to the whole genome LOVD installation for a detailed view.
+ * IDs in the logs recognized by LOVD are now turned into links, allowing quick
+   navigation from the log entry to the data described by it.
 
 
 /**************************
