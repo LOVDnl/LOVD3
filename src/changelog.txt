@@ -39,6 +39,8 @@
    to the whole genome LOVD installation for a detailed view.
  * IDs in the logs recognized by LOVD are now turned into links, allowing quick
    navigation from the log entry to the data described by it.
+ * Fixed bug; LOVD3 did not support LOVD2-style redirects from the LOVD world-
+   wide variant search interface.
 
 
 /**************************

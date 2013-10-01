@@ -43,12 +43,23 @@ if ($_AUTH) {
 
 
 
-if (!ACTION && !empty($_GET['select_db']) && !empty($_GET['trackid']) && substr_count($_GET['trackid'], ':')) {
-    // URL: /variants.php?select_db=IVD&action=search_all&trackid=IVD%3Ac.465%2B1G>A
-    // Old LOVD2-style way of linking from the genome browsers back to LOVD.
-    $aTrackID = explode(':', $_GET['trackid'], 2);
-    $sDNA = $aTrackID[1];
-    header('Location: ' . lovd_getInstallURL() . 'variants/in_gene?search_geneid=' . $_GET['select_db'] . '&search_VariantOnTranscript/DNA=' . rawurlencode($sDNA));
+if (!ACTION && !empty($_GET['select_db'])) {
+    // Old way of linking to LOVD2s.
+    if (!empty($_GET['trackid']) && substr_count($_GET['trackid'], ':')) {
+        // URL: /variants.php?select_db=IVD&action=search_all&trackid=IVD%3Ac.465%2B1G>A
+        // Old LOVD2-style way of linking from the genome browsers back to LOVD.
+        $aTrackID = explode(':', $_GET['trackid'], 2);
+        $sDNA = $aTrackID[1];
+        // Using this style of linking (not using variants/GENE) we allow all transcripts to show up. We of course don't know which transcript the variant is mapped to.
+        //   Downside is of course too much focus on the genomic side of the variant, and perhaps too many columns.
+        header('Location: ' . lovd_getInstallURL() . 'variants/in_gene?search_geneid=%3D%22' . $_GET['select_db'] . '%22&search_VariantOnTranscript/DNA=%3D%22' . rawurlencode($sDNA) . '%22');
+    } elseif (!empty($_GET['action']) && $_GET['action'] == 'search_all' && !empty($_GET['search_Variant/DBID'])) {
+        // URL: /variants.php?select_db=IVD&action=search_all&search_Variant%2FDBID=IVD_000010
+        // Old LOVD2-style way of linking from the LOVD world-wide search interface. That interface doesn't actually know what is LOVD2 and what is LOVD3...
+        // Using this style of linking (not using variants/GENE) we allow all transcripts to show up. We of course don't know which transcript the variant is mapped to.
+        //   Downside is of course too much focus on the genomic side of the variant, and perhaps too many columns.
+        header('Location: ' . lovd_getInstallURL() . 'variants/in_gene?search_geneid=%3D%22' . $_GET['select_db'] . '%22&search_VariantOnGenome/DBID=%3D%22' . rawurlencode($_GET['search_Variant/DBID']) . '%22');
+    }
     exit;
 }
 
