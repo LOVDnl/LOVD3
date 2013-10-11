@@ -41,6 +41,8 @@
    navigation from the log entry to the data described by it.
  * Fixed bug; LOVD3 did not support LOVD2-style redirects from the LOVD world-
    wide variant search interface.
+ * Fixed bug; For large gene databases, the gene homepages showed an incorrect
+   number for individuals with public variants, because of database limitations.
 
 
 /**************************
