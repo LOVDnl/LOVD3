@@ -6,7 +6,7 @@
 
 /**************************
  * 3.0 Build 08 (r...)
- * 2013-09-??
+ * 2013-10-1?
  *********/
  * Importing no longer has PHP's time limit imposed.
  * Fixed bug; Users with special characters in their name could sometimes not
@@ -43,6 +43,8 @@
    wide variant search interface.
  * Fixed bug; For large gene databases, the gene homepages showed an incorrect
    number for individuals with public variants, because of database limitations.
+ * Fixed bug; The warning messages during import about lost values were repeated
+   several times when empty sections were found at the end of the imported file.
 
 
 /**************************

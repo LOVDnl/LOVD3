@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2013-08-15
+ * Modified    : 2013-10-14
  * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -324,6 +324,7 @@ if (POST) {
                             }
                             print('  $("#lovd_parser_progress_message_done").html(sMessage);' . "\n" .
                                   '</SCRIPT>');
+                            $aUnknownCols = $aLostValues = array(); // 2013-10-14; 3.0-08; Reset, because it's normally reset when parsing the next section's columns, which might not be there.
                             flush();
                         }
                     }
