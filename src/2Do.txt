@@ -12,13 +12,14 @@ Run package script, follow instructions.
 Prioritize:
 ===========
 - Age cols: allow hours also.
-- Can we check if we have a mail server on installation? If not, disallow LOVD install, or at least a big warning message?
 - NRs en NXs horen geen protein description te hebben.
 - LOVD2: als je eenmaal gelocked bent, zegt ie dat je naar de manager moet. je krijgt dan geen link meer om je eigen password te resetten. Doet LOVD3 dat ook zo?
 - Als we voor een bepaalde patient slechts 100 varianten hebben o.i.d., check met een query welke cols uit moeten staan omdat de geselecteerde genen ze niet hebben, en verberg die cols.
 - !!! Nieuw overzicht: individual met alle phenotype kolommen
 - Position_c_start & position_c_end staan in de volgorde op 't genoom; dus voor antisense genen in de niet-oplopende volgorde, dus niet correct vergeleken met de c. nomenclatuur. Willen we dat?!!??
 - in_gene combineren met scr2var, screenings, individuals en ind2dis net zoals de full data view?
+- c.100+?_101-?del wordt verkeerd vertaald naar c.100_101del als je op het formulier op Map variant klikt!!! dit, terwijl mutalyzer hier goed mee om lijkt te gaan...
+- Variant overzicht mag dan wel meevallen, maar variant overzicht op individual pagina of onder screening pagina is absurd traag.
 - 2013-03-06 Had random logouts while mapping and preparing my release for 3.0-03, but they disappeared and I could not find a connection, seemed total random. $_SESSION was intact, but $_SESSION['auth'] was gone.
   + 2013-05-03 Exactly same here on whole_genome installation, helft ingeladen, tijdens mappen verdwijnt auth randomly; maar een refresh brengt 'm soms terug... !@#!@$!!#
     Mapper zei dan ook, dat hij klaar was... terwijl in een andere tab hij nog bezig was. Mapper resultaten slaan dan nergens op:
@@ -179,7 +180,7 @@ Prioritize:
 - Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
 - Shared columns VE: add "active for parent objects" with list. Make sure you treat the list as the curator's gene list, so that it is shortened when necessary.
-- 5.3.0 required, use bcrypt!
+- 5.3.0 required, use bcrypt! Set dan wel maximale ww lengte die verwerkt wordt, om DOS aanval te voorkomen.
 - Diseases hebben alias field nodig (lange tekst), maar nog geen speciale handelingen nodig op het moment.
 - MariaDB noemen als alternatief, en uitleggen dat ze dan vooralsnog 'mysql' als driver moeten kiezen. Config.ini, handleiding, en website. Maar hoe zit dat dan met InnoDB?
 - VOG kolommen toch per gen kunnen verbergen? Johan wil écht die dbSNP kolom niet zien.
@@ -191,7 +192,7 @@ Prioritize:
 - LOVD 3.0 heeft niet hetzelfde wat LOVD 2.0 heeft. Gene not found, are you looking for gene.lovd.nl?
 - Kunnen we ook het Exon veld voorspellen?
 - Curate all option? Geeft popup met vinkje wel/niet alles mee cureren (phenotypes, individuals, etc). Daarna met progress bar de boel cureren... Ajax request output in popup?
-- Per variant de mapping opties kunnen veranderen?
+- Per variant de mapping opties kunnen veranderen? Tijdens submissie van genomische var met een vinkje mapping aanzetten?
 - Connect existing variant to existing individual; kies individual via viewlist in new window, daarna kies screening?
 
 - Beta-09:
@@ -381,6 +382,7 @@ Prioritize:
   + Eventueel code gebruiken gesuggereerd door Ivar (november 2011)
   - Implement lovd_getColumnMaxValue() in inc-lib-init.php.
 - SeattleSeq import: in welke kolom worden de dbSNP links geladen? Is nu nummerieke select, moet text values worden.
+- SeattleSeq import: stops whenever a line doesn't match anymore. Doesn't warn about anything. Bad, bad, bad...
 - Mapper geeft query error als VOT DNA veld niet actief is: ondervangen? Ivar: Nee, moeten ze maar niet met de database kloten...
 - Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
 - Add viewlist menu also on other pages? viewlists within viewentries? phenotypes for instance, can't be downloaded yet.

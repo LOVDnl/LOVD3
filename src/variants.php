@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2013-10-01
+ * Modified    : 2013-10-15
  * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1435,7 +1435,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                             if (count($aVariant['sampleGenotype']) == 1) {
                                 // One of the alleles is reference.
-                                $aFieldsVariantOnGenome[0]['allele'] = 1;
+                                $aFieldsVariantOnGenome[0]['allele'] = 0; // 'Unknown'.
                                 $aFieldsVariantOnGenome[0]['VariantOnGenome/DNA'] .= array_pop($aVariant['sampleGenotype']);
                             } else {
                                 // Compound heterozygous.
@@ -1503,7 +1503,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                         } elseif (($n = array_search($aVariant['referenceBase'], $aVariant['sampleGenotype'])) !== false) {
                             // Heterozygous, one of the alleles is reference.
                             unset($aVariant['sampleGenotype'][$n]);
-                            $aFieldsVariantOnGenome[0]['allele'] = 1;
+                            $aFieldsVariantOnGenome[0]['allele'] = 0; // 'Unknown'.
                         } else {
                             // Compound heterozygous.
                             $aFieldsVariantOnGenome[1] = $aFieldsVariantOnGenome[0];

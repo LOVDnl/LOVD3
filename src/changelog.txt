@@ -45,6 +45,10 @@
    number for individuals with public variants, because of database limitations.
  * Fixed bug; The warning messages during import about lost values were repeated
    several times when empty sections were found at the end of the imported file.
+ * When importing data from SeattleSeq files, the Allele field would default on
+   "Parent #1", instead of "Unknown".
+ * After deleting a screening, users are now forwarded to the individual's
+   detailed view.
 
 
 /**************************

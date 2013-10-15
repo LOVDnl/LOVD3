@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2013-06-28
- * For LOVD    : 3.0-06
+ * Modified    : 2013-10-15
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -816,7 +816,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             lovd_writeLog('Event', LOG_EVENT, 'Deleted screening information entry ' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'individuals/' . $zData['individualid']);
 
             $_T->printHeader();
             $_T->printTitle();
