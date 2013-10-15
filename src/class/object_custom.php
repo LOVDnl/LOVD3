@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2013-07-21
- * For LOVD    : 3.0-07
+ * Modified    : 2013-10-15
+ * For LOVD    : 3.0-08
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -424,6 +424,14 @@ class LOVD_Custom extends LOVD_Object {
                     $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
                 } elseif (!is_array($Val)) {
                     $Val = array($Val);
+                } elseif (GET) {
+                    // 2013-10-15; 3.0-08; Not importing, $Val is already an array, and we're here using GET.
+                    // When directly publishing an entry, not having filled in a selection list will trigger
+                    // an error when an empty string is not an option in this selection list.
+                    if ($Val === array('') && !in_array('', $aOptions)) {
+                        // Error would be triggered wrongly.
+                        $Val = array();
+                    }
                 }
                 foreach ($Val as $sValue) {
                     $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.

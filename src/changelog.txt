@@ -49,6 +49,8 @@
    "Parent #1", instead of "Unknown".
  * After deleting a screening, users are now forwarded to the individual's
    detailed view.
+ * Fixed bug; Quick-curating entries sometimes triggered an incorrect error when
+   empty selection lists were involved.
 
 
 /**************************

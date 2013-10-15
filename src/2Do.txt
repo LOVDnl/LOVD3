@@ -11,6 +11,7 @@ Run package script, follow instructions.
 
 Prioritize:
 ===========
+- Berekende WGS frequentie ook in VLs?
 - Age cols: allow hours also.
 - NRs en NXs horen geen protein description te hebben.
 - LOVD2: als je eenmaal gelocked bent, zegt ie dat je naar de manager moet. je krijgt dan geen link meer om je eigen password te resetten. Doet LOVD3 dat ook zo?
@@ -44,7 +45,6 @@ Prioritize:
   + Meer values horen niet te mogen in deze kolom, is daar een check op? Direct in checkFields als het goed is?
 - Import: Mapping_flags moet goed gecontroleerd worden. Numeriek? Een geldige combinatie gezien de beschikbare waardes (1-((hoogste waarde*2)-1))? Slaat de specifieke combi ergens op? Geen in progess samen met done, bijvoorbeeld.
 - Import: Als db admin moet ik toch wel iets kunnen importeren en zeggen dat LOVD de owner is? Kan nu niet, want LOVD staat niet in de owner selection list.
-- BUG: Curate individual: error: geographic origin: '' is not a correct value. Do nothing, submit form: error: no password filled in (but it was not asked).
 - Submission emails don't show diseases connected to individual, or genes connected to screening.
 - Submissions emails easily get sent twice when you reload the URL (no POST data!). Bad, bad. Empty session var?
 - LOVD3 site: how to go back to LOVD2 easily?
