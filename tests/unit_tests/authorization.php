@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-07-25
- * Modified    : 2012-10-13
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2013-10-16
+ * For LOVD    : 3.0-08
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -28,6 +28,7 @@
  *
  *************/
 
+define('FORMAT_ALLOW_TEXTPLAIN', true);
 $_GET['format'] = 'text/plain';
 
 assert_options(ASSERT_ACTIVE, 1);
@@ -54,6 +55,7 @@ require ROOT_PATH . 'inc-init.php';
 
 // Assertions for DATABASE ADMINISTRATOR.
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN))->fetchAssoc();
+assert('!empty($_AUTH)');
 assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('transcript', 'ASDFASDFASDF', false)");
@@ -69,6 +71,7 @@ assert("lovd_isAuthorized('asdfasdf', 'ASDFASDFASDF', false)");
 
 // Assertions for MANAGER.
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_MANAGER))->fetchAssoc();
+assert('!empty($_AUTH)');
 assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('transcript', 'ASDFASDFASDF', false)");
@@ -108,8 +111,8 @@ assert("lovd_isAuthorized('gene', '" . $_AUTH['submits'][0] . "', false) === fal
 // DISEASES.
 assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false) === false");
 $nIDCurator      = $_DB->query('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') LIMIT 1', $_AUTH['curates'], false)->fetchColumn();
-$nIDCollaborator = $_DB->query('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['collaborates'])-1) . ') LIMIT 1', $_AUTH['collaborates'], false)->fetchColumn();
-$nIDSubmitter    = $_DB->query('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['submits'])-1) . ') LIMIT 1', $_AUTH['submits'], false)->fetchColumn();
+$nIDCollaborator = $_DB->query('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE d.id != ? AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['collaborates'])-1) . ') LIMIT 1', array_merge(array($nIDCurator), $_AUTH['collaborates']), false)->fetchColumn();
+$nIDSubmitter    = $_DB->query('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE d.id != ? AND d.id != ? AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['submits'])-1) . ') LIMIT 1', array_merge(array($nIDCurator, $nIDCollaborator), $_AUTH['submits']), false)->fetchColumn();
 // Don't remove quotes, zerofill will cause issues.
 assert("lovd_isAuthorized('disease', '" . $nIDCurator . "', false) === 1");
 assert("lovd_isAuthorized('disease', '" . $nIDCollaborator . "', false) === 0");

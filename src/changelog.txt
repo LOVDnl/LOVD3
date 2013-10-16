@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 08 (r...)
- * 2013-10-1?
+ * 3.0 Build 08 (r349)
+ * 2013-10-16
  *********/
  * Importing no longer has PHP's time limit imposed.
  * Fixed bug; Users with special characters in their name could sometimes not

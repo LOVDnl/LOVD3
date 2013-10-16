@@ -355,12 +355,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  array(
                      'UPDATE ' . TABLE_COLS . ' SET description_legend_short = REPLACE(description_legend_short, "/76 chomosomes", "/760 chromosomes"), description_legend_full = REPLACE(description_legend_full, "/76 chomosomes", "/760 chromosomes"), form_type = REPLACE(form_type, "/76 chomosomes", "/760 chromosomes") WHERE id = "VariantOnGenome/Frequency"',
                  ),
-                 '3.0-07b' => /////////// DMD_SPECIFIC
+                 '3.0-07b' =>
                  array(
                      'UPDATE ' . TABLE_COLS . ' SET standard = 0 WHERE id = "VariantOnGenome/Restriction_site"',
                      'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN average_frequency FLOAT UNSIGNED AFTER mapping_flags',
                  ),
-                 '3.0-07c' => /////////// DMD_SPECIFIC
+                 '3.0-07c' =>
                  array(
                      'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (average_frequency)',
                  ),
