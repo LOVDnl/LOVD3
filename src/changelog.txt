@@ -5,6 +5,14 @@
  *************/
 
 /**************************
+ * 3.0 Build 09 (r3??)
+ * 2013-1?-??
+ *********/
+ * The script that fetches frequencies from the LOVD whole genome installation,
+   was keeping the session locked.
+
+
+/**************************
  * 3.0 Build 08 (r349)
  * 2013-10-16
  *********/

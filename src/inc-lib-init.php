@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-02-28
- * For LOVD    : 3.0-03
+ * Modified    : 2013-10-31
+ * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -348,8 +348,11 @@ function lovd_getColumnType ($sTable, $sCol)
     if (!empty($sColType)) {
         if (preg_match('/^((VAR)?CHAR|(TINY|MEDIUM|LONG)?TEXT)/i', $sColType)) {
             return 'TEXT';
-        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\([0-9]+\)( UNSIGNED)?/i', $sColType, $aMatches)) {
-            return 'INT' . (isset($aMatches[2])? '_UNSIGNED' : '');
+        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT(\([0-9]+\))?( UNSIGNED)?/i', $sColType, $aMatches)) {
+            return 'INT' . (isset($aMatches[3])? '_UNSIGNED' : '');
+        } elseif (preg_match('/^(FLOAT|DOUBLE)(\([0-9]+\))?( UNSIGNED)?/i', $sColType, $aMatches)) {
+            // Currently not supported by LOVD custom columns, but in use in some custom LOVD builds.
+            return 'FLOAT' . (isset($aMatches[3])? '_UNSIGNED' : '');
         } elseif (preg_match('/^(DEC|DECIMAL)\([0-9]+,[0-9]+\)( UNSIGNED)?/i', $sColType, $aMatches)) {
             return 'DECIMAL' . (isset($aMatches[2])? '_UNSIGNED' : '');
         } elseif (preg_match('/^DATE(TIME)?/i', $sColType, $aMatches)) {
@@ -908,7 +911,7 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
         $sWidth = '100%';
     }
 
-    print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="window.location.href=\'' . $sHref . '\';"' : '') . '>' . "\n" .
+    print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
           '        <TR>' . "\n" .
           '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
           '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE><BR>' . "\n\n");

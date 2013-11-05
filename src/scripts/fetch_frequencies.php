@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2013-08-11
- * Modified    : 2013-09-27
- * For LOVD    : 3.0-08
+ * Modified    : 2013-10-29
+ * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -30,6 +30,10 @@
 
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
+
+// But we don't care about your session (in fact, it locks the whole LOVD if we keep this page running).
+session_write_close();
+
 $_T->printHeader(false); // We'll use the "clean" template.
 $nLimit = 25; // For how many variants at the same time are we requesting the frequencies? 25 is the max allowed by the WGS API.
 $sURL = 'http://databases.lovd.nl/whole_genome/api/rest/get_frequencies?format=text/json'; // URL to request data from (GET (variant=chr;pos_start;pos_end;DNA) or POST (JSON)).
