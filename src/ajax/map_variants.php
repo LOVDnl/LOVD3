@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2013-03-06
- * For LOVD    : 3.0-03
+ * Modified    : 2013-11-19
+ * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -189,7 +189,7 @@ $zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS 
 if ($zTranscripts) {
     foreach ($zTranscripts as $aTranscript) {
         $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']));
-        if (!empty($aOutput)) {
+        if (!empty($aOutput) && is_array($aOutput)) {
             $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
             foreach ($aTranscriptsInfo as $aTranscriptInfo) {
                 $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo['c']);

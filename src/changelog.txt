@@ -10,6 +10,8 @@
  *********/
  * The script that fetches frequencies from the LOVD whole genome installation,
    was keeping the session locked.
+ * Fixed bug; Editing or manually mapping unmappable variants could result in a
+   fatal error depending on the PHP settings.
 
 
 /**************************
