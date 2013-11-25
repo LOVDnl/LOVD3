@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-08-26
- * For LOVD    : 3.0-08
+ * Modified    : 2013-11-25
+ * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -725,6 +725,10 @@ function lovd_setUpdatedDate ($aGenes)
         if (!lovd_isAuthorized('gene', $sGene)) {
             unset($aGenes[$nKey]);
         }
+    }
+    // So perhaps now no gene is left.
+    if (!$aGenes) {
+        return false;
     }
 
     // Just update the database and we'll see what happens.

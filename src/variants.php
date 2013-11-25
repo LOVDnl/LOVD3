@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2013-11-19
+ * Modified    : 2013-11-25
  * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2351,6 +2351,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 }
                 $aTranscriptID = $_DATA['Transcript'][$sGene]->updateAll($nID, $_POST, $aFieldsTranscripts);
 
+                // Update gene timestamp, but submitters don't have a $_POST['statusid']...
+                if (!isset($_POST['statusid'])) {
+                    $_POST['statusid'] = $zData['statusid'];
+                }
                 if (max($_POST['statusid'], $zData['statusid']) >= STATUS_MARKED) {
                     lovd_setUpdatedDate($aGenes);
                 }

@@ -15,6 +15,8 @@
  * The variant checker (protein predictor) using the Mutalyzer services can now
    also work with an NG reference sequence, not only a UD. Sometimes UDs don't
    work in case of overlapping genes.
+ * Fixed bug; Editing a public variant by a submitter could result in a fatal
+   error.
 
 
 /**************************
