@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2012-11-02
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2013-11-25
+ * For LOVD    : 3.0-09
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -33,7 +34,7 @@ require ROOT_PATH . 'inc-init.php';
 session_write_close();
 
 $aGenes = lovd_getGeneList();
-if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes) || !preg_match('/^(UD_\d{12}\(' . $_GET['gene'] . '_v\d{3}\)):[cn]\..+$/', $_GET['variant'], $aVariantMatches)) {
+if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes) || !preg_match('/^((UD_\d{12}|NG_\d{6,}\.\d{1,2})\(' . $_GET['gene'] . '_v\d{3}\)):[cn]\..+$/', $_GET['variant'], $aVariantMatches)) {
     die(AJAX_DATA_ERROR);
 }
 $sProteinPrefix = str_replace('_v', '_i', $aVariantMatches[1]);

@@ -12,6 +12,9 @@
    was keeping the session locked.
  * Fixed bug; Editing or manually mapping unmappable variants could result in a
    fatal error depending on the PHP settings.
+ * The variant checker (protein predictor) using the Mutalyzer services can now
+   also work with an NG reference sequence, not only a UD. Sometimes UDs don't
+   work in case of overlapping genes.
 
 
 /**************************
