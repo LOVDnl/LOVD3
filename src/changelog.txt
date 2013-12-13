@@ -17,6 +17,10 @@
    work in case of overlapping genes.
  * Fixed bug; Editing a public variant by a submitter could result in a fatal
    error.
+ * Fixed notices in the data listings caused by incorrect search expressions.
+ * Improved views for diseases associated with many genes; the data listings and
+   the detailed views of the diseases now show a maximum number of gene entries,
+   but always show the total number.
 
 
 /**************************

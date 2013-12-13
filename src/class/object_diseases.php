@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2013-09-09
- * For LOVD    : 3.0-08
+ * Modified    : 2013-12-13
+ * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -81,7 +81,8 @@ class LOVD_Disease extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'd.*, d.id AS diseaseid, ' .
                                           '(SELECT COUNT(DISTINCT i.id) FROM ' . TABLE_IND2DIS . ' AS i2d LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') WHERE i2d.diseaseid = d.id) AS individuals, ' .
                                           '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
-                                          'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
+                                          'COUNT(g2d.geneid) AS gene_count, ' .
+                                          'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
         $this->aSQLViewList['WHERE']    = 'd.id > 0';
@@ -95,7 +96,7 @@ class LOVD_Disease extends LOVD_Object {
                         'id_omim' => 'OMIM ID',
                         'individuals' => 'Individuals reported having this disease',
                         'phenotypes_' => 'Phenotype entries for this disease',
-                        'genes_' => 'Associated with genes',
+                        'genes_' => 'Associated with',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -125,7 +126,7 @@ class LOVD_Disease extends LOVD_Object {
                                     'db'   => array('phenotypes', 'DESC', true)),
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
-                                    'db'   => array('genes_', false, 'TEXT')),
+                                    'db'   => array('_genes', false, 'TEXT')),
                       );
         $this->sSortDefault = 'symbol';
 
@@ -276,6 +277,21 @@ class LOVD_Disease extends LOVD_Object {
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
             $zData['symbol'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['symbol'] . '</A>';
+            $zData['genes_'] = '';
+            $i = 0;
+            if (count($zData['genes']) > 22) {
+                // Don't show all genes.
+                foreach ($zData['genes'] as $key => $sID) {
+                    $zData['genes_'] .= (!$key? '' : ', ') . $sID;
+                    $i++;
+                    if ($i >= 20) {
+                        break;
+                    }
+                }
+                $zData['genes_'] .= ', ' . ($zData['gene_count'] - $i) . ' more';
+            } else {
+                $zData['genes_'] = implode(', ', $zData['genes']);
+            }
         } else {
             if (!empty($zData['id_omim'])) {
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
@@ -284,11 +300,21 @@ class LOVD_Disease extends LOVD_Object {
             if ($zData['phenotypes']) {
                 $zData['phenotypes_'] = '<A href="phenotypes/disease/' . $zData['id'] . '">' . $zData['phenotypes'] . '</A>';
             }
+            // Provide links to gene symbols this disease is associated with.
+            $this->aColumnsViewEntry['genes_'] .= ' ' . count($zData['genes']) . ' gene' . (count($zData['genes']) == 1? '' : 's');
             $zData['genes_'] = '';
-            if (!empty($zData['genes'])) {
-                foreach ($zData['genes'] as $sID) {
-                    $zData['genes_'] .= (!$zData['genes_']? '' : ', ') . '<A href="genes/' . rawurlencode($sID) . '">' . $sID . '</A>';
+            $zData['genes_short_'] = '';
+            $i = 0;
+            foreach ($zData['genes'] as $key => $sID) {
+                $zData['genes_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sID . '">' . $sID . '</A>';
+                if ($i < 20) {
+                    $zData['genes_short_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sID . '">' . $sID . '</A>';
+                    $i++;
                 }
+            }
+            if (count($zData['genes']) > 22) {
+                // Replace long gene list by shorter one, allowing expand.
+                $zData['genes_'] = '<SPAN>' . $zData['genes_short_'] . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($zData['genes']) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $zData['genes_'] . '</SPAN>';
             }
         }
 
