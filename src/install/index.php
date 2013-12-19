@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-08-27
- * For LOVD    : 3.0-08
+ * Modified    : 2013-12-18
+ * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -158,6 +158,11 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     // Check for InnoDB support.
     $sInnoDB = $_DB->query('SHOW VARIABLES LIKE "have\_innodb"')->fetchColumn(1);
     $bInnoDB = ($sInnoDB == 'YES');
+    if (!$bInnoDB) {
+        // Might be MySQL 5.6 or higher, where this variable in unavailable.
+        $aEngines = $_DB->query('SHOW ENGINES')->fetchAllCombine(0, 1);
+        $bInnoDB = (isset($aEngines['InnoDB']) && in_array($aEngines['InnoDB'], array('YES', 'DEFAULT')));
+    }
     $sInnoDB = '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bInnoDB . '.png" alt="" width="11" height="11">&nbsp;MySQL InnoDB support ' . ($bInnoDB? 'en' : 'dis') . 'abled (required)';
 
     // 2013-08-27; 3.0-08; Check for a mail server.

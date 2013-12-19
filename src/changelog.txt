@@ -21,6 +21,10 @@
  * Improved views for diseases associated with many genes; the data listings and
    the detailed views of the diseases now show a maximum number of gene entries,
    but always show the total number.
+ * Fixed bug; MySQL 5.6 reported to not have InnoDB, because the variable we use
+   to check this, has become unavailable.
+   Closes #26: "LOVD uninstallable on Xampp on Mac OS X 10.8.5".
+   (thanks to Tyler Hill, Oregon Health & Science Univ., USA, for reporting)
 
 
 /**************************
