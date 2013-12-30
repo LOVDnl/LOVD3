@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-09-02
- * For LOVD    : 3.0-08
+ * Modified    : 2013-12-30
+ * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -115,7 +115,7 @@ class LOVD_User extends LOVD_Object {
                         'saved_work_' => array('Saved work', LEVEL_MANAGER),
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
-//                        'submits' => 'Submits',
+                        'ownes_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
                         'level_' => array('User level', LEVEL_CURATOR),
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
                         'status_' => array('Status', LEVEL_MANAGER),
@@ -408,7 +408,7 @@ class LOVD_User extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
-        global $_SETT;
+        global $_DB, $_SETT;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -467,6 +467,29 @@ class LOVD_User extends LOVD_Object {
             foreach ($zData['collaborates'] as $key => $sGene) {
                 $zData['collaborates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
             }
+
+            // Submissions...
+            if (lovd_isAuthorized('user', $zData['id']) === false) {
+                // Not authorized to view hidden data for this user; so we're not manager and we're not viewing ourselves. Nevermind then.
+                unset($this->aColumnsViewEntry['ownes_']);
+            } else {
+                // Either we're viewing ourselves, or we're manager or up. Like this is easy, because now we don't need to check for the data status of the data.
+                $nOwnes = 0;
+                $sOwnes = '';
+
+                // FIXME: Phenotypes is not included, because we don't have a phenotypes overview (must be disease-specific).
+                foreach (array('individuals', 'screenings', 'variants') as $sDataType) {
+                    $n = $_DB->query('SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sDataType)) . ' WHERE owned_by = ?', array($zData['id']))->fetchColumn();
+                    if ($n) {
+                        $nOwnes += $n;
+                        $sOwnes .= (!$sOwnes? '' : ', ') . '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode($zData['name']) . '%22">' . $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType) . '</A>';
+                    }
+                }
+
+                $this->aColumnsViewEntry['ownes_'] .= ' ' . $nOwnes . ' data entr' . ($nOwnes == 1? 'y' : 'ies');
+                $zData['ownes_'] = $sOwnes;
+            }
+
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');
             $zData['locked_'] = ($zData['locked']? '<IMG src="gfx/status_locked.png" alt="Locked" title="Locked" width="14" height="14" align="top"> Locked' : 'No');

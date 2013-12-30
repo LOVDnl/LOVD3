@@ -25,6 +25,9 @@
    to check this, has become unavailable.
    Closes #26: "LOVD uninstallable on Xampp on Mac OS X 10.8.5".
    (thanks to Tyler Hill, Oregon Health & Science Univ., USA, for reporting)
+ * From the "Your account" link in the top right-hand side of the screen, but
+   also for authorized users when viewing any user's details, links are provided
+   to view the data owned by the user in question.
 
 
 /**************************

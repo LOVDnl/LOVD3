@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-10-31
+ * Modified    : 2013-12-30
  * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -478,21 +478,40 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     // False: not allowed to view hidden data, not allowed to edit.
     // 0    : allowed to view hidden data, not allowed to edit (LEVEL_COLLABORATOR).
     // 1    : allowed to view hidden data, allowed to edit (LEVEL_OWNER || LEVEL_CURATOR).
-    // Returns 1 by default for any user with level LEVEL_MANAGER or higher.
+    // Returns 1 by default for any user with level LEVEL_MANAGER or higher for non-user based authorization requests.
     global $_AUTH, $_DB, $_CONF;
 
     if (!$_AUTH) {
         return false;
-    } elseif ($_AUTH['level'] >= LEVEL_MANAGER) {
+    } elseif ($sType != 'user' && $_AUTH['level'] >= LEVEL_MANAGER) {
         return 1;
     }
 
     // Check data type.
     if (!$Data) {
         return false;
-    } elseif (!in_array($sType, array('gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
+    } elseif (!in_array($sType, array('user', 'gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
         lovd_writeLog('Error', 'LOVD-Lib', 'lovd_isAuthorized() - Function didn\'t receive a valid datatype (' . $sType . ').');
         return false;
+    }
+
+    if ($sType == 'user') {
+        // Base authorization on own level and other's level, if not requesting authorization on himself.
+        if (is_array($Data)) {
+            // Not supported on this data type.
+            return false;
+        } else {
+            // If viewing himself, always get authorization.
+            if ($Data == $_AUTH['id']) {
+                return 1; // FIXME: We're not supporting $bSetUserLevel at the moment (not required right now, either).
+            } elseif ($_AUTH['level'] < LEVEL_MANAGER) {
+                // Lower than managers never get access to hidden data of other users.
+                return false;
+            } else {
+                $nLevelData = $_DB->query('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($Data))->fetchColumn();
+                return (int) ($_AUTH['level'] > $nLevelData);
+            }
+        }
     }
 
     if ($sType == 'gene') {
