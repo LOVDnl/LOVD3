@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2013-11-25
+ * Modified    : 2014-01-13
  * For LOVD    : 3.0-09
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -902,7 +902,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
         }
 
         do {
-            // Variants have a seperate line for each transcript they hit. We read lines
+            // Variants have a separate line for each transcript they hit. We read lines
             // until we've got all data for one genomic position and then exit of the loop.
 
             do {
@@ -929,8 +929,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             if (!empty($aHeaders) && $sLine && substr($sLine, 0, 2) != '# ') {
                 if (empty($aLine)) {
                     // $aLine is going to hold the actual variant data that we return.
-                    // Its inital data comes from $sLine (which is the previously-read line; usually even from the previous call to this function).
-                    // This is because we always read one line 'too much'; we only know $sNextLine is not part of the current variant once w've already read it.
+                    // Its initial data comes from $sLine (which is the previously-read line; usually even from the previous call to this function).
+                    // This is because we always read one line 'too much'; we only know $sNextLine is not part of the current variant once we've already read it.
                     $aLine = array_combine($aHeaders, explode("\t", rtrim($sLine, "\r\n")));
 
                     foreach (array('accession', 'functionGVS', 'functionDBSNP', 'aminoAcids', 'proteinPosition', 'cDNAPosition', 'polyPhen', 'granthamScore', 'proteinSequence', 'distanceToSplice') as $sKey) {
@@ -952,7 +952,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                 // Compare the next line with the current variant data.
                 $aNextLine = array_combine($aHeaders, explode("\t", rtrim($sNextLine, "\r\n")));
-                if ($aLine['chromosome'] == $aNextLine['chromosome'] && $aLine['position'] == $aNextLine['position']) {
+                if (isset($aLine['chromosome']) && isset($aNextLine['chromosome']) && $aLine['chromosome'] == $aNextLine['chromosome'] && isset($aLine['position']) && isset($aNextLine['position']) && $aLine['position'] == $aNextLine['position']) {
                     // The variant in $aNextLine is the same as $aLine, but on another transcript. Add the transcript-specific values.
                     foreach ($aLine as $sKey => &$value) {
                         if (is_array($value)) {
@@ -1330,8 +1330,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     'X' => array('G', 'A', 'T', 'C')
                 );
 
-                // Check whether the GERP column is available.
-                $bGERPColumnAvailable = (bool) $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = "VariantOnGenome/Conservation_score/GERP"')->fetchColumn();
+                // Check which VOG columns are available.
+                $aVOGColumnsAvailable = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid LIKE "VariantOnGenome%"')->fetchAllColumn();
 
                 // Define the list of VariantOnTranscript columns once and for all.
                 $aVOTCols = array('VariantOnTranscript/Distance_to_splice_site',
@@ -1388,7 +1388,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                         'created_date' => $aUploadData['upload_date'],
                         );
 
-                    if ($bGERPColumnAvailable && !in_array($aVariant['consScoreGERP'], array('NA', 'unknown', 'none'))) {
+                    if (in_array('VariantOnGenome/Conservation_score/GERP', $aVOGColumnsAvailable) && !in_array($aVariant['consScoreGERP'], array('NA', 'unknown', 'none'))) {
                         $aFieldsVariantOnGenome[0]['VariantOnGenome/Conservation_score/GERP'] = $aVariant['consScoreGERP'];
                     }
 
@@ -1568,7 +1568,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                 if (empty($aGeneInfo)) {
                                     // Getting all gene information from the HGNC takes a few seconds.
                                     $_BAR->setMessage('Loading gene data...', 'done');
-                                    $aGeneInfo = lovd_getGeneInfoFromHgnc(true, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id'));
+                                    $aGeneInfo = lovd_getGeneInfoFromHgncOld(true, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id'));
 
                                     if (empty($aGeneInfo)) {
                                         // We can't gene information from the HGNC, so we can't add them.

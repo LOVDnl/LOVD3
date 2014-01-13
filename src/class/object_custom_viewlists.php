@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2013-09-26
- * For LOVD    : 3.0-08
+ * Modified    : 2014-01-08
+ * For LOVD    : 3.0-09
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -276,6 +276,10 @@ class LOVD_CustomViewList extends LOVD_Object {
                         if ($nKeyVOG !== false && $nKeyVOG < $nKey) {
                             // Earlier, VOG was used, join to that.
                             $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)';
+                            // This combination only happens when we're joining VOG to Scr2Var to VOT, to show variants in a screening or individual.
+                            // Then grouping on the s2v's variant ID is faster, because we're searching on the s2v.screeningid and like this we keep
+                            // the group by and the where in the same table, greatly increasing the speed of the query.
+                            $aSQL['GROUP_BY'] = 's2v.variantid'; // Necessary for GROUP_CONCAT().
                         } elseif ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                             // Earlier, VOT was used, join to that.
                             $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid)';

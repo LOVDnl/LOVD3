@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2013-03-26
- * For LOVD    : 3.0-04
+ * Modified    : 2014-01-13
+ * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -179,10 +179,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation.');
                 } else {
                     // This call already makes the needed lovd_errorAdd() calls.
-                    $aGeneInfo = lovd_getGeneInfoFromHgnc($_POST['hgnc_id'], array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id'));
+                    $aGeneInfo = lovd_getGeneInfoFromHGNC($_POST['hgnc_id']);
                     if (!empty($aGeneInfo)) {
-                        list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim) = array_values($aGeneInfo);
-                        list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
+                        $sHgncID = $aGeneInfo['hgnc_id'];
+                        $sSymbol = $aGeneInfo['symbol'];
+                        $sGeneName = $aGeneInfo['name'];
+                        $sChromLocation = $aGeneInfo['location'];
+                        $sEntrez = $aGeneInfo['entrez_id'];
+                        $nOmim = $aGeneInfo['omim_id'];
                         // For now, until NCBI has fixed their API, we can't create MT- genes (Mutalyzer cannot get a proper reference sequence).
                         if (substr($sSymbol, 0, 3) == 'MT-') {
                             lovd_errorAdd('', 'Unfortunately, due to some problems on the side of the NCBI, we are unable to handle variants on the mitochondrial genome at this time. When the NCBI has fixed the problem, we will implement support for MT genes.');
@@ -291,7 +295,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                                                   'chrom_band' => $sChromBand,
                                                                   'id_hgnc' => $sHgncID,
                                                                   'id_entrez' => $sEntrez,
-                                                                  'id_omim' => $sOmim,
+                                                                  'id_omim' => $nOmim,
                                                                   'genomic_references' => $aRefseqGenomic,
                                                                   'refseq_UD' => $sRefseqUD,
                                                                 );

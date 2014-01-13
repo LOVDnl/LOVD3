@@ -6,7 +6,7 @@
 
 /**************************
  * 3.0 Build 09 (r3??)
- * 2013-1?-??
+ * 2014-02-13
  *********/
  * The script that fetches frequencies from the LOVD whole genome installation,
    was keeping the session locked.
@@ -28,6 +28,15 @@
  * From the "Your account" link in the top right-hand side of the screen, but
    also for authorized users when viewing any user's details, links are provided
    to view the data owned by the user in question.
+ * Due to the HGNC changing their URL schema again, no new genes could be
+   created starting from Wednesday, January 8th.
+ * Improved the speed of the variant overview on the Screenings or Individuals
+   detailed pages, especially noticable when having many VariantOnTranscript
+   columns.
+ * Fixed bug; Uploading a non-SeattleSeq file into the SeattleSeq parser resul-
+   ted in many notices, and the message only one variant was found (but not
+   imported). Now it doesn't throw the notices, and reports the correct number
+   of ignored variants.
 
 
 /**************************

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2013-03-08
- * For LOVD    : 3.0-04
+ * Modified    : 2014-01-13
+ * For LOVD    : 3.0-09
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -66,7 +66,154 @@ function lovd_getNGbyGeneSymbol ($sGeneSymbol)
 
 
 
-function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
+function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
+{
+    // Uses the HGNC API to search and retrieve gene information from the HGNC
+    // website. The first argument can be an HGNC accession number or an HGNC
+    // approved gene symbol. The results will be returned as an associative
+    // array. If $bRecursion == true, this function automatically handles
+    // deprecated HGNC entries and returns the information with the correct gene
+    // symbol. On error, this function calls lovd_errorAdd if inc-lib-form.php
+    // was included. It always returns false on failure.
+
+    // 2014-01-13; 3.0-09; Tired of problems when their URL change and they don't announce it properly; rewrite to use their new REST service.
+    $sURL = 'http://rest.genenames.org/search/';
+    if (ctype_digit($sHgncId)) {
+        $sURL .= 'hgnc_id/';
+    } else {
+        $sURL .= 'symbol/';
+    }
+    $sURL .= $sHgncId;
+    $nHGNCID = 0;
+    $aOutput = lovd_php_file($sURL, false, '', 'Accept: application/json');
+    if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
+        if (!empty($aOutput['response']['numFound'])) {
+            $nHGNCID = $aOutput['response']['docs'][0]['hgnc_id'];
+        } else {
+            // Not found, previous symbol of...?
+            $sURL = str_replace('/symbol/', '/prev_symbol/', $sURL);
+            $aOutput = lovd_php_file($sURL, false, '', 'Accept: application/json');
+            if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
+                if (!empty($aOutput['response']['numFound'])) {
+                    if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
+                        $nHGNCID = $aOutput['response']['docs'][0]['hgnc_id'];
+                    } elseif (function_exists('lovd_errorAdd')) {
+                        $sSymbols = '';
+                        for ($i = 0; $i < $aOutput['response']['numFound']; $i ++) {
+                            $sSymbols .= (!$i? '' : ($i == ($aOutput['response']['numFound'] - 1)? ' or ' : ', ')) . $aOutput['response']['docs'][$i]['symbol'];
+                        }
+                        lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' is deprecated according to the HGNC, please use ' . $sSymbols . '.');
+                    }
+                    return false;
+                } else {
+                    // Not found, maybe it's an alias?
+                    $sURL = str_replace('/prev_symbol/', '/alias_symbol/', $sURL);
+                    $aOutput = lovd_php_file($sURL, false, '', 'Accept: application/json');
+                    if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
+                        if (!empty($aOutput['response']['numFound'])) {
+                            if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
+                                $nHGNCID = $aOutput['response']['docs'][0]['hgnc_id'];
+                            } elseif (function_exists('lovd_errorAdd')) {
+                                $sSymbols = '';
+                                for ($i = 0; $i < $aOutput['response']['numFound']; $i ++) {
+                                    $sSymbols .= (!$i? '' : ($i == ($aOutput['response']['numFound'] - 1)? ' or ' : ', ')) . $aOutput['response']['docs'][$i]['symbol'];
+                                }
+                                lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' was not found, perhaps you are referring to ' . $sSymbols . '.');
+                            }
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        if (function_exists('lovd_errorAdd')) {
+            lovd_errorAdd('', 'Couldn\'t search for gene, probably because the HGNC is having website or database problems. Please try again later.');
+        }
+        return false;
+    }
+
+    if (!$nHGNCID) {
+        if (function_exists('lovd_errorAdd')) {
+            lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' was not found in the HGNC database.');
+        }
+        return false;
+    }
+
+
+
+    // Now that we have an ID, fetch the data. Use HGNC's fetch API.
+    $aOutput = lovd_php_file('http://rest.genenames.org/fetch/hgnc_id/' . $nHGNCID, false, '', 'Accept: application/json');
+    if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
+        if (!empty($aOutput['response']['numFound'])) {
+            $aGene = $aOutput['response']['docs'][0];
+        } else {
+            if (function_exists('lovd_errorAdd')) {
+                lovd_errorAdd('hgnc_id', 'Couldn\'t fetch gene information, even though search results were returned. This might be a problem at the side of the HGNC, or a bug in LOVD. Please try again later.');
+            }
+            return false;
+        }
+    } else {
+        if (function_exists('lovd_errorAdd')) {
+            lovd_errorAdd('', 'Couldn\'t get gene information, probably because the HGNC is having website or database problems. Please try again later.');
+        }
+        return false;
+    }
+
+
+
+
+    // Check returned entry.
+    // We ignore genes from the following locus groups:
+    $aBadLocusGroups =
+        array(
+            'phenotype', // No transcripts.
+            'withdrawn', // Do not exist anymore.
+        );
+
+    // We ignore genes from the following locus types (most of these are in group "other"):
+    $aBadLocusTypes =
+        array(
+            'endogenous retrovirus',  // From group "other", none of them work (verified).
+            'fragile site',           // From group "other", none of them work (verified).
+            'immunoglobulin gene',    // From group "other", none of them work (verified).
+            'region',                 // From group "other", none of them work (verified).
+            'transposable element',   // From group "other", none of them work (verified).
+            'unknown',                // From group "other", none of them work (verified).
+            'virus integration site', // From group "other", none of them work (verified).
+            'immunoglobulin pseudogene', // From group "pseudogene", none of them work (verified).
+        );
+
+    if ($aGene['status'] != 'Approved') {
+        if (function_exists('lovd_errorAdd')) {
+            lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' is not an approved gene symbol according to the HGNC database.');
+        }
+        return false;
+    } elseif ($aGene['location'] == 'reserved') {
+        if (function_exists('lovd_errorAdd')) {
+            lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' does not yet have a public association with a chromosomal location.');
+        }
+        return false;
+    } elseif (in_array($aGene['locus_group'], $aBadLocusGroups)) {
+        if (function_exists('lovd_errorAdd')) {
+            lovd_errorAdd('hgnc_id', 'LOVD cannot process this type of gene entry ' . htmlspecialchars($sHgncId) . ' (Locus Group: ' . $aGene['locus_group'] . ').');
+        }
+        return false;
+    } elseif (in_array($aGene['locus_type'], $aBadLocusTypes)) {
+        if (function_exists('lovd_errorAdd')) {
+            lovd_errorAdd('hgnc_id', 'LOVD cannot process this type of gene entry ' . htmlspecialchars($sHgncId) . ' (Locus Type: ' . $aGene['locus_type'] . ').');
+        }
+        return false;
+    }
+
+    return $aGene;
+}
+
+
+
+
+
+function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
 {
     // Downloads gene information from the HGNC website. The specified columns will be retrieved.
     // The first argument can be an HGNC accession number, an HGNC approved gene symbol, or boolean true to retrieve ALL genes.
@@ -107,7 +254,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
             $aColumns[] = 'gd_app_name';
         }
     }
-    $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
+    $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/download?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
 
     // If the HGNC is having database problems, we get an HTML page.
     if (empty($aHgncFile) || stripos(implode($aHgncFile), '<html') !== false) {
@@ -152,7 +299,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
             return false;
         } elseif (preg_match('/^symbol withdrawn, see (.+)$/', $aGene['gd_app_name'], $aRegs)) {
             if ($bRecursion) {
-                return lovd_getGeneInfoFromHgnc($aRegs[1], $aCols);
+                return lovd_getGeneInfoFromHgncOld($aRegs[1], $aCols);
             } elseif (function_exists('lovd_errorAdd')) {
                 lovd_errorAdd('hgnc_id', 'Entry ' . htmlspecialchars($sHgncId) . ' is deprecated according to the HGNC, please use ' . $aRegs[1] . '.');
             }
@@ -182,7 +329,7 @@ function lovd_getGeneInfoFromHgnc ($sHgncId, $aCols, $bRecursion = false)
         // We only do this search, if we can report if of course (hence the check for lovd_errorAdd()).
         // Replace WHERE.
         $sWhere = rawurlencode('CONCAT(" ", gd_aliases, ",") LIKE "% ' . $sHgncId . ',%"');
-        $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/hgnc_downloads?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
+        $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/download?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
 
         // Just quick check if we have a match now...
         if (!empty($aHgncFile) && stripos(implode($aHgncFile), '<html') === false) {

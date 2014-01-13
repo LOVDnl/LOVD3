@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2013-11-19
+ * Modified    : 2014-01-13
  * For LOVD    : 3.0-09
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -467,7 +467,7 @@ if (!empty($aVariants)) {
             foreach ($aGenesWeCanMapTo as $sGene) {
 
                 // Get information from HGNC.
-                $aGeneInfoFromHgnc = lovd_getGeneInfoFromHgnc($sGene, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id', 'gd_pub_refseq_ids', 'md_refseq_id'), true);
+                $aGeneInfoFromHgnc = lovd_getGeneInfoFromHgncOld($sGene, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id', 'gd_pub_refseq_ids', 'md_refseq_id'), true);
                 if (empty($aGeneInfoFromHgnc)) {
                     // Couldn't find this gene. Try the next.
                     continue;
