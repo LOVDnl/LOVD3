@@ -5,7 +5,7 @@
  *************/
 
 /**************************
- * 3.0 Build 09 (r3??)
+ * 3.0 Build 09 (r383)
  * 2014-02-13
  *********/
  * The script that fetches frequencies from the LOVD whole genome installation,
