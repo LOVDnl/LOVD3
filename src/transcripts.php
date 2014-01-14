@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2012-08-07
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2014-01-14
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -281,6 +281,14 @@ if (ACTION == 'create') {
                         $nProgress += (100/$nTranscripts);
                         $_BAR->setMessage('Collecting ' . $aTranscriptValues['id'] . ' info...');
                         if ($aTranscriptValues['id']) {
+                            // 2014-01-14; 3.0-10; When getting transcripts from an NG rather than an NC, we are missing some fields. Make sure they're set.
+                            $aTranscriptValues = array_replace_recursive(
+                                array(
+                                    'chromTransStart' => 0,
+                                    'chromCDSStart' => 0,
+                                    'chromTransEnd' => 0,
+                                    'chromCDSStop' => 0,
+                                ), $aTranscriptValues);
                             $aTranscripts[] = $aTranscriptValues['id'];
                             $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($zGene['name'] . ', ', '', $aTranscriptValues['product']);
                             $aTranscriptsMutalyzer[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($zGene['id'] . '_v', '', $aTranscriptValues['name']);

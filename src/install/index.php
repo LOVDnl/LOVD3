@@ -159,7 +159,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     $sInnoDB = $_DB->query('SHOW VARIABLES LIKE "have\_innodb"')->fetchColumn(1);
     $bInnoDB = ($sInnoDB == 'YES');
     if (!$bInnoDB) {
-        // Might be MySQL 5.6 or higher, where this variable in unavailable.
+        // Might be MySQL 5.6 or higher, where this variable is unavailable.
         $aEngines = $_DB->query('SHOW ENGINES')->fetchAllCombine(0, 1);
         $bInnoDB = (isset($aEngines['InnoDB']) && in_array($aEngines['InnoDB'], array('YES', 'DEFAULT')));
     }

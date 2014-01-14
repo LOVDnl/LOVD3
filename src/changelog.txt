@@ -5,6 +5,14 @@
  *************/
 
 /**************************
+ * 3.0 Build 10 (r???)
+ * 2014-02-??
+ *********/
+ * Selecting a new transcript now also works with an NG reference sequence, not
+   only an UD. Sometimes UDs don't work in case of overlapping genes.
+
+
+/**************************
  * 3.0 Build 09 (r383)
  * 2014-02-13
  *********/
