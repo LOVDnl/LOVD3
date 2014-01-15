@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-09
- * Modified    : 2012-11-12
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2014-01-15
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -105,8 +105,14 @@ class Feed {
             $this->sAtomFeed = str_replace('{{ FEED_ID }}', ($sFeedID? $sFeedID : 'tag:' . $_SERVER['HTTP_HOST'] . ',' . $_STAT['install_date'] . ':' . $_STAT['signature']), $this->sAtomFeed);
             $this->sAtomFeed = str_replace('{{ LOVD_VERSION }}', $_SETT['system']['version'], $this->sAtomFeed);
 
-            // Find date of last update for all genes.
-            list($sDateUpdated) = $_DB->query('SELECT MAX(updated_date) FROM ' . TABLE_GENES)->fetchColumn();
+            // Let the date of last update depend on the type of feed.
+            if (preg_match('/\/variants\/(.+)$/', $sFeedURL, $aRegs)) {
+                // Variants of a specific gene.
+                $sDateUpdated = $_DB->query('SELECT MAX(updated_date) FROM ' . TABLE_GENES . ' WHERE id = ?', array($aRegs[1]))->fetchColumn();
+            } else {
+                // Find date of last update for all genes.
+                $sDateUpdated = $_DB->query('SELECT MAX(updated_date) FROM ' . TABLE_GENES)->fetchColumn();
+            }
             $this->sAtomFeed = str_replace('{{ FEED_DATE_UPDATED }}', $this->formatDate($sDateUpdated), $this->sAtomFeed);
 
             // For now, remove any of the entries until they are added using addEntry().

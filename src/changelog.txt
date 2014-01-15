@@ -10,6 +10,8 @@
  *********/
  * Selecting a new transcript now also works with an NG reference sequence, not
    only an UD. Sometimes UDs don't work in case of overlapping genes.
+ * Fixed bug; The API didn't return a proper date of last update. This is now
+   returned for the genes separately as for the variants.
 
 
 /**************************
