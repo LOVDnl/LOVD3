@@ -16,6 +16,7 @@
 \usepackage[format=hang,font=footnotesize,labelfont=bf,skip=5pt]{caption} % To format captions.
 \usepackage{hyperref} % For URLs.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% NEW MAXIMUM LINE LENGTH (120 char) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Include all of this in a separate file!
 \newcommand{\HRule}{\rule{\linewidth}{1mm}} % Doet height (zie style) hetzelfde?
 \newcommand{\institute}[1]{\gdef\inst{#1}}  % Beamer supplies \institute. We want that, too.
@@ -209,12 +210,13 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-07}
+\setLOVDversion{3.0-09}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2013-09-03} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\funding{LOVD has received funding from the European Community's Seventh Framework Programme\\(FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
+\date{2014-01-15} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
+  (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
 
 
@@ -683,6 +685,7 @@ We use this information to see how many LOVDs there are worldwide, which version
   When this setting is enabled, LOVD will collect general usage statistics and send this to us.
   The following information is sent: the number of submitters, genes, individuals, variants and unique variants in your system.
   No specific information is sent, just the numbers.
+  \hypertarget{item:include_in_listing}{}
   \item[Include in the global LOVD listing] \hfill \\ %% FIXME; When LOVD 3.0 site has such a list, use that URL here.
   On our website, we keep a \href{http://www.lovd.nl/2.0/index_list.php}{list of public LOVD installations}.
   This list is also feeding our \href{http://www.lovd.nl/LSDBs}{worldwide LSDB list},
@@ -2934,6 +2937,280 @@ The individuals in this file may have more variants reported, which are not affe
 If you're planning large parallel changes to data entries in LOVD using spreadsheet software such as OpenOffice.org Calc or MS Excel, you could use this file as a starting point.
 In that case, read the instructions at ``\hyperlink{sec:download_importing_data}{Importing data into LOVD}'' before you begin.
 \clearpage % Makes the hyper target actually point to the right place.
+
+
+
+
+
+
+
+
+
+
+\chapter{The LOVD API}
+Just like LOVD2 (from version 2.0-22, released October 5th 2009), LOVD3 includes a simple
+ webservice enabling simple queries or listing of variant data (not patient data).
+This API only shows very basic information and can therefore not be disabled.
+The LOVD installations that have indicated to be \hyperlink{item:include_in_listing}{included in the
+ global LOVD listing} are included in the overall LOVD querying service, which is based on this API.
+
+Examples of possibilities are searching on a gene symbol, getting the list of available genes in the database,
+ or on a per-gene basis, list all variants or search for a certain variant or DNA location.
+Even though LOVD3 is not gene-based like LOVD2 was, we have decided to keep the same
+ gene-centered design of the API to make sure LOVD2 and LOVD3 can be queried alike.
+The output it creates is an Atom 1.0 feed with the LOVD information in plain text.
+
+A more advanced API will be included in LOVD3 later, allowing the querying of variants genome-wide
+ and getting more detailed information out of LOVD, such as patient and phenotype data.
+This API will be configurable, so submitters decide for themselves under
+ which data sharing license which type of information will be shared.
+
+
+
+
+
+\section{Format}
+When searching for genes, an Atom feed is returned with zero or more entries.
+When requesting a specific entry, just the Atom entry is returned.
+The Atom format is described in detail on \href{http://en.wikipedia.org/wiki/Atom_(standard)}{Wikipedia}.
+
+The content of the Atom entries is in plain text, with headers and values separated by a colon (:).
+Other formats as a `payload' of the Atom entries are not available.
+
+The new LOVD3 API (release date unavailable) will probably support multiple formats, such as
+ \href{http://www.varioml.org/}{VarioML} and \href{http://www.json.org/}{JSON},
+ most likely not wrapped in Atom feeds, since this API serves a different purpose.
+
+
+
+\clearpage
+\subsection{Genes}
+\begin{figure}[ht]
+  \begin{shaded}
+    \scriptsize
+    \begin{verbatim}
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>
+    Results for your query of the database
+  </title>
+  <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/"/>
+  <link rel="self" type="application/atom+xml" href="http://databases.lovd.nl/shared/api/rest/genes"/>
+  <updated>2014-01-14T12:20:24+01:00</updated>
+  <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
+  <generator uri="http://www.LOVD.nl/" version="3.0-09">
+    Leiden Open Variation Database
+  </generator>
+  <rights>Copyright (c), the curators of this database</rights>
+  <entry xmlns="http://www.w3.org/2005/Atom">
+    <title>IVD</title>
+    <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/genes/IVD"/>
+    <link rel="self" type="application/atom+xml" href="http://d...lovd.nl/shared/api/rest/genes/IVD"/>
+    <id>tag:databases.lovd.nl,2011-04-05:IVD</id>
+    <author>
+      <name>Gerard Schaafsma</name>
+    </author>
+    <contributor>
+      <name>Ivo F.A.C. Fokkema</name>
+    </contributor>
+    <published>2011-04-05T16:04:49+02:00</published>
+    <updated>2013-03-11T15:30:41+01:00</updated>
+    <content type="text">
+      id:IVD
+      entrez_id:3712
+      symbol:IVD
+      name:isovaleryl-CoA dehydrogenase
+      chromosome_location:15q14-q15
+      position_start:chr15:40697686
+      position_end:chr15:40713512
+      refseq_genomic:NG_011986.1
+      refseq_mrna:NM_002225.3
+      refseq_build:hg19
+    </content>
+  </entry>
+</feed>
+    \end{verbatim}
+  \caption{%
+    Example LOVD API output format.
+    The two longest lines have been shortened to fit this page.
+    This example output of a search on gene symbol returns the IVD gene and its basic information.
+    Source: \href{http://databases.lovd.nl/shared/api/rest/genes?search_symbol=IVD}
+     {LOVD3 shared installation}.}
+  \end{shaded}
+\end{figure}
+
+The gene information shared through the API consists of the official gene symbol (\textbf{id}, \textbf{symbol}),
+ the gene's Entrez ID (\textbf{entrez\_id}), the gene's official name (\textbf{name}), the chromosome band
+ (\textbf{chromosome\_location}) and exact locations (\textbf{position\_start}, \textbf{position\_end},
+ not always available), its genomic reference sequence (\textbf{refseq\_genomic}), first transcript added
+ (\textbf{refseq\_mrna}) and the code of the reference sequence build that the genomic positions are based on
+ (\textbf{refseq\_build}).
+\vskip \baselineskip
+
+The official gene symbol is mentioned twice, because in LOVD2 multiple databases could exist for the same gene by
+ setting a suffix on the gene symbol; there the `id' field could have a different value than the `symbol' field.
+Having two fields for the gene symbol is retained in the API to keep the format between LOVD3 and LOVD2 consistent.
+
+Please note, also for consistency with the LOVD2 API, that the `refseq\_mrna' field can
+ contain only one value whilst in LOVD3 one gene can contain multiple transcripts.
+The LOVD API shows only the first transcript added to the gene.
+
+
+
+\subsection{Variants}
+\begin{figure}[ht]
+  \begin{shaded}
+    \scriptsize
+    \begin{verbatim}
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>
+    Results for your query of the IVD gene database
+  </title>
+  <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/"/>
+  <link rel="self" type="application/atom+xml" href="http://...lovd.nl/shared/api/rest/variants/IVD"/>
+  <updated>2013-03-11T15:30:41+01:00</updated>
+  <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
+  <generator uri="http://www.LOVD.nl/" version="3.0-09">
+    Leiden Open Variation Database
+  </generator>
+  <rights>Copyright (c), the curators of this database</rights>
+  <entry xmlns="http://www.w3.org/2005/Atom">
+    <title>IVD:c.860G&gt;A</title>
+    <link rel="alternate" type="text/html" href="http://...?search_VariantOnGenome/DBID=IVD_000001"/>
+    <link rel="self" type="application/atom+xml" href="http://.../api/rest/variants/IVD/0000000563"/>
+    <id>tag:databases.lovd.nl,1970-01-01:IVD/0000000563</id>
+    <author>
+      <name>Unknown</name>
+    </author>
+    <contributor>
+      <name>Unknown</name>
+    </contributor>
+    <published>1970-01-01T00:00:00+01:00</published>
+    <updated>1970-01-01T00:00:00+01:00</updated>
+    <content type="text">
+      symbol:IVD
+      id:0000000563
+      position_mRNA:NM_002225.3:c.860
+      position_genomic:chr15:40707154
+      Variant/DNA:c.860G&gt;A
+      Variant/DBID:IVD_000001
+      Times_reported:1
+    </content>
+  </entry>
+</feed>
+    \end{verbatim}
+  \caption{%
+    Example LOVD API output format.
+    The three longest lines have been shortened to fit this page.
+    This example output of a search on DB ID returns one variant in the IVD gene and its basic information.
+    Source: \href{http://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001}
+     {LOVD3 shared installation}.}
+  \end{shaded}
+\end{figure}
+
+The variant information shared through the API consists of the official gene symbol of the selected gene
+ (\textbf{symbol}), the variant's internal ID (\textbf{id}), the variant's position relative to the transcript in
+ HGVS-like format (\textbf{position\_mRNA}), the variant's genomic position (\textbf{position\_genomic}), the DNA
+ field in HGVS format, HTML encoded to not break XML parsers (\textbf{Variant/DNA}), the variant's DBID value
+ (\textbf{Variant/DBID}) and the panel size of the individual of the variant entry (\textbf{Times\_reported}).
+\vskip \baselineskip
+
+If the variant could not be interpreted by Mutalyzer, the position fields will contain a question mark.
+The difference between the `id' field and the `Variant/DBID' field is that the first is the ID of the variant
+ observation, whilst the latter is the ID unique for this variant, but shared for each observation.
+It is used link back to LOVD from genome browsers, for instance.
+When variant observations are grouped together, the `Times\_reported' field
+ will contain the sum of the values of all observations together.
+
+
+
+
+
+\section{Possibilities}
+A full list of options for this API is included below.
+Please note that although ``rest.php'' is included in all the URLs, simply ``rest'' will work also.
+However, for LOVD2 installations, this does not always work, and as such the extension is included.
+
+
+
+\subsection{Genes}
+\begin{description}
+  \item[Listing of all genes in the database]\hfill \\
+  \href{http://databases.lovd.nl/shared/api/rest.php/genes}{http://databases.lovd.nl/shared/api/rest.php/genes}
+  \item[Searching on the gene symbol] (full match only)\hfill \\
+  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_symbol=IVD}
+    {http://databases.lovd.nl/shared/api/rest.php/genes?search\_symbol=IVD}
+  \item[Showing only one specific gene entry]\hfill \\
+  \href{http://databases.lovd.nl/shared/api/rest.php/genes/IVD}{http://databases.lovd.nl/shared/api/rest.php/genes/IVD}
+  \item[Searching on the genomic position]\hfill \\
+  \emph{Chromosome only:}\\
+  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15}
+    {http://databases.lovd.nl/shared/api/rest.php/genes?search\_position=chr15}\\
+  \emph{Chromosomal location:}\\
+  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40705600}
+       {http://databases.lovd.nl/shared/api/rest.php/genes?search\_position=chr15:40705600}\\
+  \emph{Chromosomal range, exact match} (only match genes having exactly this range)\\
+  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40697686_40713512&position_match=exact}
+       {http://databases.lovd.nl/shared/api/rest.php/genes?\\
+       \phantom{..........}search\_position=chr15:40697686\_40713512\&position\_match=exact}\\
+  \emph{Chromosomal range, exclusive match} (only match genes completely within this range)\\
+  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40657686_40762512&position_match=exclusive}
+       {http://databases.lovd.nl/shared/api/rest.php/genes?\\
+       \phantom{..........}search\_position=chr15:40657686\_40762512\&position\_match=exclusive}\\
+  \emph{Chromosomal range, partial match} (match any gene overlapping the given region)\\
+  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40657686_40762512&position_match=partial}
+       {http://databases.lovd.nl/shared/api/rest.php/genes?\\
+       \phantom{..........}search\_position=chr15:40657686\_40762512\&position\_match=partial}
+\end{description}
+
+
+
+\subsection{Variants}
+\begin{description}
+  \item[Listing of all variant entries in a certain gene]\hfill \\
+  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD}
+       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD}
+  \item[Searching on the DNA position]\hfill \\
+  \emph{Coding DNA or genomic position, exact match only}\\
+  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=c.157}
+       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search\_position=c.157}\\
+       This does not allow for partial matches, so variant c.157\_158del is not matched.
+       c.157 will match c.157+? and c.157\_158 will match c.157+?\_158-?.
+       However, c.157 does not match c.157+5.
+       Searching on genomic locations can be achieved using g. as a prefix.\\
+       \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40699840}
+            {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search\_position=g.40699840}
+  \emph{Genomic position only, exclusive match (only match variants completely within this range)}\\
+  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=exclusive}
+       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
+       \phantom{..........}search\_position=g.40710300\_40710410\&position\_match=exclusive}\\
+  \emph{Genomic position only, partial match (match any variant overlapping the given region)}\\
+  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=partial}
+       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
+       \phantom{..........}search\_position=g.40710300\_40710410\&position\_match=partial}
+  \clearpage
+  \item[Searching on the DNA field]\hfill \\
+  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_Variant/DNA=c.157C\%3ET}
+       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
+       \phantom{..........}search\_Variant/DNA=c.157C\%3ET}\\
+       This does not allow for partial matches, but c.(157C>T) or c.157C>T? will also match.
+  \item[Searching on the DBID field]\hfill \\
+  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_Variant/DBID=IVD_000001}
+       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
+       \phantom{..........}search\_Variant/DBID=IVD\_000001}
+  \item[Showing only one specific variant entry (internal ID only)]\hfill \\
+  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD/0000001350}
+       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD/0000001350}
+\end{description}
+
+
+
+\subsection{World-wide LOVD quering service}
+There is also a world-wide LOVD query API that allows you to query a genomic location to find out
+ whether there is a variant reported in any public LOVD installation that has registered at
+ \href{http://lovd.nl/2.0/index_list.php}{LOVD.nl}.
+Please \href{http://www.lovd.nl/3.0/contact}{contact us directly} for more information on that API.
 
 
 
