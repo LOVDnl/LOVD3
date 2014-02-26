@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2013-12-13
- * For LOVD    : 3.0-09
+ * Modified    : 2014-02-07
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -120,10 +120,10 @@ class LOVD_Disease extends LOVD_Object {
                                     'db'   => array('d.id_omim', 'ASC', true)),
                         'individuals' => array(
                                     'view' => array('Individuals', 80, 'style="text-align : right;"'),
-                                    'db'   => array('individuals', 'DESC', true)),
+                                    'db'   => array('individuals', 'DESC', 'INT_UNSIGNED')),
                         'phenotypes' => array(
                                     'view' => array('Phenotypes', 80, 'style="text-align : right;"'),
-                                    'db'   => array('phenotypes', 'DESC', true)),
+                                    'db'   => array('phenotypes', 'DESC', 'INT_UNSIGNED')),
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
                                     'db'   => array('_genes', false, 'TEXT')),

@@ -12,6 +12,12 @@
    only an UD. Sometimes UDs don't work in case of overlapping genes.
  * Fixed bug; The API didn't return a proper date of last update. This is now
    returned for the genes separately as for the variants.
+ * Added a chapter on the LOVD API to the manual, containing the sections
+   "Format" and "Possibilities".
+ * Fixed bug; The "Individuals" and "Phenotypes" columns in the Disease listing
+   were not handled as numeric columns by LOVD.
+ * The disease-specific Individuals and Phenotypes listings now have the options
+   menu enabled for managers and up.
 
 
 /**************************
