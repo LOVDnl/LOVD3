@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2014-01-13
- * For LOVD    : 3.0-09
+ * Modified    : 2014-02-26
+ * For LOVD    : 3.0-10
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -204,6 +204,13 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
             lovd_errorAdd('hgnc_id', 'LOVD cannot process this type of gene entry ' . htmlspecialchars($sHgncId) . ' (Locus Type: ' . $aGene['locus_type'] . ').');
         }
         return false;
+    }
+
+    foreach (array('omim_id') as $sCol) {
+        // Columns presented as arrays (new?), but should contain just one value.
+        if (is_array($aGene[$sCol]) && count($aGene[$sCol]) == 1) {
+            $aGene[$sCol] = $aGene[$sCol][0];
+        }
     }
 
     return $aGene;

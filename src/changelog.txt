@@ -18,6 +18,9 @@
    were not handled as numeric columns by LOVD.
  * The disease-specific Individuals and Phenotypes listings now have the options
    menu enabled for managers and up.
+ * Added a help text on imprinting to the gene data entry form.
+ * Fixed bug; The links on the names of a gene's collaborators shown on the gene
+   homepage were pointing to other user's pages.
 
 
 /**************************

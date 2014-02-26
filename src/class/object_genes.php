@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2013-10-11
- * For LOVD    : 3.0-08
+ * Modified    : 2014-02-26
+ * For LOVD    : 3.0-10
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -348,7 +348,7 @@ class LOVD_Gene extends LOVD_Object {
                         array('Official gene symbol', '', 'print', $zData['id']),
                         array('Chromosome', '', 'print', $zData['chromosome']),
                         array('Chromosomal band', '', 'text', 'chrom_band', 10),
-                        array('Imprinting', '', 'select', 'imprinting', 1, $_SETT['gene_imprinting'], false, false, false),
+                        array('Imprinting', 'Please note:<BR>Maternally imprinted (expressed from the paternal allele)<BR>Paternally imprinted (expressed from the maternal allele)', 'select', 'imprinting', 1, $_SETT['gene_imprinting'], false, false, false),
                         array('Date of creation (optional)', 'Format: YYYY-MM-DD. If left empty, today\'s date will be used.', 'text', 'created_date', 10),
                         'hr',
                         'skip',
@@ -508,7 +508,7 @@ class LOVD_Gene extends LOVD_Object {
                     }
                 }
             }
-            sort($aCollaborators); // Sort collaborators by name.
+            asort($aCollaborators); // Sort collaborators by name.
 
             $nCurators = count($aCurators);
             $nCollaborators = count($aCollaborators);
