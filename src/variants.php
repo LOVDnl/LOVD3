@@ -157,7 +157,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
 if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     // URL: /variants/DMD
     // URL: /variants/DMD/NM_004006.2
-    // View all entries in a specific gene, affecting a specific trancript.
+    // View all entries in a specific gene, affecting a specific transcript.
 
     if (in_array(rawurldecode($_PE[1]), lovd_getGeneList())) {
         $sGene = rawurldecode($_PE[1]);
@@ -208,7 +208,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
     } else {
         // Create select box.
-        // We would like to be able to link to this list, focussing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.
+        // We would like to be able to link to this list, focusing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.
         if (!isset($_GET['search_transcriptid']) || !isset($aTranscripts[$_GET['search_transcriptid']])) {
             $_GET['search_transcriptid'] = $nTranscriptID;
         }
@@ -989,7 +989,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             // Getting the selected index from the transcript-dependent fields.
 
             if (!isset($aVariant[$sKey])) {
-                // cDNAPosition, polyPhen, granthamScore, proteinSequence and distanceToSplice are optional columns so we should check for their existance.
+                // cDNAPosition, polyPhen, granthamScore, proteinSequence and distanceToSplice are optional columns so we should check for their existence.
                 continue;
             }
             $aVariant[$sKey] = $aVariant[$sKey][$nTranscriptIndex];
@@ -1135,6 +1135,14 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             // Let's go...
             $fInput = fopen($_FILES['variant_file']['tmp_name'], 'r');
             @set_time_limit(0);
+
+            // This will take some time, allow the user to browse in other tabs.
+            // FIXME; if the user finishes a screening submission in another tab while the upload
+            // is still working, a seperate e-mail about the upload will be sent once it has finished.
+            // So, other than that it results in two e-mails, it is working just fine actually.
+            // Though maybe we should block submit/finish until we're done here?
+            session_write_close();
+
             $_DB->beginTransaction();
 
 
@@ -1297,13 +1305,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
             } elseif ($_GET['type'] == 'SeattleSeq') {
                 // SeattleSeq specific.
-
-                // This will take some time, allow the user to browse in other tabs.
-                // FIXME; if the user finishes a screening submission in another tab while the upload
-                // is still working, a seperate e-mail about the upload will be sent once it has finished.
-                // So, other than that it results in two e-mails, it is working just fine actually.
-                // Though maybe we should block submit/finish until we're done here?
-                session_write_close();
                 $tStart = time();
 
                 require ROOT_PATH . 'inc-lib-actions.php';
@@ -1342,7 +1343,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 // We also need to get a list of standard VariantOnTranscript columns.
                 $aColsStandard = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE standard = 1 AND id IN("' . implode('", "', $aVOTCols) . '")')->fetchAllColumn();
 
-                $aGenesChecked = array();       // Contains arrays with [refseq_UD], [name] and [columns] for each gene we'll encounter
+                $aGenesChecked = array();       // Contains arrays with [refseq_UD], [name], [strand] and [columns] for each gene we'll encounter
                 $aAccessionToSymbol = array();  // Contains the gene symbol for each SeattleSeq transcript accession
                 $aAccessionMapping = array();   // Maps SeattleSeq transcript accession numbers to their LOVD and Mutalyzer-compatible versions
 
@@ -1381,7 +1382,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     // Prepare genomic variant.
                     $aFieldsVariantOnGenome[0] = array(
                         'effectid' => 55,
-                        'chromosome' => $aVariant['chromosome'],
+                        'chromosome' => (!isset($aVariant['chromosome'])? '' : $aVariant['chromosome']),
                         'owned_by' => $_POST['owned_by'],
                         'statusid' => $_POST['statusid'],
                         'created_by' => $_AUTH['id'],
@@ -1540,7 +1541,17 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                             $sSymbol = $aAccessionToSymbol[$sAccession];
                         } elseif ($sAccession != 'none') {
                             // We still need to get a gene symbol for this accession.
-                            $sSymbol = $_MutalyzerWS->moduleCall('getGeneName', array('build' => $_CONF['refseq_build'], 'accno' => $sAccession));
+                            // First try to get the gene symbol from the database.
+                            list($sSymbol, $sAccessionInDB) = $_DB->query('SELECT geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ?', array(substr($sAccession, 0, strpos($sAccession . '.', '.')+1) . '%'))->fetchRow();
+                            if ($sSymbol) {
+                                // We've got it in the database already.
+                                $aAccessionMapping[$sAccession] = $sAccessionInDB;
+                            } elseif (strpos($_POST['autocreate'], 't') !== false) {
+                                // ONLY attempt to fetch gene information in case we're allowed to create this (apparently new) transcript.
+                                // Otherwise, why bother?
+                                // FIXME: Isn't it easier to just check the geneList column? See if that contains just one gene, and use that?
+                                $sSymbol = $_MutalyzerWS->moduleCall('getGeneName', array('build' => $_CONF['refseq_build'], 'accno' => $sAccession));
+                            }
                             if (empty($sSymbol)) {
                                 $sSymbol = 'none';
                             }
@@ -1556,7 +1567,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                             // We haven't seen this gene before in this upload.
 
                             // First try to get this gene from the database.
-                            if ($aGene = $_DB->query('SELECT refseq_UD, name FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchAssoc()) {
+                            if ($aGene = $_DB->query('SELECT g.refseq_UD, g.name, IF(IFNULL(t.position_g_mrna_start, 0) = IFNULL(t.position_g_mrna_end, 0), NULL, IF(t.position_g_mrna_start < t.position_g_mrna_end, "+", "-")) AS strand
+                                                      FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) WHERE g.id = ? ORDER BY t.id ASC LIMIT 1', array($sSymbol))->fetchAssoc()) {
                                 // We've got it in the database. Check its columns.
                                 $aGene['columns'] = $_DB->query('SELECT colid FROM ' . TABLE_SHARED_COLS . ' WHERE geneid = ? AND colid IN("' . implode('", "', $aVOTCols) . '")', array($sSymbol))->fetchAllColumn();
                                 $aGenesChecked[$sSymbol] = $aGene;
@@ -1719,7 +1731,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                 }
 
                                 // We'll try to get it from the database first. If we don't have it, we'll try Mutalyzer.
-                                if ($sAccessionDB = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ?', array($sAccessionClean . '%'))->fetchColumn()) {
+                                // FIXME: Should no longer be necessary since we already fetched this info the first time we saw this transcript and wanted to know the gene symbol.
+                                if ($sAccessionDB = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ?', array($sAccessionClean . '.%'))->fetchColumn()) {
                                     // We have this transcript in the database already.
                                     $sAccession = $aAccessionMapping[$sAccession] = $sAccessionDB;
 
@@ -1790,13 +1803,13 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                                 // Find out the protein change.
                                 $sProteinChange = 'p.?';
-                                if ($aVariant['aminoAcids'][$i] == 'none' && ctype_digit($aVariant['distanceToSplice'][$i]) && $aVariant['distanceToSplice'][$i] > 10) {
+                                if (in_array($aVariant['aminoAcids'][$i], array('none', 'unknown')) && (in_array($aVariant['functionGVS'][$i], array('utr-5', 'utr-3', 'coding-synonymous')) || ($aVariant['functionGVS'][$i] == 'intron' && ctype_digit($aVariant['distanceToSplice'][$i]) && $aVariant['distanceToSplice'][$i] > 10))) {
                                     $sProteinChange = 'p.(=)';
-                                } elseif ($aVariant['aminoAcids'][$i] != 'none' && count($aFieldsVariantOnGenome) == 1) {
+                                } elseif (!in_array($aVariant['aminoAcids'][$i], array('none', 'unknown')) && count($aFieldsVariantOnGenome) == 1) {
                                     // Because of the way SeattleSeq reports amino acids, we can only reliably define
                                     // the protein change if we have just one alternate (non-reference) allele.
 
-                                    $aAminoAcids = explode(',', $aVariant['aminoAcids'][$i]);
+                                    $aAminoAcids = preg_split('/[,\/]/', $aVariant['aminoAcids'][$i]); // Old SeattleSeq uses comma, new uses slash.
                                     $aProteinPositions = explode('/', $aVariant['proteinPosition'][$i]);
                                     if ($aVariant['functionGVS'][$i] == 'missense') {
                                         if ($aAminoAcids[0] == 'MET' && $aProteinPositions[0] == 1) {
@@ -1821,11 +1834,35 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     if (!isset($aNumberConversion[$j])) {
                                         // This way, we make just one call for each variant.
                                         // Of course, we'll unset $aNumberConversion when we load new variants from the file.
-                                        $aNumberConversion[$j] = $_MutalyzerWS->moduleCall('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$aVariant['chromosome']] . ':' . $aFieldsVOG['VariantOnGenome/DNA']));
-                                        if (!empty($aNumberConversion[$j]['string'])) {
-                                            $aNumberConversion[$j] = $aNumberConversion[$j]['string'];
-                                        } else {
-                                            $aNumberConversion[$j] = array();
+                                        $aNumberConversion[$j] = array();
+
+                                        // 2014-02-24; In an attempt to prevent more Mutalyzer calls, try and reconstruct the VOT description ourselves.
+                                        if ($aGenesChecked[$sSymbol]['strand'] && in_array($aFieldsVOG['type'], array('subst'))) {
+                                            // We have strand information on the gene, and we understand the variant.
+                                            foreach ($aVariant['accession'] as $key => $sNM) {
+                                                // Create mapping per transcript.
+                                                if (!$aVariant['cDNAPosition'][$key] || !ctype_digit($aVariant['cDNAPosition'][$key])) {
+                                                    // We don't have a cDNA position, abort.
+                                                    $aNumberConversion[$j] = array();
+                                                    break;
+                                                }
+                                                $sDNAVOT = str_replace('g.' . $aFieldsVOG['position_g_start'], 'c.' . $aVariant['cDNAPosition'][$key], $aFieldsVOG['VariantOnGenome/DNA']);
+                                                // If we're on the negative strand, also fix the bases.
+                                                if ($aGenesChecked[$sSymbol]['strand'] == '-') {
+                                                    $sDNAVOT = str_replace(array('a>', 'c>', 'g>', 't>'), array('T>', 'G>', 'C>', 'A>'), strtolower($sDNAVOT));
+                                                    $sDNAVOT = str_replace(array('>a', '>c', '>g', '>t'), array('>T', '>G', '>C', '>A'), $sDNAVOT);
+                                                }
+                                                $aNumberConversion[$j][] = array('v' => $sNM . ':' . $sDNAVOT);
+                                            }
+                                        }
+
+                                        if (!$aNumberConversion[$j]) {
+                                            $aNumberConversion[$j] = $_MutalyzerWS->moduleCall('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$aVariant['chromosome']] . ':' . $aFieldsVOG['VariantOnGenome/DNA']));
+                                            if (!empty($aNumberConversion[$j]['string'])) {
+                                                $aNumberConversion[$j] = $aNumberConversion[$j]['string'];
+                                            } else {
+                                                $aNumberConversion[$j] = array();
+                                            }
                                         }
                                     }
 
@@ -1835,8 +1872,36 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                                         if (substr($sVariantOnTranscript, 0, strlen($sAccession)) == $sAccession) {
                                             // Got the variant description relative to this transcript.
-                                            $aMappingInfo = lovd_getAllValuesFromArray('', $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $sAccession, 'variant' => $aFieldsVOG['VariantOnGenome/DNA'])));
 
+                                            // 2014-02-24; In an attempt to prevent more Mutalyzer calls, try and get the positions ourselves.
+                                            if (preg_match('/:c\.(-?\d+)([+-]\d+)?([ACTG]>[ACTG]|del|dup)$/', $sVariantOnTranscript, $aRegs)) {
+                                                $aMappingInfo = array(
+                                                    'startmain' => $aRegs[1],
+                                                    'startoffset' => (!isset($aRegs[2])? 0 : (int) $aRegs[2]),
+                                                    'endmain' => $aRegs[1],
+                                                    'endoffset' => (!isset($aRegs[2])? 0 : (int) $aRegs[2]),
+                                                );
+                                            } elseif (preg_match('/:c\.(-?\d+)([+-]\d+)?_(-?\d+)([+-]\d+)?(del|dup|ins([0-9]+|[ACTG]+)?)$/', $sVariantOnTranscript, $aRegs)) {
+                                                $aMappingInfo = array(
+                                                    'startmain' => $aRegs[1],
+                                                    'startoffset' => (!isset($aRegs[2])? 0 : (int) $aRegs[2]),
+                                                    'endmain' => $aRegs[3],
+                                                    'endoffset' => (!isset($aRegs[4])? 0 : (int) $aRegs[4]),
+                                                );
+                                            } else {
+                                                // Basically only variants in the 3'UTR should get here.
+                                                $aMappingInfo = lovd_getAllValuesFromArray('', $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $sAccession, 'variant' => $aFieldsVOG['VariantOnGenome/DNA'])));
+                                                // 2014-02-25; 3.0-10; The mappingInfo module call does not sort the positions, and as such the "start" and "end" can be in the "wrong" order.
+                                                $bSense = ($aMappingInfo['startmain'] < $aMappingInfo['endmain'] || ($aMappingInfo['startmain'] == $aMappingInfo['endmain'] && ($aMappingInfo['startoffset'] < $aMappingInfo['endoffset'] || $aMappingInfo['startoffset'] == $aMappingInfo['endoffset'])));
+                                                if (!$bSense) {
+                                                    $nStartMain = $aMappingInfo['endmain'];
+                                                    $aMappingInfo['endmain'] = $aMappingInfo['startmain'];
+                                                    $aMappingInfo['startmain'] = $nStartMain;
+                                                    $nStartOffset = $aMappingInfo['endoffset'];
+                                                    $aMappingInfo['endoffset'] = $aMappingInfo['startoffset'];
+                                                    $aMappingInfo['startoffset'] = $nStartOffset;
+                                                }
+                                            }
                                             if (isset($aMappingInfo['startmain']) && $aMappingInfo['startmain'] !== '') {
                                                 // Also got mapping information. Prepare the VariantOnTranscript data for insertion.
 
@@ -1944,10 +2009,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     $_BAR->setMessage('Setting last updated dates for affected genes...');
                     lovd_setUpdatedDate(array_keys($aGenesChecked));
                 }
-
-                // Done! Reopen the session. Don't show warnings; session_start() is not going
-                // to be able to send another cookie. But session data is written nontheless.
-                @session_start();
             } // End SeattleSeq specific code.
 
 
@@ -1956,6 +2017,12 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
             $_BAR->setMessage('Committing changes to the database...');
             $_DB->commit();
+
+            // Done! Reopen the session. Don't show warnings; session_start() is not going
+            // to be able to send another cookie. But session data is written nonetheless.
+            // First commit, then restart session, otherwise two browser windows may be waiting
+            // for each other forever... one for the DB lock, the other for the session lock.
+            @session_start();
 
             // Turn on automatic mapping if it is enabled for the imported variants.
             if ($nMappingFlags & MAPPING_ALLOW) {
