@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2013-08-07
- * For LOVD    : 3.0-07
+ * Modified    : 2014-03-03
+ * For LOVD    : 3.0-10
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -28,7 +28,7 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -93,9 +93,12 @@ if (!$sDataType) { // No data type given.
 
 
 // Check if gene exists.
-if ($sSymbol && !in_array($sSymbol, lovd_getGeneList())) {
-    header('HTTP/1.0 404 Not Found');
-    die('This gene does not exist.');
+if ($sSymbol) {
+    $sSymbol = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchColumn();
+    if (!$sSymbol) {
+        header('HTTP/1.0 404 Not Found');
+        die('This gene does not exist.');
+    }
 }
 
 

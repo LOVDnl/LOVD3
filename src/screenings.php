@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2013-10-15
- * For LOVD    : 3.0-08
+ * Modified    : 2014-03-03
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -47,8 +47,8 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     // View all entries.
 
     if (!empty($_PE[1])) {
-        if (in_array(rawurldecode($_PE[1]), lovd_getGeneList())) {
-            $sGene = rawurldecode($_PE[1]);
+        $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
+        if ($sGene) {
             // We need the authorization call if we would show the screenings with VARIANTS in gene X, not before!
 //            lovd_isAuthorized('gene', $sGene); // To show non public entries.
 

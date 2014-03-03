@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2014-01-13
- * For LOVD    : 3.0-09
+ * Modified    : 2014-03-03
+ * For LOVD    : 3.0-10
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -708,7 +708,7 @@ if (!defined('NOT_INSTALLED')) {
         if (preg_match('/^(configuration|genes|transcripts|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
             // We'll check this value further down in this code.
             if (!in_array($aRegs[2], array('in_gene', 'upload')) && !ctype_digit($aRegs[2])) {
-                $_SESSION['currdb'] = $aRegs[2];
+                $_SESSION['currdb'] = $aRegs[2]; // Not checking capitalization here yet.
             }
         }
 
@@ -744,6 +744,9 @@ if (!defined('NOT_INSTALLED')) {
             $_SETT['currdb'] = @$_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb']))->fetchAssoc();
             if (!$_SETT['currdb']) {
                 $_SESSION['currdb'] = false;
+            } else {
+                // Replace with what we have in the database, so we won't run into issues on other pages when CurrDB is used for navigation to other tabs.
+                $_SESSION['currdb'] = $_SETT['currdb']['id'];
             }
         } else {
             $_SESSION['currdb'] = false;

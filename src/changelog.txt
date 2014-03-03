@@ -30,6 +30,7 @@
  * Improved the protein description prediction for the SeattleSeq import format.
  * The owned_by and statusid fields are no longer mandatory while importing;
    default values are filled in.
+ * Fixed bug; Checks on gene symbols passed through as part of the page URL are now case-insensitive.
 
 
 /**************************

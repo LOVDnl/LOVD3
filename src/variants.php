@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-01-13
- * For LOVD    : 3.0-09
+ * Modified    : 2014-03-03
+ * For LOVD    : 3.0-10
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -159,8 +159,8 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     // URL: /variants/DMD/NM_004006.2
     // View all entries in a specific gene, affecting a specific transcript.
 
-    if (in_array(rawurldecode($_PE[1]), lovd_getGeneList())) {
-        $sGene = rawurldecode($_PE[1]);
+    $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
+    if ($sGene) {
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
         // Curators are allowed to download this list...
@@ -551,8 +551,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
     if ($_GET['reference'] == 'Transcript') {
         // On purpose not checking for format of $_GET['geneid']. If it's not right, we'll automatically get to the error message below.
-        $sGene = $_GET['geneid'];
-        if (!in_array($sGene, lovd_getGeneList())) {
+        $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_GET['geneid']))->fetchColumn();
+        if (!$sGene) {
             define('PAGE_TITLE', 'Create a new variant entry');
             $_T->printHeader();
             $_T->printTitle();
@@ -560,7 +560,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             $_T->printFooter();
             exit;
         } else {
-            define('PAGE_TITLE', 'Create a new variant entry for gene ' . $_GET['geneid']);
+            define('PAGE_TITLE', 'Create a new variant entry for gene ' . $sGene);
         }
     } else {
         define('PAGE_TITLE', 'Create a new variant entry');

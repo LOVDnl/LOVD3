@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-01-14
+ * Modified    : 2014-03-03
  * For LOVD    : 3.0-10
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,7 +49,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldec
     if (empty($_PE[1])) {
         $sGene = '';
     } else {
-        $sGene = rawurldecode($_PE[1]);
+        $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
         $_GET['search_geneid'] = '="' . $sGene . '"';
         lovd_isAuthorized('gene', $sGene);
     }
@@ -190,11 +190,12 @@ if (ACTION == 'create') {
 
 
 
-    define('PAGE_TITLE', 'Add transcript to gene ' . $_PE[1]);
+    // Gene given, check validity.
+    $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
+    define('PAGE_TITLE', 'Add transcript to gene ' . $sGene);
     $sPath = CURRENT_PATH . '?' . ACTION;
     $sPathBase = $_PE[0] . '?' . ACTION;
-    // Gene given, check validity.
-    if (!in_array($_PE[1], lovd_getGeneList())) {
+    if (!$sGene) {
         header('Refresh: 3; url=' . lovd_getInstallURL() . $sPathBase);
         $_T->printHeader();
         $_T->printTitle();
@@ -207,7 +208,7 @@ if (ACTION == 'create') {
 
 
     // Is user authorized for the selected gene?
-    lovd_isAuthorized('gene', $_PE[1]);
+    lovd_isAuthorized('gene', $sGene);
     lovd_requireAUTH(LEVEL_CURATOR);
 
 
@@ -224,7 +225,7 @@ if (ACTION == 'create') {
             unset($_SESSION['work'][$sPathBase][min(array_keys($_SESSION['work'][$sPathBase]))]);
         }
 
-        $zGene = $_DB->query('SELECT id, name, chromosome, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchAssoc();
+        $zGene = $_DB->query('SELECT id, name, chromosome, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchAssoc();
 
         $_T->printHeader();
         $_T->printTitle();
