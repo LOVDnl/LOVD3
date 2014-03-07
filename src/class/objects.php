@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2014-02-21
+ * Modified    : 2014-03-07
  * For LOVD    : 3.0-10
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -934,7 +934,14 @@ class LOVD_Object {
 
         $sSQLOrderBy = $this->aColumnsViewList[$aOrder[0]]['db'][0] . ' ' . $aOrder[1];
         if (in_array($aOrder[0], array('chromosome','VariantOnGenome/DNA'))) {
-            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_CHROMOSOMES . ' AS chr ON (chromosome = chr.name)';
+            // 2014-03-07; 3.0-10; We need to find the table alias of the VOG or genes table, because otherwise MySQL fails here ('chromosome' is ambiguous) if both are joined.
+            $sAlias = '';
+            if (preg_match('/' . TABLE_VARIANTS . ' AS ([a-z]+)/i', $this->aSQLViewList['FROM'], $aRegs)) {
+                $sAlias = $aRegs[1];
+            } elseif (preg_match('/' . TABLE_GENES . ' AS ([a-z]+)/i', $this->aSQLViewList['FROM'], $aRegs)) {
+                $sAlias = $aRegs[1];
+            }
+            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_CHROMOSOMES . ' AS chr ON (' . (!$sAlias? '' : $sAlias . '.') . 'chromosome = chr.name)';
             $sSQLOrderBy = 'chr.sort_id ' . $aOrder[1];
             if ($aOrder[0] == 'VariantOnGenome/DNA') {
                 $sSQLOrderBy .= ', position_g_start ' . $aOrder[1] . ', position_g_end ' . $aOrder[1] . ', `VariantOnGenome/DNA` ' . $aOrder[1];

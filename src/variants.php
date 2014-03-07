@@ -1081,7 +1081,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
     // If dbSNP custom links are active, find out which columns in TABLE_VARIANTS accept them.
     $aDbSNPColumns = $_DB->query('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac JOIN ' . TABLE_COLS2LINKS . ' USING (colid) JOIN ' . TABLE_LINKS . ' ON (linkid = id) WHERE name = "DbSNP" AND ac.colid LIKE "VariantOnGenome/%" AND ac.colid NOT IN ("VariantOnGenome/DBID", "VariantOnGenome/DNA")')->fetchAllColumn();
-    // FIXME: dbSNP wordt dubbel included this way.
+    // FIXME: dbSNP will be included twice this way.
     if ($sDbSNPColumn = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = "VariantOnGenome/dbSNP"')->fetchColumn()) {
         // The dbSNP special column is active, allow to insert dbSNP links in there.
         array_unshift($aDbSNPColumns, $sDbSNPColumn);
@@ -1541,7 +1541,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                             $sSymbol = $aAccessionToSymbol[$sAccession];
                         } elseif ($sAccession != 'none') {
                             // We still need to get a gene symbol for this accession.
-                            // First try to get the gene symbol from the database.
+                            // First try to get the gene symbol from the database (ignoring version number).
                             list($sSymbol, $sAccessionInDB) = $_DB->query('SELECT geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ?', array(substr($sAccession, 0, strpos($sAccession . '.', '.')+1) . '%'))->fetchRow();
                             if ($sSymbol) {
                                 // We've got it in the database already.
@@ -1731,8 +1731,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                 }
 
                                 // We'll try to get it from the database first. If we don't have it, we'll try Mutalyzer.
-                                // FIXME: Should no longer be necessary since we already fetched this info the first time we saw this transcript and wanted to know the gene symbol.
-                                if ($sAccessionDB = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ?', array($sAccessionClean . '.%'))->fetchColumn()) {
+                                // We might have matched a different version before, now find the version we have, preferring the version given by SeattleSeq, otherwise the one added last.
+                                if ($sAccessionDB = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC', array($sAccessionClean . '.%', $sAccession))->fetchColumn()) {
                                     // We have this transcript in the database already.
                                     $sAccession = $aAccessionMapping[$sAccession] = $sAccessionDB;
 

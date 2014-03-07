@@ -30,7 +30,18 @@
  * Improved the protein description prediction for the SeattleSeq import format.
  * The owned_by and statusid fields are no longer mandatory while importing;
    default values are filled in.
- * Fixed bug; Checks on gene symbols passed through as part of the page URL are now case-insensitive.
+ * Fixed bug; Checks on gene symbols passed through as part of the page URL are
+   now case-insensitive.
+ * Now FLOAT columns can be defined as well.
+ * Fixed bug; The variant mapper can end up in a endless loop while annotating
+   transcripts in genes without the UD set.
+ * Fixed bug; When looking for a transcript to map the variant to while
+   importing a SeattleSeq file, prefer the version provided in the SeattleSeq
+   annotation.
+ * Fixed bug; The VOG and Genes tables could not be in one VL sorted on the
+   chromosome field because of field name ambiguity.
+ * Fixed bug; The waiting time for forcing an LOVD upgrade was set to 3 seconds,
+   but should be 30.
 
 
 /**************************

@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-09-27
- * For LOVD    : 3.0-08
+ * Modified    : 2014-02-28
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *
@@ -474,7 +474,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     // Try to update the upgrade lock.
     $sQ = 'UPDATE ' . TABLE_STATUS . ' SET lock_update = 1 WHERE lock_update = 0';
-    $nMax = 3; // FIXME; Should be higher, this value is for dev only
+    $nMax = 30;
+    // DMD_SPECIFIC
+    if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
+        $nMax = 3;
+    }
+
     for ($i = 0; $i < $nMax; $i ++) {
         $bLocked = !$_DB->exec($sQ);
         if (!$bLocked) {

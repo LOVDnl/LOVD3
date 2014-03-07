@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2014-01-13
- * For LOVD    : 3.0-09
+ * Modified    : 2014-02-27
+ * For LOVD    : 3.0-10
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -185,7 +185,8 @@ $nVariants = 0;
 
 // Check if all transcripts have their positions and the mutalyzer ID correctly set; if not, fix before we start to do any type of mapping.
 // 0.12 sec for 22K transcripts.
-$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE t.position_g_mrna_end = 0 OR t.id_mutalyzer IS NULL ORDER BY RAND() LIMIT 10')->fetchAllAssoc();
+// FIXME: Would be better to pick a random gene to do this on, instead of a random transcript, and continuously repeat the call for each gene if there is more than one transcript.
+$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.refseq_UD != "" AND (t.position_g_mrna_end = 0 OR t.id_mutalyzer IS NULL) ORDER BY RAND() LIMIT 10')->fetchAllAssoc();
 if ($zTranscripts) {
     foreach ($zTranscripts as $aTranscript) {
         $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']));
@@ -199,7 +200,7 @@ if ($zTranscripts) {
                     // Check if the exact version is the same, otherwise mark the transcript as expired.
                     ($aTranscriptValues['id'] == $aTranscript['id_ncbi'] || strpos($aTranscript['id_ncbi'], 'expired') !== false? '' : ', name = CONCAT(name, " (expired, new version available)")') .
                     ' WHERE id = ?', array(str_replace($aTranscript['geneid'] . '_v', '', $aTranscriptValues['name']), $aTranscriptValues['cTransStart'], $aTranscriptValues['sortableTransEnd'], $aTranscriptValues['cCDSStop'], $aTranscriptValues['chromTransStart'], $aTranscriptValues['chromTransEnd'], $aTranscript['id']));
-                    break;
+                    continue 2;
                 }
             }
             // If we get here, the transcript got removed.
@@ -207,7 +208,10 @@ if ($zTranscripts) {
             // Mark the transcript as removed, if not done already.
             (strpos($aTranscript['id_ncbi'], 'removed') !== false? '' : ', name = CONCAT(name, " (removed from reference sequence)")') .
             ' WHERE id = ?', array($aTranscript['id']));
-        } elseif ($aOutput === '') {
+        } else {
+            // 2014-02-27; 3.0-10; There's more than just either arrays or empty strings... preventing endless loop by putting an else here.
+            // Received "senv:Server - list index out of range" a few times.
+//        } elseif ($aOutput === '') {
             // UD file does not contain any transcripts? Reload UD?
             // FIXME; Temporary fix.
             $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1 WHERE id = ?', array($aTranscript['id']));
