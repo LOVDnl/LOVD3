@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2013-09-26
- * For LOVD    : 3.0-08
+ * Modified    : 2014-03-13
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -73,8 +73,9 @@ if ($_GET['object'] == 'Custom_ViewList' && (!isset($_GET['object_id']) || !in_a
     die(AJAX_DATA_ERROR);
 }
 
-// We can't authorize Curators without loading their level!
-if ($_AUTH['level'] < LEVEL_MANAGER && !empty($_AUTH['curates'])) {
+// We can't authorize Curators and Collaborators without loading their level!
+// 2014-03-13; 3.0-10; Collaborators should of course also get their level loaded!
+if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AUTH['collaborates']))) {
     if ($_GET['object'] == 'Column') {
         lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
     } elseif ($_GET['object'] == 'Transcript' && isset($_GET['search_geneid']) && preg_match('/^="([^"]+)"$/', $_GET['search_geneid'], $aRegs)) {

@@ -6,7 +6,7 @@
 
 /**************************
  * 3.0 Build 10 (r???)
- * 2014-02-??
+ * 2014-03-??
  *********/
  * Selecting a new transcript now also works with an NG reference sequence, not
    only an UD. Sometimes UDs don't work in case of overlapping genes.
@@ -42,6 +42,11 @@
    chromosome field because of field name ambiguity.
  * Fixed bug; The waiting time for forcing an LOVD upgrade was set to 3 seconds,
    but should be 30.
+ * Fixed bug; Non-managers could get a menu item to download other user's data,
+   even though the action itself is not allowed.
+ * More information is shown when viewing your own account page.
+ * Fixed bug; Collaborators lost authorization when dynamically reloading a data
+   view, by searching, sorting or navigating the view.
 
 
 /**************************

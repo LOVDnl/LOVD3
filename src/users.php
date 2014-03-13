@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2013-09-02
- * For LOVD    : 3.0-08
+ * Modified    : 2014-03-13
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -93,6 +93,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             'information', array('position' => '{my:"left top",at:"left bottom",of:"#tab_submit"}', 'buttons' => '{"Go there now":function(){window.location.href="' . lovd_getInstallURL() . 'submit";},"Close":function(){$(this).dialog("close");}}'));
     }
 
+    // 2014-03-13; 3.0-10; Users viewing their own profile should see a lot more...
+    if ($_AUTH['id'] == $nID && $_AUTH['level'] < LEVEL_CURATOR) {
+        $_AUTH['level'] = LEVEL_CURATOR;
+    }
+
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     // Increase the max group_concat() length, so that curators of many many genes still have all genes mentioned here.
@@ -100,8 +105,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $zData = $_DATA->viewEntry($nID);
 
     $aNavigation = array();
-    // This all assumes we are LEVEL_MANAGER already.
-    if ($_AUTH['level'] > $zData['level']) {
+    // Since we're faking the user's level to show some more columns when the user is viewing himself, we must put the check on the ID here.
+    if ($_AUTH['id'] != $nID && $_AUTH['level'] > $zData['level']) {
         // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Edit user', 1);
         if ($zData['active']) {
@@ -118,7 +123,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         // Viewing himself!
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Update your registration', 1);
         $aNavigation['download/all/mine']    = array('menu_save.png', 'Download all my data', 1);
-    } else {
+    } elseif ($_AUTH['level'] >= LEVEL_MANAGER) {
         // Managers and up, not viewing own account, not higher level than other user.
         $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     }
