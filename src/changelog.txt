@@ -47,6 +47,9 @@
  * More information is shown when viewing your own account page.
  * Fixed bug; Collaborators lost authorization when dynamically reloading a data
    view, by searching, sorting or navigating the view.
+ * Switched the order of the options "Add phenotype information to individual"
+   and "Add screening to individual" in the individual detailed view menu.
+ * Fixed a typo in the menus for individuals, phenotypes and variants.
 
 
 /**************************
