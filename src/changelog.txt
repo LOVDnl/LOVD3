@@ -5,6 +5,15 @@
  *************/
 
 /**************************
+ * 3.0 Build 11 (r4..)
+ * 2014-0.-..
+ *********/
+ * Checkbox values are now checked properly when importing data.
+ * Fixed bug; DB-IDs created for genes containing a hyphen followed by a number, were rejected by LOVD.
+   (thanks to Efstathios Papachristos, Centogene, Germany, for reporting)
+
+
+/**************************
  * 3.0 Build 10 (r424)
  * 2014-04-28
  *********/

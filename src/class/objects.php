@@ -186,8 +186,8 @@ class LOVD_Object {
                         if (in_array($sMySQLType, array('DECIMAL', 'INT')) && (int) $aData[$sName] < (int)('-' . str_repeat('9', $nMaxLength))) {
                             lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to numbers no lower than -' . str_repeat('9', $nMaxLength) . '.');
                         }
-                        // ALL numerical cols: positive values.
-                        if ((int) $aData[$sName] > (int) str_repeat('9', $nMaxLength)) {
+                        // ALL numerical cols (except floats): positive values.
+                        if (substr($sMySQLType, 0, 5) != 'FLOAT' && (int) $aData[$sName] > (int) str_repeat('9', $nMaxLength)) {
                             lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . str_repeat('9', $nMaxLength) . '.');
                         }
                     } elseif (strlen($aData[$sName]) > $nMaxLength) {
@@ -259,6 +259,8 @@ class LOVD_Object {
                 if (!isset($aData[$sName])) {
                     $GLOBALS['_' . $aFormInfo[0]][$sName] = 0;
                     $aData[$sName] = 0;
+                } elseif (!in_array($aData[$sName], array('0', '1'))) {
+                    lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain either a \'0\' or a \'1\'.');
                 }
             }
 
