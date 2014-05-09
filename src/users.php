@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2014-03-13
- * For LOVD    : 3.0-10
+ * Modified    : 2014-05-09
+ * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -198,7 +198,8 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                     lovd_errorAdd('orcid', 'There is already an account registered with this ORCID ID.' . (!$_CONF['allow_unlock_accounts']? '' : ' Did you <A href="reset_password">forget your password</A>?'));
                 } else {
                     // Contact ORCID to retrieve public info.
-                    $aOutput = lovd_php_file('http://pub.orcid.org/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
+                    // 2014-05-09; 3.0-11; ORCID changed their API... but at least they understood including a version might help. Not changing to the new one.
+                    $aOutput = lovd_php_file('http://pub.orcid.org/v1.0.23/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
                     if (!$aOutput) {
                         lovd_errorAdd('orcid', 'The given ORCID ID can not be found at ORCID.org.');
                     } else {
