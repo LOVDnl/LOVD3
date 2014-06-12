@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2013-07-27
- * For LOVD    : 3.0-07
+ * Modified    : 2014-06-12
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -993,7 +993,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                     $q = $_DB->query($sSQL, $aArgs);
                     if ($q->rowCount()) {
                         // Write to log...
-                        lovd_writeLog('Error', LOG_EVENT, 'Column ' . $sColumnID . ' reset to new defaults for all ' . $aColumnInfo['unit'] . 's');
+                        lovd_writeLog('Event', LOG_EVENT, 'Column ' . $sColumnID . ' reset to new defaults for all ' . $aColumnInfo['unit'] . 's');
                     }
                 }
             }

@@ -19,6 +19,8 @@
    that has no annotated transcripts, resulted in a fatal error.
  * Fixed bug; Transcripts created from an NG reference sequence sometimes caused
    the variant mapper to loop forever.
+ * Fixed bug; Some event log entries related to column edits were marked as er-
+   rors by mistake.
 
 
 /**************************
