@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2014-01-13
- * For LOVD    : 3.0-09
+ * Modified    : 2014-06-11
+ * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -186,7 +186,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         $sGeneName = $aGeneInfo['name'];
                         $sChromLocation = $aGeneInfo['location'];
                         $sEntrez = $aGeneInfo['entrez_id'];
-                        $nOmim = $aGeneInfo['omim_id'];
+                        // OMIM ID is not always defined.
+                        $nOmim = (!isset($aGeneInfo['omim_id'])? '' : $aGeneInfo['omim_id']);
                         // For now, until NCBI has fixed their API, we can't create MT- genes (Mutalyzer cannot get a proper reference sequence).
                         if (substr($sSymbol, 0, 3) == 'MT-') {
                             lovd_errorAdd('', 'Unfortunately, due to some problems on the side of the NCBI, we are unable to handle variants on the mitochondrial genome at this time. When the NCBI has fixed the problem, we will implement support for MT genes.');
@@ -415,6 +416,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $aSuccessTranscripts = array();
                 if (!empty($_POST['active_transcripts'])) {
                     foreach($_POST['active_transcripts'] as $sTranscript) {
+                        // 2014-06-11; 3.0-11; Add check on $sTranscript to make sure a selected "No transcripts found" doens't cause a lot of errors here.
+                        if (!$sTranscript) {
+                            continue;
+                        }
                         // Gather transcript information from session.
                         $nMutalyzerID = $zData['transcriptMutalyzer'][preg_replace('/\.\d+/', '', $sTranscript)];
                         $sTranscriptProtein = $zData['transcriptsProtein'][$sTranscript];

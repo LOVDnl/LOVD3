@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2014-02-27
- * For LOVD    : 3.0-10
+ * Modified    : 2014-06-12
+ * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -196,6 +196,13 @@ if ($zTranscripts) {
                 $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo['c']);
                 // Check if the given NM is in the output, disregard version for now.
                 if (preg_replace('/\.\d+/', '', $aTranscript['id_ncbi']) == preg_replace('/\.\d+/', '', $aTranscriptValues['id'])) {
+                    // 2014-06-12; 3.0-11; Sometimes we don't receive chrom* values, for instance when using an NG (doesn't always happen). Set this to prevent endless loop.
+                    if (empty($aTranscriptValues['chromTransStart'])) {
+                        $aTranscriptValues['chromTransStart'] = (empty($aTranscriptValues['gTransStart'])? 1 : $aTranscriptValues['gTransStart']);
+                    }
+                    if (empty($aTranscriptValues['chromTransEnd'])) {
+                        $aTranscriptValues['chromTransEnd'] = (empty($aTranscriptValues['gTransEnd'])? 1 : $aTranscriptValues['gTransEnd']);
+                    }
                     $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = ?, position_c_mrna_start = ?, position_c_mrna_end = ?, position_c_cds_end = ?, position_g_mrna_start = ?, position_g_mrna_end = ?' .
                     // Check if the exact version is the same, otherwise mark the transcript as expired.
                     ($aTranscriptValues['id'] == $aTranscript['id_ncbi'] || strpos($aTranscript['id_ncbi'], 'expired') !== false? '' : ', name = CONCAT(name, " (expired, new version available)")') .
