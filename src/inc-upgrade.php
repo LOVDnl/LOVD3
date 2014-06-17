@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2014-06-12
+ * Modified    : 2014-06-16
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -368,9 +368,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  array(
                      'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]+))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID" AND preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9]+))_\\\\d{6}$/"',
                  ),
-                 '3.0-11' =>
+                 '3.0-10c' =>
                  array(
                      'UPDATE ' . TABLE_LOGS . ' SET name = "Event" WHERE name = "Error" AND event = "ColEdit" AND log LIKE "Column % reset to new defaults%"',
+                     'INSERT IGNORE INTO ' . TABLE_EFFECT . ' VALUES ("00", "./."), ("01", "./-"), ("03", "./-?"), ("05", "./?"), ("07", "./+?"), ("09", "./+"), ("10", "-/."), ("30", "-?/."), ("50", "?/."), ("70", "+?/."), ("90", "+/.")',
+                     'ALTER TABLE ' . TABLE_EFFECT . ' MODIFY COLUMN id TINYINT(2) UNSIGNED ZEROFILL NOT NULL',
+                     'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN effectid TINYINT(2) UNSIGNED ZEROFILL',
+                     'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN effectid TINYINT(2) UNSIGNED ZEROFILL',
                  ),
              );
 

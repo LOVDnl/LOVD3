@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2013-09-26
- * For LOVD    : 3.0-08
+ * Modified    : 2014-06-16
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -234,7 +234,7 @@ $aTableSQL =
 
          , 'TABLE_EFFECT' =>
    'CREATE TABLE ' . TABLE_EFFECT . ' (
-    id TINYINT(2) UNSIGNED NOT NULL,
+    id TINYINT(2) UNSIGNED ZEROFILL NOT NULL,
     name VARCHAR(5) NOT NULL,
     PRIMARY KEY (id))
     ' . $sSettings
@@ -304,7 +304,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_VARIANTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     allele TINYINT(2) UNSIGNED NOT NULL,
-    effectid TINYINT(2) UNSIGNED,
+    effectid TINYINT(2) UNSIGNED ZEROFILL,
     chromosome VARCHAR(2),
     position_g_start INT(10) UNSIGNED,
     position_g_end INT(10) UNSIGNED,
@@ -371,7 +371,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL,
     transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    effectid TINYINT(2) UNSIGNED,
+    effectid TINYINT(2) UNSIGNED ZEROFILL,
     position_c_start MEDIUMINT,
     position_c_start_intron INT,
     position_c_end MEDIUMINT,

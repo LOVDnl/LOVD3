@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2013-09-27
- * For LOVD    : 3.0-08
+ * Modified    : 2014-06-16
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -144,7 +144,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'view' => array('Effect', 70),
                                     'db'   => array('e.name', 'ASC', true),
                                     'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                      'The variant\'s affect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown.')),
+                                                      'The variant\'s affect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                         'allele_' => array(
                                     'view' => array('Allele', 120),
                                     'db'   => array('a.name', 'ASC', true),
@@ -212,6 +212,9 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $this->aCheckMandatory[] = 'effect_concluded';
+        } elseif (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
+            // Submitters must fill in the variant effect field; '0' is not allowed for them.
+            unset($aData['effect_reported']);
         }
 
         // Do this before running checkFields so that we have time to predict the DBID and fill it in.

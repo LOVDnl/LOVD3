@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2014-04-28
- * For LOVD    : 3.0-10
+ * Modified    : 2014-06-16
+ * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -119,6 +119,11 @@ $aRequired =
                      array(
                             'mb_detect_encoding',
                             'xml_parser_create', // We could also look for libxml constants?
+                            'openssl_seal',      // We could also look for openssl constants?
+                          ),
+                'PHP_classes' =>
+                     array(
+                            'SoapClient',
                           ),
                 'MySQL' => '4.1.2',
               );
@@ -127,7 +132,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-10b',
+                            'version' => '3.0-10c',
                           ),
                 'user_levels' =>
                      array(
@@ -147,6 +152,7 @@ $_SETT = array(
                           ),
                 'var_effect' =>
                      array(
+                            0 => 'Not classified', // Submitter cannot select this.
                             5 => 'Effect unknown',
                             9 => 'Affects function',
                             7 => 'Probably affects function',

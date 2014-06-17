@@ -21,6 +21,10 @@
    the variant mapper to loop forever.
  * Fixed bug; Some event log entries related to column edits were marked as er-
    rors by mistake.
+ * Added "Not classified" as a value for the variant effect option list, which
+   is selected by default but not a valid input for submitters, forcing them to
+   make a conscious choice for a value for this field, and therefore showing the
+   difference between "Effect unknown" and "Not classified".
 
 
 /**************************

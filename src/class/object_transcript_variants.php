@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2012-11-28
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2014-06-16
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -117,7 +117,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                                     'view' => array('Affects function', 70),
                                     'db'   => array('e.name', 'ASC', true),
                                     'legend' => array('The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                      'The variant\'s affect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown.')),
+                                                      'The variant\'s affect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                       ),
                  $this->buildViewList(),
                  array(
@@ -196,6 +196,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             $this->aCheckMandatory[] = $sPrefix . 'effect_reported';
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $this->aCheckMandatory[] = $sPrefix . 'effect_concluded';
+            } elseif (isset($aData[$sPrefix . 'effect_reported']) && $aData[$sPrefix . 'effect_reported'] === '0') {
+                // Submitters must fill in the variant effect field; '0' is not allowed for them.
+                unset($aData[$sPrefix . 'effect_reported']);
             }
         }
 

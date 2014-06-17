@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2014-01-08
- * For LOVD    : 3.0-09
+ * Modified    : 2014-06-16
+ * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -421,7 +421,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                         'view' => array('Effect', 70),
                                         'db'   => array('eg.name', 'ASC', true),
                                         'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                          'The variant\'s affect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown.')),
+                                                          'The variant\'s affect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                               ));
                     if (in_array('VariantOnTranscript', $aObjects)) {
                         unset($this->aColumnsViewList['vog_effect']);
@@ -445,7 +445,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                         'view' => array('Effect', 70),
                                         'db'   => array('et.name', 'ASC', true),
                                         'legend' => array('The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                          'The variant\'s affect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown.')),
+                                                          'The variant\'s affect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                               ));
                     if (!$this->sSortDefault) {
                         // First data table in view.

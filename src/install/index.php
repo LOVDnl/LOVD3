@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2013-12-18
- * For LOVD    : 3.0-09
+ * Modified    : 2014-05-26
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -141,13 +141,22 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
 
     // 2012-02-01; 3.0-beta-02; Added check for xml_parser_create(), easily allowing other PHP functions to be checked also.
     $bPHPFunctions = true;
-    $sPHPFunctions = '';
+    $bPHPClasses = true;
+    $sPHPRequirements = '';
     foreach ($aRequired['PHP_functions'] as $sFunction) {
         $bFunction = function_exists($sFunction);
         if (!$bFunction) {
             $bPHPFunctions = false;
         }
-        $sPHPFunctions .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bFunction . '.png" alt="" width="11" height="11">&nbsp;PHP function : ' . $sFunction . '()<BR>';
+        $sPHPRequirements .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bFunction . '.png" alt="" width="11" height="11">&nbsp;PHP function : ' . $sFunction . '()<BR>';
+    }
+    // 2014-05-26; 3.0-11; Switching to PHP's SoapClient class to communicate with Mutalyzer's SOAP service, as their REST/JSON service is subject to change.
+    foreach ($aRequired['PHP_classes'] as $sClass) {
+        $bClass = class_exists($sClass);
+        if (!$bClass) {
+            $bPHPClasses = false;
+        }
+        $sPHPRequirements .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bClass . '.png" alt="" width="11" height="11">&nbsp;PHP class : ' . $sClass . '()<BR>';
     }
 
     $sMySQLVers = str_replace('_', '-', $_DB->getServerInfo()) . '-';
@@ -193,7 +202,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
         // Failure!
         lovd_showInfoTable('One or more requirements are not met!<BR>I will now bluntly refuse to install.<BR><BR>' .
                            $sPHP . '<BR>' .
-                           $sPHPFunctions .
+                           $sPHPRequirements .
                            $sMySQL . '<BR>' .
                            $sInnoDB . '<BR>' .
                            $sSMTP . '<BR>' .
@@ -204,7 +213,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
         // Success!
         lovd_showInfoTable('System check for requirements all OK!<BR><BR>' .
                            $sPHP . '<BR>' .
-                           $sPHPFunctions .
+                           $sPHPRequirements .
                            $sMySQL . '<BR>' .
                            $sInnoDB . '<BR>' .
                            $sSMTP . '<BR>' .
