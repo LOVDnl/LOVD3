@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2013-03-01
- * For LOVD    : 3.0-03
+ * Modified    : 2014-05-26
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -48,13 +47,14 @@ if (!$_AUTH) {
     die(AJAX_NO_AUTH);
 }
 
-require ROOT_PATH . 'class/REST2SOAP.php';
-$_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
-
-$aOutput = $_MutalyzerWS->moduleCall('checkSyntax', array('variant' => $_GET['variant']));
-if (is_array($aOutput) && !count($aOutput)) {
+$_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
+try {
+    $aOutput = $_Mutalyzer->checkSyntax(array('variant' => $_GET['variant']))->checkSyntaxResult;
+} catch (SoapFault $e) {
     die(AJAX_UNKNOWN_RESPONSE);
-} elseif (isset($aOutput['valid']) && $aOutput['valid'][0]['v'] == 'true') {
+}
+
+if (isset($aOutput->valid) && $aOutput->valid) {
     die(AJAX_TRUE);
 } else {
     die(AJAX_FALSE);
