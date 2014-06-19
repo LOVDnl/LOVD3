@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2014-06-18
+ * Modified    : 2014-06-19
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,23 +46,27 @@ if (!$_AUTH) {
 
 $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
 try {
-    $aOutput = $_Mutalyzer->runMutalyzer(array('variant' => $_GET['variant']))->runMutalyzerResult;
+    $oOutput = $_Mutalyzer->runMutalyzer(array('variant' => $_GET['variant']))->runMutalyzerResult;
 } catch (SoapFault $e) {
     // FIXME: Perhaps indicate an error? Like in the check_hgvs script?
     die(AJAX_FALSE);
 }
 
-if (!empty($aOutput->messages)) {
-    foreach ($aOutput->messages->SoapMessage as $aMessage) {
-        if (isset($aMessage->errorcode)) {
-            print(trim($aMessage->errorcode) . ':' . trim($aMessage->message));
+if (!empty($oOutput->messages)) {
+    if (!is_array($oOutput->messages->SoapMessage)) {
+        $oOutput->messages->SoapMessage = array($oOutput->messages->SoapMessage);
+    }
+
+    foreach ($oOutput->messages->SoapMessage as $oMessage) {
+        if (isset($oMessage->errorcode)) {
+            print(trim($oMessage->errorcode) . ':' . trim($oMessage->message));
         }
         print('|');
     }
 } else {
     print('|');
 }
-$sProteinDescriptions = implode('|', $aOutput->proteinDescriptions->string);
+$sProteinDescriptions = implode('|', $oOutput->proteinDescriptions->string);
 preg_match('/' . preg_quote($sProteinPrefix) . ':(p\..+?)(\||$)/', $sProteinDescriptions, $aProteinMatches);
 print('|' . (isset($aProteinMatches[1])? $aProteinMatches[1] : ''));
 ?>
