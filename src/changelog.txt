@@ -29,6 +29,9 @@
    now logged, so users can be helpt more easily. Also, it is mentioned that if
    they do not receive an email, it might be because the username they entered
    is incorrect.
+ * From 25 diseases or more, the diseases list on the individuals form shows a
+   link to the full disease list which can be searched and browsed in order to
+   find the disease abbreviation needed for the form.
 
 
 /**************************
