@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2014-06-19
+ * Modified    : 2014-06-27
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,7 +52,7 @@ try {
     die(AJAX_FALSE);
 }
 
-if (!empty($oOutput->messages)) {
+if (!empty($oOutput->messages->SoapMessage)) {
     if (!is_array($oOutput->messages->SoapMessage)) {
         $oOutput->messages->SoapMessage = array($oOutput->messages->SoapMessage);
     }
@@ -66,7 +66,7 @@ if (!empty($oOutput->messages)) {
 } else {
     print('|');
 }
-$sProteinDescriptions = implode('|', $oOutput->proteinDescriptions->string);
+$sProteinDescriptions = (empty($oOutput->proteinDescriptions->string)? '' : implode('|', $oOutput->proteinDescriptions->string));
 preg_match('/' . preg_quote($sProteinPrefix) . ':(p\..+?)(\||$)/', $sProteinDescriptions, $aProteinMatches);
 print('|' . (isset($aProteinMatches[1])? $aProteinMatches[1] : ''));
 ?>
