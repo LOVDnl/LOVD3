@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2013-09-26
- * For LOVD    : 3.0-08
+ * Modified    : 2014-07-15
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -281,8 +281,8 @@ class LOVD_Individual extends LOVD_Custom {
                         array('', '', 'print', '<B>Relation to diseases</B>'),
                         'hr',
          'aDiseases' => array('This individual has been diagnosed with these diseases', '', 'select', 'active_diseases', $nFieldSize, $aDiseasesForm, false, true, false),
-     'diseases_info' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD. If any disease you would like to select is not in here, please mention this in the remarks, preferably including the omim number. This way, a manager can configure this disease in this LOVD.'),
-   'diseases_create' => array('', '', 'note', 'Diseases not in this list are not yet configured in this LOVD.<BR>Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
+     'diseases_info' => array('', '', 'note', ($nDiseases < 25? '' : '<A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?&amp;no_links&amp;in_window\', \'Diseases\', 1000, 550); return false;">Find the used disease abbreviation in the list of diseases</A>.<BR>') . 'Diseases not in this list are not yet configured in this LOVD. If any disease you would like to select is not in here, please mention this in the remarks, preferably including the omim number. This way, a manager can configure this disease in this LOVD.'),
+   'diseases_create' => array('', '', 'note', ($nDiseases < 25? '' : '<A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?&amp;no_links&amp;in_window\', \'Diseases\', 1000, 550); return false;">Find the used disease abbreviation in the list of diseases</A>.<BR>') . 'Diseases not in this list are not yet configured in this LOVD.<BR>Do you want to <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'diseases?create&amp;in_window\', \'DiseasesCreate\', 800, 550); return false;">configure more diseases</A>?'),
                      'hr',
       'general_skip' => 'skip',
            'general' => array('', '', 'print', '<B>General information</B>'),
