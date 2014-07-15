@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-03-03
- * For LOVD    : 3.0-10
+ * Modified    : 2014-06-11
+ * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -248,68 +248,69 @@ if (ACTION == 'create') {
         // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
         flush();
 
-        require ROOT_PATH . 'class/REST2SOAP.php';
-        $_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+        $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
         $_BAR->setMessage('Collecting all available transcripts...');
         $_BAR->setProgress(0);
 
-        $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $zGene['refseq_UD'], 'geneName' => $zGene['id']));
-        if (!is_array($aOutput) && !empty($aOutput)) {
-            $_MutalyzerWS->soapError('getTranscriptsAndInfo', array('genomicReference' => $zGene['refseq_UD'], 'geneName' => $zGene['id']), $aOutput);
-        } else {
-            $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array();
-            if (!empty($aOutput)) {
-                $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
-                $aTranscripts = array();
-                $aTranscriptsName = array();
-                $aTranscriptsMutalyzer = array();
-                $aTranscriptsPositions = array();
-                $aTranscriptsProtein = array();
-                $aResultTranscriptsAdded = $_DB->query('SELECT GROUP_CONCAT(DISTINCT id_ncbi ORDER BY id_ncbi SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid="' . $zGene['id'] . '"')->fetchColumn();
-                $aTranscriptsAdded = explode(';', $aResultTranscriptsAdded);
-                $nTranscripts = 0;
-                foreach ($aTranscriptsInfo as $aTranscript) {
-                    if (!in_array($aTranscript['c']['id'][0]['v'], $aTranscriptsAdded)) {
-                        $nTranscripts += 1;
-                    }
-                }
-                $nTranscripts = max($nTranscripts, 1);
-                $nProgress = 0;
-                foreach($aTranscriptsInfo as $aTranscriptInfo) {
-                    $aTranscriptInfo = $aTranscriptInfo['c'];
-                    $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo);
-                    if (!in_array($aTranscriptValues['id'], $aTranscriptsAdded)) {
-                        $nProgress += (100/$nTranscripts);
-                        $_BAR->setMessage('Collecting ' . $aTranscriptValues['id'] . ' info...');
-                        if ($aTranscriptValues['id']) {
-                            // 2014-01-14; 3.0-10; When getting transcripts from an NG rather than an NC, we are missing some fields. Make sure they're set.
-                            $aTranscriptValues = array_replace_recursive(
-                                array(
-                                    'chromTransStart' => 0,
-                                    'chromCDSStart' => 0,
-                                    'chromTransEnd' => 0,
-                                    'chromCDSStop' => 0,
-                                ), $aTranscriptValues);
-                            $aTranscripts[] = $aTranscriptValues['id'];
-                            $aTranscriptsName[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($zGene['name'] . ', ', '', $aTranscriptValues['product']);
-                            $aTranscriptsMutalyzer[preg_replace('/\.\d+/', '', $aTranscriptValues['id'])] = str_replace($zGene['id'] . '_v', '', $aTranscriptValues['name']);
-                            $aTranscriptsPositions[$aTranscriptValues['id']] = array('chromTransStart' => $aTranscriptValues['chromTransStart'], 'chromTransEnd' => $aTranscriptValues['chromTransEnd'], 'cTransStart' => $aTranscriptValues['cTransStart'], 'cTransEnd' => $aTranscriptValues['sortableTransEnd'], 'cCDSStop' => $aTranscriptValues['cCDSStop']);
-                            $aTranscriptsProtein[$aTranscriptValues['id']] = lovd_getElementFromArray('proteinTranscript/id', $aTranscriptInfo, 'v');
-                        }
-                        $_BAR->setProgress($nProgress);
-                    }
-                }
-                $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array(
-                                                                          'gene' => $zGene,
-                                                                          'transcripts' => $aTranscripts,
-                                                                          'transcriptMutalyzer' => $aTranscriptsMutalyzer,
-                                                                          'transcriptsProtein' => $aTranscriptsProtein,
-                                                                          'transcriptNames' => $aTranscriptsName,
-                                                                          'transcriptPositions' => $aTranscriptsPositions,
-                                                                          'transcriptsAdded' => $aTranscriptsAdded
-                                                                        );
+        try {
+            // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
+            $aTranscriptInfo = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $zGene['refseq_UD'], 'geneName' => $zGene['id']))->getTranscriptsAndInfoResult->TranscriptInfo;
+        } catch (SoapFault $e) {
+            lovd_soapError($e);
+        }
+        if (empty($aTranscriptInfo)) {
+            // No transcripts found.
+            $aTranscriptInfo = array();
+        }
+
+        $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array();
+        $aTranscripts = array();
+        $aTranscriptsName = array();
+        $aTranscriptsMutalyzer = array();
+        $aTranscriptsPositions = array();
+        $aTranscriptsProtein = array();
+        // Get list of transcripts already added to the database.
+        $aTranscriptsAdded = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? ORDER BY id_ncbi', array($zGene['id']))->fetchAllColumn();
+        // Count transcripts that still can be added (needed for reliable progress reporting).
+        $nTranscripts = 0;
+        foreach ($aTranscriptInfo as $oTranscript) {
+            if (!in_array($oTranscript->id, $aTranscriptsAdded)) {
+                $nTranscripts += 1;
             }
         }
+        $nTranscripts = max($nTranscripts, 1); // To prevent division-by-zero errors...
+        $nProgress = 0.0;
+        foreach($aTranscriptInfo as $oTranscript) {
+            if (!in_array($oTranscript->id, $aTranscriptsAdded)) {
+                $nProgress += (100/$nTranscripts);
+                $_BAR->setMessage('Collecting ' . $oTranscript->id . ' info...');
+                if ($oTranscript->id) {
+                    $aTranscripts[] = $oTranscript->id;
+                    $aTranscriptsName[preg_replace('/\.\d+/', '', $oTranscript->id)] = str_replace($zGene['name'] . ', ', '', $oTranscript->product);
+                    $aTranscriptsMutalyzer[preg_replace('/\.\d+/', '', $oTranscript->id)] = str_replace($zGene['id'] . '_v', '', $oTranscript->name);
+                    // 2014-01-14; 3.0-10; When getting transcripts from an NG rather than an NC, we are missing some fields. Make sure they're set.
+                    $aTranscriptsPositions[$oTranscript->id] =
+                        array(
+                            'chromTransStart' => (isset($oTranscript->chromTransStart)? $oTranscript->chromTransStart : 0),
+                            'chromTransEnd' => (isset($oTranscript->chromTransEnd)? $oTranscript->chromTransEnd : 0),
+                            'cTransStart' => $oTranscript->cTransStart,
+                            'cTransEnd' => $oTranscript->sortableTransEnd,
+                            'cCDSStop' => $oTranscript->cCDSStop,
+                        );
+                    $aTranscriptsProtein[$oTranscript->id] = (!isset($oTranscript->proteinTranscript)? '' : $oTranscript->proteinTranscript->id);
+                }
+                $_BAR->setProgress($nProgress);
+            }
+        }
+        $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array(
+                                                                  'gene' => $zGene,
+                                                                  'transcripts' => $aTranscripts,
+                                                                  'transcriptMutalyzer' => $aTranscriptsMutalyzer,
+                                                                  'transcriptsProtein' => $aTranscriptsProtein,
+                                                                  'transcriptNames' => $aTranscriptsName,
+                                                                  'transcriptPositions' => $aTranscriptsPositions,
+                                                                  'transcriptsAdded' => $aTranscriptsAdded,
+                                                                );
 
         $_BAR->setProgress(100);
         $_BAR->setMessage('Information collected, now building form...');
