@@ -25,6 +25,10 @@
    is selected by default but not a valid input for submitters, forcing them to
    make a conscious choice for a value for this field, and therefore showing the
    difference between "Effect unknown" and "Not classified".
+ * When users try to reset the password but type in the wrong username, this is
+   now logged, so users can be helpt more easily. Also, it is mentioned that if
+   they do not receive an email, it might be because the username they entered
+   is incorrect.
 
 
 /**************************
