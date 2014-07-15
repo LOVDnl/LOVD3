@@ -606,8 +606,8 @@ if (POST) {
 
                 // We'll need to split the functional consequence field to have checkFields() function normally.
                 if (in_array($sCurrentSection, array('Variants_On_Genome', 'Variants_On_Transcripts'))) {
-                    $aLine['effect_reported'] = 5; // Default value.
-                    $aLine['effect_concluded'] = 5; // Default value.
+                    $aLine['effect_reported'] = substr($_SETT['var_effect_default'], 0, 1); // Default value.
+                    $aLine['effect_concluded'] = substr($_SETT['var_effect_default'], -1); // Default value.
                     if (in_array('effectid', $aColumns)) {
                         if (strlen($aLine['effectid']) != 2) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Please select a valid entry for the \'effectid\' field.');
@@ -1393,14 +1393,6 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                         } else {
                             $aLineVar['sort'] = '0000_' . $aLineVar['sort'];
                         }
-                    }
-                }
-
-                // ID_pathogenic_ column (pat2var).
-                if (!isset($aLinePat2Var['pathogenic']) || $aLinePat2Var['pathogenic'] === '') {
-                    if (!array_key_exists($sPat2VarKey, $aPat2Var)) {
-                        // 2008-05-28; 2.0-07; Changed default value from 99 to 55 (unknown).
-                        $aLinePat2Var['pathogenic'] = '55';
                     }
                 }
 

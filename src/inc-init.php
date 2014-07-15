@@ -159,6 +159,7 @@ $_SETT = array(
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
                           ),
+                'var_effect_default' => '00',
                 'data_status' =>
                      array(
                             STATUS_IN_PROGRESS => 'In progress',

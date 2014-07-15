@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-06-25
+ * Modified    : 2014-07-15
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -597,7 +597,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
-            $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['effect_concluded'] : '5');
+            $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['effect_concluded'] : substr($_SETT['var_effect_default'], -1));
 
             $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
             try {
@@ -1287,7 +1287,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                         }
 
                         // Analysis complete, now enter the variant into the database.
-                        $aInsertValues = array($aVariantData['allele'], '55', $aVariantData['chromosome'], $aVariantData['position_g_start'], $aVariantData['position_g_end'], $aVariantData['type'], $_POST['owned_by'], $_POST['statusid'], $nMappingFlags, $_AUTH['id'], $aUploadData['upload_date'], $aVariantData['VariantOnGenome/DBID'], $aVariantData['VariantOnGenome/DNA']);
+                        $aInsertValues = array($aVariantData['allele'], $_SETT['var_effect_default'], $aVariantData['chromosome'], $aVariantData['position_g_start'], $aVariantData['position_g_end'], $aVariantData['type'], $_POST['owned_by'], $_POST['statusid'], $nMappingFlags, $_AUTH['id'], $aUploadData['upload_date'], $aVariantData['VariantOnGenome/DBID'], $aVariantData['VariantOnGenome/DNA']);
                         if ($_POST['dbSNP_column']) {
                             $aInsertValues[] = $aVariantData['reference'];
                         }
@@ -1382,7 +1382,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                     // Prepare genomic variant.
                     $aFieldsVariantOnGenome[0] = array(
-                        'effectid' => 55,
+                        'effectid' => $_SETT['var_effect_default'],
                         'chromosome' => (!isset($aVariant['chromosome'])? '' : $aVariant['chromosome']),
                         'owned_by' => $_POST['owned_by'],
                         'statusid' => $_POST['statusid'],
@@ -1933,7 +1933,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                 // Also got mapping information. Prepare the VariantOnTranscript data for insertion.
 
                                                 $aFieldsVariantOnTranscript[$j][$sAccession] = array(
-                                                    'effectid' => 55,
+                                                    'effectid' => $_SETT['var_effect_default'],
                                                     'position_c_start' => $aMappingInfo['startmain'],
                                                     'position_c_start_intron' => $aMappingInfo['startoffset'],
                                                     'position_c_end' => $aMappingInfo['endmain'],
@@ -2852,7 +2852,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                                     );
                                 }
                                 // Insert all the gathered information about the variant description into the database.
-                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], '55', $aMatches[1]));
+                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], $_SETT['var_effect_default'], $aMatches[1]));
                                 $bAdded = true;
                                 $aGenesUpdated[] = $aTranscripts[$nTranscript];
                                 // Speed improvement: remove this value from the output from mutalyzer, so we will not check this one again with the next transcript that we will add.
@@ -2864,7 +2864,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                     if (!$bAdded) {
                         // Requested transcript was not added to the database! Usually because mutalyzer does not understand the variant.
                         // Insert simpler version of mapping: no mapping fields, no DNA field predicted.
-                        $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid) VALUES (?, ?, ?)', array($nID, $nTranscript, '55'));
+                        $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid) VALUES (?, ?, ?)', array($nID, $nTranscript, $_SETT['var_effect_default']));
                     }
                 }
             }
