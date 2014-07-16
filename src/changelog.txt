@@ -32,6 +32,11 @@
  * From 25 diseases or more, the diseases list on the individuals form shows a
    link to the full disease list which can be searched and browsed in order to
    find the disease abbreviation needed for the form.
+ * Included version 3.0-11 of the official LOVD Reference Sequence Parser
+   script.
+   - The user can now choose whether the gene-specific NG reference sequence is
+     used, if configured for that specific gene, or the chromosomal NC reference
+     sequence.
 
 
 /**************************

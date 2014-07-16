@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2012-11-15
- * For LOVD    : 3.0-beta-11
+ * Modified    : 2014-07-16
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ir. Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -94,7 +94,7 @@ if ($_GET['step'] == 1) {
         } else {
             // Get the UD number from the genes table.
             $_POST['transcript_id'] = $_POST['symbol'];
-            list($_POST['symbol'], $_POST['file'], $_POST['protein_id']) = $_DB->query('SELECT g.id, g.refseq_UD, t.id_protein_ncbi FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) WHERE t.id_ncbi = ?', array($_POST['symbol']))->fetchRow();
+            list($_POST['symbol'], $_POST['file'], $_POST['protein_id']) = $_DB->query('SELECT g.id, ' . ($_POST['file'] == 'NC'? 'g.refseq_UD' : 'IF(LEFT(g.refseq_genomic, 2) != "NG", g.refseq_UD, g.refseq_genomic)') . ' AS refseq, t.id_protein_ncbi FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) WHERE t.id_ncbi = ?', array($_POST['symbol']))->fetchRow();
 
             if (empty($_POST['file']) || empty($_POST['transcript_id']) || empty($_POST['protein_id'])) {
                 lovd_errorAdd('symbol', 'This gene or transcript does not seem to be configured correctly, we currently can\'t generate a human-readable reference sequence file using this gene.');
@@ -111,7 +111,10 @@ if ($_GET['step'] == 1) {
         if (!lovd_error()) {
             // All fields filled in, go ahead.
             // Read file into an array.
-            $aGenBank = lovd_php_file(str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $_POST['file'] . '.gb');
+            $_POST['file'] = (substr($_POST['file'], 0, 2) == 'UD'?
+                str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $_POST['file'] . '.gb' :
+                'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=' . $_POST['file'] . '&rettype=gb');
+            $aGenBank = lovd_php_file($_POST['file']);
 
             if (!$aGenBank) {
                 lovd_errorAdd('symbol', 'We couldn\'t retreive the reference sequence file for this gene. Please try again later.');
@@ -428,6 +431,7 @@ if ($_GET['step'] == 1) {
     $aForm = array(
         array('POST', '', '', '', '35%', '14', '65%'),
         array('Select gene and transcript', '', 'select', 'symbol', 1, $aGenes, false, false, false),
+        array('Genomic sequence to use', '', 'select', 'file', 1, array('NG' => 'NG (gene-specific) when available, NC (chromosomal) otherwise', 'NC' => 'NC (chromosomal) sequence only'), false, false, false),
         array('', '', 'submit', 'Continue'),
     );
 
