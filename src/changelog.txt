@@ -37,6 +37,9 @@
    - The user can now choose whether the gene-specific NG reference sequence is
      used, if configured for that specific gene, or the chromosomal NC reference
      sequence.
+ * The Configuration area is slightly restyled to mirror the view of the Setup
+   area, and includes the names and email addresses of the managers of the LOVD
+   installation, so Curators know who to turn to for help.
 
 
 /**************************

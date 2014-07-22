@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-07-11
- * Modified    : 2013-03-15
- * For LOVD    : 3.0-04
+ * Modified    : 2014-07-22
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -140,21 +140,39 @@ if (!$aVarCounts[STATUS_IN_PROGRESS]) {
     unset($aVarCounts[STATUS_IN_PROGRESS]);
 }
 $nTotalVars = array_sum($aVarCounts);
-$nUncurated =
+$sVariantLink = 'view/' . $_SESSION['currdb'] . '?search_var_status=';
 
-$sLink = 'view/' . $_SESSION['currdb'] . '?search_var_status=';
-print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
+
+
+// Main table.
+// FIXME: Make the list of variant statusses look more like the Setup area.
+print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . "\n" .
+      '        <TR>' . "\n" .
+      '          <TD valign="top" style="padding-right : 10px; border-right : 1px solid #224488;">' . "\n" .
+      '            <TABLE border="0" cellpadding="0" cellspacing="0" class="setup" width="250">' . "\n" .
       '              <TR>' . "\n" .
-      '                <TD colspan="' . (count($aVarCounts) - 3) . '"><B>Variants</B></TD>' . "\n" .
-      '                <TD colspan="' . (count($aVarCounts) - 2) . '"><B><A href="' . $sLink . 'Pending%7CNon">All uncurated</A></B>: ' . (int) ($aVarCounts[STATUS_PENDING] + $aVarCounts[STATUS_HIDDEN]) . '</TD>' . "\n" .
-      '                <TD colspan="' . (count($aVarCounts) - 2) . '"><B><A href="' . $sLink . 'Marked%7CPublic%20%21Non">All curated</A></B>: ' . (int) ($aVarCounts[STATUS_MARKED] + $aVarCounts[STATUS_OK]) . '</TD></TR>' . "\n" .
-      '              <TR class="S11">' . "\n" .
-      '                <TD><A href="' . $sLink . '">Total</A>: ' . $nTotalVars . '</TD>');
-foreach ($aVarCounts as $nStatus => $nVars) {
+      '                <TH>Variants (<A href="' . $sVariantLink . '">Total</A>: ' . $nTotalVars . ')</TH></TR>' . "\n" .
+      '              <TR>' . "\n" .
+      '                <TH><A href="' . $sVariantLink . 'Pending%7CNon">All uncurated</A>: ' . (int) ($aVarCounts[STATUS_PENDING] + $aVarCounts[STATUS_HIDDEN]) . '</TH></TR>' . "\n" .
+      '              <TR>' . "\n" .
+      '                <TD>');
+foreach (array(STATUS_PENDING, STATUS_HIDDEN, STATUS_IN_PROGRESS) as $nStatus) {
+    if (!isset($aVarCounts[$nStatus])) {
+        continue;
+    }
     print("\n" .
-          '                <TD><A href="' . $sLink . '%3D%22' . $_SETT['data_status'][$nStatus] . '%22">' . $_SETT['data_status'][$nStatus] . '</A>: ' . $nVars . '</TD>');
+          '                  <A href="' . $sVariantLink . '%3D%22' . $_SETT['data_status'][$nStatus] . '%22">' . $_SETT['data_status'][$nStatus] . '</A>: ' . $aVarCounts[$nStatus] . '<BR>');
 }
-print('</TR></TABLE><BR>' . "\n\n");
+print('</TD></TR>' . "\n" .
+      '              <TR>' . "\n" .
+      '                <TH><A href="' . $sVariantLink . 'Marked%7CPublic%20%21Non">All curated</A>: ' . (int) ($aVarCounts[STATUS_MARKED] + $aVarCounts[STATUS_OK]) . '</TH></TR>' . "\n" .
+      '              <TR>' . "\n" .
+      '                <TD>');
+foreach (array(STATUS_MARKED, STATUS_OK) as $nStatus) {
+    print("\n" .
+        '                  <A href="' . $sVariantLink . '%3D%22' . $_SETT['data_status'][$nStatus] . '%22">' . $_SETT['data_status'][$nStatus] . '</A>: ' . $aVarCounts[$nStatus] . '<BR>');
+}
+print('</TD></TR></TABLE><BR>' . "\n\n");
 
 
 
@@ -162,19 +180,27 @@ print('</TR></TABLE><BR>' . "\n\n");
 // It is important to have at least one transcript.
 $nTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ?', array($_SESSION['currdb']))->fetchColumn();
 if (!$nTranscript) {
-    lovd_showInfoTable('You currently do not have a transcript configured for the ' . $_SESSION['currdb'] . ' gene database. Without a transcript added, you can only store genomic variants, and thus you will not have any gene-specific variant overviews.<BR>Please <A href="transcripts?create&amp;target=' . $_SESSION['currdb'] . '">add a transcript to your gene</A>.', 'warning');
+    lovd_showInfoTable('<SPAN class="S11">You currently do not have a transcript configured for the ' . $_SESSION['currdb'] . ' gene database. Without a transcript added, you can only store genomic variants, and thus you will not have any gene-specific variant overviews.<BR>Please <A href="transcripts?create&amp;target=' . $_SESSION['currdb'] . '">add a transcript to your gene</A>.</SPAN>', 'warning');
 }
 
 
 
-// Main table.
-print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . "\n" .
-      '        <TR>' . "\n" .
-      '          <TD valign="top" width="50%" style="padding-right : 10px; border-right : 1px solid #224488;" id="configLeft">' . "\n");
+// Curators do not have access to the Users tab. But if needed, they should be able to contact the manager, when available.
+$aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? ORDER BY name', array(LEVEL_MANAGER))->fetchAllAssoc();
+if (!$aManagers) {
+    $aManagers = array($_SETT['admin']);
+}
+$sManagers = '<SPAN class="S11">For technical assistance, such as creating new custom columns, please contact ' . (count($aManagers) == 1? 'the system\'s manager' : 'one of the system\'s managers') . ':';
+foreach ($aManagers as $aManager) {
+    $sManagers .= '<BR><A href="mailto:' . str_replace(array("\r\n", "\r", "\n"), ', ', trim($aManager['email'])) . '">' . $aManager['name'] . '</A>';
+}
+$sManagers .= '</SPAN>';
+lovd_showInfoTable($sManagers);
 
-// Do we want statistics here, on the left? If so, take the code from Setup.php.
 
 
+print('          </TD>' . "\n" .
+      '          <TD valign="top" width="50%" style="padding-left : 10px; padding-right : 10px; border-right : 1px solid #224488;" id="configLeft">' . "\n\n");
 
 $aItems =
     array(
@@ -216,8 +242,8 @@ foreach ($aItems as $sTitle => $aLinks) {
         list($sLink, $sIMG, $sAlt, $sText) = $val;
         $sLink = (substr($sLink, 0, 11) == 'javascript:'? substr($sLink, 11) . ' return false;' : 'window.location.href=\'' . lovd_getInstallURL(false) . $sLink . '\'');
         print("\n" .
-            '              <TR class="pointer" onclick="' . $sLink . '">' . "\n" .
-            '                <TD align="center" width="40"><IMG src="gfx/' . $sIMG . '" alt="' . $sAlt . '" width="32" height="32"></TD>' . "\n" .
+              '              <TR class="pointer" onclick="' . $sLink . '">' . "\n" .
+              '                <TD align="center" width="40"><IMG src="gfx/' . $sIMG . '" alt="' . $sAlt . '" width="32" height="32"></TD>' . "\n" .
               '                <TD>' . $sText . '</TD></TR>');
     }
     print('</TABLE><BR>' . "\n\n");
@@ -226,7 +252,7 @@ foreach ($aItems as $sTitle => $aLinks) {
 
 
 print('          </TD>' . "\n" .
-    '          <TD valign="top" width="50%" style="padding-left : 10px;" id="configRight">' . "\n\n");
+      '          <TD valign="top" width="50%" style="padding-left : 10px;" id="configRight">' . "\n\n");
 
 
 
@@ -256,12 +282,12 @@ $aItems =
 /*
 // Export central repository format.
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
-    '              <TR>' . "\n" .
-    '                <TD colspan="2"><B>Download variant data for central repository</B></TD></TR>' . "\n" .
-    '              <TR class="setup" onclick="window.location.href=\'' . ROOT_PATH . 'export_data.php?genes%5B%5D=' . $_SESSION['currdb'] . lovd_showSID(true, true) . '\';">' . "\n" .
-    '                <TD align="center" width="40"><IMG src="' . ROOT_PATH . 'gfx/lovd_save.png" alt="Download variant data" width="32" height="32"></TD>' . "\n" .
-    '                <TD>Download the variant data for central repositories. This format includes the gene name, DNA change, DB ID, and possible OMIM and DbSNP IDs.</TD></TR>' .
-    '</TABLE><BR>' . "\n");
+      '              <TR>' . "\n" .
+      '                <TD colspan="2"><B>Download variant data for central repository</B></TD></TR>' . "\n" .
+      '              <TR class="setup" onclick="window.location.href=\'' . ROOT_PATH . 'export_data.php?genes%5B%5D=' . $_SESSION['currdb'] . lovd_showSID(true, true) . '\';">' . "\n" .
+      '                <TD align="center" width="40"><IMG src="' . ROOT_PATH . 'gfx/lovd_save.png" alt="Download variant data" width="32" height="32"></TD>' . "\n" .
+      '                <TD>Download the variant data for central repositories. This format includes the gene name, DNA change, DB ID, and possible OMIM and DbSNP IDs.</TD></TR>' .
+      '</TABLE><BR>' . "\n");
 */
 
         'LOVD scripts' =>
@@ -278,22 +304,22 @@ if (!$nTotalVars) {
 
 foreach ($aItems as $sTitle => $aLinks) {
     print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
-        '              <TR>' . "\n" .
-        '                <TH colspan="2">' . $sTitle . '</TH></TR>');
+          '              <TR>' . "\n" .
+          '                <TH colspan="2">' . $sTitle . '</TH></TR>');
     foreach ($aLinks as $val) {
         list($sLink, $sIMG, $sAlt, $sText) = $val;
         $sLink = (substr($sLink, 0, 11) == 'javascript:'? substr($sLink, 11) . ' return false;' : 'window.location.href=\'' . lovd_getInstallURL(false) . $sLink . '\'');
         print("\n" .
-            '              <TR class="pointer" onclick="' . $sLink . '">' . "\n" .
-            '                <TD align="center" width="40"><IMG src="gfx/' . $sIMG . '" alt="' . $sAlt . '" width="32" height="32"></TD>' . "\n" .
-            '                <TD>' . $sText . '</TD></TR>');
+              '              <TR class="pointer" onclick="' . $sLink . '">' . "\n" .
+              '                <TD align="center" width="40"><IMG src="gfx/' . $sIMG . '" alt="' . $sAlt . '" width="32" height="32"></TD>' . "\n" .
+              '                <TD>' . $sText . '</TD></TR>');
     }
     print('</TABLE><BR>' . "\n\n");
 }
 
 print('          </TD>' . "\n" .
-    '        </TR>' . "\n" .
-    '      </TABLE>' . "\n");
+      '        </TR>' . "\n" .
+      '      </TABLE>' . "\n");
 
 $_T->printFooter();
 ?>
