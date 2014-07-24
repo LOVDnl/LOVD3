@@ -40,6 +40,8 @@
  * The Configuration area is slightly restyled to mirror the view of the Setup
    area, and includes the names and email addresses of the managers of the LOVD
    installation, so Curators know who to turn to for help.
+ * Fixed bug; Variants with many genes associated with it could not be edited,
+   because MySQL applied a limit to the length of the gene list.
 
 
 /**************************
