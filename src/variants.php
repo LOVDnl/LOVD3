@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-07-23
+ * Modified    : 2014-07-25
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1917,17 +1917,19 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                 );
                                             } else {
                                                 // Basically only variants in the 3'UTR should get here.
-                                                $aMappingInfo = get_object_vars($_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $sAccession, 'variant' => $aFieldsVOG['VariantOnGenome/DNA']))->mappingInfoResult);
-                                                // 2014-02-25; 3.0-10; The mappingInfo module call does not sort the positions, and as such the "start" and "end" can be in the "wrong" order.
-                                                $bSense = ($aMappingInfo['startmain'] < $aMappingInfo['endmain'] || ($aMappingInfo['startmain'] == $aMappingInfo['endmain'] && ($aMappingInfo['startoffset'] < $aMappingInfo['endoffset'] || $aMappingInfo['startoffset'] == $aMappingInfo['endoffset'])));
-                                                if (!$bSense) {
-                                                    $nStartMain = $aMappingInfo['endmain'];
-                                                    $aMappingInfo['endmain'] = $aMappingInfo['startmain'];
-                                                    $aMappingInfo['startmain'] = $nStartMain;
-                                                    $nStartOffset = $aMappingInfo['endoffset'];
-                                                    $aMappingInfo['endoffset'] = $aMappingInfo['startoffset'];
-                                                    $aMappingInfo['startoffset'] = $nStartOffset;
-                                                }
+                                                $aMappingInfo = array();
+                                                try {
+                                                    $aMappingInfo = get_object_vars($_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $sAccession, 'variant' => $aFieldsVOG['VariantOnGenome/DNA']))->mappingInfoResult);
+                                                    if (isset($aMappingInfo['errorcode'])) {
+                                                        throw new Exception();
+                                                    }
+                                                    // 2014-02-25; 3.0-10; The mappingInfo module call does not sort the positions, and as such the "start" and "end" can be in the "wrong" order.
+                                                    $bSense = ($aMappingInfo['startmain'] < $aMappingInfo['endmain'] || ($aMappingInfo['startmain'] == $aMappingInfo['endmain'] && ($aMappingInfo['startoffset'] < $aMappingInfo['endoffset'] || $aMappingInfo['startoffset'] == $aMappingInfo['endoffset'])));
+                                                    if (!$bSense) {
+                                                        list($aMappingInfo['startmain'], $aMappingInfo['endmain']) = array($aMappingInfo['endmain'], $aMappingInfo['startmain']);
+                                                        list($aMappingInfo['startoffset'], $aMappingInfo['endoffset']) = array($aMappingInfo['endoffset'], $aMappingInfo['startoffset']);
+                                                    }
+                                                } catch (Exception $e) {}
                                             }
                                             if (isset($aMappingInfo['startmain']) && $aMappingInfo['startmain'] !== '') {
                                                 // Also got mapping information. Prepare the VariantOnTranscript data for insertion.
