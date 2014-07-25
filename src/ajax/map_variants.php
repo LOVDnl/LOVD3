@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2014-07-15
+ * Modified    : 2014-07-25
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -34,7 +34,8 @@ require ROOT_PATH . 'inc-init.php';
 require ROOT_PATH . 'inc-lib-actions.php';
 require ROOT_PATH . 'inc-lib-genes.php';
 require ROOT_PATH . 'inc-lib-form.php';
-$_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl', array('features' => SOAP_SINGLE_ELEMENT_ARRAYS));
+require ROOT_PATH . 'class/soap_client.php';
+$_Mutalyzer = new LOVD_SoapClient();
 define('LOG_EVENT', 'AutomaticMapping');
 //header('Content-type: text/javascript; charset=UTF-8'); // When this header is enabled, jQuery doesn't like the script anymore because it assumes JSON, see the dataType setting.
 //$tStart = microtime(true);
@@ -85,7 +86,7 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
     // $aTranscripts is a two-dimensional array; each transcript is an array with keys 'id' (optional) and 'id_ncbi' (mandatory).
     // Returns an associative array of the same length as $aTranscripts with the 'id_ncbi' values as keys, or FALSE on failure.
     // On success, each element contains an array with a ?-filled SQL query and an array of values. If the transcript ID is not given, the value array's element [1] contains NULL.
-    // The value array's elements [7] and [8], for the VariantOnTranscript/RNA and VariantOnTranscript/Protein columns, contain empty strings and are to be overwritten by runMutalyzer output.
+    // The value array's elements [8] and [9], for the VariantOnTranscript/RNA and VariantOnTranscript/Protein columns, contain empty strings and are to be overwritten by runMutalyzer output.
     // On failure of a single transcript, the corresponding element contains FALSE.
     global $_Mutalyzer, $_CONF, $_SETT;
     static $aVariantsOnTranscripts = array();
@@ -144,6 +145,7 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
                     // Got the variant description relative to this transcript.
                     $aReturn[$aTranscript['id_ncbi']] =
                          array(
+                                // NOTE that is this array is changed, and the order or the number of arguments changes, then also in other places the code needs to be modified, because this array is manipulated directly using its numeric keys.
                                 'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/RNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                                 array($aVariant['id'], (isset($aTranscript['id'])? $aTranscript['id'] : NULL), $_SETT['var_effect_default'], $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], preg_replace('/^[A-Z]{2}_[0-9.]+:/', '', $sVariantOnTranscript), '', '')
                               );
@@ -428,7 +430,7 @@ if (!empty($aVariants)) {
                                 $sTranscriptNum = $_DB->query('SELECT id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sTranscriptNM))->fetchColumn();
                                 // This takes about 0.9-1.1 second...
                                 try {
-                                    $aOutput = get_object_vars($_Mutalyzer->runMutalyzer(array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][6]))->runMutalyzerResult);
+                                    $aOutput = get_object_vars($_Mutalyzer->runMutalyzer(array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][7]))->runMutalyzerResult);
                                     // FIXME: Notice: Undefined property: stdClass::$string in /www/svn/LOVD3/trunk/src/ajax/map_variants.php on line 433
                                     if (!empty($aOutput['proteinDescriptions']->string)) {
                                         $aVariantsOnProtein = $aOutput['proteinDescriptions']->string;
@@ -473,12 +475,12 @@ if (!empty($aVariants)) {
                                         }
                                     }
                                 }
-                                $aSQL[1][7] = $sRNA;
-                                $aSQL[1][8] = $sProtein;
+                                $aSQL[1][8] = $sRNA;
+                                $aSQL[1][9] = $sProtein;
                                 if ($_DB->query($aSQL[0], $aSQL[1], false)) {
                                     // If the insert succeeded, save some data in the variant array for lovd_fetchDBID().
                                     $aVariant['aTranscripts'][$aSQL[1][1]] = array($sTranscriptNM, $aTranscript['gene']);
-                                    $aVariant[$aSQL[1][1] . '_VariantOnTranscript/DNA'] = $aSQL[1][6];
+                                    $aVariant[$aSQL[1][1] . '_VariantOnTranscript/DNA'] = $aSQL[1][7];
                                 }
                             }
                         }
@@ -695,7 +697,7 @@ if (!empty($aVariants)) {
 
                     // Get the p. description too.
                     try {
-                        $aOutput = get_object_vars($_Mutalyzer->runMutalyzer(array('variant' => $sRefseqUD . '(' . $sSymbol . '_v' . $aFieldsTranscript['id_mutalyzer'] . '):' . $aVariantOnTranscriptSQL[1][6]))->runMutalyzerResult);
+                        $aOutput = get_object_vars($_Mutalyzer->runMutalyzer(array('variant' => $sRefseqUD . '(' . $sSymbol . '_v' . $aFieldsTranscript['id_mutalyzer'] . '):' . $aVariantOnTranscriptSQL[1][7]))->runMutalyzerResult);
                         // FIXME: Notice: Undefined property: stdClass::$string in /www/svn/LOVD3/trunk/src/ajax/map_variants.php on line 433
                         if (!empty($aOutput['proteinDescriptions']->string)) {
                             $aVariantsOnProtein = $aOutput['proteinDescriptions']->string;
@@ -741,15 +743,15 @@ if (!empty($aVariants)) {
                             }
                         }
                     }
-                    $aVariantOnTranscriptSQL[1][7] = $sRNA;
-                    $aVariantOnTranscriptSQL[1][8] = $sProtein;
+                    $aVariantOnTranscriptSQL[1][8] = $sRNA;
+                    $aVariantOnTranscriptSQL[1][9] = $sProtein;
 
                     // Map the variant to the newly inserted transcript.
                     $aVariantOnTranscriptSQL[1][1] = $nID;
                     if ($_DB->query($aVariantOnTranscriptSQL[0], $aVariantOnTranscriptSQL[1], false)) {
                         // If the insert succeeded, save some data in the variant array for lovd_fetchDBID().
                         $aVariant['aTranscripts'][$nID] = array($aFieldsTranscript['id_ncbi'], $sSymbol);
-                        $aVariant[$nID . '_VariantOnTranscript/DNA'] = $aVariantOnTranscriptSQL[1][6];
+                        $aVariant[$nID . '_VariantOnTranscript/DNA'] = $aVariantOnTranscriptSQL[1][7];
                     }
 
                     // Also remember that we've got this gene and transcript now.

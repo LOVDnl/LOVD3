@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2014-06-24
+ * Modified    : 2014-07-25
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -212,7 +212,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
 
-                $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
+                require ROOT_PATH . 'class/soap_client.php';
+                $_Mutalyzer = new LOVD_SoapClient();
 
                 // Get LRG if it exists
                 $aRefseqGenomic = array();
@@ -314,9 +315,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     try {
                         // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
                         $aTranscriptInfo = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $sRefseqUD, 'geneName' => $sSymbol))->getTranscriptsAndInfoResult->TranscriptInfo;
-                        if (!is_array($aTranscriptInfo)) {
-                            $aTranscriptInfo = array($aTranscriptInfo);
-                        }
                     } catch (SoapFault $e) {
                         lovd_soapError($e);
                     }
@@ -330,7 +328,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     $aTranscriptsMutalyzer = array();
                     $aTranscriptsPositions = array();
                     $aTranscriptsProtein = array();
-                    $nTranscripts = count($aTranscripts);
+                    $nTranscripts = count($aTranscriptInfo);
                     $nProgress = 0.0;
                     foreach($aTranscriptInfo as $oTranscript) {
                         $nProgress += (34/$nTranscripts);
@@ -651,7 +649,8 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
                             );
 
             if (empty($zData['refseq_UD'])) {
-                $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
+                require ROOT_PATH . 'class/soap_client.php';
+                $_Mutalyzer = new LOVD_SoapClient();
                 try {
                     $sRefseqUD = $_Mutalyzer->sliceChromosomeByGene(array('geneSymbol' => $sID, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'))->sliceChromosomeByGeneResult;
                     $_POST['refseq_UD'] = $sRefseqUD;

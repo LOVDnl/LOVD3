@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-06-11
+ * Modified    : 2014-07-25
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -248,7 +248,8 @@ if (ACTION == 'create') {
         // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
         flush();
 
-        $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
+        require ROOT_PATH . 'class/soap_client.php';
+        $_Mutalyzer = new LOVD_SoapClient();
         $_BAR->setMessage('Collecting all available transcripts...');
         $_BAR->setProgress(0);
 

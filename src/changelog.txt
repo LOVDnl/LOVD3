@@ -42,6 +42,8 @@
    installation, so Curators know who to turn to for help.
  * Fixed bug; Variants with many genes associated with it could not be edited,
    because MySQL applied a limit to the length of the gene list.
+ * Fixed bug; The variant mapper sometimes didn't return any RNA or Protein
+   prediction.
 
 
 /**************************

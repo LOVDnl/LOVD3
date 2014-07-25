@@ -599,7 +599,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             // Prepare values.
             $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['effect_concluded'] : substr($_SETT['var_effect_default'], -1));
 
-            $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
+            require ROOT_PATH . 'class/soap_client.php';
+            $_Mutalyzer = new LOVD_SoapClient();
             try {
                 // NM is chosen at random, but we need to provide one just so we can get to the variant type.
                 $oOutput = @$_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']))->mappingInfoResult;
@@ -1311,7 +1312,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                 require ROOT_PATH . 'inc-lib-actions.php';
                 require ROOT_PATH . 'inc-lib-genes.php';
-                $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl', array('features' => SOAP_SINGLE_ELEMENT_ARRAYS));
+                require ROOT_PATH . 'class/soap_client.php';
+                $_Mutalyzer = new LOVD_SoapClient();
 
                 $aIupacTable = array(
                     'A' => array('A'),
@@ -1766,9 +1768,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         try {
                                             // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
                                             $aTranscripts = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $aGenesChecked[$sSymbol]['refseq_UD'], 'geneName' => $sSymbol))->getTranscriptsAndInfoResult->TranscriptInfo;
-                                            if (!is_array($aTranscripts)) {
-                                                $aTranscripts = array($aTranscripts);
-                                            }
                                         } catch (SoapFault $e) {
                                             // 2014-06-25; Can fail with no proper reason; for now, don't die on this error.
                                             // lovd_soapError($e);
@@ -2345,7 +2344,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 $_POST['statusid'] = STATUS_MARKED;
             }
 
-            $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl', array('features' => SOAP_SINGLE_ELEMENT_ARRAYS));
+            require ROOT_PATH . 'class/soap_client.php';
+            $_Mutalyzer = new LOVD_SoapClient();
             if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
                 $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type', 'mapping_flags'));
                 try {
@@ -2795,7 +2795,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
             $aNewTranscripts = array();
             $aToRemove = array();
             $aVariantDescriptions = array();
-            $_Mutalyzer = new SoapClient($_CONF['mutalyzer_soap_url'] . '?wsdl');
+            require ROOT_PATH . 'class/soap_client.php';
+            $_Mutalyzer = new LOVD_SoapClient();
             $aGenesUpdated = array();
 
             foreach ($_POST['transcripts'] as $nTranscript) {
@@ -2811,11 +2812,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                             $oOutput = $_Mutalyzer->numberConversion(array('build' => $_CONF['refseq_build'], 'variant' => 'chr' . $zData['chromosome'] . ':' . $zData['VariantOnGenome/DNA'], 'gene' => $zTranscript['geneid']))->numberConversionResult;
                         } catch (Exception $e) {}
                         if (isset($oOutput) && isset($oOutput->string)) {
-                            if (is_array($oOutput->string)) {
-                                $aVariantDescriptions[$zTranscript['geneid']] = $oOutput->string;
-                            } else {
-                                $aVariantDescriptions[$zTranscript['geneid']] = array($oOutput->string);
-                            }
+                            $aVariantDescriptions[$zTranscript['geneid']] = $oOutput->string;
                         } else {
                             $aVariantDescriptions[$zTranscript['geneid']] = array();
                         }
