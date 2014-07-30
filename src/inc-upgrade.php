@@ -376,6 +376,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN effectid TINYINT(2) UNSIGNED ZEROFILL',
                      'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN effectid TINYINT(2) UNSIGNED ZEROFILL',
                  ),
+                 '3.0-10d' =>
+                 array(
+                     'ALTER TABLE ' . TABLE_CONFIG . ' MODIFY COLUMN mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "https://mutalyzer.nl/services"',
+                     'UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url = "https://mutalyzer.nl/services" WHERE mutalyzer_soap_url = "http://www.mutalyzer.nl/2.0/services"',
+                 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

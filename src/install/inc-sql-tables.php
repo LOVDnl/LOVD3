@@ -637,7 +637,7 @@ $aTableSQL =
     proxy_username VARCHAR(255) NOT NULL,
     proxy_password VARCHAR(255) NOT NULL,
     logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD3_logo145x50.jpg",
-    mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "http://www.mutalyzer.nl/2.0/services",
+    mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "https://mutalyzer.nl/services",
     omim_apikey VARCHAR(40) NOT NULL,
     send_stats BOOLEAN NOT NULL,
     include_in_listing BOOLEAN NOT NULL,
