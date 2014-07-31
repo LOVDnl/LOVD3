@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2014-07-25
+ * Modified    : 2014-07-31
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -278,6 +278,11 @@ if (!empty($_GET['variantid'])) {
 // Automatic mapping of variants in the background (not a specifically requested variant).
 } elseif ($_SESSION['mapping']['todo'] > 0) {
     // Randomly select some adjacent variants that await mapping.
+    // But when a position is given, focus on that (starting) position first.
+    $aArgs = array();
+    if (!empty($_GET['position']) && preg_match('/^chr([0-9A-Z]{1,2}):(\d+)$/', $_GET['position'], $aRegs)) {
+        $aArgs = array($aRegs[1], $aRegs[2]);
+    }
     // Order by RAND() takes >1s with 1M variants, so no random pick when more than 10K variants.
     // Nonetheless, with 2M variants, this Q shows up in the slow log thousands of times.
     $aVariants = $_DB->query('SELECT id, vog.chromosome, vog.position_g_start, position_g_end, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
@@ -285,14 +290,15 @@ if (!empty($_GET['variantid'])) {
                                  'SELECT chromosome, position_g_start ' .
                                  'FROM ' . TABLE_VARIANTS . ' ' .
                                  'WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' AND position_g_start IS NOT NULL ' .
+                                 (empty($aArgs)? '' : 'AND chromosome = ? AND position_g_start >= ? ') .
                                  ($_SESSION['mapping']['todo'] > 10000? '' : 'ORDER BY RAND() ') .
                                  'LIMIT 1' .
                              ') AS first ' .
                              'WHERE vog.chromosome = first.chromosome AND vog.position_g_start BETWEEN first.position_g_start AND first.position_g_start + ' . $nRange . ' ' .
                                  'AND mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' ' .
                              'ORDER BY position_g_start ' .
-                             'LIMIT ' . $nMaxVariants
-                             )->fetchAllAssoc();
+                             'LIMIT ' . $nMaxVariants,
+                             $aArgs)->fetchAllAssoc();
 
     if (count($aVariants)) {
         // First flag the variants as MAPPING_IN_PROGRESS.
