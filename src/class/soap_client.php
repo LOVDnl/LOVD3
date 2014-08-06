@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2014-07-25
- * Modified    : 2014-07-25
+ * Modified    : 2014-08-06
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,9 +46,14 @@ class LOVD_SoapClient extends SoapClient {
         // Initiate Soap Client.
         global $_CONF;
 
+        $sHostname = parse_url($_CONF['mutalyzer_soap_url'], PHP_URL_HOST);
+        // Mutalyzer's Apache server doesn't like SSL requests coming in through a proxy, if these settings are not configured.
+        // The new Mutalyzer server (scheduled to be released in September, 2014) does not have this issue, but still works with these settings enabled.
+        $oContext = stream_context_create(array('ssl' => array('allow_self_signed' => 1, 'SNI_enabled' => 1, 'SNI_server_name' => $sHostname)));
         $aOptions =
             array(
                 'features' => SOAP_SINGLE_ELEMENT_ARRAYS, // Makes sure we ALWAYS get an array back, even if there is just one element returned (saves us a lot is_array() checks).
+                'stream_context' => $oContext,
             );
         if ($_CONF['proxy_host']) {
             $aOptions = array_merge($aOptions, array(
