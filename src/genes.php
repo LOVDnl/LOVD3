@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2014-07-25
+ * Modified    : 2014-08-06
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -171,8 +171,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             } else {
                 // Gene Symbol must be unique.
                 // Enforced in the table, but we want to handle this gracefully.
-                $sSQL = 'SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?';
-                $aSQL = array($_POST['hgnc_id'], $_POST['hgnc_id']);
+                // When numeric, we search the id_hgnc field. When not, we search the id (gene symbol) field.
+                $sSQL = 'SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id' . (!ctype_digit($_POST['hgnc_id'])? '' : '_hgnc') . ' = ?';
+                $aSQL = array($_POST['hgnc_id']);
 
                 if ($_DB->query($sSQL, $aSQL)->fetchColumn()) {
                     lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation.');

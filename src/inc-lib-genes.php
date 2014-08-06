@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2014-06-11
+ * Modified    : 2014-08-06
  * For LOVD    : 3.0-11
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -88,7 +88,8 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
     $aOutput = lovd_php_file($sURL, false, '', 'Accept: application/json');
     if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
         if (!empty($aOutput['response']['numFound'])) {
-            $nHGNCID = $aOutput['response']['docs'][0]['hgnc_id'];
+            // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
+            $nHGNCID = preg_replace('/[^0-9]+/', '', $aOutput['response']['docs'][0]['hgnc_id']);
         } else {
             // Not found, previous symbol of...?
             $sURL = str_replace('/symbol/', '/prev_symbol/', $sURL);
@@ -96,7 +97,9 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
             if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
                 if (!empty($aOutput['response']['numFound'])) {
                     if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
-                        $nHGNCID = $aOutput['response']['docs'][0]['hgnc_id'];
+                        // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
+                        $nHGNCID = preg_replace('/[^0-9]+/', '', $aOutput['response']['docs'][0]['hgnc_id']);
+                        return lovd_getGeneInfoFromHGNC ($nHGNCID, $bRecursion);
                     } elseif (function_exists('lovd_errorAdd')) {
                         $sSymbols = '';
                         for ($i = 0; $i < $aOutput['response']['numFound']; $i ++) {
@@ -112,7 +115,9 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
                     if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
                         if (!empty($aOutput['response']['numFound'])) {
                             if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
-                                $nHGNCID = $aOutput['response']['docs'][0]['hgnc_id'];
+                                // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
+                                $nHGNCID = preg_replace('/[^0-9]+/', '', $aOutput['response']['docs'][0]['hgnc_id']);
+                                return lovd_getGeneInfoFromHGNC ($nHGNCID, $bRecursion);
                             } elseif (function_exists('lovd_errorAdd')) {
                                 $sSymbols = '';
                                 for ($i = 0; $i < $aOutput['response']['numFound']; $i ++) {
@@ -212,6 +217,9 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
             $aGene[$sCol] = $aGene[$sCol][0];
         }
     }
+
+    // 2014-08-06; 3.0-11; HGNC ID suddenly got a prefix, removing the prefix.
+    $aGene['hgnc_id'] = preg_replace('/[^0-9]+/', '', $aGene['hgnc_id']);
 
     return $aGene;
 }

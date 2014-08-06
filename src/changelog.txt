@@ -44,6 +44,8 @@
    because MySQL applied a limit to the length of the gene list.
  * Fixed bug; The variant mapper sometimes didn't return any RNA or Protein
    prediction.
+ * Due to the HGNC changing their REST webservice output format, there were pro-
+   blems with creating multiple genes starting from Thursday, July 31th.
 
 
 /**************************
