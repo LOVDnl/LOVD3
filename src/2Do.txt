@@ -6,20 +6,39 @@ Check changelog and release date in it (and don't use "mutation") && inc-upgrade
 Commit, svn update, svn log, create svn tag.
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
+Update download.php, news.php, package_update.php. Update trac. Update Facebook.
+
+Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /antwerpen/ heeft aangepaste .htaccess.
-/shared/ heeft een aangepaste class/template.php.
+/shared/ heeft een aangepaste class/graphs.php en class/template.php.
 /VKGL/ heeft aangepaste .htaccess.
 /whole_genome/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
+After updating all installations, send email to team with all improvements summarized.
 
 Prioritize:
 ===========
+- Genen lijst apart laten genereren, cache van een minuut? Of huidig gen meesturen, zodat refresh als zelf gen aangemaakt?
+  Of misschien gewoon een file die opnieuw gegenereerd wordt, als er een gen wordt toegevoegd of verwijderd?
+  Toch hier misschien nog even heel goed over nadenken...
+- Import, VOG met VOT, DBID die wordt uitgedeeld is toch van chr, niet van gen (2014-02-03).
++ IndividualID in screening in phenotype sections zijn niet verplicht, query crasht met insert.
+- Probleem met username in het Re-site veld; browser kiest eerste veld voor het password veld. Zet daar een veld met random name en style=display:none. Anders type=hidden.
+- Reading frame checker porten, zou niet zo veel werk moeten zijn nu.
+- Waarom kan deze variant niet handmatig gemapped worden?
+  http://databases.lovd.nl/shared/variants/0000021573?edit#23851,23850
+- DBID met 6 nullen: foutmelding is een beetje vaag (alsof hij het wel gaat accepteren, maar toch niet). Moet dit niet gewoon altijd kunnen?
+- Fix HGNC probleem correct? Gebruik oude functie niet meer?
 - Import / update laten werken. Nieuwe data toevoegen mag, andere velden veranderen is max 1 veld per entry wijzigen, voor de zekerheid.
+- Ziekte: + description en alias, maar wat doen we met die alias?
 - Editing preg_pattern voor kolom, LOVD geeft waarschuwing tijdens het editen dat het lang gaat duren (WGS install), terwijl het geen alter table nodig heeft.
+- Het updaten van de update status van de shared LOVD3 duurt echt, echt, heel lang... (minuten)
+  Kwam door de enorme hoeveelheid genen, als ik me niet vergis...
+- RNA/Protein prediction: variant over gehele gen geeft p.0? maar als 't een dup is, slaat dat nergens op.
+- Phenotype entries toewijzen aan andere aandoening (aanvraag Johan).
 - Berekende WGS frequentie ook in VLs?
 - Age cols: allow hours also.
 - NRs en NXs horen geen protein description te hebben.
-- LOVD2: als je eenmaal gelocked bent, zegt ie dat je naar de manager moet. je krijgt dan geen link meer om je eigen password te resetten. Doet LOVD3 dat ook zo?
 - Als we voor een bepaalde patient slechts 100 varianten hebben o.i.d., check met een query welke cols uit moeten staan omdat de geselecteerde genen ze niet hebben, en verberg die cols.
 - !!! Nieuw overzicht: individual met alle phenotype kolommen
 - Position_c_start & position_c_end staan in de volgorde op 't genoom; dus voor antisense genen in de niet-oplopende volgorde, dus niet correct vergeleken met de c. nomenclatuur. Willen we dat?!!??
@@ -38,13 +57,11 @@ Prioritize:
     Correct zou zijn:
     "1	00	Mapped 0% of 1982330 variants"
 - Optimalisatie in VL: als een view traag WORDT (dus niet was!), hoe vangen we dat dan op? En andersom? Maak settings instelbaar!
-- LOVD site: index_list: genen uniek maken?
 - Merge code from Peikuan?
 - Kaart maken met LOVD gebruikers voor op de site? We hebben dan "stad, land" nodig per curator en/of submitter (submitter = ander kleurtje), en deze moeten gemapped worden op een geographische lokatie.
   Daarvoor kun je gebruiken: https://developers.google.com/maps/documentation/geocoding/index?hl=nl
   Voor de kaart zelf: google "google maps with markers". Zie ook Decipher website.
 - Link naar VariOtator van Gerard? Heeft nu ook "suggesties voor annotatie voor function and structure".
-- Doe iets met HVP status? Johan: kun je er niet een opvallende ster (geel of zo) van maken waarvoor je uitlegt krijg als je er op klikt?
 - LOVD will move to use NGs and LRGs as much as possible for transcript information and the name checker, to reduce the use of UD slices.
   + Als iemand dan wil overstappen, controleren of alle huidig gekozen transcripten wel in die genomische referentie sequentie voorkomen!
 - Pedigree tree: finish and implement. Mark currently selected individual with asterisk? Perhaps implement more icons?
@@ -92,7 +109,6 @@ Prioritize:
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
 - Updated date van genen klopt niet (variant map, screening add/edit/delete, phenotype?, individual).
 - Het is niet duidelijk, hoe een variant aan een bestaande individu toe te voegen (moet dus via screening). Dat moet duidelijk gemaakt worden.
-- Individual VE: Niet VOG, maar VOG+VOT tonen (Ammar Husami zit r echt op te wachten)
 - VCF importer:
   + Negeer varianten zonder frequency (het huidige sample heeft 'm niet, andere samples wel).
   + Voor multi-sample files, geef aan welke sample je wilt importeren. Dat scheelt gebruikers veel werk.
@@ -110,8 +126,6 @@ Prioritize:
 - Curator mag geen cols zien van disease 0, foutmelding: je moet curator zijn.
   + Disease healthy kan niet beheerd worden (kolommen inzien, hersorteren e.d.)?
 - Als David Baux zijn scripts klaar zijn, mergen met trunk.
-- Na het uploaden van de head1000 VCF file, kreeg ik een wit scherm (geen individual data gesubmit).
-  + Ik kan dit niet bevestigen op mijn LUMC install.
 - (@Ivo) Row Link probleem:
   + Every object needs a variable, indicating where the rowlink needs to be implemented as an HTML anchor; id_ == default.
     * Currently, Object::prepareData() puts the link in every id_ column it can find.
@@ -319,8 +333,6 @@ Prioritize:
 - Als send_stats uit staat, heeft include_in_listing weinig zin...
 - Gene removed, refseq files deleted?
 - Unit tests via Selenium (student?)
-- Hebben we OpenSSL ergens voor nodig?
-  + http mutalyzer contact als zelf in https???
 - Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
@@ -357,7 +369,6 @@ Prioritize:
 - Newline in naam submitter bij register -> Header injection??? Waar hiertegen beschermen? In objects.php, dat in normale text velden geen newlines mogen zitten?
   * Maar ook met dubbele quotes in de naam gaat mis; speciaal dit veld opschonen of meer? Hoe?
 - Delete user alleen permanent, wanneer hij geen data heeft?
-- LOVD 3.0 heeft libxml nodig voor REST2SOAP, én we zitten nu op PHP >= 5.1.0, hebben we dan wellicht niet sowieso extra interessante mogelijkheden?
 - Ensemble gene ID opslaan en leiden naar: http://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000073734
 - Het is niet duidelijk wat object_id nu precies is (gene symbol of disease id, bedoeld om te bepalen welke cc actief zijn)
   - Ook id is niet echt duidelijk (dit is eigenlijk de foreign key van de entry (variantid, individualid), bedoeld om te bepalen welke cc actief zijn)
@@ -371,7 +382,6 @@ Prioritize:
 - Variant/allele -> Variant/Phase?
 - In individual viewList: lijst genen meest gemuteerd?
 - Als account gelocked wordt, moet er naar de gebruiker die gelocked is, gemailed worden.
-- Raar: /genes/DMD?authorize -> click alle users aan -> resort viewList.
 - Use uniqid() ipv lovd_generateRandomID()?
 - Deinstalleren moet gewoon altijd werken. Als de foutmelding "foreign key constraint fails" opduikt bij het removen, moet LOVD gewoon opnieuw proberen of misschien in een andere (random??) volgorde of misschien de tabel die de fout triggered achteraan zetten en opnieuw proberen.
 - Geheugengebruik hoog vanwege session: Ook fix nodig voor viewList data? Blijft ook hangen.
@@ -380,9 +390,6 @@ Prioritize:
   * Dan op een bepaalde manier de curator van op de hoogte stellen?
   * Bij gebruik LRG webservice: Pontus: "Should a key be leaked or stolen in a way so that it is misused, we may need to reserve the right to ban that key. In that case, you would perhaps want to implement some way of redistributing new keys to the LOVD installations..."
     Me: "I see - in that case I can't hard-code it in, but need to store it in the database somewhere. However, anyone wanting to abuse the system could easily find out the new key. So if somebody really does want to do harm, it's quite impossible to lock them out *without* locking LOVDs out, unless you would introduce per-LOVD keys and match each key with a certain IP address..."
-- (@Ivo) De Oostenrijkse DB sluit:
-  http://grenada.lumc.nl/LSDB_list/lsdb.php?action=view_all&symbol_start=DHCR7
-  (zie email van 9 jan)
 - De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
 - Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - API.
@@ -438,8 +445,6 @@ From LOVD 2.0:
 - Submitter er aan herinneren, dat zij consent moeten hebben voor het opslaan van deze data, tenzij de data publiek is (papers)?
 - Christophe Beroud: UMD predictor doet het beter dan SIFT, Polyphen en Mutation Taster.
 - Mauno: PONP doet het beter dan SIFT en Polyphen.
-- Goede check of http://zwarterita/mutalyzer/services en http://www.mutalyzer.nl/2.0/services hetzelfde teruggeven?
-  + Wellicht makkelijker te implementeren dan checken of alle LOVD features nog werken.
 - /users/ORCiD ?
 - Fix de VCF importer, zodat die VCF 3.3 ook aan kan?
 - Entrez ID && OMIM ID: Johan: als er nog geen ID is maar wel komt kan ik die ook niet handmatig toevoegen. Hoe komt die er dan ooit in, automatisch?
