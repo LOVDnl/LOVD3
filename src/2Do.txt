@@ -7,11 +7,15 @@ Commit, svn update, svn log, create svn tag.
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
+/antwerpen/ heeft aangepaste .htaccess.
 /shared/ heeft een aangepaste class/template.php.
+/VKGL/ heeft aangepaste .htaccess.
 /whole_genome/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 
 Prioritize:
 ===========
+- Import / update laten werken. Nieuwe data toevoegen mag, andere velden veranderen is max 1 veld per entry wijzigen, voor de zekerheid.
+- Editing preg_pattern voor kolom, LOVD geeft waarschuwing tijdens het editen dat het lang gaat duren (WGS install), terwijl het geen alter table nodig heeft.
 - Berekende WGS frequentie ook in VLs?
 - Age cols: allow hours also.
 - NRs en NXs horen geen protein description te hebben.
@@ -22,6 +26,9 @@ Prioritize:
 - in_gene combineren met scr2var, screenings, individuals en ind2dis net zoals de full data view?
 - c.100+?_101-?del wordt verkeerd vertaald naar c.100_101del als je op het formulier op Map variant klikt!!! dit, terwijl mutalyzer hier goed mee om lijkt te gaan...
 - Variant overzicht mag dan wel meevallen, maar variant overzicht op individual pagina of onder screening pagina is absurd traag.
+  Dat komt niet door de query zelf (dat is opgelost), maar door de custom cols (komt door het aantal genen misschien?):
+  SELECT c.id, c.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM lovd_stress_active_columns AS ac INNER JOIN lovd_stress_columns AS c ON (c.id = ac.colid) LEFT OUTER JOIN lovd_stress_shared_columns AS sc ON (sc.colid = ac.colid) WHERE ((c.id NOT LIKE "VariantOnTranscript/%" AND c.public_view = 1) OR sc.public_view = 1) AND (c.id LIKE 'VariantOnGenome/%' OR c.id LIKE 'Scr2Var/%' OR c.id LIKE 'VariantOnTranscript/%') GROUP BY c.id ORDER BY col_order
+  i.c.m. PHP processing time, waarschijnlijk.
 - 2013-03-06 Had random logouts while mapping and preparing my release for 3.0-03, but they disappeared and I could not find a connection, seemed total random. $_SESSION was intact, but $_SESSION['auth'] was gone.
   + 2013-05-03 Exactly same here on whole_genome installation, helft ingeladen, tijdens mappen verdwijnt auth randomly; maar een refresh brengt 'm soms terug... !@#!@$!!#
     Mapper zei dan ook, dat hij klaar was... terwijl in een andere tab hij nog bezig was. Mapper resultaten slaan dan nergens op:
@@ -53,7 +60,8 @@ Prioritize:
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
 - Unique variants (Ammar Husami, Anne Polvi). Met counts, waar op gezocht en gesorteerd kan worden.
   + Zoeken met WHERE of HAVING? Eerst WHERE (met waarschuwing), later HAVING?
-- Implement an HGNC mirror.
+- Implement an HGNC mirror (student project?)
+  + REST API can still be used I guess, but a raw download would be useful for at least variants.php, which downloads a full copy.
 - RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
   + Als hele codon wordt vervangen, kan p.(=) ook gebeuren, zonder dat de RNA r.(=) kan zijn.
   + Alleen als in intron en p.(=), r.(=) geven. Anders altijd r.(?) ?
@@ -77,6 +85,8 @@ Prioritize:
 - Handling ORCID ID:
   + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
   + reset password met orcid id!
+  + Nieuwe API ondersteunt login mogelijkheden?
+  + (student / medewerker?)
 - Download/all/mine gebruikt te veel geheugen, niet alles laten prefetchen!
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
@@ -201,7 +211,6 @@ Prioritize:
   - Add option to report registration as spam? Then we need to store IP address? Or track registration event log?
   - Submit a variant that has already been reported (zoals in LOVD 2.0 met auto complete, of viewList?)
   - Een ingelogde gebruiker hoort een grote melding te zien dat er stored submissions zijn, en hij hoort deze te kunnen bekijken.
-    + Sowieso moeten submissies bekeken kunnen worden; "My submissions", zoals in LOVD 2.0.
   - (@Ivar) Als Mutalyzer van een variant de posities niet kan isoleren, gebruik dan de fallback LOVD 2.0 code.
   - (@Ivar) Fix transcript position numbers (change code gene create, verzin manier om alle waardes weg te gooien en opnieuw te berekenen)
     + Hierna kan de transcript ViewList voor nieuwe VOT op bestaande VOG specifieker worden geselecteerd.
@@ -309,7 +318,7 @@ Prioritize:
 - VOT/Published_as is op zich niet nodig als VOG/Published_as is toegevoegd. Hier dan ook een stokje voor steken?
 - Als send_stats uit staat, heeft include_in_listing weinig zin...
 - Gene removed, refseq files deleted?
-- Unit tests via Selenium (of alternatief)?
+- Unit tests via Selenium (student?)
 - Hebben we OpenSSL ergens voor nodig?
   + http mutalyzer contact als zelf in https???
 - Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
@@ -327,7 +336,10 @@ Prioritize:
             nog wel gewoon kunt bekijken? Met als resultaat dat de variant informatie publiekelijk beschikbaar is, maar dat het niet te herleiden
             is naar de Individual in kwestie.
     * Ivo: Is afhankelijk van in hoeverre de individu informatie toch nog moet worden getoond.
+- Atom update feed (student project?).
+- Follow variant? (student project?).
 - Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)
+  + Student project?
   + Ook support mededelingen: voor versies alpha-01 t/m alpha-10 het bericht dat alpha niet meer ondersteund wordt, dus je moet upgraden. Of voor alle installs op onze server (signature check): downtime dan en dan. Op versie of op signature??? Zoiets.
   + Ook instellen per user level (submitter, curator, manager, db admin).
   + Na het inloggen, indien er een update is, een tooltip weergeven rechtsonder dat er een update is! Niet de hele tijd dus, alleen nadat je net bent ingelogd.

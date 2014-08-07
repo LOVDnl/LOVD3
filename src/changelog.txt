@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 11 (r4..)
- * 2014-0.-..
+ * 3.0 Build 11 (r463)
+ * 2014-08-07
  *********/
  * Checkbox values are now checked properly when importing data.
  * Fixed bug; DB-IDs created for genes containing a hyphen followed by a number,
@@ -46,6 +46,8 @@
    prediction.
  * Due to the HGNC changing their REST webservice output format, there were pro-
    blems with creating multiple genes starting from Thursday, July 31th.
+ * Rewrote all communication with Mutalyzer to the new standard, which will be
+   required starting from the next Mutalyzer release, planned in September 2014.
 
 
 /**************************
