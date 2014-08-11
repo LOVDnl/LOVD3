@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2014-06-16
- * For LOVD    : 3.0-11
+ * Modified    : 2014-08-11
+ * For LOVD    : 3.0-12
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -157,7 +157,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                         list($nPosStart, $nPosEnd) = $_DB->query('SELECT position_g_start, position_g_end FROM ' . TABLE_VARIANTS . ' WHERE id = ?', array($this->nOtherID))->fetchRow();
                         // Specific modifications for this overview; distance between variant and transcript in question.
                         if ($nPosStart && $nPosEnd) {
-                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'IF(t.position_g_mrna_start > ' . $nPosEnd . ', t.position_g_mrna_start - ' . $nPosEnd . ', IF(t.position_g_mrna_end < ' . $nPosStart . ', ' . $nPosStart . ' - t.position_g_mrna_start, 0)) AS distance_to_var';
+                            // 2014-08-11; 3.0-12; Transcripts on the reverse strand did not display the correctly calculated distance.
+                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'IF(t.position_g_mrna_start < t.position_g_mrna_end, IF(t.position_g_mrna_start > ' . $nPosEnd . ', t.position_g_mrna_start - ' . $nPosEnd . ', IF(t.position_g_mrna_end < ' . $nPosStart . ', ' . $nPosStart . ' - t.position_g_mrna_start, 0)), IF(t.position_g_mrna_end > ' . $nPosEnd . ', t.position_g_mrna_end - ' . $nPosEnd . ', IF(t.position_g_mrna_start < ' . $nPosStart . ', ' . $nPosStart . ' - t.position_g_mrna_end, 0))) AS distance_to_var';
                         } else {
                             $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . '"?" AS distance_to_var';
                         }
