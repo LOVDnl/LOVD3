@@ -10,6 +10,11 @@
  *********/
  * Fixed bug; When manually mapping a variant to a transcript, transcripts on
    the reverse strand did not display the correctly calculated distance.
+ * Fixed bug; The number of non-public variants, shown on the gene homepage, was
+   always set to 0 for the public users, while it was meant to show the public
+   whether a gene database is really empty or not.
+ * Fixed bug; When no individuals with public variants are stored, the field for
+   this value on the gene homepage was empty, instead of showing a 0.
 
 
 /**************************
