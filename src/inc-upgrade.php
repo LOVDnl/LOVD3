@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2014-06-16
- * For LOVD    : 3.0-11
+ * Modified    : 2014-08-26
+ * For LOVD    : 3.0-12
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -380,6 +380,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  array(
                      'ALTER TABLE ' . TABLE_CONFIG . ' MODIFY COLUMN mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "https://mutalyzer.nl/services"',
                      'UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url = "https://mutalyzer.nl/services" WHERE mutalyzer_soap_url = "http://www.mutalyzer.nl/2.0/services"',
+                 ),
+                 '3.0-11b' =>
+                 array(
+                     'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_gene", "http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}")',
                  ),
              );
 
