@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-07-25
- * For LOVD    : 3.0-11
+ * Modified    : 2014-08-19
+ * For LOVD    : 3.0-12
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -1877,7 +1877,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                     $sDNAVOT = str_replace(array('a>', 'c>', 'g>', 't>'), array('T>', 'G>', 'C>', 'A>'), strtolower($sDNAVOT));
                                                     $sDNAVOT = str_replace(array('>a', '>c', '>g', '>t'), array('>T', '>G', '>C', '>A'), $sDNAVOT);
                                                 }
-                                                $aNumberConversion[$j][] = array('v' => $sNM . ':' . $sDNAVOT);
+                                                $aNumberConversion[$j][] = $sNM . ':' . $sDNAVOT;
                                             }
                                         }
 

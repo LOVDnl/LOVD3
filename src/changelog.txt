@@ -17,6 +17,9 @@
    this value on the gene homepage was empty, instead of showing a 0.
  * When the Entrez Gene ID is available, the Gene homepage now shows a link to
    PubMed, showing articles manually linked to the gene by the NCBI staff.
+ * Fixed bug; The SeattleSeq importer caused errors and warnings when trying to
+   generate a variant's description by itself, due to the recent changes to the
+   Mutalyzer interface.
 
 
 /**************************
