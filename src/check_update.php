@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2013-05-30
- * For LOVD    : 3.0-05
+ * Modified    : 2014-09-19
+ * For LOVD    : 3.0-12
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -117,13 +117,9 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         // Send gene edit dates, curator names, emails & institutes as well.
         // This is not very efficient, but for something done once a day (max) it will do.
         $aData = array('genes' => array(), 'users' => array(), 'diseases' => array());
-        $aUserIDs = array(); // Temporary array for query purposes only.
-        $aDiseaseIDs = array(); // Temporary array for query purposes only.
 
         // First, get the gene info (we store name, diseases, date last updated and curator ids).
         $q = $_DB->query('SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1 AND u2g.show_order > 0) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 GROUP BY g.id ORDER BY g.id', array());
-        // FIXME; This loop here causes an enourmous delay; some 3-4 minutes with 22K genes. All other code is quick and fine.
-        //   It's probably a combination between the 22K times fetchAssoc() and array_merge().
         while ($z = $q->fetchAssoc()) {
             $aData['genes'][$z['id']] =
                      array(
@@ -131,28 +127,18 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
                             'diseases' => explode(',', $z['diseases']),
                             'updated_date' => $z['updated_date'],
                             'curators' => explode(',', $z['users']));
-            $aUserIDs = array_merge($aUserIDs, explode(',', $z['users']));
-            if ($z['diseases']) {
-                $aDiseaseIDs = array_merge($aDiseaseIDs, explode(',', $z['diseases']));
-            }
         }
-        $aUserIDs = array_values(array_unique($aUserIDs)); // Keys must be in order, otherwise PDO returns a query error.
-        $aDiseaseIDs = array_values(array_unique($aDiseaseIDs)); // Keys must be in order, otherwise PDO returns a query error.
 
         // Then, get the actual curator data (name, email, institute).
-        if ($aUserIDs) {
-            $q = $_DB->query('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' WHERE id IN (?' . str_repeat(', ?', count($aUserIDs)-1) . ') ORDER BY id', $aUserIDs, false);
-            while ($z = $q->fetchAssoc()) {
-                $aData['users'][$z['id']] = array('name' => $z['name'], 'email' => $z['email'], 'institute' => $z['institute']);
-            }
+        $q = $_DB->query('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' AS u INNER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.allow_edit = 1 AND u2g.show_order != 0 ORDER BY u.id', array(), false);
+        while ($z = $q->fetchAssoc()) {
+            $aData['users'][$z['id']] = array('name' => $z['name'], 'email' => $z['email'], 'institute' => $z['institute']);
         }
 
         // Finally, get the actual disease data (ID, symbol, name).
-        if ($aDiseaseIDs) {
-            $q = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($aDiseaseIDs)-1) . ') ORDER BY id', $aDiseaseIDs, false);
-            while ($z = $q->fetchAssoc()) {
-                $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
-            }
+        $q = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ORDER BY d.id', array(), false);
+        while ($z = $q->fetchAssoc()) {
+            $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
         }
         $sData = serialize($aData);
         $sPOSTVars .= '&data=' . rawurlencode($sData);

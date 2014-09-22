@@ -20,6 +20,8 @@
  * Fixed bug; The SeattleSeq importer caused errors and warnings when trying to
    generate a variant's description by itself, due to the recent changes to the
    Mutalyzer interface.
+ * Fixed bug; The update checker could in large installations take a few minutes
+   to complete if statistics were shared; greatly improved the speed.
 
 
 /**************************
