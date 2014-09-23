@@ -5,7 +5,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2014-08-26
+ * Modified    : 2014-09-23
  * For LOVD    : 3.0-12
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -384,6 +384,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-11b' =>
                  array(
                      'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_gene", "http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}")',
+                 ),
+                 '3.0-11c' =>
+                 array(
+                     'UPDATE ' . TABLE_COUNTRIES . ' SET name = "Libya" WHERE id = "LY" AND name = "Libyan Arab Jamahiriya"',
+                     'UPDATE ' . TABLE_COUNTRIES . ' SET name = "Saint Helena, Ascension and Tristan da Cunha" WHERE id = "SH" AND name = "Saint Helena"',
+                     'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("SS", "South Sudan")',
                  ),
              );
 
