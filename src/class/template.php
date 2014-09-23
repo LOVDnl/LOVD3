@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2013-11-29
+ * Modified    : 2014-09-17
  * For LOVD    : 3.0-09
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -196,7 +196,7 @@ class LOVD_Template {
                     );
 
         // Remove certain menu entries, if the user has no access to them.
-        // FIXME; Can't we foreach() through everything and, if all links from a manu item are removed, then also remove the item itself?
+        // FIXME; Can't we foreach() through everything and, if all links from a menu item are removed, then also remove the item itself?
         if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
             unset($this->aMenu['users'], $this->aMenu['users_']); // FIXME; Submitter list should be public.
             unset($this->aMenu['setup'], $this->aMenu['setup_']);
@@ -310,7 +310,7 @@ class LOVD_Template {
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  &copy;2004-2013 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  &copy;2004-2014 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">

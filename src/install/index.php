@@ -395,7 +395,7 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
         // Please note that in LOVD 2.0 this risk is more significant, since LOVD 2.0 creates new tables for every new gene (variants, columns). LOVD 3.0 does not do that.
         // Therefore, this risk is quite minimal and can only occur when upgrading LOVD 3.0 to a new build with new functionality and more database tables.
         print('      There ' . ($nTablesMatched == 1? 'is a possibly interfering table' : 'are ' . $nTablesMatched . ' possibly interfering tables') . ' found!<BR>' . "\n" .
-              '      <B>Tables with names starting with the same prefix as the LOVD tables may interfere with LOVD at a later stage, if LOVD whishes to create a table with that name.</B><BR>' . "\n" .
+              '      <B>Tables with names starting with the same prefix as the LOVD tables may interfere with LOVD at a later stage, if LOVD wishes to create a table with that name.</B><BR>' . "\n" .
               '      I found:<BR>' . "\n" .
               '      - ' . implode("<BR>\n" . '      - ', $aTablesMatched) . "<BR>\n" .
               '      You may want to consider (re)moving th' . ($nTablesMatched == 1? 'is table' : 'ese tables') . '.<BR>' . "\n\n");

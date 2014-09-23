@@ -22,6 +22,7 @@
    Mutalyzer interface.
  * Fixed bug; The update checker could in large installations take a few minutes
    to complete if statistics were shared; greatly improved the speed.
+ * Fixed bug; The custom viewlists didn't align numeric columns to the right.
 
 
 /**************************
