@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2014-07-16
- * For LOVD    : 3.0-11
+ * Modified    : 2014-10-02
+ * For LOVD    : 3.0-12
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -94,9 +94,9 @@ if ($_GET['step'] == 1) {
         } else {
             // Get the UD number from the genes table.
             $_POST['transcript_id'] = $_POST['symbol'];
-            list($_POST['symbol'], $_POST['file'], $_POST['protein_id']) = $_DB->query('SELECT g.id, ' . ($_POST['file'] == 'NC'? 'g.refseq_UD' : 'IF(LEFT(g.refseq_genomic, 2) != "NG", g.refseq_UD, g.refseq_genomic)') . ' AS refseq, t.id_protein_ncbi FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) WHERE t.id_ncbi = ?', array($_POST['symbol']))->fetchRow();
+            list($_POST['symbol'], $sFileID, $_POST['protein_id']) = $_DB->query('SELECT g.id, ' . ($_POST['file'] == 'NC'? 'g.refseq_UD' : 'IF(LEFT(g.refseq_genomic, 2) != "NG", g.refseq_UD, g.refseq_genomic)') . ' AS refseq, t.id_protein_ncbi FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) WHERE t.id_ncbi = ?', array($_POST['symbol']))->fetchRow();
 
-            if (empty($_POST['file']) || empty($_POST['transcript_id']) || empty($_POST['protein_id'])) {
+            if (empty($sFileID) || empty($_POST['transcript_id']) || empty($_POST['protein_id'])) {
                 lovd_errorAdd('symbol', 'This gene or transcript does not seem to be configured correctly, we currently can\'t generate a human-readable reference sequence file using this gene.');
             }
 
@@ -111,10 +111,13 @@ if ($_GET['step'] == 1) {
         if (!lovd_error()) {
             // All fields filled in, go ahead.
             // Read file into an array.
-            $_POST['file'] = (substr($_POST['file'], 0, 2) == 'UD'?
-                str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $_POST['file'] . '.gb' :
-                'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=' . $_POST['file'] . '&rettype=gb');
-            $aGenBank = lovd_php_file($_POST['file']);
+            $sFileID = (substr($sFileID, 0, 2) == 'UD'?
+                str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $sFileID . '.gb' :
+                'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=' . $sFileID . '&rettype=gb');
+            // FIXME: Since Mutalyzer only allows for https communication since Sept 2014, lovd_php_file()'s socket communication doesn't work.
+            // 2014-10-02; 3.0-12; Modified lovd_php_file() to allow http(s) communication through PHP's file() as long as there's allow_url_fopen and no POST.
+            // This is a temporary fix, depends on a PHP setting, and does not work with proxies at the moment (although than can be fixed with providing a context to file()).
+            $aGenBank = lovd_php_file($sFileID);
 
             if (!$aGenBank) {
                 lovd_errorAdd('symbol', 'We couldn\'t retreive the reference sequence file for this gene. Please try again later.');

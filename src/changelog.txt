@@ -24,6 +24,10 @@
    to complete if statistics were shared; greatly improved the speed.
  * Fixed bug; The custom viewlists didn't align numeric columns to the right.
  * Updated the country list with information from wikipedia.org/wiki/ISO_3166-1.
+ * Fixed bug; The reference sequence parser couldn't download files from
+   Mutalyzer anymore due to their recent server update.
+ * Included version 3.0-12 of the official LOVD Reference Sequence Parser
+   script.
 
 
 /**************************
