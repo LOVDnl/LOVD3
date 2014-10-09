@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 12 (r4??)
- * 2014-??-??
+ * 3.0 Build 12 (r480)
+ * 2014-10-09
  *********/
  * Fixed bug; When manually mapping a variant to a transcript, transcripts on
    the reverse strand did not display the correctly calculated distance.
