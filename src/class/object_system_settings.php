@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-10-11
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2014-10-09
+ * For LOVD    : 3.0-12
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -143,7 +143,7 @@ class LOVD_SystemSetting extends LOVD_Object {
 
         // FIXME; Like above, not the best solution, but gets the job done for now.
         if (empty($aData['mutalyzer_soap_url'])) {
-            $_POST['mutalyzer_soap_url'] = 'http://www.mutalyzer.nl/2.0/services';
+            $_POST['mutalyzer_soap_url'] = 'https://mutalyzer.nl/services';
         }
 
         // SSL check.
@@ -262,7 +262,7 @@ class LOVD_SystemSetting extends LOVD_Object {
         $_POST['refseq_build'] = 'hg19';
         $_POST['api_feed_history'] = 3;
         $_POST['logo_uri'] = 'gfx/LOVD3_logo145x50.jpg';
-        $_POST['mutalyzer_soap_url'] = 'http://www.mutalyzer.nl/2.0/services';
+        $_POST['mutalyzer_soap_url'] = 'https://mutalyzer.nl/services';
         $_POST['send_stats'] = 1;
         $_POST['include_in_listing'] = 1;
         $_POST['allow_submitter_mods'] = 1;

@@ -28,6 +28,8 @@
    Mutalyzer anymore due to their recent server update.
  * Included version 3.0-12 of the official LOVD Reference Sequence Parser
    script.
+ * Fixed bug; New LOVD 3.0-11 installations didn't connect to the correct Muta-
+   lyzer webservice, whereas installations upgraded from 3.0-10, did.
 
 
 /**************************

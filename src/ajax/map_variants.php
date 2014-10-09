@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2014-07-31
- * For LOVD    : 3.0-11
+ * Modified    : 2014-10-09
+ * For LOVD    : 3.0-12
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -345,7 +345,8 @@ if (!empty($aVariants)) {
     $aTranscriptData = array();
 
     try {
-        $aTranscriptsWithinRange = $_Mutalyzer->getTranscriptsMapping(array('build' => $_CONF['refseq_build'], 'chrom' => 'chr' . $sChromosome, 'pos1' => $nStart, 'pos2' => $nEnd, 'method' => 1))->getTranscriptsMappingResult->TranscriptMappingInfo;
+        // Can throw notice when TranscriptMappingInfo is not present (when no transcripts are available, for instance).
+        $aTranscriptsWithinRange = @$_Mutalyzer->getTranscriptsMapping(array('build' => $_CONF['refseq_build'], 'chrom' => 'chr' . $sChromosome, 'pos1' => $nStart, 'pos2' => $nEnd, 'method' => 1))->getTranscriptsMappingResult->TranscriptMappingInfo;
     } catch (SoapFault $e) {
         // Call failed, due to network problems, perhaps? Don't run the mapping script now!
         define('MAPPING_NO_RESTART', true);
