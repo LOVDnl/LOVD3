@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2014-02-07
- * For LOVD    : 3.0-10
+ * Modified    : 2014-10-18
+ * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -246,7 +246,7 @@ class LOVD_Disease extends LOVD_Object {
                         'hr',
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
-                        array('OMIM ID', '', 'text', 'id_omim', 10),
+                        array('OMIM ID (optional)', '', 'text', 'id_omim', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to genes (optional)</B>'),
