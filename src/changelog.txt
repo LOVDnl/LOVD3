@@ -5,6 +5,13 @@
  *************/
 
 /**************************
+ * 3.0 Build 13 (r???)
+ * 2014-??-??
+ *********/
+ * Fixed bug; Given parent IDs were not properly checked during import.
+
+
+/**************************
  * 3.0 Build 12 (r480)
  * 2014-10-09
  *********/

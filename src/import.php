@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2014-07-15
- * For LOVD    : 3.0-11
+ * Modified    : 2014-10-18
+ * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1189,7 +1189,7 @@ if (POST) {
             // If not found, it will return the given ID.
             global $aParsed;
 
-            if (isset($aParsed[$sSection]['data'][(int) $nID])) {
+            if (isset($aParsed[$sSection]['data'][(int) $nID]['newID'])) {
                 $nID = $aParsed[$sSection]['data'][(int) $nID]['newID'];
             }
             return $nID;

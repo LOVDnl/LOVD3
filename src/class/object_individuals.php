@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2014-07-15
- * For LOVD    : 3.0-11
+ * Modified    : 2014-10-18
+ * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -192,6 +192,28 @@ class LOVD_Individual extends LOVD_Custom {
 
         // Checks fields before submission of data.
         parent::checkFields($aData);
+
+        foreach (array('fatherid', 'motherid') as $sParentalField) {
+            if (isset($aData[$sParentalField]) && ctype_digit($aData[$sParentalField])) {
+                // FIXME: Also check gender!!! Check if field is available, download value (or '' if not available), then check possible conflicts.
+                // Partially, the code is already written below.
+                $nParentID = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData[$sParentalField]))->fetchColumn();
+                if (empty($nParentID)) {
+                    // FIXME: Once we have this on the form, replace with form description.
+                    lovd_errorAdd($sParentalField, 'No individual found with this \'' . $sParentalField . '\'.');
+                } elseif ($sParentalField == 'fatherid' && false) {
+                    lovd_errorAdd($sParentalField, 'The \'' . $sParentalField . '\' you entered does not refer to a male individual.');
+                } elseif ($sParentalField == 'motherid' && false) {
+                    lovd_errorAdd($sParentalField, 'The \'' . $sParentalField . '\' you entered does not refer to a female individual.');
+                } elseif ($aData[$sParentalField] == $this->nID) {
+                    lovd_errorAdd('panel_size', 'The \'' . $sParentalField . '\' can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual.');
+                }
+            } elseif (!empty($aData[$sParentalField])) {
+                // FIXME: Normally we don't have to check this, because objects.php is taking care of this.
+                // But as long as the field is not defined on the form, there is no check.
+                lovd_errorAdd($sParentalField, 'The \'' . $sParentalField . '\' must contain a positive integer.');
+            }
+        }
 
         if (isset($aData['panelid']) && ctype_digit($aData['panelid'])) {
             $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData['panelid']))->fetchColumn();
