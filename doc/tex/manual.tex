@@ -210,11 +210,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-09}
+\setLOVDversion{3.0-12}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2014-01-15} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2014-10-22} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
   (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
@@ -402,6 +402,7 @@ For the .htaccess file to work, you need to have ``Limit'' and ``Options'' enabl
 
 Also, make sure you have MultiViews or mod\_rewrite enabled.
 This allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.
+The mod\_rewrite rules in the .htaccess file require ``FileInfo'' enabled in Apache's ``AllowOverride'' setting.
 \vspace{1em} % vspace doesn't introduce new \par, therefore no \noindent is needed
 
 More information about .htaccess files:\\
@@ -2646,7 +2647,8 @@ Custom columns are not listed here, since every LOVD installation has different 
 
   A score of 97 means a variant is reported to effect the function of the protein having strong proof, but the curator
    thinks more proof is needed, still accepting there is strong evidence for the variant's effect.
-  All options are:\\
+  All options are:
+  \vskip \baselineskip
 
   \begin{minipage}[t]{3.15cm}
     \begin{tabular}{>{\bfseries}p{0.6cm} p{1.4cm}}
@@ -2753,9 +2755,10 @@ Custom columns are not listed here, since every LOVD installation has different 
   \item[note\_listing] (from section Genes)\hfill \\
   Notes that should appear on gene-specific data listings.
   \item[owned\_by] (from section Individuals, Phenotypes, Screenings and Variants\_On\_Genome)\hfill \\
-  The internal ID of the user that owns this data entry.
+  Optional; The internal ID of the user that owns this data entry.
   Owners are allowed to edit the entry and add new data to the entry.
   Owners are not fixed, and can be re-assigned.
+  When no value is provided during import, this value is set to the user ID of the user importing the data.
   \item[panelid] (from section Individuals)\hfill \\
   Optional; The internal ID of the individual in the database that represents the group to which this individual or group of individuals belong to.
   \item[panel\_size] (from section Individuals)\hfill \\
@@ -2816,7 +2819,7 @@ Custom columns are not listed here, since every LOVD installation has different 
   See also section ``\hyperlink{sec:custom_column_create}{Creating a new custom column}''.
   Default value is 0.
   \item[statusid] (from section Individuals, Phenotypes and Variants\_On\_Genome)\hfill \\
-  This numeric status ID defines if the data is public or not.\\
+  Optional; This numeric status ID defines if the data is public or not.\\
   \begin{tabular}{>{\bfseries}p{0.6cm} p{2.3cm} p{11.7cm}}
     ID & \textbf{Name} & \textbf{Description}\\ \hline \hline
     1 & In progress & \emph{Not used when importing}; data entry is in the process of being submitted\\ \hline
@@ -2825,6 +2828,8 @@ Custom columns are not listed here, since every LOVD installation has different 
     7 & Marked & Data entry is public but marked, shows up as red for authorized users\\ \hline
     9 & Public & Data entry is public\\ \hline
   \end{tabular}
+  \vskip \baselineskip
+  When no value is provided during import, this value is set to `9' (Public).
   \item[symbol] (from section Diseases) \hfill \\
   The disease's abbreviation, preferably the most commonly used one.
   \item[type] (from section Variants\_On\_Genome)\hfill \\
@@ -3179,8 +3184,9 @@ However, for LOVD2 installations, this does not always work, and as such the ext
        c.157 will match c.157+? and c.157\_158 will match c.157+?\_158-?.
        However, c.157 does not match c.157+5.
        Searching on genomic locations can be achieved using g. as a prefix.\\
+       \small{
        \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40699840}
-            {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search\_position=g.40699840}
+            {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search\_position=g.40699840}}\\
   \emph{Genomic position only, exclusive match (only match variants completely within this range)}\\
   \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=exclusive}
        {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
