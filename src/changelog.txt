@@ -11,6 +11,8 @@
  * Fixed bug; Given parent IDs were not properly checked during import.
  * Updated the manual; added detail on installation requirements,  and clarified
    that some extra fields during import are now optional.
+ * Fixed bug; Importing a file with phenotype or screening data without a given
+   individual ID, caused a fatal query error instead of an error message.
 
 
 /**************************

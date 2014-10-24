@@ -3,10 +3,12 @@ Release LOVD?
 Did you run all unit tests?
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
+If bugs have been closed, mark them in the changelog.
 Commit, svn update, svn log, create svn tag.
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
 Update download.php, news.php, package_update.php. Update trac. Update Facebook.
+If bugs have been closed, mark them in the news.
 
 Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
@@ -14,15 +16,18 @@ Update LOVD installations:
 /shared/ heeft een aangepaste class/graphs.php en class/template.php.
 /VKGL/ heeft aangepaste .htaccess.
 /whole_genome/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
+/whole_genome_mirror/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 After updating all installations, send email to team with all improvements summarized.
 
 Prioritize:
 ===========
+- Indicate the parents using the data entry form, not just the import. Also check the given IDs for the correct (at least not conflicting) gender value, and make sure that during import, the ID is first matched to the file (ignoring own line), and then to the database.
+  - Also implement check if given parent is used as both mother and father? Or add check when filling in gender, if it conflicts with used as fatherid/motherid?
+  - Check if motherid and fatherid are the same individual?
 - Genen lijst apart laten genereren, cache van een minuut? Of huidig gen meesturen, zodat refresh als zelf gen aangemaakt?
   Of misschien gewoon een file die opnieuw gegenereerd wordt, als er een gen wordt toegevoegd of verwijderd?
   Toch hier misschien nog even heel goed over nadenken...
 - Import, VOG met VOT, DBID die wordt uitgedeeld is toch van chr, niet van gen (2014-02-03).
-+ IndividualID in screening in phenotype sections zijn niet verplicht, query crasht met insert.
 - Probleem met username in het Re-site veld; browser kiest eerste veld voor het password veld. Zet daar een veld met random name en style=display:none. Anders type=hidden.
 - Reading frame checker porten, zou niet zo veel werk moeten zijn nu.
 - Waarom kan deze variant niet handmatig gemapped worden?
@@ -32,8 +37,6 @@ Prioritize:
 - Import / update laten werken. Nieuwe data toevoegen mag, andere velden veranderen is max 1 veld per entry wijzigen, voor de zekerheid.
 - Ziekte: + description en alias, maar wat doen we met die alias?
 - Editing preg_pattern voor kolom, LOVD geeft waarschuwing tijdens het editen dat het lang gaat duren (WGS install), terwijl het geen alter table nodig heeft.
-- Het updaten van de update status van de shared LOVD3 duurt echt, echt, heel lang... (minuten)
-  Kwam door de enorme hoeveelheid genen, als ik me niet vergis...
 - RNA/Protein prediction: variant over gehele gen geeft p.0? maar als 't een dup is, slaat dat nergens op.
 - Phenotype entries toewijzen aan andere aandoening (aanvraag Johan).
 - Berekende WGS frequentie ook in VLs?
@@ -145,6 +148,7 @@ Prioritize:
   + Als je een VL opent, daarna zoekt, dan terug, dan blijven de search terms staan. Kan de hash parser niet alle search terms laten vervallen op het moment dat er geen hash is?
   + http://grenada.lumc.nl/LOVD2/mendelian_genes/refseq/CYP2C19_codingDNA.html  (NM_000769.1)
     Gen waar de ATG meteen het start van het transcript is. g. nummering gaat helemaal fout op de cDNA pagina.
+    The RefSeq parser doesn't annotate the intron files correctly, if the introns are 3' UTR.
 - Individual viewList: add column "variants in genes" with gene symbols.
   + Then, add option to dropdown menu if we have a currdb (replace: individuals screened for gene X).
   + After that, change the default link when clicking the individual tab.

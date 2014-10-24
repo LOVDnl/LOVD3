@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2014-10-18
+ * Modified    : 2014-10-24
  * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -367,11 +367,13 @@ if (POST) {
                             break;
                         case 'Phenotypes':
                             $aSection['required_columns'][] = 'diseaseid';
+                            $aSection['required_columns'][] = 'individualid';
                             require_once ROOT_PATH . 'class/object_phenotypes.php';
                             // We don't create an object here, because we need to do that per disease. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
                             $aSection['objects'] = array();
                             break;
                         case 'Screenings':
+                            $aSection['required_columns'][] = 'individualid';
                             require_once ROOT_PATH . 'class/object_screenings.php';
                             $aSection['object'] = new LOVD_Screening();
                             break;
