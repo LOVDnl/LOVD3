@@ -1,3 +1,4 @@
+% Requires texlive-latex-recommended and texlive-fonts-recommended packages (Debian, Ubuntu).
 \documentclass[a4paper,oneside,openany,12pt]{memoir}
 \usepackage[T1]{fontenc} % To get different font encoding, thus allow \guillemotright.
 % Undo bad "side effects" of T1 font encoding (ugly font && chapters in small caps).
@@ -214,7 +215,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema}
 \institute{Leiden University Medical Center}
-\date{2014-10-22} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2014-11-12} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
   (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
@@ -2499,14 +2500,15 @@ This way, transcripts are connected to genes.
 "0000000116"	"IVD"
     \end{verbatim}
   \caption{%
-    Example LOVD import format file.
+    Example (partial) LOVD import format file.
     This example file contains information about the IVD gene, its first transcript variant, the IVA disease, the link between the IVD gene and the IVA disease,
      and an individual linked to the IVA disease and screened for variants in the IVD gene.
     Note the \emph{geneid} field in the Transcripts section, which links a transcript to a gene, and the \emph{individualid} field in the Screenings section, which links a screening to an individual.
     The link between genes and diseases and between screenings and genes are in a separate section because
      each gene can be linked to multiple diseases, and each screening can test for variants in multiple genes.
     Please note that a full LOVD download contains many more sections, and more columns.
-    This file has been shortened to fit this page.}
+    This file has been shortened to fit this page.
+    \emph{This example file is therefore not a valid import file.}}
   \end{shaded}
 \end{figure}
 
