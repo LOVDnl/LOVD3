@@ -38,7 +38,7 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-// Require manager clearance.
+// Require any user level.
 lovd_requireAUTH(LEVEL_SUBMITTER);
 
 function lovd_prepareSubmitData ($sDataType, $aData) {
@@ -169,6 +169,8 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
         }
     }
 
+    $bScreenings = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ?', array($nID))->fetchColumn();
+
     define('PAGE_TITLE', 'Submission of individual #' . $nID);
 
     $_T->printHeader();
@@ -217,6 +219,11 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
     //}
     //$aOptionsList['options'][4]['option_text'] = '<B>I want to manage a previously added variant screening</B>';
 
+    if ($bScreenings) {
+        $aOptionsList['options'][4]['option_text'] = '<B>I want to add a variant to ' . $sPersons . '</B>';
+        $aOptionsList['options'][4]['onclick'] = 'submit/individual/' . $nID . '/screenings';
+    }
+
     if (!$bVariants) {
         $aOptionsList['options'][5]['disabled'] = true;
         $aOptionsList['options'][5]['onclick']  = 'javascript:alert(\'You cannot finish your submission, because ' . (!empty($nScreeningsWithoutVariants)? 'not all screenings added to ' . $sPersons . ' have variants yet!' : 'no variants have been added to ' . $sPersons . ' yet!') . '\')';
@@ -257,6 +264,37 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
           '        $("#container_screenings").hide();' . "\n" .
           '        $("#container_phenotypes").hide();' . "\n" .
           '      </SCRIPT>' . "\n");*/
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 4 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && $_PE[3] == 'screenings' && !ACTION) {
+    // URL: /submit/individual/00000001/screenings
+    // Let submitter select screening to add variant to.
+
+    $nID = sprintf('%08d', $_PE[2]);
+    define('PAGE_TITLE', 'Select screening to add variant to');
+    $_T->printHeader();
+    $_T->printTitle();
+
+    $bExists = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nID))->fetchColumn();
+    if (!$bExists || !isset($_AUTH['saved_work']['submissions']['individual'][$nID])) {
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
+    require ROOT_PATH . 'class/object_screenings.php';
+    $_DATA = new LOVD_Screening();
+    $_GET['search_individualid'] = $nID;
+    $_GET['page_size'] = '10';
+    $_DATA->setRowLink('Screenings_submissions', 'variants?create&target=' . $_DATA->sRowID);
+    $_DATA->viewList('Screenings_submissions', array('individualid', 'owned_by_', 'created_date'), false, false);
 
     $_T->printFooter();
     exit;
@@ -592,7 +630,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
 
     // Arrays containing submitter & data fields.
     $aSubmitterDetails =
-     array(
+        array(
             '_AUTH',
             'id' => 'User ID',
             'name' => 'Name',
@@ -604,30 +642,30 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             'email' => 'Email address',
             'telephone' => 'Telephone',
             'reference' => 'Reference',
-          );
+        );
     $aIndividualFields =
-     array(
+        array(
             'zIndividualDetails',
             'id' => 'Individual ID',
             'panel_' => 'Panel?',
             'panel_size' => 'Panel size',
-          );
+        );
     $aPhenotypeFields =
-     array(
+        array(
             '',
             'individualid' => 'Individual ID',
             'diseaseid_' => 'Disease',
             'id' => 'Phenotype ID',
-          );
+        );
     $aScreeningFields =
-     array(
+        array(
             '',
             'individualid' => 'Individual ID',
             'id' => 'Screening ID',
             'variants_found_' => 'Variants found',
-          );
+        );
     $aVariantOnGenomeFields =
-     array(
+        array(
             '',
             'screeningid' => 'Screening ID',
             'id' => 'Variant ID',
@@ -635,16 +673,16 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             'effect_reported' => 'Affects function (reported)',
             'effect_concluded' => 'Affects function (concluded)',
             'chromosome' => 'Chromosome',
-          );
+        );
     $aVariantOnTranscriptFields =
-     array(
+        array(
             '',
             'id_ncbi_' => 'On transcript',
             'effect_reported' => 'Affects function (reported)',
             'effect_concluded' => 'Affects function (concluded)',
-          );
+        );
     $aUploadFields =
-     array(
+        array(
             '',
             'screeningid' => 'Screening ID',
             'file_name' => 'File name',
@@ -656,7 +694,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             'num_transcripts' => 'Transcripts created',
             'num_variants_on_transcripts' => 'Transcript variants imported',
             'mapping_flags_' => 'Automatic mapping',
-          );
+        );
 
     // Load the non-shared custom columns and add them to the fields list.
     $qCols = $_DB->query('SELECT c.id, c.head_column FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id NOT LIKE "VariantOnTranscript/%" ' . (empty($aSubmit['screenings']) && $_PE[2] != 'confirmedVariants'? 'AND c.id NOT LIKE "Screening/%" ' : '') . ($_PE[2] != 'individual'? 'AND c.id NOT LIKE "Individual/%" ' : '') . 'AND c.id NOT LIKE "Phenotype/%" ORDER BY c.col_order', array());
