@@ -122,6 +122,17 @@ class LOVD_Custom extends LOVD_Object {
         while ($z = $q->fetchAssoc()) {
             $z['custom_links'] = array();
             $z['form_type'] = explode('|', $z['form_type']);
+            // Modify form_type to include full legend text in second index of form_type.
+            if (!empty($z['form_type'][1])) {
+                if (!empty($z['description_legend_full'])  ) {
+                    $z['form_type'][1] .= '<BR><B>Legend: </B>' . str_replace(array("\r", "\n"), '', $z['description_legend_full']);
+                }
+            }else{
+                if (!empty($z['description_legend_full'])) {
+                    $z['form_type'][1] = '<B>Legend: </B>' . $z['description_legend_full'];
+                }
+            }
+
             $z['select_options'] = explode("\r\n", $z['select_options']);
             $this->aColumns[$z['id']] = $z;
         }
