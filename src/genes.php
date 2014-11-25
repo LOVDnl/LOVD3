@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2014-08-06
- * For LOVD    : 3.0-11
+ * Modified    : 2014-11-25
+ * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -860,18 +860,20 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
                 $_BAR->setProgress(60);
                 $_BAR->setMessage('Deleting phenotypes...');
 
-                // Delete the Phenotypes! (NOTE: Again, just because I want the statistics...)
-                $q = $_DB->query('DELETE FROM ' . TABLE_PHENOTYPES . ' WHERE individualid IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
-                $aDone['Phenotypes'] = $q->rowCount();
-                $nDone ++;
-                $_BAR->setProgress(80);
-                $_BAR->setMessage('Deleting individuals...');
+                if ($aIndividuals) {
+                    // Delete the Phenotypes! (NOTE: Again, just because I want the statistics...)
+                    $q = $_DB->query('DELETE FROM ' . TABLE_PHENOTYPES . ' WHERE individualid IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
+                    $aDone['Phenotypes'] = $q->rowCount();
+                    $nDone ++;
+                    $_BAR->setProgress(80);
+                    $_BAR->setMessage('Deleting individuals...');
 
-                // And finally, delete the Individuals!
-                $q = $_DB->query('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
-                $aDone['Individuals'] = $q->rowCount();
-                $nDone ++;
-                unset($aIndividuals); // Save some memory.
+                    // And finally, delete the Individuals!
+                    $q = $_DB->query('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
+                    $aDone['Individuals'] = $q->rowCount();
+                    $nDone ++;
+                    unset($aIndividuals); // Save some memory.
+                }
             }
 
             $_BAR->setProgress(100);
