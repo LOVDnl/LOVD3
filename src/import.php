@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2014-10-24
+ * Modified    : 2014-11-21
  * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -71,6 +71,13 @@ $aTypes =
     array(
         'Full data download' => 'Full',
         'Custom column download' => 'Col',
+        'Owned data download' => 'Owned',
+    );
+
+// An array with import file types wich are recognized but not accepted for import, with the error message.
+$aExcludedTypes =
+    array(
+        'Owned data download' => 'It is currently not possible to import owned data, see manual section "downloading and importing own data set" for details.',
     );
 
 // Calculate maximum uploadable file size.
@@ -250,10 +257,15 @@ if (POST) {
                         // We did not understand the file type (Full data download, custom columns, genes, etc).
                         lovd_errorAdd('import', 'File type not recognized; type "' . $sFileType . '" unknown.');
                     } else {
-                        $sFileType = $aTypes[$sFileType];
-                        // Clean $aParsed a bit, depending on the file type.
-                        if ($sFileType == 'Col') {
-                            $aParsed = array('Columns' => $aParsed['Columns']);
+                        if (isset($aExcludedTypes[$sFileType])) {
+                            // It is currently not possible to import owned data, see manual for details..
+                            lovd_errorAdd('import', 'File type not allowed; ' . $aExcludedTypes[$sFileType] . ' ');
+                        } else {
+                            $sFileType = $aTypes[$sFileType];
+                            // Clean $aParsed a bit, depending on the file type.
+                            if ($sFileType == 'Col') {
+                                $aParsed = array('Columns' => $aParsed['Columns']);
+                            }
                         }
                     }
                     lovd_endLine();
