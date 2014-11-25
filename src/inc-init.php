@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2014-10-09
- * For LOVD    : 3.0-12
+ * Modified    : 2014-11-25
+ * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -45,11 +45,6 @@ define('MODULE_PATH', ROOT_PATH . 'modules/');
 // fine most of the time.
 if (ini_get('error_reporting') == E_ALL) {
     error_reporting(E_ALL ^ E_NOTICE);
-}
-
-// DMD_SPECIFIC!!! - Testing purposes only.
-if ($_SERVER['HTTP_HOST'] == 'localhost') {
-    error_reporting(E_ALL | E_STRICT);
 }
 
 
@@ -650,7 +645,7 @@ if (!defined('NOT_INSTALLED')) {
     require ROOT_PATH . 'inc-auth.php';
 
     // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.
-    $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName($_SERVER['REQUEST_URI'])); // 'login' or 'genes?create' or 'users/00001?edit'
+    $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'
     $aPath = explode('?', $sPath); // Cut off the Query string, that will be handled later.
     $_PE = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')
     // XSS check on the elements.
