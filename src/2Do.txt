@@ -108,6 +108,7 @@ Prioritize:
   + Nieuwe API ondersteunt login mogelijkheden?
   + (student / medewerker?)
 - Download/all/mine gebruikt te veel geheugen, niet alles laten prefetchen!
+- When making a gene specific download, the Gen2Dis doesn't seem to filter the Diseases section at all.
 - Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
 - Updated date van genen klopt niet (variant map, screening add/edit/delete, phenotype?, individual).
