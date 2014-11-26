@@ -47,6 +47,11 @@ if (ini_get('error_reporting') == E_ALL) {
     error_reporting(E_ALL ^ E_NOTICE);
 }
 
+// DMD_SPECIFIC!!! - Testing purposes only.
+if ($_SERVER['HTTP_HOST'] == 'localhost') {
+    error_reporting(E_ALL | E_STRICT);
+}
+
 
 
 

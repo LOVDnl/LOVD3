@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2014-11-21
+ * Modified    : 2014-11-26
  * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -77,7 +78,7 @@ $aTypes =
 // An array with import file types wich are recognized but not accepted for import, with the error message.
 $aExcludedTypes =
     array(
-        'Owned data download' => 'It is currently not possible to import owned data, see manual section "downloading and importing own data set" for details.',
+        'Owned data download' => 'It is currently not possible to directly import file type "Owned data download" without modifications. Please see the <A href="docs">manual</A> section "Downloading and importing own data set" for details on how to prepare these files for import.',
     );
 
 // Calculate maximum uploadable file size.

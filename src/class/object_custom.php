@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2014-08-15
- * For LOVD    : 3.0-12
+ * Modified    : 2014-11-26
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -123,14 +123,8 @@ class LOVD_Custom extends LOVD_Object {
             $z['custom_links'] = array();
             $z['form_type'] = explode('|', $z['form_type']);
             // Modify form_type to include full legend text in second index of form_type.
-            if (!empty($z['form_type'][1])) {
-                if (!empty($z['description_legend_full'])  ) {
-                    $z['form_type'][1] .= '<BR><B>Legend: </B>' . str_replace(array("\r", "\n"), '', $z['description_legend_full']);
-                }
-            }else{
-                if (!empty($z['description_legend_full'])) {
-                    $z['form_type'][1] = '<B>Legend: </B>' . $z['description_legend_full'];
-                }
+            if (!empty($z['description_legend_full'])) {
+                $z['form_type'][1] .= (empty($z['form_type'][1])? '' : '<BR>') . '<B>Legend: </B>' . str_replace(array("\r", "\n"), '', $z['description_legend_full']);
             }
 
             $z['select_options'] = explode("\r\n", $z['select_options']);
