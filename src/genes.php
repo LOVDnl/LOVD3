@@ -10,6 +10,7 @@
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -993,7 +994,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
     $_T->printHeader();
     $_T->printTitle();
-
+    lovd_showInfoTable('This will delete the gene "' . $zData['id'] . '" and all transcripts of this gene. Variants, Individuals Diseases and Screenings
+                        will not be deleted, but the link to "' . $zData['id'] . '" will be deleted and therfore no curators are available who can manage
+                        the data.', 'warning');
     lovd_errorPrint();
 
     // Table.
