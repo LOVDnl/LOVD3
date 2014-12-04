@@ -13,7 +13,18 @@
    that some extra fields during import are now optional.
  * Fixed bug; Importing a file with phenotype or screening data without a given
    individual ID, caused a fatal query error instead of an error message.
-
+ * Legend of a form field is available in data entry forms. Legend can now be
+   viewed in via help icons.
+ * Option added in the submission process; Add a variant to a screening for when
+   a submitter returns to the individual. Or when submission process is
+   interrupted and submission is proceeded via Unfinished Submissions.
+ * Display error message when filetype Owned data download is imported.
+ * Fixed bug; When deleting all variants and associated data of a gene,
+   deleting phenotypes while no individuals were found caused an error.
+ * Fixed bug; Solved bug with finding the proper path elements due to spaces in
+   LOVD installation name.
+ * Added info table which explains the effect of deleting a gene and all
+   variants and associated data. 
 
 /**************************
  * 3.0 Build 12 (r480)
