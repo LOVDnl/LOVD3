@@ -25,6 +25,9 @@
    LOVD installation name.
  * Added info table which explains the effect of deleting a gene and all
    variants and associated data. 
+ * Fixed bug; When genes overlap, the protein change prediction predicted by the
+   variant mapper was sometimes incorrect.
+
 
 /**************************
  * 3.0 Build 12 (r480)
