@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2014-11-25
+ * Modified    : 2014-12-11
  * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -994,9 +994,10 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
     $_T->printHeader();
     $_T->printTitle();
-    lovd_showInfoTable('This will delete the gene "' . $zData['id'] . '" and all transcripts of this gene. Variants, Individuals Diseases and Screenings
-                        will not be deleted, but the link to "' . $zData['id'] . '" will be deleted and therfore no curators are available who can manage
-                        the data.', 'warning');
+
+    lovd_showInfoTable('This will delete the ' . $zData['id'] . ' gene, all transcripts of this gene, and all annotations on variants specific for ' . $zData['id'] . '. The genomic variants and all individual-related information, including screenings, phenotypes and diseases, will not be deleted, so these might be left without a curator able to manage the data.<BR>
+                        <B>If you also wish to remove all information on individuals with variants in ' . $zData['id'] . ', first <A href="' . CURRENT_PATH . '?empty">empty</A> the gene database.</B>', 'warning');
+
     lovd_errorPrint();
 
     // Table.
