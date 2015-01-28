@@ -6,10 +6,8 @@
 
 /**************************
  * 3.0 Build 13 (r???)
- * 2014-??-??
+ * 2015-0?-??
  *********/
- * Fixed bug; Fatal sql error when curator finishes a variant for which he is
-   not the curator.
  * Fixed bug; Given parent IDs were not properly checked during import.
  * Updated the manual; added detail on installation requirements,  and clarified
    that some extra fields during import are now optional.
@@ -28,6 +26,8 @@
  * Added info table which explains the effect of deleting a gene.
  * Fixed bug; When genes overlap, the protein change prediction predicted by the
    variant mapper was sometimes incorrect.
+ * Fixed bug; Fixed fatal error when a user submits an individual with variants
+   for which is he both curator and submitter.
 
 
 /**************************
