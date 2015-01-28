@@ -26,8 +26,15 @@
  * Added info table which explains the effect of deleting a gene.
  * Fixed bug; When genes overlap, the protein change prediction predicted by the
    variant mapper was sometimes incorrect.
+ * Fixed typo in the data importer.
  * Fixed bug; Fixed fatal error when a user submits an individual with variants
    for which is he both curator and submitter.
+ * Fixed bug; Diseases could not be linked to a big number of genes (hundreds).
+ * Fixed bug; The ORCID integration during user registration had to be updated
+   due to a discontinued service.
+ * Updated the year of the copyright notice in the footer.
+ * LOVD now reports the incorrect DBID, when it throws an error about rejecting
+   the given ID.
 
 
 /**************************

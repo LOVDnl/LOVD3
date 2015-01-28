@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2014-11-26
+ * Modified    : 2015-01-23
  * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -134,18 +134,21 @@ class LOVD_Custom extends LOVD_Object {
 
 
         // Gather the custom link information.
-        $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) WHERE c2l.colid LIKE ? GROUP BY l.id',
-            array($this->sCategory . '/%'))->fetchAllAssoc();
-        foreach ($aLinks as $aLink) {
-            $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text'])) . '/';
-            $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
-            $aCols = explode(';', $aLink['colids']);
-            foreach ($aCols as $sColID) {
-                if (isset($this->aColumns[$sColID])) {
-                    $this->aColumns[$sColID]['custom_links'][] = $aLink['id'];
+        // 2015-01-23; 3.0-13; But not when importing, then we don't need this at all.
+        if (lovd_getProjectFile() != '/import.php') {
+            $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) WHERE c2l.colid LIKE ? GROUP BY l.id',
+                array($this->sCategory . '/%'))->fetchAllAssoc();
+            foreach ($aLinks as $aLink) {
+                $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text'])) . '/';
+                $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
+                $aCols = explode(';', $aLink['colids']);
+                foreach ($aCols as $sColID) {
+                    if (isset($this->aColumns[$sColID])) {
+                        $this->aColumns[$sColID]['custom_links'][] = $aLink['id'];
+                    }
                 }
+                $this->aCustomLinks[$aLink['id']] = $aLink;
             }
-            $this->aCustomLinks[$aLink['id']] = $aLink;
         }
 
         parent::__construct();

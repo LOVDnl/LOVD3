@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2014-05-09
- * For LOVD    : 3.0-11
+ * Modified    : 2015-01-26
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -199,12 +199,12 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                 } else {
                     // Contact ORCID to retrieve public info.
                     // 2014-05-09; 3.0-11; ORCID changed their API... but at least they understood including a version might help. Not changing to the new one.
-                    $aOutput = lovd_php_file('http://pub.orcid.org/v1.0.23/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
+                    $aOutput = lovd_php_file('http://pub.orcid.org/v1.2/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
                     if (!$aOutput) {
                         lovd_errorAdd('orcid', 'The given ORCID ID can not be found at ORCID.org.');
                     } else {
                         $aORCID = array(
-                            'orcid' => array('value' => ''),
+                            'orcid-identifier' => array('path' => ''),
                             'orcid-bio' => array(
                                 'personal-details' => array(
                                     'family-name' => array('value' => ''),
@@ -219,20 +219,20 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                                 ),
                             ),
                             'orcid-history' => array(
-                                'email-verified' => array('value' => ''),
+                                'verified-email' => array('value' => ''),
                             ),
                         );
 
                         $aOutput = json_decode(implode('', $aOutput), true);
                         $aORCID = array_replace_recursive($aORCID, $aOutput['orcid-profile']);
-                        $nID = $aORCID['orcid']['value'];
+                        $nID = $aORCID['orcid-identifier']['path'];
                         $sNameComposed = $aORCID['orcid-bio']['personal-details']['family-name']['value'] . ', ' . $aORCID['orcid-bio']['personal-details']['given-names']['value'];
                         $sNameDisplay = $aORCID['orcid-bio']['personal-details']['credit-name']['value'];
                         if (!$sNameDisplay) {
                             $sNameDisplay = $aORCID['orcid-bio']['personal-details']['given-names']['value'] . ' ' . $aORCID['orcid-bio']['personal-details']['family-name']['value'];
                         }
                         $sEmail = $aORCID['orcid-bio']['contact-details']['email']['value'];
-                        $bEmailVerified = $aORCID['orcid-history']['email-verified']['value'];
+                        $bEmailVerified = $aORCID['orcid-history']['verified-email']['value'];
                         $sCountryCode = $aORCID['orcid-bio']['contact-details']['address']['country']['value'];
                         if ($sCountryCode) {
                             $sCountry = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($sCountryCode))->fetchColumn();
