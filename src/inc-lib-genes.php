@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2014-08-06
- * For LOVD    : 3.0-11
+ * Modified    : 2014-12-23
+ * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -213,13 +213,26 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
 
     foreach (array('omim_id') as $sCol) {
         // Columns presented as arrays (new?), but should contain just one value.
-        if (isset($aGene[$sCol]) && is_array($aGene[$sCol]) && count($aGene[$sCol]) == 1) {
+        // 2014-12-23; 3.0-13; Can also not be defined.
+        if (!isset($aGene[$sCol])) {
+            $aGene[$sCol] = '';
+        } elseif (is_array($aGene[$sCol]) && count($aGene[$sCol]) == 1) {
             $aGene[$sCol] = $aGene[$sCol][0];
         }
     }
 
     // 2014-08-06; 3.0-11; HGNC ID suddenly got a prefix, removing the prefix.
     $aGene['hgnc_id'] = preg_replace('/[^0-9]+/', '', $aGene['hgnc_id']);
+
+    // 2014-12-23; 3.0-13; Split "location" to "chromosome" and "chrom_band", which makes it easier to create this gene in the database.
+    if ($aGene['location'] == 'mitochondria') {
+        $aGene['chromosome'] = 'M';
+        $aGene['chrom_band'] = '';
+    } else {
+        preg_match('/^(\d{1,2}|[XY])(.*)$/', $aGene['location'], $aMatches);
+        $aGene['chromosome'] = $aMatches[1];
+        $aGene['chrom_band'] = $aMatches[2];
+    }
 
     return $aGene;
 }
