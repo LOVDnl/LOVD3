@@ -163,6 +163,7 @@ class LOVD_Disease extends LOVD_Object {
         if (!empty($aData['id_omim']) && ($bCreate || $aData['id_omim'] != $zData['id_omim'])) {
             $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?', array($aData['id_omim']))->fetchColumn();
             if ($bExists) {
+                // IMPORTANT: when you change this message, also change the array_search argument in import.php in the Disease section.
                 lovd_errorAdd('id_omim', 'Another disease already exists with this OMIM ID!');
             }
         }
@@ -170,6 +171,7 @@ class LOVD_Disease extends LOVD_Object {
         if (!empty($aData['name']) && ($bCreate || $aData['name'] != $zData['name'])) {
             $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aData['name']))->fetchColumn();
             if ($bExists) {
+                // IMPORTANT: when you change this message, also change the array_search argument in import.php in the Disease section.
                 lovd_errorAdd('name', 'Another disease already exists with the same name!');
             }
         }

@@ -197,10 +197,14 @@ class LOVD_Column extends LOVD_Object {
             lovd_errorAdd('colid', 'The column ID is not of the correct format. It can contain only letters, numbers and underscores. Subcategories must be divided by a slash (/).');
         }
 
-        // ColID must not exist in the database.
-        if (!empty($aData['category']) && !empty($aData['colid'])) {
-            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid']))->fetchColumn()) {
-                lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
+        // During an import ColID that exist in the database do not give a hard error. Error is handled in import.php
+        if (lovd_getProjectFile() != '/import.php')        
+        { 
+            //ColID must not exist in the database.
+            if (!empty($aData['category']) && !empty($aData['colid'])) {
+                if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid']))->fetchColumn()) {
+                    lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
+                }
             }
         }
 
