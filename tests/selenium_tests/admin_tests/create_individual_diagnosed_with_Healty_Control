@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="https://localhost/" />
+<title>selenium_test_create_individual_diagnosed_with_Healty_Control</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">selenium_test_create_individual_diagnosed_with_Healty_Control</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>/svn/LOVD3/trunk/src/submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>//div/table/tbody/tr/td/table/tbody/tr/td[2]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/individuals?create</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=Individual/Lab_ID</td>
+	<td>12345HealtyCtrl</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>link=PubMed</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=Individual/Reference</td>
+	<td>{PMID:[2011]:[21520333]}</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=Individual/Remarks</td>
+	<td>No Remarks</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=Individual/Remarks_Non_Public</td>
+	<td>Still no remarks</td>
+</tr>
+<tr>
+	<td>addSelection</td>
+	<td>name=active_diseases[]</td>
+	<td>label=Healty/Control (Healthy individual / control)</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>name=owned_by</td>
+	<td>label=LOVD3 Admin</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>name=statusid</td>
+	<td>label=Public</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>css=table[class=info]</td>
+	<td>Successfully created the individual information entry!</td>
+</tr>
+<tr>
+	<td>waitForPageToLoad</td>
+	<td>4000</td>
+	<td></td>
+</tr>
+</tbody></table>
+</body>
+</html>

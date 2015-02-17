@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="https://localhost/svn/LOVD3/trunk/src/install/" />
+<title>selenium_test_add_phenotype_info_to_IVA_individual</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">selenium_test_add_phenotype_info_to_IVA_individual</td></tr>
+</thead><tbody>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/submit/screening/0000000003</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>id=tab_individuals</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/individuals</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=td.ordered</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/individuals/00000001</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=viewentryOptionsButton_Individuals</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=Add phenotype information to individual</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/phenotypes?create&amp;target=00000001</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=Phenotype/Additional</td>
+	<td>Additional phenotype information</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>name=Phenotype/Inheritance</td>
+	<td>label=Familial</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>css=table[class=info]</td>
+	<td>Successfully processed your submission and sent an email notification to the relevant curator*</td>
+</tr>
+<tr>
+	<td>waitForPageToLoad</td>
+	<td>4000</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/phenotypes/0000000002</td>
+	<td></td>
+</tr>
+</tbody></table>
+</body>
+</html>

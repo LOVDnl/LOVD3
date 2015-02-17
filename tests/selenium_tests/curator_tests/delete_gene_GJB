@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="https://localhost/svn/LOVD3/trunk/src/install/" />
+<title>selenium_test_delete_gene_IVD</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">selenium_test_delete_gene_IVD</td></tr>
+</thead><tbody>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/phenotypes/0000000002</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>id=tab_genes</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=GJB1</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/genes/GJB1</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=viewentryOptionsButton_Genes</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=Empty this gene database</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/genes/GJB1?empty</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=password</td>
+	<td>test1234</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>css=table[class=info]</td>
+	<td>Successfully emptied the GJB1 gene database!</td>
+</tr>
+<tr>
+	<td>waitForPageToLoad</td>
+	<td>4000</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/configuration</td>
+	<td></td>
+</tr>
+</tbody></table>
+</body>
+</html>

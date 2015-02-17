@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="https://localhost/svn/LOVD3/trunk/src/install/" />
+<title>Curate submitted data</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">Curate submitted data</td></tr>
+</thead><tbody>
+<tr>
+	<td>clickAndWait</td>
+	<td>id=tab_variants</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/variants</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=0000000001</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/variants/0000000001</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>//tr[13]/td/span</td>
+	<td>Pending</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=viewentryOptionsButton_Variants</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=Publish (curate) variant entry</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>//tr[13]/td/span</td>
+	<td>Public</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=00000001</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/individuals/00000001</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>//tr[8]/td</td>
+	<td>Pending</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=viewentryOptionsButton_Individuals</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=Publish (curate) individual entry</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>//tr[8]/td</td>
+	<td>Public</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>id=tab_variants</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/variants</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=0000000002</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>*/trunk/src/variants/0000000002</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>//tr[13]/td/span</td>
+	<td>Pending</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=viewentryOptionsButton_Variants</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=Publish (curate) variant entry</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>//tr[13]/td/span</td>
+	<td>Public</td>
+</tr>
+</tbody></table>
+</body>
+</html>
