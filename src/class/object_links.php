@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2013-09-09
+ * Modified    : 2015-02-17
  * For LOVD    : 3.0-08
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -275,7 +275,7 @@ class LOVD_Link extends LOVD_Object {
                         array('', '', 'note', 'The pattern is bound to some rules:<UL style="margin : 0px; padding-left : 1.5em;"><LI>It must start with \'{\' and end with \'}\'.</LI><LI>It can contain letters, numbers, spaces, some special characters (:;,_-) and references ([1] to [9]).</LI><LI>It must be 3-25 characters long.</LI><LI>Two or more references directly after each other must be separated by at least one character to keep the two apart.</LI></UL>'),
                         array('Replacement text', '', 'textarea', 'replace_text', 40, 3),
                         array('', '', 'note', 'Make sure you use all references from the pattern in the replacement text.'),
-                        array('Link description', 'To aid other users in using your custom link, please provide some information on what the link is for and how to use the references.', 'textarea', 'description', 40, 3),
+                        array('Link description', 'To aid other users in using your custom link, please provide some information on what the link is for and how to use the references.', 'textarea', 'description', 40, 5),
                         'skip',
                         array('', '', 'print', '<B>Link settings</B>'),
                         array('Active for columns', '', 'print', $sSelect),

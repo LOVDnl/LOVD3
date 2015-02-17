@@ -35,6 +35,14 @@
  * Updated the year of the copyright notice in the footer.
  * LOVD now reports the incorrect DBID, when it throws an error about rejecting
    the given ID.
+ * Improved import; If a custom column, transcript or disease already exists in
+   the database, the IDs from the database are used and a soft error is set.
+   Custom columns and diseases that exist are not imported and import will
+   continue with the IDs from the database.
+ * Updated the manual; Added chapter 8-submitting data to the LOVD and chapter
+   9-information about downloading and importing data.
+ * The Phenotype/Length column is now no longer enabled by default for healthy
+   controls.
 
 
 /**************************

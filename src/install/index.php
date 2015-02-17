@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2014-05-26
- * For LOVD    : 3.0-11
+ * Modified    : 2015-02-17
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -505,9 +505,6 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
             'UPDATE ' . TABLE_DISEASES . ' SET id = 0',
             'ALTER TABLE ' . TABLE_DISEASES . ' auto_increment = 1',
             // FIXME: Rather parse inc-sql-columns then to do this manually.
-            'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `Phenotype/Length` SMALLINT(3) UNSIGNED',
-            'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Length", 0, NOW())',
-            'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, col_order, width, mandatory, description_form, description_legend_short, description_legend_full, select_options, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Length", 0, 100, 0, "", "Length of the individual, in cm.", "Length of the individual, in centimeters (cm).", "", 1, 1, 0, NOW())',
             'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `Phenotype/Age` VARCHAR(12)',
             'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Age", 0, NOW())',
             'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, col_order, width, mandatory, description_form, description_legend_short, description_legend_full, select_options, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Age", 0, 100, 0, "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the individual was examined, if known. 04y08m = 4 years and 8 months.", "The age at which the individual was examined, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", "", 1, 1, 0, NOW())',
