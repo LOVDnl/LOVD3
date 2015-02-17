@@ -47,14 +47,10 @@ function lovd_assertFailed ($sFile, $nLine, $sCode)
 
 define('ROOT_PATH', '../../src/');
 require ROOT_PATH . 'inc-init.php';
-//$_AUTH_old = $_AUTH;
-
-
-
 
 
 // Assertions for DATABASE ADMINISTRATOR.
-$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN))->fetchAssoc();
+$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 1')->fetchAssoc();
 assert('!empty($_AUTH)');
 assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false)");
@@ -64,13 +60,9 @@ assert("lovd_isAuthorized('individual', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('phenotype', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('screening', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('asdfasdf', 'ASDFASDFASDF', false)");
-
-
-
-
 
 // Assertions for MANAGER.
-$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_MANAGER))->fetchAssoc();
+$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 2')->fetchAssoc();
 assert('!empty($_AUTH)');
 assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false)");
@@ -81,95 +73,66 @@ assert("lovd_isAuthorized('phenotype', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('screening', 'ASDFASDFASDF', false)");
 assert("lovd_isAuthorized('asdfasdf', 'ASDFASDFASDF', false)");
 
-
-
-
-
 // Assertions for CURATORS.
-$_AUTH = $_DB->query('SELECT u.*,
-                        (SELECT GROUP_CONCAT(c.geneid SEPARATOR ";") FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id AND c.allow_edit = 1) AS _curates,
-                        (SELECT GROUP_CONCAT(c.geneid SEPARATOR ";") FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id AND c.allow_edit = 0) AS _collaborates,
-                        (SELECT GROUP_CONCAT(id SEPARATOR ";") FROM ' . TABLE_GENES . ' WHERE id NOT IN (SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = u.id)) AS _submits
-                      FROM ' . TABLE_USERS . ' AS u
-                        LEFT JOIN ' . TABLE_CURATES . ' AS c_3 ON (u.id = c_3.userid)
-                      WHERE u.level = ?
-                      HAVING _curates IS NOT NULL AND _collaborates IS NOT NULL', array(LEVEL_SUBMITTER), false)->fetchAssoc();
-// For this assumption to be true, you MUST have a user in the system that is a curator,
-// a collaborator, and a submitter (= no authorization) for all different genes.
+$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 3')->fetchAssoc();
 assert('!empty($_AUTH)');
-print('Testing curator, collaborator and submitter rights with user: ' . $_AUTH['id'] . "\n");
-$_AUTH['curates'] = explode(';', $_AUTH['_curates']);
-$_AUTH['collaborates'] = explode(';', $_AUTH['_collaborates']);
-$_AUTH['submits'] = explode(';', $_AUTH['_submits']);
+$_AUTH['curates'] = $_DB->query('SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = 3 AND allow_edit = 1')->fetchAssoc();
+assert('!empty($_AUTH["curates"])');
+assert("lovd_isAuthorized('gene', 'IVD', false) === 1");
+assert("lovd_isAuthorized('disease', '1', false) === 1");
+assert("lovd_isAuthorized('transcript', '1', false) === 1");
+assert("lovd_isAuthorized('variant', '1', false) === 1");
+assert("lovd_isAuthorized('individual', '1', false) === 1");
+assert("lovd_isAuthorized('phenotype', '1', false) === 1");
+assert("lovd_isAuthorized('screening', '1', false) === 1");
 
-// GENES.
+// Assertions for COLLABORATOR.
+$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 4')->fetchAssoc();
+assert('!empty($_AUTH)');
+$_AUTH['collaborates'] = $_DB->query('SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = 4 AND allow_edit = 0')->fetchAssoc();
+assert('!empty($_AUTH["collaborates"])');
+assert("lovd_isAuthorized('gene', 'IVD', false) === 0");
+assert("lovd_isAuthorized('disease', '1', false) === 0");
+assert("lovd_isAuthorized('transcript', '1', false) === 0");
+assert("lovd_isAuthorized('individual', '1', false) === 0");
+assert("lovd_isAuthorized('phenotype', '1', false) === 0");
+assert("lovd_isAuthorized('variant', '1', false) === 0");
+assert("lovd_isAuthorized('screening', '1', false) === 0");
+
+// Assertions for SUBMITTER
+$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 5')->fetchAssoc();
+assert('!empty($_AUTH)');
+assert("lovd_isAuthorized('gene', 'IVD', false) === false");
+assert("lovd_isAuthorized('disease', '1', false) === false");
+assert("lovd_isAuthorized('transcript', '1', false) === false");
+assert("lovd_isAuthorized('individual', '1', false) === false");
+assert("lovd_isAuthorized('phenotype', '1', false) === false");
+assert("lovd_isAuthorized('variant', '1', false) === false");
+assert("lovd_isAuthorized('screening', '1', false) === false");
+
+// Assertions for OWNER
+$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 6')->fetchAssoc();
+$_CONF['allow_submitter_mods'] = 1;
+assert("lovd_isAuthorized('individual', '1', false) === 1");
+assert("lovd_isAuthorized('phenotype', '1', false) === 1");
+assert("lovd_isAuthorized('variant', '1', false) === 1");
+assert("lovd_isAuthorized('screening', '1', false) === 1");
+
+$_CONF['allow_submitter_mods'] = 0;
+assert("lovd_isAuthorized('individual', '1', false) === 0");
+assert("lovd_isAuthorized('phenotype', '1', false) === 0");
+assert("lovd_isAuthorized('variant', '1', false) === 0");
+assert("lovd_isAuthorized('screening', '1', false) === 0");
+
+// Assertions for false input
 assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false) === false");
-assert("lovd_isAuthorized('gene', '" . $_AUTH['curates'][0] . "', false) === 1");
-assert("lovd_isAuthorized('gene', '" . $_AUTH['collaborates'][0] . "', false) === 0");
-assert("lovd_isAuthorized('gene', '" . $_AUTH['submits'][0] . "', false) === false");
-
-// DISEASES.
 assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false) === false");
-$nIDCurator      = $_DB->query('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') LIMIT 1', $_AUTH['curates'], false)->fetchColumn();
-$nIDCollaborator = $_DB->query('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE d.id != ? AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['collaborates'])-1) . ') LIMIT 1', array_merge(array($nIDCurator), $_AUTH['collaborates']), false)->fetchColumn();
-$nIDSubmitter    = $_DB->query('SELECT d.id FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE d.id != ? AND d.id != ? AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['submits'])-1) . ') LIMIT 1', array_merge(array($nIDCurator, $nIDCollaborator), $_AUTH['submits']), false)->fetchColumn();
-// Don't remove quotes, zerofill will cause issues.
-assert("lovd_isAuthorized('disease', '" . $nIDCurator . "', false) === 1");
-assert("lovd_isAuthorized('disease', '" . $nIDCollaborator . "', false) === 0");
-assert("lovd_isAuthorized('disease', '" . $nIDSubmitter . "', false) === false");
-
-// TRANSCRIPTS.
 assert("lovd_isAuthorized('transcript', 'ASDFASDFASDF', false) === false");
-$nIDCurator      = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['curates'][0]), false)->fetchColumn();
-$nIDCollaborator = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['collaborates'][0]), false)->fetchColumn();
-$nIDSubmitter    = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? LIMIT 1', array($_AUTH['submits'][0]), false)->fetchColumn();
-// Don't remove quotes, zerofill will cause issues.
-assert("lovd_isAuthorized('transcript', '" . $nIDCurator . "', false) === 1");
-assert("lovd_isAuthorized('transcript', '" . $nIDCollaborator . "', false) === 0");
-assert("lovd_isAuthorized('transcript', '" . $nIDSubmitter . "', false) === false");
-
-// VARIANTS.
-assert("lovd_isAuthorized('variant', 'ASDFASDFASDF', false) === false");
-$nIDCurator      = $_DB->query('SELECT v.id FROM ' . TABLE_VARIANTS . ' AS v INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE v.created_by != ? AND v.owned_by != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $_AUTH['curates'][0]), false)->fetchColumn();
-$nIDOwner        = $_DB->query('SELECT v.id FROM ' . TABLE_VARIANTS . ' AS v INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE (v.created_by = ? OR v.owned_by = ?) AND t.geneid NOT IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') LIMIT 1', array_merge(array($_AUTH['id'], $_AUTH['id']), $_AUTH['curates']), false)->fetchColumn();
-$nIDCollaborator = $_DB->query('SELECT v.id FROM ' . TABLE_VARIANTS . ' AS v INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE v.created_by != ? AND v.owned_by != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $_AUTH['collaborates'][0]), false)->fetchColumn();
-$nIDSubmitter    = $_DB->query('SELECT v.id FROM ' . TABLE_VARIANTS . ' AS v INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE v.created_by != ? AND v.owned_by != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $_AUTH['submits'][0]), false)->fetchColumn();
-$nIDOther        = $_DB->query('SELECT v.id FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) WHERE vot.id IS NULL AND v.created_by != ? AND v.owned_by != ? LIMIT 1', array($_AUTH['id'], $_AUTH['id']), false)->fetchColumn();
-// Don't remove quotes, zerofill will cause issues.
-assert("lovd_isAuthorized('variant', '" . $nIDCurator . "', false) === 1");
-$_CONF['allow_submitter_mods'] = 1;
-assert("lovd_isAuthorized('variant', '" . $nIDOwner . "', false) === 1");
-$_CONF['allow_submitter_mods'] = 0;
-assert("lovd_isAuthorized('variant', '" . $nIDOwner . "', false) === 0");
-assert("lovd_isAuthorized('variant', '" . $nIDCollaborator . "', false) === 0");
-assert("lovd_isAuthorized('variant', '" . $nIDSubmitter . "', false) === false");
-assert("lovd_isAuthorized('variant', '" . $nIDOther . "', false) === false");
-
-// SCREENINGS.
+assert("lovd_isAuthorized('individual', 'ASDFASDFASDF', false) === false");
+assert("lovd_isAuthorized('phenotype', 'ASDFASDFASDF', false) === false");
 assert("lovd_isAuthorized('screening', 'ASDFASDFASDF', false) === false");
-$nIDCurator      = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.created_by != ? AND s.owned_by != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $_AUTH['curates'][0]), false)->fetchColumn();
-$nIDOwner        = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE (s.created_by = ? OR s.owned_by = ?) AND t.geneid NOT IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') LIMIT 1', array_merge(array($_AUTH['id'], $_AUTH['id']), $_AUTH['curates']), false)->fetchColumn();
-$nIDCollaborator = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.created_by != ? AND s.owned_by != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $_AUTH['collaborates'][0]), false)->fetchColumn();
-$nIDSubmitter    = $_DB->query('SELECT s.id FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.created_by != ? AND s.owned_by != ? AND s.id != ? AND t.geneid = ? LIMIT 1', array($_AUTH['id'], $_AUTH['id'], $nIDCollaborator, $_AUTH['submits'][0]), false)->fetchColumn();
-// Don't remove quotes, zerofill will cause issues.
-assert("lovd_isAuthorized('screening', '" . $nIDCurator . "', false) === 1");
-$_CONF['allow_submitter_mods'] = 1;
-assert("lovd_isAuthorized('screening', '" . $nIDOwner . "', false) === 1");
-$_CONF['allow_submitter_mods'] = 0;
-assert("lovd_isAuthorized('screening', '" . $nIDOwner . "', false) === 0");
-assert("lovd_isAuthorized('screening', '" . $nIDCollaborator . "', false) === 0");
-assert("lovd_isAuthorized('screening', '" . $nIDSubmitter . "', false) === false");
+assert("lovd_isAuthorized('variant', 'ASDFASDFASDF', false) === false");
+assert("lovd_isAuthorized('asdfasdf', '1', false) === false");
 
-///////////////////// WORK IN PROGRESS /////////////////////////////////////////
-// INDIVIDUALS.
-// PHENOTYPES.
-
-
-
-
-
-
-
-//$_AUTH = $_AUTH_old;
 die('Complete, all successful');
 ?>
