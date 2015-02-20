@@ -37,11 +37,6 @@
 	<td>35y</td>
 </tr>
 <tr>
-	<td>type</td>
-	<td>name=Phenotype/Length</td>
-	<td>180</td>
-</tr>
-<tr>
 	<td>select</td>
 	<td>name=owned_by</td>
 	<td>label=LOVD3 Admin</td>

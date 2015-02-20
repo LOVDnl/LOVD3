@@ -14,6 +14,7 @@ SCRIPT=$(readlink -f $0)
 SCRIPTPATH=$(dirname $SCRIPT)
 SELENIUMTESTTPATH=$(dirname $SCRIPTPATH)/selenium_tests
 PHPUNITTESTTPATH=$(dirname $SCRIPTPATH)/phpunit_selenium
+TESTDATATPATH=$(dirname $SCRIPTPATH)/test_data_files/
 LOCALHOSTDIR=`echo ${SCRIPTPATH} | sed "s@.*svn@/svn@" | sed "s@trunk.*@@"`
 LOCALHOSTDIRTRUNK=`echo ${SCRIPTPATH} | sed "s@.*svn@/svn@" | sed "s@trunk.*@trunk/@"`
 TRUNKDIR=`echo ${SCRIPT} | sed "s@trunk.*@@"`
@@ -211,14 +212,18 @@ echo "Total number of methods converted:" $totalmethod
 echo -----------------------end---------------------------
 
 
-# There are two bugs/issues with the selenium export file.
-# 1 In some cases the ";" is not put at the end of a line.
-# 2 The base url is not used. Therefore the directory in the open functions have to be modified. 
+# There are three bugs/issues with the selenium export file.
+# 1 The base url is not used. Therefore the directory in the open functions have to be modified.
+# 2 In some cases the ";" is not put at the end of a line.
+# 3 When files are imported the location must be modified, depending on the installation.
 echo --------------Fix Selenium export bugs---------------
 for file in "${PHPUNITTESTTPATH}"/*
 do
     echo "Fix:" ${file}
-    data=`grep -A 2000 "<?php" ${file} | sed "s@this->open(\".*./trunk/@this->open(\"$LOCALHOSTDIRTRUNK@" | sed 's/0)$/0);/'`
+    data=`grep -A 2000 "<?php" ${file} |
+        sed "s@this->open(\".*./trunk/@this->open(\"$LOCALHOSTDIRTRUNK@" |
+        sed 's/0)$/0);/' |
+        sed "s@name=variant_file.*./trunk/tests/test_data_files/@name=variant_file\"\, \"$TESTDATATPATH@"`
     echo "${data}">${file}
     sleep 1
     echo "done"

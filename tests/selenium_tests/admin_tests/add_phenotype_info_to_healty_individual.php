@@ -15,7 +15,6 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/phenotypes[\s\S]create&target=00000001$/',$this->getLocation()));
     $this->selectWindow("null");
     $this->type("name=Phenotype/Age", "35y");
-    $this->type("name=Phenotype/Length", "180");
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
     $this->click("css=input[type=\"submit\"]");
