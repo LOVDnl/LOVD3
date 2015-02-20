@@ -43,6 +43,9 @@
    9-information about downloading and importing data.
  * The Phenotype/Length column is now no longer enabled by default for healthy
    controls.
+ * On the system-wide view of gene-specific columns, two menu links were enabled
+   for Curators, which led to non-available actions.
+ * Clarified some text in the Configuration area.
 
 
 /**************************

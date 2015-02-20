@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2014-06-12
- * For LOVD    : 3.0-11
+ * Modified    : 2015-02-20
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -135,8 +135,8 @@ if (PATH_COUNT > 2 && !ACTION) {
         $aNavigation[CURRENT_PATH . '?add']                         = array('menu_plus.png', 'Enable column', (!$zData['active'] || $aTableInfo['shared']? 1 : 0));
         $aNavigation[CURRENT_PATH . '?remove']                      = array('cross.png', 'Disable column' . ($aTableInfo['shared']? '' : ' and remove values'), ($zData['active'] && !$zData['hgvs']? 1 : 0));
         $aNavigation[CURRENT_PATH . '?delete']                      = array('cross.png', 'Delete column', (!$zData['active'] && !$zData['hgvs'] && (int) $zData['created_by']? 1 : 0));
-        $aNavigation[CURRENT_PATH . '?edit']                        = array('menu_edit.png', 'Edit custom data column settings', 1);
-        $aNavigation[$_PE[0] . '/' . $zData['category'] . '?order'] = array('menu_columns.png', 'Re-order all ' . $zData['category'] . ' columns', 1);
+        $aNavigation[CURRENT_PATH . '?edit']                        = array('menu_edit.png', 'Edit custom data column settings', ($_AUTH['level'] >= LEVEL_MANAGER));
+        $aNavigation[$_PE[0] . '/' . $zData['category'] . '?order'] = array('menu_columns.png', 'Re-order all ' . $zData['category'] . ' columns', ($_AUTH['level'] >= LEVEL_MANAGER));
         // $aNavigation[$_SERVER['PHP_SELF'] . '?action=edit_colid&amp;edit_colid=' . rawurlencode($zData['colid'])] = array('menu_edit.png', 'Edit column ID', ($zData['created_by'] && !$bSelected? 1 : 0));
     }
     lovd_showJGNavigation($aNavigation, 'Columns');

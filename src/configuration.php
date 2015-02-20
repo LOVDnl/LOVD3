@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-07-11
- * Modified    : 2014-07-22
- * For LOVD    : 3.0-11
+ * Modified    : 2015-02-20
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -227,8 +227,8 @@ $aItems =
         'Custom columns for ' . $_SESSION['currdb'] =>
             array(
                 // FIXME; Can we implement an overview of columns NOT present in gene X?
-                array('columns/VariantOnTranscript', 'lovd_columns_add.png', 'Add pre-configured custom column to the ' . $_SESSION['currdb'] . ' gene', 'View all available pre-configured variant custom columns to add to the ' . $_SESSION['currdb'] . ' gene database.'),
-                array('genes/' . $_SESSION['currdb'] . '/columns', 'lovd_columns_view.png', 'Manage custom columns in the ' . $_SESSION['currdb'] . ' gene', 'View the variant custom columns currently enabled for the ' . $_SESSION['currdb'] . ' gene.'),
+                array('columns/VariantOnTranscript', 'lovd_columns_add.png', 'Add pre-configured custom column to the ' . $_SESSION['currdb'] . ' gene', 'View <B>all available pre-configured variant custom columns</B> to add to the ' . $_SESSION['currdb'] . ' gene database.'),
+                array('genes/' . $_SESSION['currdb'] . '/columns', 'lovd_columns_view.png', 'Manage custom columns in the ' . $_SESSION['currdb'] . ' gene', 'View the variant custom columns <B>currently enabled</B> for the ' . $_SESSION['currdb'] . ' gene.'),
             ),
     );
 
