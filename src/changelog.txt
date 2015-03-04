@@ -46,7 +46,9 @@
  * On the system-wide view of gene-specific columns, two menu links were enabled
    for Curators, which led to non-available actions.
  * Clarified some text in the Configuration area.
-
+ * Fixed bug; The warning message during phenotype import "the disease belonging
+   to this phenotype entry is yet to be inserted into the database" was not
+   correct. 
 
 /**************************
  * 3.0 Build 12 (r480)

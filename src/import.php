@@ -976,7 +976,7 @@ if (POST) {
                     if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
                         // Disease does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Disease "' . htmlspecialchars($aLine['diseaseid']) . '" does not exist in the database and is not defined in this import file.');
-                    } elseif ((!$bDiseaseInDB || ($sMode == 'insert' && $bDiseaseInFile)) && !in_array($aLine['diseaseid'], $aDiseasesAlreadyWarnedFor)) {
+                    } elseif (!$bDiseaseInDB && $sMode == 'insert' && $bDiseaseInFile && !in_array($aLine['diseaseid'], $aDiseasesAlreadyWarnedFor)) {
                         // We're inserting this disease, so we're not sure about the exact columns that will be active. Issue a warning.
                         $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): The disease belonging to this phenotype entry is yet to be inserted into the database. Perhaps not all this phenotype entry\'s custom columns will be enabled for this disease!<BR>', 'done');
                         $nWarnings ++;
