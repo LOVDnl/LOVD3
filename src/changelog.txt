@@ -49,6 +49,10 @@
  * Fixed bug; The warning message during phenotype import "the disease belonging
    to this phenotype entry is yet to be inserted into the database" was not
    correct. 
+ * Fixed bug; User can add a new disease via 'configure more diseases' link on
+   the edit individual or edit gene page. A new create disease window is opened,
+   but the relation between disease and individual or gene was not selected when
+   closing the create new disease window.
 
 /**************************
  * 3.0 Build 12 (r480)
