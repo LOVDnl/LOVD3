@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2015-03-10
+ * Modified    : 2015-03-11
  * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -219,19 +219,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             if (isset($_GET['in_window'])) {
                 // We're in a new window, refresh opener en close window.
                 print('      <SCRIPT type="text/javascript">
-                                 $(opener.document.forms[0][\'active_diseases[]\']).append(\'<OPTION value="' . $nID . '">' . lovd_shortenString($_POST['symbol'] . ' (' . $_POST['name'] . ')', 60) . '</OPTION>\');
+                                 $(opener.document.forms[0][\'active_diseases[]\']).append(\'<OPTION value="' . $nID . '">' . lovd_shortenString($_POST['symbol'] . ' (' . $_POST['name'] . ')', 75) . '</OPTION>\');
                                  if ($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\') < 15) {
                                      $(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\', eval($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\')) + 1);
-                                 }' . "\n");
-                print('          if (opener.document.location.href.match(/\/individuals\//)) {
-                                         $(opener.document.forms[0][\'active_diseases[]\']).children(\'option:last\').attr(\'selected\', 1);
-                                     }' . "\n");
-                if (!empty($_POST['genes'])) {
-                    print('          if (opener.document.location.href.match(/\/genes\/(' . implode('|', $_POST['genes']) . ')\?/)) {
-                                         $(opener.document.forms[0][\'active_diseases[]\']).children(\'option:last\').attr(\'selected\', 1);
-                                     }' . "\n");
-                }
-                print('          setTimeout(\'self.close();\', 1000);</SCRIPT>' . "\n\n");
+                                 }
+                                 if (opener.document.location.href.match(/\/(individuals\/' . (empty($_POST['genes'])? '' : '|genes\/(' . implode('|', $_POST['genes']) . ')\?') . ')/)) {
+                                     $(opener.document.forms[0][\'active_diseases[]\']).children(\'option:last\').attr(\'selected\', 1);
+                                 }
+                                 setTimeout(\'self.close();\', 1000);</SCRIPT>' . "\n\n");
             } else {
                 print('      <SCRIPT type="text/javascript">setTimeout(\'window.location.href=\\\'' . lovd_getInstallURL() . CURRENT_PATH . '/' . $nID . '\\\';\', 3000);</SCRIPT>' . "\n\n");
             }
