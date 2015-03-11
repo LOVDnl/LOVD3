@@ -370,6 +370,7 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
     $nTablesFound = count($aTablesFound);
 
     if ($nTablesFound) {
+        // FIXME: This check needs to be done in the beginning. Redirect loop can occur, if TABLE_USERS exists, but other tables miss.
         if ($nTablesFound == $nTables) {
             // Maybe an existing LOVD install... Weird, because then we shouldn't have gotten here... Right?
             $sVersion = $_DB->query('SELECT version FROM ' . TABLE_STATUS, false, false)->fetchColumn();

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-08-19
+ * Modified    : 2014-11-05
  * For LOVD    : 3.0-12
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1370,7 +1370,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     $aFieldsVariantOnGenome = array(); // [0] is the first variant, [1] is filled in case of compound heterozygosity.
                     $aFieldsVariantOnTranscript = array();
 
-                    // lovd_fetchDBID wants to have some additional data in the variant's array which we need to store seperately for now.
+                    // lovd_fetchDBID wants to have some additional data in the variant's array which we need to store separately for now.
                     $aTranscriptDataForDBID = array();
 
                     // And we use this just to be able to cache the numberConversion calls.
