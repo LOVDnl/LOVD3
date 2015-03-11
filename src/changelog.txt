@@ -33,30 +33,26 @@
  * Fixed bug; The ORCID integration during user registration had to be updated
    due to a discontinued service.
  * Updated the year of the copyright notice in the footer.
- * LOVD now reports the incorrect DBID, when it throws an error about rejecting
-   the given ID.
+ * When rejecting a given DBID, LOVD now reports the incorrect DBID.
  * Improved import; If a custom column, transcript or disease already exists in
    the database, the IDs from the database are used and a soft error is set.
    Custom columns and diseases that exist are not imported and import will
-   continue with the IDs from the database.
- * Updated the manual; Added chapter 8-submitting data to the LOVD and chapter
-   9-information about downloading and importing data.
+   continue using the IDs from the database.
+ * Added chapter "Adding data to LOVD" to the manual and extended chapter
+   "Downloading & importing data".
  * The Phenotype/Length column is now no longer enabled by default for healthy
    controls.
  * On the system-wide view of gene-specific columns, two menu links were enabled
    for Curators, which led to non-available actions.
  * Clarified some text in the Configuration area.
- * Fixed bug; The warning message during phenotype import "the disease belonging
-   to this phenotype entry is yet to be inserted into the database" was not
-   correct. 
- * Fixed bug; User can add a new disease via 'configure more diseases' link on
-   the edit individual or edit gene page. A new create disease window is opened,
-   but the relation between disease and individual or gene was not selected when
-   closing the create new disease window.
- * Fixed bug; Page "View individuals screened for gene ... " displayed
-   individuals screened for other genes, due to partial match. ie when on the
-   page "View individuals screened for gene CDH1" also individual screened for
-   PCDH19 were displayed.
+ * Fixed bug; During phenotype data import, an incorrect warning message could
+   occur, about the disease not being inserted in the database yet.
+ * Improved the way a new disease can be created through a popup window from the
+   individual and gene data entry forms.
+ * Fixed bug; The gene-specific page for listing individuals sometimes showed
+   individuals screened for other genes, if those genes had a symbol partially
+   matching the selected gene.
+
 
 /**************************
  * 3.0 Build 12 (r480)
