@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2014-12-12
+ * Modified    : 2015-03-11
  * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
@@ -707,9 +707,9 @@ if (POST) {
                     if (in_array($aLine['id'], $aSection['ids'])) {
                         $_BAR[0]->appendMessage('Warning: There is already a ' . $aLine['category'] . ' column with column ID ' . $aLine['colid'] . '. This column is not imported! <BR>', 'done');
                         $nWarnings ++;
-                        // break: None of the following checks have to be done because column is not imported. 
+                        // break: None of the following checks have to be done because column is not imported.
                         break;
-                    } 
+                    }
                     // Columns normally not on the form, are not checked properly...
                     // Col_order; numeric and 0 <= col_order <= 255.
                     if ($aLine['col_order'] === '') {
@@ -774,13 +774,13 @@ if (POST) {
                 case 'Transcripts':
                     if (!in_array($sFileType, array('Genes', 'Transcripts'))) {
                         // Not importing genes or transcripts. Allowed are references to existing transcripts only!!!
-//                            $_BAR[0]->appendMessage('Warning: transcript "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['geneid'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import transcripts into LOVD using this file format.<BR>', 'done');
-                            // FIXME: If we'll allow the creation of transcripts, and we have an object, we can use $zData here.
+//                        $_BAR[0]->appendMessage('Warning: transcript "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['geneid'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import transcripts into LOVD using this file format.<BR>', 'done');
+                        // FIXME: If we'll allow the creation of transcripts, and we have an object, we can use $zData here.
                         // Transcript has been found in the database, check if NM and gene are the same. The rest we will ignore.
                         $nTranscriptid = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? AND id_ncbi = ?', array($aLine['geneid'], $aLine['id_ncbi']))->fetchColumn();
                         if ($nTranscriptid) {
                             $aLine['newID'] = $nTranscriptid;
-                            $aLine['todo'] = 'map';        
+                            $aLine['todo'] = 'map';
                         } else {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Transcript "' . htmlspecialchars($aLine['id']) . '" does not match the same gene and/or the same NCBI ID as in the database.');
                             $aLine['todo'] = '';
@@ -810,27 +810,25 @@ if (POST) {
                                     lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name at line ' . $aSection['data'][$nID]['nLine'] . '.');
                                 }
                             }
-                                
+
                             $nDiseaseIdOmim = $_DB->query('SELECT id, id_omim FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aLine['name']))->fetchRow();
                             if ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && $aLine['id_omim']) {
                                 lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Import file contains OMIM ID for disease ' . $aLine['name'] . ', while OMIM ID is missing in database.');
-                            }                       
-                            if (($nDiseaseIdOmim && $nDiseaseIdOmim[1]==$aLine['id_omim']) || ($nDiseaseIdOmim[1] && !$aLine['id_omim']) || ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && !$aLine['id_omim'])) {
-                                // Some error added in checkfields should be removes and because soft messages are used. 
-                                $key = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name!', $_ERROR['messages']);
+                            }
+                            if (($nDiseaseIdOmim && $nDiseaseIdOmim[1] == $aLine['id_omim']) || ($nDiseaseIdOmim[1] && !$aLine['id_omim']) || ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && !$aLine['id_omim'])) {
+                                // Some error added in checkfields should be removes and because soft messages are used.
+                                $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name!', $_ERROR['messages']);
                                 // when key is false, no errors are set in checkfields.
-                                if($key !== false);
-                                {
-                                    unset($_ERROR['messages'][$key]);
-                                    $_ERROR['messages'] = array_values($_ERROR['messages']);   
+                                if ($nKey !== false) {
+                                    unset($_ERROR['messages'][$nKey]);
+                                    $_ERROR['messages'] = array_values($_ERROR['messages']);
                                 }
-                                
-                                $key = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID!', $_ERROR['messages']);
+
+                                $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID!', $_ERROR['messages']);
                                 // when key is false, no errors are set in checkfields.
-                                if($key !== false);
-                                {
-                                    unset($_ERROR['messages'][$key]);
-                                    $_ERROR['messages'] = array_values($_ERROR['messages']);                        
+                                if ($nKey !== false) {
+                                    unset($_ERROR['messages'][$nKey]);
+                                    $_ERROR['messages'] = array_values($_ERROR['messages']);
                                 }
                                 $_BAR[0]->appendMessage('Warning: There is already a disease with disease name ' . $aLine['name'] . '. This disease is not imported! <BR>', 'done');
                                 $nWarnings ++;
@@ -874,14 +872,14 @@ if (POST) {
                     } elseif ($bGeneInDB) {
                         // No problems left, just check now if insert is necessary or not.
                         if (!$bDiseaseInDB || ($sMode == 'insert' && $nNewID === false && $bDiseaseInFile)) {
-                            // Disease is in file (will be inserted, or it has generated errors), so flag this to be inserted!     
+                            // Disease is in file (will be inserted, or it has generated errors), so flag this to be inserted!
                             $aLine['todo'] = 'insert';
                         } else {
                             $aSQL = array($aLine['geneid']);
                             if (isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID'])) {
-                                array_push($aSQL, $aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID']);
+                                $aSQL[] = $aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID'];
                             } else {
-                                array_push($aSQL, $aLine['diseaseid']);
+                                $aSQL[] = $aLine['diseaseid'];
                             }
                             // Gene & Disease are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
                             $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid = ?', $aSQL)->fetchColumn();

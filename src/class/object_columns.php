@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2014-03-06
+ * Modified    : 2015-03-11
  * For LOVD    : 3.0-10
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -198,9 +198,8 @@ class LOVD_Column extends LOVD_Object {
         }
 
         // During an import ColID that exist in the database do not give a hard error. Error is handled in import.php
-        if (lovd_getProjectFile() != '/import.php')        
-        { 
-            //ColID must not exist in the database.
+        if (lovd_getProjectFile() != '/import.php') {
+            // ColID must not exist in the database.
             if (!empty($aData['category']) && !empty($aData['colid'])) {
                 if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid']))->fetchColumn()) {
                     lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
