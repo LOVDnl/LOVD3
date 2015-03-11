@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2015-01-23
+ * Modified    : 2015-03-11
  * For LOVD    : 3.0-13
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -377,7 +377,7 @@ class LOVD_Custom extends LOVD_Object {
                     $aData[$sCol] = $_POST[$sCol] = $aRegs[1] . (!$aRegs[2]? '00y' : $aRegs[2]) . (!$aRegs[3] && $aRegs[4]? '00m' : $aRegs[3]) . (!$aRegs[4]? '' : $aRegs[4]) . (!$aRegs[5]? '' : $aRegs[5]);
                 }
             }
-            if (isset($aData[$sCol])) {
+            if (!empty($aData[$sCol])) {
                 $this->checkInputRegExp($sCol, $aData[$sCol]);
                 $this->checkSelectedInput($sCol, $aData[$sCol]);
             }

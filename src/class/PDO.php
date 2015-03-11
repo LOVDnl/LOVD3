@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2012-10-28
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2015-03-05
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -153,7 +153,7 @@ class LOVD_PDO extends PDO {
         // THIS WRAPPER DOES NOT SUPPORT ANY OF THE MODES!
         //   PDO::FETCH_COLUMN is quite useless (you have ->fetchColumn() for that) and PDO::FETCH_CLASS and PDO::FETCH_INTO MODE are not used in LOVD.
 
-        if (is_array($aSQL)) {
+        if ($aSQL === (array) $aSQL) { // Believe it or not, faster than is_array().
             // We'll do an prepare() and execute(), not a query()!
             $q = $this->prepare($sSQL, $bHalt); // Error handling by our own PDO class.
             if ($q) {
@@ -213,10 +213,10 @@ class LOVD_PDOStatement extends PDOStatement {
         global $_DB;
 
         try {
-            if (is_array($aSQL)) {
+            if ($aSQL === (array) $aSQL) { // Believe it or not, faster than is_array().
                 // lovd_queryDB() allowed the passing of arrays in the arguments.
                 foreach ($aSQL as $nKey => $Arg) {
-                    if (is_array($Arg)) {
+                    if ($Arg === (array) $Arg) { // Believe it or not, faster than is_array().
                         // We handle arrays gracefully.
                         $aSQL[$nKey] = implode(';', ($bTrim? array_map('trim', $Arg) : $Arg));
                     } elseif ($Arg === NULL) {

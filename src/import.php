@@ -350,7 +350,7 @@ if (POST) {
                     $nColumns = &$aSection['nColumns'];
 
                     // Section-specific settings and definitions.
-                    if (!in_array($sCurrentSection, array('Genes_To_Diseases'))) {
+                    if ($sCurrentSection != 'Genes_To_Diseases') {
                         $aSection['required_columns'][] = 'id';
                     }
                     $sTableName = 'TABLE_' . strtoupper($sCurrentSection);
@@ -423,7 +423,13 @@ if (POST) {
                             $aSection['required_columns'] = $aSection['allowed_columns'];
                         } else {
                             // Normal data table, no data links.
-                            $aSection['ids'] = $_DB->query('SELECT id FROM ' . $sTableName)->fetchAllColumn();
+                            if ($sCurrentSection == 'Variants_On_Transcripts' && $aParsed['Variants_On_Genome']['ids']) {
+                                // IDs are not unique, and anyways are already parsed in the VOG section.
+                                // Note: Making this a reference (=& instead of =) slows down the parsing of a VOT line 3x. Don't understand why.
+                                $aSection['ids'] = $aParsed['Variants_On_Genome']['ids'];
+                            } else {
+                                $aSection['ids'] = $_DB->query('SELECT id FROM ' . $sTableName)->fetchAllColumn();
+                            }
                         }
                     }
                     // For custom objects: all mandatory custom columns will be mandatory here, as well.
@@ -620,7 +626,7 @@ if (POST) {
                 }
 
                 // We'll need to split the functional consequence field to have checkFields() function normally.
-                if (in_array($sCurrentSection, array('Variants_On_Genome', 'Variants_On_Transcripts'))) {
+                if ($sCurrentSection == 'Variants_On_Genome' || $sCurrentSection == 'Variants_On_Transcripts') {
                     $aLine['effect_reported'] = substr($_SETT['var_effect_default'], 0, 1); // Default value.
                     $aLine['effect_concluded'] = substr($_SETT['var_effect_default'], -1); // Default value.
                     if (in_array('effectid', $aColumns)) {
@@ -646,7 +652,7 @@ if (POST) {
 
             // General checks: numerical ID, have we seen the ID before, owned_by, created_* and edited_*.
             if (!empty($aLine['id'])) {
-                if (in_array($sCurrentSection, array('Columns', 'Genes'))) {
+                if ($sCurrentSection == 'Columns' || $sCurrentSection == 'Genes') {
                     $ID = $aLine['id'];
                 } else {
                     if (!ctype_digit($aLine['id'])) {
@@ -772,7 +778,7 @@ if (POST) {
                     break;
 
                 case 'Transcripts':
-                    if (!in_array($sFileType, array('Genes', 'Transcripts'))) {
+                    if ($sFileType != 'Genes' && $sFileType != 'Transcripts') {
                         // Not importing genes or transcripts. Allowed are references to existing transcripts only!!!
 //                        $_BAR[0]->appendMessage('Warning: transcript "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['geneid'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import transcripts into LOVD using this file format.<BR>', 'done');
                         // FIXME: If we'll allow the creation of transcripts, and we have an object, we can use $zData here.

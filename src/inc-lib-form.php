@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2013-11-25
- * For LOVD    : 3.0-09
+ * Modified    : 2015-03-05
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -81,16 +81,18 @@ function lovd_checkDBID ($aData)
         if (!empty($sGenomeVariant)) {
             // SQL addition to check the genomic notation-chromosome combination.
             $sWhere .= '(REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?) ';
-            $aArgs = array_merge($aArgs, array($sGenomeVariant, $aData['chromosome']));
+            $aArgs[] = $sGenomeVariant;
+            $aArgs[] = $aData['chromosome'];
         }
         foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
             // SQL addition to check the transcript notation-transcript combination.
             $sWhere .= (!empty($sWhere)? 'OR ' : '') . '(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?) ';
-            $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
+            $aArgs[] = $sTranscriptVariant;
+            $aArgs[] = $nTranscriptID;
         }
         // SQL addition to check if the above combinations are found with the given DBID.
         $sWhere .= ') AND BINARY vog.`VariantOnGenome/DBID` = ? ';
-        $aArgs = array_merge($aArgs, array($aData['VariantOnGenome/DBID']));
+        $aArgs[] = $aData['VariantOnGenome/DBID'];
         if ($nIDtoIgnore > 0) {
             // SQL addition to exclude the current variant, where the $aData belongs to.
             $sWhere .= 'AND vog.id != ? ';
@@ -380,12 +382,13 @@ function lovd_fetchDBID ($aData)
             $sSQL = 'SELECT DISTINCT vog.`VariantOnGenome/DBID` ' .
                     'FROM ' . TABLE_VARIANTS . ' AS vog ' .
                     'WHERE `VariantOnGenome/DBID` IS NOT NULL AND `VariantOnGenome/DBID` != "" AND REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?';
-            $aArgs = array_merge($aArgs, array($sGenomeVariant, $aData['chromosome']));
+            $aArgs[] = $sGenomeVariant;
+            $aArgs[] = $aData['chromosome'];
             // 2013-02-28; 3.0-03; If we have the variant's position available, we can use that, speeding up the query from
             // 0.11s to 0.00s when having 1M variants. Would the position ever be different when we've got the same DNA field?
             if (!empty($aData['position_g_start'])) {
                 $sSQL .= ' AND vog.position_g_start = ?';
-                $aArgs = array_merge($aArgs, array($aData['position_g_start']));
+                $aArgs[] = $aData['position_g_start'];
             }
             if (!empty($aTranscriptVariants)) {
                 $sSQL .= ' UNION ';
@@ -401,7 +404,8 @@ function lovd_fetchDBID ($aData)
             foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
                 // SQL addition to check the transcript notation-transcript combination.
                 $sWhere .= (empty($sWhere)? '' : ' OR ') . '(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?)';
-                $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
+                $aArgs[] = $sTranscriptVariant;
+                $aArgs[] = $nTranscriptID;
             }
             $sWhere .= ')';
             $sSQL .= $sWhere;

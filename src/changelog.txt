@@ -52,6 +52,7 @@
  * Fixed bug; The gene-specific page for listing individuals sometimes showed
    individuals screened for other genes, if those genes had a symbol partially
    matching the selected gene.
+ * Multiple speed optimizations related to importing large files.
 
 
 /**************************

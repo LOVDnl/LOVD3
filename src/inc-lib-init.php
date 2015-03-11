@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2014-10-09
- * For LOVD    : 3.0-12
+ * Modified    : 2015-03-05
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -427,11 +427,18 @@ function lovd_getInstallURL ($bFull = true)
 function lovd_getProjectFile ()
 {
     // Gets project file name (file name including possible project subdirectory).
+    // 2015-03-05; 3.0-13; When running an import, this function is called very often, so let's cache this function's results.
+    static $sProjectFile;
+    if ($sProjectFile) {
+        return $sProjectFile;
+    }
+
     $sDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // /LOVDv.3.0/install/ or /
     $sProjectDir = lovd_cleanDirName($sDir . ROOT_PATH);        // /LOVDv.3.0/         or /
     $sDir = substr($sDir, strlen($sProjectDir) - 1);            // /install/           or /
     // You need to use SCRIPT_FILENAME here, because SCRIPT_NAME can lose the .php extension.
-    return $sDir . basename($_SERVER['SCRIPT_FILENAME']);       // /install/index.php  or /variants.php
+    $sProjectFile = $sDir . basename($_SERVER['SCRIPT_FILENAME']); // /install/index.php  or /variants.php
+    return $sProjectFile;
 }
 
 
