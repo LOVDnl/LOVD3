@@ -53,6 +53,10 @@
    the edit individual or edit gene page. A new create disease window is opened,
    but the relation between disease and individual or gene was not selected when
    closing the create new disease window.
+ * Fixed bug; Page "View individuals screened for gene ... " displayed
+   individuals screened for other genes, due to partial match. ie when on the
+   page "View individuals screened for gene CDH1" also individual screened for
+   PCDH19 were displayed.
 
 /**************************
  * 3.0 Build 12 (r480)

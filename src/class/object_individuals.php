@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2014-10-18
+ * Modified    : 2015-03-11
  * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -150,12 +151,15 @@ class LOVD_Individual extends LOVD_Custom {
                         'diseases_' => array(
                                     'view' => array('Disease', 175),
                                     'db'   => array('diseases_', 'ASC', true)),
+                        'genes_searched' => array(
+                                    'view' => false,
+                                    'db'   => array('s2g.geneid', false, true)),
                         'genes_screened_' => array(
                                     'view' => array('Genes screened', 175),
                                     'db'   => array('genes_screened_', false, true)),
                         'variants_' => array(
                                     'view' => array('Variants', 75),
-                                    'db'   => array('variants_', 'ASC', 'INT_UNSIGNED')),
+                                    'db'   => array('variants_', 'DESC', 'INT_UNSIGNED')),
                         'panel_size' => array(
                                     'view' => array('Panel size', 70),
                                     'db'   => array('i.panel_size', 'DESC', true),

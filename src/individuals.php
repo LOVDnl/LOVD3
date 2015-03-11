@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2014-03-31
- * For LOVD    : 3.0-10
+ * Modified    : 2015-03-11
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -51,9 +52,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         if ($sGene) {
             // We need the authorization call once we show the individuals with VARIANTS in gene X, not before!
 //            lovd_isAuthorized('gene', $sGene); // To show non public entries.
-
-            // FIXME; This doesn't work; searching for gene X also finds XYZ.
-            $_GET['search_genes_screened_'] = $sGene;
+            $_GET['search_genes_searched'] = '="' . $sGene . '"';
         } else {
             // Command or gene not understood.
             // FIXME; perhaps a HTTP/1.0 501 Not Implemented? If so, provide proper output (gene not found) and
