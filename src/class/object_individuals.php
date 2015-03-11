@@ -267,7 +267,7 @@ class LOVD_Individual extends LOVD_Custom {
         $aDiseasesForm = $_DB->query('SELECT id, IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")) FROM ' . TABLE_DISEASES . ' ORDER BY (id > 0), (symbol != "" AND symbol != "-") DESC, symbol, name')->fetchAllCombine();
         $nDiseases = count($aDiseasesForm);
         foreach ($aDiseasesForm as $nID => $sDisease) {
-            $aDiseasesForm[$nID] = lovd_shortenString($sDisease, 60);
+            $aDiseasesForm[$nID] = lovd_shortenString($sDisease, 75);
         }
         $nFieldSize = ($nDiseases < 15? $nDiseases : 15);
         if (!$nDiseases) {
