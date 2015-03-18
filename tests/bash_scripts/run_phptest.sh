@@ -8,6 +8,9 @@ SELENIUMTESTFOLDER=${TESTPATH}/phpunit_selenium
 # used for the report name.
 DATE=`date +%Y-%m-%d:%H:%M:%S`
 
+# Default location of phpunit folder
+PHPUNITFOLDER=/home/dasscheman/bin/vendor/phpunit/phpunit/
+
 # get the exact location of the selenium server.
 SELENIUMSERVER=`locate /bin/selenium-server-standalone-2.44.0.jar`
 
@@ -16,12 +19,12 @@ do
     case $i in
         -f=*|--file=*)
             FILE="${i#*=}"
-            # Check if folder exists. 
+            # Check if folder exists.
             if [ ! -e ${SELENIUMTESTFOLDER}/${FILE} ]; then
                 echo "File" $FILE " does not exists"
                 echo "Test is aborted"
                 exit
-            fi 
+            fi
         ;;
         -p=*|--phpunit=*)
             PHPUNITFOLDER="${i#*=}"
@@ -41,17 +44,17 @@ do
     esac
 done
 
-# Check if phpunit folder exists. 
+# Check if phpunit folder exists.
 if [ ! -e ${PHPUNITFOLDER}phpunit ]; then
-    echo "phpunit is not found in folder:" $PHPUNITFOLDER   
+    echo "phpunit is not found in folder:" $PHPUNITFOLDER
     echo "Test is aborted"
     exit
-fi 
+fi
 
-# If the selenium server is already running, then the selenium server is not started again. 
+# If the selenium server is already running, then the selenium server is not started again.
 javaruns=`ps -ef | grep selenium-server | grep -v grep | wc -l`
 if [ $javaruns = 0 ]; then
-    if [ ! -e ${SELENIUMSERVER} ]; then 
+    if [ ! -e ${SELENIUMSERVER} ]; then
         echo "Cannot find Selenium Server!"
         echo "Test is aborted"
         exit

@@ -83,7 +83,7 @@
 </tr>
 <!--Importing seatlleseq can take some time, therefore the timeout is extended. And seet back to 3000 after seatlleseq is successfully imported.-->
 <tr>
-	<td>setTimeout</td>
+	<td>pause</td>
 	<td>300000</td>
 	<td></td>
 </tr>
@@ -93,8 +93,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>setTimeout</td>
-	<td>3000</td>
+	<td>pause</td>
+	<td>30000</td>
 	<td></td>
 </tr>
 <tr>

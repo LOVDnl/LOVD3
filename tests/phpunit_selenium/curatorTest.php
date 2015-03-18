@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2014-12-19
- * Modified    : 2015-02-19:15:49:53
+ * Modified    : 2015-03-18:09:58:04
  * For LOVD    : 3.0-12
  *
  * Copyright   : 2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,7 +31,7 @@
 class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
 {
     protected $captureScreenshotOnFailure = TRUE;
-    protected $screenshotPath = '/home/dasscheman/svn/LOVD3_development/trunk/tests/test_results/error_screenshots';
+    protected $screenshotPath = '/home/dasscheman/svn/LOVD3/trunk/tests/test_results/error_screenshots';
     protected $screenshotUrl = 'trunk/tests/test_results/error_screenshots';
   
     protected function setUp()
@@ -39,12 +39,12 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->setHost('localhost');
         $this->setPort(4444);
         $this->setBrowser("firefox");
-        $this->setBrowserUrl("http://localhost/svn/LOVD3_development/");
+        $this->setBrowserUrl("http://localhost/svn/LOVD3/");
         $this->shareSession(true);
     }
     public function testInstallLOVD()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/install/");
+        $this->open("/svn/LOVD3/trunk/src/install/");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
         $this->type("name=name", "LOVD3 Admin");
@@ -104,7 +104,7 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateUserManager()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
+        $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
         $this->type("name=name", "Test Manager");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
@@ -124,7 +124,7 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateUserCurator()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
+        $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
         $this->type("name=name", "Test Curator");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
@@ -144,7 +144,7 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testMakeUserCuratorGJB()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/genes/GJB1?authorize");
+        $this->open("/svn/LOVD3/trunk/src/genes/GJB1?authorize");
         $this->click("link=Test Curator");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
@@ -153,8 +153,8 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testLoginAsCurator()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/logout");
-        $this->open("/svn/LOVD3_development/trunk/src/login");
+        $this->open("/svn/LOVD3/trunk/src/logout");
+        $this->open("/svn/LOVD3/trunk/src/login");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/login$/',$this->getLocation()));
         $this->type("name=username", "curator");
         $this->type("name=password", "test1234");
@@ -163,12 +163,12 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateUserCurator2()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
+        $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
         $this->assertEquals("To access this area, you need at least Manager clearance.", $this->getText("//div/table/tbody/tr/td/table/tbody/tr/td[2]"));
     }
     public function testCreateUserSubmitter()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
+        $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
         $this->assertEquals("To access this area, you need at least Manager clearance.", $this->getText("//div/table/tbody/tr/td/table/tbody/tr/td[2]"));
     }
     public function testCreateDiseaseCMT()
@@ -340,17 +340,17 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddSeatlleseqFileToCMTIndividual()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/variants/upload?create&target=0000000002");
+        $this->open("/svn/LOVD3/trunk/src/variants/upload?create&target=0000000002");
         $this->assertEquals("To access this area, you need at least Manager clearance.", $this->getText("//div/table/tbody/tr/td/table/tbody/tr/td[2]"));
     }
     public function testAddVcfFileToCMTIndividual()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/variants/upload?create&target=0000000001");
+        $this->open("/svn/LOVD3/trunk/src/variants/upload?create&target=0000000001");
         $this->assertEquals("To access this area, you need at least Manager clearance.", $this->getText("//div/table/tbody/tr/td/table/tbody/tr/td[2]"));
     }
     public function testFinishIndividualDiagnosedWithCMT()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/submit/screening/0000000001");
+        $this->open("/svn/LOVD3/trunk/src/submit/screening/0000000001");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
         $this->click("//tr[3]/td[2]/b");
         $this->waitForPageToLoad("30000");
@@ -426,17 +426,17 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddSummaryVariantSeatlleseqFile()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/variants/upload?create");
+        $this->open("/svn/LOVD3/trunk/src/variants/upload?create");
         $this->assertEquals("To access this area, you need at least Manager clearance.", $this->getText("//div/table/tbody/tr/td/table/tbody/tr/td[2]"));
     }
     public function testAddSummaryVariantVcfFile()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/variants/upload?create&type=VCF");
+        $this->open("/svn/LOVD3/trunk/src/variants/upload?create&type=VCF");
         $this->assertEquals("To access this area, you need at least Manager clearance.", $this->getText("//div/table/tbody/tr/td/table/tbody/tr/td[2]"));
     }
     public function testPostFinishAddVariantOnlyDescribedOnGenomicLevelToCMTIndividual()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/");
+        $this->open("/svn/LOVD3/trunk/src/");
         $this->click("id=tab_screenings");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings$/',$this->getLocation()));
@@ -578,13 +578,13 @@ class curator_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testUninstallLOVD()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/logout");
-        $this->open("/svn/LOVD3_development/trunk/src/login");
+        $this->open("/svn/LOVD3/trunk/src/logout");
+        $this->open("/svn/LOVD3/trunk/src/login");
         $this->type("name=username", "admin");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
-        $this->open("/svn/LOVD3_development/trunk/src/uninstall");
+        $this->open("/svn/LOVD3/trunk/src/uninstall");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
