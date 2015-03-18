@@ -9,7 +9,7 @@ SELENIUMTESTFOLDER=${TESTPATH}/phpunit_selenium
 DATE=`date +%Y-%m-%d:%H:%M:%S`
 
 # Default location of phpunit folder
-PHPUNITFOLDER=/home/dasscheman/bin/vendor/phpunit/phpunit/
+PHPUNITFOLDER=/home/$USER/bin/vendor/phpunit/phpunit/
 
 # get the exact location of the selenium server.
 SELENIUMSERVER=`locate /bin/selenium-server-standalone-2.44.0.jar`

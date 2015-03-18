@@ -55,49 +55,63 @@ rsort($dirArray);
 
 function getNumberOfTests($file)
 {
-	$xml=simplexml_load_file($file);
-	if ($xml) {
-		return $xml->testsuite[0]->attributes()->tests;
+	$xml = file_get_contents($file);
+	if (trim($xml) != '') {
+		$xml=simplexml_load_file($file);
+		if ($xml) {
+			return $xml->testsuite[0]->attributes()->tests;
+		}
 	}
 	return "ND";
 }
 
 function getNumberOfAssertions($file)
 {
-	$xml=simplexml_load_file($file);
-	if ($xml) {
-		return $xml->testsuite[0]->attributes()->assertions;
+	$xml = file_get_contents($file);
+	if (trim($xml) != '') {
+		$xml=simplexml_load_file($file);
+		if ($xml) {
+			return $xml->testsuite[0]->attributes()->assertions;
+		}
 	}
 	return "ND";
 }
 
 function getNumberOfFailures($file)
 {
-	$xml=simplexml_load_file($file);
-	if ($xml) {
-		return $xml->testsuite[0]->attributes()->failures;
+	$xml = file_get_contents($file);
+	if (trim($xml) != '') {
+		$xml=simplexml_load_file($file);
+		if ($xml) {
+			return $xml->testsuite[0]->attributes()->failures;
+		}
 	}
 	return "ND";
 }
 
 function getNumberOfErrors($file)
 {
+	$xml = file_get_contents($file);
+	if (trim($xml) != '') {
 	$xml=simplexml_load_file($file);
-	if ($xml) {
-		return $xml->testsuite[0]->attributes()->errors;
+		if ($xml) {
+			return $xml->testsuite[0]->attributes()->errors;
+		}
 	}
 	return "ND";
 }
 
 function getRunningTime($file)
 {
-	$xml=simplexml_load_file($file);
-	if ($xml) {
-		$minutes = floor($xml->testsuite[0]->attributes()->time/60);
-		$seconds = $xml->testsuite[0]->attributes()->time % 60;
-		$seconds = sprintf( '%02d', $seconds );
-		return $minutes.":".$seconds."  (min:sec)";
+	$xml = file_get_contents($file);
+	if (trim($xml) != '') {
+		$xml=simplexml_load_file($file);
+		if ($xml) {
+			$minutes = floor($xml->testsuite[0]->attributes()->time/60);
+			$seconds = $xml->testsuite[0]->attributes()->time % 60;
+			$seconds = sprintf( '%02d', $seconds );
+			return $minutes.":".$seconds."  (min:sec)";
+		}
 	}
 	return "ND";
 }
-

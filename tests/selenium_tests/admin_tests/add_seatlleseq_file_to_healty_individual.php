@@ -27,7 +27,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=statusid", "label=Public");
     $this->click("css=input[type=\"submit\"]");
     // Importing seatlleseq can take some time, therefore the timeout is extended. And seet back to 3000 after seatlleseq is successfully imported.
-    sleep(300);
+    sleep(30);
     for ($second = 0; ; $second++) {
         if ($second >= 60) $this->fail("timeout");
         try {

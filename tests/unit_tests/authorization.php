@@ -77,6 +77,7 @@ assert("lovd_isAuthorized('asdfasdf', 'ASDFASDFASDF', false)");
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 3')->fetchAssoc();
 assert('!empty($_AUTH)');
 $_AUTH['curates'] = $_DB->query('SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = 3 AND allow_edit = 1')->fetchAssoc();
+$_AUTH['collaborates'] = array();
 assert('!empty($_AUTH["curates"])');
 assert("lovd_isAuthorized('gene', 'IVD', false) === 1");
 assert("lovd_isAuthorized('disease', '1', false) === 1");
@@ -90,6 +91,7 @@ assert("lovd_isAuthorized('screening', '1', false) === 1");
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 4')->fetchAssoc();
 assert('!empty($_AUTH)');
 $_AUTH['collaborates'] = $_DB->query('SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = 4 AND allow_edit = 0')->fetchAssoc();
+$_AUTH['curates'] = array();
 assert('!empty($_AUTH["collaborates"])');
 assert("lovd_isAuthorized('gene', 'IVD', false) === 0");
 assert("lovd_isAuthorized('disease', '1', false) === 0");
@@ -101,6 +103,8 @@ assert("lovd_isAuthorized('screening', '1', false) === 0");
 
 // Assertions for SUBMITTER
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 5')->fetchAssoc();
+$_AUTH['curates'] = array();
+$_AUTH['collaborates'] = array();
 assert('!empty($_AUTH)');
 assert("lovd_isAuthorized('gene', 'IVD', false) === false");
 assert("lovd_isAuthorized('disease', '1', false) === false");
@@ -113,6 +117,8 @@ assert("lovd_isAuthorized('screening', '1', false) === false");
 // Assertions for OWNER
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 6')->fetchAssoc();
 $_CONF['allow_submitter_mods'] = 1;
+$_AUTH['curates'] = array();
+$_AUTH['collaborates'] = array();
 assert("lovd_isAuthorized('individual', '1', false) === 1");
 assert("lovd_isAuthorized('phenotype', '1', false) === 1");
 assert("lovd_isAuthorized('variant', '1', false) === 1");

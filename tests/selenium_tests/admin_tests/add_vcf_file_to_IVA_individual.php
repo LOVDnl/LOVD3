@@ -32,7 +32,6 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->assertEquals("138 variants where imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
     $this->click("css=input[type=\"button\"]");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000003$/',$this->getLocation()));
     sleep(100);
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
