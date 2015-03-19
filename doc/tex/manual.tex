@@ -215,11 +215,11 @@
 
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-12}
+\setLOVDversion{3.0-13}
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \institute{Leiden University Medical Center}
-\date{2014-11-26} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2015-03-19} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
   (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
@@ -1305,6 +1305,7 @@ Therefore, most of the information in this section has been filled in for you, a
 
 \hypertarget{ssec:relation_to_disease}{}
 \subsection{Relation to diseases}
+\label{ssec:relation_to_disease}
 \begin{description}
   \item[This gene has been linked to these diseases] \hfill \\
   By linking the gene to disease(s), LOVD can help predicting next steps in data submission,
@@ -1825,8 +1826,7 @@ You will need to enable the column after defining it, so it actually gets added 
 To create a new custom column, click on the ``Create new custom data column'' option from the ``Setup'' tab dropdown menu,
  or the ``Create new custom data column'' link in the setup area.
 Firstly, you will need to choose which type of column you would like to create.
-For more information on the different column types, see the \hyperlink{sec:custom_column_categories}
- {\nameref{sec:custom_column_categories}}.
+For more information on the different column types, see the \hyperlink{sec:custom_column_categories}{previous section}.
 Please note that you can never change the type of a column once it has been chosen.
 Select the type of column you would like to create, by clicking its description.
 You are then forwarded to the entry form specific for this type of custom column.
@@ -1838,7 +1838,8 @@ Here the description of the new column is defined; its displayed name and the ex
 \begin{description}
   \item[Column ID] \hfill \\
   Choose a simple unique name for your column, consisting of only letters, numbers and underscores.
-  Subcategories must be divided by a slash (/), such as ``Geographic\_origin\slash Country'', ``Blood\_pressure/Systolic'', ``Protocol/Date\_updated'', ``Frequency/dbSNP'' or ``Protein/Codon''.
+  Subcategories must be divided by a slash (/), such as ``Geographic\_origin\slash Country'',
+   ``Blood\_pressure/Systolic'', ``Protocol/Date\_updated'', ``Frequency/dbSNP'' or ``Protein/Codon''.
   \item[Column heading] \hfill \\
   This will appear above the column in data tables and on the legend.
   In principle, this is free text, but try to keep it short, because a long name will increase the width of the column.
@@ -2418,7 +2419,8 @@ In any of these cases, the column can not be removed.
     Available from: LOVD 3.0 Build 04
   \end{leftbar}
 \end{wrapfigure}
-LOVD supports exporting the custom data col\-umns, including the columns' system-wide settings, to \hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}.
+LOVD supports exporting the custom data col\-umns, including the columns' system-wide settings,
+ to the \hyperlink{sec:download_import_format}{LOVD import format}.
 This file can then be used as a backup or to share the custom columns specifications with other LOVD3 installations,
  by (re)\hyperlink{ssec:importing_data}{importing the file into LOVD} (from LOVD 3.0-05).
 Please note that from LOVD 3.0-05, the custom column data is also included in the \hyperlink{ssec:download_full_data}{full LOVD download}, available from the setup area.
@@ -2444,8 +2446,7 @@ For more information on the format, please see section ``\hyperlink{sec:download
     Available from: LOVD 3.0 Build 05
   \end{leftbar}
 \end{wrapfigure}
-Custom columns downloaded in the \hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}} 
- can be reimported into LOVD.
+Custom columns downloaded in the \hyperlink{sec:download_import_format}{LOVD import format} can be reimported into LOVD.
 LOVD will only import the custom columns from the file which are not already in the system.
 LOVD does not compare the column's settings in the file versus what is in the database, LOVD just checks if the column IDs are present in the database or not.
 \vskip \baselineskip
@@ -2486,11 +2487,11 @@ When finishing a submission, the curator will receive an email notification, inv
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-You can submit new data by clicking the ``Submit'' tab, or by selecting the option ``Create a new data 
+You can submit new data by clicking the ``Submit'' tab, or by selecting the option ``Create a new data
  submission'' from the dropdown menu of the tabs ``Individuals'', ``Screenings'' or ``Variants''.
 Depending on your authorisation level, you have different options for submitting data.
 As an submitter level user, your submission always starts directly with creating an individual to whom you can link
- phenotype or variant screening information. 
+ phenotype or variant screening information.
 If you are registered as a curator or higher, choose ``I want to submit information on
  individuals'' to enter individual information.
 As a curator or higher, you can also choose to submit only summary variant data, although we do not recommend this.
@@ -2517,6 +2518,7 @@ Hereafter, you are redirected to the menu as displayed in figure \ref{fig:submis
 \end{figure}
 
 
+
 \clearpage
 \hypertarget{ssec:add_phenotype_information_to_an_individual}{}
 \subsection{Adding phenotype information to the individual}
@@ -2529,15 +2531,15 @@ Hereafter, you are redirected to the menu as displayed in figure \ref{fig:submis
 \end{wrapfigure}
 When you created an individual, and this individual has been diagnosed with one or more diseases,
  or when this individual is marked as healthy/control, it is possible to add extra phenotype details to
- this individual. 
-Select ``I want to add phenotype information to this individual'' (figure 
- \hyperlink{fig:submission_of_individual}{\ref{fig:submission_of_individual}}), fill all required field and select 
- ``Create phenotype information entry''. 
- 
+ this individual.
+Select ``I want to add phenotype information to this individual'' (figure
+ \hyperlink{fig:submission_of_individual}{\ref{fig:submission_of_individual}}), fill all required fields and click
+ ``Create phenotype information entry''.
+
 The option ``I want to add phenotype information to this individual'' is disabled when no relation to
  diseases has been selected during the creation of this individual.
 If you wish to add phenotype information while this option is disabled, you have to edit the individual, see
- section ``\hyperlink{ssec:add_phenotype}{\nameref{ssec:add_phenotype}}'' for how to. 
+ section ``\hyperlink{ssec:add_phenotype}{\nameref{ssec:add_phenotype}}'' on how to proceed.
 
 
 
@@ -2565,7 +2567,7 @@ Hereafter you are redirected to a menu where you can choose how to proceed:
     ``Back to the individual'' will leave this screening unfinished, and will return
      you to the choice to add phenotype information or another screening.}
   \end{shaded}
-\end{figure} 
+\end{figure}
 
 
 
@@ -2587,9 +2589,9 @@ A submission can only be finished when at least one variant has been added to th
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_menu_create_new_variant_entry.png}}%
   \caption{%
     Creating a new variant entry.
-    Note: Submitter do not have the option ``I want to upload a file with genomic variant data'' available.}
+    Note: Only managers and up have the option ``I want to upload a file with genomic variant data'' available.}
   \end{shaded}
-\end{figure} 
+\end{figure}
 
 \subsubsection{Confirming variants using a screening}
 When different variant screenings have been applied to the individual, for instance to confirm
@@ -2609,7 +2611,7 @@ Click the checkmarks left of the variants that you would like to mark as confirm
     Shown are the variants already linked to other screenings of the individual,
      but not to the currently selected screening.}
   \end{shaded}
-\end{figure} 
+\end{figure}
 
 \subsubsection{Adding a variant located within a gene}
 After choosing this option, you are shown a list of genes.
@@ -2626,7 +2628,7 @@ If successful, you are redirected to the options to submit more variants, or ret
   \caption{%
     Click the gene for which you want to submit a variant.}
   \end{shaded}
-\end{figure} 
+\end{figure}
 
 \subsubsection{Adding a variant only described on genomic level}
 You can create a variant which is only described on genomic level.
@@ -2678,7 +2680,7 @@ See section ``\hyperlink{ssec:add_variant_to_a_screening}{\nameref{ssec:add_vari
   \end{leftbar}
 \end{wrapfigure}
 The option ``I want to finish this submission'' is enabled for submitters when they completed a submission,
- i.e., an individual, screening and at least one variant have been added. 
+ i.e., an individual, screening and at least one variant have been added.
 Finishing a submission will send an email to the curator(s) of the gene(s) affected by the variant(s) submitted,
  or the manager(s), for variants described only on genomic level.
 They are thereby requested to publish the newly submitted data.
@@ -2703,7 +2705,7 @@ If, for whatever reason, a data submission has not been finished, it is stored i
 This also means that the curator(s) did not get an email with the request to publish the newly submitted data.
 You can continue an unfinished submission at any time, adding any missing information,
  and finishing the submission to alert the curator(s) of the new data.
-To proceed with an unfinished submission, select ``Unfinished submissions'' in the top right corner of the screen. 
+To proceed with an unfinished submission, select ``Unfinished submissions'' in the top right corner of the screen.
 You will see an overview of data submissions which are not yet finished.
 Select any submission to proceed.
 The normal submission process will continue where it was left, for instructions
@@ -2763,7 +2765,7 @@ If you do not see the ``Options'' menu button, you are not logged in or you do n
 In the opened menu, click ``Add variant to screening''.
 From here you can follow the steps described in the section
  ``\hyperlink{ssec:add_variant_to_a_screening}{\nameref{ssec:add_variant_to_a_screening}}''.
-After you submitted the variant data, LOVD sends an email to the curator(s) and redirects you to the variant 
+After you submitted the variant data, LOVD sends an email to the curator(s) and redirects you to the variant
  overview.
 
 
@@ -2783,8 +2785,8 @@ If you do not see the ``Options'' menu button, you are not logged in or you do n
  individual.
 In the opened menu, click ``Add screening to individual'' to open up the screening data entry form.
 You are now in the submission process described in section
- ``\hyperlink{ssec:add_variant_screening_to_an_individual}{\nameref{ssec:add_variant_screening_to_an_individual}}'',
-although the option ``Back to individual'' is not available when you submit a screening to an existing  individual.
+ ``\hyperlink{ssec:add_variant_screening_to_an_individual}{\nameref{ssec:add_variant_screening_to_an_individual}}''.
+The option ``Back to individual'' is not available when you submit a screening to an existing  individual.
 You can only finish this submission, if you also add at least one new variant to this new screening,
  or select at least one previously submitted variant as confirmed by this new screening.
 After finishing the submission, LOVD sends an email to the curator(s) requesting the publication of the submission.
@@ -2829,11 +2831,13 @@ After you submitted the phenotype data, LOVD sends an email
 \hypertarget{sec:download_import_format}{}
 \section{The LOVD3 import format}
 \label{sec:download_import_format}
-The LOVD3 import format is based on the LOVD2 tab-delimited import format, but all data is split into separate sections, preventing data duplication.
+The LOVD3 import format is based on the LOVD2 tab-delimited import format,
+ but all data is split into separate sections, preventing data duplication.
 Examples of sections are Genes, Transcripts, and Diseases.
 Each section has its own set of fields.
 Sections refer to each other using IDs.
-For instance, the Transcripts section has a \emph{geneid} field that refers to an entry in the Genes section with the same value in its \emph{id} field.
+For instance, the Transcripts section has a \emph{geneid} field that refers
+ to an entry in the Genes section with the same value in its \emph{id} field.
 This way, transcripts are connected to genes.
 
 \begin{figure}[ht]
@@ -2877,9 +2881,11 @@ This way, transcripts are connected to genes.
     \end{verbatim}
   \caption{%
     Example (partial) LOVD import format file.
-    This example file contains information about the IVD gene, its first transcript variant, the IVA disease, the link between the IVD gene and the IVA disease,
-     and an individual linked to the IVA disease and screened for variants in the IVD gene.
-    Note the \emph{geneid} field in the Transcripts section, which links a transcript to a gene, and the \emph{individualid} field in the Screenings section, which links a screening to an individual.
+    This example file contains information about the IVD gene, its first transcript variant,
+     the IVA disease, the link between the IVD gene and the IVA disease, and an individual linked
+     to the IVA disease and screened for variants in the IVD gene.
+    Note the \emph{geneid} field in the Transcripts section, which links a transcript to a gene,
+     and the \emph{individualid} field in the Screenings section, which links a screening to an individual.
     The link between genes and diseases and between screenings and genes are in a separate section because
      each gene can be linked to multiple diseases, and each screening can test for variants in multiple genes.
     Please note that a full LOVD download contains many more sections, and more columns.
@@ -2888,9 +2894,11 @@ This way, transcripts are connected to genes.
   \end{shaded}
 \end{figure}
 
-The first line of the file contains the file's header line, which indicates the LOVD version number as well as the type of file.
+The first line of the file contains the file's header line,
+ which indicates the LOVD version number as well as the type of file.
 The LOVD version number is encoded and provided by LOVD when creating a download.
-When importing, LOVD can decode the version and in case the download format has changed between versions, convert the data into the correct format.
+When importing, LOVD can decode the version and in case the download format has changed between versions,
+ convert the data into the correct format.
 When this line is not included in the file that is imported, LOVD cannot process the file, and halt.
 
 The file's data sections are indicated by lines starting with two hash characters (\#\#),
@@ -2903,49 +2911,58 @@ A downloaded file may contain comments, like the number of entries for each sect
 The following sections are currently recognized:
 \begin{description}
   \item[Columns] \hfill \\
-	Custom columns and their system-wide settings.
-    Most records in this section are created during installation of LOVD. 
-	Columns in the import file that already exist in the database are skipped during import. 
-	When this happens a warning is displayed, but the import will continue.
+    Custom columns and their system-wide settings.
+    In a full data download, this section contains records created during
+     installation of LOVD as well as records created by users.
+    During import, columns in the import file that already exist in the database are skipped.
+    In that case a warning is displayed, but the import will continue.
   \item[Genes] \hfill \\
     Genes, including external IDs. \emph{Can currently not yet be imported.}
-  	Genes can  be mentioned in the file, if so, they should already be present in the database before
-  	 importing the entire file.
-	If mentioned in the import file, the genes should be created manually in the database.
+    When importing, genes can be listed in the file, but they should already be present in the database.
+    If not present, they should be created manually before importing the file.
+    Links between genes and diseases are described in the ``Genes\_To\_Diseases'' section.
   \item[Transcripts] \hfill \\
-    Transcript variants, including external IDs. \emph{Can currently not yet be imported.} 
-	Transcripts can be mentioned in the file, if so, they should already be present in the database before
-   	 importing the entire file.
-  	If mentioned, the transcript should be created manually in the database.
+    Transcript variants, including external IDs. \emph{Can currently not yet be imported.}
+    When importing, transcripts can be listed in the file, but they should already be present in the database.
+    If not present, they should be created manually before importing the file.
+    A transcript entry is linked to a gene using the ``geneid'' field.
   \item[Diseases] \hfill \\
     General disease information.
- 	LOVD can import new diseases, but it does not accept diseases with the same name or id\_omim, this will
-   	 generate an warning, but the import will continue.
+    Diseases should have a unique name and OMIM ID.
+    During import, diseases in the import file that already exist in the database
+     (based on name or OMIM ID) are skipped.
+    In that case a warning is displayed, but the import will continue.
+    Links between diseases and genes are described in the ``Genes\_To\_Diseases'' section.
   \item[Genes\_To\_Diseases] \hfill \\
     Links genes and diseases by referring to their IDs.
   \item[Individuals]* \hfill \\
     Individuals and related information, like links to the parents of the individual.
+    Links between individuals and diseases are described in the ``Individuals\_To\_Diseases'' section.
   \item[Individuals\_To\_Diseases] \hfill \\
     Links individuals to diseases.
   \item[Phenotypes]* \hfill \\
     Phenotype information of a certain individual, related to a certain disease.
+    A phenotype entry is linked to a disease using the ``diseaseid'' field.
+    A phenotype entry is linked to an individual using the ``individualid'' field.
   \item[Screenings]* \hfill \\
     Variant screening information, with which variants are detected.
+    A screening is linked to an individual using the ``individualid'' field.
+    Links between screenings and genes are described in the ``Screenings\_To\_Genes'' section.
+    Links between screenings and variants are described in the ``Screenings\_To\_Variants'' section.
   \item[Screenings\_To\_Genes] \hfill \\
     Linking screenings to genes, indicating which genes were screened using a certain screening.
   \item[Variants\_On\_Genome]* \hfill \\
     Genomic information of all variants detected.
-    When you want to link an individual to a variant you can do that with sections Screenings and
-     Screenings\_To\_Variants.
-    Individuals are linked with section Screenings via the individualid field in the Screenings section.
-    In section Screenings\_To\_Variants you can link screenings and variants. 
+    Links between variants and screenings are described in the ``Screenings\_To\_Variants'' section.
   \item[Variants\_On\_Transcripts]* \hfill \\
     Possible effects on a transcript caused by a genomic variant.
+    A variant on transcript is linked to a variant on genome using the ``id'' field.
   \item[Screenings\_To\_Variants] \hfill \\
     Linking screenings to variants, indicating which variants were detected using a certain screening.
 \end{description}
 \noindent
-Categories indicated with an asterisk (*) are data types with custom columns (also see ``\hyperlink{sec:custom_column_categories}{\nameref{sec:custom_column_categories}}''),
+Categories indicated with an asterisk (*) are data types with custom columns
+ (also see ``\hyperlink{sec:custom_column_categories}{\nameref{sec:custom_column_categories}}''),
  and the exact list of fields in this category depend on the LOVD settings.
 
 Lines in the import file starting with one hash character are settings.
@@ -2953,30 +2970,38 @@ The following settings are currently recognized:
 \begin{description}
   \item[charset] \hfill \\
     Indicates which carset was used when creating the file.
-    During import, usually the file encoding is detected given the file's contents, in which case this setting is ignored.
+    During import, usually the file encoding is detected given the file's contents,
+     in which case this setting is ignored.
 \end{description}
 
 Each section header is followed immediately by a line that indicates the names of the fields used in this section.
 When reading a downloaded file, this nicely indicates which column represents which data.
-When importing a file, being able to change this line allows you to skip certain columns or decide yourself in which order you would like to display the columns in the file.
-To clearly separate the line with column names from the data lines, the column names are surrounded by two curly braces on each side (\{\{ and \}\}).
-Field names can not contain spaces, match the field's name in the database exactly, and the field names are separated by exactly one tab character from each other.
+When importing a file, being able to change this line allows you to skip certain columns
+ or decide yourself in which order you would like to display the columns in the file.
+To clearly separate the line with column names from the data lines,
+ the column names are surrounded by two curly braces on each side (\{\{ and \}\}).
+Field names can not contain spaces, match the field's name in the database exactly,
+ and the field names are separated by exactly one tab character from each other.
 \vskip \baselineskip
 
 The section's data is also in tab-delimited format.
 Each field is preferably enclosed by double quotes.
-All existing quotes in the data, are escaped by the backslash character (\textbackslash), so \texttt{\symbol{34}} becomes \texttt{\textbackslash\symbol{34}}.
-Other special characters are \texttt{\textbackslash{}t} for a tab character, and \texttt{\textbackslash{}r\textbackslash{}n} for a linebreak.
+All existing quotes in the data, are escaped by the backslash character (\textbackslash),
+ so \texttt{\symbol{34}} becomes \texttt{\textbackslash\symbol{34}}.
+Other special characters are \texttt{\textbackslash{}t} for a tab character,
+ and \texttt{\textbackslash{}r\textbackslash{}n} for a linebreak.
 
 
 
 \subsection{Specific fields explained}
 For each section, the import format contains all fields that are stored in the database.
 Some of these fields are not displayed on the normal LOVD data entry forms, and therefore may cause confusion.
-Others are displayed, but for the user appear as selection lists with human-readable values, whereas in the database only numbers are stored.
+Others are displayed, but for the user appear as selection lists with human-readable values,
+ whereas in the database only numbers are stored.
 To aid in understanding these fields and their values, all fields that may cause confusion are listed here.
 
-Custom columns are not listed here, since every LOVD installation has different columns enabled and custom columns provide explanations about their use by themselves.
+Custom columns are not listed here, since every LOVD installation has different
+ columns enabled and custom columns provide explanations about their use by themselves.
 
 \begin{description}
   \item[allele] (from section Variants\_On\_Genome)\hfill \\
@@ -3006,12 +3031,15 @@ Custom columns are not listed here, since every LOVD installation has different 
   \item[col\_order] (from section Columns)\hfill \\
   The order in which the columns of this column's category are shown.
   Low values are shown before higher values.
-  \item[created\_by] (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes, Screenings and Variants\_On\_Genome)\hfill \\
+  \item[created\_by] (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes,
+   Screenings and Variants\_On\_Genome)\hfill \\
   The internal ID of the user that created this data entry.
-  If left empty during import, the current user performing the import will be selected as the creator of this data entry.
+  If left empty during import, the current user performing the import will be selected
+   as the creator of this data entry.
   Creators are allowed to edit the entry and add new data to the entry.
   They are fixed, and can not be re-assigned at a later time.
-  \item[created\_date] (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes, Screenings and Variants\_On\_Genome)\hfill \\
+  \item[created\_date] (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes,
+   Screenings and Variants\_On\_Genome)\hfill \\
   The date the entry was created, in the format YYYY-MM-DD HH:MM:SS.
   \item[description\_form] (from section Columns)\hfill \\
   The column's notes on the data entry form.
@@ -3094,7 +3122,8 @@ Custom columns are not listed here, since every LOVD installation has different 
   Optional; The internal ID of the individual in the database that is the father of this individual.
   \item[form\_type] (from section Columns)\hfill \\
   The custom column's form type definition.
-  When importing new custom columns, we recommend you use the Data type wizard available when creating a new custom column, and to use the form type definition generated by the wizard.
+  When importing new custom columns, we recommend you use the Data type wizard available
+   when creating a new custom column, and to use the form type definition generated by the wizard.
   See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
   \item[head\_column] (from section Columns)\hfill \\
   The custom column's header, shown above the column in data views.
@@ -3140,7 +3169,8 @@ Custom columns are not listed here, since every LOVD installation has different 
   Optional; The internal ID of the individual in the database that is the mother of this individual.
   \item[mysql\_type] (from section Columns)\hfill \\
   The custom column's MySQL data type.
-  When importing new custom columns, we recommend you use the Data type wizard available when creating a new custom column, and to use the MySQL data type generated by the wizard.
+  When importing new custom columns, we recommend you use the Data type wizard available
+   when creating a new custom column, and to use the MySQL data type generated by the wizard.
   See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
   \item[note\_index] (from section Genes)\hfill \\
   Notes that should appear on the gene home page.
@@ -3152,7 +3182,8 @@ Custom columns are not listed here, since every LOVD installation has different 
   Owners are not fixed, and can be re-assigned.
   When no value is provided during import, this value is set to the user ID of the user importing the data.
   \item[panelid] (from section Individuals)\hfill \\
-  Optional; The internal ID of the individual in the database that represents the group to which this individual or group of individuals belong to.
+  Optional; The internal ID of the individual in the database that represents the group
+   to which this individual or group of individuals belong to.
   \item[panel\_size] (from section Individuals)\hfill \\
   The number of individuals represented by this entry (default: 1).
   Only used when multiple individuals, for instance from one family, are aggregated into one entry in the database.
@@ -3203,7 +3234,8 @@ Custom columns are not listed here, since every LOVD installation has different 
   \item[select\_options] (from section Columns)\hfill \\
   When the custom column is a selection field, the selection options are listed here.
   See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}'' for the format.
-  Please remember that linebreaks in the LOVD import format are displayed as \texttt{\textbackslash{}r\textbackslash{}n}.
+  Please remember that linebreaks in the LOVD import format are displayed
+   as \texttt{\textbackslash{}r\textbackslash{}n}.
   \item[standard] (from section Columns)\hfill \\
   If set to 1, this column is enabled by default.
   When importing, this is only useful for shared custom columns.
@@ -3222,16 +3254,18 @@ Custom columns are not listed here, since every LOVD installation has different 
     9 & Public & Data entry is public\\ \hline
   \end{tabular}
   \vskip \baselineskip
-  Individuals, Phenotypes and Variants\_On\_Genome with status ``In progress'' or ``Pending'', respectively   	 value 1 and 2, can not be imported.
-  The manager has 3 options:
+  Data with status ``In progress'' or ``Pending'', respectively value 1 and 2, can not be imported.
+  Instead, there are 3 options:
   \begin{enumerate}
-    \item Process the individual in the original LOVD installation and download the file again.
-    \item Change the statusid value to a valid value.
-    \item Exclude this record for import by removing it from the import file or comment the record with a \#.
-    If you do this you have to make sure that all related data from other sections are excluded as well.
-    Else LOVD returns a error \textit{``...does not exist in the database and is not defined in this import 	 file.''}
+    \item If the import file originates from a different LOVD installation,
+       then curate the data there, and download the file again.
+    \item Change the statusid value to a valid value, being 4 or higher.
+    \item Exclude this record for import, by either removing it from the import file,
+       or hiding the record by putting a \# in the beginning of the line.
+      If you do this, make sure that all related data from other sections are excluded as well,
+       or LOVD will return errors when trying to resolve references in the file.
   \end{enumerate}
-  
+
   When no value is provided during import, this value is set to `9' (Public).
   \item[symbol] (from section Diseases) \hfill \\
   The disease's abbreviation, preferably the most commonly used one.
@@ -3277,7 +3311,7 @@ Custom columns are not listed here, since every LOVD installation has different 
 For backup purposes or to move data sets from one LOVD into another, LOVD supports different download options.
 All downloaded file types lack the LOVD system settings, registered user accounts, and object-specific custom
  column settings.
- 
+
 In order to have a full backup, for instance to restore LOVD in case of a hardware failure, more information
  is needed.
 It is therefore recommended not to rely only on this feature for a full backup of LOVD.
@@ -3336,6 +3370,7 @@ In the future, the option ``Update existing data \& add new data''
 \label{sec:download_import_full_data}
 
 
+
 \hypertarget{ssec:download_full_data}{}
 \subsection{Downloading the complete data set from LOVD}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -3350,6 +3385,12 @@ The data sections included in the download file are:
  Columns, Genes, Transcripts, Diseases, Genes\_To\_Diseases, Individuals, Individuals\_To\_Diseases,
  Phenotypes, Screenings, Screenings\_To\_Genes, Variants\_On\_Genome, Variants\_On\_Transcripts
  and Screenings\_To\_Variants.
+In order to have a full backup, for instance to restore LOVD in case of a hardware failure,
+ more information is needed.
+The download file lacks the LOVD system settings, registered user accounts, and object-specific custom column settings.
+It is therefore recommended not to rely only on this feature for a full backup of LOVD.
+However, it works perfectly as a backup for your variant and patient data, for instance if you accidentally
+ deleted the wrong entry or the wrong column.
 
 To download the full dataset from LOVD, click the ``Download all data'' link from the ``Setup'' tab dropdown
  menu, or from the setup area, click the ``Download all data in LOVD import format'' link listed under
@@ -3361,7 +3402,7 @@ Depending on your browser, it will save the file to a default location on your h
 
 
 \hypertarget{ssec:importing_full_data}{}
-\subsection{Importing the complete data set to LOVD}
+\subsection{Importing the complete data set into LOVD}
 \label{ssec:importing_full_data}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -3374,8 +3415,8 @@ A complete data set downloaded from the LOVD can be imported into a LOVD.
 This can only be done by the manager.
 Not all data can and will be imported and some data needs to be modified to be able to import in LOVD.
 Genes and transcripts can currently not be imported directly.
-See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}'' about import details
- on each section.
+See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}''
+ for details on each section.
 
 
 
@@ -3395,19 +3436,20 @@ See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_impor
     Available from: LOVD 3.0 Build 04
   \end{leftbar}
 \end{wrapfigure}
-Managers can download a data file with only the custom columns witch are added to an LOVD installation.
+Managers can download a data file with only the custom columns which are added to an LOVD installation.
+This can be done for backup purposes, but also for importing to an other LOVD installation.
+The records downloaded can be both records created during installation of LOVD, as well as records created by users.
 To download the custom columns data, click the ``Download all LOVD custom columns'' link from the setup menu
  tab dropdown menu, or from the setup area, click the ``Download all LOVD custom columns in the LOVD import
  format'' link listed under ``Custom data columns''.
 The download begins immediately.
 Depending on your browser, it will save the file to a default location on your hard disk, or ask you whether
  to open or to save the file.
-\pagebreak
 
 
 
 \hypertarget{ssec:import_custom_columns_data}{}
-\subsection{Importing a custom columns data set to LOVD}
+\subsection{Importing a custom columns data set into LOVD}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
   \begin{leftbar}
@@ -3415,9 +3457,10 @@ Depending on your browser, it will save the file to a default location on your h
     Available from: LOVD 3.0 Build 05
   \end{leftbar}
 \end{wrapfigure}
-The custom column data set downloaded by a manager can be uploaded to an LOVD.
-Most of the records in this section are default custom columns.
-Columns which already exists in the database are not imported, these columns are skipped during import.
+The custom column data set downloaded by a manager can be uploaded to the same or any other LOVD.
+Columns which already exists in the database are not imported, but skipped instead.
+For this, LOVD checks if the column's ID already exists in the database.
+No other fields are compared.
 
 
 
@@ -3451,32 +3494,31 @@ The following sections contain data that is not owned by the user in question, b
  to allow interpretation of all data:
  Genes and Transcripts (the ones where variants were reported in are shown), and Diseases (the ones linked to
  submitted Individuals are shown).
-These section are marked with ``\#\# For reference only, not part of the selected data set''.
+These section are marked with ``\texttt{\#\# For reference only, not part of the selected data set}''.
 
 
 
 \hypertarget{ssec:import_owned_data}{}
-\subsection{Importing own data set to LOVD}
+\subsection{Importing own data set into LOVD}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
   \begin{leftbar}
     Required level: Manager\\
-    Available from: LOVD 3.0 Build 01
+    Available from: LOVD 3.0 Build 13
   \end{leftbar}
 \end{wrapfigure}
-The own data set downloaded by a submitter can not be uploaded to an LOVD without modifications.
-Some sections must be modified and as with all import files, only a manager can import the data file.
- 
-Before import the header name must be changed. 
-Replace ``Owned data download'' with ``Full data download''.
+The own data set downloaded by a submitter can also be reuploaded into LOVD.
+But as with all import files, only a manager can import the data file.
 
-If the diseases in the import file do not exist in LOVD, the these diseases will be added during the import.
-These new disease will not have a link with any gene, to create a link you have to edit the gene.
-See ``\hyperlink{ssec:relation_to_disease}{Relation to diseases}'' for how to create a link between a gene and
- a disease.
+If the diseases in the import file do not exist in LOVD, these diseases will be added during the import.
+Downloads in this format do not contain any links between genes and diseases.
+To create this link, you will have to add records to the ``Genes\_To\_Diseases'' section, or manually create the links.
+See ``\hyperlink{ssec:relation_to_disease}{\nameref{ssec:relation_to_disease}}''
+ for how to create a link between a gene and a disease.
 
-For more import details on each section, see section ``\hyperlink{sec:download_import_format}
- {\nameref{sec:download_import_format}}''.
+For more details on each section of the import file, see section
+ ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}''.
+\clearpage
 
 
 
@@ -3497,6 +3539,7 @@ For more import details on each section, see section ``\hyperlink{sec:download_i
   \end{leftbar}
 \end{wrapfigure}
 Curators can download a file containing all information related to a gene they have authorization on.
+This can be done for backup purposes, but also for importing to an other LOVD installation.
 From the gene homepage, click the ``Options'' button and click ``Download all this gene's data''.
 The download begins immediately.
 Depending on your browser, it will save the file to a default location on your hard disk, or ask you whether
@@ -3515,7 +3558,7 @@ The individuals in this file may have more variants reported, which are not affe
 
 
 \hypertarget{ssec:import_gene_data}{}
-\subsection{Importing a gene's data set to LOVD}
+\subsection{Importing a gene's data set into LOVD}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
   \begin{leftbar}
@@ -3523,13 +3566,12 @@ The individuals in this file may have more variants reported, which are not affe
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-The gene data set downloaded by a manager can be uploaded to an LOVD.
+The gene data set downloaded can be uploaded without modifications into the same or any other LOVD installation.
+However, the gene and its transcript(s) must exist in the database in which the file is imported.
 The column section is missing in this download file, but apart from that, this is the same import file as the
  complete data set.
-See section \hyperlink{ssec:importing_full_data}{\nameref{ssec:importing_full_data}} on details about
- importing a gene's data set. 
-
-\clearpage % Makes the hyper target actually point to the right place.
+See section ``\hyperlink{ssec:importing_full_data}{\nameref{ssec:importing_full_data}}'' on details about
+ importing a gene's data set.
 
 
 
