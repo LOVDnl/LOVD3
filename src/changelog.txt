@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 13 (r???)
- * 2015-0?-??
+ * 3.0 Build 13 (r546)
+ * 2015-03-23
  *********/
  * Fixed bug; Given parent IDs were not properly checked during import.
  * Updated the manual; added detail on installation requirements,  and clarified
