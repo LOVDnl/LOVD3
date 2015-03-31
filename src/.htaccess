@@ -34,6 +34,7 @@ php_flag mysql.trace_mode Off
     RewriteRule ^logs(.*)$ logs.php
     RewriteRule ^pedigree(.*)$ pedigree.php
     RewriteRule ^phenotypes(.*)$ phenotypes.php
+    RewriteRule ^references(.*)$ references.php
     RewriteRule ^reset_password(.*)$ reset_password.php
     RewriteRule ^screenings(.*)$ screenings.php
     RewriteRule ^settings(.*)$ settings.php
