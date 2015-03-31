@@ -394,8 +394,8 @@ button.ui-button::-moz-focus-inner {
 .ui-tabs .ui-tabs-nav {
 	margin: 0;
 	padding: .2em .2em 0;
-	/* Modified 2015-03-25 by dasscheman; Border around the reference page. */
-	background: lightblue;
+	/* Added 2015-03-25 by dasscheman; Background behind tabs and border around the tabs. */
+	background: #F0F3FF;
 	border-bottom-left-radius: 0;
 	border-bottom-right-radius: 0;
 }
@@ -408,19 +408,19 @@ button.ui-button::-moz-focus-inner {
 	border-bottom-width: 0;
 	padding: 0;
 	white-space: nowrap;
-	/* Modified 2015-03-25 by dasscheman; Background color of tab on reference page. */
+	/* Added 2015-03-25 by dasscheman; Background color of non-active tabs. */
 	background: #AFC8FA;
 }
 .ui-tabs .ui-tabs-nav .ui-tabs-anchor {
 	float: left;
-	text-decoration: none;
-	/* Modified 2015-03-25 by dasscheman; Font color of the tabs on the reference page. */
+	/* Added/modified 2015-03-25 by dasscheman; Font color of the non-active tabs and changed padding. */
 	color: #444444;
 	padding: 7px 1em;
+	text-decoration: none;
 }
 .ui-tabs .ui-tabs-nav li.ui-tabs-active {
 	margin-bottom: -1px;
-	/* Modified 2015-03-25 by dasscheman; Background of active tabs on the reference page. */
+	/* Added/modified 2015-03-25 by dasscheman; Background color of active tabs and changed padding. */
 	background: #8CAFF0;
 	padding-bottom: 0px;
 }
@@ -428,8 +428,8 @@ button.ui-button::-moz-focus-inner {
 .ui-tabs .ui-tabs-nav li.ui-state-disabled .ui-tabs-anchor,
 .ui-tabs .ui-tabs-nav li.ui-tabs-loading .ui-tabs-anchor {
 	cursor: text;
-	/* Modified 2015-03-25 by dasscheman; Font color of the tabs on the reference page. */
-	color: #000;
+	/* Added 2015-03-25 by dasscheman; Font color of the tabs. */
+	color: #000000;
 }
 .ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-active .ui-tabs-anchor {
 	cursor: pointer;
@@ -439,8 +439,7 @@ button.ui-button::-moz-focus-inner {
 	border-width: 0;
 	padding: 1em 1.4em;
 	background: none;
-	/* Modified 2015-03-25 by dasscheman; Background and margin of panel on reference page. */
-	/*margin: 34px -2px 0px -42px;*/
+	/* Added 2015-03-25 by dasscheman; Background of tabs panels (contents). */
 	background: #FFFFFF;
 }
 
@@ -844,8 +843,8 @@ button.ui-button::-moz-focus-inner {
 }
 
 
-/* Modified 2015-03-25 by dasscheman; Data in the tabs of the reference page are displayed in bold */
-.ui-widget-content table.data{
-	font-weight: normal;
 
+/* Added 2015-03-25 by dasscheman; Data in the tab's panels (content pages) were displayed in bold. */
+.ui-widget-content table.data {
+	font-weight: normal;
 }

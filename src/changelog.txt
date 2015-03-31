@@ -5,6 +5,14 @@
  *************/
 
 /**************************
+ * 3.0 Build 14 (r...)
+ * 2015-0?-??
+ *********/
+ * Added URLs to show data by reference (DOI or PubMed currently supported),
+   e.g. /references/PMID:10677295.
+
+
+/**************************
  * 3.0 Build 13 (r546)
  * 2015-03-23
  *********/
