@@ -158,21 +158,16 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
           '           <LI><A href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-variants">Variants</A></LI>' . "\n" .
           '           <LI><A href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-individuals">Individuals</A></LI>' . "\n" .
           '       </UL>' . "\n" .
-          '       <DIV id="tabs-variants">' . "\n" .
-          '           <P>' . "\n");
+          '       <DIV id="tabs-variants">' . "\n");
     if (!empty($_DATAvariants)){
         $_DATAvariants->viewList('Variants_per_reference', $aColsToHide['VariantOnGenome'], true, true);
     }
-    print('           </P>' . "\n" .
-          '       </DIV>' . "\n" .
-          '       <DIV id="tabs-individuals">' . "\n" .
-          '           <P>' . "\n");
+    print('       </DIV>' . "\n" .
+          '       <DIV id="tabs-individuals">' . "\n");
     if (!empty($_DATAindividuals)){
         $_DATAindividuals->viewList('Individuals_per_reference', $aColsToHide['Individual'], true, true);
     }
-    print('           </P>' . "\n" .
-          '       </DIV>' . "\n" .
-          '       </UL></UL>' . "\n" .
+    print('       </DIV>' . "\n" .
           '   </DIV>');
 
     $_T->printFooter();
