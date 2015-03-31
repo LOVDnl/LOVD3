@@ -395,16 +395,17 @@ button.ui-button::-moz-focus-inner {
 	margin: 0;
 	padding: .2em .2em 0;
 	/* Modified 2015-03-25 by dasscheman; Border around the reference page. */
-	border: 1px solid #224488;
 	background: lightblue;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
 }
 .ui-tabs .ui-tabs-nav li {
 	list-style: none;
 	float: left;
 	position: relative;
 	top: 0;
-	margin: 1px .2em 12px 0;
-	border-bottom-width: 0px;
+	margin: 1px .2em 0 0;
+	border-bottom-width: 0;
 	padding: 0;
 	white-space: nowrap;
 	/* Modified 2015-03-25 by dasscheman; Background color of tab on reference page. */
@@ -436,10 +437,10 @@ button.ui-button::-moz-focus-inner {
 .ui-tabs .ui-tabs-panel {
 	display: block;
 	border-width: 0;
+	padding: 1em 1.4em;
 	background: none;
 	/* Modified 2015-03-25 by dasscheman; Background and margin of panel on reference page. */
-	margin: 34px -2px 0px -42px;
-	padding: 2px 1.4em;
+	/*margin: 34px -2px 0px -42px;*/
 	background: #FFFFFF;
 }
 

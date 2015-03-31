@@ -157,7 +157,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
           '       <UL>' . "\n" .
           '           <LI><A href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-variants">Variants</A></LI>' . "\n" .
           '           <LI><A href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-individuals">Individuals</A></LI>' . "\n" .
-          '       <UL>' . "\n" .
+          '       </UL>' . "\n" .
           '       <DIV id="tabs-variants">' . "\n" .
           '           <P>' . "\n");
     if (!empty($_DATAvariants)){
