@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2015-03-27
+ * Modified    : 2015-03-31
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -45,8 +45,12 @@ if ($bImage = (end($aPathElements) == 'image')) {
 }
 
 // Implode elements 1 up to the end, this is because DOI: can have slashes (/).
-$aPathElements[1] = implode("/", array_slice($aPathElements, 1));
+$aPathElements[1] = implode('/', array_slice($aPathElements, 1));
 // From now on, we'll use $aPathElements instead of $_PE.
+
+
+
+
 
 if (!ACTION && (empty($aPathElements[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($aPathElements[1])))) {
     // URL: /references
@@ -61,7 +65,7 @@ if (!ACTION && (empty($aPathElements[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i',
 
 
 
-if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPathElements[1],0,5) == 'PMID:')) {
+if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPathElements[1], 0, 5) == 'PMID:')) {
     // URL: /references/DOI:.....
     // URL: /references/DOI:...../image
     // URL: /references/PMID:.....
@@ -71,21 +75,23 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
     require ROOT_PATH . 'inc-lib-columns.php';
 
     if (substr($aPathElements[1], 0, 4) == 'DOI:') {
-        $sSearchPattern = '{DOI:%' . substr($aPathElements[1],4) . '}';
-        $sAjaxSearchPattern = '{DOI: ' . ':'.substr($aPathElements[1],4) . '}';
+        $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '}%';
+        $sAjaxSearchPattern = '{DOI: ' . ':' . substr($aPathElements[1], 4) . '}';
         $sType = 'DOI';
-    }
-
-    if (substr($aPathElements[1],0,5) == 'PMID:') {
-        $sSearchPattern = '{PMID:%' . substr($aPathElements[1],5) . '}';
-        $sAjaxSearchPattern = '{PMID: ' . ':'.substr($aPathElements[1],5) . '}';
+    } elseif (substr($aPathElements[1], 0, 5) == 'PMID:') {
+        $sSearchPattern = '%{PMID:%' . substr($aPathElements[1], 5) . '}%';
+        $sAjaxSearchPattern = '{PMID: ' . ':' . substr($aPathElements[1], 5) . '}';
         $sType = 'PubMed';
     }
 
-    $aIDs = array();
-    $aColNames = $_DB->query('SELECT colid FROM ' . TABLE_COLS2LINKS . ' AS c2l LEFT JOIN ' . TABLE_LINKS . ' AS l ON (l.id = c2l.linkid) WHERE name = "' . $sType . '"')->fetchAllColumn();
-    foreach ($aColNames as $sColName){
-        $sCategory = substr($sColName, 0, -10);
+    $aCategories = array();
+    $aColsToHide = array(
+        'VariantOnGenome' => array('allele_'),
+        'Individual' => array('panelid', 'diseaseids'),
+    );
+    $aColNames = $_DB->query('SELECT colid FROM ' . TABLE_COLS2LINKS . ' AS c2l LEFT JOIN ' . TABLE_LINKS . ' AS l ON (l.id = c2l.linkid) WHERE name = ?', array($sType))->fetchAllColumn();
+    foreach ($aColNames as $sColName) {
+        $sCategory = substr($sColName, 0, strpos($sColName . '/', '/'));
         $aTable = lovd_getTableInfoByCategory($sCategory);
         $aData = $_DB->query('SELECT id FROM ' . $aTable['table_sql'] . ' WHERE `' . $sColName . '` LIKE ? LIMIT 1', array($sSearchPattern))->fetchAllColumn();
         if (!empty($aData)) {
@@ -94,13 +100,16 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
                 readfile(ROOT_PATH . 'gfx/LOVD_logo60x26.png');
                 exit;
             }
-            $aIDs[$sCategory] = $aData;
+            $aCategories[$sCategory] = true;
+            // FIXME: This means that if the PMID/DOI is found in *more than 1 column*, filters will be applied to *both* columns, which may return *no results*.
+            // There is no way to make these filters an *OR* filter. Only solution is to select *one* column out of the multiple, but based on what?
+            $_GET['search_' . $sColName] = $sAjaxSearchPattern;
+            $aColsToHide[$sCategory][] = $sColName;
         }
-
-        $_GET['search_' . $sColName] = $sAjaxSearchPattern;
     }
 
-    if ($bImage && empty($aIDs['VariantOnGenome']) && empty($aData['Individual'])) {
+    if ($bImage) {
+        // Apparently, no data has been found.
         header('Content-type: image/png');
         readfile(ROOT_PATH . 'gfx/trans.png');
         exit;
@@ -111,7 +120,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
     $_T->printTitle();
 
     // Print info table when no variants or individuals are availble for given reference.
-    if (empty($aIDs['VariantOnGenome']) && empty($aIDs['Individual'])) {
+    if (empty($aCategories['VariantOnGenome']) && empty($aCategories['Individual'])) {
         lovd_showInfoTable('No data found for reference ' . $aPathElements[1], 'stop');
         $_T->printFooter();
         exit;
@@ -119,59 +128,58 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
 
     // Check which tab is active and which must be disabled. Depending on available data
     $nActiveTab = 0;
-    $aDisabledTab = '[]';
+    $nDisabledTab = null;
 
-    if (empty($aIDs['Individual'])) {
+    if (empty($aCategories['Individual'])) {
         $nActiveTab = 0;
-        $aDisabledTab = '[1]';
-    } elseif (empty($aIDs['VariantOnGenome'])) {
+        $nDisabledTab = 1;
+    } elseif (empty($aCategories['VariantOnGenome'])) {
         $nActiveTab = 1;
-        $aDisabledTab = '[0]';
+        $nDisabledTab = 0;
     }
 
-    if (!empty($aIDs['VariantOnGenome'])) {
-        $aColsToHidevariants = array('allele_', 'VariantOnGenome/Reference');
+    if (!empty($aCategories['VariantOnGenome'])) {
         require ROOT_PATH . 'class/object_genome_variants.php';
         $_DATAvariants = new LOVD_GenomeVariant();
     }
 
-    if (!empty($aIDs['Individual'])) {
-        $aColsToHideindividuals = array('panelid', 'diseaseids', 'Individual/Reference');
+    if (!empty($aCategories['Individual'])) {
         require ROOT_PATH . 'class/object_individuals.php';
         $_DATAindividuals = new LOVD_Individual();
     }
 
-    print(  '   <SCRIPT>' . "\n" .
-            '       $(function() {' . "\n" .
-            '           $( "#tabs" ).tabs({ active: ' . $nActiveTab . ', disabled: ' . $aDisabledTab . '});' . "\n" .
-            '       });' . "\n" .
-            '   </SCRIPT>' . "\n" .
-            '   <div id="tabs">' . "\n" .
-            '       <ul>' . "\n" .
-            '           <li><a href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-variants">Variants</a></li>' . "\n" .
-            '           <li><a href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-individuals">Individuals</a></li>' . "\n" .
-            '       <ul> ' . "\n" .
-            '       <div id="tabs-variants">' . "\n" .
-            '           <p> ');
-                            if (!empty($_DATAvariants)){
-                                $_DATAvariants->viewList('Variants_per_reference', $aColsToHidevariants, true, true);
-                            }
-    print(  '           </p>' . "\n" .
-            '       </div>' . "\n" .
-            '       <div id="tabs-individuals">' . "\n" .
-            '           <p> ');
-                            if (!empty($_DATAindividuals)){
-                                $_DATAindividuals->viewList('Individuals_per_reference', $aColsToHideindividuals, true, true);
-                            }
-    print(  '           </p>' . "\n" .
-            '       </div>' . "\n" .
-            '   </div>');
+    print('   <SCRIPT type="text/javascript">' . "\n" .
+          '       $(function() {' . "\n" .
+          '           $("#tabs").tabs({active: ' . $nActiveTab . ', disabled: [' . $nDisabledTab . ']});' . "\n" .
+          '       });' . "\n" .
+          '   </SCRIPT>' . "\n" .
+          '   <DIV id="tabs">' . "\n" .
+          '       <UL>' . "\n" .
+          '           <LI><A href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-variants">Variants</A></LI>' . "\n" .
+          '           <LI><A href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-individuals">Individuals</A></LI>' . "\n" .
+          '       <UL>' . "\n" .
+          '       <DIV id="tabs-variants">' . "\n" .
+          '           <P>' . "\n");
+    if (!empty($_DATAvariants)){
+        $_DATAvariants->viewList('Variants_per_reference', $aColsToHide['VariantOnGenome'], true, true);
+    }
+    print('           </P>' . "\n" .
+          '       </DIV>' . "\n" .
+          '       <DIV id="tabs-individuals">' . "\n" .
+          '           <P>' . "\n");
+    if (!empty($_DATAindividuals)){
+        $_DATAindividuals->viewList('Individuals_per_reference', $aColsToHide['Individual'], true, true);
+    }
+    print('           </P>' . "\n" .
+          '       </DIV>' . "\n" .
+          '       </UL></UL>' . "\n" .
+          '   </DIV>');
 
     $_T->printFooter();
     exit;
 }
 
-if ($bImage){
+if ($bImage) {
     header('Content-type: image/png');
     readfile(ROOT_PATH . 'gfx/trans.png');
     exit;
