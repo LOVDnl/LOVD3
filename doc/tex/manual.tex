@@ -219,7 +219,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \institute{Leiden University Medical Center}
-\date{2015-03-19} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2015-04-02} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
   (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
@@ -3604,6 +3604,30 @@ This API will be configurable, so submitters decide for themselves under
 
 
 
+\section{Terms of service and fair use policy}
+\begin{warntable}
+  These terms of service and fair use policy are applicable to \emph{all} APIs present on the LOVD site
+   and any LOVD installations hosted by the Leiden University Medical Center, recognizable by domain names ending
+   by .lovd.nl, .lumc.nl or .liacs.nl.
+  Other servers hosting LOVDs may also have terms of service in place.
+  If in doubt, try to contact the party hosting the LOVD installation.
+\end{warntable}
+
+\begin{itemize}
+  \item Read the \hyperlink{sec:api_possibilities}{API possibilities} below carefully,
+    and choose the most efficient method to query the API --- meaning,
+    the least amount of requests to get the information you need.
+  \item Limit your requests to 5 per second per server/domain name.
+  \item If the API indicates a certain entry does not exist, do not repeat the same request for at least 4 hours,
+    unless you have reason to believe the entry may exist now.
+  \item Not required, but appreciated; please set a `User agent' string that identifies you, so we can see how the
+    service is being used and we can contact you if necessary.
+\end{itemize}
+
+
+
+
+
 \section{Format}
 When searching for genes, an Atom feed is returned with zero or more entries.
 When requesting a specific entry, just the Atom entry is returned.
@@ -3762,6 +3786,7 @@ When variant observations are grouped together, the `Times\_reported' field
 
 
 
+\hypertarget{sec:api_possibilities}{}
 \section{Possibilities}
 A full list of options for this API is included below.
 Please note that although ``rest.php'' is included in all the URLs, simply ``rest'' will work also.
