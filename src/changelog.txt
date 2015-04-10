@@ -10,6 +10,9 @@
  *********/
  * Added URLs to show data by reference (DOI or PubMed currently supported),
    e.g. /references/PMID:10677295.
+ * Fixed bug; During import the panel IDs in the individual section where only
+   checked in the database and not in the import file. Same for father ID and
+   mother ID.
 
 
 /**************************

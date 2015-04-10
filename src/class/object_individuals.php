@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2015-03-11
- * For LOVD    : 3.0-13
+ * Modified    : 2015-04-10
+ * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -186,6 +186,9 @@ class LOVD_Individual extends LOVD_Custom {
     {
         global $_DB;
 
+        // During import panelid, fatherid and motherid are checked in import.php.
+        $bImport = (lovd_getProjectFile() == '/import.php');
+
         // Mandatory fields.
         $this->aCheckMandatory =
                  array(
@@ -198,7 +201,8 @@ class LOVD_Individual extends LOVD_Custom {
         parent::checkFields($aData);
 
         foreach (array('fatherid', 'motherid') as $sParentalField) {
-            if (isset($aData[$sParentalField]) && ctype_digit($aData[$sParentalField])) {
+            // This is not yet implemented correctly. These checks are implemented correctly in import.php in section "Individuals".
+            if (isset($aData[$sParentalField]) && ctype_digit($aData[$sParentalField]) && !$bImport) {
                 // FIXME: Also check gender!!! Check if field is available, download value (or '' if not available), then check possible conflicts.
                 // Partially, the code is already written below.
                 $nParentID = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData[$sParentalField]))->fetchColumn();
@@ -210,16 +214,17 @@ class LOVD_Individual extends LOVD_Custom {
                 } elseif ($sParentalField == 'motherid' && false) {
                     lovd_errorAdd($sParentalField, 'The \'' . $sParentalField . '\' you entered does not refer to a female individual.');
                 } elseif ($aData[$sParentalField] == $this->nID) {
-                    lovd_errorAdd('panel_size', 'The \'' . $sParentalField . '\' can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual.');
+                    lovd_errorAdd($sParentalField, 'The \'' . $sParentalField . '\' can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual.');
                 }
-            } elseif (!empty($aData[$sParentalField])) {
+            } elseif (!empty($aData[$sParentalField]) && !ctype_digit($aData[$sParentalField])) {
                 // FIXME: Normally we don't have to check this, because objects.php is taking care of this.
                 // But as long as the field is not defined on the form, there is no check.
                 lovd_errorAdd($sParentalField, 'The \'' . $sParentalField . '\' must contain a positive integer.');
             }
         }
 
-        if (isset($aData['panelid']) && ctype_digit($aData['panelid'])) {
+        // Changes in these checks should also be implemented in import.php in section "Individuals"
+        if (isset($aData['panelid']) && ctype_digit($aData['panelid']) && !$bImport) {
             $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData['panelid']))->fetchColumn();
             if (empty($nPanel)) {
                 lovd_errorAdd('panelid', 'No Panel found with this \'Panel ID\'.');
