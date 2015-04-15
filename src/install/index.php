@@ -5,12 +5,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-02-17
- * For LOVD    : 3.0-13
+ * Modified    : 2015-04-15
+ * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -337,6 +338,8 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
 // DMD_SPECIFIC
 if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
     $sSignature = 'ifokkema_local_3.0';
+} elseif ($_SERVER['SERVER_ADMIN'] == 'd.asscheman@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
+    $sSignature = 'dasscheman_local_3.0';
 }
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($sSignature);
