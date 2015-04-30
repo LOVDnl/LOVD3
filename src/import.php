@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-04-10
+ * Modified    : 2015-04-29
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -35,10 +35,14 @@ require ROOT_PATH . 'inc-init.php';
 ini_set('auto_detect_line_endings', true); // So we can work with Mac files also...
 set_time_limit(0); // Disable time limit, parsing may take a long time.
 
-// Require curator clearance.
-//lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
-//lovd_requireAUTH(LEVEL_CURATOR);
-lovd_requireAUTH(LEVEL_MANAGER);
+lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+// Require at least curator clearance.
+lovd_requireAUTH(LEVEL_CURATOR);
+if ($_AUTH['level'] == LEVEL_CURATOR){
+    //If user has level curator, only simulate is allowed.
+    $_POST['simulate'] = 1;
+
+}
 // FIXME: How do we implement authorization? First parse everything, THEN using the parsed data we check if user has rights to insert this data?
 
 require ROOT_PATH . 'inc-lib-form.php';
@@ -861,6 +865,7 @@ if (POST) {
 
                     // Check references.
                     $bGeneInDB = isset($aParsed['Genes']['ids'][$aLine['geneid']]);
+                    $bGeneInFile = !$bGeneInDB; // FIXME: Do this properly, when genes are allowed to be imported.
                     if ($aLine['geneid'] && !$bGeneInDB) {
                         // Gene does not exist.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Gene "' . htmlspecialchars($aLine['geneid']) . '" does not exist in the database.');
@@ -897,7 +902,7 @@ if (POST) {
 
                     if (isset($aLine['todo']) && $aLine['todo'] == 'insert') {
                         // Inserting, check rights.
-                        if ($_AUTH['level'] < LEVEL_MANAGER && !lovd_isAuthorized('gene', $aLine['geneid'])) {
+                        if ($_AUTH['level'] < LEVEL_MANAGER && !$bGeneInFile && !lovd_isAuthorized('gene', $aLine['geneid'], false)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, you are not authorized to connect this gene to this disease.');
                         }
                     }
@@ -1030,7 +1035,7 @@ if (POST) {
 
                     if (isset($aLine['todo']) && $aLine['todo'] == 'insert') {
                         // Inserting, check rights.
-                        if ($_AUTH['level'] < LEVEL_MANAGER && !lovd_isAuthorized('individual', $aLine['individualid'])) {
+                        if ($_AUTH['level'] < LEVEL_MANAGER && !$bIndInFile && !lovd_isAuthorized('individual', $aLine['individualid'], false)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, you are not authorized to connect this individual to this disease.');
                         }
                     }
@@ -1631,6 +1636,17 @@ $_T->printTitle('Import data in LOVD format');
 print('      Using this form you can import files in LOVD\'s tab-delimited format. Currently supported imports are custom column, individual, phenotype, screening and variant data.<BR><I>Genomic positions in your data are assumed to be relative to Human Genome build ' . $_CONF['refseq_build'] . '</I>.<BR>' . "\n" .
       '      <BR>' . "\n\n");
 
+if ($_AUTH['level'] == LEVEL_CURATOR){
+    $sManagers = '';
+    $aManagers = $_DB->query('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u WHERE u.level = 7 ORDER BY u.name ASC')->fetchAllAssoc();
+    $nManagers = count($aManagers);
+    foreach ($aManagers as $i => $z) {
+        $i ++;
+        $sManagers .= ($sManagers? ($i == $nManagers? ' or ' : ', ') : '') . '<A href="mailto:' . str_replace(array("\r\n", "\r", "\n"), ', ', trim($z['email'])) . '">' . $z['name'] . '</A>';
+    }
+    lovd_showInfoTable('Your user level is curator, as a curator you can only simulate an import and check your LOVD tab-delimited formatted file. To actually import a LOVD file you have to contact the database manager(s): ' . $sManagers . '.', 'information', 760);
+}
+
 lovd_showInfoTable('If you\'re looking for importing data files containing variant data only, like VCF files and SeattleSeq annotated files, please <A href="submit">start a new submission</A>.', 'information', 760);
 
 // FIXME: Since we can increase the memory limit anyways, maybe we can leave this message out if we nicely handle the memory?
@@ -1667,9 +1683,19 @@ $aForm =
         array('', '', 'note', 'Please select which import mode LOVD should use; <I>' . implode('</I> or <I>', $aModes) . '</I>. For more information on the modes, move your mouse over the ? icon.'),
         array('Character encoding of imported file', 'If your file contains special characters like &egrave;, &ouml; or even just fancy quotes like &ldquo; or &rdquo;, LOVD needs to know the file\'s character encoding to ensure the correct display of the data.', 'select', 'charset', 1, $aCharSets, false, false, false),
         array('', '', 'note', 'Please only change this setting in case you encounter problems with displaying special characters in imported data. Technical information about character encoding can be found <A href="http://en.wikipedia.org/wiki/Character_encoding" target="_blank">on Wikipedia</A>.'),
-        array('Simulate (don\'t actually import the data)', 'To check your file for errors, without actually importing anything, select this checkbox.', 'checkbox', 'simulate', 1),
+        array('Simulate (don\'t actually import the data)', 'To check your file for errors, without actually importing anything, select this checkbox. Currently only managers or higher are allowed to do an import. Curators are only allowed to simulate an import.', 'checkbox', 'simulate', 1),
         'skip',
         array('', '', 'submit', 'Import file'));
+
+// If user has level curator, the checkbox is disabled and via $_POST['simulate'] the checkbox is always set on true.
+// Help contains some extra explanation for the user.
+if ($_AUTH['level'] == LEVEL_CURATOR){
+    print('<SCRIPT type="text/javascript">' . "\n" .
+          '  $(function() {' . "\n" .
+          '     document.getElementsByName("simulate")[0].disabled = true;' . "\n" .
+          '  });' . "\n" .
+          '</SCRIPT>');
+}
 
 lovd_viewForm($aForm);
 

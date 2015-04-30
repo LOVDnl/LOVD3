@@ -267,9 +267,10 @@ $aItems =
                     (!$nTotalVars? '' : "\n" .
                 */
             ),
-        'Download<!--/Import--> gene, transcript, variant and individual data' =>
+        'Download & Import' =>
             array(
                 array('download/all/gene/' . $_SESSION['currdb'], 'lovd_save.png', 'Download all data from the ' . $_SESSION['currdb'] . ' gene database', 'Download all data from the ' . $_SESSION['currdb'] . ' gene database.'),
+                array('import', 'lovd_import.png', 'Import data', 'Import data using the LOVD import format (custom columns, diseases, individuals, phenotypes, screenings &amp; variants).'),
                 /*
                 array('', '', '', ''),
     '              <TR class="setup" onclick="window.location.href=\'' . ROOT_PATH . 'config_import.php\';">' . "\n" .
