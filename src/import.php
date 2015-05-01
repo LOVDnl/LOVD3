@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-04-29
+ * Modified    : 2015-05-01
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -35,14 +35,14 @@ require ROOT_PATH . 'inc-init.php';
 ini_set('auto_detect_line_endings', true); // So we can work with Mac files also...
 set_time_limit(0); // Disable time limit, parsing may take a long time.
 
-lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
 // Require at least curator clearance.
+lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
 lovd_requireAUTH(LEVEL_CURATOR);
-if ($_AUTH['level'] == LEVEL_CURATOR){
-    //If user has level curator, only simulate is allowed.
+if ($_AUTH['level'] == LEVEL_CURATOR) {
+    // If user has level curator, only simulate is allowed.
     $_POST['simulate'] = 1;
-
 }
+
 // FIXME: How do we implement authorization? First parse everything, THEN using the parsed data we check if user has rights to insert this data?
 
 require ROOT_PATH . 'inc-lib-form.php';
@@ -901,7 +901,8 @@ if (POST) {
                     }
 
                     if (isset($aLine['todo']) && $aLine['todo'] == 'insert') {
-                        // Inserting, check rights.
+                        // Inserting, check rights, but only if we're handling a gene *not* in the file, but in the database.
+                        // Note: file gets preference over database, so we can't just check for $bGeneInDB.
                         if ($_AUTH['level'] < LEVEL_MANAGER && !$bGeneInFile && !lovd_isAuthorized('gene', $aLine['geneid'], false)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, you are not authorized to connect this gene to this disease.');
                         }
@@ -944,7 +945,7 @@ if (POST) {
                             if ($nPanel !== false && $nPanel == 1) {
                                 lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel ID "' . htmlspecialchars($aLine['panelid']) . '" refers to an individual, not a panel (group of individuals). If you want to configure that individual as a panel, set its \'Panel size\' field to a value higher than 1.');
                             } elseif ($nPanel !== false && $nPanel <= $aLine['panel_size']) {
-                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel size of Individual ID "' . htmlspecialchars($aLine['id']) . '" must be lower than the Panel size of Individual ID "' . htmlspecialchars($aLine['panelid']) . '".');
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel size of Individual "' . htmlspecialchars($aLine['id']) . '" must be lower than the panel size of Individual "' . htmlspecialchars($aLine['panelid']) . '".');
                             }
                         }
 
@@ -1034,7 +1035,8 @@ if (POST) {
                     }
 
                     if (isset($aLine['todo']) && $aLine['todo'] == 'insert') {
-                        // Inserting, check rights.
+                        // Inserting, check rights, but only if we're handling an individual *not* in the file, but in the database.
+                        // Note: file gets preference over database, so we can't just check for $bIndInDB.
                         if ($_AUTH['level'] < LEVEL_MANAGER && !$bIndInFile && !lovd_isAuthorized('individual', $aLine['individualid'], false)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, you are not authorized to connect this individual to this disease.');
                         }
@@ -1636,15 +1638,19 @@ $_T->printTitle('Import data in LOVD format');
 print('      Using this form you can import files in LOVD\'s tab-delimited format. Currently supported imports are custom column, individual, phenotype, screening and variant data.<BR><I>Genomic positions in your data are assumed to be relative to Human Genome build ' . $_CONF['refseq_build'] . '</I>.<BR>' . "\n" .
       '      <BR>' . "\n\n");
 
-if ($_AUTH['level'] == LEVEL_CURATOR){
+if ($_AUTH['level'] == LEVEL_CURATOR) {
     $sManagers = '';
-    $aManagers = $_DB->query('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u WHERE u.level = 7 ORDER BY u.name ASC')->fetchAllAssoc();
-    $nManagers = count($aManagers);
-    foreach ($aManagers as $i => $z) {
+    $zManagers = $_DB->query('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u WHERE u.level = ? ORDER BY u.name ASC', array(LEVEL_MANAGER))->fetchAllAssoc();
+    if (!$zManagers) {
+        // No managers found, then get the database admin.
+        $zManagers = $_DB->query('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u WHERE u.level = ? ORDER BY u.name ASC', array(LEVEL_ADMIN))->fetchAllAssoc();
+    }
+    $nManagers = count($zManagers);
+    foreach ($zManagers as $i => $z) {
         $i ++;
         $sManagers .= ($sManagers? ($i == $nManagers? ' or ' : ', ') : '') . '<A href="mailto:' . str_replace(array("\r\n", "\r", "\n"), ', ', trim($z['email'])) . '">' . $z['name'] . '</A>';
     }
-    lovd_showInfoTable('Your user level is curator, as a curator you can only simulate an import and check your LOVD tab-delimited formatted file. To actually import a LOVD file you have to contact the database manager(s): ' . $sManagers . '.', 'information', 760);
+    lovd_showInfoTable('Your user level is curator, as a curator you can only simulate an import and check your LOVD tab-delimited file.<BR>To actually import the file, you have to contact the database manager(s): ' . $sManagers . '.', 'information', 760);
 }
 
 lovd_showInfoTable('If you\'re looking for importing data files containing variant data only, like VCF files and SeattleSeq annotated files, please <A href="submit">start a new submission</A>.', 'information', 760);
@@ -1687,19 +1693,19 @@ $aForm =
         'skip',
         array('', '', 'submit', 'Import file'));
 
-// If user has level curator, the checkbox is disabled and via $_POST['simulate'] the checkbox is always set on true.
-// Help contains some extra explanation for the user.
-if ($_AUTH['level'] == LEVEL_CURATOR){
-    print('<SCRIPT type="text/javascript">' . "\n" .
-          '  $(function() {' . "\n" .
-          '     document.getElementsByName("simulate")[0].disabled = true;' . "\n" .
-          '  });' . "\n" .
-          '</SCRIPT>');
-}
-
 lovd_viewForm($aForm);
 
 print('</FORM>' . "\n\n");
+
+// If user has level curator, the checkbox is disabled and via $_POST['simulate'] the checkbox is always set to true.
+// The help icon shows some extra information to the user.
+if ($_AUTH['level'] == LEVEL_CURATOR) {
+    print('      <SCRIPT type="text/javascript">' . "\n" .
+          '        $(function() {' . "\n" .
+          '          document.getElementsByName("simulate")[0].disabled = true;' . "\n" .
+          '        });' . "\n" .
+          '      </SCRIPT>' . "\n\n");
+}
 
 $_T->printFooter();
 ?>
