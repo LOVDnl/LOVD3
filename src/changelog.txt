@@ -21,6 +21,10 @@
    is running under HTTPS and includes other items using normal HTTP, causing
    errors.
    (thanks to Raymond Dalgleish, University of Leicester, UK, for reporting)
+ * Increased maximum of entries for sortable views to 250K.
+ * Fixed bug; When creating a download file, filters applied would sometimes
+   overwrite previously set filters, for instance causing the gene-specific
+   download to sometimes not contain all related diseases.
 
 
 /**************************

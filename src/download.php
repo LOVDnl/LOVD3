@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2013-05-17
- * For LOVD    : 3.0-05
+ * Modified    : 2015-05-01
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -368,12 +368,17 @@ foreach ($aObjectsToBeFiltered as $sObject) {
                 }
                 // Now loop the list of filters to apply.
                 foreach ($aFiltersToRun as $sColumnToFilter => $sColToMatch) {
+                    // Make sure this object has a functional 'filters' array for this column.
+                    if (!isset($aObjects[$sObjectToFilter]['filters'][$sColumnToFilter]) || !is_array($aObjects[$sObjectToFilter]['filters'][$sColumnToFilter])) {
+                        $aObjects[$sObjectToFilter]['filters'][$sColumnToFilter] = array();
+                    }
                     // Now loop the data to collect all the $sValueToFilter data.
                     $aValuesToFilter = array();
                     foreach ($aObjects[$sObject]['data'] as $zData) {
                         $aValuesToFilter[] = $zData[$sColToMatch];
                     }
-                    $aObjects[$sObjectToFilter]['filters'][$sColumnToFilter] = array_unique($aValuesToFilter);
+                    // 2015-05-01; 3.0-14; Do not overwrite previous filters on this column! Merge them, instead.
+                    $aObjects[$sObjectToFilter]['filters'][$sColumnToFilter] = array_unique(array_merge($aObjects[$sObjectToFilter]['filters'][$sColumnToFilter], $aValuesToFilter));
                 }
             }
         }

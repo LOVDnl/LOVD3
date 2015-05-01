@@ -1037,7 +1037,7 @@ class LOVD_Object {
             //   Unfortunately, we can't automatically get us an SQL_CALC_FOUND_ROWS which leaves out unnecessary joins. Is there a way to do this?
             // ORDER BY is absolutely killing on large result sets, but when used you might as well use SQL_CALC_FOUND_ROWS, since it needs to read the entire table anyways.
             // So, long time to retrieve count (>1s) => no SQL_CALC_FOUND_ROWS and no sort.
-            // Count OK (<=1s), but big result set (25K) => no sort.
+            // Count OK (<=1s), but big result set (250K) => no sort. ($_SETT['lists']['max_sortable_rows'])
 
             // 1) If we don't have a count in memory, request count separately, using SQL_CALC_FOUND_ROWS, since it handles all complex queries.
             // Also if last count was >30min ago, request again.
