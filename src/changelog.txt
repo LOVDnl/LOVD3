@@ -10,12 +10,17 @@
  *********/
  * Added URLs to show data by reference (DOI or PubMed currently supported),
    e.g. /references/PMID:10677295.
+ * Fixed possible future problems with the longer new generic top level domains,
+   which could be rejected as invalid URLs for LOVDs to reside.
  * Fixed bug; During import the panel IDs in the individual section where only
    checked in the database and not in the import file. Same for father ID and
    mother ID.
  * Curators can simulate import of an LOVD tab-delimited formatted file.
-   The import function can be found on the cofiguration area, under the
-   Download & Import section.
+ * Fixed problem when LOVD is behind a proxy communicating over HTTPS with the
+   internet, but over normal HTTP with LOVD itself. LOVD then does not detect it
+   is running under HTTPS and includes other items using normal HTTP, causing
+   errors.
+   (thanks to Raymond Dalgleish, University of Leicester, UK, for reporting)
 
 
 /**************************

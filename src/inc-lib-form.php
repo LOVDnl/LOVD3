@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2015-03-05
- * For LOVD    : 3.0-13
+ * Modified    : 2015-04-20
+ * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -574,7 +574,7 @@ function lovd_matchURL ($s, $bAllowCustomHosts = false)
     // Matches a string to the standard URL pattern (including those using IP addresses).
     // If $bAllowCustomHosts is true, hosts like "localhost" (hosts without dots) are allowed.
 
-    return (preg_match('/^(ht|f)tps?:\/\/([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-z][-0-9a-z]*[0-9a-z]|[0-9a-z])\.' . ($bAllowCustomHosts? '?' : '') . ')+[a-z]{2,6})(\/[%&=#0-9a-z\/._+-]*\??.*)?$/i', $s));
+    return (preg_match('/^(ht|f)tps?:\/\/([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-z][-0-9a-z]*[0-9a-z]|[0-9a-z])\.' . ($bAllowCustomHosts? '?' : '') . ')+[a-z]{2,})(\/[%&=#0-9a-z\/._+-]*\??.*)?$/i', $s));
 }
 
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-03-23
- * For LOVD    : 3.0-13
+ * Modified    : 2015-05-01
+ * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -58,7 +58,7 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
 
 // Define constants needed throughout LOVD.
 // Find out whether or not we're using SSL.
-if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['SSL_PROTOCOL'])) {
+if ((!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['SSL_PROTOCOL'])) {
     // We're using SSL!
     define('SSL', true);
     define('SSL_PROTOCOL', $_SERVER['SSL_PROTOCOL']);
