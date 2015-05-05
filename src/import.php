@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-05-01
+ * Modified    : 2015-05-05
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -432,7 +432,7 @@ if (POST) {
                                 // Note: Making this a reference (=& instead of =) slows down the parsing of a VOT line 3x. Don't understand why.
                                 $aSection['ids'] = $aParsed['Variants_On_Genome']['ids'];
                             } else {
-                                $aSection['ids'] = array_flip($_DB->query('SELECT id FROM ' . $sTableName)->fetchAllColumn());
+                                $aSection['ids'] = array_flip($_DB->query("SELECT IF(STRCMP('" . $sCurrentSection . "', 'Genes'),  CAST(id AS UNSIGNED), id) FROM " . $sTableName)->fetchAllColumn());
                             }
                         }
                     }
@@ -577,7 +577,7 @@ if (POST) {
             if ($sCurrentSection == 'Variants_On_Transcripts' && $aLine['transcriptid']) {
                 // We have to include some checks here instead of below, because we need to verify that we understand the transcriptID and get to the Gene.
                 //   Only then can we open the correct object.
-                $bTranscriptInDB = isset($aParsed['Transcripts']['ids'][$aLine['transcriptid']]);
+                $bTranscriptInDB = isset($aParsed['Transcripts']['ids'][(int) $aLine['transcriptid']]);
                 $bTranscriptInFile = isset($aParsed['Transcripts']['data'][(int) $aLine['transcriptid']]);
                 if (!$bTranscriptInFile && !$bTranscriptInDB) {
                     // Transcript does not exist and is not defined in the import file.
@@ -872,9 +872,9 @@ if (POST) {
                     }
                     $nNewID = (!isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID'])? false : $aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID']);
                     if ($nNewID !== false) {
-                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][$nNewID]);
+                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][(int) $nNewID]);
                     } else {
-                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][$aLine['diseaseid']]);
+                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][(int) $aLine['diseaseid']]);
                     }
                     $bDiseaseInFile = isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]);
                     if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
@@ -919,7 +919,7 @@ if (POST) {
                         // Panel, Father and Mother IDs are checked.
                         // It's assumed that in the import file, panels and parents are listed before panel individuals and children.
                         if ($aLine['panelid']) {
-                            $bPanelInDB = isset($aParsed['Individuals']['ids'][$aLine['panelid']]);
+                            $bPanelInDB = isset($aParsed['Individuals']['ids'][(int) $aLine['panelid']]);
                             $bPanelInFile = isset($aParsed['Individuals']['data'][(int) $aLine['panelid']]);
                             if (!$bPanelInDB && !$bPanelInFile) {
                                 // Individual does not exist and is not defined in the import file.
@@ -951,7 +951,7 @@ if (POST) {
 
                         foreach (array('fatherid', 'motherid') as $sParentalField) {
                             if ($aLine[$sParentalField]) {
-                                $bParentInDB = isset($aParsed['Individuals']['ids'][$aLine[$sParentalField]]);
+                                $bParentInDB = isset($aParsed['Individuals']['ids'][(int) $aLine[$sParentalField]]);
                                 $bParentInFile = isset($aParsed['Individuals']['data'][(int) $aLine[$sParentalField]]);
                                 if (!$bParentInDB && !$bParentInFile) {
                                     // Individual does not exist and is not defined in the import file.
@@ -1004,7 +1004,7 @@ if (POST) {
                     }
 
                     // Check references.
-                    $bIndInDB = isset($aParsed['Individuals']['ids'][$aLine['individualid']]);
+                    $bIndInDB = isset($aParsed['Individuals']['ids'][(int) $aLine['individualid']]);
                     $bIndInFile = isset($aParsed['Individuals']['data'][(int) $aLine['individualid']]);
                     if ($aLine['individualid'] && !$bIndInDB && !$bIndInFile) {
                         // Individual does not exist and is not defined in the import file.
@@ -1012,9 +1012,9 @@ if (POST) {
                     }
                     $nNewID = (!isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID'])? false : $aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID']);
                     if ($nNewID !== false) {
-                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][$nNewID]);
+                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][(int) $nNewID]);
                     } else {
-                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][$aLine['diseaseid']]);
+                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][(int) $aLine['diseaseid']]);
                     }
                     $bDiseaseInFile = isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]);
                     if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
@@ -1049,9 +1049,9 @@ if (POST) {
                     // Check references.
                     $nNewID = (!isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID'])? false : $aParsed['Diseases']['data'][(int) $aLine['diseaseid']]['newID']);
                     if ($nNewID !== false) {
-                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][$nNewID]);
+                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][(int) $nNewID]);
                     } else {
-                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][$aLine['diseaseid']]);
+                        $bDiseaseInDB = isset($aParsed['Diseases']['ids'][(int) $aLine['diseaseid']]);
                     }
                     $bDiseaseInFile = isset($aParsed['Diseases']['data'][(int) $aLine['diseaseid']]);
                     if ($aLine['diseaseid'] && !$bDiseaseInFile && !$bDiseaseInDB) {
@@ -1063,7 +1063,7 @@ if (POST) {
                         $nWarnings ++;
                         $aDiseasesAlreadyWarnedFor[] = $aLine['diseaseid'];
                     }
-                    $bIndInDB = isset($aParsed['Individuals']['ids'][$aLine['individualid']]);
+                    $bIndInDB = isset($aParsed['Individuals']['ids'][(int) $aLine['individualid']]);
                     $bIndInFile = isset($aParsed['Individuals']['data'][(int) $aLine['individualid']]);
                     if ($aLine['individualid'] && !$bIndInDB && !$bIndInFile) {
                         // Individual does not exist and is not defined in the import file.
@@ -1086,7 +1086,7 @@ if (POST) {
                     // FIXME: Check references only if we don't have a $zData OR $zData['referenceid'] is different from now?
                     //   Actually, do we allow references to change during an edit?
                     // Check references.
-                    $bIndInDB = isset($aParsed['Individuals']['ids'][$aLine['individualid']]);
+                    $bIndInDB = isset($aParsed['Individuals']['ids'][(int) $aLine['individualid']]);
                     $bIndInFile = isset($aParsed['Individuals']['data'][(int) $aLine['individualid']]);
                     if ($aLine['individualid'] && !$bIndInDB && !$bIndInFile) {
                         // Individual does not exist and is not defined in the import file.
@@ -1122,7 +1122,7 @@ if (POST) {
                         // Gene does not exist.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Gene "' . htmlspecialchars($aLine['geneid']) . '" does not exist in the database.');
                     }
-                    $bScreeningInDB = isset($aParsed['Screenings']['ids'][$aLine['screeningid']]);
+                    $bScreeningInDB = isset($aParsed['Screenings']['ids'][(int) $aLine['screeningid']]);
                     $bScreeningInFile = isset($aParsed['Screenings']['data'][(int) $aLine['screeningid']]);
                     if ($aLine['screeningid'] && !$bScreeningInFile && !$bScreeningInDB) {
                         // Screening does not exist and is not defined in the import file.
@@ -1184,7 +1184,7 @@ if (POST) {
                     //   in the code, because we had to initialize the object using the geneid of the given transcript.
 // FIXME: Check if combination is already known in the database, since this is partially also a linking table!!!
 //   Combi already in DB: then no insert mode allowed, otherwise get $zData? Or do we have that already?
-                    $bVariantInDB = isset($aParsed['Variants_On_Genome']['ids'][$aLine['variantid']]);
+                    $bVariantInDB = isset($aParsed['Variants_On_Genome']['ids'][(int) $aLine['variantid']]);
                     $bVariantInFile = isset($aParsed['Variants_On_Genome']['data'][(int) $aLine['variantid']]);
                     if ($aLine['id'] && !$bVariantInFile && !$bVariantInDB) {
                         // Variant does not exist and is not defined in the import file.
@@ -1231,7 +1231,7 @@ if (POST) {
                 case 'Screenings_To_Variants':
                     // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
                     // Create ID, so we can link to the data.
-                    $aLine['id'] = (int) $aLine['screeningid'] . '|' . $aLine['variantid']; // This also means we lack the check for repeated lines!
+                    $aLine['id'] = (int) $aLine['screeningid'] . '|' . (int) $aLine['variantid']; // This also means we lack the check for repeated lines!
                     // Manually check for repeated lines, to prevent query errors in case of inserts.
                     if (isset($aSection['data'][$aLine['id']])) {
                         // We saw this ID before in this file!
@@ -1240,13 +1240,13 @@ if (POST) {
                     }
 
                     // Check references.
-                    $bScreeningInDB = isset($aParsed['Screenings']['ids'][$aLine['screeningid']]);
+                    $bScreeningInDB = isset($aParsed['Screenings']['ids'][(int) $aLine['screeningid']]);
                     $bScreeningInFile = isset($aParsed['Screenings']['data'][(int) $aLine['screeningid']]);
                     if ($aLine['screeningid'] && !$bScreeningInFile && !$bScreeningInDB) {
                         // Screening does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Screening "' . htmlspecialchars($aLine['screeningid']) . '" does not exist in the database and is not defined in this import file.');
                     }
-                    $bVariantInDB = isset($aParsed['Variants_On_Genome']['ids'][$aLine['variantid']]);
+                    $bVariantInDB = isset($aParsed['Variants_On_Genome']['ids'][(int)$aLine['variantid']]);
                     $bVariantInFile = isset($aParsed['Variants_On_Genome']['data'][(int) $aLine['variantid']]);
                     if ($aLine['variantid'] && !$bVariantInFile && !$bVariantInDB) {
                         // Variant does not exist and is not defined in the import file.
