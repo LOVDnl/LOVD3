@@ -219,7 +219,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \institute{Leiden University Medical Center}
-\date{2015-04-02} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2015-05-05} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
   (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
@@ -3336,11 +3336,12 @@ Also the order in the downloaded file is equal to the order of the entries on th
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
   \begin{leftbar}
-    Required level: Manager\\
+    Required level: Curator\\
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
 For managers it is possible to import data directly into LOVD, using the LOVD3 import format.
+For curators, only simulation is available (see below), starting from LOVD 3.0-14.
 See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}'' for more details about the
  file format.
 Files created or modified using spreadsheet software such as OpenOffice.org Calc or MS Excel must be saved as
@@ -3350,9 +3351,14 @@ The file must be tab delimited, otherwise LOVD will produce an error.
 To import a dataset to LOVD, click the ``Import data'' link from the ``Setup'' tab dropdown menu,
  or from the setup area, click the ``Import data using the LOVD import format'' link listed under
  ``Download \& Import''.
+Curators can import data from the Configuration area. 
+Click the ``Import data using the LOVD import format'' link listed under ``Download \& Import''.
 
 The LOVD import has a simulate option, allowing you to check if the import file is correct, without importing anything.
 Check the ``Simulate (don't actually import the data)'' checkbox to use this simulation option.
+This option is always enabled for curators, and cannot be disabled.
+This allows curators to test their import files,
+ but it still requires a manager or up to actually import the file.
 
 The import mode is an option which will be extended in the near future.
 For now only ``Add only, treat all data a new'' is available.
@@ -3363,7 +3369,7 @@ In the future, the option ``Update existing data \& add new data''
 
 
 
-
+ 
 
 \hypertarget{sec:download_import_full_data}{}
 \section{Downloading \& importing the complete data}
