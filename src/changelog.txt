@@ -25,9 +25,8 @@
  * Fixed bug; When creating a download file, filters applied would sometimes
    overwrite previously set filters, for instance causing the gene-specific
    download to sometimes not contain all related diseases.
- * Fixed bug; When the an import file missed the preceding zero's in disease,
-   individual, variant, screening or transcript IDs, LOVD did not recognize the
-   ID when it did existed in the database.
+ * Fixed bug; When an import file missed the preceding zeros in any numeric ID,
+   LOVD did not recognize the ID, even though it existed in the database.
 
 
 /**************************

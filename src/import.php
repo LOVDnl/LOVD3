@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-05-05
+ * Modified    : 2015-05-06
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -432,7 +432,7 @@ if (POST) {
                                 // Note: Making this a reference (=& instead of =) slows down the parsing of a VOT line 3x. Don't understand why.
                                 $aSection['ids'] = $aParsed['Variants_On_Genome']['ids'];
                             } else {
-                                $aSection['ids'] = array_flip($_DB->query("SELECT IF(STRCMP('" . $sCurrentSection . "', 'Genes'),  CAST(id AS UNSIGNED), id) FROM " . $sTableName)->fetchAllColumn());
+                                $aSection['ids'] = array_flip($_DB->query('SELECT ' . ($sCurrentSection == 'Genes'? 'id' : 'CAST(id AS UNSIGNED)') . ' FROM ' . $sTableName)->fetchAllColumn());
                             }
                         }
                     }
@@ -1246,7 +1246,7 @@ if (POST) {
                         // Screening does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Screening "' . htmlspecialchars($aLine['screeningid']) . '" does not exist in the database and is not defined in this import file.');
                     }
-                    $bVariantInDB = isset($aParsed['Variants_On_Genome']['ids'][(int)$aLine['variantid']]);
+                    $bVariantInDB = isset($aParsed['Variants_On_Genome']['ids'][(int) $aLine['variantid']]);
                     $bVariantInFile = isset($aParsed['Variants_On_Genome']['data'][(int) $aLine['variantid']]);
                     if ($aLine['variantid'] && !$bVariantInFile && !$bVariantInDB) {
                         // Variant does not exist and is not defined in the import file.
