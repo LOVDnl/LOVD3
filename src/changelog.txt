@@ -27,6 +27,8 @@
    download to sometimes not contain all related diseases.
  * Fixed bug; When an import file missed the preceding zeros in any numeric ID,
    LOVD did not recognize the ID, even though it existed in the database.
+ * Improved the speed of the genes and diseases ViewEntries, where many linked
+   variants, individuals or phenotype entries slowed down the views.
 
 
 /**************************

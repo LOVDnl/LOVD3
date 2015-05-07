@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-03-11
- * For LOVD    : 3.0-13
+ * Modified    : 2015-05-07
+ * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -72,10 +72,10 @@ class LOVD_Gene extends LOVD_Object {
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
-                                           'COUNT(DISTINCT vog.id) AS variants, ' .
-                                           'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants, ' .
+                                           '(SELECT COUNT(*) FROM lovd_v3_variants AS vog INNER JOIN lovd_v3_variants_on_transcripts AS vot USING (id) WHERE vot.transcriptid = t.id AND vog.statusid >= ' . STATUS_MARKED . ') AS variants, ' .
+                                           '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM lovd_v3_variants AS vog INNER JOIN lovd_v3_variants_on_transcripts AS vot USING (id) WHERE vot.transcriptid = t.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ' .
                                            '"" AS count_individuals, ' . // Temporarely value, prepareData actually runs this query.
-                                           'COUNT(DISTINCT hidden_vog.id) AS hidden_variants';
+                                           '(SELECT COUNT(*) FROM lovd_v3_variants AS hidden_vog INNER JOIN lovd_v3_variants_on_transcripts AS hidden_vot ON (hidden_vog.id = hidden_vot.id) WHERE hidden_vot.transcriptid = t.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') AS hidden_variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
@@ -84,10 +84,7 @@ class LOVD_Gene extends LOVD_Object {
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id AND vog.statusid >= ' . STATUS_MARKED . ') ' .
-                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS hidden_vog ON (vot.id = hidden_vog.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') ';
+                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ';
         $this->aSQLViewEntry['GROUP_BY'] = 'g.id';
 
         // SQL code for viewing the list of genes
