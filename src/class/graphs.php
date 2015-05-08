@@ -4,11 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2012-12-13
- * For LOVD    : 3.0-01
+ * Modified    : 2015-05-08
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               David Baux <david.baux@inserm.fr>
+ *               Mame Fatim Gueye <mame.gueye@etu.univ-nantes.fr>
  *
  *
  * This file is part of LOVD.
@@ -92,16 +94,20 @@ class LOVD_Graphs {
     }
 
 
+
+
+
+////////////////////////////////////////////////////////////////////////////////
     //begin_david
- 
+
     // To do: a good use of public data, collaborator levels etc, in queries. I just focused on the types of graphs.
- 
+
     function screeningTechniques ($sDIV, $bPublicOnly = true)
     {
         // Shows a nice piechart about the type/number of techniques used per individual in a certain data set.
         // $Data can be either a * (all genes), or an array of gene symbols.
         global $_DB;
-        
+
         if (empty($sDIV)) {
             return false;
         }
@@ -138,7 +144,7 @@ class LOVD_Graphs {
                 //$aData[$sType] = 0;
             //}
             //$aData[$sType] += $nCount;
-        }   
+        }
 
         // Format $aData.
         print('        var data = [');
@@ -184,7 +190,7 @@ class LOVD_Graphs {
 
         flush();
         return true;
-        
+
     }
 
 
@@ -213,7 +219,7 @@ class LOVD_Graphs {
         // for pathogenicity
         if ($bPathogenic) {$pThreshold = 55;}
         else {$pThreshold = 0;}
-        
+
         // Keys need to be renamed.
         //$aTypes =
         //     array(
@@ -234,7 +240,7 @@ class LOVD_Graphs {
                     $qData = $_DB->query('SELECT DISTINCT `VariantOnTranscript/Protein` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot  INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE vot.effectid > ' . $pThreshold . ' AND statusid >= ' . STATUS_MARKED);
                 } else {
                     $qData = $_DB->query('SELECT DISTINCT `VariantOnTranscript/Protein` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.effectid > '. $pThreshold . ' AND t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED), array($Data));
-                }  
+                }
                 //$aData = array();
                 //while (list($pName) = $qData->fetchRow()) {
                 //    if (preg_match("#fs#", $pName)) {
@@ -243,8 +249,8 @@ class LOVD_Graphs {
                 //    else if(preg_match("#*#", $pName)) {
                 //        $aData['stop'] ++;
                 //    }
-                //    
-                //    
+                //
+                //
                 //    // If $nCount is greater than one, this DBID had more than one type. Probably a mistake, but we'll count it as complex.
                 //    //if ($nCount > 1) {
                 //    //    $sType = 'complex';
@@ -253,7 +259,7 @@ class LOVD_Graphs {
                 //    //    $aData[$sType] = 0;
                 //    //}
                 //    //$aData[$sType] ++;
-                //}   
+                //}
             } else {
                 if ($Data == '*') {
                     $qData = $_DB->query('SELECT `VariantOnTranscript/Protein` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot  INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE vot.effectid > ' . $pThreshold . ' AND statusid >= ' . STATUS_MARKED);
@@ -301,7 +307,7 @@ class LOVD_Graphs {
                         $aData['missense'] ++;
                     }
                 }
-            }   
+            }
         } else {
             // Using list of variant IDs.
         }
@@ -346,127 +352,21 @@ class LOVD_Graphs {
         flush();
         return true;
     }
-    
-    function variantsTypeDNA2 ($sDIV, $Data = array(), $bPublicOnly = true, $bUnique = false, $bPathogenic = false)
-    {
-        // Shows a nice piechart about the variant types on DNA level in a certain data set.
-        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
-        // $bPublicOnly indicates whether or not only the public variants should be used.
-        global $_DB;
 
-        if (empty($sDIV)) {
-            return false;
-        }
 
-        print('      <SCRIPT type="text/javascript">' . "\n");
-
-        if (empty($Data)) {
-            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsTypeDNA2()<BR>No data received to create graph.");' . "\n" .
-                  '      </SCRIPT>' . "\n\n");
-            return false;
-        }
-        
-        // for pathogenicity
-        if ($bPathogenic) {$pThreshold = 55;}
-        else {$pThreshold = 0;}
-        
-        // Keys need to be renamed.
-        $aTypes =
-             array(
-                    ''       => array('Unknown', '#000'),
-                    'del'    => array('Deletions', '#A00'),
-                    'delins' => array('Indels', '#95F'),
-                    'dup'    => array('Duplications', '#F90'),
-                    'ins'    => array('Insertions', '#090'),
-                    'inv'    => array('Inversions', '#0AC'),
-                    'subst'  => array('Substitutions', '#00C'),
-                  );
-
-        if (!is_array($Data)) {
-            // Retricting to a certain gene, or full database ($Data == '*').
-            if ($bUnique) {
-                // FIXME: Double check if multi-transcript genes don't mess up the statistics here.
-                if ($Data == '*') {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog' . (!$bPublicOnly? '' : ' WHERE effectid > ' . $pThreshold . ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
-                } else {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vog.effectid > ' . $pThreshold . ' AND t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
-                }
-                $aData = array();
-                while (list($sType, $nCount) = $qData->fetchRow()) {
-                    // If $nCount is greater than one, this DBID had more than one type. Probably a mistake, but we'll count it as complex.
-                    if ($nCount > 1) {
-                        $sType = 'complex';
-                    }
-                    if (!isset($aData[$sType])) {
-                        $aData[$sType] = 0;
-                    }
-                    $aData[$sType] ++;
-                }   
-            } else {
-                if ($Data == '*') {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog' . (!$bPublicOnly? '' : ' WHERE effectid > ' . $pThreshold . ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY type')->fetchAllCombine();
-                } else {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vog.effectid > ' . $pThreshold . ' AND t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY type', array($Data))->fetchAllCombine();
-                }
-            }
-        } else {
-            // Using list of variant IDs.
-        }
-
-        // Format $aData.
-        print('        var data = [');
-        ksort($aData); // May not work correctly, if keys are replaced...
-        $i = 0;
-        $nTotal = 0;
-        foreach ($aData as $sType => $nValue) {
-            if (isset($aTypes[$sType])) {
-                $sLabel = $aTypes[$sType][0];
-            } else {
-                $sLabel = $sType;
-            }
-            print(($i++? ',' : '') . "\n" .
-                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
-            $nTotal += $nValue;
-        }
-        if (!$aData) {
-            // There was no data... give "fake" data such that the graph can still be generated.
-            print('{label: "No data to show", data: 1, color: "#000"}');
-            $nTotal = 1;
-        }
-        print('];' . "\n\n" .
-              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
-              '        {' . "\n" .
-              '            series: {' . "\n" .
-              $this->getPieGraph() .
-              '            },' . "\n" .
-              '            grid: {hoverable: true}' . "\n" .
-              '        });' . "\n" .
-              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
-
-        // Add the total number to the header above the graph.
-              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
-
-        // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
-        $this->getHoverFunction($sDIV, $nTotal) .
-              '      </SCRIPT>' . "\n\n");
-
-        flush();
-        return true;
-    }
-    
     function variantsPositions ($sDIV, $Data = array(), $bPublicOnly = true)
     {
         // Shows a nice piechart about the variant positions on DNA level in a certain data set.
         // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
         // $bPublicOnly indicates whether or not only the public variants should be used.
         global $_DB;
-    
+
         if (empty($sDIV)) {
             return false;
         }
-    
+
         print('      <SCRIPT type="text/javascript">' . "\n");
-    
+
         if (empty($Data)) {
             print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsPositions()<BR>No data received to create graph.");' . "\n" .
                   '      </SCRIPT>' . "\n\n");
@@ -540,7 +440,7 @@ class LOVD_Graphs {
         flush();
         return true;
     }
-    
+
     //end_david
 
 
@@ -630,7 +530,7 @@ class LOVD_Graphs {
         return true;
     }
 
- 
+
   /*combine: {
    threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
    color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
@@ -757,7 +657,7 @@ class LOVD_Graphs {
 
 //function mysql_to_unix($sDate) {
     //$sPhpDate = new DateTime($sDate);
-    //return date_timestamp_get($sPhpDate)*1000;  
+    //return date_timestamp_get($sPhpDate)*1000;
 //}
 
 
@@ -789,7 +689,7 @@ function data_format ($sJsname, $aData = array() )  {
         $nTotal = 1;
     }
     print('];' . "\n\n" );
-    return $nTotal;  
+    return $nTotal;
 }
 
 
@@ -799,22 +699,22 @@ function timeline($sDIV, $bPublicOnly = true) {
     if (empty($sDIV)) {
     return false;
     }
-    
-    
+
+
     print('      <SCRIPT type="text/javascript"> ' . "\n");
-                   
+
      //the request above returns an array with the numbers of individuals added in the database per  date ex ('201404'=>'127')
     $aPatients = $_DB->query(' SELECT UNIX_TIMESTAMP(CONCAT(LEFT(created_date, 8), "01"))*1000, COUNT(id) FROM ' . TABLE_INDIVIDUALS .  (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY LEFT(created_date, 8)')->fetchAllCombine();
     //the request above returns an array with the number of unique variants added in the database per specific date
     $aCumulated = $_DB->query(' SELECT UNIX_TIMESTAMP(CONCAT(LEFT(created_date, 8), "01"))*1000, COUNT(DISTINCT(`VariantOnGenome/DBID`)) FROM ' . TABLE_VARIANTS . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY LEFT(created_date, 8)')->fetchAllCombine();
     //the request above returns an array with the number of unique variants added in the database per specific date
     $aUnique = $_DB->query(' SELECT UNIX_TIMESTAMP(CONCAT(LEFT(created_date, 8), "01"))*1000, COUNT(id) FROM ' . TABLE_VARIANTS . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY LEFT(created_date, 8)')->fetchAllCombine();
-    
+
     //method to get the cumulated # of stuffs and dates as UNIX TIMESTAMPS mandatory for flot
     $nPatients = $this->data_format("Patients", $aPatients);
     $nCumulated = $this->data_format("Cumulated", $aCumulated);
     $nUnique = $this->data_format("Unique", $aUnique);
-    
+
     //begin of the javascript code to print the chart
     // old patient color: #058DC7
     print(
@@ -823,7 +723,7 @@ function timeline($sDIV, $bPublicOnly = true) {
     ' {label:"Number of unique variants", data: Cumulated, yaxis: 2, lines:{show:true}, points:{show:true},color:"#AA4643"},'. "\n" .
     ' {label:"Number of cumulated variants", data: Unique, yaxis: 3, lines:{show:true}, points:{show:true},color:"#50B432"}'. "\n".
     ' ];'. "\n\n");
-    print( 
+    print(
     'var options ={'. "\n" .
     //x-axis parameters
     ' xaxis:'. "\n" .
@@ -867,7 +767,7 @@ function timeline($sDIV, $bPublicOnly = true) {
     ' legend:{'. "\n" .
     '  position: "nw"'. "\n" .
     '  },'. "\n\n" .
-    
+
     '};'. "\n\n" .
     'function showTooltip(x, y, contents, color) {'    . "\n" .
     '    $(\'<div id="timechart_hover">\' + contents + \'</div>\').css( {'  . "\n" .
@@ -884,7 +784,7 @@ function timeline($sDIV, $bPublicOnly = true) {
     '       }).appendTo("body").fadeIn(200);'   . "\n" .
     '}' . "\n" .
     '$.plot($("#timechart"), datatoplot, options);'. "\n\n" . "\n" .
-    'var previousPoint = null;'. "\n" .    
+    'var previousPoint = null;'. "\n" .
 //binding the hover event to the hover-generation function
     '$("#' . $sDIV . '").bind("plothover", function (event, pos, obj) {'   . "\n" .
     '  if (obj) {'. "\n" .
@@ -902,46 +802,46 @@ function timeline($sDIV, $bPublicOnly = true) {
     '   $("#timechart_hover").remove();'. "\n" .
     '   var color = obj.series.color;'. "\n" .
     '   showTooltip(obj.pageX, obj.pageY, contents, color);'. "\n" .
-    '   }'. "\n" .                
+    '   }'. "\n" .
     '  }'. "\n" .
     '  else {'. "\n" .
     '   $("#timechart_hover").remove();'. "\n" .
     '   previousPoint = null;'. "\n" .
     '  }'. "\n" .
     '});'. "\n");
-        
+
     print(' </SCRIPT> ' . "\n\n");
-            
+
     flush();
     return true;
 
 }
 
-  
-  
+
+
   function timeline2 ($sDIV, $Data = array(), $bPublicOnly = true, $bUnique = true) {
-    
+
     global $_DB;
     if (empty($sDIV)) {
     return false;
     }
-    
+
     print('      <SCRIPT type="text/javascript"> ' . "\n");
-       
+
     //the request above returns an array with the numbers of individuals added in the database per  date ex ('201404'=>'127')
     $aPatients = $_DB->query(' SELECT UNIX_TIMESTAMP(CONCAT(LEFT(created_date, 8), "01"))*1000, COUNT(i.id) FROM ' . TABLE_INDIVIDUALS. ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON i.id=s.individualid INNER JOIN ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (i.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON vot.transcriptid = t.id WHERE t.geneid = ? ' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) .  'GROUP BY LEFT(created_date, 8)')->fetchAllCombine();
     //the request above returns an array with the number of unique variants added in the database per specific date
     $aCumulated = $_DB->query(' SELECT UNIX_TIMESTAMP(CONCAT(LEFT(created_date, 8), "01"))*1000, COUNT(DISTINCT(`VariantOnGenome/DBID`)) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (i.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON vot.transcriptid = t.id WHERE t.geneid = ? ' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . '  GROUP BY LEFT(created_date, 8)')->fetchAllCombine();
     //the request above returns an array with the number of unique variants added in the database per specific date
     $aUnique = $_DB->query(' SELECT UNIX_TIMESTAMP(CONCAT(LEFT(created_date, 8), "01"))*1000, COUNT(i.id) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (i.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON vot.transcriptid = t.id WHERE t.geneid = ? ' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . '  GROUP BY LEFT(created_date, 8)')->fetchAllCombine();
-    
-    
+
+
     //method to get the cumulated # of stuffs and dates as UNIX TIMESTAMPS mandatory for flot
     $nPatients = $this->data_format("Patients", $aPatients);
     $nCumulated = $this->data_format("Cumulated", $aCumulated);
     $nUnique = $this->data_format("Unique", $aUnique);
-    
-    
+
+
     //begin of the javascript code to print the chart
     // old patient color: #058DC7
     print(
@@ -950,7 +850,7 @@ function timeline($sDIV, $bPublicOnly = true) {
     ' {label:"Number of unique variants", data: Cumulated, yaxis: 2, lines:{show:true}, points:{show:true},color:"#AA4643"},'. "\n" .
     ' {label:"Number of cumulated variants", data: Unique, yaxis: 3, lines:{show:true}, points:{show:true},color:"#50B432"}'. "\n".
     '               ];'. "\n\n");
-    print( 
+    print(
     'var options ={'. "\n" .
     //x-axis parameters
     ' xaxis:'. "\n" .
@@ -994,7 +894,7 @@ function timeline($sDIV, $bPublicOnly = true) {
     ' legend:{'. "\n" .
     '  position: "nw"'. "\n" .
     '  },'. "\n\n" .
-    
+
     '};'. "\n\n" .
     'function showTooltip(x, y, contents, color) {'    . "\n" .
     '    $(\'<div id="timeline_hover">\' + contents + \'</div>\').css( {'  . "\n" .
@@ -1011,7 +911,7 @@ function timeline($sDIV, $bPublicOnly = true) {
     '       }).appendTo("body").fadeIn(200);'   . "\n" .
     '}' . "\n" .
     '$.plot($("#timeline"), datatoplot, options);'. "\n\n" . "\n" .
-    'var previousPoint = null;'. "\n" .    
+    'var previousPoint = null;'. "\n" .
 //binding the hover event to the hover-generation function
     '$("#' . $sDIV . '").bind("plothover", function (event, pos, obj) {'   . "\n" .
     '  if (obj) {'. "\n" .
@@ -1029,23 +929,23 @@ function timeline($sDIV, $bPublicOnly = true) {
     '   $("#timeline_hover").remove();'. "\n" .
     '   var color = obj.series.color;'. "\n" .
     '   showTooltip(obj.pageX, obj.pageY, contents, color);'. "\n" .
-    '   }'. "\n" .                
+    '   }'. "\n" .
     '  }'. "\n" .
     '  else {'. "\n" .
     '   $("#timeline_hover").remove();'. "\n" .
     '   previousPoint = null;'. "\n" .
     '  }'. "\n" .
     '});'. "\n");
-        
+
     print(' </SCRIPT> ' . "\n\n");
-            
+
     flush();
     return true;
 
 }
 
-  
-  
+
+
   function genes2chromosomes($sDIV, $bPublicOnly = true) {
     //barchart about the number of references to the chromosomes in the DB
     global $_DB;
@@ -1053,7 +953,7 @@ function timeline($sDIV, $bPublicOnly = true) {
     if (empty($sDIV)) {
         return false;
     }
-   
+
     print('      <SCRIPT type="text/javascript">' . "\n");
 
     //$aTypes =
@@ -1083,17 +983,17 @@ function timeline($sDIV, $bPublicOnly = true) {
                 //'X'    => '22',
                 //'Y'    => '23',
               //);
-    
+
     $aData = $_DB->query(' SELECT c.name, COUNT(g.name) FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON g.chromosome=c.name ' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY c.name ')->fetchAllCombine();
-       
+
     // Format $aData.
     print('        var data = [');
     ksort($aData); // May not work correctly, if keys are replaced...
     $i = 0;$j = 0;
     $nTotal = 0;
     $sticks = "     var ticks = [";
-    foreach ($aData as $sType => $nValue) {     
-       
+    foreach ($aData as $sType => $nValue) {
+
         //$sLabel = $aTypes[$sType];
         print(($i++? ',' : '') . "\n" .
               '[' . $i . ',' . $nValue  .']');
@@ -1107,7 +1007,7 @@ function timeline($sDIV, $bPublicOnly = true) {
         print('{label: "No data to show", data: 1, color: "#000"}');
         $nTotal = 1;
     }
-            print('];' . "\n\n" . 
+            print('];' . "\n\n" .
                             'var dataset = [' . "\n" .
             ' {' . "\n".
             ' data: data,'   . "\n".
@@ -1117,7 +1017,7 @@ function timeline($sDIV, $bPublicOnly = true) {
             ' align:\'center\','. "\n"  .
             ' barWidth:0.6}'  . "\n"  .
             ' }   ' . "\n" .
-            ' ]; '   .  $sticks .    "\n\n" . 
+            ' ]; '   .  $sticks .    "\n\n" .
             ' var options = {'   . "\n".
             '  xaxis: {ticks:ticks,'. "\n" .
             '     axisLabelFontSizePixels: 12,'. "\n" .
@@ -1153,16 +1053,19 @@ function timeline($sDIV, $bPublicOnly = true) {
     flush();
     return true;
     }
-
-    
 //end_fatim
 
 
-    function variantsTypeDNA ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false)
+
+
+
+    function variantsTypeDNA ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
     {
         // Shows a nice piechart about the variant types on DNA level in a certain data set.
         // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
         // $bNonPublic indicates whether or not only the public variants should be used.
+        // $bUnique indicates whether all variants or or the unique variants should be counted.
+        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
         global $_DB;
 
         if (empty($sDIV)) {
@@ -1177,26 +1080,27 @@ function timeline($sDIV, $bPublicOnly = true) {
             return false;
         }
 
+        $nPathogenicThreshold = 7;
+
         // Keys need to be renamed.
         $aTypes =
-             array(
-                    ''       => array('Unknown', '#000'),
-                    'del'    => array('Deletions', '#A00'),
-                    'delins' => array('Indels', '#95F'),
-                    'dup'    => array('Duplications', '#F90'),
-                    'ins'    => array('Insertions', '#090'),
-                    'inv'    => array('Inversions', '#0AC'),
-                    'subst'  => array('Substitutions', '#00C'),
-                  );
+            array(
+                ''       => array('Unknown', '#000'),
+                'del'    => array('Deletions', '#A00'),
+                'delins' => array('Indels', '#95F'),
+                'dup'    => array('Duplications', '#F90'),
+                'ins'    => array('Insertions', '#090'),
+                'inv'    => array('Inversions', '#0AC'),
+                'subst'  => array('Substitutions', '#00C'),
+            );
 
         if (!is_array($Data)) {
-            // Retricting to a certain gene, or full database ($Data == '*').
+            // Restricting to a certain gene, or full database ($Data == '*').
             if ($bUnique) {
-                // FIXME: Double check if multi-transcript genes don't mess up the statistics here.
                 if ($Data == '*') {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog' . ($bNonPublic? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
                 } else {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
                 }
                 $aData = array();
                 while (list($sType, $nCount) = $qData->fetchRow()) {
@@ -1211,9 +1115,9 @@ function timeline($sDIV, $bPublicOnly = true) {
                 }
             } else {
                 if ($Data == '*') {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog' . ($bNonPublic? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY type')->fetchAllCombine();
+                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY type')->fetchAllCombine();
                 } else {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY type', array($Data))->fetchAllCombine();
+                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.id IN (SELECT DISTINCT vot.id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?)' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY type', array($Data))->fetchAllCombine();
                 }
             }
         } else {
@@ -1232,7 +1136,7 @@ function timeline($sDIV, $bPublicOnly = true) {
                 $sLabel = $sType;
             }
             print(($i++? ',' : '') . "\n" .
-                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+                '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
             $nTotal += $nValue;
         }
         if (!$aData) {
@@ -1254,7 +1158,7 @@ function timeline($sDIV, $bPublicOnly = true) {
               '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
 
         // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
-        $this->getHoverFunction($sDIV, $nTotal) .
+              $this->getHoverFunction($sDIV, $nTotal) .
               '      </SCRIPT>' . "\n\n");
 
         flush();
