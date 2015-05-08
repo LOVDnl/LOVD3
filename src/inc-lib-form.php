@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-06-07
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-04-20
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -81,16 +81,18 @@ function lovd_checkDBID ($aData)
         if (!empty($sGenomeVariant)) {
             // SQL addition to check the genomic notation-chromosome combination.
             $sWhere .= '(REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?) ';
-            $aArgs = array_merge($aArgs, array($sGenomeVariant, $aData['chromosome']));
+            $aArgs[] = $sGenomeVariant;
+            $aArgs[] = $aData['chromosome'];
         }
         foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
             // SQL addition to check the transcript notation-transcript combination.
             $sWhere .= (!empty($sWhere)? 'OR ' : '') . '(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?) ';
-            $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
+            $aArgs[] = $sTranscriptVariant;
+            $aArgs[] = $nTranscriptID;
         }
         // SQL addition to check if the above combinations are found with the given DBID.
         $sWhere .= ') AND BINARY vog.`VariantOnGenome/DBID` = ? ';
-        $aArgs = array_merge($aArgs, array($aData['VariantOnGenome/DBID']));
+        $aArgs[] = $aData['VariantOnGenome/DBID'];
         if ($nIDtoIgnore > 0) {
             // SQL addition to exclude the current variant, where the $aData belongs to.
             $sWhere .= 'AND vog.id != ? ';
@@ -104,11 +106,43 @@ function lovd_checkDBID ($aData)
             return false;
         }
     } elseif (!empty($aGenes) && !in_array($sSymbol, $aGenes)) {
+        // VOT, but DBID does not use the gene symbol of one of these VOT's.
         return false;
-    } elseif (empty($aGenes) && substr($aData['VariantOnGenome/DBID'], 0, 3) == 'chr' && $sSymbol != 'chr' . $aData['chromosome'] && !in_array($sSymbol, lovd_getGeneList())) {
-        return false;
+    } elseif (empty($aGenes)) {
+        // VOG
+        if (substr($aData['VariantOnGenome/DBID'], 0, 3) != 'chr') {
+            if (!in_array($sSymbol, lovd_getGeneList())) {
+                // Gene symbol used in the DBID does not exist in the database.
+                return false;
+            }
+        } elseif ($sSymbol != 'chr' . $aData['chromosome']) {
+            // Chromosome number in the DBID does not match the chromosome of the genomic variant.
+            return false;
+        }
     }
     return true;
+}
+
+
+
+
+
+function lovd_checkORCIDChecksum ($sID)
+{
+    // Partially based on function taken 2012-10-24 from:
+    // http://support.orcid.org/knowledgebase/articles/116780-structure-of-the-orcid-identifier
+    // Checks "check digit" as per ISO 7064 11,2, for a given ORCID ID.
+
+    $sBaseDigits = ltrim(str_replace('-', '', substr($sID, 0, -1)), '0'); // '0000-0002-1368-1939' => 21368193
+    $nTotal = 0;
+    for ($i = 0; $i < strlen($sBaseDigits); $i++) {
+        $nDigit = (int) $sBaseDigits{$i};
+        $nTotal = ($nTotal + $nDigit) * 2;
+    }
+    $nRemainder = $nTotal % 11;
+    $nResult = (12 - $nRemainder) % 11;
+    $sResult = ($nResult == 10 ? 'X' : (string) $nResult);
+    return ($sResult == substr($sID, -1));
 }
 
 
@@ -148,21 +182,21 @@ function lovd_checkXSS ($aInput = '')
 
 
 
-function lovd_emailError ($sErrorCode, $sType, $bHalt = false)
+function lovd_emailError ($sErrorCode, $sSubject, $sTo, $bHalt = false)
 {
     // Formats email errors for the error log, and optionally halts the system.
 
     // Format the error message.
     // FIXME; Kan makkelijker??? // Een str_replace() zou ook wel werken... Deze code staat op minimaal 3 plaatsen.
     $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . $sErrorCode . '.' . "\n" .
-              'Email type : ' . $sType;
+              'Error : Couldn\'t send a mail with subject "' . $sSubject . '" to ' . $sTo;
 
     // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
     // write it to the system log, and halt the system. Otherwise, just log it to the database.
     if ($bHalt) {
-        lovd_displayError('Email', $sError);
+        lovd_displayError('SendMail', $sError);
     } else {
-        lovd_writeLog('Error', 'Email', $sError);
+        lovd_writeLog('Error', 'SendMail', $sError);
     }
 }
 
@@ -339,47 +373,70 @@ function lovd_fetchDBID ($aData)
     }
 
     if (!empty($aData) && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
-        // This is the standard query that will be used to determine if there are any DBID's already present in the database to use.
-        $sSQL = 'SELECT DISTINCT t.geneid, ' .
-                'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
-                'vog.`VariantOnGenome/DBID` ' .
-                'FROM ' . TABLE_VARIANTS . ' AS vog LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' .
-                'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
-                'WHERE ';
+        // Gather a list of DBIDs already present in the database to use.
+        // 2013-03-01; 3.0-03; To speed up this query in large databases, it has been optimized and rewritten with a UNION.
+        $sSQL = '';
         $aArgs = array();
-        $sWhere = '';
         if (!empty($sGenomeVariant)) {
             // SQL addition to check the genomic notation-chromosome combination.
-            $sWhere .= '(REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?) ';
-            $aArgs = array_merge($aArgs, array($sGenomeVariant, $aData['chromosome']));
+            $sSQL = 'SELECT DISTINCT vog.`VariantOnGenome/DBID` ' .
+                    'FROM ' . TABLE_VARIANTS . ' AS vog ' .
+                    'WHERE `VariantOnGenome/DBID` IS NOT NULL AND `VariantOnGenome/DBID` != "" AND REPLACE(REPLACE(REPLACE(vog.`VariantOnGenome/DNA`, "(", ""), ")", ""), "?", "") = ? AND vog.chromosome = ?';
+            $aArgs[] = $sGenomeVariant;
+            $aArgs[] = $aData['chromosome'];
+            // 2013-02-28; 3.0-03; If we have the variant's position available, we can use that, speeding up the query from
+            // 0.11s to 0.00s when having 1M variants. Would the position ever be different when we've got the same DNA field?
+            if (!empty($aData['position_g_start'])) {
+                $sSQL .= ' AND vog.position_g_start = ?';
+                $aArgs[] = $aData['position_g_start'];
+            }
+            if (!empty($aTranscriptVariants)) {
+                $sSQL .= ' UNION ';
+            }
         }
-        foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
-            // SQL addition to check the transcript notation-transcript combination.
-            $sWhere .= (!empty($sWhere)? 'OR' : '') . ' (REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?) ';
-            $aArgs = array_merge($aArgs, array($sTranscriptVariant, $nTranscriptID));
+        if (!empty($aTranscriptVariants)) {
+            // 2013-03-01; 3.0-03; To speed up this query in large databases, it has been optimized and rewritten using INNER JOIN instead of LEFT OUTER JOIN, requiring a UNION.
+            $sSQL .= 'SELECT DISTINCT vog.`VariantOnGenome/DBID` ' .
+                     'FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' .
+                     'INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
+                     'WHERE `VariantOnGenome/DBID` IS NOT NULL AND `VariantOnGenome/DBID` != "" AND (';
+            $sWhere = '';
+            foreach ($aTranscriptVariants as $nTranscriptID => $sTranscriptVariant) {
+                // SQL addition to check the transcript notation-transcript combination.
+                $sWhere .= (empty($sWhere)? '' : ' OR ') . '(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ? AND vot.transcriptid = ?)';
+                $aArgs[] = $sTranscriptVariant;
+                $aArgs[] = $nTranscriptID;
+            }
+            $sWhere .= ')';
+            $sSQL .= $sWhere;
         }
 
-        $sSQL .= $sWhere . ' AND `VariantOnGenome/DBID` IS NOT NULL AND `VariantOnGenome/DBID` != "" GROUP BY vog.id';
-        $aOutput = $_DB->query($sSQL, $aArgs)->fetchAllRow();
+        $aDBIDOptions = $_DB->query($sSQL, $aArgs)->fetchAllColumn();
 
         // Set the default for the DBID.
         $sDBID = 'chr' . $aData['chromosome'] . '_999999';
-        foreach($aOutput as $aOption) {
+        foreach($aDBIDOptions as $sDBIDoption) {
             // Loop through all the options returned from the database and decide which option to take.
             preg_match('/^((.+)_(\d{6}))$/', $sDBID, $aMatches);
             list($sDBIDnew, $sDBIDnewSymbol, $sDBIDnewNumber) = array($aMatches[1], $aMatches[2], $aMatches[3]);
 
-            if (preg_match('/^((.+)_(\d{6}))$/', $aOption[2], $aMatches)) {
-                list($sDBIDoptionAll, $sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
+            if (preg_match('/^(.+)_(\d{6})$/', $sDBIDoption, $aMatches)) {
+                list($sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
+                // Check this option, if it doesn't pass we'll skip it now.
+                $aDataCopy = $aData;
+                $aDataCopy['VariantOnGenome/DBID'] = $sDBIDoption;
+                if (!lovd_checkDBID($aDataCopy)) {
+                    continue;
+                }
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
                     // If the symbol of the option is the same, but the number is lower(not including 000000), take it.
-                    $sDBID = $sDBIDoptionAll;
+                    $sDBID = $sDBIDoption;
                 } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDnewSymbol, $aGenes)) {
                     // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.
-                    $sDBID = $sDBIDoptionAll;
+                    $sDBID = $sDBIDoption;
                 } elseif (substr($sDBIDnewSymbol, 0, 3) == 'chr' && substr($sDBIDoptionSymbol, 0, 3) != 'chr') {
                     // If the symbol of the option is not a chromosome, but the current DBID is, take it.
-                    $sDBID = $sDBIDoptionAll;
+                    $sDBID = $sDBIDoption;
                 }
             }
         }
@@ -387,9 +444,18 @@ function lovd_fetchDBID ($aData)
             // Either this variant has a DBID with chr, but also a VOT that we want to change to, or
             // no entries found with these combinations and a DBID, so we are going to use the gene symbol
             // (or chromosome if there is no gene) and take the first number available to make a DBID.
-            $sSymbol = (!empty($aGenes)? $aGenes[0] : 'chr' . $aData['chromosome']);
             // Query for getting the first available number for the new DBID.
-            $nDBIDnewNumber = $_DB->query('SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` REGEXP "^' . $sSymbol . '_[0-9]{6}$"')->fetchColumn();
+            if (empty($aGenes)) {
+                // No genes, simple query only on TABLE_VARIANTS.
+                // 2013-02-28; 3.0-03; By querying the chromosome also we sped up this query from 0.43s to 0.09s when having 1M variants.
+                // NOTE: By adding an index on `VariantOnGenome/DBID` this query time can be reduced to 0.00s because of the LIKE on the DBID field.
+                $sSymbol = 'chr' . $aData['chromosome'];
+                $nDBIDnewNumber = $_DB->query('SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.chromosome = ? AND `VariantOnGenome/DBID` LIKE ? AND `VariantOnGenome/DBID` REGEXP ?', array($aData['chromosome'], $sSymbol . '\_%', '^' . $sSymbol . '_[0-9]{6}$'))->fetchColumn();
+            } else {
+                // 2013-02-28; 3.0-03; By using INNER JOIN to VOT and T and placing a WHERE on t.geneid we sped up this query from 0.45s to 0.00s when having 1M variants.
+                $sSymbol = $aGenes[0];
+                $nDBIDnewNumber = $_DB->query('SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ? AND `VariantOnGenome/DBID` REGEXP ?', array($sSymbol, '^' . $sSymbol . '_[0-9]{6}$'))->fetchColumn();
+            }
             $sDBID = $sSymbol . '_' . sprintf('%06d', $nDBIDnewNumber);
         }
         return $sDBID;
@@ -423,7 +489,7 @@ function lovd_buildOptionTable ($aOptionsList = array())
             $aOption['onclick'] = 'window.location.href=\'' . lovd_getInstallURL() . $aOption['onclick'] . '\'';
         }
         $sOptionsTable .= 'onclick="' . $aOption['onclick'] . '">' . "\n" .
-                         '          <TD width="30" align="center"><SPAN class="S18">&raquo;</SPAN></TD>' . "\n" .
+                         '          <TD width="30" align="center"><SPAN class="S18">&' . (!empty($aOption['type'])? $aOption['type'] : 'r') . 'aquo;</SPAN></TD>' . "\n" .
                          '          <TD>' . (!empty($aOption['disabled'])? '<I>' . $aOption['option_text'] . '</I>' : $aOption['option_text']) . '</TD></TR>' . "\n";
     }
 
@@ -508,7 +574,7 @@ function lovd_matchURL ($s, $bAllowCustomHosts = false)
     // Matches a string to the standard URL pattern (including those using IP addresses).
     // If $bAllowCustomHosts is true, hosts like "localhost" (hosts without dots) are allowed.
 
-    return (preg_match('/^(ht|f)tps?:\/\/([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-z][-0-9a-z]*[0-9a-z]|[0-9a-z])\.' . ($bAllowCustomHosts? '?' : '') . ')+[a-z]{2,6})(\/[%&=#0-9a-z\/._+-]*\??.*)?$/i', $s));
+    return (preg_match('/^(ht|f)tps?:\/\/([0-9]{1,3}(\.[0-9]{1,3}){3}|(([0-9a-z][-0-9a-z]*[0-9a-z]|[0-9a-z])\.' . ($bAllowCustomHosts? '?' : '') . ')+[a-z]{2,})(\/[%&=#0-9a-z\/._+-]*\??.*)?$/i', $s));
 }
 
 
@@ -537,50 +603,32 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
     global $_SETT, $_CONF;
 
     $aEmailsUsed = array(); // Make sure no email address is used more than once.
-    $sTo = '';
-    foreach ($aTo as $aRecipient) {
-        list($sName, $sEmails) = array_values($aRecipient);
-        $aEmails = explode("\r\n", $sEmails);
-        foreach ($aEmails as $sEmail) {
-            if (!in_array($sEmail, $aEmailsUsed)) {
-                $sTo .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
-                $aEmailsUsed[] = $sEmail;
-            }
-        }
-    }
-    $sTo = rtrim($sTo, ', ');
-    $sCc = '';
-    foreach ($aCc as $aRecipient) {
-        list($sName, $sEmails) = array_values($aRecipient);
-        $aEmails = explode("\r\n", $sEmails);
-        foreach ($aEmails as $sEmail) {
-            if (!in_array($sEmail, $aEmailsUsed)) {
-                $sCc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
-                $aEmailsUsed[] = $sEmail;
-            }
-        }
-    }
-    $sCc = rtrim($sCc, ', ');
-    $sBcc = '';
-    foreach ($aBcc as $aRecipient) {
-        list($sName, $sEmails) = array_values($aRecipient);
-        $aEmails = explode("\r\n", $sEmails);
-        foreach ($aEmails as $sEmail) {
-            if (!in_array($sEmail, $aEmailsUsed)) {
-                $sBcc .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
-                $aEmailsUsed[] = $sEmail;
-            }
-        }
-    }
-    $sBcc = rtrim($sBcc, ', ');
+    $sTo = lovd_sendMailFormatAddresses($aTo, $aEmailsUsed);
+    $sCc = lovd_sendMailFormatAddresses($aCc, $aEmailsUsed);
+    $sBcc = lovd_sendMailFormatAddresses($aBcc, $aEmailsUsed);
+
+    // 2013-02-06; 3.0-02; Fix for MIME emails that have long lines in the MIME headers.
+    // Lines that are not to be wrapped will have their spaces (and other characters lovd_wrapText()
+    // responds to) replaced with something else; then the body is wrapped, and then the spaces are replaced back in.
+    $sBody = preg_replace_callback('/^(Content-(Type|Description):.+)/im',
+        function ($aRegs) { return str_replace(array(' ', '-', ',', ':', ';'), array('{{SPACE}}', '{{HYPHEN}}', '{{COMMA}}', '{{COLON}}', '{{SEMICOLON}}'), $aRegs[1]);},
+        $sBody);
+    // Normal message body wrapping, which now cannot wrap the headers anymore...
     $sBody = lovd_wrapText($sBody);
+    // Now, let's restore what we replaced.
+    $sBody = preg_replace_callback('/^(Content{{HYPHEN}}(Type|Description){{COLON}}.+)/im',
+        function ($aRegs) { return str_replace(array('{{SPACE}}', '{{HYPHEN}}', '{{COMMA}}', '{{COLON}}', '{{SEMICOLON}}'), array(' ', '-', ',', ':', ';'), $aRegs[1]);},
+        $sBody);
+
     $sHeaders = $sHeaders . (!empty($sCc)? PHP_EOL . 'Cc: ' . $sCc : '') . (!empty($sBcc)? PHP_EOL . 'Bcc: ' . $sBcc : '');
 
+    // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
+    $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
     $bSafeMode = ini_get('safe_mode');
     if (!$bSafeMode) {
-        $bMail = @mail($sTo, $sSubject, $sBody, $sHeaders, '-f ' . $_CONF['email_address']);
+        $bMail = @mail($sTo, $sSubjectEncoded, $sBody, $sHeaders, '-f ' . $_CONF['email_address']);
     } else {
-        $bMail = @mail($sTo, $sSubject, $sBody, $sHeaders);
+        $bMail = @mail($sTo, $sSubjectEncoded, $sBody, $sHeaders);
     }
 
     if ($bMail && $bFwdAdmin) {
@@ -593,7 +641,7 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
         // The admin should have a proper Reply-to header.
         $sAdditionalHeaders = '';
-        if (in_array($sSubject, array('LOVD registration', 'LOVD password reset'))) {
+        if (in_array($sSubject, array('LOVD account registration', 'LOVD password reset'))) {
             // Reply-to should be original addressees.
             $sAdditionalHeaders .= 'Reply-To: ' . $sTo;
         } elseif (strpos($sSubject, 'LOVD submission') === 0) {
@@ -601,12 +649,13 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
             $sAdditionalHeaders .= 'Reply-To: ' . $sCc;
         }
 
-        return lovd_sendMail(array($_SETT['admin']), 'FW: ' . $sSubject, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
+        $sSubject = 'FW: ' . $sSubject;
+        // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
+        $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
+        return lovd_sendMail(array($_SETT['admin']), $sSubjectEncoded, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
     } elseif (!$bMail) {
-        // $sSubject is used here as it can always be used to describe the email type.
-        lovd_emailError(LOG_EVENT, $sSubject);
-        lovd_writeLog('Error', 'SendMail', preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in code block ' . LOG_EVENT . '.' . "\n" .
-                                           'Error : Couldn\'t send a mail with subject ' . $sSubject . ' to ' . $sTo);
+        // $sSubject is used here as it can always be used to describe the email type. This function also logs the email error.
+        lovd_emailError(LOG_EVENT, $sSubject, $sTo, true);
     }
 
     return $bMail;
@@ -616,25 +665,80 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
 
 
 
-/*
-DMD_SPECIFIC
-function lovd_setUpdatedDate ($sGene)
+function lovd_sendMailFormatAddresses ($aRecipients, & $aEmailsUsed)
 {
-    // Updates the updated_date field of the indicated gene.
-    global $_AUTH;
+    // Formats the To, Cc or Bcc headers for emails sent by LOVD.
 
-    // Does this user have rights on this gene? It doesn't really matter that much, but still.
-    if (lovd_isCurator($sGene)) {
-        // Just update the database and we'll see what happens.
-        $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = "' . $_AUTH['id'] . '", updated_date = NOW() WHERE id = ?', array($sGene), false);
-        if ($q->rowCount()) {
-            return true;
-        }
+    if (!is_array($aRecipients) || !count($aRecipients)) {
+        return false;
+    }
+    if (!is_array($aEmailsUsed)) {
+        $aEmailsUsed = array();
     }
 
-    return false;
+    $sRecipients = '';
+    foreach ($aRecipients as $aRecipient) {
+        list($sName, $sEmails) = array_values($aRecipient);
+        $aEmails = explode("\r\n", $sEmails);
+        foreach ($aEmails as $sEmail) {
+            if ($sEmail && !in_array($sEmail, $aEmailsUsed)) {
+                // Plain mb_encode_mimeheader() has some limitations:
+                // - It doesn't know the length of the header, which is needed because lines can be no longer than 76 chars.
+                // - It encodes the email address which it should not do, breaking the sending of email.
+                // - It doesn't handle spaces well.
+                // Solution is to split on spaces first, and encode the name only, each word on a different line to be relatively sure we don't cross the line border.
+                if (preg_match('/[\x80-\xFF]/', $sName)) {
+                    // Special characters. Encode the name, split on each word. This technique will not be sufficient in case of very
+                    // long names (longer than 24 chars with many special chars). In that case it could cross the 76-char line boundary.
+                    $aName = explode(' ', trim($sName));
+                    foreach ($aName as $nKey => $sWord) {
+                        // To include spaces where they belong, include a space in the encoded name.
+                        if ($nKey) {
+                            $sWord = ' ' . $sWord;
+                        }
+                        $sRecipients .= (!$sRecipients? '' : PHP_EOL . ' ') . mb_encode_mimeheader($sWord, 'UTF-8');
+                    }
+                    $sRecipients .= PHP_EOL . ' <' . trim($sEmail) . '>, ';
+                } else {
+                    $sRecipients .= (ON_WINDOWS? '' : '"' . trim($sName) . '" ') . '<' . trim($sEmail) . '>, ';
+                }
+                $aEmailsUsed[] = $sEmail;
+            }
+        }
+    }
+    return rtrim($sRecipients, ', ');
 }
-*/
+
+
+
+
+
+function lovd_setUpdatedDate ($aGenes)
+{
+    // Updates the updated_date field of the indicated gene.
+    global $_AUTH, $_DB;
+
+    if (!$aGenes) {
+        return false;
+    } elseif (!is_array($aGenes)) {
+        $aGenes = array($aGenes);
+    }
+
+    // Check if this user have rights on this gene? It doesn't really matter that much, but still.
+    foreach ($aGenes as $nKey => $sGene) {
+        if (!lovd_isAuthorized('gene', $sGene)) {
+            unset($aGenes[$nKey]);
+        }
+    }
+    // So perhaps now no gene is left.
+    if (!$aGenes) {
+        return false;
+    }
+
+    // Just update the database and we'll see what happens.
+    $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = ?, updated_date = NOW() WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')', array_merge(array($_AUTH['id']), $aGenes), false);
+    return ($q->rowCount());
+}
 
 
 
@@ -669,7 +773,7 @@ function lovd_viewForm ($a,
      * array('<header>', '<help_text>', 'select', '<field_name>', <field_size>, <data> (array, key => val|query, [0] => [1]), <select>:true|false|select_text, <multiple>:true|false, <select_all_link>:true|false|link_text),
      * array('<header>', '<help_text>', 'checkbox', '<field_name>'),
      * array('<header>', '<help_text>', 'submit', '<button_value>', '<field_name>'),
-     * 
+     *
      **********/
 
     // Options.
@@ -816,7 +920,8 @@ function lovd_viewForm ($a,
                 if (is_array($oData)) {
                     // Array input.
                     foreach ($oData as $key => $val) {
-                        $bSelected = ((!$bMultiple && $GLOBALS['_' . $sMethod][$sName] == $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array($key, $GLOBALS['_' . $sMethod][$sName])));
+                        // We have to cast the $key to string because PHP made integers of them, if they were integer strings.
+                        $bSelected = ((!$bMultiple && (string) $GLOBALS['_' . $sMethod][$sName] === (string) $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array((string) $key, $GLOBALS['_' . $sMethod][$sName], true)));
                         print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
                     }
                 }
@@ -824,8 +929,8 @@ function lovd_viewForm ($a,
                 print('</SELECT>');
 
                 // Select all link.
-                if ($bMultiple && $bSelectAll) {                    
-                    print('&nbsp;<A href="#" onclick="var list = this.previousSibling.previousSibling; for (i=0;i<list.options.length;i++) { list.options[i].selected = true; }; return false">Select&nbsp;all</A>');
+                if ($bMultiple && $bSelectAll) {
+                    print('&nbsp;<A href="#" onclick="$(this.previousSibling.previousSibling).children().each(function(){$(this).attr(\'selected\', true);}); $(this.previousSibling.previousSibling).change(); return false">Select&nbsp;all</A>');
                 }
 
                 print($sDataSuffix);

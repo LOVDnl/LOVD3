@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2013-12-30
+ * For LOVD    : 3.0-09
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -52,11 +52,11 @@ class LOVD_User extends LOVD_Object {
     {
         // Default constructor.
         global $_SETT;
-        
+
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT *, (login_attempts >= 3) AS locked ' .
                                'FROM ' . TABLE_USERS . ' ' .
-                               'WHERE id = ?';
+                               'WHERE id = ? AND id > 0';
 
         // SQL code to insert the level names into the database output, so it can be searched on.
         $sLevelQuery = '';
@@ -69,8 +69,8 @@ class LOVD_User extends LOVD_Object {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
                                            '(u.login_attempts >= 3) AS locked, ' .
-                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ", ") AS curates_, ' .
-                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ", ") AS collaborates_, ' .
+                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _curates, ' .
+                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _collaborates, ' .
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
@@ -86,7 +86,7 @@ class LOVD_User extends LOVD_Object {
         $this->aSQLViewList['SELECT']   = 'u.*, (u.login_attempts >= 3) AS locked, ' .
                                           'COUNT(CASE u2g.allow_edit WHEN 1 THEN u2g.geneid END) AS curates, ' .
                                           'c.name AS country_, ' .
-                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level, ' . 
+                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level, ' .
                                           'CASE GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . '))' . $sLevelQuery . ' END AS level_';
         $this->aSQLViewList['FROM']     = TABLE_USERS . ' AS u ' .
                                           'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
@@ -99,31 +99,32 @@ class LOVD_User extends LOVD_Object {
         $this->aColumnsViewEntry =
                  array(
                         'id' => 'User ID',
+                        'orcid_id_' => 'ORCID ID',
                         'name' => 'Name',
                         'institute' => 'Institute',
                         'department' => 'Department',
-                        'telephone' => 'Telephone',
-                        'address' => 'Address',
+                        'telephone' => array('Telephone', LEVEL_CURATOR),
+                        'address' => array('Address', LEVEL_CURATOR),
                         'city' => 'City',
                         'country_' => 'Country',
-                        'email' => 'Email address',
+                        'email' => array('Email address', LEVEL_CURATOR),
                         'reference' => 'Reference',
-                        'username' => array('Username', LEVEL_CURATOR),
+                        'username' => array('Username', LEVEL_MANAGER),
                         'password_force_change_' => array('Force change password', LEVEL_MANAGER),
                         'phpsessid' => array('Session ID', LEVEL_MANAGER),
-                        'saved_work_' => 'Saved work',
+                        'saved_work_' => array('Saved work', LEVEL_MANAGER),
                         'curates_' => 'Curator for',
-                        'collaborates_' => array('Collaborator for', LEVEL_MANAGER),
-//                        'submits' => 'Submits',
-                        'level_' => 'User level',
-                        'allowed_ip_' => 'Allowed IP address list',
-                        'status_' => 'Status',
-                        'locked_' => 'Locked',
+                        'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
+                        'ownes_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'level_' => array('User level', LEVEL_CURATOR),
+                        'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
+                        'status_' => array('Status', LEVEL_MANAGER),
+                        'locked_' => array('Locked', LEVEL_MANAGER),
                         'last_login' => array('Last login', LEVEL_MANAGER),
                         'created_by_' => array('Created by', LEVEL_CURATOR),
                         'created_date' => array('Date created', LEVEL_CURATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_CURATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_CURATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_MANAGER),
+                        'edited_date_' => array('Date last edited', LEVEL_MANAGER),
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -132,12 +133,16 @@ class LOVD_User extends LOVD_Object {
                         'id' => array(
                                     'view' => array('ID', 45),
                                     'db'   => array('u.id', 'ASC', true)),
+                        'orcid_id_' => array(
+                                    'view' => array('ORCiD', 60, 'style="text-align : center;"'),
+                                    'db'   => array('(u.orcid_id is not null)', 'DESC', true),
+                                    'legend' => array('The user\'s ORCID ID, a unique digital identifier.', 'The user\'s ORCID ID, a persistent digital identifier that distinguishes you from every other researcher and supports automated linkages between you and your professional activities ensuring that your work is recognized.')),
                         'name' => array(
                                     'view' => array('Name', 160),
                                     'db'   => array('u.name', 'ASC', true)),
                         'username' => array(
                                     'view' => array('Username', 80),
-                                    'db'   => array('u.username', false, true)),
+                                    'db'   => array('u.username', 'ASC', true)),
                         'institute' => array(
                                     'view' => array('Institute', 225),
                                     'db'   => array('u.institute', 'ASC', true)),
@@ -146,14 +151,16 @@ class LOVD_User extends LOVD_Object {
                                     'db'   => array('c.name', 'ASC', true)),
                         'curates' => array(
                                     'view' => array('Curated DBs', 100, 'style="text-align : right;"'),
-                                    'db'   => array('curates', 'DESC', 'INT_UNSIGNED')),
+                                    'db'   => array('curates', 'DESC', 'INT_UNSIGNED'),
+                                    'legend' => array('Shows how many gene databases have this user assigned as curator.')),
 /*
                         'submits' => array(
                                     'view' => array('Submits', 75, 'style="text-align : right;"'),
                                     'db'   => array('submits', 'DESC', 'INT_UNSIGNED')),
 */
                         'status_' => array(
-                                    'view' => array('Status', 50, 'style="text-align : center;"')),
+                                    'view' => array('Status', 50, 'style="text-align : center;"'),
+                                    'legend' => array('Shows whether this user is online (computer screen icon), locked (forbidden entry icon), or offline (no icon).')),
                         'last_login_' => array(
                                     'view' => array('Last login', 80),
                                     'db'   => array('u.last_login', 'DESC', true)),
@@ -182,7 +189,7 @@ class LOVD_User extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
         global $_AUTH, $_DB, $_PE, $_SETT;
@@ -199,8 +206,8 @@ class LOVD_User extends LOVD_Object {
                         'username', // LOVD will not complain if a mandatory column has not been added to the form.
                       );
 
-        // New password is only mandatory when we're forcing a change to the password.
-        if (ACTION == 'change_password') {
+        // These password fields are only not mandatory when we're editing.
+        if (ACTION != 'edit') {
             $this->aCheckMandatory[] = 'password_1';
             $this->aCheckMandatory[] = 'password_2';
         }
@@ -211,7 +218,7 @@ class LOVD_User extends LOVD_Object {
             $aEmail = explode("\r\n", $aData['email']);
             foreach ($aEmail as $sEmail) {
                 if (!lovd_matchEmail($sEmail)) {
-                    lovd_errorAdd('email', 'Email "' . htmlspecialchars($sEmail) . '" is not a correct email address.');
+                    lovd_errorAdd('email', 'Email "' . htmlspecialchars($sEmail) . '" is not a correct email address' . (($sEmail && $sEmail == trim($sEmail))? '' : '. Make sure there are no spaces or empty lines left in the email field') . '.');
                 }
             }
         }
@@ -288,6 +295,12 @@ class LOVD_User extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
         global $_AUTH, $_DB, $_SETT, $_PE;
 
         $aUserLevels = $_SETT['user_levels'];
@@ -350,9 +363,13 @@ class LOVD_User extends LOVD_Object {
             'locked' => array('Locked', '', 'checkbox', 'locked'),
                         'hr',
 'authorization_skip' => 'skip',
+        'send_email' => array('Send email with account details to user', '', 'checkbox', 'send_email'),
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       );
 
+        if ($bInstall || ACTION != 'create') {
+            unset($this->aFormData['send_email']);
+        }
         if ($bInstall || ACTION == 'register') {
             // No need to ask for the user's password when the user is not created yet.
             unset($this->aFormData['authorization_skip'], $this->aFormData['authorization']);
@@ -391,7 +408,7 @@ class LOVD_User extends LOVD_Object {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
-        global $_SETT;
+        global $_DB, $_SETT;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -402,6 +419,7 @@ class LOVD_User extends LOVD_Object {
 
         $zData['active'] = file_exists(session_save_path() . '/sess_' . $zData['phpsessid']);
         if ($sView == 'list') {
+            $zData['orcid_id_'] = (!$zData['orcid_id']? '&nbsp;' : '<IMG src="gfx/check.png" alt="' . $zData['orcid_id'] . '" title="' . $zData['orcid_id'] . '">');
             $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['name'] . '</A>';
             $sAlt = ($zData['active']? 'Online' : ($zData['locked']? 'Locked' : 'Offline'));
             $zData['status_'] = ($zData['locked'] || $zData['active']? '<IMG src="gfx/' . ($zData['locked']? 'status_locked' : 'status_online') . '.png" alt="' . $sAlt . '" title="' . $sAlt . '" width="14" height="14">' : '');
@@ -410,12 +428,68 @@ class LOVD_User extends LOVD_Object {
             $zData['level_'] = substr($zData['level_'], 1);
 
         } else {
+            $zData['orcid_id_'] = '';
+            if ($zData['orcid_id']) {
+                $zData['orcid_id_'] = '<A href="http://orcid.org/' . $zData['orcid_id'] . '" target="_blank">' . $zData['orcid_id'] . '</A>';
+            }
             $zData['password_force_change_'] = ($zData['password_force_change']? '<IMG src="gfx/mark_1.png" alt="" width="11" height="11"> Yes' : 'No');
-            if ($zData['saved_work']) {
-                // Do something later.
+            if (!empty($zData['saved_work'])) {
+                $zData['saved_work'] = unserialize(htmlspecialchars_decode($zData['saved_work']));
+                if (!empty($zData['saved_work']['submissions']['individual']) || !empty($zData['saved_work']['submissions']['screening'])) {
+                    $zData['saved_work_'] = '<A href="users/' . $zData['id'] . '?submissions">Unfinished submissions</A>';
+                } else {
+                    $zData['saved_work_'] = 'N/A';
+                }
             } else {
                 $zData['saved_work_'] = 'N/A';
             }
+            // Provide links to gene symbols this user is curator and collaborator for. Easy access to one's own genes.
+            $this->aColumnsViewEntry['curates_'] .= ' ' . count($zData['curates']) . ' gene' . (count($zData['curates']) == 1? '' : 's');
+            if (isset($this->aColumnsViewEntry['collaborates_'])) {
+                // This is only visible for Curators, so we don't want to mess around with aColumnsViewEntry when this field is no longer there.
+                $this->aColumnsViewEntry['collaborates_'][0] .= ' ' . count($zData['collaborates']) . ' gene' . (count($zData['collaborates']) == 1? '' : 's');
+            }
+            $zData['curates_'] = '';
+            $zData['curates_short_'] = '';
+            $i = 0;
+            foreach ($zData['curates'] as $key => $sGene) {
+                $zData['curates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
+                if ($i < 20) {
+                    $zData['curates_short_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
+                    $i++;
+                }
+            }
+            if (count($zData['curates']) > 22) {
+                // Replace long gene list by shorter one, allowing expand.
+                $zData['curates_'] = '<SPAN>' . $zData['curates_short_'] . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($zData['curates']) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $zData['curates_'] . '</SPAN>';
+            }
+            $zData['collaborates_'] = '';
+            foreach ($zData['collaborates'] as $key => $sGene) {
+                $zData['collaborates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
+            }
+
+            // Submissions...
+            if (lovd_isAuthorized('user', $zData['id']) === false) {
+                // Not authorized to view hidden data for this user; so we're not manager and we're not viewing ourselves. Nevermind then.
+                unset($this->aColumnsViewEntry['ownes_']);
+            } else {
+                // Either we're viewing ourselves, or we're manager or up. Like this is easy, because now we don't need to check for the data status of the data.
+                $nOwnes = 0;
+                $sOwnes = '';
+
+                // FIXME: Phenotypes is not included, because we don't have a phenotypes overview (must be disease-specific).
+                foreach (array('individuals', 'screenings', 'variants') as $sDataType) {
+                    $n = $_DB->query('SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sDataType)) . ' WHERE owned_by = ?', array($zData['id']))->fetchColumn();
+                    if ($n) {
+                        $nOwnes += $n;
+                        $sOwnes .= (!$sOwnes? '' : ', ') . '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode($zData['name']) . '%22">' . $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType) . '</A>';
+                    }
+                }
+
+                $this->aColumnsViewEntry['ownes_'] .= ' ' . $nOwnes . ' data entr' . ($nOwnes == 1? 'y' : 'ies');
+                $zData['ownes_'] = $sOwnes;
+            }
+
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');
             $zData['locked_'] = ($zData['locked']? '<IMG src="gfx/status_locked.png" alt="Locked" title="Locked" width="14" height="14" align="top"> Locked' : 'No');
@@ -435,6 +509,7 @@ class LOVD_User extends LOVD_Object {
     {
         // Sets default values of fields in $_POST.
         $_POST['allowed_ip'] = '*';
+        $_POST['send_email'] = 1;
         return true;
     }
 }

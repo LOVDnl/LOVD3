@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-22
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-05-01
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -58,7 +58,7 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
 
 // Define constants needed throughout LOVD.
 // Find out whether or not we're using SSL.
-if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['SSL_PROTOCOL'])) {
+if ((!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['SSL_PROTOCOL'])) {
     // We're using SSL!
     define('SSL', true);
     define('SSL_PROTOCOL', $_SERVER['SSL_PROTOCOL']);
@@ -69,8 +69,11 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['S
     define('PROTOCOL', 'http://');
 }
 
-// Our output format: text/html by default.
-$aFormats = array('text/html', 'text/plain'); // Key [0] is default.
+// Our output formats: text/html by default.
+$aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other values may not always be allowed. It is checked in the Template class' printHeader() and in Objects::viewList().
+if (lovd_getProjectFile() == '/api.php') {
+    $aFormats[] = 'text/bed';
+}
 if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
     define('FORMAT', $_GET['format']);
 } else {
@@ -93,6 +96,8 @@ define('STATUS_OK', 9);
 
 define('AJAX_FALSE', '0');
 define('AJAX_TRUE', '1');
+define('AJAX_UNKNOWN_RESPONSE', '6');
+define('AJAX_CONNECTION_ERROR', '7');
 define('AJAX_NO_AUTH', '8');
 define('AJAX_DATA_ERROR', '9');
 
@@ -103,14 +108,22 @@ define('MAPPING_NOT_RECOGNIZED', 8);    // FIXME; Create a button in Setup which
 define('MAPPING_ERROR', 16);            // FIXME; Create a button in Setup which clears all ERROR flags in the database to retry them.
 define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which clears all DONE flags in the database to retry them.
 
+// Define constant to quickly check if we're on Windows, since sending emails on Windows requires different settings.
+define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
+
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
-                'PHP'   => '5.1.0',
+                'PHP'   => '5.3.0',
                 'PHP_functions' =>
                      array(
                             'mb_detect_encoding',
                             'xml_parser_create', // We could also look for libxml constants?
+                            'openssl_seal',      // We could also look for openssl constants?
+                          ),
+                'PHP_classes' =>
+                     array(
+                            'SoapClient',
                           ),
                 'MySQL' => '4.1.2',
               );
@@ -119,7 +132,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-beta-06',
+                            'version' => '3.0-13',
                           ),
                 'user_levels' =>
                      array(
@@ -139,12 +152,14 @@ $_SETT = array(
                           ),
                 'var_effect' =>
                      array(
+                            0 => 'Not classified', // Submitter cannot select this.
                             5 => 'Effect unknown',
                             9 => 'Affects function',
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
                           ),
+                'var_effect_default' => '00',
                 'data_status' =>
                      array(
                             STATUS_IN_PROGRESS => 'In progress',
@@ -176,6 +191,10 @@ $_SETT = array(
                             500,
                             1000,
                           ),
+                'lists' =>
+                    array(
+                        'max_sortable_rows' => 250000,
+                    ),
                 'notes_align' =>
                      array(
                             -1 => 'left',
@@ -309,7 +328,7 @@ foreach ($aConfig as $nLine => $sLine) {
     // Setting.
     if (preg_match('/^([A-Z_]+) *=(.*)$/i', $sLine, $aRegs)) {
         list(,$sVar, $sVal) = $aRegs;
-        $sVal = trim($sVal);
+        $sVal = trim($sVal, ' "\'“”');
 
         if (!$sVal) {
             $sVal = false;
@@ -334,6 +353,13 @@ $aConfigValues =
          array(
                 'database' =>
                          array(
+                                'driver' =>
+                                         array(
+                                                'required' => true,
+                                                'default'  => 'mysql',
+                                                'pattern'  => '/^[a-z]+$/',
+                                                'values' => array('mysql' => 'MySQL', 'sqlite' => 'SQLite'),
+                                              ),
                                 'hostname' =>
                                          array(
                                                 'required' => true,
@@ -347,7 +373,7 @@ $aConfigValues =
                                               ),
                                 'password' =>
                                          array(
-                                                'required' => true,
+                                                'required' => false, // XAMPP and other systems have 'root' without password as default!
                                               ),
                                 'database' =>
                                          array(
@@ -361,6 +387,11 @@ $aConfigValues =
                                               ),
                               ),
               );
+// SQLite doesn't need an username and password...
+if (isset($_INI['database']['driver']) && $_INI['database']['driver'] == 'sqlite') {
+    unset($aConfigValues['database']['username']);
+    unset($aConfigValues['database']['password']);
+}
 
 foreach ($aConfigValues as $sSection => $aVars) {
     foreach ($aVars as $sVar => $aVar) {
@@ -387,9 +418,6 @@ foreach ($aConfigValues as $sSection => $aVars) {
                 if (!array_key_exists($_INI[$sSection][$sVar], $aVar['values'])) {
                     // Error: a value list is available, but it doesn't match the input!
                     lovd_displayError('Init', 'Error parsing config file: incorrect value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
-                } else {
-                    // Get correct value loaded.
-                    $_INI[$sSection][$sVar] = $aVar['values'][$_INI[$sSection][$sVar]];
                 }
             }
         }
@@ -434,8 +462,7 @@ $_TABLES =
                 'TABLE_SOURCES' => TABLEPREFIX . '_external_sources',
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
-                'TABLE_HITS' => TABLEPREFIX . '_hits',
-                
+
                 // VERSIONING TABLES
                 //'TABLE_INDIVIDUALS_REV' => TABLEPREFIX . '_individuals_revisions',
                 //'TABLE_VARIANTS_REV' => TABLEPREFIX . '_variants_revisions',
@@ -445,8 +472,11 @@ $_TABLES =
 
                 // REMOVED in 3.0-alpha-07; delete only if sure that there are no legacy versions still out there!
                 // SEE ALSO uninstall.php !!!
-                // REMOVE THIS ONLY IF line 544 IS ALSO ADAPTED!!!
+                // SEE ALSO line 559 !!!
                 'TABLE_PATHOGENIC' => TABLEPREFIX . '_variant_pathogenicity',
+                // REMOVED IN 3.0-05; delete only if sure that there are no legacy versions still out there!
+                'TABLE_HITS' => TABLEPREFIX . '_hits',
+                // They can also be removed, if they are completely removed from the code (also inc-upgrade.php), and only the DROP code is kept with the name hard coded.
               );
 
 foreach ($_TABLES as $sConst => $sTable) {
@@ -464,21 +494,31 @@ if (!class_exists('PDO')) {
     lovd_displayError('Init', $sError);
 
 } else {
-    // PDO available, check if we have MySQL.
-    if (!in_array('mysql', PDO::getAvailableDrivers())) {
-        lovd_displayError('Init', 'This PHP installation does not have MySQL support for PDO installed. Without it, LOVD will not function. Please install MySQL support for PHP PDO.');
+    // PDO available, check if we have the requested database driver.
+    if (!in_array($_INI['database']['driver'], PDO::getAvailableDrivers())) {
+        $sDriverName = $aConfigValues['database']['driver']['values'][$_INI['database']['driver']];
+        lovd_displayError('Init', 'This PHP installation does not have ' . $sDriverName . ' support for PDO installed. Without it, LOVD will not function. Please install ' . $sDriverName . ' support for PHP PDO.');
     }
 }
 
 
 
-// Initiate Database Connection (NEW WAY).
+// Initiate Database Connection.
 require ROOT_PATH . 'class/PDO.php';
-$_DB = new LOVD_PDO('mysql', 'host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
+if ($_INI['database']['driver'] == 'mysql') {
+    $_DB = new LOVD_PDO($_INI['database']['driver'], 'host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
+} elseif ($_INI['database']['driver'] == 'sqlite') {
+    // SQLite.
+    $_DB = new LOVD_PDO($_INI['database']['driver'], $_INI['database']['database']);
+} else {
+    // Can't happen.
+    exit;
+}
 
 
 
 ini_set('default_charset','UTF-8');
+mb_internal_encoding('UTF-8');
 
 // Help prevent cookie theft trough JavaScript; XSS defensive line.
 // See: http://nl.php.net/manual/en/session.configuration.php#ini.session.cookie-httponly
@@ -495,7 +535,7 @@ if (!$_CONF) {
     $_CONF =
          array(
                 'system_title' => 'LOVD 3.0 - Leiden Open Variation Database',
-                'logo_uri' => 'gfx/LOVD_logo130x50.jpg',
+                'logo_uri' => 'gfx/LOVD3_logo145x50.jpg',
               );
 }
 
@@ -532,7 +572,7 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
             $aTables[] = $sCol;
         }
     }
-    if (count($aTables) < (count($_TABLES) - 1)) {
+    if (count($aTables) < (count($_TABLES) - 2)) {
         // We're not completely installed.
         define('NOT_INSTALLED', true);
     }
@@ -575,7 +615,7 @@ if (get_magic_quotes_gpc()) {
 //// (SSL not required when exporting data to WikiProfessional because their scripts do not support it)
 //// (The UCSC also has issues with retrieving the BED files through SSL...)
 //if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/export_data.php' && !empty($_GET['format']) && $_GET['format'] == 'wiki') && !(substr(lovd_getProjectFile(), 0, 9) == '/api/rest' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
-if (!empty($_CONF['use_ssl']) && !SSL) {
+if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/api.php' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
     // We were enabled, when SSL was available. So I guess SSL is still available. If not, this line here would be a problem.
     // No, not sending any $_POST values either. Let's just assume no-one is working with LOVD when the ssl setting is activated.
     // FIXME; does not allow for nice URLs.
@@ -593,11 +633,13 @@ if (ini_get('session.cookie_path') == '/') {
 if (!empty($_STAT['signature'])) {
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($_STAT['signature']);
-    session_name('PHPSESSID_' . $_SETT['cookie_id']);
-
-    // Start sessions - use cookies.
-    @session_start();
+} else {
+    $_SETT['cookie_id'] = md5($_INI['database']['database'] . $_INI['database']['table_prefix']);
 }
+session_name('PHPSESSID_' . $_SETT['cookie_id']);
+
+// Start sessions - use cookies.
+@session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
 header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version']) || $_STAT['version'] == $_SETT['system']['version']? '' : ' (DB @ ' . $_STAT['version'] . ')'));
 
 
@@ -608,7 +650,7 @@ if (!defined('NOT_INSTALLED')) {
     require ROOT_PATH . 'inc-auth.php';
 
     // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.
-    $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName($_SERVER['REQUEST_URI'])); // 'login' or 'genes?create' or 'users/00001?edit'
+    $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'
     $aPath = explode('?', $sPath); // Cut off the Query string, that will be handled later.
     $_PE = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')
     // XSS check on the elements.
@@ -670,16 +712,10 @@ if (!defined('NOT_INSTALLED')) {
 
         // Switch gene.
         // Gene switch will occur automatically at certain pages. They can be accessed by following links in LOVD itself, or possibly from outer sources.
-        if (preg_match('/^(genes|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
-            $sSelectGene = $aRegs[2];
-        }      
-
-        if (!empty($sSelectGene)) {
-            if (in_array($sSelectGene, lovd_getGeneList())) {
-                $_SESSION['currdb'] = $sSelectGene;
-            } else {
-                // FIXME; we used to have this... but probably not such a good idea now (it replaces normal error at genes/GENE).
-                //lovd_displayError('Init', 'You provided a non-existing gene database name');
+        if (preg_match('/^(configuration|genes|transcripts|variants|view)\/([^\/]+)/', CURRENT_PATH, $aRegs)) {
+            // We'll check this value further down in this code.
+            if (!in_array($aRegs[2], array('in_gene', 'upload')) && !ctype_digit($aRegs[2])) {
+                $_SESSION['currdb'] = $aRegs[2]; // Not checking capitalization here yet.
             }
         }
 
@@ -691,14 +727,7 @@ if (!defined('NOT_INSTALLED')) {
             $_CONF['email_address'] = 'noreply@' . (substr($_SERVER['HTTP_HOST'], 0, 4) == 'www.'? substr($_SERVER['HTTP_HOST'], 4) : $_SERVER['HTTP_HOST']);
         }
 
-        // Determine email header line endings.
-        // Define constant to quickly check if we're on Windows, since sending emails on Windows requires yet one more adaptation.
-        if (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')) {
-            define('ON_WINDOWS', true);
-        } else {
-            define('ON_WINDOWS', false);
-        }
-
+        // Set email headers.
         $_SETT['email_mime_boundary'] = md5('PHP_MIME');
         $_SETT['email_headers'] = 'MIME-Version: 1.0' . PHP_EOL .
                                   'Content-Type: text/plain; charset=UTF-8' . PHP_EOL .
@@ -722,6 +751,9 @@ if (!defined('NOT_INSTALLED')) {
             $_SETT['currdb'] = @$_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb']))->fetchAssoc();
             if (!$_SETT['currdb']) {
                 $_SESSION['currdb'] = false;
+            } else {
+                // Replace with what we have in the database, so we won't run into issues on other pages when CurrDB is used for navigation to other tabs.
+                $_SESSION['currdb'] = $_SETT['currdb']['id'];
             }
         } else {
             $_SESSION['currdb'] = false;

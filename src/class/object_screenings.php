@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2013-08-08
+ * For LOVD    : 3.0-07
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -52,8 +52,10 @@ class LOVD_Screening extends LOVD_Custom {
     function __construct ()
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
+        // FIXME; change owner to owned_by_ in the load entry query below.
         $this->sSQLLoadEntry = 'SELECT s.*, ' .
                                'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ";") AS _genes, ' .
                                'uo.name AS owner ' .
@@ -65,14 +67,17 @@ class LOVD_Screening extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
+                                           'i.statusid AS individual_statusid, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
-                                           'COUNT(s2v.variantid) AS variants, ' .
+                                           'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
                                            'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
+                                           ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by = "' . $_AUTH['id'] . '"') . ')) ') .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (s.created_by = uc.id) ' .
@@ -82,10 +87,17 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for viewing the list of screenings
         $this->aSQLViewList['SELECT']   = 's.*, ' .
                                           's.id AS screeningid, ' .
-                                          'COUNT(DISTINCT s2v.variantid) AS variants, ' .
-                                          'uo.name AS owned_by_';
+                                          'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
+                                          'GROUP_CONCAT(DISTINCT s2g.geneid SEPARATOR ", ") AS genes, ' .
+                                          ($_AUTH['level'] < LEVEL_COLLABORATOR? '' :
+                                              'CASE i.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name, ') .
+                                          'uo.name AS owned_by_, ' .
+                                          'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
+                                          ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by = "' . $_AUTH['id'] . '"') . ')) ') .
+                                          'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id)';
         $this->aSQLViewList['GROUP_BY'] = 's.id';
@@ -114,7 +126,7 @@ class LOVD_Screening extends LOVD_Custom {
                         'screeningid' => array(
                                     'view' => false,
                                     'db'   => array('s.id', 'ASC', true)),
-                        'id_' => array(
+                        'id' => array(
                                     'view' => array('Screening ID', 110),
                                     'db'   => array('s.id', 'ASC', true)),
                         'individualid' => array(
@@ -123,20 +135,20 @@ class LOVD_Screening extends LOVD_Custom {
                       ),
                  $this->buildViewList(),
                  array(
-                        'variants' => array(
-                                    'view' => array('Variants found', 120),
-                                    'db'   => array('variants', 'ASC', 'INT_UNSIGNED')),
+                        'genes' => array(
+                                    'view' => array('Genes screened', 20),
+                                    'db'   => array('genes', 'ASC', 'TEXT')),
+                        'variants_found_' => array(
+                                    'view' => array('Variants found', 100),
+                                    'db'   => array('variants_found_', 'ASC', 'INT_UNSIGNED')),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
                         'created_date' => array(
                                     'view' => array('Date created', 130),
                                     'db'   => array('s.created_date', 'ASC', true)),
-                        'edited_date' => array(
-                                    'view' => array('Date edited', 130),
-                                    'db'   => array('s.edited_date', 'ASC', true)),
                       ));
-        $this->sSortDefault = 'id_';
+        $this->sSortDefault = 'id';
 
         // Because the gene information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
@@ -146,7 +158,7 @@ class LOVD_Screening extends LOVD_Custom {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
 
@@ -157,18 +169,8 @@ class LOVD_Screening extends LOVD_Custom {
                       );
         parent::checkFields($aData);
 
-        $aGenes = lovd_getGeneList();
-        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
-        //   De parent checkFields vraagt de getForm() namelijk al op.
-        //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
         if (!empty($aData['genes']) && is_array($aData['genes'])) {
-            if (count($aData['genes']) <= 15) {
-                foreach ($aData['genes'] as $sGene) {
-                    if ($sGene && !in_array($sGene, $aGenes)) {
-                        lovd_errorAdd('genes', htmlspecialchars($sGene) . ' is not a valid gene.');
-                    }
-                }
-            } else {
+            if (count($aData['genes']) > 15) {
                 lovd_errorAdd('genes', 'Please select no more than 15 genes. For genome-wide analysis, <B>no</B> genes should be selected.');
             }
         }
@@ -183,12 +185,18 @@ class LOVD_Screening extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
         global $_AUTH, $_DB, $nID;
 
-        $aSelectOwner = array();
-
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id > 0 ORDER BY name')->fetchAllCombine();
+            $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS .
+                (ACTION == 'edit' && (int) $_POST['owned_by'] === 0? '' : ' WHERE id > 0') .
+                ' ORDER BY name')->fetchAllCombine();
             $aFormOwner = array('Owner of this data', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
         } else {
             $aFormOwner = array();
@@ -216,7 +224,8 @@ class LOVD_Screening extends LOVD_Custom {
                       ),
                  $this->buildForm(),
                  array(
-                        array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, true),
+            'aGenes' => array('Genes screened', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
+                        array('', '', 'note', 'Please select no more than 15 genes. For genome-wide analysis, <B>no</B> genes should be selected.'),
     'variants_found' => array('Have variants been found?', 'Please uncheck this box when no variants have been found using this screening.', 'checkbox', 'variants_found'),
                         'hr',
       'general_skip' => 'skip',
@@ -227,8 +236,9 @@ class LOVD_Screening extends LOVD_Custom {
                         'skip',
      'authorization' => array('Enter your password for authorization', '', 'password', 'password', 20),
                       ));
-                      
-        if (ACTION != 'edit') {
+
+        if (ACTION == 'create' || (ACTION == 'publish' && GET)) {
+            // When creating, or when publishing without any changes, unset the authorization.
             unset($this->aFormData['authorization']);
         } else {
             if ($_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn()) {
@@ -249,6 +259,7 @@ class LOVD_Screening extends LOVD_Custom {
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        global $_AUTH, $_SETT;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -258,10 +269,12 @@ class LOVD_Screening extends LOVD_Custom {
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'entry') {
-            // FIXME; ik bedenk me nu, dat deze aanpassingen zo klein zijn, dat ze ook in MySQL al gedaan kunnen worden. Wat denk jij?
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
-            $zData['variants_found_'] = '<IMG src="gfx/mark_' . $zData['variants_found'] . '.png" alt="" width="11" height="11">';
+            if ($_AUTH['level'] >= LEVEL_COLLABORATOR) {
+                $zData['individualid_'] .= ' <SPAN style="color : #' . $this->getStatusColor($zData['individual_statusid']) . '">(' . $_SETT['data_status'][$zData['individual_statusid']] . ')</SPAN>';
+            }
         }
+        $zData['variants_found_'] = ($zData['variants_found_'] == -1? 'Not yet submitted' : $zData['variants_found_']);
 
         return $zData;
     }

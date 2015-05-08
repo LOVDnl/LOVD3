@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2012-06-20
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-03-18
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *
@@ -75,7 +75,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
                                 'ALTER TABLE ' . TABLE_SCREENINGS . ' DROP COLUMN edited_date',
                                 'ALTER TABLE ' . TABLE_SCREENINGS . ' ADD COLUMN edited_date DATETIME AFTER edited_by',
-/////////////////// DMD_SPECIFIC: I would expect these to fail if I don't remove the FKs first. But they don't.
                                 'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN id VARCHAR(20) NOT NULL',
                                 'ALTER TABLE ' . TABLE_CURATES . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                                 'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
@@ -270,8 +269,138 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'UPDATE ' . TABLE_COLS . ' SET select_options = "Unknown\r\nGermline (inherited)\r\nSomatic\r\nDe novo\r\nUniparental disomy\r\nUniparental disomy, maternal allele\r\nUniparental disomy, paternal allele" WHERE id = "VariantOnGenome/Genetic_origin"',
                                 // Delete all transcript positions from TABLE_TRANSCRIPTS, so that they can be recalculated.
                                 'UPDATE ' . TABLE_TRANSCRIPTS . ' SET position_c_mrna_start = 0, position_c_mrna_end = 0, position_c_cds_end = 0, position_g_mrna_start = 0, position_g_mrna_end = 0',
-                             ),
-                  );
+                        ),
+                    '3.0-beta-07' =>
+                        array(
+                            'ALTER TABLE ' . TABLE_COLS . ' MODIFY COLUMN form_type TEXT NOT NULL',
+                            'UPDATE ' . TABLE_COLS . ' SET select_options = "? = Unknown\r\nF = Female\r\nM = Male\r\nrF = Raised as female\r\nrM = Raised as male" WHERE id = "Individual/Gender" and select_options = "Female\r\nMale\r\nUnknown"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "Geographic origin|If mixed, please indicate origin of father and mother, if known.|text|30" WHERE id = "Individual/Origin/Geographic" and select_options = "Geographic origin||text|30"',
+                            'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("Phenotype/Additional", 250, 200, 0, 1, 0, "Phenotype details", "Additional information on the phenotype of the individual.", "Additional information on the phenotype of the individual.", "Additional information on the phenotype of the individual.", "TEXT", "Additional phenotype details||textarea|40|4", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                            'UPDATE ' . TABLE_COLS . ' SET hgvs = 1, standard = 1 WHERE id = "Phenotype/Inheritance"',
+                            'UPDATE ' . TABLE_COLS . ' SET select_options = "? = Unknown\r\narrayCGH = array for Comparative Genomic Hybridisation\r\narraySEQ = array for resequencing\r\narraySNP = array for SNP typing\r\narrayCNV = array for Copy Number Variation (SNP and CNV probes)\r\nBESS = Base Excision Sequence Scanning\r\nCMC = Chemical Mismatch Cleavage\r\nCSCE = Conformation Sensitive Capillary Electrophoresis\r\nDGGE = Denaturing-Gradient Gel-Electrophoresis\r\nDHPLC = Denaturing High-Performance Liquid Chromatography\r\nDOVAM = Detection Of Virtually All Mutations (SSCA variant)\r\nddF = dideoxy Fingerprinting\r\nDSCA = Double-Strand DNA Conformation Analysis\r\nEMC = Enzymatic Mismatch Cleavage\r\nHD = HeteroDuplex analysis\r\nMCA = high-resolution Melting Curve Analysis (hrMCA)\r\nIHC = Immuno-Histo-Chemistry\r\nMAPH = Multiplex Amplifiable Probe Hybridisation\r\nMLPA = Multiplex Ligation-dependent Probe Amplification\r\nSEQ-NG = Next-Generation Sequencing\r\nSEQ-NG-H = Next-Generation Sequencing - Helicos\r\nSEQ-NG-I = Next-Generation Sequencing - Illumina/Solexa\r\nSEQ-NG-R = Next-Generation Sequencing - Roche/454\r\nSEQ-NG-S = Next-Generation Sequencing - SOLiD\r\nNorthern = Northern blotting\r\nPCR = Polymerase Chain Reaction\r\nPCRdig = PCR + restriction enzyme digestion\r\nPCRlr = PCR, long-range\r\nPCRm = PCR, multiplex\r\nPCRq = PCR, quantitative\r\nPAGE = Poly-Acrylamide Gel-Electrophoresis\r\nPTT = Protein Truncation Test\r\nPFGE = Pulsed-Field Gel-Electrophoresis (+Southern)\r\nRT-PCR = Reverse Transcription and PCR\r\nSEQ = SEQuencing\r\nSBE = Single Base Extension\r\nSSCA = Single-Strand DNA Conformation polymorphism Analysis (SSCP)\r\nSSCAf = SSCA, fluorescent (SSCP)\r\nSouthern = Southern blotting\r\nTaqMan = TaqMan assay\r\nWestern = Western Blotting" WHERE id = "Screening/Technique" and select_options = "Unknown\r\nBESS = Base Excision Sequence Scanning\r\nCMC = Chemical Mismatch Cleavage\r\nCSCE = Conformation sensitive capillary electrophoresis\r\nDGGE = Denaturing-Gradient Gel-Electrophoresis\r\nDHPLC = Denaturing High-Performance Liquid Chromatography\r\nDOVAM = Detection Of Virtually All Mutations (SSCA variant)\r\nDSCA = Double-Strand DNA Conformation Analysis\r\nHD = HeteroDuplex analysis\r\nIHC = Immuno-Histo-Chemistry\r\nmPCR = multiplex PCR\r\nMAPH = Multiplex Amplifiable Probe Hybridisation\r\nMLPA = Multiplex Ligation-dependent Probe Amplification\r\nNGS = Next Generation Sequencing\r\nPAGE = Poly-Acrylamide Gel-Electrophoresis\r\nPCR = Polymerase Chain Reaction\r\nPTT = Protein Truncation Test\r\nRT-PCR = Reverse Transcription and PCR\r\nSEQ = SEQuencing\r\nSouthern = Southern Blotting\r\nSSCA = Single-Strand DNA Conformation Analysis (SSCP)\r\nWestern = Western Blotting"',
+                            'UPDATE ' . TABLE_COLS . ' SET select_options = "DNA\r\nRNA = RNA (cDNA)\r\nProtein\r\n? = unknown" WHERE id = "Screening/Template" and select_options = "DNA\r\nRNA\r\nProtein"',
+                            'UPDATE ' . TABLE_COLS . ' SET mandatory = 1 WHERE id = "VariantOnGenome/Genetic_origin"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "GVS function||select|1|true|false|false", select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nutr-3\r\nnear-gene-3" WHERE id = "VariantOnTranscript/GVS/Function" and form_type LIKE "GVS function|%|text|%"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "Protein change (HGVS format)|Description of variant at protein level (following HGVS recommendations); e.g. p.(Arg345Pro) = change predicted from DNA (RNA not analysed), p.Arg345Pro = change derived from RNA analysis, p.0 (no protein produced), p.? (unknown effect).|text|30" WHERE id = "VariantOnTranscript/Protein" and form_type LIKE "Protein change (HGVS format)||text|%"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "RNA change (HGVS format)|Description of variant at RNA level (following HGVS recommendations); e.g. r.123c>u, r.? = unknown, r.(?) = RNA not analysed but probably transcribed copy of DNA variant, r.spl? = RNA not analysed but variant probably affects splicing, r.(spl?) = RNA not analysed but variant may affect splicing.|text|30" WHERE id = "VariantOnTranscript/RNA" and form_type LIKE "RNA change (HGVS format)||text|%"',
+                            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
+                            'UPDATE ' . TABLE_DISEASES . ' SET id = 0 WHERE id_omim IS NULL AND created_by = 0 AND symbol = "Healty/Control"',
+                        ),
+                    '3.0-beta-08' =>
+                        array(
+                            'UPDATE ' . TABLE_COLS . ' SET width = 120 WHERE id = "VariantOnGenome/DBID" AND width < 120',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN fatherid MEDIUMINT(8) UNSIGNED ZEROFILL AFTER id',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN motherid MEDIUMINT(8) UNSIGNED ZEROFILL AFTER fatherid',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD INDEX (fatherid)',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD INDEX (motherid)',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_fatherid FOREIGN KEY (fatherid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                            'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_motherid FOREIGN KEY (motherid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
+                            'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN omim_apikey VARCHAR(40) NOT NULL AFTER mutalyzer_soap_url',
+                            'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_username VARCHAR(255) NOT NULL AFTER proxy_port',
+                            'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN proxy_password VARCHAR(255) NOT NULL AFTER proxy_username',
+                        ),
+                    '3.0-beta-09' =>
+                        array(
+                            'UPDATE ' . TABLE_CONFIG . ' SET logo_uri = "gfx/LOVD3_logo145x50.jpg" WHERE logo_uri = "gfx/LOVD_logo130x50.jpg"',
+                        ),
+                    '3.0-beta-09b' =>
+                        array(
+                            'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN orcid_id CHAR(19) AFTER id',
+                            'ALTER TABLE ' . TABLE_USERS . ' ADD UNIQUE (orcid_id)',
+                        ),
+                    '3.0-beta-09c' =>
+                        array(
+                            'UPDATE ' . TABLE_COLS . ' SET description_form         = "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)" WHERE id = "VariantOnGenome/Segregation" AND description_form         = "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)"',
+                            'UPDATE ' . TABLE_COLS . ' SET description_legend_short = "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)" WHERE id = "VariantOnGenome/Segregation" AND description_legend_short = "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)"',
+                            'UPDATE ' . TABLE_COLS . ' SET description_legend_full  = "Indicates whether the variant segregates with the phenotype (yes), does not segregate with the phenotype (no) or segregation is unknown (?)" WHERE id = "VariantOnGenome/Segregation" AND description_legend_full  = "Indicates whether the variant segregates with the disease (yes), does not segregate with the disease (no) or segregation is unknown (?)"',
+                            'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN mapping_flags TINYINT(3) UNSIGNED NOT NULL DEFAULT 0',
+                        ),
+                    '3.0-beta-09d' =>
+                        array(
+                            'INSERT IGNORE INTO ' . TABLE_LINKS . ' VALUES (NULL, "DOI", "{DOI:[1]:[2]}", "<A href=\"http://dx.doi.org/[2]\" target=\"_blank\">[1]</A>", "Links directly to an article using the DOI.\r\n[1] = The name of the author(s), possibly followed by the year of publication.\r\n[2] = The DOI.\r\n\r\nExample:\r\n{DOI:Fokkema et al. (2011):10.1002/humu.21438}", 0, NOW(), NULL, NULL)',
+                            'INSERT IGNORE INTO ' . TABLE_COLS2LINKS . ' VALUES ("Individual/Reference", LAST_INSERT_ID())',
+                            'UPDATE ' . TABLE_LINKS . ' SET description = "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s), possibly followed by the year of publication.\r\n[2] = The PubMed ID.\r\n\r\nExample:\r\n{PMID:Fokkema et al. (2011):21520333}", edited_by = 0, edited_date = NOW() WHERE id = 1 AND (description = "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s).\r\n[2] = The PubMed ID.\r\n\r\nExample:\r\n{PMID:Fokkema et al. (2011):21520333}" OR description = "Links to abstracts in the PubMed database.\r\n[1] = The name of the author(s), possibly including year.\r\n[2] = The PubMed ID.\r\n\r\nExample:\r\n{PMID:Fokkema et al. (2011):21520333}")',
+                        ),
+                    '3.0-beta-10b' =>
+                        array(
+                            'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN orcid_confirmed BOOLEAN NOT NULL DEFAULT 0 AFTER orcid_id',
+                            'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN email_confirmed BOOLEAN NOT NULL DEFAULT 0 AFTER email',
+                            'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9]+))_\\\\d{6}$/" WHERE preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf\\\\d+-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf\\\\d+|[A-Z][A-Z0-9]+))_\\\\d{6}$/" AND id = "VariantOnGenome/DBID"',
+                            'UPDATE ' . TABLE_COLS . ' SET form_type = "Genomic DNA change (HGVS format)|Description of variant at DNA level, based on the genomic DNA reference sequence (following HGVS recommendations); e.g. g.12345678C>T, g.12345678_12345890del, g.12345678_12345890dup.|text|30" WHERE form_type = "Genomic DNA change (HGVS format)||text|30" AND id = "VariantOnGenome/DNA"',
+                        ),
+                 '3.0-02' =>
+                 array(
+                     'INSERT IGNORE INTO ' . TABLE_COLS2LINKS . ' VALUES ("VariantOnGenome/Reference", 001)',
+                 ),
+                 '3.0-04' =>
+                 array(
+                     'INSERT IGNORE INTO ' . TABLE_COLS . ' VALUES ("Phenotype/Age/Onset", 1, 100, 0, 0, 0, "Age of onset", "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the first symptoms of the disease appeared in the individual, if known. 04y08m = 4 years and 8 months.", "The age at which the first symptoms appeared in the individual, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", "VARCHAR(12)", "Age of onset|The age at which the first symptoms appeared in the individual, if known. Numbers lower than 10 should be prefixed by a zero and the field should always begin with years, to facilitate sorting on this column.|text|10", "", "/^([<>]?\\\\d{2,3}y(\\\\d{2}m(\\\\d{2}d)?)?)?\\\\??$/", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                     'UPDATE ' . TABLE_COLS . ' SET description_form = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial), isolated (sporadic) or complex" WHERE description_form = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)" AND id = "Phenotype/Inheritance"',
+                     'UPDATE ' . TABLE_COLS . ' SET description_legend_short = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial), isolated (sporadic) or complex" WHERE description_legend_short = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)" AND id = "Phenotype/Inheritance"',
+                     'UPDATE ' . TABLE_COLS . ' SET description_legend_full = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial), isolated (sporadic) or complex" WHERE description_legend_full = "Indicates the inheritance of the phenotype in the family; unknown, familial (autosomal/X-linked, dominant/ recessive), paternal (Y-linked), maternal (mitochondrial) or isolated (sporadic)" AND id = "Phenotype/Inheritance"',
+                     'UPDATE ' . TABLE_COLS . ' SET select_options = "Unknown\r\nFamilial\r\nFamilial, autosomal dominant\r\nFamilial, autosomal recessive\r\nFamilial, X-linked dominant\r\nFamilial, X-linked dominant, male sparing\r\nFamilial, X-linked recessive\r\nPaternal, Y-linked\r\nMaternal, mitochondrial\r\nIsolated (sporadic)\r\nComplex" WHERE select_options = "Unknown\r\nFamilial\r\nFamilial, autosomal dominant\r\nFamilial, autosomal recessive\r\nFamilial, X-linked dominant\r\nFamilial, X-linked dominant, male sparing\r\nFamilial, X-linked recessive\r\nPaternal, Y-linked\r\nMaternal, mitochondrial\r\nIsolated (sporadic)" AND id = "Phenotype/Inheritance"',
+                 ),
+                 '3.0-05' =>
+                 array(
+/////////////////// DMD_SPECIFIC: I would expect these to fail if I don't remove the FKs first. But they don't.
+                     'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN id VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_CURATES . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_GEN2DIS . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_SCR2GENE . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
+                     'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(25)',
+                     'DROP TABLE ' . TABLE_HITS,
+                 ),
+                 '3.0-07' =>
+                 array(
+                     'UPDATE ' . TABLE_COLS . ' SET description_legend_short = REPLACE(description_legend_short, "/76 chomosomes", "/760 chromosomes"), description_legend_full = REPLACE(description_legend_full, "/76 chomosomes", "/760 chromosomes"), form_type = REPLACE(form_type, "/76 chomosomes", "/760 chromosomes") WHERE id = "VariantOnGenome/Frequency"',
+                 ),
+                 '3.0-07b' =>
+                 array(
+                     'UPDATE ' . TABLE_COLS . ' SET standard = 0 WHERE id = "VariantOnGenome/Restriction_site"',
+                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN average_frequency FLOAT UNSIGNED AFTER mapping_flags',
+                 ),
+                 '3.0-07c' =>
+                 array(
+                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (average_frequency)',
+                 ),
+                 '3.0-10b' =>
+                 array(
+                     'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]+))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID" AND preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9]+))_\\\\d{6}$/"',
+                 ),
+                 '3.0-10c' =>
+                 array(
+                     'UPDATE ' . TABLE_LOGS . ' SET name = "Event" WHERE name = "Error" AND event = "ColEdit" AND log LIKE "Column % reset to new defaults%"',
+                     'INSERT IGNORE INTO ' . TABLE_EFFECT . ' VALUES ("00", "./."), ("01", "./-"), ("03", "./-?"), ("05", "./?"), ("07", "./+?"), ("09", "./+"), ("10", "-/."), ("30", "-?/."), ("50", "?/."), ("70", "+?/."), ("90", "+/.")',
+                     'ALTER TABLE ' . TABLE_EFFECT . ' MODIFY COLUMN id TINYINT(2) UNSIGNED ZEROFILL NOT NULL',
+                     'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN effectid TINYINT(2) UNSIGNED ZEROFILL',
+                     'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN effectid TINYINT(2) UNSIGNED ZEROFILL',
+                 ),
+                 '3.0-10d' =>
+                 array(
+                     'ALTER TABLE ' . TABLE_CONFIG . ' MODIFY COLUMN mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "https://mutalyzer.nl/services"',
+                     'UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url = "https://mutalyzer.nl/services" WHERE mutalyzer_soap_url = "http://www.mutalyzer.nl/2.0/services"',
+                 ),
+                 '3.0-11b' =>
+                 array(
+                     'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_gene", "http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}")',
+                 ),
+                 '3.0-11c' =>
+                 array(
+                     'UPDATE ' . TABLE_COUNTRIES . ' SET name = "Libya" WHERE id = "LY" AND name = "Libyan Arab Jamahiriya"',
+                     'UPDATE ' . TABLE_COUNTRIES . ' SET name = "Saint Helena, Ascension and Tristan da Cunha" WHERE id = "SH" AND name = "Saint Helena"',
+                     'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("SS", "South Sudan")',
+                 ),
+                 '3.0-11d' =>
+                     array(
+                         'UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url = "https://mutalyzer.nl/services" WHERE mutalyzer_soap_url = "http://www.mutalyzer.nl/2.0/services"',
+                     ),
+                 '3.0-13' =>
+                     array(
+                         'UPDATE ' . TABLE_COLS . ' SET select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" WHERE select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nutr-3\r\nnear-gene-3" AND id = "VariantOnTranscript/GVS/Function"',
+                         'UPDATE ' . TABLE_SHARED_COLS . ' SET select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" WHERE select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nutr-3\r\nnear-gene-3" AND colid = "VariantOnTranscript/GVS/Function"',
+                     ),
+             );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
         // Simply reload all custom columns.
@@ -381,7 +510,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     // Try to update the upgrade lock.
     $sQ = 'UPDATE ' . TABLE_STATUS . ' SET lock_update = 1 WHERE lock_update = 0';
-    $nMax = 3; // FIXME; Should be higher, this value is for dev only
+    $nMax = 30;
+    // DMD_SPECIFIC
+    if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
+        $nMax = 3;
+    }
+
     for ($i = 0; $i < $nMax; $i ++) {
         $bLocked = !$_DB->exec($sQ);
         if (!$bLocked) {
@@ -433,7 +567,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         foreach ($aUpdates as $sVersion => $aSQL) {
             $_BAR->setMessage('To ' . $sVersion . '...');
 
-            $aSQL[] = 'UPDATE ' . TABLE_STATUS . ' SET version = "' . $sVersion . '", updated_date = NOW()';
+            // Also set update_checked_date to NULL, so LOVD will again check for updates as soon as possible.
+            $aSQL[] = 'UPDATE ' . TABLE_STATUS . ' SET version = "' . $sVersion . '", updated_date = NOW(), update_level = 0, update_checked_date = NULL';
 
             // Loop needed queries...
             foreach ($aSQL as $i => $sSQL) {

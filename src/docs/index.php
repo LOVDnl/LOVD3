@@ -3,13 +3,12 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2011-02-21
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Created     : 2012-11-27
+ * Modified    : 2015-04-02
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -29,25 +28,26 @@
  *
  *************/
 
-define('ROOT_PATH', './');
+define('ROOT_PATH', '../');
+define('TAB_SELECTED', 'docs');
 require ROOT_PATH . 'inc-init.php';
-
-if ($_AUTH) {
-    // If authorized, check for updates.
-    require ROOT_PATH . 'inc-upgrade.php';
-}
 
 
 
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /documentation
-    // ?????
+    // URL: /docs
+    // Provide link to PDF; later we will point to the HTML files.
 
-    define('PAGE_TITLE', 'UNDER CONSTRUCTION!!!');
+    define('PAGE_TITLE', 'LOVD 3.0 documentation');
     $_T->printHeader();
     $_T->printTitle();
+
+    print('      The LOVD 3.0 documentation is currently still work in progress.<BR>Currently available is the LOVD 3.0 user manual.<BR>' .
+          '      <UL>' . "\n" .
+          '        <LI><A href="docs/LOVD_manual_3.0.pdf" target="_blank">LOVD manual 3.0-13</A> (72 pages, 1.2Mb) - last updated April 2nd 2015</LI></UL>' . "\n\n");
+
     $_T->printFooter();
     exit;
 }

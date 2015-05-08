@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-09
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2014-07-25
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -33,7 +33,7 @@ require ROOT_PATH . 'inc-init.php';
 session_write_close();
 
 $aGenes = lovd_getGeneList();
-if (empty($_GET['variant']) || !preg_match('/^(N[RM]_\d{6,9}\.\d{1,2}:c)|(chr.{0,2}:g)\..+$/', $_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes)) {
+if (empty($_GET['variant']) || !preg_match('/^([A-Z]{2}_\d{6,9}\.\d{1,2}(\([A-Za-z0-9-]+_v\d{3}\))?:[cn])|(chr.{0,2}:[gm])\..+$/', $_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes)) {
     die(AJAX_DATA_ERROR);
 }
 
@@ -43,17 +43,18 @@ if (!$_AUTH) {
     die(AJAX_NO_AUTH);
 }
 
-require ROOT_PATH . 'class/REST2SOAP.php';
-$_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+require ROOT_PATH . 'class/soap_client.php';
+$_Mutalyzer = new LOVD_SoapClient();
 
-$aOutput = $_MutalyzerWS->moduleCall('numberConversion', array('build' => 'hg19', 'variant' => $_GET['variant'], 'gene' => $_GET['gene']));
-$sVariants = '';
-if (is_array($aOutput) && isset($aOutput['string'])) {
-    foreach($aOutput['string'] as $aVariant) {
-        $sVariants .= ';' . $aVariant['v'];
-    }
-    $sVariants = ltrim($sVariants, ';');
-    print($sVariants);
+try {
+    $oOutput = $_Mutalyzer->numberConversion(array('build' => 'hg19', 'variant' => $_GET['variant'], 'gene' => $_GET['gene']))->numberConversionResult;
+} catch (SoapFault $e) {
+    // FIXME: Perhaps indicate an error? Like in the check_hgvs script?
+    die(AJAX_FALSE);
+}
+if ($oOutput && isset($oOutput->string)) {
+    $sVariants = implode(';', $oOutput->string);
+    die($sVariants);
 } else {
     die(AJAX_FALSE);
 }

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-06-18
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-02-20
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -93,7 +93,8 @@ if (PATH_COUNT < 3 && !ACTION) {
             print('        <LI><A href="' . CURRENT_PATH . '/' . $sCategory . '">Show only ' . $sCategory . ' columns</A></LI>' . "\n");
         }
     }
-    print('      </UL>' . "\n\n");
+    print('        <LI class="icon"><A click="lovd_openWindow(\'' . lovd_getInstallURL() . 'download/columns' . (empty($_PE[1])? '' : '/' . $_PE[1]) . '\', \'ColumnDownload\', 800, 500);"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries (full data)</A></LI>' . "\n" .
+          '      </UL>' . "\n\n");
     $_DATA->viewList('Columns', $aSkip, false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
 
     $_T->printFooter();
@@ -126,44 +127,19 @@ if (PATH_COUNT > 2 && !ACTION) {
     $zData = $_DATA->viewEntry($sColumnID);
     $aTableInfo = lovd_getTableInfoByCategory($zData['category']);
 
-    $sNavigation = '';
+    $aNavigation = array();
     if ($_AUTH['level'] >= LEVEL_MANAGER || ($aTableInfo['shared'] && $_AUTH['level'] >= LEVEL_CURATOR)) {
         // Authorized user (admin or manager, or curator in case of shared column) is logged in. Provide tools.
-        if (!$zData['active'] || $aTableInfo['shared']) {
-            // FIXME; needs exact check if there are genes/diseases left that do not have this column.
-            // A check on 'active' is way too simple and does not work for shared columns.
-            $sNavigation = '<A href="' . CURRENT_PATH . '?add">Enable column</A>';
-        } else {
-            $sNavigation = '<A style="color : #999999;">Enable column</A>';
-        }
-        // Disable column.
-        if ($zData['active'] && !$zData['hgvs']) {
-            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?remove">Disable column</A>';
-        } else {
-            $sNavigation .= ' | <A style="color : #999999;">Disable column</A>';
-        }
-        // Delete column.
-        if (!$zData['active'] && !$zData['hgvs'] && (int) $zData['created_by']) {
-            $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete column</A>';
-        } else {
-            $sNavigation .= ' | <A style="color : #999999;">Delete column</A>';
-        }
-        $sNavigation .= ' | <A href="' . CURRENT_PATH . '?edit">Edit custom data column settings</A>';
-        $sNavigation .= ' | <A href="' . $_PE[0] . '/' . $zData['category'] . '?order">Re-order all ' . $zData['category'] . ' columns</A>';
-/*
-
-        if ($zData['created_by'] && !$bSelected) {
-            $sNavigation .= ' | <A href="' . $_SERVER['PHP_SELF'] . '?action=edit_colid&amp;edit_colid=' . rawurlencode($zData['colid']) . '">Edit column ID</A>';
-        } else {
-            $sNavigation .= ' | <A style="color : #999999;">Edit column ID</A>';
-        }
-*/
+        // FIXME; needs exact check if there are genes/diseases left that do not have this column.
+        // A check on 'active' is way too simple and does not work for shared columns.
+        $aNavigation[CURRENT_PATH . '?add']                         = array('menu_plus.png', 'Enable column', (!$zData['active'] || $aTableInfo['shared']? 1 : 0));
+        $aNavigation[CURRENT_PATH . '?remove']                      = array('cross.png', 'Disable column' . ($aTableInfo['shared']? '' : ' and remove values'), ($zData['active'] && !$zData['hgvs']? 1 : 0));
+        $aNavigation[CURRENT_PATH . '?delete']                      = array('cross.png', 'Delete column', (!$zData['active'] && !$zData['hgvs'] && (int) $zData['created_by']? 1 : 0));
+        $aNavigation[CURRENT_PATH . '?edit']                        = array('menu_edit.png', 'Edit custom data column settings', ($_AUTH['level'] >= LEVEL_MANAGER));
+        $aNavigation[$_PE[0] . '/' . $zData['category'] . '?order'] = array('menu_columns.png', 'Re-order all ' . $zData['category'] . ' columns', ($_AUTH['level'] >= LEVEL_MANAGER));
+        // $aNavigation[$_SERVER['PHP_SELF'] . '?action=edit_colid&amp;edit_colid=' . rawurlencode($zData['colid'])] = array('menu_edit.png', 'Edit column ID', ($zData['created_by'] && !$bSelected? 1 : 0));
     }
-
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
+    lovd_showJGNavigation($aNavigation, 'Columns');
 
     $_T->printFooter();
     exit;
@@ -253,8 +229,6 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
           '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="' . (isset($_GET['in_window'])? 'self.close(); return false;' : 'window.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . '\'; return false;') . '" style="border : 1px solid #FF4422;">' . "\n" .
           '      </FORM>' . "\n\n");
 
-    lovd_includeJS('lib/jQuery/jquery-ui.sortable.min.js');
-
 ?>
       <SCRIPT type='text/javascript'>
         $(function() {
@@ -280,6 +254,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
     // URL: /columns?data_type_wizard
     // Show form type forms and send info back.
 
+    define('TAB_SELECTED', 'setup');
     define('PAGE_TITLE', 'Data type wizard');
 
     // Require manager clearance.
@@ -597,7 +572,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
                     array('POST', '', '', '', '40%', '14', '60%'),
                     array('', '', 'print', '<B>Column options</B>'),
                     array('Column name on form', '', 'text', 'name', 30),
-                    array('Help text', 'If you think the data field needs clarification given as an icon such as this one, add it here.', 'text', 'help_text', 50),
+                    array('Help text (optional)', 'If you think the data field needs clarification given as an icon such as this one, add it here.', 'text', 'help_text', 50),
                     array('Notes on form (optional)<BR>(HTML enabled)', '', 'textarea', 'description_form', 40, 2),
                     array('', '', 'note', 'If you think the data field needs clarification on the data entry form, add it here - it will appear below the field on the data entry form just like this piece of text.'),
                   );
@@ -615,7 +590,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
                     array('', '', 'note', 'Note: for advanced users only. Type in a full regular expression pattern (PHP\'s Perl-compatible regexp syntax), including \'/\' delimiters and possible modifiers. Make sure it\'s valid, otherwise you risk getting all this column\'s data input rejected.'));
     $aDefault   = array(array('Default value (optional)', '', 'text', 'default_val', 20));
     $aPositive  = array(array('Allow only positive values', '', 'checkbox', 'unsigned'));
-    $aSelect    = array(array('Provide "-- select --" option', 'This will add an option called "-- select --" that will be regarded as an empty value.', 'checkbox', 'select'));
+    $aSelect    = array(array('Provide "-- select --" option', 'This will add an option named "-- select --" that will be regarded as an empty value.', 'checkbox', 'select'));
     $aSelectAll = array(array('Provide "select all" link', 'This will add a link next to the selection list that allows the user to instantly select all available options.', 'checkbox', 'select_all'));
     $aOptions   = array(
                     array('List of possible options', '', 'textarea', 'select_options', 50, 5),
@@ -667,6 +642,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /columns?create
     // Create a new column.
 
+    define('TAB_SELECTED', 'setup');
     define('PAGE_TITLE', 'Create new custom ' . (!empty($_POST['category'])? strtolower($_POST['category']) : '') . ' data column');
     define('LOG_EVENT', 'ColCreate');
 
@@ -819,6 +795,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    lovd_includeJS('inc-js-columns.php');
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
           '        <INPUT type="hidden" name="category" value="' . $_POST['category'] . '">' . "\n" .
@@ -839,27 +816,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
     print('</FORM>' . "\n\n");
 
-?>
-<SCRIPT>
-function lovd_setWidth () {
-    var line = $(this).parent().parent().next().children(':last').children(':first');
-    if ($(this).attr('value') > 999) {
-        $(this).attr('value', 999);
-        alert('The width cannot be more than 3 digits!');
-        return false;
-    }
-    $(line).attr('width', $(this).attr('value'));
-    $(line).next().next().html('(This is ' + $(this).attr('value') + ' pixels)');
-    return false;
-}
-
-$( function () {
-    $('input[name="width"]').change(lovd_setWidth);
-});
-
-</SCRIPT>
-<?php
-
     $_T->printFooter();
     exit;
 }
@@ -872,6 +828,8 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
     // URL: /columns/VariantOnGenome/DNA?edit
     // URL: /columns/Phenotype/Blood_pressure/Systolic?edit
     // Edit specific column.
+
+    define('TAB_SELECTED', 'setup');
 
     $aCol = $_PE;
     unset($aCol[0]); // 'columns';
@@ -925,7 +883,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
             $aFields = array('width', 'standard', 'mandatory', 'head_column', 'description_form', 'description_legend_short', 'description_legend_full', 'mysql_type', 'form_type', 'select_options', 'preg_pattern', 'public_view', 'public_add', 'allow_count_all', 'edited_by', 'edited_date');
 
             // Prepare values.
-            $_POST['standard'] = (isset($_POST['standard'])? $_POST['standard'] : $zData['standard']); 
+            $_POST['standard'] = (isset($_POST['standard'])? $_POST['standard'] : $zData['standard']);
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
@@ -1035,7 +993,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                     $q = $_DB->query($sSQL, $aArgs);
                     if ($q->rowCount()) {
                         // Write to log...
-                        lovd_writeLog('Error', LOG_EVENT, 'Column ' . $sColumnID . ' reset to new defaults for all ' . $aColumnInfo['unit'] . 's');
+                        lovd_writeLog('Event', LOG_EVENT, 'Column ' . $sColumnID . ' reset to new defaults for all ' . $aColumnInfo['unit'] . 's');
                     }
                 }
             }
@@ -1175,6 +1133,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    lovd_includeJS('inc-js-columns.php');
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkSubmittedForm();">' . "\n" .
           '        <INPUT type="hidden" name="category" value="' . $_POST['category'] . '">' . "\n" .
@@ -1206,25 +1165,6 @@ function lovd_checkSubmittedForm ()
         return window.confirm('<?php echo $sJSMessage ?>');
     }
 }
-
-function lovd_setWidth ()
-{
-    var line = $(this).parent().parent().next().children(':last').children(':first');
-    if ($(this).attr('value') > 999) {
-        $(this).attr('value', 999);
-        alert('The width cannot be more than 3 digits!');
-        return false;
-    }
-    $(line).attr('width', $(this).attr('value'));
-    $(line).next().next().html('(This is ' + $(this).attr('value') + ' pixels)');
-    return false;
-}
-
-$(function ()
-{
-    $('input[name="width"]').change(lovd_setWidth);
-});
-
 </SCRIPT>
 <?php
 
@@ -1239,6 +1179,8 @@ $(function ()
 /*******************************************************************************
 if ($_GET['action'] == 'edit_colid' && !empty($_GET['edit_colid'])) {
     // Edit specific custom colid.
+
+    define('TAB_SELECTED', 'setup');
 
 // Require manager clearance.
 lovd_requireAUTH(LEVEL_MANAGER);
@@ -1429,9 +1371,10 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     }
 
     if ($aTableInfo['shared']) {
+        // Get count for targets, then verify that number of targets the column is already added to is smaller.
         // FIXME; If, for curator level users, we'd made a JOIN here, we could see beforehand that there will be no targets left, instead of having to check it some 50 lines below here.
         $nCount = $_DB->query('SELECT COUNT(id) FROM ' . constant(strtoupper('table_' . $aTableInfo['unit'] . 's')))->fetchColumn();
-        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
+        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, count(sc.colid) AS targets FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
     } else {
         $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ? AND ac.colid IS NULL', array($sColumnID))->fetchAssoc();
     }
@@ -1466,14 +1409,14 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $nPossibleTargets = count($aPossibleTargets);
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases which do NOT have this column yet.
-            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
+            $sSQL = 'SELECT DISTINCT d.id, IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.symbol, " (", d.name, ")")) FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
             $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Maybe a JOIN would be simpler?
-                $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ')';
+                $sSQL .= ' AND (g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates'])-1) . ') OR d.id = 0)';
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
-            $sSQL .= ' ORDER BY d.symbol';
+            $sSQL .= ' ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name';
             $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
         }
@@ -1490,7 +1433,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
     // Check if column is enabled for target.
     lovd_errorClean();
-    if (!empty($_POST['target'])) {
+    if ($aTableInfo['shared'] && !empty($_POST['target'])) {
         $aTargets = $_POST['target'];
         if (!is_array($aTargets)) {
             $aTargets = array($aTargets);
@@ -1504,14 +1447,19 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     }
 
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
-    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
-    $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
-    $nSizeIndexes = $zStatus['Index_length'];
-    // Calculating time it could take to rebuild the table. This is just an estimate and it depends
-    // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
-    // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
-    // (results of some quick benchmarks in September 2010 by ifokkema)
-    $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
+    if ($aTableInfo['shared'] && $zData['targets']) {
+        // We're not going to run an ALTER TABLE!
+        $tAlter = 0;
+    } else {
+        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
+        $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
+        $nSizeIndexes = $zStatus['Index_length'];
+        // Calculating time it could take to rebuild the table. This is just an estimate and it depends
+        // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
+        // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
+        // (results of some quick benchmarks in September 2010 by ifokkema)
+        $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
+    }
 
     if (POST) {
         lovd_errorClean();
@@ -1634,7 +1582,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
             // Write to log...
             if ($aTableInfo['shared']) {
-                lovd_writeLog('Event', LOG_EVENT,  'Enabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . $aTargets);
+                lovd_writeLog('Event', LOG_EVENT,  'Enabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . implode(', ', $aTargets));
             }
 
             // Thank the user...
@@ -1665,7 +1613,7 @@ if (!isset($_GET['in_window'])) {
           '    }' . "\n" .
           '    window.close();' . "\n" .
           '</SCRIPT>');
-    
+
 }
 /*
             }
@@ -1700,7 +1648,7 @@ if (!isset($_GET['in_window'])) {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
-    
+
     // Table
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
@@ -1797,10 +1745,12 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
-            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
+            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
             $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
-                $sSQL .= ' AND g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ')';
+                // FIXME: Before today (2013-06-24), this code contained a check if the column had values or not. Removal was then disallowed. Perhaps we should be checking here if there are values in
+                //   entries that this user does not have access to. If two curators share access on the disease, but do not share a gene, one curator should not have rights to delete the other's data.
+                $sSQL .= ' LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ') OR d.id = 0 GROUP BY d.id';
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
             $sSQL .= ' ORDER BY d.symbol';
@@ -1809,7 +1759,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         }
 
         if (!$nPossibleTargets) {
-            // Column has already been added to everything it can be added to.
+            // Column has already been removed from everything it can be removed from.
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable('This column has already been removed from all ' . $aTableInfo['unit'] . 's.', 'stop');
@@ -1820,7 +1770,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
     // Check if column is enabled for target.
     lovd_errorClean();
-    if (!empty($_POST['target'])) {
+    if ($aTableInfo['shared'] && !empty($_POST['target'])) {
         $aTargets = $_POST['target'];
         if (!is_array($aTargets)) {
             $aTargets = array($aTargets);
@@ -1834,14 +1784,19 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     }
 
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
-    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
-    $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
-    $nSizeIndexes = $zStatus['Index_length'];
-    // Calculating time it could take to rebuild the table. This is just an estimate and it depends
-    // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
-    // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
-    // (results of some quick benchmarks in September 2010 by ifokkema)
-    $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
+    if ($aTableInfo['shared'] && !empty($_POST['target']) && !is_array($_POST['target']) && !lovd_error() && count($aTargets) < $nPossibleTargets) {
+        // We're not going to run an ALTER TABLE!
+        $tAlter = 0;
+    } else {
+        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
+        $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
+        $nSizeIndexes = $zStatus['Index_length'];
+        // Calculating time it could take to rebuild the table. This is just an estimate and it depends
+        // GREATLY on things like disk connection type (SATA etc), RPM and free space in InnoDB tablespace.
+        // We are not checking the tablespace right now. Assuming the data throughput is 8MB / second, Index creation 10MB / sec.
+        // (results of some quick benchmarks in September 2010 by ifokkema)
+        $tAlter = ($nSizeData / (8*1024*1024)) + ($nSizeIndexes / (10*1024*1024));
+    }
 
     if (POST) {
         // Mandatory fields.
@@ -1865,8 +1820,9 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
 
             // If ALTER time is large enough, mention something about it.
-            if ($tAlter > $tAlterMax) {
-                lovd_showInfoTable('Please note that the time estimated to add this column to the ' . $aInfoTable['table_name'] . ' data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table are possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
+            // ... but only if we're running it...
+            if (!($aTableInfo['shared'] && count($aTargets) < $nPossibleTargets) && $tAlter > $tAlterMax) {
+                lovd_showInfoTable('Please note that the time estimated to remove this column from the ' . $aTableInfo['table_name'] . ' data table is <B>' . round($tAlter) . ' seconds</B>.<BR>During this time, no updates to the data table are possible. If other users are trying to update information in the database during this time, they will have to wait a long time, or get an error.', 'warning');
             }
 
             require ROOT_PATH . 'class/progress_bar.php';
@@ -1927,7 +1883,11 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
             // Write to log...
             if ($aTableInfo['shared']) {
-                lovd_writeLog('Event', LOG_EVENT,  'Disabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . $nTargets . ' ' . $aTableInfo['unit'] . '(s): ' . implode(', ', $aTargets));
+                lovd_writeLog('Event', LOG_EVENT,  'Disabled column ' . $zData['id'] . ' (' . $zData['head_column'] . ') for ' . count($aTargets) . ' ' . $aTableInfo['unit'] . '(s): ' . implode(', ', $aTargets));
+            }
+            // In case this was/were the last objects to have this column, log its removal.
+            if (!$aTableInfo['shared'] || !$nTargets) {
+                lovd_writeLog('Event', LOG_EVENT,  'Removed column ' . $zData['id'] . ' (' . $zData['head_column'] . ') from ' . $aTableInfo['table_name'] . ' table');
             }
 
             // Thank the user...
@@ -1962,7 +1922,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post" id="oRemoveColumn">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
@@ -1972,17 +1932,31 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     if ($aTableInfo['shared']) {
         // If the target is received through $_GET do not show the selection list unless there is a problem with the target.
         if (!empty($_POST['target']) && !is_array($_POST['target']) && !in_array('target', $_ERROR['fields'])) {
-            $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '.</B><BR><BR>' . "\n");
+            $sTarget = $_DB->query('SELECT name FROM ' . ($sCategory == 'VariantOnTranscript'? TABLE_GENES : TABLE_DISEASES) . ' WHERE id = ?', array($_POST['target']))->fetchColumn();
+            // General query for phenotype data and VOT columns, but for VOT we need to put a join to table_transcripts...
+            $nEntriesWithData = $_DB->query('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ($sCategory != 'VariantOnTranscript'? '' : ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)') . ' WHERE ' . $aTableInfo['unit'] . 'id = ? AND `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"', array($_POST['target']))->fetchColumn();
+            $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '<BR>(' . $sTarget . ')</B><BR><BR>');
             print('      <INPUT type="hidden" name="target" value="' . $_POST['target'] . '">' . "\n");
         } else {
+            $nEntriesWithData = -1; // We need to determine this on the fly.
             print('      Please select the ' . $aTableInfo['unit'] . '(s) for which you want to remove the ' . $zData['colid'] . ' column.<BR><BR>' . "\n");
             $nPossibleTargets = ($nPossibleTargets > 15? 15 : $nPossibleTargets);
             $aForm[] = array('Remove this column from', '', 'select', 'target', $nPossibleTargets, $aPossibleTargets, false, true, true);
             $aForm[] = 'skip';
         }
     } else {
-        $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['colid'] . ' column from the ' . $aTableInfo['table_name'] . ' data table</B>');
+        $nEntriesWithData = $_DB->query('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' WHERE `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"')->fetchColumn();
+        $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['colid'] . ' column from the ' . $aTableInfo['table_name'] . ' data table, and removing all values</B>');
     }
+
+    // Show information about number of entries losing data when this column is removed.
+    print('      <DIV id="oEntriesWithData"' . ($nEntriesWithData > -1? '' : ' style="display : none;"') . '>' . "\n");
+    if ($nEntriesWithData) {
+        lovd_showInfoTable('Please note that this will <B id="permanent">' . ($aTableInfo['shared']? '' : 'permanently') . '</B> delete the data in this column. <SPAN id="entries">' . $nEntriesWithData . ' value' . ($nEntriesWithData == 1? '' : 's') . '</SPAN> will be lost.', 'warning');
+    } else {
+        lovd_showInfoTable('There are currently no values stored in this column, you can safely remove it.', 'information');
+    }
+    print('      </DIV>' . "\n\n");
 
     $aForm = array_merge($aForm,
              array(
@@ -1993,6 +1967,62 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
+    flush();
+
+    if ($nEntriesWithData == -1) {
+        // We will determine the number of affected entries dynamically. For each target, we must know how much data will get lost.
+        // 2013-06-24; 3.0-06; BUT make sure you only select genes and diseases that still have this column, otherwise you get really weird results (1+1=5?).
+        //   When selecting all from the options list, LOVD will take the sum of the values, which may not match the sum of the individually selected entries.
+        if ($sCategory == 'VariantOnTranscript') {
+            $aEntriesWithData = $_DB->query('SELECT sc.' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS data INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (data.transcriptid = t.id) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (t.geneid = sc.geneid) WHERE sc.colid = ? AND data.`' . $zData['id'] . '` IS NOT NULL AND data.`' . $zData['id'] . '` != "" AND data.`' . $zData['id'] . '` != "-" GROUP BY sc.' . $aTableInfo['unit'] . 'id', array($zData['id']))->fetchAllCombine();
+        } else {
+            $aEntriesWithData = $_DB->query('SELECT sc.' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS data INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING (' . $aTableInfo['unit'] . 'id) WHERE sc.colid = ? AND data.`' . $zData['id'] . '` IS NOT NULL AND data.`' . $zData['id'] . '` != "" AND data.`' . $zData['id'] . '` != "-" GROUP BY sc.' . $aTableInfo['unit'] . 'id', array($zData['id']))->fetchAllCombine();
+        }
+        $nParentObjects = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id']))->fetchColumn();
+        print('      <SCRIPT type="text/javascript">' . "\n" .
+              '        nParentObjects = ' . $nParentObjects . "\n" .
+              '        nAllEntriesWithData = ' . array_sum(array_values($aEntriesWithData)) . "\n" .
+              '        aEntriesWithData = {');
+        $i = 0;
+        foreach ($aEntriesWithData as $sTarget => $nEntries) {
+            if ($i) {
+                print(', ');
+            } else {
+                $i ++;
+            }
+            print('\'' . $sTarget . '\' : ' . $nEntries);
+        }
+        print('};' . "\n\n" .
+              '        $("#oRemoveColumn select[name=\'target[]\']").change(
+                            function() {
+                                if ($(this).children(":selected").size() == nParentObjects) {
+                                    $("#oEntriesWithData #permanent").html("permanently");
+                                } else {
+                                    $("#oEntriesWithData #permanent").html("");
+                                }
+                                if ($(this).children(":selected").size() >= aEntriesWithData.length) {
+                                    nEntriesWithData = nAllEntriesWithData;
+                                } else {
+                                    nEntriesWithData = 0;
+                                    $(this).children(":selected").each(function() {
+                                        if (aEntriesWithData[$(this).val()]) {
+                                            nEntriesWithData += aEntriesWithData[$(this).val()];
+                                        }
+                                    });
+                                }
+                                if (nEntriesWithData) {
+                                    $("#oEntriesWithData #entries").html(nEntriesWithData + " value" + (nEntriesWithData == 1? "" : "s"));
+                                    $("#oEntriesWithData").show(400);
+                                } else {
+                                    // FIXME: More correct would be to have the information table saying that the column can safely be removed.
+                                    $("#oEntriesWithData #entries").html("no values");
+                                    $("#oEntriesWithData").hide(400);
+                                }
+                            });' . "\n" .
+              '        // If we got here with options already selected (form was returned from an error, we should handle that, also.' . "\n" .
+              '        $("#oRemoveColumn select[name=\'target[]\']").change();' . "\n" .
+              '      </SCRIPT>' . "\n\n");
+    }
 
     $_T->printFooter();
     exit;
@@ -2006,7 +2036,9 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
     // URL: /columns/VariantOnGenome/DNA?delete
     // URL: /columns/Phenotype/Blood_pressure/Systolic?delete
     // Drop specific custom column.
-    
+
+    define('TAB_SELECTED', 'setup');
+
     $aCol = $_PE;
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);

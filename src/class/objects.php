@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2012-06-17
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2014-04-28
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -127,51 +127,67 @@ class LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
         global $_AUTH;
         $aForm = $this->getForm();
+        if (!$aForm) {
+            return false;
+        }
         $aFormInfo = $aForm[0];
-        unset($aForm[0]);
+        if (!in_array($aFormInfo[0], array('GET', 'POST'))) {
+            // We're not working on a full form array, possibly an incomplete VOT form.
+            $aFormInfo = array('POST');
+        } else {
+            unset($aForm[0]);
+        }
 
-        // Always mandatory.
-        $this->aCheckMandatory[] = 'password';
+        if (lovd_getProjectFile() != '/import.php') {
+            // Always mandatory... unless importing.
+            $this->aCheckMandatory[] = 'password';
+        }
 
         // Validate form by looking at the form itself, and check what's needed.
-        foreach ($aForm as $key => $aField) {
+        foreach ($aForm as $aField) {
             if (!is_array($aField)) {
                 // 'skip', 'hr', etc...
                 continue;
             }
             @list($sHeader, $sHelp, $sType, $sName) = $aField;
             $sNameClean = preg_replace('/^\d{5}_/', '', $sName); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
+            if (lovd_getProjectFile() == '/import.php') {
+                // During import, we don't mention the field names how they appear on screen, but using their IDs which are used in the file.
+                $sHeader = $sName;
+            }
 
             // Trim() all fields. We don't want those spaces in the database anyway.
-            if (isset($aData[$sName]) && !is_array($aData[$sName])) {
-                $GLOBALS['_' . $aFormInfo[0]][$sName] = $aData[$sName] = trim($aData[$sName]);
+            if (lovd_getProjectFile() != '/import.php' && isset($aData[$sName]) && !is_array($aData[$sName])) {
+                $GLOBALS['_' . $aFormInfo[0]][$sName] = trim($GLOBALS['_' . $aFormInfo[0]][$sName]);
+                $aData[$sName] = trim($aData[$sName]);
             }
 
             // Mandatory fields, as defined by child object.
-            if (in_array($sName, $this->aCheckMandatory) && empty($aData[$sName])) {
+            if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || $aData[$sName] === '')) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
             }
 
             // Checking free text fields for max length, data types, etc.
             if (in_array($sType, array('text', 'textarea')) && $sMySQLType = lovd_getColumnType(constant($this->sTable), $sNameClean)) {
                 // FIXME; we're assuming here, that $sName equals the database name. Which is true in probably most/every case, but even so...
+                // FIXME; select fields might also benefit from having this check (especially for import).
 
                 // Check max length.
                 $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
                 if (!empty($aData[$sName])) {
                     // For numerical columns, maxlength works differently!
-                    if (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
+                    if (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'FLOAT', 'FLOAT_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
                         // SIGNED cols: negative values.
                         if (in_array($sMySQLType, array('DECIMAL', 'INT')) && (int) $aData[$sName] < (int)('-' . str_repeat('9', $nMaxLength))) {
                             lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to numbers no lower than -' . str_repeat('9', $nMaxLength) . '.');
                         }
-                        // ALL numerical cols: positive values.
-                        if ((int) $aData[$sName] > (int) str_repeat('9', $nMaxLength)) {
+                        // ALL numerical cols (except floats): positive values.
+                        if (substr($sMySQLType, 0, 5) != 'FLOAT' && (int) $aData[$sName] > (int) str_repeat('9', $nMaxLength)) {
                             lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . str_repeat('9', $nMaxLength) . '.');
                         }
                     } elseif (strlen($aData[$sName]) > $nMaxLength) {
@@ -194,8 +210,10 @@ class LOVD_Object {
                             break;
                         case 'DECIMAL':
                         case 'DECIMAL_UNSIGNED':
-                            if (!is_numeric($aData[$sName]) || ($sMySQLType != 'DECIMAL' && $aData[$sName] < 0)) {
-                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a' . ($sMySQLType == 'DECIMAL'? '' : ' positive') . ' number.');
+                        case 'FLOAT':
+                        case 'FLOAT_UNSIGNED':
+                            if (!is_numeric($aData[$sName]) || (substr($sMySQLType, -8) == 'UNSIGNED' && $aData[$sName] < 0)) {
+                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a' . (substr($sMySQLType, -8) != 'UNSIGNED'? '' : ' positive') . ' number.');
                             }
                             break;
                         case 'INT':
@@ -207,12 +225,31 @@ class LOVD_Object {
                     }
                 }
 
-            } elseif ($sType == 'select' && !empty($aField[7])) {
-                // The browser fails to send value if selection list w/ multiple selection options is left empty.
-                // This is causing notices in the code.
-                // FIXME; is it also with selection lists with a size > 1? Then you should change the check above.
-                if (!isset($aData[$sName])) {
-                    $GLOBALS['_' . $aFormInfo[0]][$sName] = array();
+            } elseif ($sType == 'select') {
+                if (!empty($aField[7])) {
+                    // The browser fails to send value if selection list w/ multiple selection options is left empty.
+                    // This is causing notices in the code.
+                    if (!isset($aData[$sName])) {
+                        $GLOBALS['_' . $aFormInfo[0]][$sName] = array();
+                        $aData[$sName] = array();
+                    }
+                }
+                // Simple check on non-custom columns (custom columns have their own function for this) to see if the given value is actually allowed.
+                // 0 is a valid entry for the check for mandatory fields, so we should also check if 0 is a valid entry in the selection list!
+                if (strpos($sName, '/') === false && isset($aData[$sName]) && $aData[$sName] !== '') {
+                    $Val = $aData[$sName];
+                    $aOptions = array_keys($aField[5]);
+                    if (lovd_getProjectFile() == '/import.php' && !is_array($Val)) {
+                        $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
+                    } elseif (!is_array($Val)) {
+                        $Val = array($Val);
+                    }
+                    foreach ($Val as $sValue) {
+                        $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
+                        if (!in_array($sValue, $aOptions)) {
+                            lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                        }
+                    }
                 }
 
             } elseif ($sType == 'checkbox') {
@@ -221,16 +258,20 @@ class LOVD_Object {
                 // columns can't receive an empty string if STRICT is on.
                 if (!isset($aData[$sName])) {
                     $GLOBALS['_' . $aFormInfo[0]][$sName] = 0;
+                    $aData[$sName] = 0;
+                } elseif (!in_array($aData[$sName], array('0', '1'))) {
+                    lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain either a \'0\' or a \'1\'.');
+                }
+            }
+
+            if ($sName == 'password') {
+                // Password is in the form, it must be checked. Assuming here that it is also considered mandatory.
+                if (!empty($aData['password']) && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
+                    lovd_errorAdd('password', 'Please enter your correct password for authorization.');
                 }
             }
         }
-
-        if ($sName == 'password') {
-            // Password is in the form, it must be checked. Assuming here that it is also considered mandatory.
-            if (!empty($aData['password']) && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
-                lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-            }
-        }
+        return $aData;
     }
 
 
@@ -256,7 +297,7 @@ class LOVD_Object {
             } else {
                 return false;
             }
-        }            
+        }
     }
 
 
@@ -338,6 +379,9 @@ class LOVD_Object {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::insertEntry() - Method didn\'t receive data array');
         } elseif (!is_array($aFields) || !count($aFields)) {
             $aFields = array_keys($aData);
+        } else {
+            // Non-numerical keys or a missing key 0 messes up the SQL creation.
+            $aFields = array_values($aFields);
         }
 
         // Query text.
@@ -349,7 +393,7 @@ class LOVD_Object {
                 // Field may be not set, make sure it is (happens in very rare cases).
                 $aData[$sField] = '';
             }
-            if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC'))) {
+            if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC', 'FLO'))) {
                 $aData[$sField] = NULL;
             }
             $aSQL[] = $aData[$sField];
@@ -424,6 +468,10 @@ class LOVD_Object {
 
     function prepareData ($zData = '', $sView = 'list')
     {
+        // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        // Also quotes all data with htmlspecialchars(), to prevent XSS.
+        global $_AUTH;
+
         if (!is_array($zData)) {
             $zData = array();
         }
@@ -445,6 +493,12 @@ class LOVD_Object {
             if ($zData['row_link'] && array_key_exists('id_', $this->aColumnsViewList) && $zData['id']) {
                 $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
             }
+            // If we find an owned_by_ field, and an owner array, we set up the popups as well (but not for the "LOVD" user).
+            if (isset($zData['owned_by']) && (int) $zData['owned_by'] && !empty($zData['owner'])) {
+                list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['owner'];
+                // Call the tooltip function with a request to move the tooltip left, because "Owner" is often the last column in the table, and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
+                $zData['owned_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>\', this, [-200, 0]);">' . $zData['owned_by_'] . '</SPAN>';
+            }
 
         } else {
             // Add links to users from *_by fields.
@@ -452,7 +506,7 @@ class LOVD_Object {
             foreach($aUserColumns as $sUserColumn) {
                 if (empty($zData[$sUserColumn])) {
                     $zData[$sUserColumn . '_'] = 'N/A';
-                } elseif ($zData[$sUserColumn] != '00000') {
+                } elseif ($_AUTH && $zData[$sUserColumn] != '00000') {
                     $zData[$sUserColumn . '_'] = '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>';
                 }
             }
@@ -561,7 +615,7 @@ class LOVD_Object {
                 // Field may be not set, make sure it is (happens in very rare cases).
                 $aData[$sField] = '';
             }
-            if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC'))) {
+            if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC', 'FLO'))) {
                 $aData[$sField] = NULL;
             }
             $aSQL[] = $aData[$sField];
@@ -677,13 +731,13 @@ class LOVD_Object {
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOptions = false, $bOnlyRows = false)
     {
         // Views list of entries in the database, allowing search.
-        global $_DB, $_SETT;
+        global $_DB, $_INI, $_SETT;
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
         }
-        if (!defined('FORMAT')) {
-           define('FORMAT', 'text/html');
+        if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
+            die('text/plain not allowed here');
         }
 
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
@@ -719,12 +773,12 @@ class LOVD_Object {
         // SEARCH: Advanced text search.
         $WHERE = '';
         $HAVING = '';
-        $CLAUSE = '';
         $aArguments = array(
                         'WHERE' => array(),
                         'HAVING' => array()
                            );
         $aBadSyntaxColumns = array();
+        $aColTypes = array(); // For describing the search expressions in the mouseover of the input field.
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
                 $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false? 'HAVING' : 'WHERE');
@@ -732,21 +786,22 @@ class LOVD_Object {
                     // Column type of an alias is given by LOVD.
                     $sColType = $aCol['db'][2];
                 } else {
-                    if (preg_match('/^[a-z]{1,3}\.[a-z_]+$/i', $aCol['db'][0])) {
+                    if (preg_match('/^[a-z0-9]{1,3}\.[a-z_]+$/i', $aCol['db'][0])) {
                         list($sAlias, $sColName) = explode('.', $aCol['db'][0]);
-                        if (preg_match('/(' . TABLEPREFIX . '_[a-z_]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches)) {
+                        if (preg_match('/(' . TABLEPREFIX . '_[a-z0-9_]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches)) {
                             $sTable = $aMatches[1];
                         } else {
                             // Alias was not valid, default col type to TEXT.
                             $sTable = '';
                         }
                     } else {
-                        $sColName = $aCol['db'][0];
+                        $sColName = trim($aCol['db'][0], '`');
                         $sTable = constant($this->sTable);
                     }
                     $sColType = lovd_getColumnType($sTable, $sColName);
                 }
-                // Allow for searches where the order of words is forced by enclosing the values with double quotes; 
+                $aColTypes[$sColumn] = $sColType;
+                // Allow for searches where the order of words is forced by enclosing the values with double quotes;
                 // Replace spaces in sentences between double quotes so they don't get exploded.
                 if ($sColType == 'DATETIME') {
                     $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($_GET['search_' . $sColumn]));
@@ -764,6 +819,8 @@ class LOVD_Object {
                             switch ($sColType) {
                                 case 'DECIMAL_UNSIGNED':
                                 case 'DECIMAL':
+                                case 'FLOAT_UNSIGNED':
+                                case 'FLOAT':
                                 case 'INT_UNSIGNED':
                                 case 'INT':
                                     if (preg_match('/^([><]=?|!)?(-?\d+(\.\d+)?)$/', $sTerm, $aMatches)) {
@@ -774,10 +831,10 @@ class LOVD_Object {
                                         } else {
                                             $sOperator = '=';
                                         }
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ' . ($_INI['database']['driver'] != 'sqlite'? '?' : 'CAST(? AS NUMERIC)') . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         $aArguments[$CLAUSE][] = $sTerm;
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
-                                        // INT fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
+                                        // Numeric fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
                                         $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
                                     } elseif ($aCol['view']) {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
@@ -842,7 +899,8 @@ class LOVD_Object {
                                     } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = $aMatches[1];
+                                        // 2013-07-25; 3.0-07; When not using LIKE, undo escaping done by lovd_escapeSearchTerm().
+                                        $aArguments[$CLAUSE][] = str_replace(array('\%', '\_'), array('%', '_'), $aMatches[1]);
                                     } elseif ($aCol['view']) {
                                         $aBadSyntaxColumns[] = $aCol['view'][0];
                                     }
@@ -878,12 +936,20 @@ class LOVD_Object {
 
         $sSQLOrderBy = $this->aColumnsViewList[$aOrder[0]]['db'][0] . ' ' . $aOrder[1];
         if (in_array($aOrder[0], array('chromosome','VariantOnGenome/DNA'))) {
-            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_CHROMOSOMES . ' AS chr ON (chromosome = chr.name)';
+            // 2014-03-07; 3.0-10; We need to find the table alias of the VOG or genes table, because otherwise MySQL fails here ('chromosome' is ambiguous) if both are joined.
+            // 2014-04-28; 3.0-10; Prefer the genes table, since it joins to VOG as well, but may not have results which messes up the order.
+            $sAlias = '';
+            if (preg_match('/' . TABLE_GENES . ' AS ([a-z]+)/i', $this->aSQLViewList['FROM'], $aRegs)) {
+                $sAlias = $aRegs[1];
+            } elseif (preg_match('/' . TABLE_VARIANTS . ' AS ([a-z]+)/i', $this->aSQLViewList['FROM'], $aRegs)) {
+                $sAlias = $aRegs[1];
+            }
+            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_CHROMOSOMES . ' AS chr ON (' . (!$sAlias? '' : $sAlias . '.') . 'chromosome = chr.name)';
             $sSQLOrderBy = 'chr.sort_id ' . $aOrder[1];
             if ($aOrder[0] == 'VariantOnGenome/DNA') {
                 $sSQLOrderBy .= ', position_g_start ' . $aOrder[1] . ', position_g_end ' . $aOrder[1] . ', `VariantOnGenome/DNA` ' . $aOrder[1];
             }
-        } else if ($aOrder[0] == 'VariantOnTranscript/DNA') {
+        } elseif ($aOrder[0] == 'VariantOnTranscript/DNA') {
             $sSQLOrderBy = 'position_c_start ' . $aOrder[1] . ', position_c_start_intron ' . $aOrder[1] . ', position_c_end ' . $aOrder[1] . ', position_c_end_intron ' . $aOrder[1] . ', `VariantOnTranscript/DNA` ' . $aOrder[1];
         }
         $this->aSQLViewList['ORDER_BY'] = $sSQLOrderBy . (empty($this->aSQLViewList['ORDER_BY'])? '' : ', ' . $this->aSQLViewList['ORDER_BY']);
@@ -931,18 +997,21 @@ class LOVD_Object {
             print("\n");
         }
 
+        // Make a reference variable of the session for cleaner code.
+        $aSessionViewList =& $_SESSION['viewlists'][$sViewListID];
+
         // To make row ids persist when the viewList is refreshed, we must store the row id in $_SESSION.
-        if (!empty($_SESSION['viewlists'][$sViewListID]['row_id'])) {
-            $this->sRowID = $_SESSION['viewlists'][$sViewListID]['row_id'];
+        if (!empty($aSessionViewList['row_id'])) {
+            $this->sRowID = $aSessionViewList['row_id'];
         } else {
-            $_SESSION['viewlists'][$sViewListID]['row_id'] = $this->sRowID; // Implies array creation.
+            $aSessionViewList['row_id'] = $this->sRowID; // Implies array creation.
         }
 
         // To make row links persist when the viewList is refreshed, we must store the row link in $_SESSION.
-        if (!empty($_SESSION['viewlists'][$sViewListID]['row_link'])) {
-            $this->sRowLink = $_SESSION['viewlists'][$sViewListID]['row_link'];
+        if (!empty($aSessionViewList['row_link'])) {
+            $this->sRowLink = $aSessionViewList['row_link'];
         } else {
-            $_SESSION['viewlists'][$sViewListID]['row_link'] = $this->sRowLink; // Implies array creation.
+            $aSessionViewList['row_link'] = $this->sRowLink; // Implies array creation.
         }
 
         $nTotal = 0;
@@ -963,8 +1032,58 @@ class LOVD_Object {
                 $aArgs[] = $aArg;
             }
 
+            // For ALL viewlists, we store the number of hits that we get, including the current filters.
+            // For large tables, using SQL_CALC_FOUND_ROWS takes a lot of time, also still quite a lot for smaller result sets, since the entire table needs to be read out.
+            //   Unfortunately, we can't automatically get us an SQL_CALC_FOUND_ROWS which leaves out unnecessary joins. Is there a way to do this?
+            // ORDER BY is absolutely killing on large result sets, but when used you might as well use SQL_CALC_FOUND_ROWS, since it needs to read the entire table anyways.
+            // So, long time to retrieve count (>1s) => no SQL_CALC_FOUND_ROWS and no sort.
+            // Count OK (<=1s), but big result set (250K) => no sort. ($_SETT['lists']['max_sortable_rows'])
+
+            // 1) If we don't have a count in memory, request count separately, using SQL_CALC_FOUND_ROWS, since it handles all complex queries.
+            // Also if last count was >30min ago, request again.
+            $bTrueCount = false; // Indicates whether or not we are sure about the number of results.
+            $sFilterMD5 = md5($WHERE . '||' . $HAVING . '||' . implode('|', $aArgs)); // A signature for the filters, NOTE that this depends on the column order!
+            if (!isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
+                $t = microtime(true);
+                if ($_INI['database']['driver'] == 'mysql') {
+                    $_DB->query('SELECT SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'] .
+                        ' FROM ' . $this->aSQLViewList['FROM'] .
+                        (!$this->aSQLViewList['WHERE']? '' :
+                            ' WHERE ' . $this->aSQLViewList['WHERE']) .
+                        (!$this->aSQLViewList['GROUP_BY']? '' :
+                            ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
+                        (!$this->aSQLViewList['HAVING']? '' :
+                            ' HAVING ' . $this->aSQLViewList['HAVING']) .
+                        ' LIMIT 0', $aArgs);
+                    // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
+                    $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+                } else {
+                    // Super inefficient, only for low-volume (sqlite) databases!
+                    $nTotal = count($_DB->query('SELECT ' . $this->aSQLViewList['SELECT'] .
+                        ' FROM ' . $this->aSQLViewList['FROM'] .
+                        (!$this->aSQLViewList['WHERE']? '' :
+                            ' WHERE ' . $this->aSQLViewList['WHERE']) .
+                        (!$this->aSQLViewList['GROUP_BY']? '' :
+                            ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
+                        (!$this->aSQLViewList['HAVING']? '' :
+                            ' HAVING ' . $this->aSQLViewList['HAVING']), $aArgs)->fetchAllColumn());
+                }
+                $tQ = microtime(true) - $t;
+                $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
+                $aSessionViewList['counts'][$sFilterMD5]['t'] = $tQ;
+                $aSessionViewList['counts'][$sFilterMD5]['d'] = time();
+                $bTrueCount = true;
+            }
+
+
+
             // Manipulate SELECT to include SQL_CALC_FOUND_ROWS.
-            $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
+            $bSQLCALCFOUNDROWS = false;
+            if (!$bTrueCount && $_INI['database']['driver'] == 'mysql' && ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 || $aSessionViewList['counts'][$sFilterMD5]['d'] < (time() - (60*15)))) {
+                // But only if we're using MySQL and it takes less than a second to get the correct number of results, or it's been more than 15 minutes since the last check!
+                $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
+                $bSQLCALCFOUNDROWS = true;
+            }
             $sSQL = 'SELECT ' . $this->aSQLViewList['SELECT'] .
                    ' FROM ' . $this->aSQLViewList['FROM'] .
                 (!$this->aSQLViewList['WHERE']? '' :
@@ -975,50 +1094,70 @@ class LOVD_Object {
                    ' HAVING ' . $this->aSQLViewList['HAVING']);
 
             if ($bOptions) {
-                // Make a reference variable of the session for cleaner code.
-                $aSessionViewList =& $_SESSION['viewlists'][$sViewListID];
-
                 // If the session variable does not exist, create it!
                 if (!isset($aSessionViewList['checked'])) {
                     $aSessionViewList['checked'] = array();
                 }
 
-                if (isset($_GET['ids_changed']) && $_GET['ids_changed'] == 'all') {
-                    // If the select all button was clicked, fetch all entries and mark them as 'checked' in session.
-                    // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
-                    // of the query.
-                    $q = $_DB->query($sSQL, $aArgs);
-                    while ($zData = $q->fetchAssoc()) {
-                        $zData = $this->generateRowID($zData);
-                        // We only need the row_id here for knowing which ones we need to check.
-                        $aSessionViewList['checked'][] = $zData['row_id'];
-                    }
-                } elseif (isset($_GET['ids_changed']) && $_GET['ids_changed'] == 'none') {
-                    // If the unselect all button was clicked, reset the 'checked' array.
-                    $aSessionViewList['checked'] = array();
-                } elseif (isset($_GET['ids_changed'])) {
-                    // Get the changed ids and remove them from or add them to the session.
-                    $aIDsChanged = explode(';', $_GET['ids_changed']);
-                    // Flip the keys & values, so that we can do a simple isset() to see if the id is already present.
-                    $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
-                    // Determine the highest key number, so we can use that later when adding new values to the array.
-                    $nIndex = (count($aSessionViewList['checked'])? max($aSessionViewList['checked']) + 1 : 0);
-                    foreach ($aIDsChanged as $nID) {
-                        if (isset($aSessionViewList['checked'][$nID])) {
-                            // ID is found in the array, but is also in the 'ids_changed' array, so remove it!
-                            unset($aSessionViewList['checked'][$nID]);
-                        } else {
-                            // ID is not found in the array, but IS in the 'ids_changed' array, so add it using the $nIndex as value we determined earlier.
-                            // Also add 1 to the $nIndex so that the next id that needs to be added will not overwrite this one.
-                            $aSessionViewList['checked'][$nID] = ++$nIndex;
+                if (isset($_GET['ids_changed'])) {
+                    if ($_GET['ids_changed'] == 'all') {
+                        // If the select all button was clicked, fetch all entries and mark them as 'checked' in session.
+                        // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
+                        // of the query.
+                        $q = $_DB->query($sSQL, $aArgs);
+                        while ($zData = $q->fetchAssoc()) {
+                            $zData = $this->generateRowID($zData);
+                            // We only need the row_id here for knowing which ones we need to check.
+                            $aSessionViewList['checked'][] = $zData['row_id'];
                         }
+                    } elseif ($_GET['ids_changed'] == 'none') {
+                        // If the unselect all button was clicked, reset the 'checked' array.
+                        $aSessionViewList['checked'] = array();
+                    } else {
+                        // Get the changed ids and remove them from or add them to the session.
+                        $aIDsChanged = explode(';', $_GET['ids_changed']);
+                        // Flip the keys & values, so that we can do a simple isset() to see if the id is already present.
+                        $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
+                        // Determine the highest key number, so we can use that later when adding new values to the array.
+                        $nIndex = (count($aSessionViewList['checked'])? max($aSessionViewList['checked']) + 1 : 0);
+                        foreach ($aIDsChanged as $nID) {
+                            if (isset($aSessionViewList['checked'][$nID])) {
+                                // ID is found in the array, but is also in the 'ids_changed' array, so remove it!
+                                unset($aSessionViewList['checked'][$nID]);
+                            } else {
+                                // ID is not found in the array, but IS in the 'ids_changed' array, so add it using the $nIndex as value we determined earlier.
+                                // Also add 1 to the $nIndex so that the next id that needs to be added will not overwrite this one.
+                                $aSessionViewList['checked'][$nID] = ++$nIndex;
+                            }
+                        }
+                        // Flip the array back to its original state.
+                        $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
                     }
-                    // Flip the array back to its original state.
-                    $aSessionViewList['checked'] = array_flip($aSessionViewList['checked']);
                 }
             }
 
-            $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
+            // ORDER BY will only occur when we estimate we have time for it.
+            if ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 && $aSessionViewList['counts'][$sFilterMD5]['n'] <= $_SETT['lists']['max_sortable_rows']) {
+                $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
+                $bSortableVL = true;
+            } else {
+                // Not sortable, indicate this on the VL...
+                $aOrder = array('', '');
+                $bSortableVL = false;
+                // 2013-07-03; 3.0-07; However, we do try and sort because in principle, the order is random and this may cause confusion while paginating.
+                //   So, as a result we'll try and sort on the PK. We attempt to determine this from the GROUP BY or ID col in the VL columns list.
+                $sCol= '';
+                if (isset($this->aSQLViewList['GROUP_BY'])) {
+                    $sCol = $this->aSQLViewList['GROUP_BY'];
+                } elseif ($this->aColumnsViewList['id']) {
+                    $sCol = $this->aColumnsViewList['id']['db'][0];
+                } elseif ($this->aColumnsViewList['id_']) {
+                    $sCol = $this->aColumnsViewList['id_']['db'][0];
+                }
+                if ($sCol) {
+                    $sSQL .= ' ORDER BY ' . $sCol;
+                }
+            }
 
             if (!$bHideNav && FORMAT == 'text/html') {
                 // Implement LIMIT only if navigation is not hidden.
@@ -1033,9 +1172,22 @@ class LOVD_Object {
             // FIXME; what if using AJAX? Probably we should generate a number here, if this query fails, telling the system to try once more. If that fails also, the JS should throw a general error, maybe.
             $q = $_DB->query($sSQL, $aArgs);
 
-            // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
-            $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+            // Now, get the total number of hits as if no LIMIT was used (when we have used the proper SELECT syntax). Note that $nTotal gets overwritten here.
+            if ($bSQLCALCFOUNDROWS) {
+                // FIXME: 't' needs to be recalculated as well!
+                $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+                $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
+                $aSessionViewList['counts'][$sFilterMD5]['d'] = time();
+                $bTrueCount = true;
+            } else {
+                // Estimate the number of results!
+                $nTotal = $aSessionViewList['counts'][$sFilterMD5]['n'];
+            }
             $_DB->commit(); // To end the transaction and the locks that come with it.
+        } else {
+            // Set certain values that are needed for hiding notices, applicable for the "incorrect syntax" error message.
+            $bTrueCount = true; // Yes, we're sure we have 0 results.
+            $bSortableVL = false; // Sorting makes no sense when you have no results.
         }
 
         // If no results are found, try to figure out if it was because of the user's searching or not.
@@ -1062,7 +1214,7 @@ class LOVD_Object {
         // FIXME; this is a temporary hack just to get the genes?authorize working when all users have been selected.
         //   There is no longer a viewList when all users have been selected, but we need one for the JS execution.
         //   Possibly, this code can be standardized a bit and, if necessary for other viewLists as well, can be kept here.
-        if (!$nTotal && $this->sObject == 'User' && !$bSearched && !empty($_GET['search_id'])) {
+        if (!$nTotal && !$bSearched && (($this->sObject == 'User' && !empty($_GET['search_id'])))) {
             // FIXME; Maybe check for JS contents of the rowlink?
             // There has been searched, but apparently the ID column is forced hidden. This must be the authorize page.
             $bSearched = true; // This will trigger the creation of the viewList table.
@@ -1075,14 +1227,47 @@ class LOVD_Object {
                     print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
                 }
 
+                // If we have a legend, create a hidden DIV that will be used for the full legend.
+                print('      <DIV id="viewlistLegend_' . $sViewListID . '" title="Legend" style="display : none;">' . "\n" .
+                      '        <H2 class="LOVD">Legend</H2>' . "\n\n" .
+                      '        <I class="S11">Please note that a short description of a certain column can be displayed when you move your mouse cursor over the column\'s header and hold it still. Below, a more detailed description is shown per column.</I><BR><BR>' . "\n\n");
+                $bLegend = false; // We need to check if we have a legend at all.
+                foreach ($this->aColumnsViewList as $sField => $aCol) {
+                    if (!empty($aCol['legend'])) {
+                        $bLegend = true;
+                        if (empty($aCol['legend'][1])) {
+                            $aCol['legend'][1] = $aCol['legend'][0];
+                        }
+                        print('        <B>' . $aCol['view'][0] . '</B>: ' . $aCol['legend'][1]);
+                        if (substr($aCol['legend'][1], -5) == '</UL>') {
+                            // No additional breaks, no possible listing of selection options. Column has its own UL already.
+                            print("\n\n");
+                            continue;
+                        }
+                        if (isset($this->aColumns[$sField]) && $this->aColumns[$sField]['form_type'][2] == 'select') {
+                            // This is a custom column and it has a selection list with options. List the options below.
+                            print('<BR>' . "\n" .
+                                  '        All options:' . "\n" .
+                                  '        <UL style="margin-top : 0px;">' . "\n");
+                            foreach ($this->aColumns[$sField]['select_options'] as $sOption) {
+                                print('          <LI>' . $sOption . '</LI>' . "\n");
+                            }
+                            print('      </UL>' . "\n\n");
+                        } else {
+                            print('<BR><BR>' . "\n\n");
+                        }
+                    }
+                }
+                print('      </DIV>' . "\n\n");
+
                 if (!$bHideNav) {
-                    lovd_pagesplitShowNav($sViewListID, $nTotal);
+                    lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
                       '        <THEAD>' . "\n" .
-                      '        <TR>' . 
+                      '        <TR>' .
    ($bOptions? "\n" . '          <TH valign="center" style="text-align:center;">' . "\n" .
                       '            <IMG id="viewlistOptionsButton_' . $sViewListID . '" src="gfx/options.png" width="16" height="16" style="cursor : pointer;"></TH>' : ''));
 
@@ -1091,7 +1276,7 @@ class LOVD_Object {
                         continue;
                     }
 
-                    $bSortable   = !empty($aCol['db'][1]);
+                    $bSortable   = !empty($aCol['db'][1]) && $bSortableVL; // If we can't sort at all, nothing is sortable.
                     $bSearchable = !empty($aCol['db'][2]);
                     $sImg = '';
                     $sAlt = '';
@@ -1099,7 +1284,7 @@ class LOVD_Object {
                         $sImg = ($aOrder[1] == 'DESC'? '_desc' : '_asc');
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
-                    print("\n" . '          <TH valign="top"' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . '>' . "\n" .
+                    print("\n" . '          <TH valign="top"' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') . '>' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .
@@ -1109,7 +1294,7 @@ class LOVD_Object {
                             (!$bSearchable? '' :
                                  "\n" .
                                  // SetTimeOut() is necessary because if the function gets executed right away, selecting a previously used value from a *browser-generated* list in one of the fields, gets aborted and it just sends whatever is typed in at that moment.
-                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain..." style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\')\', 0); }">') .
+                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain...' . (!empty($_GET['search_' . $sField])? "\nCurrent search:\n\n" . htmlspecialchars(lovd_formatSearchExpression($_GET['search_' . $sField], $aColTypes[$sField])) : '') .'" style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\')\', 0); }">') .
                           '</TH>');
                 }
                 print('</TR></THEAD>');
@@ -1134,7 +1319,7 @@ class LOVD_Object {
                 print('## Filter: ' . $sFilter . "\r\n");
             }
             if (ACTION == 'downloadSelected') {
-                print('## Filter: selected = ' . implode(',', $_SESSION['viewlists'][$sViewListID]['checked']) . "\r\n");
+                print('## Filter: selected = ' . implode(',', $aSessionViewList['checked']) . "\r\n");
             }
             print('# charset=UTF-8' . "\r\n");
             $i = 0;
@@ -1196,7 +1381,7 @@ class LOVD_Object {
                             $sWhere .= ($sWhere? ' and ' : ' where ') . strtolower($sCol) . ' is "' . str_replace('|', '" or "', trim($sValue, '="') . '"');
                         }
                     }
-                    $sMessage .= $sWhere;                    
+                    $sMessage .= $sWhere;
                 }
                 lovd_showInfoTable($sMessage . '!', 'stop');
 
@@ -1204,7 +1389,8 @@ class LOVD_Object {
             }
         }
 
-        while ($zData = $q->fetchAssoc()) {
+        // Now loop through the data and print. But check for $q to be set; if we had a bad search syntax, we end up here as well, but without an $q.
+        while (isset($q) && $nTotal && $zData = $q->fetchAssoc()) {
             // If row_id is not given by the database, but it should be created according to some format ($this->sRowID), put the data's ID in this format.
             $zData = $this->generateRowID($zData);
             // If row_link is not given by the database, but it should be created according to some format ($this->sRowLink), put the data's ID and the viewList's ID in this format.
@@ -1247,7 +1433,7 @@ class LOVD_Object {
 
             } elseif (FORMAT == 'text/plain') {
                 // Download format: print contents.
-                if (ACTION == 'downloadSelected' && !in_array($zData['row_id'], $_SESSION['viewlists'][$sViewListID]['checked'])) {
+                if (ACTION == 'downloadSelected' && !in_array($zData['row_id'], $aSessionViewList['checked'])) {
                     // Only selected entries should be downloaded. And this one is not selected.
                     continue;
                 }
@@ -1271,7 +1457,7 @@ class LOVD_Object {
                       '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                       '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");
 
-                lovd_pagesplitShowNav($sViewListID, $nTotal);
+                lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
             }
             if (!$bAjax) {
                 print('      </DIV></FORM><BR>' . "\n"); // These contents will be replaced by Ajax.
@@ -1295,7 +1481,7 @@ class LOVD_Object {
                       '        // Fix the top border that could not be set through jeegoo\'s style.css.' . "\n" .
                       '        $(\'#viewlistMenu_' . $sViewListID . '\').attr(\'style\', \'border-top : 1px solid #000;\');' . "\n" .
                       '        $(\'#viewlistMenu_' . $sViewListID . '\').prepend(\'<LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'all\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>Select all <SPAN>entries</SPAN></A></LI><LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'none\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Unselect all</A></LI>\');' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').append(\'<LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', true);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', false);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download selected entries</A></LI>\');' . "\n" .
+                      '        $(\'#viewlistMenu_' . $sViewListID . '\').append(\'<LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', true);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries (summary data)</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', false);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download selected entries (summary data)</A></LI>\');' . "\n" .
                       '        lovd_activateMenu(\'' . $sViewListID . '\');' . "\n\n");
             }
             print('        check_list[\'' . $sViewListID . '\'] = [];' . "\n" .

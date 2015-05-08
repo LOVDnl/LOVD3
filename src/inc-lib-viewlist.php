@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2012-03-29
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2013-07-03
+ * For LOVD    : 3.0-07
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -38,6 +38,100 @@ function lovd_escapeSearchTerm ($sTerm)
     // Reverse the insertion of {{SPACE}} done to allow for searches where the order of words is forced by enclosing the values with double quotes.
     $sTerm = str_replace('{{SPACE}}', ' ', $sTerm);
     return $sTerm;
+}
+
+
+
+
+
+function lovd_formatSearchExpression ($sExpression, $sColumnType)
+{
+    // Formats the search expressions for the "title" text of the input field so that the users can understand what their search does.
+    if ($sColumnType == 'DATETIME') {
+        $sExpression = preg_replace('/ (\d)/', "{{SPACE}}$1", $sExpression);
+    } else {
+        $sExpression = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), $sExpression);
+    }
+    $aANDExpressions = explode(' ', $sExpression);
+    $nANDLength = count($aANDExpressions);
+    $sFormattedExpressions = '';
+    foreach ($aANDExpressions as $nANDIndex => $sANDExpression) {
+        $aORExpressions = explode('|', $sANDExpression);
+        $nORLength = count($aORExpressions);
+        $sFormattedExpression = ($sColumnType == 'TEXT'? ' - ' : ' ');
+        if ($nORLength > 1) {
+            $sFormattedExpression .= '(';
+        }
+        foreach ($aORExpressions as $nORIndex => $sORExpression) {
+            switch ($sColumnType) {
+                case 'TEXT':
+                    if ($sORExpression{0} == '!' && $sORExpression{1} == '=') {
+                        $sFormattedExpression .= 'Does not exactly match ' . trim($sORExpression, '!="');
+                    } elseif ($sORExpression{0} == '!' && $sORExpression{1} != '=') {
+                        $sFormattedExpression .= 'Does not contain ' . trim($sORExpression, '!=');
+                    } elseif ($sORExpression{0} == '=') {
+                        $sFormattedExpression .= 'Exactly matches ' . trim($sORExpression, '="');
+                    } else {
+                        $sFormattedExpression .= 'Contains ' . $sORExpression;
+                    }
+                    break;
+                case 'INT':
+                case 'INT_UNSIGNED':
+                case 'DECIMAL':
+                case 'DECIMAL_UNSIGNED':
+                case 'DATE':
+                case 'DATETIME':
+                    if (!in_array($sORExpression{0}, array('<', '>', '!'))) {
+                        $sFormattedExpression .= '=' . $sORExpression;
+                    } else {
+                        $sFormattedExpression .= $sORExpression;
+                    }
+                    break;
+                default:
+                    $sFormattedExpression .= $sORExpression;
+            }
+            if ($nORIndex + 1 != $nORLength) {
+                $sFormattedExpression .= ' OR ';
+            } elseif ($nORLength > 1) {
+                $sFormattedExpression .= ')';
+            }
+        }
+        $sFormattedExpressions .= $sFormattedExpression;
+        if ($nANDIndex + 1 != $nANDLength) {
+            $sFormattedExpressions .= "\nAND\n";
+        }
+    }
+
+    return preg_replace('/{{SPACE}}/', ' ', $sFormattedExpressions);
+}
+
+
+
+
+
+function lovd_hideEmail ($s)
+{
+    // Function kindly provided by Ileos.nl in the interest of Open Source.
+    // Obscure email addresses from spambots.
+
+    $a_replace = array(45 => '-', '.',
+        48 => '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        64 => '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        95 => '_',
+        97 => 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    );
+
+    $s_return = '';
+    for ($i = 0; $i < strlen($s); $i ++) {
+        $s_sub = substr($s, $i, 1);
+        if ($key = array_search($s_sub, $a_replace)) {
+            $s_return .= '&#' . str_pad($key, 3, '0', STR_PAD_LEFT) . ';';
+        } else {
+            $s_return .= $s_sub;
+        }
+    }
+
+    return $s_return;
 }
 
 
@@ -81,7 +175,7 @@ function lovd_pagesplitInit ()
 
 
 
-function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
+function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bTrueTotal = true, $bSortable = true, $bLegend = true, $nShownPages = 10)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Initializes page splitting function which converts long lists of results
@@ -92,7 +186,7 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
     global $_PAGESPLIT, $_SETT;
     $_PAGESPLIT['total'] = $nTotal;
     foreach ($_PAGESPLIT as $key => $val) {
-        ${$key} = $val;
+        ${$key} = $val; // Defines $first_entry && $total.
     }
 
     // Last entry of the page.
@@ -108,7 +202,8 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
     if (empty($_PAGESPLIT['printed'])) {
         // First, print the range currently on the screen.
         print('      <SPAN class="S11" id="viewlistPageSplitText_' . $sViewListID . '">' . "\n" .
-              '        ' . $total . ' entr' . ($total == 1? 'y' : 'ies') . ' on ' . $nPages . ' page' . ($nPages == 1? '' : 's') . '.');
+              '        ' . ($bTrueTotal? '' : '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'If LOVD takes too much time to determine the number of results,<BR>LOVD will not recalculate this number on every page view.\', this);">About</SPAN> ') .
+                  $total . ' entr' . ($total == 1? 'y' : 'ies') . ' on ' . $nPages . ' page' . ($nPages == 1? '' : 's') . '.');
 
         // lovd_pagesplitInit() is not run, when we have a BadSyntax error message.
         if (isset($first_entry)) {
@@ -131,6 +226,18 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $nShownPages = 10)
     }
     print("\n" .
           '            </SELECT></TD>');
+
+    // 2013-03-05; 3.0-03; Added an icon that indicates if sorting is not allowed on this VL.
+    if (!$bSortable) {
+        print("\n" .
+              '          <TD><IMG src="gfx/order_arrow_off.png" width="19" height="19" alt="No sorting possible" onmouseover="lovd_showToolTip(\'Sorting is disabled on this result set due to necessary restrictions;<BR> ' . ($nTotal > $_SETT['lists']['max_sortable_rows']? 'too many results are returned' : 'database takes too much time to generate view') . ', please narrow your search.\', this);" style="margin-right : 5px;"></TD>');
+    }
+
+    // Put a button here that shows the full legend, if it's available for this VL. We don't know that here, so we use JS to show it if necessary.
+    if ($bLegend) {
+        print("\n" .
+              '          <TD><B onclick="lovd_showLegend(\'' . $sViewListID . '\');" title="Click here to see the full legend of this data table." class="legend">Legend</B>&nbsp;&nbsp;</TD>');
+    }
 
     if ($nPages > 1) {
         // First printed page number.

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-03-05
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -99,6 +99,8 @@ function lovd_cleanDirName ($s)
         return false;
     }
 
+    // Clean up the pwd; remove '\' (some PHP versions under Windows seem to escape the slashes with backslashes???)
+    $s = stripslashes($s);
     // Clean up the pwd; remove '//'
     $s = preg_replace('/\/+/', '/', $s);
     // Clean up the pwd; remove '/./'
@@ -234,7 +236,7 @@ function lovd_getColumnData ($sTable)
                           );
         }
     }
-    
+
     return $aTableCols[$sTable];
 }
 
@@ -275,6 +277,16 @@ function lovd_getColumnLength ($sTable, $sCol)
     }
 
     return 0;
+}
+
+
+
+
+
+function lovd_getColumnList ($sTable)
+{
+    // Returns the list of columns for a certain table.
+    return array_keys(lovd_getColumnData($sTable));
 }
 
 
@@ -336,8 +348,11 @@ function lovd_getColumnType ($sTable, $sCol)
     if (!empty($sColType)) {
         if (preg_match('/^((VAR)?CHAR|(TINY|MEDIUM|LONG)?TEXT)/i', $sColType)) {
             return 'TEXT';
-        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT\([0-9]+\)( UNSIGNED)?/i', $sColType, $aMatches)) {
-            return 'INT' . (isset($aMatches[2])? '_UNSIGNED' : '');
+        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT(\([0-9]+\))?( UNSIGNED)?/i', $sColType, $aMatches)) {
+            return 'INT' . (isset($aMatches[3])? '_UNSIGNED' : '');
+        } elseif (preg_match('/^(FLOAT|DOUBLE)(\([0-9]+\))?( UNSIGNED)?/i', $sColType, $aMatches)) {
+            // Currently not supported by LOVD custom columns, but in use in some custom LOVD builds.
+            return 'FLOAT' . (isset($aMatches[3])? '_UNSIGNED' : '');
         } elseif (preg_match('/^(DEC|DECIMAL)\([0-9]+,[0-9]+\)( UNSIGNED)?/i', $sColType, $aMatches)) {
             return 'DECIMAL' . (isset($aMatches[2])? '_UNSIGNED' : '');
         } elseif (preg_match('/^DATE(TIME)?/i', $sColType, $aMatches)) {
@@ -362,7 +377,7 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
     if (!count($aSources)) {
         $aSources = $_DB->query('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine();
     }
-    
+
     if (array_key_exists($sSource, $aSources)) {
         $s = $aSources[$sSource];
         if ($bHTML) {
@@ -412,11 +427,18 @@ function lovd_getInstallURL ($bFull = true)
 function lovd_getProjectFile ()
 {
     // Gets project file name (file name including possible project subdirectory).
+    // 2015-03-05; 3.0-13; When running an import, this function is called very often, so let's cache this function's results.
+    static $sProjectFile;
+    if ($sProjectFile) {
+        return $sProjectFile;
+    }
+
     $sDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // /LOVDv.3.0/install/ or /
     $sProjectDir = lovd_cleanDirName($sDir . ROOT_PATH);        // /LOVDv.3.0/         or /
     $sDir = substr($sDir, strlen($sProjectDir) - 1);            // /install/           or /
     // You need to use SCRIPT_FILENAME here, because SCRIPT_NAME can lose the .php extension.
-    return $sDir . basename($_SERVER['SCRIPT_FILENAME']);       // /install/index.php  or /variants.php
+    $sProjectFile = $sDir . basename($_SERVER['SCRIPT_FILENAME']); // /install/index.php  or /variants.php
+    return $sProjectFile;
 }
 
 
@@ -463,21 +485,40 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     // False: not allowed to view hidden data, not allowed to edit.
     // 0    : allowed to view hidden data, not allowed to edit (LEVEL_COLLABORATOR).
     // 1    : allowed to view hidden data, allowed to edit (LEVEL_OWNER || LEVEL_CURATOR).
-    // Returns 1 by default for any user with level LEVEL_MANAGER or higher.
+    // Returns 1 by default for any user with level LEVEL_MANAGER or higher for non-user based authorization requests.
     global $_AUTH, $_DB, $_CONF;
 
     if (!$_AUTH) {
         return false;
-    } elseif ($_AUTH['level'] >= LEVEL_MANAGER) {
+    } elseif ($sType != 'user' && $_AUTH['level'] >= LEVEL_MANAGER) {
         return 1;
     }
 
     // Check data type.
     if (!$Data) {
         return false;
-    } elseif (!in_array($sType, array('gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
+    } elseif (!in_array($sType, array('user', 'gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
         lovd_writeLog('Error', 'LOVD-Lib', 'lovd_isAuthorized() - Function didn\'t receive a valid datatype (' . $sType . ').');
         return false;
+    }
+
+    if ($sType == 'user') {
+        // Base authorization on own level and other's level, if not requesting authorization on himself.
+        if (is_array($Data)) {
+            // Not supported on this data type.
+            return false;
+        } else {
+            // If viewing himself, always get authorization.
+            if ($Data == $_AUTH['id']) {
+                return 1; // FIXME: We're not supporting $bSetUserLevel at the moment (not required right now, either).
+            } elseif ($_AUTH['level'] < LEVEL_MANAGER) {
+                // Lower than managers never get access to hidden data of other users.
+                return false;
+            } else {
+                $nLevelData = $_DB->query('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($Data))->fetchColumn();
+                return (int) ($_AUTH['level'] > $nLevelData);
+            }
+        }
     }
 
     if ($sType == 'gene') {
@@ -514,25 +555,25 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     switch ($sType) {
         // Queries for every data type.
         case 'transcript':
-            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
-            return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+            $aGenes = $_DB->query('SELECT DISTINCT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
+            return lovd_isAuthorized('gene', $aGenes, $bSetUserLevel);
         case 'disease':
-            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT geneid SEPARATOR ";") FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
-            return lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+            $aGenes = $_DB->query('SELECT DISTINCT geneid FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
+            return lovd_isAuthorized('gene', $aGenes, $bSetUserLevel);
         case 'variant':
-            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'individual':
-            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'phenotype':
-            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (s.individualid = p.individualid) WHERE p.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (s.individualid = p.individualid) WHERE p.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'screening':
-            $sGenes = $_DB->query('SELECT GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchColumn();
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         default:
@@ -540,7 +581,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     }
 
     // Run the authorization on genes.
-    $Auth = lovd_isAuthorized('gene', explode(';', $sGenes), $bSetUserLevel);
+    $Auth = lovd_isAuthorized('gene', $aGenes, $bSetUserLevel);
     if ($Auth) {
         // Level has already been set by recursive call.
         return 1;
@@ -558,6 +599,9 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
             $_AUTH['level'] = LEVEL_COLLABORATOR;
         }
         return 0;
+    }
+    if ($bSetUserLevel) {
+        $_AUTH['level'] = LEVEL_SUBMITTER;
     }
     return false;
 }
@@ -601,14 +645,18 @@ function lovd_magicUnquoteAll ()
 
 
 
-function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
+function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHeaders = array()) {
     // LOVD's alternative to file(), not dependent on the fopenwrappers, and can do POST requests.
     global $_CONF, $_SETT;
 
-    if (substr($sURL, 0, 4) != 'http') {
+    if (substr($sURL, 0, 4) != 'http' || (ini_get('allow_url_fopen') && !$sPOST && !$aAdditionalHeaders)) {
         // Normal file() is fine.
         return @file($sURL, FILE_IGNORE_NEW_LINES);
     }
+    if (!is_array($aAdditionalHeaders)) {
+        $aAdditionalHeaders = array($aAdditionalHeaders);
+    }
+    $aAdditionalHeaders[] = ''; // To make sure we end with a \r\n.
 
     $aHeaders = array();
     $aOutput = array();
@@ -625,6 +673,9 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
                     (!$sPOST? '' :
                     'Content-length: ' . strlen($sPOST) . "\r\n" .
                     'Content-Type: application/x-www-form-urlencoded' . "\r\n") .
+            (empty($_CONF['proxy_username']) || empty($_CONF['proxy_password'])? '' :
+                'Proxy-Authorization: Basic ' . base64_encode($_CONF['proxy_username'] . ':' . $_CONF['proxy_password']) . "\r\n") .
+            implode("\r\n", $aAdditionalHeaders) .
                     'Connection: Close' . "\r\n\r\n" .
                     (!$sPOST? '' :
                     $sPOST . "\r\n");
@@ -635,7 +686,7 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false) {
             if ($s === false) {
                 // This mysteriously may happen at the first fgets() call???
                 continue;
-            } 
+            }
             $s = rtrim($s, "\r\n");
             if ($bListen) {
                 $aOutput[] = $s;
@@ -683,8 +734,6 @@ function lovd_php_htmlspecialchars ($Var)
 
 
 
-/*
-DMD_SPECIFIC
 function lovd_printGeneFooter ()
 {
     // Prints the current gene's footer, if any is stored.
@@ -706,7 +755,6 @@ function lovd_printGeneHeader ()
         print('      <DIV style="text-align : ' . $_SETT['notes_align'][$_SETT['currdb']['header_align']] . ';">' . $_SETT['currdb']['header'] . '</DIV>' . "\n\n");
     }
 }
-*/
 
 
 
@@ -772,23 +820,95 @@ function lovd_requireAUTH ($nLevel = 0)
 
 
 
+function lovd_saveWork ()
+{
+    // Save the changes made in $_AUTH['saved_work'] by inserting the changed array back into the database.
+    global $_AUTH, $_DB;
+
+    if ($_AUTH && isset($_AUTH['saved_work'])) {
+        // FIXME; Later when we add a decent json_encode library, we will switch to that.
+        $_DB->query('UPDATE ' . TABLE_USERS . ' SET saved_work = ? WHERE id = ?', array(serialize($_AUTH['saved_work']), $_AUTH['id']));
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+
+
+
 function lovd_shortenString ($s, $l = 50)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Shortens string nicely to a given length.
     // FIXME; Should be able to shorten from the left as well, useful with for example transcript names.
     if (strlen($s) > $l) {
-        $s = substr($s, 0, $l - 3);
-        // 2012-02-02; 3.0-beta-02; Now also makes sure the parentheses are balanced.
-        //   It assumes they were balanced before shorting the string.
+        $s = rtrim(substr($s, 0, $l - 3), '(');
+        // Also make sure the parentheses are balanced. It assumes they were balanced before shorting the string.
         $nClosingParenthesis = 0;
         while (substr_count($s, '(') > (substr_count($s, ')') + $nClosingParenthesis)) {
-            $s = substr($s, 0, -1);
-            $nClosingParenthesis ++;
+            $s = rtrim(substr($s, 0, ($l - 3 - ++$nClosingParenthesis)), '('); // Usually eats off one, but we may have started with a shorter string because of the rtrim().
         }
         $s .= '...' . str_repeat(')', $nClosingParenthesis);
     }
     return $s;
+}
+
+
+
+
+
+function lovd_showDialog ($sID, $sTitle, $sMessage, $sType = 'information', $aSettings = array())
+{
+    $aTypes =
+             array(
+                    'information' => 'Information',
+                    'question' => 'Question',
+                    'save' => 'Save',
+                    'stop' => 'Stop!',
+                    'success' => 'Success!',
+                    'warning' => 'Warning',
+                  );
+
+    if (!array_key_exists($sType, $aTypes)) {
+        $sType = 'information';
+    }
+
+    // Other settings.
+    $aSettingDefaults =
+        array(
+            'modal' => 'false',
+            'position' => '', // Center of dialog on center of screen.
+            'buttons' => '',
+        );
+
+    if (!is_array($aSettings)) {
+        $aSettings = array();
+    }
+    foreach ($aSettings as $sKey => $sVal) {
+        if (!isset($aSettingDefaults[$sKey])) {
+            // Setting does not exist (= has no default).
+            unset($aSettings[$sKey]);
+            continue;
+        }
+        // Overwrite default settings.
+        $aSettingDefaults[$sKey] = $sVal;
+    }
+
+    print('      <DIV id="' . $sID . '" title="' . $sTitle . '" style="display : none;">' . "\n" .
+          '        <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . "\n" .
+          '          <TR>' . "\n" .
+          '            <TD valign="top" align="left" width="50"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
+          '            <TD valign="middle">' . $sMessage . '</TD></TR></TABLE></DIV>' . "\n" .
+          '      <SCRIPT type="text/javascript">$("#' . $sID . '").dialog({draggable:false,resizable:false,minWidth:400,show:"fade",closeOnEscape:true,hide:"fade"');
+    // Add settings.
+    foreach ($aSettingDefaults as $sKey => $sVal) {
+        if ($sVal) {
+            print(',' . $sKey . ':' . $sVal);
+        }
+    }
+    print('});</SCRIPT>' . "\n\n");
 }
 
 
@@ -815,28 +935,10 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
         $sWidth = '100%';
     }
 
-    print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="window.location.href=\'' . $sHref . '\';"' : '') . '>' . "\n" .
+    print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
           '        <TR>' . "\n" .
           '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
           '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE><BR>' . "\n\n");
-}
-
-
-
-
-
-function lovd_showNavigation ($sBody, $nPrefix = 3)
-{
-    // Function kindly provided by Ileos.nl in the interest of Open Source.
-    // Displays navigation table to the screen with given contents, accepting a
-    // number of settings.
-
-    // Spaces prepended to HTML code for proper alignment.
-    $sPrefix = str_repeat('  ', $nPrefix);
-
-    print($sPrefix . '<TABLE border="0" cellpadding="0" cellspacing="0" class="navigation">' . "\n" .
-          $sPrefix . '  <TR align="center">' . "\n" .
-          $sPrefix . '    <TD>' . $sBody . '</TD></TR></TABLE>'. "\n\n");
 }
 
 
@@ -864,7 +966,7 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
                                 (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
                                 '</A></LI>' . "\n");
         } else {
-            print($sPrefix . '  <LI class="disabled' . (!$sIMG? '' : ' icon') . '">' . (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName . '</LI>' . "\n");
+            print($sPrefix . '  <LI class="disabled' . (!$sIMG? '' : ' icon') . '">' . (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . preg_replace('/(\.[a-z]+)$/', '_disabled' . "$1", $sIMG) . ');"></SPAN>') . $sName . '</LI>' . "\n");
         }
     }
     print($sPrefix . '</UL>' . "\n\n" .
@@ -878,9 +980,9 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '      onSelect: function(e, context) {' . "\n" .
           $sPrefix . '        if ($(this).hasClass("disabled")) {' . "\n" .
           $sPrefix . '          return false;' . "\n" .
-          $sPrefix . '        } else if ($(this).find(\'a\').attr(\'href\') != undefined) {' . "\n" .
+          $sPrefix . '        } else if ($(this).find(\'a\').attr(\'href\') != undefined && $(this).find(\'a\').attr(\'href\') != \'\') {' . "\n" .
           $sPrefix . '          window.location = $(this).find(\'a\').attr(\'href\');' . "\n" .
-          $sPrefix . '          return true; // True closes the menu.' . "\n" .
+          $sPrefix . '          return false; // False doesn\'t close the menu, but at least it prevents double hits on the page we\'re going to.' . "\n" .
           $sPrefix . '        } else if ($(this).find(\'a\').attr(\'click\') != undefined) {' . "\n" .
           $sPrefix . '          eval($(this).find(\'a\').attr(\'click\'));' . "\n" .
           $sPrefix . '          return true; // True closes the menu.' . "\n" .
@@ -893,6 +995,50 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '    $(\'#viewentryOptionsButton_' . $sID . '\').jeegoocontext(\'viewentryMenu_' . $sID . '\', aMenuOptions);' . "\n" .
           $sPrefix . '  });' . "\n" .
           $sPrefix . '</SCRIPT>' . "\n\n");
+}
+
+
+
+
+
+function lovd_soapError ($e, $bHalt = true)
+{
+    // Formats SOAP errors for the error log, and optionally halts the system.
+
+    if (!is_object($e)) {
+        return false;
+    }
+
+    // Try to detect if arguments have been passed, and isolate them from the stacktrace.
+    $sMethod = '';
+    $sArgs = '';
+    foreach ($e->getTrace() as $aTrace) {
+        if (isset($aTrace['function']) && $aTrace['function'] == '__call') {
+            // This is the low level SOAP call. Isolate used method and arguments from here.
+            list($sMethod, $aArgs) = $aTrace['args'];
+            if ($aArgs && is_array($aArgs) && isset($aArgs[0])) {
+                $aArgs = $aArgs[0]; // Not sure why the call's argument are in a sub array, but oh, well.
+                foreach ($aArgs as $sArg => $sValue) {
+                    $sArgs .= (!$sArgs? '' : "\n") . "\t\t" . $sArg . ':' . $sValue;
+                }
+            }
+            break;
+        }
+    }
+
+    // Format the error message.
+    $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in module \'' . $sMethod . '\'.' . "\n" .
+        (!$sArgs? '' : 'Arguments:' . "\n" . $sArgs . "\n") .
+        'Error message:' . "\n" .
+        str_replace("\n", "\n\t\t", $e->__toString());
+
+    // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
+    // write it to the system log, and halt the system. Otherwise, just log it to the database.
+    if ($bHalt) {
+        return lovd_displayError('SOAP', $sError);
+    } else {
+        return lovd_writeLog('Error', 'SOAP', $sError);
+    }
 }
 
 
@@ -931,7 +1077,7 @@ function lovd_validateIP ($sRange, $sIP)
             } else {
                 $bPart = false;
                 break;
-            }            
+            }
         }
         $b = $bPart;
     }
@@ -1022,8 +1168,8 @@ function lovd_convertIniValueToBytes ($sValue)
     // FIXME; Implement proper checks here? Regexp?
 
     $nValue = (int) $sValue;
-    $sLast = strtolower($sValue[strlen($sValue) - 1]);
-    switch($sLast) {
+    $sLast = strtolower(substr($sValue, -1));
+    switch ($sLast) {
         case 'g':
             $nValue *= 1024;
         case 'm':

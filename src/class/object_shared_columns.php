@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2013-06-24
+ * For LOVD    : 3.0-06
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -76,6 +76,7 @@ class LOVD_SharedColumn extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'sc.*, ' .
+                                           'c.hgvs, ' .
                                            'c.form_type, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -158,7 +159,7 @@ class LOVD_SharedColumn extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
 
@@ -172,15 +173,19 @@ class LOVD_SharedColumn extends LOVD_Object {
 
         parent::checkFields($aData);
 
-        // Width can not be more than 3 digits.
-        if (!empty($aData['width']) && $aData['width'] > 999) {
-            $aData['width'] = 999;
-            lovd_errorAdd('width', 'The width can not be more than 3 digits!');
+        // Width can not be less than 20 or more than 500.
+        // These numbers are also defined in object_columns.php and inc-js-columns.php.
+        if (isset($aData['width']) && strlen($aData['width']) > 0) {
+            if ($aData['width'] > 500) {
+                lovd_errorAdd('width', 'The width can not be more than 500 pixels!');
+            } elseif ($aData['width'] < 20) {
+                lovd_errorAdd('width', 'The width can not be less than 20 pixels!');
+            }
         }
 
         // XSS attack prevention. Deny input of HTML.
-        // Ignore the 'Description on short legend' and 'Description on full legend' fields.
-        unset($aData['description_legend_short'], $aData['description_legend_full']);
+        // Ignore some fields that are allowed to contain HTML, or that might cause false positives.
+        unset($aData['description_form'], $aData['description_legend_short'], $aData['description_legend_full']);
         lovd_checkXSS($aData);
     }
 
@@ -215,6 +220,11 @@ class LOVD_SharedColumn extends LOVD_Object {
     {
         // Build the form.
 
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
         // Array which will make up the form table.
         $this->aFormData =
                  array(
@@ -226,7 +236,8 @@ class LOVD_SharedColumn extends LOVD_Object {
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Form settings</B>'),
-                        array('Notes on form (optional)', '', 'textarea', 'description_form', 50, 2),
+                        array('Notes on form (optional)<BR>(HTML enabled)', '', 'textarea', 'description_form', 50, 2),
+                        array('', '', 'note', 'If you think the data field needs clarification on the data entry form, add it here - it will appear below the field on the data entry form just like this piece of text.'),
            'options' => array('List of possible options', '', 'textarea', 'select_options', 50, 5),
       'options_note' => array('', '', 'note', 'This is used to build the available options for the selection list.<BR>One option per line.<BR>If you want to use abbreviations, use: Abbreviation = Long name<BR>Example: &quot;DMD = Duchenne Muscular Dystrophy&quot;'),
                         'hr',
@@ -266,8 +277,11 @@ class LOVD_SharedColumn extends LOVD_Object {
 
         if ($sView == 'list') {
             $zData['row_id']      = $zData['id'];
-            $zData['row_link']    = CURRENT_PATH . '/' . $zData['colid']; // Note: I chose not to use rawurlencode() here!
-            $zData['colid_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['colid'] . '</A>';
+            if ($this->sObjectID) {
+                // Can't use CURRENT_PATH here, because that might resolve to the ajax/viewlist.php file.
+                $zData['row_link'] = (ctype_digit($this->sObjectID)? 'diseases' : 'genes') . '/' . $this->sObjectID . '/columns/' . $zData['colid']; // Note: I chose not to use rawurlencode() here!
+                $zData['colid_']   = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['colid'] . '</A>';
+            }
             $zData['form_type_']  = lovd_describeFormType($zData);
         } else {
             // Remove unnecessary columns.

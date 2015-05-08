@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-01
- * Modified    : 2012-05-07
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2015-05-01
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -29,10 +29,12 @@
  *************/
 
 define('ROOT_PATH', './');
+header('Content-type: text/javascript; charset=UTF-8');
+header('Expires: ' . date('r', time()+(180*60)));
 require ROOT_PATH . 'inc-lib-init.php';
 
 // Find out whether or not we're using SSL.
-if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['SSL_PROTOCOL'])) {
+if ((!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['SSL_PROTOCOL'])) {
     // We're using SSL!
     define('PROTOCOL', 'https://');
 } else {
@@ -57,8 +59,6 @@ function lovd_AJAX_deleteLogEntry (sViewListID, sID)
                         lovd_AJAX_viewListHideRow(sViewListID, sID);
                         document.forms['viewlistForm_' + sViewListID].total.value --;
                         lovd_AJAX_viewListUpdateEntriesString(sViewListID);
-// FIXME; disable for IE or try to fix?
-                        // This one doesn't really work in IE 7 and IE 8. Other versions not known.
                         lovd_AJAX_viewListAddNextRow(sViewListID);
                         return true;
                     } else if (objHTTP.responseText == '8') {

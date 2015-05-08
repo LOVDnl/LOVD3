@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2012-06-17
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-03-11
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -56,7 +56,7 @@ class LOVD_Custom extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH, $_DB, $_SETT;
+        global $_AUTH, $_DB;
 
         $aArgs = array();
 
@@ -87,12 +87,11 @@ class LOVD_Custom extends LOVD_Object {
                             'FROM ' . TABLE_COLS . ' AS c ' .
                             'INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = c.id) ' .
                             'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
-                            'AND sc.geneid IN(?' . str_repeat(', ?', count($aArgs) - 1) . ') ' .
+                            'AND sc.geneid IN (?' . str_repeat(', ?', count($aArgs) - 1) . ') ' .
                             'ORDER BY sc.col_order, sc.colid';
                 }
-            } else {
+            } elseif ($this->nID) {
                 // FIXME; kan er niet wat specifieke info in de objects (e.g. object_phenotypes) worden opgehaald, zodat dit stukje hier niet nodig is?
-                // FIXME; don't we need a way to fetch all active custom column info, so we can make a general phenotype overview?
                 if ($this->sObject == 'Phenotype') {
                     $sSQL = 'SELECT c.*, sc.*, p.id AS phenotypeid ' .
                             'FROM ' . TABLE_COLS . ' AS c ' .
@@ -112,12 +111,22 @@ class LOVD_Custom extends LOVD_Object {
                             'ORDER BY sc.col_order';
                 }
                 $aArgs[] = $this->nID;
+            } else {
+                $sSQL = 'SELECT c.*, c.id AS colid ' .
+                        'FROM ' . TABLE_COLS . ' AS c ' .
+                        'WHERE c.id LIKE "' . $this->sCategory . '/%" ' .
+                        'ORDER BY c.col_order';
             }
         }
         $q = $_DB->query($sSQL, $aArgs);
         while ($z = $q->fetchAssoc()) {
             $z['custom_links'] = array();
             $z['form_type'] = explode('|', $z['form_type']);
+            // Modify form_type to include full legend text in second index of form_type.
+            if (!empty($z['description_legend_full'])) {
+                $z['form_type'][1] .= (empty($z['form_type'][1])? '' : '<BR>') . '<B>Legend: </B>' . str_replace(array("\r", "\n"), '', $z['description_legend_full']);
+            }
+
             $z['select_options'] = explode("\r\n", $z['select_options']);
             $this->aColumns[$z['id']] = $z;
         }
@@ -125,21 +134,22 @@ class LOVD_Custom extends LOVD_Object {
 
 
         // Gather the custom link information.
-        $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) WHERE c2l.colid LIKE ? GROUP BY l.id',
-            array($this->sCategory . '/%'))->fetchAllAssoc();
-        foreach ($aLinks as $aLink) {
-            $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text'])) . '/';
-            $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
-            $aCols = explode(';', $aLink['colids']);
-            foreach ($aCols as $sColID) {
-                if (isset($this->aColumns[$sColID])) {
-                    $this->aColumns[$sColID]['custom_links'][] = $aLink['id'];
+        // 2015-01-23; 3.0-13; But not when importing, then we don't need this at all.
+        if (lovd_getProjectFile() != '/import.php') {
+            $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) WHERE c2l.colid LIKE ? GROUP BY l.id',
+                array($this->sCategory . '/%'))->fetchAllAssoc();
+            foreach ($aLinks as $aLink) {
+                $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text'])) . '/';
+                $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
+                $aCols = explode(';', $aLink['colids']);
+                foreach ($aCols as $sColID) {
+                    if (isset($this->aColumns[$sColID])) {
+                        $this->aColumns[$sColID]['custom_links'][] = $aLink['id'];
+                    }
                 }
+                $this->aCustomLinks[$aLink['id']] = $aLink;
             }
-            $this->aCustomLinks[$aLink['id']] = $aLink;
         }
-
-
 
         parent::__construct();
 
@@ -150,8 +160,14 @@ class LOVD_Custom extends LOVD_Object {
             } else {
                 $sAlias = strtolower($this->sCategory{0});
             }
-            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
-            $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '"))';
+            $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '")') . '';
+            $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by = "' . $_AUTH['id'] . '")') . ')';
+            if ($this->sCategory == 'VariantOnGenome' && $_AUTH && (count($_AUTH['curates']) || count($_AUTH['collaborates']))) {
+                // Added so that Curators and Collaborators can view the variants for which they have viewing rights in the genomic variant viewlist.
+                $this->aSQLViewList['WHERE'] .= ' OR t.geneid IN ("' . implode('", "', array_merge($_AUTH['curates'], $_AUTH['collaborates'])) . '"))';
+            } else {
+                $this->aSQLViewList['WHERE'] .= ')';
+            }
         }
     }
 
@@ -162,12 +178,13 @@ class LOVD_Custom extends LOVD_Object {
     function buildFields ()
     {
         // Gathers the columns to be used for lovd_(insert/update)Entry and returns them
-        // FIXME; Neither are used yet. When authorization is added to this function, then they will.
-        // global $_AUTH, $_PE;
+        global $_AUTH;
 
         $aFields = array();
         foreach($this->aColumns as $sCol => $aCol) {
-            // FIXME; implement a check for authorization to create/edit each columns using lovd_isAuthorized(), public_view && public_add.
+            if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
+                continue;
+            }
             $aFields[] = $sCol;
         }
         return $aFields;
@@ -180,9 +197,13 @@ class LOVD_Custom extends LOVD_Object {
     function buildForm ($sPrefix = '')
     {
         // Builds the array needed to display the form.
+        global $_AUTH;
         $aFormData = array();
 
         foreach ($this->aColumns as $sCol => $aCol) {
+            if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
+                continue;
+            }
             // Build what type of form entry?
             $aEntry = array();
             if ($aCol['form_type'][2] != 'select') {
@@ -190,7 +211,7 @@ class LOVD_Custom extends LOVD_Object {
                 foreach ($aCol['form_type'] as $key => $val) {
                     if (!$key && !$aCol['mandatory']) {
                         // Add '(Optional)'.
-                        $val .= ' (Optional)';
+                        $val .= ' (optional)';
                     }
                     $aEntry[] = $val;
                     if ($key == 2) {
@@ -206,7 +227,7 @@ class LOVD_Custom extends LOVD_Object {
                 foreach ($aCol['form_type'] as $key => $val) {
                     if (!$key && !$aCol['mandatory']) {
                         // Add '(Optional)'.
-                        $val .= ' (Optional)';
+                        $val .= ' (optional)';
                     } elseif ($key == 3) { // Size
                         // We need to place the form entry name (e.g. "Individual/Gender") in between.
                         $aEntry[] = $sPrefix . $sCol;
@@ -217,6 +238,7 @@ class LOVD_Custom extends LOVD_Object {
                             if (substr_count($sLine, '=')) {
                                 list($sKey, $sVal) = explode('=', $sLine, 2);
                                 $sVal = lovd_shortenString(trim($sVal), 75);
+                                // NOTE: This array *refuses* to create string keys if the contents are integer strings. So the keys can actually be integers.
                                 $aData[trim($sKey)] = $sVal;
                             } else {
                                 $sVal = trim($sLine);
@@ -292,8 +314,12 @@ class LOVD_Custom extends LOVD_Object {
     function buildViewEntry ()
     {
         // Gathers the columns which are active for the current data type and returns them in a viewEntry format
+        global $_AUTH;
         $aViewEntry = array();
         foreach ($this->aColumns as $sID => $aCol) {
+            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+                continue;
+            }
             $aViewEntry[$sID] = $aCol['head_column'];
         }
         return $aViewEntry;
@@ -306,14 +332,19 @@ class LOVD_Custom extends LOVD_Object {
     function buildViewList ()
     {
         // Gathers the columns which are active for the current data type and returns them in a viewList format
+        global $_AUTH;
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
-            $bAlignRight = preg_match('/^(DEC|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);
-            
-            $aViewList[$sID] = 
+            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+                continue;
+            }
+            $bAlignRight = preg_match('/^(DEC|FLOAT|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);
+
+            $aViewList[$sID] =
                             array(
-                                    'view' => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
-                                    'db'   => array('`' . $aCol['colid'] . '`', 'ASC', true),
+                                    'view'   => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
+                                    'db'     => array('`' . $aCol['colid'] . '`', 'ASC', lovd_getColumnType('', $aCol['mysql_type'])),
+                                    'legend' => array($aCol['description_legend_short'], $aCol['description_legend_full']),
                                  );
         }
         return $aViewList;
@@ -323,43 +354,49 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
-        global $_AUTH, $_SETT, $_DB;
+        global $_AUTH;
         // Checks fields before submission of data.
         foreach ($this->aColumns as $sCol => $aCol) {
             if ($aCol['mandatory']) {
                 $this->aCheckMandatory[] = $sCol;
             }
-            if (isset($aData[$sCol])) {
+            // Make it easier for users to fill in the age fields. Change 5d into 00y00m05d, for instance.
+            if (preg_match('/\/Age(\/.+|_.+)?$/', $sCol) && $aData[$sCol] && preg_match('/^([<>])?(\d{1,2}y)?(\d{1,2}m)?(\d{1,2}d)?(\?)?$/', $aData[$sCol], $aRegs)) {
+                $aRegs = array_pad($aRegs, 6, '');
+                if ($aRegs[2] || $aRegs[3] || $aRegs[4]) {
+                    // At least some data needs to be filled in!
+                    // First, pad the numbers.
+                    foreach ($aRegs as $key => $val) {
+                        if (preg_match('/^\d{1}[ymd]$/', $val)) {
+                            $aRegs[$key] = '0' . $val;
+                        }
+                    }
+                    // Then, glue everything together.
+                    $aData[$sCol] = $_POST[$sCol] = $aRegs[1] . (!$aRegs[2]? '00y' : $aRegs[2]) . (!$aRegs[3] && $aRegs[4]? '00m' : $aRegs[3]) . (!$aRegs[4]? '' : $aRegs[4]) . (!$aRegs[5]? '' : $aRegs[5]);
+                }
+            }
+            if (!empty($aData[$sCol])) {
                 $this->checkInputRegExp($sCol, $aData[$sCol]);
                 $this->checkSelectedInput($sCol, $aData[$sCol]);
             }
         }
 
-        if (!empty($aData['owned_by'])) {
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id = ?', array($aData['owned_by']))->fetchColumn()) {
-                    // FIXME; clearly they haven't used the selection list, so possibly a different error message needed?
-                    lovd_errorAdd('owned_by', 'Please select a proper owner from the \'Owner of this data\' selection box.');
-                }
-            } else {
+        if ($_AUTH['level'] < LEVEL_CURATOR) {
+            if (!empty($aData['owned_by'])) {
                 // FIXME; this is a hack attempt. We should consider logging this. Or just plainly ignore the value.
                 lovd_errorAdd('owned_by', 'Not allowed to change \'Owner of this data\'.');
             }
-        }
 
-        if (!empty($aData['statusid'])) {
-            $aSelectStatus = $_SETT['data_status'];
-            unset($aSelectStatus[STATUS_IN_PROGRESS], $aSelectStatus[STATUS_PENDING]);
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                if (!array_key_exists($aData['statusid'], $aSelectStatus)) {
-                    lovd_errorAdd('statusid', 'Please select a proper status from the \'Status of this data\' selection box.');
-                }
-            } else {
-                // FIXME; wie, lager dan LEVEL_CURATOR, komt er op dit formulier? Alleen de data owner. Moet die de status kunnen aanpassen?
+            if (!empty($aData['statusid'])) {
                 lovd_errorAdd('statusid', 'Not allowed to set \'Status of this data\'.');
             }
+        }
+
+        if (lovd_getProjectFile() == '/import.php' && $this->sObject == 'Genome_Variant' && ($nIndex = array_search('VariantOnGenome/DBID', $this->aCheckMandatory)) !== false) {
+            // Importing, and in VOG. Make the DBID non-mandatory, because it will be predicted by the import script when it's empty.
+            unset($this->aCheckMandatory[$nIndex]);
         }
 
         parent::checkFields($aData);
@@ -373,9 +410,9 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Checks if field input corresponds to the given regexp pattern.
         $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
-        if ($this->aColumns[$sColClean]['preg_pattern'] && !empty($_POST[$sCol])) {
+        if ($this->aColumns[$sColClean]['preg_pattern'] && $val) {
             if (!preg_match($this->aColumns[$sColClean]['preg_pattern'], $val)) {
-                lovd_errorAdd($sCol, 'The input in the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' field does not correspond to the required input pattern.');
+                lovd_errorAdd($sCol, 'The input in the \'' . (lovd_getProjectFile() == '/import.php'? $sColClean : $this->aColumns[$sColClean]['form_type'][0]) . '\' field does not correspond to the required input pattern.');
             }
         }
     }
@@ -391,16 +428,60 @@ class LOVD_Custom extends LOVD_Object {
         if ($this->aColumns[$sColClean]['form_type'][2] == 'select' && $this->aColumns[$sColClean]['form_type'][3] >= 1) {
             if (!empty($Val)) {
                 $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sColClean]['select_options']); // Trim whitespace from the options.
-                (!is_array($Val)? $Val = array($Val) : false);
+                if (lovd_getProjectFile() == '/import.php') {
+                    $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
+                } elseif (!is_array($Val)) {
+                    $Val = array($Val);
+                } elseif (GET) {
+                    // 2013-10-15; 3.0-08; Not importing, $Val is already an array, and we're here using GET.
+                    // When directly publishing an entry, not having filled in a selection list will trigger
+                    // an error when an empty string is not an option in this selection list.
+                    if ($Val === array('') && !in_array('', $aOptions)) {
+                        // Error would be triggered wrongly.
+                        $Val = array();
+                    }
+                }
                 foreach ($Val as $sValue) {
                     $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
                     if (!in_array($sValue, $aOptions)) {
-                        lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                        if (lovd_getProjectFile() == '/import.php') {
+                            lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $sColClean . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aOptions) . '\'.');
+                        } else {
+                            lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                        }
                         break;
                     }
                 }
             }
         }
+    }
+
+
+
+
+
+    function colExists ($sCol)
+    {
+        // Returns true if column exists.
+        return (isset($this->aColumns[$sCol]));
+    }
+
+
+
+
+
+    function getStatusColor ($nStatusID)
+    {
+        // Returns the color coding that fits the given status.
+
+        if ($nStatusID < STATUS_MARKED) {
+            $sColor = 'F00'; // Red.
+        } elseif ($nStatusID < STATUS_OK) {
+            $sColor = 'A30'; // Dark red.
+        } else {
+            $sColor = '0A0'; // Green.
+        }
+        return $sColor;
     }
 
 
@@ -455,8 +536,14 @@ class LOVD_Custom extends LOVD_Object {
 
     function prepareData ($zData = '', $sView = 'list')
     {
+        // Prepares the data before returning it to the user.
+        global $_AUTH, $_SETT;
+
         $zData = parent::prepareData($zData, $sView);
         foreach ($this->aColumns as $sCol => $aCol) {
+            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+                continue;
+            }
             if (!empty($aCol['custom_links'])) {
                 foreach ($aCol['custom_links'] as $nLink) {
                     $sRegexpPattern = $this->aCustomLinks[$nLink]['regexp_pattern'];
@@ -467,6 +554,10 @@ class LOVD_Custom extends LOVD_Object {
                     $zData[$aCol['id']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['id']]);
                 }
             }
+        }
+        // Mark the status, if shown on the page.
+        if ($sView == 'entry' && isset($zData['statusid'])) {
+            $zData['status'] = '<SPAN style="color : #' . $this->getStatusColor($zData['statusid']) . '">' . $_SETT['data_status'][$zData['statusid']] . '</SPAN>';
         }
         return $zData;
     }

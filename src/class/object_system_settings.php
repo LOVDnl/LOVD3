@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-04-18
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2014-10-09
+ * For LOVD    : 3.0-12
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -49,7 +49,7 @@ class LOVD_SystemSetting extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
         global $_SETT;
@@ -64,7 +64,7 @@ class LOVD_SystemSetting extends LOVD_Object {
 
         // Database URL is mandatory, if the option "Include in the global LOVD listing" is selected.
         if (!empty($aData['include_in_listing']) && empty($aData['location_url'])) {
-            lovd_errorAdd('location_url', 'Please fill in an URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing.');
+            lovd_errorAdd('location_url', 'Please fill in an URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing; otherwise disable the \'Include in the global LOVD listing\' setting below.');
         }
 
         // Database URL should be an URL.
@@ -95,14 +95,27 @@ class LOVD_SystemSetting extends LOVD_Object {
                 $f = @fsockopen($aData['proxy_host'], $aData['proxy_port'], $nError, $sError, 5);
                 if ($f === false) {
                     lovd_errorAdd('proxy_host', 'Could not connect to given proxy server. Please check if the fields are correctly filled in.');
+                    lovd_errorAdd('proxy_port', '');
                 } else {
                     $sRequest = 'GET ' . $_SETT['check_location_URL'] . ' HTTP/1.0' . "\r\n" .
                                 'User-Agent: LOVDv.' . $_SETT['system']['version'] . " Proxy Check\r\n" . // Will be passed on to LOVD.nl.
-                                'Connection: Close' . "\r\n\r\n";
+                        (empty($_POST['proxy_username']) || empty($_POST['proxy_password'])? '' :
+                            'Proxy-Authorization: Basic ' . base64_encode($_POST['proxy_username'] . ':' . $_POST['proxy_password']) . "\r\n") .
+                        'Connection: Close' . "\r\n\r\n";
                     fputs($f, $sRequest);
                     $s = rtrim(fgets($f));
                     if (!preg_match('/^HTTP\/1\.. [23]/', $s, $aRegs)) { // Allowing HTTP 2XX and 3XX.
-                        lovd_errorAdd('proxy_host', 'Unexpected answer from proxy when trying to connect upstream: ' . $s);
+                        if (preg_match('/^HTTP\/1\.. 407/', $s, $aRegs)) { // Proxy needs username and password.
+                            if (!empty($_POST['proxy_username']) && !empty($_POST['proxy_password'])) {
+                                lovd_errorAdd('proxy_username', 'Invalid username/password combination for this proxy server. Please try again.');
+                                lovd_errorAdd('proxy_password', '');
+                            } else {
+                                lovd_errorAdd('proxy_username', 'This proxy server requires a valid username and password. Please make sure you provide them both.');
+                                lovd_errorAdd('proxy_password', '');
+                            }
+                        } else {
+                            lovd_errorAdd('proxy_host', 'Unexpected answer from proxy when trying to connect upstream: ' . $s);
+                        }
                     }
                 }
             }
@@ -125,19 +138,19 @@ class LOVD_SystemSetting extends LOVD_Object {
             }
         } else {
             // FIXME; this is probably not the best way of doing this...
-            $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
+            $_POST['logo_uri'] = 'gfx/LOVD3_logo145x50.jpg';
         }
-        
+
         // FIXME; Like above, not the best solution, but gets the job done for now.
         if (empty($aData['mutalyzer_soap_url'])) {
-            $_POST['mutalyzer_soap_url'] = 'http://www.mutalyzer.nl/2.0/services';
+            $_POST['mutalyzer_soap_url'] = 'https://mutalyzer.nl/services';
         }
-        
+
         // SSL check.
         if (!empty($aData['use_ssl']) && !SSL) {
             lovd_errorAdd('use_ssl', 'You\'ve selected to force the use of SSL, but SSL is not currently activated for this session. To force SSL, I must be sure it\'s possible to approach LOVD through an SSL connection (use <A href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . ($_SERVER['QUERY_STRING']? '?' . str_replace('&sent=true', '', $_SERVER['QUERY_STRING']) : '') . '" target="_blank">https://</A> instead of http://).');
         }
-        
+
         $_POST['api_feed_history'] = 0;
         $_POST['allow_count_hidden_entries'] = 0;
         $_POST['use_versioning'] = 0;
@@ -151,12 +164,20 @@ class LOVD_SystemSetting extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
         global $_SETT;
 
         $aHumanBuilds = array();
         foreach ($_SETT['human_builds'] as $sCode => $aBuild) {
             $aHumanBuilds[$sCode] = $sCode . ' / ' . $aBuild['ncbi_name'];
         }
+        // No more hg18! We'll support LOVDs having this setting, but we won't allow new installations to pick this setting.
+        unset($aHumanBuilds['hg18']);
 
         $aFeedHistory = array('Not available');
         for ($i = 1; $i <= 12; $i ++) {
@@ -169,9 +190,9 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('', '', 'print', '<B>General system settings</B>'),
                         'hr',
                         array('Title of this LOVD installation', 'This will be shown on the top of every page.', 'text', 'system_title', 45),
-                        array('Institute (optional)', 'The institute which runs this database is displayed in the public area and in emails sent by LOVD. Is commonly set to a laboratory name or a website name.', 'text', 'institute', 45),
+                        array('Institute (optional)', 'The institute which runs this database is displayed in the public area and in emails sent by LOVD. It\'s commonly set to a laboratory name or a website name.', 'text', 'institute', 45),
                         array('Database URL (optional)', 'This is the URL with which the database can be accessed by the outside world, including "http://" or "https://". It will also be used in emails sent by LOVD. This field is mandatory if you select the "Include in the global LOVD listing" option.<BR>If you click the "check" link, LOVD will verify or try to predict the value.', 'print', '<INPUT type="text" name="location_url" size="40" id="location_url" value="' . (empty($_POST['location_url'])? '' : htmlspecialchars($_POST['location_url'])) . '"' . (!lovd_errorFindField('location_url')? '' : ' class="err"') . '>&nbsp;<SPAN id="location_url_check">(<A href="#" onclick="javascript:lovd_checkURL(); return false;">check</A>)</SPAN>'),
-                        array('LOVD email address', 'This email address will be used to send emails from LOVD to users. We need this address to make sure that emails from LOVD arrive. Please note that although strictly spoken this email address does not need to exist, we recommend that you use a valid address.', 'text', 'email_address', 40),
+                        array('LOVD email address', 'This email address will be used to send emails from LOVD to users. We need this address to make sure that emails from LOVD arrive. Please note that although strictly speaking this email address does not need to exist, we recommend that you use a valid address.', 'text', 'email_address', 40),
                         array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'checkbox', 'send_admin_submissions'),
       'refseq_build' => array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
                         //array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'select', 'api_feed_history', 1, $aFeedHistory, false, false, false),
@@ -180,15 +201,20 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'skip',
                         'skip',
                         array('', '', 'print', '<B>Connection settings (optional)</B>'),
-                        array('', '', 'note', 'Some networks have no access to the outside world except through a proxy. If this applies to the network this server is installed on, please fill in the proxy server information here.'),
+                        array('', '', 'note', 'The following settings apply to how LOVD connects to other resources.<BR>Some networks have no access to the outside world except through a proxy. If this applies to the network this server is installed on, please fill in the proxy server information here.'),
                         'hr',
+//                     array('OMIM API key', 'LOVD can connect to OMIM.org to retrieve information about diseases, genes and phenotypes. Connecting to OMIM requires an API key. OMIM unfortunately does not allow us to use one key for all LOVDs, so you\'ll have to register at OMIM.org to request your own.', 'text', 'proxy_host', 20),
                         array('Proxy server host name', 'The host name of the proxy server, such as www-cache.institution.edu.', 'text', 'proxy_host', 20),
                         array('Proxy server port number', 'The port number of the proxy server, such as 3128.', 'text', 'proxy_port', 4),
+                        'skip',
+                        array('', '', 'note', 'The following two fields only apply if the proxy server requires authentication.'),
+                        array('Proxy server username', 'In case the proxy server requires authentication, please enter the required username here.', 'text', 'proxy_username', 20),
+                        array('Proxy server password', 'In case the proxy server requires authentication, please enter the required password here.', 'password', 'proxy_password', 20),
                         'hr',
                         'skip',
                         'skip',
                         array('', '', 'print', '<B>Customize LOVD</B>'),
-                        array('', '', 'note', 'Here you can customize the way LOVD looks. We will add new options here later.'),
+                        array('', '', 'note', 'Here you can customize the way LOVD looks. We will add more options here later.'),
                         'hr',
                         array('System logo', 'If you wish to have your custom logo on the top left of every page instead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.', 'text', 'logo_uri', 40),
                         array('', '', 'note', 'Currently, only images already uploaded to the LOVD server are allowed here.'),
@@ -198,7 +224,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('', '', 'print', '<B>Global LOVD statistics</B>'),
                         array('', '', 'note', 'The following settings apply to the kind of information your LOVD install sends to the development team to gather statistics about global LOVD usage.'),
                         'hr',
-                        array('Send statistics?', 'This sends <I>anonymous</I> statistics about the number of submitters, genes, individuals and mutations in your installation of LOVD.', 'checkbox', 'send_stats'),
+                        array('Send statistics?', 'This sends <I>anonymous</I> statistics about the number of submitters, genes, individuals and variants in your installation of LOVD.', 'checkbox', 'send_stats'),
                         array('Include in the global LOVD listing?', 'We keep a public listing of LOVD installations, their genes and their URLs. Deselect this checkbox if you do not want to be included in this public listing.', 'checkbox', 'include_in_listing'),
                         'hr',
                         'skip',
@@ -235,8 +261,8 @@ class LOVD_SystemSetting extends LOVD_Object {
         $_POST['location_url'] = ($_SERVER['HTTP_HOST'] == 'localhost' || lovd_matchIPRange($_SERVER['HTTP_HOST'])? '' : lovd_getInstallURL());
         $_POST['refseq_build'] = 'hg19';
         $_POST['api_feed_history'] = 3;
-        $_POST['logo_uri'] = 'gfx/LOVD_logo130x50.jpg';
-        $_POST['mutalyzer_soap_url'] = 'http://www.mutalyzer.nl/2.0/services';
+        $_POST['logo_uri'] = 'gfx/LOVD3_logo145x50.jpg';
+        $_POST['mutalyzer_soap_url'] = 'https://mutalyzer.nl/services';
         $_POST['send_stats'] = 1;
         $_POST['include_in_listing'] = 1;
         $_POST['allow_submitter_mods'] = 1;

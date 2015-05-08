@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2012-01-04
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2014-07-25
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -30,10 +29,12 @@
  *************/
 
 define('ROOT_PATH', '../');
+session_cache_limiter('public'); // Stops the session from sending any cache or no-cache headers. Alternative: ini_set() session.cache_limiter.
 require ROOT_PATH . 'inc-init.php';
+header('Expires: ' . date('r', time()+(24*60*60))); // HGVS syntax check result expires in a day.
 session_write_close();
 
-if (empty($_GET['variant']) || !preg_match('/^(c:c|g:g)\..+$/', $_GET['variant'])) {
+if (empty($_GET['variant']) || !preg_match('/^(c:[c|n]|g:g)\..+$/', $_GET['variant'])) {
     die(AJAX_DATA_ERROR);
 }
 
@@ -46,12 +47,16 @@ if (!$_AUTH) {
     die(AJAX_NO_AUTH);
 }
 
-require ROOT_PATH . 'class/REST2SOAP.php';
-$_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+require ROOT_PATH . 'class/soap_client.php';
+$_Mutalyzer = new LOVD_SoapClient();
+try {
+    $aOutput = $_Mutalyzer->checkSyntax(array('variant' => $_GET['variant']))->checkSyntaxResult;
+} catch (SoapFault $e) {
+    die(AJAX_UNKNOWN_RESPONSE);
+}
 
-$aOutput = $_MutalyzerWS->moduleCall('checkSyntax', array('variant' => $_GET['variant']));
-if (isset($aOutput['valid']) && $aOutput['valid'][0]['v'] == 'true') {
-    die(AJAX_TRUE); 
+if (isset($aOutput->valid) && $aOutput->valid) {
+    die(AJAX_TRUE);
 } else {
     die(AJAX_FALSE);
 }

@@ -18,12 +18,14 @@ php_flag mysql.trace_mode Off
     RewriteEngine On
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api(.*)$ api.php
     RewriteRule ^check_update(.*)$ check_update.php
     RewriteRule ^columns(.*)$ columns.php
+    RewriteRule ^configuration(.*)$ configuration.php
     RewriteRule ^diseases(.*)$ diseases.php
-    RewriteRule ^docs(.*)$ docs.php
     RewriteRule ^download(.*)$ download.php
     RewriteRule ^genes(.*)$ genes.php
+    RewriteRule ^import(.*)$ import.php
 #    RewriteRule ^install(.*)$ install/index.php # I'm having trouble using /install?etc because Apache is redirecting to /install/?etc which loses the $_POST info. Very annoying.
     RewriteRule ^individuals(.*)$ individuals.php
     RewriteRule ^links(.*)$ links.php
@@ -32,6 +34,7 @@ php_flag mysql.trace_mode Off
     RewriteRule ^logs(.*)$ logs.php
     RewriteRule ^pedigree(.*)$ pedigree.php
     RewriteRule ^phenotypes(.*)$ phenotypes.php
+    RewriteRule ^references(.*)$ references.php
     RewriteRule ^reset_password(.*)$ reset_password.php
     RewriteRule ^screenings(.*)$ screenings.php
     RewriteRule ^settings(.*)$ settings.php

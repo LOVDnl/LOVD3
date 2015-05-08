@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-06-22
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2014-12-11
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -31,11 +31,15 @@
  *************/
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
+require ROOT_PATH . 'inc-lib-actions.php';
 require ROOT_PATH . 'inc-lib-genes.php';
 require ROOT_PATH . 'inc-lib-form.php';
-require ROOT_PATH . 'class/REST2SOAP.php';
-$_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+require ROOT_PATH . 'class/soap_client.php';
+$_Mutalyzer = new LOVD_SoapClient();
 define('LOG_EVENT', 'AutomaticMapping');
+//header('Content-type: text/javascript; charset=UTF-8'); // When this header is enabled, jQuery doesn't like the script anymore because it assumes JSON, see the dataType setting.
+//$tStart = microtime(true);
+//var_dump(__LINE__ . ':' . (microtime(true) - $tStart));
 
 // We want to finish the mapping, even if the connection with the browser is lost while working.
 ignore_user_abort(true);
@@ -64,7 +68,7 @@ function lovd_updateVariantsOnExit ()
 
     // Restore the working directory.
     chdir(WORKING_DIRECTORY);
-    
+
     if (!empty($aVariantUpdates)) {
         $_DB->query('UPDATE '. TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_IN_PROGRESS . ' WHERE id IN(?' . str_repeat(', ?', count($aVariantUpdates) - 1) . ')', array_keys($aVariantUpdates));
     }
@@ -82,31 +86,32 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
     // $aTranscripts is a two-dimensional array; each transcript is an array with keys 'id' (optional) and 'id_ncbi' (mandatory).
     // Returns an associative array of the same length as $aTranscripts with the 'id_ncbi' values as keys, or FALSE on failure.
     // On success, each element contains an array with a ?-filled SQL query and an array of values. If the transcript ID is not given, the value array's element [1] contains NULL.
-    // The value array's element [7], for the VariantOnTranscript/Protein column, contains an empty string and is to be overwritten by runMutalyzer output.
+    // The value array's elements [8] and [9], for the VariantOnTranscript/RNA and VariantOnTranscript/Protein columns, contain empty strings and are to be overwritten by runMutalyzer output.
     // On failure of a single transcript, the corresponding element contains FALSE.
-    global $_MutalyzerWS, $_CONF, $_SETT;
+    global $_Mutalyzer, $_CONF, $_SETT;
     static $aVariantsOnTranscripts = array();
 
-    
+
     if (!isset($aVariant['id']) || !isset($aVariant['VariantOnGenome/DNA']) || !is_array($aTranscripts)) {
         // Invalid arguments.
         return false;
     }
-    
-    
+
+
     $aReturn = array();
     if (!empty($aTranscripts)) {
-        
         // Get the variant descriptions in c. notation.
         $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$aVariant['chromosome']] . ':' . $aVariant['VariantOnGenome/DNA'];
         if (!isset($aVariantsOnTranscripts[$sVariant])) {
             // We haven't run numberConversion for this variant before.
-            $aVariantsOnTranscripts[$sVariant] = $_MutalyzerWS->moduleCall('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => $sVariant));
-            if (!empty($aVariantsOnTranscripts[$sVariant]['string'])) {
-                $aVariantsOnTranscripts[$sVariant] = $aVariantsOnTranscripts[$sVariant]['string'];
-            } // If moduleCall fails (bad variant description?) it will return an empty string, so no 'else' needed here.
+            try {
+                $aVOTs = $_Mutalyzer->numberConversion(array('build' => $_CONF['refseq_build'], 'variant' => $sVariant))->numberConversionResult->string;
+            } catch (SoapFault $e) {
+                $aVOTs = array();
+            }
+            $aVariantsOnTranscripts[$sVariant] = $aVOTs;
         }
-        
+
         if (empty($aVariantsOnTranscripts[$sVariant]) || !is_array($aVariantsOnTranscripts[$sVariant])) {
             return false;
         }
@@ -122,7 +127,11 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
                 $aReturn[$aTranscript['id_ncbi']] = false;
                 continue;
             }
-            $aMappingInfo = lovd_getAllValuesFromArray('', $_MutalyzerWS->moduleCall('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript['id_ncbi'], 'variant' => $aVariant['VariantOnGenome/DNA'])));
+            try {
+                $aMappingInfo = get_object_vars($_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript['id_ncbi'], 'variant' => $aVariant['VariantOnGenome/DNA']))->mappingInfoResult);
+            } catch (SoapFault $e) {
+                $aMappingInfo = array();
+            }
             if (!isset($aMappingInfo['startmain']) || $aMappingInfo['startmain'] === '') {
                 if ($aMappingInfo['errorcode']) {
                     // Got an error from Mutalyzer.
@@ -131,14 +140,14 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
                 $aReturn[$aTranscript['id_ncbi']] = false;
                 continue;
             }
-            foreach ($aVariantsOnTranscripts[$sVariant] as $aVariantOnTranscript) {
-                $sVariantOnTranscript = lovd_getValueFromElement('', $aVariantOnTranscript);
+            foreach ($aVariantsOnTranscripts[$sVariant] as $sVariantOnTranscript) {
                 if (substr($sVariantOnTranscript, 0, strlen($aTranscript['id_ncbi'])) == $aTranscript['id_ncbi']) {
                     // Got the variant description relative to this transcript.
                     $aReturn[$aTranscript['id_ncbi']] =
                          array(
-                                'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, 55, ?, ?, ?, ?, ?, ?)',
-                                array($aVariant['id'], isset($aTranscript['id'])? $aTranscript['id'] : NULL, $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], substr($sVariantOnTranscript, strpos($sVariantOnTranscript, ':c.') + 1), '')
+                                // NOTE that is this array is changed, and the order or the number of arguments changes, then also in other places the code needs to be modified, because this array is manipulated directly using its numeric keys.
+                                'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/RNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                                array($aVariant['id'], (isset($aTranscript['id'])? $aTranscript['id'] : NULL), $_SETT['var_effect_default'], $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], preg_replace('/^[A-Z]{2}_[0-9.]+:/', '', $sVariantOnTranscript), '', '')
                               );
                     continue 2;
                 }
@@ -154,7 +163,16 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
 
 
 // Update progress data.
+// Store total variants that need to be mapped in SESSION. We want to nicely show the progress.
+if (!isset($_SESSION['mapping']['total_todo'])) {
+    $_SESSION['mapping']['total_todo'] = 0;
+}
+// 0.5 sec for 1M variants. Add index to mapping_flags and/or position_g_start to speed up?
 $_SESSION['mapping']['todo'] = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL')->fetchColumn();
+if ($_SESSION['mapping']['todo'] > $_SESSION['mapping']['total_todo']) {
+    // We didn't have a total set yet, or more variants were added in the process that now need to be mapped as well.
+    $_SESSION['mapping']['total_todo'] = $_SESSION['mapping']['todo'];
+}
 $_SESSION['mapping']['time_complete'] = 0;
 
 // Now we unlock the session. We'll update the unmappable, todo and time_complete values
@@ -172,23 +190,47 @@ $nVariants = 0;
 
 
 // Check if all transcripts have their positions and the mutalyzer ID correctly set; if not, fix before we start to do any type of mapping.
-$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE t.position_g_mrna_end = 0 OR t.id_mutalyzer = NULL ORDER BY Rand() LIMIT 10')->fetchAllAssoc();
+// 0.12 sec for 22K transcripts.
+// FIXME: Would be better to pick a random gene to do this on, instead of a random transcript, and continuously repeat the call for each gene if there is more than one transcript.
+$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.refseq_UD != "" AND (t.position_g_mrna_end = 0 OR t.id_mutalyzer IS NULL) ORDER BY RAND() LIMIT 10')->fetchAllAssoc();
 if ($zTranscripts) {
     foreach ($zTranscripts as $aTranscript) {
-        $aOutput = $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']));
-        if (!empty($aOutput)) {
-            $aTranscriptsInfo = lovd_getElementFromArray('TranscriptInfo', $aOutput, '');
-            foreach ($aTranscriptsInfo as $aTranscriptInfo) {
-                $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscriptInfo['c']);
+        try {
+            // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
+            $aOutput = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']))->getTranscriptsAndInfoResult->TranscriptInfo;
+        } catch (SoapFault $e) {}
+        if (!empty($aOutput) && is_array($aOutput)) {
+            foreach ($aOutput as $oTranscriptInfo) {
+                $aTranscriptValues = get_object_vars($oTranscriptInfo);
                 // Check if the given NM is in the output, disregard version for now.
                 if (preg_replace('/\.\d+/', '', $aTranscript['id_ncbi']) == preg_replace('/\.\d+/', '', $aTranscriptValues['id'])) {
+                    // 2014-06-12; 3.0-11; Sometimes we don't receive chrom* values, for instance when using an NG (doesn't always happen). Set this to prevent endless loop.
+                    if (empty($aTranscriptValues['chromTransStart'])) {
+                        $aTranscriptValues['chromTransStart'] = (empty($aTranscriptValues['gTransStart'])? 1 : $aTranscriptValues['gTransStart']);
+                    }
+                    if (empty($aTranscriptValues['chromTransEnd'])) {
+                        $aTranscriptValues['chromTransEnd'] = (empty($aTranscriptValues['gTransEnd'])? 1 : $aTranscriptValues['gTransEnd']);
+                    }
                     $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = ?, position_c_mrna_start = ?, position_c_mrna_end = ?, position_c_cds_end = ?, position_g_mrna_start = ?, position_g_mrna_end = ?' .
                     // Check if the exact version is the same, otherwise mark the transcript as expired.
                     ($aTranscriptValues['id'] == $aTranscript['id_ncbi'] || strpos($aTranscript['id_ncbi'], 'expired') !== false? '' : ', name = CONCAT(name, " (expired, new version available)")') .
                     ' WHERE id = ?', array(str_replace($aTranscript['geneid'] . '_v', '', $aTranscriptValues['name']), $aTranscriptValues['cTransStart'], $aTranscriptValues['sortableTransEnd'], $aTranscriptValues['cCDSStop'], $aTranscriptValues['chromTransStart'], $aTranscriptValues['chromTransEnd'], $aTranscript['id']));
-                    break;
+                    continue 2;
                 }
             }
+            // If we get here, the transcript got removed.
+            $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1' .
+            // Mark the transcript as removed, if not done already.
+            (strpos($aTranscript['id_ncbi'], 'removed') !== false? '' : ', name = CONCAT(name, " (removed from reference sequence)")') .
+            ' WHERE id = ?', array($aTranscript['id']));
+        } else {
+            // 2014-02-27; 3.0-10; There's more than just either arrays or empty strings... preventing endless loop by putting an else here.
+            // Received "senv:Server - list index out of range" a few times.
+//        } elseif ($aOutput === '') {
+            // UD file does not contain any transcripts? Reload UD?
+            // FIXME; Temporary fix.
+            $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1 WHERE id = ?', array($aTranscript['id']));
+            continue;
         }
     }
     // The "preparing" type of image shows an animation; we don't want to show the progress but still the user should see we're doing something.
@@ -236,19 +278,27 @@ if (!empty($_GET['variantid'])) {
 // Automatic mapping of variants in the background (not a specifically requested variant).
 } elseif ($_SESSION['mapping']['todo'] > 0) {
     // Randomly select some adjacent variants that await mapping.
+    // But when a position is given, focus on that (starting) position first.
+    $aArgs = array();
+    if (!empty($_GET['position']) && preg_match('/^chr([0-9A-Z]{1,2}):(\d+)$/', $_GET['position'], $aRegs)) {
+        $aArgs = array($aRegs[1], $aRegs[2]);
+    }
+    // Order by RAND() takes >1s with 1M variants, so no random pick when more than 10K variants.
+    // Nonetheless, with 2M variants, this Q shows up in the slow log thousands of times.
     $aVariants = $_DB->query('SELECT id, vog.chromosome, vog.position_g_start, position_g_end, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
                              'FROM ' . TABLE_VARIANTS . ' AS vog, (' .
                                  'SELECT chromosome, position_g_start ' .
                                  'FROM ' . TABLE_VARIANTS . ' ' .
                                  'WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' AND position_g_start IS NOT NULL ' .
-                                 'ORDER BY RAND() ' .
+                                 (empty($aArgs)? '' : 'AND chromosome = ? AND position_g_start >= ? ') .
+                                 ($_SESSION['mapping']['todo'] > 10000? '' : 'ORDER BY RAND() ') .
                                  'LIMIT 1' .
                              ') AS first ' .
                              'WHERE vog.chromosome = first.chromosome AND vog.position_g_start BETWEEN first.position_g_start AND first.position_g_start + ' . $nRange . ' ' .
                                  'AND mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' ' .
                              'ORDER BY position_g_start ' .
-                             'LIMIT ' . $nMaxVariants
-                             )->fetchAllAssoc();
+                             'LIMIT ' . $nMaxVariants,
+                             $aArgs)->fetchAllAssoc();
 
     if (count($aVariants)) {
         // First flag the variants as MAPPING_IN_PROGRESS.
@@ -284,16 +334,21 @@ if (!empty($aVariants)) {
 
     // We'll need a list of transcripts in the database on this chromosome.
     $aTranscriptsInLOVD = array();
+    // FIXME: Restrict range somewhat based on variant's range? Query takes 0.03s with 22K transcripts, but we have $nStart and $nEnd available.
     $qTranscriptsInLOVD = $_DB->query('SELECT t.id, geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid) WHERE chromosome = ?', array($sChromosome));
     while ($aTranscriptInLOVD = $qTranscriptsInLOVD->fetchAssoc()) {
         $aTranscriptsInLOVD[$aTranscriptInLOVD['geneid']][$aTranscriptInLOVD['id']] = array('id' => $aTranscriptInLOVD['id'], 'id_ncbi' => $aTranscriptInLOVD['id_ncbi']);
     }
 
     // Ask Mutalyzer about the transcripts within this range.
+    // FIXME: Is this really necessary if all variants only want to be mapped on the transcripts in the database?
     $aTranscriptData = array();
-    $aTranscriptsWithinRange = $_MutalyzerWS->moduleCall('getTranscriptsMapping', array('build' => $_CONF['refseq_build'], 'chrom' => 'chr' . $sChromosome, 'pos1' => $nStart, 'pos2' => $nEnd, 'method' => 1));
-    if ($aTranscriptsWithinRange === false) {
-        // Call failed due to network problems. Don't run the mapping script now!
+
+    try {
+        // Can throw notice when TranscriptMappingInfo is not present (when no transcripts are available, for instance).
+        $aTranscriptsWithinRange = @$_Mutalyzer->getTranscriptsMapping(array('build' => $_CONF['refseq_build'], 'chrom' => 'chr' . $sChromosome, 'pos1' => $nStart, 'pos2' => $nEnd, 'method' => 1))->getTranscriptsMappingResult->TranscriptMappingInfo;
+    } catch (SoapFault $e) {
+        // Call failed, due to network problems, perhaps? Don't run the mapping script now!
         define('MAPPING_NO_RESTART', true);
         if (!empty($_GET['variantid'])) {
             // We were trying to map a specific variant. Set the MAPPING_ERROR flag so the user understands we tried it.
@@ -302,7 +357,7 @@ if (!empty($aVariants)) {
         }
 
         if (empty($_SESSION['mapping']['time_error']) || time() - $_SESSION['mapping']['time_error'] > $tLogInterval) {
-            lovd_writeLog('Error', LOG_EVENT, 'Could not connect to the Mutalyzer getTranscriptsMapping webservice.');
+            lovd_writeLog('Error', LOG_EVENT, 'Error while running the Mutalyzer getTranscriptsMapping webservice.');
         }
 
         // Forget the variants we had selected. This will skip the loop below and take us straight to the update-and-exit part.
@@ -310,20 +365,20 @@ if (!empty($aVariants)) {
         $nVariants = 0;
     }
 
-    if (!empty($aTranscriptsWithinRange['TranscriptMappingInfo']) && is_array($aTranscriptsWithinRange['TranscriptMappingInfo'])){
+    if (!empty($aTranscriptsWithinRange) && is_array($aTranscriptsWithinRange)){
         // Of the detected transcripts, we want to know their GENE and POSITIONS.
-        foreach ($aTranscriptsWithinRange['TranscriptMappingInfo'] as $aTranscript) {
-            $aTranscript = $aTranscript['c'];
+        foreach ($aTranscriptsWithinRange as $oTranscript) {
+            $aTranscript = get_object_vars($oTranscript);
 
             // Record the transcript accession, gene symbol and start and end positions.
-            $sTranscriptNM = lovd_getValueFromElement('name', $aTranscript);
-            $nVersion = lovd_getValueFromElement('version', $aTranscript);
+            $sTranscriptNM = $aTranscript['name'];
+            $nVersion = $aTranscript['version'];
             if (empty($aTranscriptData[$sTranscriptNM]) || $aTranscriptData[$sTranscriptNM]['version'] < $nVersion) {
                 // Be sure to remember only the latest version!
                 $aTranscriptData[$sTranscriptNM]['version'] = $nVersion;
-                $aTranscriptData[$sTranscriptNM]['gene'] = lovd_getValueFromElement('gene', $aTranscript);
-                $aTranscriptData[$sTranscriptNM]['start'] = lovd_getValueFromElement('start', $aTranscript);
-                $aTranscriptData[$sTranscriptNM]['end'] = lovd_getValueFromElement('stop', $aTranscript);
+                $aTranscriptData[$sTranscriptNM]['gene'] = $aTranscript['gene'];
+                $aTranscriptData[$sTranscriptNM]['start'] = $aTranscript['start'];
+                $aTranscriptData[$sTranscriptNM]['end'] = $aTranscript['stop'];
 
                 // We want 'start' to be lower than 'end' no matter the direction of the transcript.
                 if ($aTranscriptData[$sTranscriptNM]['start'] > $aTranscriptData[$sTranscriptNM]['end']) {
@@ -335,8 +390,8 @@ if (!empty($aVariants)) {
 
     // Let's process the variants one by one and see if we can map them.
     foreach ($aVariants as $aVariant) {
-        $aGenes = array();
-        $aMappedToGenesInLOVD = array();
+        $aGenesAlreadyMappedTo = array(); // Contains a list of genes this variant has already been mapped to this run.
+        $aGenesWeCanMapTo = array(); // Contains a list with genes (not yet in LOVD) Mutalyzer has transcripts of that the variant can be mapped to.
 
         // Find out on which transcripts this variant has been mapped already.
         $aVariant['alreadyMappedTranscripts'] = array();
@@ -347,24 +402,28 @@ if (!empty($aVariants)) {
             $aVariant['aTranscripts'][$a['id']] = array($a['id_ncbi'], $a['geneid']);
             $aVariant[$a['id'] . '_VariantOnTranscript/DNA'] = $a['dna'];
         }
-        
 
+
+        // Loop through the transcripts that Mutalyzer knows around this area.
         foreach ($aTranscriptData as $sTranscriptNM => $aTranscript) {
             if (!empty($aFailedGenes[$aTranscript['gene']])) {
                 // Skip genes of which we know for sure mapping is not going to work.
                 continue;
             }
-
             // Test if variant lies within this transcript.
             if (($aVariant['position_g_start'] >= $aTranscript['start'] && $aVariant['position_g_start'] <= $aTranscript['end']) ||
                 ($aVariant['position_g_end']   >= $aTranscript['start'] && $aVariant['position_g_end']   <= $aTranscript['end']) ||
                 ($aVariant['position_g_start'] <  $aTranscript['start'] && $aVariant['position_g_end']   >  $aTranscript['end'])) {
 
+                // Check if there is a transcript in the database that also has this gene.
+                // We'd rather map to that transcript, than to create a new, possibly unwanted, transcript.
                 if (isset($aTranscriptsInLOVD[$aTranscript['gene']])) {
-                    // We've got at least one transcript for the corresponding gene in the database.
-                    if(!isset($aMappedToGenesInLOVD[$aTranscript['gene']])) {
-                        // But only try it once. (NOTE: don't merge these if's because that breaks the elseif below!)
+                    // We've got at least one transcript for the corresponding gene in the database. Try and map the variant to this transcript.
+                    if (!in_array($aTranscript['gene'], $aGenesAlreadyMappedTo)) {
+                        // But only try it once. If Mutalyzer knows more transcripts for this gene, we don't want to do all of this again.
+                        // (NOTE: don't merge these if's because that breaks the elseif below!)
 
+                        // FIXME: When mapping multiple variants in one gene, this query is repeated for each variants. Store UD?
                         $sRefseqUD = $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($aTranscript['gene']))->fetchColumn();
                         $aVariantOnTranscriptSQL = lovd_mapVariantToTranscripts($aVariant, $aTranscriptsInLOVD[$aTranscript['gene']]);
                         if (!empty($aVariantOnTranscriptSQL)) {
@@ -374,56 +433,87 @@ if (!empty($aVariants)) {
                                 }
 
                                 // Get the p. description too.
+                                // FIXME: When mapping multiple variants in one gene, this query is repeated for each variants. Store ID?
                                 $sTranscriptNum = $_DB->query('SELECT id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sTranscriptNM))->fetchColumn();
-                                $aOutputRunMutalyzer = $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][6]));
-                                $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $aOutputRunMutalyzer);
-                                $aVariantsOnProteinError = lovd_getAllValuesFromArray('messages/SoapMessage', $aOutputRunMutalyzer);
-
-                                // FIXME; Temporary fix!!! Wait for mutalyzer SOAP to return errors ONLY from the requested transcript.
-                                if (isset($aVariantsOnProteinError['errorcode']) && $aVariantsOnProteinError['errorcode'] == 'WSPLICESELECTED') {
-                                    $aSQL[1][7] = 'p.?';
+                                // This takes about 0.9-1.1 second...
+                                try {
+                                    $aOutput = get_object_vars($_Mutalyzer->runMutalyzer(array('variant' => $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][7]))->runMutalyzerResult);
+                                    // FIXME: Notice: Undefined property: stdClass::$string in /www/svn/LOVD3/trunk/src/ajax/map_variants.php on line 433
+                                    if (!empty($aOutput['proteinDescriptions']->string)) {
+                                        $aVariantsOnProtein = $aOutput['proteinDescriptions']->string;
+                                    } else {
+                                        $aVariantsOnProtein = array();
+                                    }
+                                } catch (SoapFault $e) {
+                                    $aOutput = $aVariantsOnProtein = array();
+                                }
+                                if (isset($aOutput['messages']->SoapMessage)) {
+                                    $aVariantsOnProteinErrors = $aOutput['messages']->SoapMessage;
                                 } else {
-                                    if (!empty($aVariantsOnProtein['string'])) {
-                                        if (!is_array($aVariantsOnProtein['string'])) {
-                                            $aVariantsOnProtein['string'] = array($aVariantsOnProtein['string']);
-                                        }
-                                        foreach ($aVariantsOnProtein['string'] as $sVariantOnProtein) {
-                                            if (($nPos = strpos($sVariantOnProtein, '_i' . $sTranscriptNum . '):p.')) !== false) {
-                                                $aSQL[1][7] = substr($sVariantOnProtein, $nPos + strlen('_i' . $sTranscriptNum . '):'));
-                                                break;
+                                    $aVariantsOnProteinErrors = array();
+                                }
+
+                                $sRNA = '';
+                                $sProtein = '';
+                                foreach ($aVariantsOnProteinErrors as $oError) {
+                                    $aError = get_object_vars($oError);
+                                    // FIXME; We should include ERANGE error handling here too, when we can expect large deletions etc.
+                                    if (isset($aError['errorcode']) && $aError['errorcode'] == 'WSPLICE') {
+                                        $sRNA = 'r.spl?';
+                                        $sProtein = 'p.?';
+                                        break;
+                                    }
+                                }
+
+                                if (!$sProtein && !empty($aVariantsOnProtein)) {
+                                    foreach ($aVariantsOnProtein as $sVariantOnProtein) {
+                                        // 2014-12-05; 3.0-13; Fixed bug: When multiple genes exist in the UD, make sure we are reading out the right protein change here.
+                                        if (($nPos = strpos($sVariantOnProtein, $aTranscript['gene'] . '_i' . $sTranscriptNum . '):p.')) !== false) {
+                                            // FIXME: Since this code is the same as the code used for transcripts newly created in LOVD, better make a function out of it.
+                                            $sProtein = substr($sVariantOnProtein, $nPos + strlen($aTranscript['gene'] . '_i' . $sTranscriptNum . '):'));
+                                            if ($sProtein == 'p.?') {
+                                                $sRNA = 'r.?';
+                                            } elseif ($sProtein == 'p.(=)') {
+                                                // FIXME: Not correct in case of substitutions e.g. in the third position of the codon, not leading to a protein change.
+                                                $sRNA = 'r.(=)';
+                                            } else {
+                                                // RNA will default to r.(?).
+                                                $sRNA = 'r.(?)';
                                             }
+                                            break;
                                         }
                                     }
                                 }
+                                $aSQL[1][8] = $sRNA;
+                                $aSQL[1][9] = $sProtein;
                                 if ($_DB->query($aSQL[0], $aSQL[1], false)) {
                                     // If the insert succeeded, save some data in the variant array for lovd_fetchDBID().
                                     $aVariant['aTranscripts'][$aSQL[1][1]] = array($sTranscriptNM, $aTranscript['gene']);
-                                    $aVariant[$aSQL[1][1] . '_VariantOnTranscript/DNA'] = $aSQL[1][6];
+                                    $aVariant[$aSQL[1][1] . '_VariantOnTranscript/DNA'] = $aSQL[1][7];
                                 }
                             }
                         }
                         // Remember we've mapped this variant to this gene, so we don't try to map it again.
-                        $aMappedToGenesInLOVD[$aTranscript['gene']] = 1;
+                        $aGenesAlreadyMappedTo[] = $aTranscript['gene'];
                     }
 
-                // We don't have the gene that this transcript belongs to in the database yet.
-                // Count it for now, we may need to add it later on if the variant can't be mapped to something that already exists in LOVD.
-                } elseif (empty($aGenes[$aTranscript['gene']])) {
-                    $aGenes[$aTranscript['gene']] = 1;
                 } else {
-                    $aGenes[$aTranscript['gene']] ++;
+                    // We don't have the gene that this transcript belongs to in the database yet.
+                    // Save it for now, we may need to add it later on if the variant can't be mapped to something that already exists in LOVD.
+                    $aGenesWeCanMapTo[] = $aTranscript['gene'];
                 }
             }
         }
 
-        if (($aVariant['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) && count($aGenes)) {
-            // We may add extra genes to map this variant to.
+        $aGenesWeCanMapTo = array_unique($aGenesWeCanMapTo);
+        if (($aVariant['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) && count($aGenesWeCanMapTo)) {
+            // We may add extra genes to map this variant to. $aGenes contains genes we can map to.
 
             // Try the genes one by one.
-            foreach (array_keys($aGenes) as $sGene) {
+            foreach ($aGenesWeCanMapTo as $sGene) {
 
                 // Get information from HGNC.
-                $aGeneInfoFromHgnc = lovd_getGeneInfoFromHgnc($sGene, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id', 'gd_pub_refseq_ids', 'md_refseq_id'), true);
+                $aGeneInfoFromHgnc = lovd_getGeneInfoFromHgncOld($sGene, array('gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_pub_chrom_map', 'gd_locus_type', 'gd_pub_eg_id', 'md_mim_id', 'gd_pub_refseq_ids', 'md_refseq_id'), true);
                 if (empty($aGeneInfoFromHgnc)) {
                     // Couldn't find this gene. Try the next.
                     continue;
@@ -440,15 +530,21 @@ if (!empty($aVariants)) {
                 }
 
                 // Get UD.
-                $sRef = $sRefseqUD = $_MutalyzerWS->moduleCall('sliceChromosomeByGene', array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'));
+                try {
+                    $sRefseqUD = $_Mutalyzer->sliceChromosomeByGene(array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'))->sliceChromosomeByGeneResult;
+                    $sRef = $sRefseqUD;
+                } catch (SoapFault $e) {} // Silent error.
                 if (!is_string($sRefseqUD) || substr($sRefseqUD, 0, 3) != 'UD_') {
                     $sRefseqUD = false;
                     $sRef = $sRefseqGenomic;
                 }
 
                 // Get transcripts and info.
-                $aTranscripts = lovd_getElementFromArray('TranscriptInfo', $_MutalyzerWS->moduleCall('getTranscriptsAndInfo', array('genomicReference' => $sRef, 'geneName' => $sSymbol)));
-                if (empty($aTranscripts)) {
+                try {
+                    // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
+                    $aTranscriptsInUD = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $sRef, 'geneName' => $sSymbol))->getTranscriptsAndInfoResult->TranscriptInfo;
+                } catch (SoapFault $e) {}
+                if (empty($aTranscriptsInUD)) {
                     // Mutalyzer has no transcripts for this gene. Try the next.
                     continue;
                 }
@@ -480,7 +576,7 @@ if (!empty($aVariants)) {
                 }
                 if (empty($aRefseqsTranscript)) {
                     // We couldn't get any recommended transcripts from HGNC or the LOVD api, so we will just default to the first transcript that Mutalyzer returns.
-                    $aRefseqsTranscript[] = array('id_ncbi' => lovd_getValueFromElement('id', $aTranscripts[0]['c']));
+                    $aRefseqsTranscript[] = array('id_ncbi' => $aTranscriptsInUD[0]->id);
                 }
 
                 // Split chromosomal location in chromosome and band.
@@ -516,19 +612,26 @@ if (!empty($aVariants)) {
                         // The variant can't be mapped here, ignore...
                         continue;
                     }
-                    foreach ($aTranscripts as $aTranscript) {
-                        $aTranscriptValues = lovd_getAllValuesFromArray('', $aTranscript['c']);
-                        if ($aTranscriptValues['id'] == $sTranscriptNM) {
-                            // We'll be inserting the transcript we got from the HGNC. It's either the most studied or the longest for this gene.
+                    foreach ($aTranscriptsInUD as $oTranscriptInUD) {
+                        $aTranscriptInUD = get_object_vars($oTranscriptInUD);
+                        if ($aTranscriptInUD['id'] == $sTranscriptNM || strpos($aTranscriptInUD['id'], preg_replace('/\.\d+$/', '.', $sTranscriptNM)) === 0) {
+                            // We'll be inserting the transcript we got from the HGNC (could be a different version). It's either the most studied or the longest for this gene.
 
                             $aFieldsTranscript = array('geneid' => $sSymbol,
-                                                       'name' => str_replace($sGeneName . ', ', '', $aTranscriptValues['product']),
-                                                       'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscriptValues['name']),
-                                                       'id_ncbi' => $aTranscriptValues['id'],
-                                                       'id_protein_ncbi' => lovd_getValueFromElement('proteinTranscript/id', $aTranscript['c']),
-                                                       'position_c_mrna_start' => $aTranscriptValues['cTransStart'],
-                                                       'position_c_mrna_end' => $aTranscriptValues['sortableTransEnd'],
-                                                       'position_c_cds_end' => $aTranscriptValues['cCDSStop'],
+                                                       'name' => str_replace($sGeneName . ', ', '', $aTranscriptInUD['product']),
+                                                       'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscriptInUD['name']),
+                            // FIXME: Using this and the modification of the if above, we allow different versions of NMs to be matched.
+                            // This happens when the mapping database doesn't catch up with the UD, or possiby when the UD is getting too old.
+                            // We need a better solution for this, though. First, try and find full match, otherwise match w/ different version number.
+//                                                       'id_ncbi' => $aTranscriptInUD['id'],
+                                                       'id_ncbi' => $sTranscriptNM,
+                                                       'id_ensembl' => '',
+                                                       'id_protein_ncbi' => (!isset($aTranscriptInUD['proteinTranscript'])? '' : $aTranscriptInUD['proteinTranscript']->id),
+                                                       'id_protein_ensembl' => '',
+                                                       'id_protein_uniprot' => '',
+                                                       'position_c_mrna_start' => $aTranscriptInUD['cTransStart'],
+                                                       'position_c_mrna_end' => $aTranscriptInUD['sortableTransEnd'],
+                                                       'position_c_cds_end' => $aTranscriptInUD['cCDSStop'],
                                                        'position_g_mrna_start' => $aTranscriptData[substr($sTranscriptNM, 0, strpos($sTranscriptNM, '.'))]['start'],
                                                        'position_g_mrna_end' => $aTranscriptData[substr($sTranscriptNM, 0, strpos($sTranscriptNM, '.'))]['end'],
                                                        'created_by' => 0,
@@ -551,15 +654,31 @@ if (!empty($aVariants)) {
                                          'chrom_band' => $sChromBand,
                                          'refseq_genomic' => $sRefseqGenomic,
                                          'refseq_UD' => $sRefseqUD,
+                                         'reference' => '',
+                                         'url_homepage' => '',
+                                         'url_external' => '',
+                                         'allow_download' => 0,
+                                         'allow_index_wiki' => 0,
                                          'id_hgnc' => $sHgncID,
                                          'id_entrez' => $sEntrez,
                                          'id_omim' => $sOmim,
                                          'show_hgmd' => 1,
                                          'show_genecards' => 1,
                                          'show_genetests' => 1,
+                                         'note_index' => '',
+                                         'note_listing' => '',
+                                         'refseq' => '',
+                                         'refseq_url' => '',
                                          'disclaimer' => 1,
+                                         'disclaimer_text' => '',
+                                         'header' => '',
+                                         'header_align' => -1,
+                                         'footer' => '',
+                                         'footer_align' => -1,
                                          'created_by' => 0,
-                                         'created_date' => date('Y-m-d H:i:s'));
+                                         'created_date' => date('Y-m-d H:i:s'),
+                                         'updated_by' => 0,
+                                         'updated_date' => date('Y-m-d H:i:s'));
                         $_DB->query('INSERT INTO ' . TABLE_GENES . ' (' . implode(', ', array_keys($aFields)) . ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')', array_values($aFields));
 
                         // Only assign newly inserted genes to managers. If the creator of the variant is not a manager, make the database admin the curator for this gene.
@@ -571,7 +690,7 @@ if (!empty($aVariants)) {
                         $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($nCurator, $sSymbol, 1, 1));
 
                         // Also activate default custom columns for this gene.
-                        lovd_addAllDefaultCustomColumnsForGene($sSymbol, false);
+                        lovd_addAllDefaultCustomColumns('gene', $sSymbol, 0);
                     }
 
                     // Now insert the transcript.
@@ -586,23 +705,63 @@ if (!empty($aVariants)) {
                     }
 
                     // Get the p. description too.
-                    $aVariantsOnProtein = lovd_getAllValuesFromArray('proteinDescriptions', $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $sRefseqUD . '(' . $sSymbol . '_v' . $aFieldsTranscript['id_mutalyzer'] . '):' . $aVariantOnTranscriptSQL[1][6])));
-                    if (!empty($aVariantsOnProtein['string'])) {
-                        if (!is_array($aVariantsOnProtein['string'])) {
-                            $aVariantsOnProtein['string'] = array($aVariantsOnProtein['string']);
+                    try {
+                        $aOutput = get_object_vars($_Mutalyzer->runMutalyzer(array('variant' => $sRefseqUD . '(' . $sSymbol . '_v' . $aFieldsTranscript['id_mutalyzer'] . '):' . $aVariantOnTranscriptSQL[1][7]))->runMutalyzerResult);
+                        // FIXME: Notice: Undefined property: stdClass::$string in /www/svn/LOVD3/trunk/src/ajax/map_variants.php on line 433
+                        if (!empty($aOutput['proteinDescriptions']->string)) {
+                            $aVariantsOnProtein = $aOutput['proteinDescriptions']->string;
+                        } else {
+                            $aVariantsOnProtein = array();
                         }
-                        foreach ($aVariantsOnProtein['string'] as $sVariantOnProtein) {
-                            if (($nPos = strpos($sVariantOnProtein, '_i' . $aFieldsTranscript['id_mutalyzer'] . '):p.')) !== false) {
-                                $aVariantOnTranscriptSQL[1][7] = substr($sVariantOnProtein, $nPos + strlen('_i' . $aFieldsTranscript['id_mutalyzer'] . '):'));
+                    } catch (SoapFault $e) {
+                        $aOutput = $aVariantsOnProtein = array();
+                    }
+                    if (isset($aOutput['messages']->SoapMessage)) {
+                        $aVariantsOnProteinErrors = $aOutput['messages']->SoapMessage;
+                    } else {
+                        $aVariantsOnProteinErrors = array();
+                    }
+
+                    $sRNA = '';
+                    $sProtein = '';
+                    foreach ($aVariantsOnProteinErrors as $oError) {
+                        $aError = get_object_vars($oError);
+                        // FIXME; We should include ERANGE error handling here too, when we can expect large deletions etc.
+                        if (isset($aError['errorcode']) && $aError['errorcode'] == 'WSPLICE') {
+                            $sRNA = 'r.spl?';
+                            $sProtein = 'p.?';
+                            break;
+                        }
+                    }
+
+                    if (!$sProtein && !empty($aVariantsOnProtein)) {
+                        foreach ($aVariantsOnProtein as $sVariantOnProtein) {
+                            // 2014-12-05; 3.0-13; Fixed bug: When multiple genes exist in the UD, make sure we are reading out the right protein change here.
+                            if (($nPos = strpos($sVariantOnProtein, $aTranscript['gene'] . '_i' . $aFieldsTranscript['id_mutalyzer'] . '):p.')) !== false) {
+                                // FIXME: Since this code is the same as the code used for transcripts already in LOVD, better make a function out of it.
+                                $sProtein = substr($sVariantOnProtein, $nPos + strlen($aTranscript['gene'] . '_i' . $aFieldsTranscript['id_mutalyzer'] . '):'));
+                                if ($sProtein == 'p.?') {
+                                    $sRNA = 'r.?';
+                                } elseif ($sProtein == 'p.(=)') {
+                                    // FIXME: Not correct in case of substitutions e.g. in the third position of the codon, not leading to a protein change.
+                                    $sRNA = 'r.(=)';
+                                } else {
+                                    // RNA will default to r.(?).
+                                    $sRNA = 'r.(?)';
+                                }
+                                break;
                             }
                         }
                     }
+                    $aVariantOnTranscriptSQL[1][8] = $sRNA;
+                    $aVariantOnTranscriptSQL[1][9] = $sProtein;
 
                     // Map the variant to the newly inserted transcript.
                     $aVariantOnTranscriptSQL[1][1] = $nID;
                     if ($_DB->query($aVariantOnTranscriptSQL[0], $aVariantOnTranscriptSQL[1], false)) {
+                        // If the insert succeeded, save some data in the variant array for lovd_fetchDBID().
                         $aVariant['aTranscripts'][$nID] = array($aFieldsTranscript['id_ncbi'], $sSymbol);
-                        $aVariant[$nID . '_VariantOnTranscript/DNA'] = $aVariantOnTranscriptSQL[1][6];
+                        $aVariant[$nID . '_VariantOnTranscript/DNA'] = $aVariantOnTranscriptSQL[1][7];
                     }
 
                     // Also remember that we've got this gene and transcript now.
@@ -652,13 +811,13 @@ if (!empty($aVariants)) {
 
 
 // Get the newest data from the session files and update that.
-session_start();
+@session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
 
 // Update todo counter.
 $_SESSION['mapping']['todo'] -= $nVariants;
 
 // Compute progress percentage - but only percentages for which we have an image (+6.25% each) are possible.
-$nTotalVariants = (int) $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW)->fetchColumn();
+$nTotalVariants = $_SESSION['mapping']['total_todo'];
 $nMappedVariants = $nTotalVariants - $_SESSION['mapping']['todo'];
 if ($nTotalVariants == 0) {
     $nPercentage = 99;
@@ -677,6 +836,7 @@ if ($nMappedVariants >= $nTotalVariants || (!isset($_GET['variantid']) && !defin
     if ($nTotalVariants == 0) {
         exit(AJAX_FALSE . "\t99\tThere are no variants to map in the database");
     }
+    $_SESSION['mapping']['total_todo'] = 0; // Reset the counter for next time.
     exit(AJAX_FALSE . "\t99\tSuccessfully mapped " . $nTotalVariants . ' variant' . ($nTotalVariants == 1? '' : 's'));
 } elseif (defined('MAPPING_NO_RESTART')) {
     // There were network problems during this request.

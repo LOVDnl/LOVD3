@@ -1,106 +1,101 @@
+4.0.0 addslashes
 4.0.0 array
+5.0.0 array_combine
+4.1.0 array_key_exists
 4.0.0 array_keys
+4.0.0 array_merge
 4.0.0 array_reverse
+4.0.0 array_values
 4.0.0 basename
+4.0.0 ceil
 4.0.4 constant
 4.0.0 count
+4.0.4 ctype_digit
+4.0.0 date
 4.0.0 define
 4.0.0 defined
+4.0.0 die
 4.0.0 dirname
 4.0.0 empty
 4.0.0 error_reporting
 4.0.0 explode
+4.0.0 fclose
 4.0.0 file
 4.0.0 file_exists
 4.3.0 file_get_contents
+4.0.0 floor
 4.0.0 flush
+4.0.0 fopen
 4.0.0 function_exists
+4.0.0 fwrite
 4.0.0 get_magic_quotes_gpc
+4.0.0 getimagesize
+4.0.0 header
 4.0.0 htmlspecialchars
 4.0.0 implode
 4.0.0 in_array
 4.0.0 ini_get
 4.0.0 ini_set
-4.0.0 isset
-4.0.0 is_array
-4.0.0 is_readable
-4.0.0 list
-4.0.0 md5
-4.0.0 microtime
-4.0.0 preg_match
-4.0.0 preg_replace
-4.0.0 round
-4.0.0 rtrim
-4.0.0 session_destroy
-4.0.0 session_start
-4.0.0 setcookie
-4.3.0 sha1
-4.0.0 str_repeat
-4.0.0 str_replace
-4.0.0 stripslashes
-4.0.0 substr
-4.0.0 substr_count
-4.0.0 time
-4.0.0 trim
-4.0.0 unset
-4.0.0 usleep
-
-/* deze data van 2.0
-4.0.0 addslashes
-5.0.0 array_combine (REDEFINED)
-4.1.0 array_key_exists
-4.0.0 array_merge
-4.0.0 array_values
-4.0.0 ceil
-4.0.0 closedir
-4.0.0 date
-4.0.0 die
-4.0.0 ereg_replace
-4.0.0 fclose
-4.0.0 floor
-4.0.0 fopen
-4.0.0 fwrite
-4.0.0 getimagesize
-4.0.0 header
 4.0.0 is_dir
+4.0.0 is_array
 4.0.0 is_int
 4.0.0 is_numeric
-4.0.0 is_resource
+4.0.0 is_readable
 4.0.0 is_writable
+4.0.0 isset
+4.0.0 list
 4.0.0 mail
 4.0.0 max
+4.0.0 md5
+4.0.0 microtime
 4.0.0 mt_rand
 4.0.0 opendir
+4.0.0 preg_match
 4.0.0 preg_quote
+4.0.0 preg_replace
+4.0.0 preg_split
 4.0.0 rawurlencode
 4.0.0 readdir
 4.0.0 readfile
-4.0.0 session_unset (REMOVE??)
-4.2.0 settype (zoals hij nu gebruikt wordt, anders 4.0.0)
+4.0.0 round
+4.0.0 rtrim
+4.0.0 session_destroy
+4.3.2 session_regenerate_id()
+4.0.0 session_start
+4.0.0 setcookie
+4.3.0 sha1
 4.0.0 sleep
-4.0.0 split
 4.0.1 str_pad
+4.0.0 str_repeat
+4.0.0 str_replace
+4.0.0 stripslashes
 4.0.0 strlen
 4.0.0 strpos
 4.0.0 strtolower
 4.0.0 strtotime
+4.0.0 strtoupper
+4.0.0 substr
+4.0.0 substr_count
+4.0.0 time
+4.0.0 trim
 4.0.0 ucfirst
 4.0.0 unlink
+4.0.0 unset
+4.0.0 usleep
 
-4.0.4 preg_replace('...', $1, '...')
 4.1.0 $_GET, $_POST, $_COOKIES, $_SESSION, $_FILES.
 4.2.0 $_FILES error codes
-4.2.0 array_search('dont_find', $aEmpty) === false
-4.3.0 auto_detect_line_endings (ini setting, wil ik gaan gebruiken voor importeren)
-4.3.2 session_regenerate_id (gebruik ik nu alleen, als ie bestaat)
-4.2.0 in_array met array als needle
-5.0.0 As of PHP 5, default values may be passed by reference.
+4.3.0 auto_detect_line_endings (ini setting, voor het importeren)
 5.0.0 file() with FILE_IGNORE_NEW_LINES.
-5.0.0 microtime(true) ondersteunt argument true.
+5.0.0 microtime() ondersteunt argument true.
 5.1.0 PDO built in.
-*/
+5.2.0 json_(de|en)code built in (there's only one LOVD3 user on 5.1 right now, and we haven't seen him in 3 months - 2012-10-29).
+5.2.0 array_fill_keys() available.
+5.3.0 array_replace_recursive() available (already in use in users.php in two places and we have two current PHP 5.2 users! (cc1bd203e228f68f2c67bde49779ab54 (143.210.170.132 - viti.gene.le.ac.uk), 5a6a939312e611c2a72e662752f1418f (143.210.170.214 - lamp-api-22.rcs.le.ac.uk, and 143.210.56.79)))
+5.3.0 anonymous functions introduced. I got parse errors in inc-lib-form (needed to log in even!) so I now realize that 5.3.0 is required, which means we could use bcrypt as well!!!
+5.3.0 bcrypt built into PHP (before that, availability depends on the system)
 =====-========
-4.3.0 REQUIRED
+5.3.0 REQUIRED
 
 
 
@@ -118,5 +113,5 @@ MySQL:
 4.1. 1  VALUES() in: INSERT INTO ... ON DUPLICATE KEY UPDATE ... VALUES()
 4.1. 2  ENGINE (instead of TYPE) not really necessary but since we're at 4.1.1 already...
 =======-========
-4.1.2   REQUIRED
+4.1. 2   REQUIRED
 

@@ -49,7 +49,8 @@ session_destroy();   // Destroy session, delete the session file.
 $_AUTH = false;
 
 // FIXME; Somehow this doesn't work...
-session_start(); // Reinitiate... Otherwise the next line will do nothing.
+// Reinitiate... Otherwise the next line will do nothing.
+@session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
 $_SESSION['currdb'] = $sCurrDB; // Put it back.
 header('Refresh: 5; url=' . lovd_getInstallURL());
 define('PAGE_TITLE', 'Log out');

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-02-17
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -110,13 +110,10 @@ class LOVD_Link extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
         global $_DB;
-        if (ACTION == 'edit') {
-            global $zData; // FIXME; this could be done more elegantly.
-        }
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -146,10 +143,7 @@ class LOVD_Link extends LOVD_Object {
             $_POST['active_columns'] = array();
         } elseif (!empty($aData['active_columns'])) {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
-            // FIXME; eerst een group_concat, daarna een explode()? 
-            $sSQL = 'SELECT GROUP_CONCAT(id) FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'';
-            $sColumns = $_DB->query($sSQL)->fetchColumn();
-            $aColumns = explode(',', $sColumns);
+            $aColumns = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'')->fetchAllColumn();
             foreach($aData['active_columns'] as $sCol) {
                 if (substr_count($sCol, '/') && !in_array($sCol, $aColumns)) {
                     // Columns without slashes are the category headers, that could be selected.
@@ -204,10 +198,10 @@ class LOVD_Link extends LOVD_Object {
                 }
 
                 // Check for reference order and/or references missing from the replacement text.
-                reset($aPatternRefs); 
-                for ($i = 1; list(,$nRef) = each($aPatternRefs); $i ++) { 
-                    if ($nRef != $i) { 
-                        lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $i . '] ' . ($i == 1? 'first' : 'after [' . ($i - 1) . ']') . ', got [' . $nRef . '].'); 
+                reset($aPatternRefs);
+                for ($i = 1; list(,$nRef) = each($aPatternRefs); $i ++) {
+                    if ($nRef != $i) {
+                        lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $i . '] ' . ($i == 1? 'first' : 'after [' . ($i - 1) . ']') . ', got [' . $nRef . '].');
                     }
                 }
 
@@ -236,6 +230,12 @@ class LOVD_Link extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
         global $_DB;
 
         // Get column list, to connect link to column.
@@ -260,7 +260,7 @@ class LOVD_Link extends LOVD_Object {
             }
         }
         foreach ($aData as $key => $val) {
-            $sSelect .= "\n" . 
+            $sSelect .= "\n" .
                         '              <OPTION value="' . $key . '"' . (!empty($_POST['active_columns']) && in_array($key, $_POST['active_columns'])? ' selected' : '') . '>' . $val . '</OPTION>';
         }
         $sSelect .= '</SELECT>';
@@ -275,7 +275,7 @@ class LOVD_Link extends LOVD_Object {
                         array('', '', 'note', 'The pattern is bound to some rules:<UL style="margin : 0px; padding-left : 1.5em;"><LI>It must start with \'{\' and end with \'}\'.</LI><LI>It can contain letters, numbers, spaces, some special characters (:;,_-) and references ([1] to [9]).</LI><LI>It must be 3-25 characters long.</LI><LI>Two or more references directly after each other must be separated by at least one character to keep the two apart.</LI></UL>'),
                         array('Replacement text', '', 'textarea', 'replace_text', 40, 3),
                         array('', '', 'note', 'Make sure you use all references from the pattern in the replacement text.'),
-                        array('Link description', 'To aid other users in using your custom link, please provide some information on what the link is for and how to use the references.', 'textarea', 'description', 40, 3),
+                        array('Link description', 'To aid other users in using your custom link, please provide some information on what the link is for and how to use the references.', 'textarea', 'description', 40, 5),
                         'skip',
                         array('', '', 'print', '<B>Link settings</B>'),
                         array('Active for columns', '', 'print', $sSelect),

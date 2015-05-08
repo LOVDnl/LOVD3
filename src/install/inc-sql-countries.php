@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2009-10-21
- * For LOVD    : 3.0-pre-01
+ * Modified    : 2014-09-10
+ * For LOVD    : 3.0-12
  *
- * Copyright   : 2004-2010 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -36,6 +35,8 @@ if (!defined('ROOT_PATH')) {
 }
 
 // Country list, taken from http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm at 2009-10-05
+// Updated 2014-09-10 with information from http://en.wikipedia.org/wiki/ISO_3166-1
+// NOTE: Do not change these queries without verifying that object_users.php still collects the country data correctly. It parses these queries for the DB admin registration form.
 $aCountrySQL =
          array(
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("AF", "Afghanistan")',
@@ -162,7 +163,7 @@ $aCountrySQL =
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LB", "Lebanon")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LS", "Lesotho")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LR", "Liberia")',
-                'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LY", "Libyan Arab Jamahiriya")',
+                'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LY", "Libya")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LI", "Liechtenstein")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LT", "Lithuania")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LU", "Luxembourg")',
@@ -222,7 +223,7 @@ $aCountrySQL =
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("RU", "Russian Federation")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("RW", "Rwanda")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("BL", "Saint Barthélemy")',
-                'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("SH", "Saint Helena")',
+                'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("SH", "Saint Helena, Ascension and Tristan da Cunha")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("KN", "Saint Kitts and Nevis")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LC", "Saint Lucia")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("MF", "Saint Martin")',
@@ -243,6 +244,7 @@ $aCountrySQL =
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("SO", "Somalia")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("ZA", "South Africa")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("GS", "South Georgia and The South Sandwich Islands")',
+                'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("SS", "South Sudan")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("ES", "Spain")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("LK", "Sri Lanka")',
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("SD", "Sudan")',

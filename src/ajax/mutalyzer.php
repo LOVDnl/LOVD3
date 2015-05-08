@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-18
- * Modified    : 2012-05-07
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2014-07-25
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -33,14 +33,13 @@ define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 session_write_close();
 
-if (!ACTION || count($_GET) <= 1 ) {
+if (!ACTION || count($_GET) <= 1) {
     echo 'Insufficient arguments given.';
     exit;
 }
 
-require ROOT_PATH . '/class/REST2SOAP.php';
-
-$_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
+require ROOT_PATH . 'class/soap_client.php';
+$_Mutalyzer = new LOVD_SoapClient();
 
 $aArgs = array();
 foreach ($_GET as $key => $value) {
@@ -49,7 +48,8 @@ foreach ($_GET as $key => $value) {
     }
 }
 
-$aOutput = $_MutalyzerWS->moduleCall(ACTION, $aArgs);
+// I don't understand why I need to put an array() around the arguments array, but oh, well...
+$aOutput = $_Mutalyzer->__soapCall(ACTION, array($aArgs));
 
 var_dump($aOutput);
 ?>

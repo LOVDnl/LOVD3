@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2012-05-24
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-03-11
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -51,6 +52,10 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
+    // If the list of diseases is loaded from the individual's data entry form, don't use the VL links.
+    if (isset($_GET['no_links'])) {
+        $_DATA->setRowLink('Diseases', '');
+    }
     $_DATA->viewList('Diseases', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
 
     $_T->printFooter();
@@ -70,33 +75,51 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
+    if ($nID == '00000') {
+        $nID = -1;
+    }
+
     // Load appropiate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
+    // Increase the max group_concat() length, so that diseases linked to many many genes still have all genes mentioned here.
+    $_DB->query('SET group_concat_max_len = 150000');
     $zData = $_DATA->viewEntry($nID);
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
-        if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit disease information</A>', 1);
+        $aNavigation[CURRENT_PATH . '?edit']      = array('menu_edit.png', 'Edit disease information', 1);
+        if ($_AUTH['level'] == LEVEL_CURATOR) {
+            $bDelete = true;
+            foreach ($zData['genes'] as $sGene) {
+                if (!in_array($sGene, $_AUTH['curates'])) {
+                    $bDelete = false;
+                    break;
+                }
+            }
+        }
+        if ($_AUTH['level'] >= LEVEL_MANAGER || $bDelete) {
             $aNavigation[CURRENT_PATH . '?delete']    = array('cross.png', 'Delete disease entry', 1);
         }
         $aNavigation[CURRENT_PATH . '/columns']       = array('menu_columns.png', 'View enabled phenotype columns', 1);
         $aNavigation[CURRENT_PATH . '/columns?order'] = array('menu_columns.png', 'Re-order enabled phenotype columns', 1);
         $aNavigation['columns/Phenotype'] = array('menu_columns.png', 'View all available phenotype columns', 1);
+        $aNavigation['phenotypes/disease/' . $nID] = array('menu_magnifying_glass.png', 'View all phenotype entries for this disease', 1);
     }
-    lovd_showJGNavigation($aNavigation, 'Genes');
+    lovd_showJGNavigation($aNavigation, 'Diseases');
 
-    $_GET['search_diseaseids'] = $nID;
-    print('<BR><BR>' . "\n\n");
-    $_T->printTitle('Individuals', 'H4');
-    require ROOT_PATH . 'class/object_individuals.php';
-    $_DATA = new LOVD_Individual();
-    $_DATA->setSortDefault('id');
-    $_DATA->viewList('Individuals_for_D_VE', array('panelid', 'diseaseids'), true, true);
-    
+    if ($zData['individuals']) {
+        $_GET['search_diseaseids'] = $nID;
+        print('<BR><BR>' . "\n\n");
+        $_T->printTitle('Individuals', 'H4');
+        require ROOT_PATH . 'class/object_individuals.php';
+        $_DATA = new LOVD_Individual();
+        $_DATA->setSortDefault('id');
+        $_DATA->viewList('Individuals_for_D_VE', array('panelid', 'diseaseids'), true, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    }
+
     $_T->printFooter();
     exit;
 }
@@ -139,10 +162,11 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('PAGE_TITLE', 'Create a new disease information entry');
     define('LOG_EVENT', 'DiseaseCreate');
 
-    // Require manager clearance.
-    // FIXME; allow curator to create disease entries linked to own genes?
-    lovd_requireAUTH(LEVEL_MANAGER);
+    // Require curator clearance.
+    lovd_isAuthorized('gene', $_AUTH['curates']);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
+    require ROOT_PATH . 'inc-lib-actions.php';
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
     require ROOT_PATH . 'inc-lib-form.php';
@@ -162,17 +186,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
-            // FIXME; add this and next block to a function, just like lovd_addAllDefaultCustomColumnsForGene().
-            $aAdded = $_DB->query('DESCRIBE ' . TABLE_PHENOTYPES)->fetchAllColumn();
-
-            $qStandardCustomCols = $_DB->query('SELECT * FROM ' . TABLE_COLS . ' WHERE id LIKE "Phenotype/%" AND (standard = 1 OR hgvs = 1)');
-            while ($zStandard = $qStandardCustomCols->fetchAssoc()) {
-                if (!in_array($zStandard['id'], $aAdded)) {
-                    $_DB->query('ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `' . $zStandard['id'] . '` ' . $zStandard['mysql_type']);
-                    $_DB->query('INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES(?, ?, NOW())', array($zStandard['id'], $_AUTH['id']));
-                }
-                $_DB->query('INSERT INTO ' . TABLE_SHARED_COLS . ' VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)', array($nID, $zStandard['id'], $zStandard['col_order'], $zStandard['width'], $zStandard['mandatory'], $zStandard['description_form'], $zStandard['description_legend_short'], $zStandard['description_legend_full'], $zStandard['select_options'], $zStandard['public_view'], $zStandard['public_add'], $_AUTH['id']));
-            }
+            // Add all standard custom columns to this new disease.
+            lovd_addAllDefaultCustomColumns('disease', $nID);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' (' . $_POST['name'] . ')');
@@ -197,11 +212,24 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $nID);
-
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable('Successfully created the disease information entry!', 'success');
+
+            if (isset($_GET['in_window'])) {
+                // We're in a new window, refresh opener en close window.
+                print('      <SCRIPT type="text/javascript">
+                                 $(opener.document.forms[0][\'active_diseases[]\']).append(\'<OPTION value="' . $nID . '">' . lovd_shortenString($_POST['symbol'] . ' (' . $_POST['name'] . ')', 75) . '</OPTION>\');
+                                 if ($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\') < 15) {
+                                     $(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\', eval($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\')) + 1);
+                                 }
+                                 if (opener.document.location.href.match(/\/(individuals\/' . (empty($_POST['genes'])? '' : '|genes\/(' . implode('|', $_POST['genes']) . ')\?') . ')/)) {
+                                     $(opener.document.forms[0][\'active_diseases[]\']).children(\'option:last\').attr(\'selected\', 1);
+                                 }
+                                 setTimeout(\'self.close();\', 1000);</SCRIPT>' . "\n\n");
+            } else {
+                print('      <SCRIPT type="text/javascript">setTimeout(\'window.location.href=\\\'' . lovd_getInstallURL() . CURRENT_PATH . '/' . $nID . '\\\';\', 3000);</SCRIPT>' . "\n\n");
+            }
 
             $_T->printFooter();
             exit;
@@ -232,7 +260,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     lovd_includeJS('inc-js-tooltip.php');
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (isset($_GET['in_window'])? '&amp;in_window' : '') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -260,19 +288,25 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     define('PAGE_TITLE', 'Edit disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseEdit');
 
+    if ($nID == '00000') {
+        $nID = -1;
+    }
+
     // Load appropiate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
     lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
+    // Increase the max group_concat() length, so that diseases linked to many many genes still have all genes mentioned here.
+    $_DB->query('SET group_concat_max_len = 150000');
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (!empty($_POST)) {
         lovd_errorClean();
 
-        $_DATA->checkFields($_POST);
+        $_DATA->checkFields($_POST, $zData);
 
         if (!lovd_error()) {
             // Fields to be used.
@@ -389,13 +423,36 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('PAGE_TITLE', 'Delete disease information entry #' . $nID);
     define('LOG_EVENT', 'DiseaseDelete');
 
-    // Require manager clearance.
-    // FIXME; allow curators to delete diseases that point to no other genes besides their own?
-    lovd_requireAUTH(LEVEL_MANAGER);
+    if ($nID == '00000') {
+        $nID = -1;
+    }
+
+    lovd_isAuthorized('disease', $nID);
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
     $zData = $_DATA->loadEntry($nID);
+
+    if ($_AUTH['level'] == LEVEL_CURATOR) {
+        $bDelete = true;
+        foreach ($zData['genes'] as $sGene) {
+            if (!in_array($sGene, $_AUTH['curates'])) {
+                $bDelete = false;
+                break;
+            }
+        }
+
+        if (!$bDelete) {
+            // Curator has no delete rights, throw him out.
+            lovd_requireAUTH(LEVEL_MANAGER);
+        }
+    } else {
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_MANAGER);
+    }
+
+
+
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (!empty($_POST)) {
@@ -483,7 +540,8 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) 
     $n = $_DATA->viewList('Columns');
 
     if ($n) {
-        lovd_showJGNavigation(array('javascript:lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $nID . '\', 800, 350);' => array('', 'Change order of columns', 1)), 'Columns');
+        lovd_showJGNavigation(array('javascript:lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?order&amp;in_window\', \'ColumnSort' . $nID . '\', 800, 350);' =>
+            array('', 'Change order of columns', 1)), 'Columns');
     }
 
     $_T->printFooter();
@@ -522,7 +580,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
          array(
                 CURRENT_PATH . '?edit' => array('menu_edit.png', 'Edit settings for this ' . $sUnit . ' only', 1),
                 // FIXME; Can we redirect inmediately to the correct page? And in a new window!
-                'columns/' . $sCategory . '/' . $sColumnID . '?remove&amp;target=' . $sParentID => array('cross.png', 'Remove column from this ' . $sUnit, 1),
+                'columns/' . $sCategory . '/' . $sColumnID . '?remove&amp;target=' . $sParentID => array('cross.png', 'Remove column from this ' . $sUnit, (!$zData['hgvs'])),
               );
     lovd_showJGNavigation($aNavigation, 'ColumnEdit');
 
@@ -613,6 +671,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    lovd_includeJS('inc-js-columns.php');
 
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
@@ -629,29 +688,6 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");
-    
-?>
-<SCRIPT type="text/javascript">
-function lovd_setWidth ()
-{
-    var line = $(this).parent().parent().next().children(':last').children(':first');
-    if ($(this).attr('value') > 999) {
-        $(this).attr('value', 999);
-        alert('The width cannot be more than 3 digits!');
-        return false;
-    }
-    $(line).attr('width', $(this).attr('value'));
-    $(line).next().next().html('(This is ' + $(this).attr('value') + ' pixels)');
-    return false;
-}
-
-$(function ()
-{
-    $('input[name="width"]').change(lovd_setWidth);
-});
-
-</SCRIPT>
-<?php
 
     $_T->printFooter();
     exit;
@@ -733,15 +769,13 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION ==
           '        <INPUT type="submit" value="Save">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="' . (isset($_GET['in_window'])? 'self.close(); return false;' : 'window.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . '\'; return false;') . '" style="border : 1px solid #FF4422;">' . "\n" .
           '      </FORM>' . "\n\n");
 
-    lovd_includeJS('lib/jQuery/jquery-ui.sortable.min.js');
-
 ?>
       <SCRIPT type='text/javascript'>
         $(function() {
           $('#column_list').sortable({
             containment: 'parent',
             tolerance: 'pointer',
-            handle: 'TD.handle',
+            handle: 'TD.handle'
           });
           $('#column_list').disableSelection();
         });

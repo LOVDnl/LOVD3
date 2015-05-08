@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2012-05-08
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2015-05-01
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -30,11 +30,12 @@
  *************/
 
 define('ROOT_PATH', './');
+header('Expires: ' . date('r', time()+(180*60)));
 require ROOT_PATH . 'inc-lib-init.php';
 require ROOT_PATH . 'inc-js-ajax.php';
 
 // Find out whether or not we're using SSL.
-if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' && !empty($_SERVER['SSL_PROTOCOL'])) {
+if ((!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['SSL_PROTOCOL'])) {
     // We're using SSL!
     define('PROTOCOL', 'https://');
 } else {
@@ -47,44 +48,59 @@ if (!isset($_GET['nohistory'])) {
 
 function lovd_AJAX_processViewListHash ()
 {
-    // Get the hash, explode it, interpret it.
-    if (window.location.hash) {
-        if (window.location.hash != prevHash) {
-            var aGET = window.location.hash.substr(1).split('&');
-            var GET = new Array();
+    // Get the hash, explode it, interpret it. Fill in the hash values in the form's fields and resubmit.
+    // If this function notices we don't have a hash *anymore*, it realized we pushed back and it will parse the GET query string to return to the original viewlist.
+    // When we do this, we must make SURE we don't put a hash anymore, otherwise we're going forward in the browser history again and the user will never be able to get back beyond this VL.
 
-            // In case multiple viewList's exist, we choose the first one. In practice, hashing is turned off on pages with multiple viewLists.
-            for (var i in document.forms) {
-                if (document.forms[i].getAttribute('id') && document.forms[i].getAttribute('id').substring(0, 13) == 'viewlistForm_') {
-                    oForm = document.forms[i];
-                    sViewListID = document.forms[i].getAttribute('id').substring(13);
-                    break;
+    if (window.location.hash != prevHash && prevHash != 'no_rehash') {
+        // In case multiple viewList's exist, we choose the first one. In practice, hashing is turned off on pages with multiple viewLists.
+        $("form").each(function(){
+            if ($(this).attr('id') && $(this).attr('id').substring(0, 13) == 'viewlistForm_') {
+                oForm = this;
+                sViewListID = $(this).attr('id').substring(13);
+                return false; // Break the loop.
+            }
+            return true;
+        });
+
+        // Based on the function by Andy E at http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values
+        var Hash = {},
+            match,
+            search = /([^&=]+)=?([^&]*)/g;
+
+        while (match = search.exec(window.location.hash.substring(1))) {
+            Hash[match[1]] = decodeURIComponent(match[2]);
+            // Search fields.
+            if ((match[1].substr(0,7) == 'search_' || match[1].substr(0,4) == 'page' || match[1] == 'order') && oForm[match[1]]) {
+                // Fill in values in search boxes.
+                oForm[match[1]].value = Hash[match[1]];
+            }
+        }
+
+        // Values which are NO LONGER in the Hash (added search term, then back button) need to be removed!!!
+        $(oForm).find('input[name^="search_"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
+        $(oForm).find('input[name^="page"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
+        $(oForm).find('input[name="order"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
+
+        if (!window.location.hash) {
+            // We don't have a hash anymore. This means we went back to the original viewlist. We must reload it, WITHOUT
+            // having lovd_AJAX_viewListSubmit() put a new hash, otherwise we can never navigate back beyond this VL.
+            var GET = {};
+            while (match = search.exec(window.location.search.substring(1))) {
+                GET[match[1]] = decodeURIComponent(match[2]);
+                if ((match[1].substr(0,7) == 'search_' || match[1].substr(0,4) == 'page' || match[1] == 'order') && oForm[match[1]]) {
+                    // Fill in values in search boxes.
+                    oForm[match[1]].value = GET[match[1]];
                 }
             }
+        }
 
-            for (var i in aGET) {
-                // Split on the *first* = character. Firefox (at least 3.6.16@Ubuntu) doesn't get that %3D is not the same as =. IE and Chrome do well.
-                var tmp = aGET[i].split(/=(.+)?/);
-                GET[tmp[0]] = tmp[1];
-                // Search fields.
-                if (tmp[0].substr(0,7) == 'search_' && tmp[1] && oForm[tmp[0]]) {
-                    oForm[tmp[0]].value = decodeURIComponent(tmp[1]);
-                }
-            }
-            if (GET['order']) {
-                oForm.order.value = decodeURIComponent(GET['order']);
-            }
-            if (GET['page_size'] && GET['page']) {
-                oForm.page_size.value = decodeURIComponent(GET['page_size']);
-                oForm.page.value = decodeURIComponent(GET['page']);
-            }
-
-            // Values which are NO LONGER in the Hash (added search term, then back button) need to be removed!!!
-            $(oForm).find('input[name^="search_"]').each(function (i, o) { if (o.value && !GET[o.name]) { o.value = ""; }});
-
-            // GoToPage is used instead of directly calling viewListSubmit, because it has some page navigation optimizations.
-            lovd_AJAX_viewListGoToPage(sViewListID, oForm.page.value);
+        lovd_AJAX_viewListSubmit(sViewListID);
+        if (window.location.hash) {
             prevHash = window.location.hash;
+        } else {
+            // We must send a signal to lovd_AJAX_viewListSubmit() to NOT load a new hash.
+            prevHash = 'no_rehash';
         }
     }
 }
@@ -154,17 +170,16 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
 
         // Build GET query.
         var sGET = '';
-        aInput = oForm.getElementsByTagName('input');
-        for (var i in aInput) {
-            if (!aInput[i].disabled && aInput[i].value) {
-                sVal = aInput[i].value;
-                if (aInput[i].name == 'page_size')
+        $(oForm).find('input').each(function(){
+            if (!this.disabled && this.value) {
+                sVal = this.value;
+                if (this.name == 'page_size')
                     sVal = 1;
-                if (aInput[i].name == 'page')
+                if (this.name == 'page')
                     sVal = oForm['page_size'].value * oForm['page'].value;
-                sGET += (sGET? '&' : '') + aInput[i].name + '=' + encodeURIComponent(sVal);
+                sGET += (sGET? '&' : '') + this.name + '=' + encodeURIComponent(sVal);
             }
-        }
+        });
         sGET += (sGET? '&' : '') + 'only_rows=true';
         objHTTP.open('GET', '<?php echo lovd_getInstallURL() . 'ajax/viewlist.php?'; ?>' + sGET, true);
         objHTTP.send(null);
@@ -175,10 +190,6 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
 
 function lovd_AJAX_viewListGoToPage (sViewListID, nPage) {
     oForm = document.forms['viewlistForm_' + sViewListID];
-    nMaxPage = Math.ceil(oForm.total.value / oForm.page_size.value);
-    if (nPage > nMaxPage) {
-        nPage = nMaxPage;
-    }
     oForm.page.value = nPage;
     lovd_AJAX_viewListSubmit(sViewListID);
 }
@@ -195,13 +206,12 @@ function lovd_AJAX_viewListDownload (sViewListID, bAll)
     // Build URL.
     var sURL = 'ajax/viewlist.php?download' + (bAll? '' : 'Selected') + '&format=text/plain';
     oForm = document.forms['viewlistForm_' + sViewListID];
-    aInput = oForm.getElementsByTagName('input');
-    for (var i in aInput) {
+    $(oForm).find('input').each(function(){
         // We actually don't need everything, but it's too difficult to manually add viewListID, object, order and skip.
-        if (!aInput[i].disabled && aInput[i].value && aInput[i].name.substring(0,6) != 'check_') {
-            sURL +=  '&' + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
+        if (!this.disabled && this.value && this.name.substring(0,6) != 'check_') {
+            sURL +=  '&' + this.name + '=' + encodeURIComponent(this.value);
         }
-    }
+    });
     //oIFrame.src = 'ajax/viewlist.php?viewlistid=' + sViewListID + '&object=' + $('#viewlistForm_' + sViewListID + ' :input[name="object"]').val() + '&download';
     oIFrame.src = sURL;
     $('#viewlistDiv_' + sViewListID).append(oIFrame);
@@ -241,12 +251,11 @@ function lovd_AJAX_viewListHideRow (sViewListID, sElementID)
 function lovd_AJAX_viewListSubmit (sViewListID, callBack) {
     oForm = document.forms['viewlistForm_' + sViewListID];
     // Used to have a simple loop through oForm, but Google Chrome does not like that.
-    aInput = oForm.getElementsByTagName('input');
-    for (var i in aInput) {
-        if (aInput[i].name && aInput[i].name.substring(0, 7) == 'search_' && !aInput[i].value) {
-            aInput[i].disabled = true;
+    $(oForm).find('input').each(function(){
+        if (this.name && this.name.substring(0, 7) == 'search_' && !this.value) {
+            this.disabled = true;
         }
-    }
+    });
 
     // Create HTTP request object.
     var objHTTP = lovd_createHTTPRequest();
@@ -274,16 +283,17 @@ function lovd_AJAX_viewListSubmit (sViewListID, callBack) {
 <?php
 if (!isset($_GET['nohistory'])) {
 ?>
-                        // The following adds the page to the history in Firefox, such that the user *can* push the back button.
-                        // I chose not to use sGET (created somewhere below) here, because it contains 'viewlistid' and 'object' which I don't want to use now and I guess it would be possible that it won't be set.
                         var sHash = '';
-                        aInput = oForm.getElementsByTagName('input');
-                        for (var i in aInput) {
-                            if (!aInput[i].disabled && aInput[i].value && aInput[i].name != 'viewlistid' && aInput[i].name != 'object' && aInput[i].name.substring(0,6) != 'check_') {
-                                sHash += (sHash? '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
-                            }
+                        if (prevHash != 'no_rehash') {
+                            // The following adds the page to the history in Firefox, such that the user *can* push the back button.
+                            // I chose not to use sGET (created somewhere below) here, because it contains 'viewlistid' and 'object' which I don't want to use now and I guess it would be possible that it won't be set.
+                            $(oForm).find('input').each(function(){
+                                if (!this.disabled && this.value && this.name != 'viewlistid' && this.name != 'object' && this.name.substring(0,6) != 'check_') {
+                                    sHash += (sHash? '&' : '') + this.name + '=' + encodeURIComponent(this.value);
+                                }
+                            });
+                            window.location.hash = sHash;
                         }
-                        window.location.hash = sHash;
                         // lovd_AJAX_processViewListHash() itself will actually allow that when the back button is pressed, the correct page is loaded.
                         // The following makes sure this change we just made does not have to reload lovd_AJAX_processViewListHash().
                         prevHash = window.location.hash;
@@ -312,12 +322,11 @@ if (!isset($_GET['nohistory'])) {
         }
         // Build GET query.
         var sGET = '';
-        aInput = oForm.getElementsByTagName('input');
-        for (var i in aInput) {
-            if (!aInput[i].disabled && aInput[i].value && aInput[i].name.substring(0,6) != 'check_') {
-                sGET += (sGET? '&' : '') + aInput[i].name + '=' + encodeURIComponent(aInput[i].value);
+        $(oForm).find('input').each(function(){
+            if (!this.disabled && this.value && this.name.substring(0,6) != 'check_') {
+                sGET += (sGET? '&' : '') + this.name + '=' + encodeURIComponent(this.value);
             }
-        }
+        });
         // Gather changed checkbox IDs and send, too.
         if (check_list[sViewListID].length) {
             if ($.isArray(check_list[sViewListID])) {
@@ -357,6 +366,15 @@ function lovd_AJAX_viewListUpdateEntriesString (sViewListID)
 
 
 
+function lovd_showLegend (sViewListID)
+{
+    // Opens a jQuery Dialog containing a ViewList's full legend.
+
+    $("#viewlistLegend_" + sViewListID).dialog({draggable:false,resizable:false,minWidth:800,modal:true,show:"fade",closeOnEscape:true});
+}
+
+
+
 function lovd_stretchInputs (id)
 {
     // Stretches the input fields for search terms on all columns, since the
@@ -365,7 +383,10 @@ function lovd_stretchInputs (id)
     var aColumns = $("#viewlistTable_"+id+" th");
     var nColumns = aColumns.size();
     for (var i = 0; i < nColumns; i ++) {
-        aColumns.eq(i).find("input").css("width", aColumns.eq(i).width() - 6);
+        if (aColumns.eq(i).width()) {
+            // But only if the column actually has a width (= 0 if table is hidden for now)
+            aColumns.eq(i).find("input").css("width", aColumns.eq(i).width() - 6);
+        }
     }
 }
 
@@ -374,7 +395,7 @@ function lovd_stretchInputs (id)
 function cancelParentEvent (event)
 {
     // Cancels the event from the parent element.
-    if ('bubbles' in event) {   
+    if ('bubbles' in event) {
         // All browsers except IE before version 9.
         if (event.bubbles) {
             event.stopPropagation();
@@ -395,7 +416,7 @@ function lovd_recordCheckChanges (element, sViewListID)
     var nIndex = $.inArray(sID, check_list[sViewListID]);
 
     if (nIndex != -1) {
-        // If the checked checkbox is already in the check_list array, remove it! 
+        // If the checked checkbox is already in the check_list array, remove it!
         check_list[sViewListID].splice(nIndex,1);
         return true;
     } else {

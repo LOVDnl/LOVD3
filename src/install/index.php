@@ -5,12 +5,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2012-06-07
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-04-15
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -141,13 +142,22 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
 
     // 2012-02-01; 3.0-beta-02; Added check for xml_parser_create(), easily allowing other PHP functions to be checked also.
     $bPHPFunctions = true;
-    $sPHPFunctions = '';
+    $bPHPClasses = true;
+    $sPHPRequirements = '';
     foreach ($aRequired['PHP_functions'] as $sFunction) {
         $bFunction = function_exists($sFunction);
         if (!$bFunction) {
             $bPHPFunctions = false;
         }
-        $sPHPFunctions .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bFunction . '.png" alt="" width="11" height="11">&nbsp;PHP function : ' . $sFunction . '()<BR>';
+        $sPHPRequirements .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bFunction . '.png" alt="" width="11" height="11">&nbsp;PHP function : ' . $sFunction . '()<BR>';
+    }
+    // 2014-05-26; 3.0-11; Switching to PHP's SoapClient class to communicate with Mutalyzer's SOAP service, as their REST/JSON service is subject to change.
+    foreach ($aRequired['PHP_classes'] as $sClass) {
+        $bClass = class_exists($sClass);
+        if (!$bClass) {
+            $bPHPClasses = false;
+        }
+        $sPHPRequirements .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bClass . '.png" alt="" width="11" height="11">&nbsp;PHP class : ' . $sClass . '()<BR>';
     }
 
     $sMySQLVers = str_replace('_', '-', $_DB->getServerInfo()) . '-';
@@ -158,7 +168,29 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     // Check for InnoDB support.
     $sInnoDB = $_DB->query('SHOW VARIABLES LIKE "have\_innodb"')->fetchColumn(1);
     $bInnoDB = ($sInnoDB == 'YES');
+    if (!$bInnoDB) {
+        // Might be MySQL 5.6 or higher, where this variable is unavailable.
+        $aEngines = $_DB->query('SHOW ENGINES')->fetchAllCombine(0, 1);
+        $bInnoDB = (isset($aEngines['InnoDB']) && in_array($aEngines['InnoDB'], array('YES', 'DEFAULT')));
+    }
     $sInnoDB = '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bInnoDB . '.png" alt="" width="11" height="11">&nbsp;MySQL InnoDB support ' . ($bInnoDB? 'en' : 'dis') . 'abled (required)';
+
+    // 2013-08-27; 3.0-08; Check for a mail server.
+    // On Windows, you must specify the server address.
+    $bSMTP = false;
+    if (ON_WINDOWS) {
+        $sHost = (ini_get('SMTP')? ini_get('SMTP') : 'localhost');
+        $nPort = (ini_get('smtp_port')? ini_get('smtp_port') : '25');
+        if ($f = @fsockopen($sHost, $nPort, $nError, $sError, 5)) {
+            $bSMTP = true;
+            fclose($f);
+        }
+    } else {
+        $sPath = (ini_get('sendmail_path')? ini_get('sendmail_path') : '/usr/sbin/sendmail');
+        $sPath = substr($sPath, 0, strpos($sPath . ' ', ' '));
+        $bSMTP = is_executable($sPath);
+    }
+    $sSMTP = '<IMG src="gfx/mark_' . (int) $bSMTP . '.png" alt="" width="11" height="11">&nbsp;' . ($bSMTP? 'R' : 'No r') . 'esponse from mail server (recommended' . ($bSMTP? '' : ', please check your PHP configuration') . ')';
 
     // 2012-02-01; 3.0-beta-02; Check for "MultiViews" or Apache's mod_rewrite, or anything some other webserver may have that does the same.
     $aResultNoExt = @lovd_php_file(lovd_getInstallURL() . 'setup');
@@ -171,9 +203,10 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
         // Failure!
         lovd_showInfoTable('One or more requirements are not met!<BR>I will now bluntly refuse to install.<BR><BR>' .
                            $sPHP . '<BR>' .
-                           $sPHPFunctions .
+                           $sPHPRequirements .
                            $sMySQL . '<BR>' .
                            $sInnoDB . '<BR>' .
+                           $sSMTP . '<BR>' .
                            $sMultiViews, 'stop');
         $_T->printFooter();
         exit;
@@ -181,9 +214,10 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
         // Success!
         lovd_showInfoTable('System check for requirements all OK!<BR><BR>' .
                            $sPHP . '<BR>' .
-                           $sPHPFunctions .
+                           $sPHPRequirements .
                            $sMySQL . '<BR>' .
                            $sInnoDB . '<BR>' .
+                           $sSMTP . '<BR>' .
                            $sMultiViews, 'success');
     }
 
@@ -298,13 +332,22 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
 
     @set_time_limit(0); // We don't want the installation to time out in the middle of table creation.
 
-    // Start session.
+    // Restart session, now with correct session name.
+    session_destroy();
     $sSignature = md5($_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . time());
+// DMD_SPECIFIC
+if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
+    $sSignature = 'ifokkema_local_3.0';
+} elseif ($_SERVER['SERVER_ADMIN'] == 'd.asscheman@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
+    $sSignature = 'dasscheman_local_3.0';
+}
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($sSignature);
     session_name('PHPSESSID_' . $_SETT['cookie_id']);
-
-    session_start();
+    @session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
+    // $_SESSION can still be filled with data from previous session of previous LOVD install
+    // on this location and with the same signature, and it's messing up the install (of course highly unlikely).
+    $_SESSION = array();
 
     $_T->printHeader();
     lovd_printSideBar();
@@ -330,6 +373,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     $nTablesFound = count($aTablesFound);
 
     if ($nTablesFound) {
+        // FIXME: This check needs to be done in the beginning. Redirect loop can occur, if TABLE_USERS exists, but other tables miss.
         if ($nTablesFound == $nTables) {
             // Maybe an existing LOVD install... Weird, because then we shouldn't have gotten here... Right?
             $sVersion = $_DB->query('SELECT version FROM ' . TABLE_STATUS, false, false)->fetchColumn();
@@ -355,7 +399,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
         // Please note that in LOVD 2.0 this risk is more significant, since LOVD 2.0 creates new tables for every new gene (variants, columns). LOVD 3.0 does not do that.
         // Therefore, this risk is quite minimal and can only occur when upgrading LOVD 3.0 to a new build with new functionality and more database tables.
         print('      There ' . ($nTablesMatched == 1? 'is a possibly interfering table' : 'are ' . $nTablesMatched . ' possibly interfering tables') . ' found!<BR>' . "\n" .
-              '      <B>Tables with names starting with the same prefix as the LOVD tables may interfere with LOVD at a later stage, if LOVD whishes to create a table with that name.</B><BR>' . "\n" .
+              '      <B>Tables with names starting with the same prefix as the LOVD tables may interfere with LOVD at a later stage, if LOVD wishes to create a table with that name.</B><BR>' . "\n" .
               '      I found:<BR>' . "\n" .
               '      - ' . implode("<BR>\n" . '      - ', $aTablesMatched) . "<BR>\n" .
               '      You may want to consider (re)moving th' . ($nTablesMatched == 1? 'is table' : 'ese tables') . '.<BR>' . "\n\n");
@@ -393,9 +437,11 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // (3) Creating LOVD user & administrator.
     $aInstallSQL['Creating LOVD account &amp; LOVD database administrator account...'] =
              array(
-                    'INSERT INTO ' . TABLE_USERS . '(name, created_date) VALUES ("LOVD", NOW())',
+                    'INSERT INTO ' . TABLE_USERS . ' (name, institute, department, telephone, address, city, email, reference, username, password, password_force_change, level, allowed_ip, login_attempts, created_date) VALUES ("LOVD", "", "", "", "", "", "", "", "", "", 0, 0, "", 9, NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
-                    'INSERT INTO ' . TABLE_USERS . ' VALUES ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' . $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW(), NULL, NULL)',
+                    'INSERT INTO ' . TABLE_USERS . ' (id, name, institute, department, telephone, address, city, countryid, email, reference, username, password, password_autogen, password_force_change, phpsessid, saved_work, level, allowed_ip, login_attempts, last_login, created_by, created_date) VALUES
+                     ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' .
+                        $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW())',
                   );
     $nInstallSQL ++;
 
@@ -450,27 +496,39 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
                 $sTable = 'TABLE_' . strtoupper($sCategory) . 'S';
             }
 
-            $aInstallSQL['Activating LOVD standard custom columns'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
-            $aInstallSQL['Activating LOVD standard custom columns'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES("' . $aCol[0] . '", "00000", NOW())';
+            $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
+            $aInstallSQL['Activating LOVD standard custom columns...'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("' . $aCol[0] . '", "00000", NOW())';
         }
     }
 
 
-    // (10) Creating standard custom links.
+    // (10) Creating the "Healthy / Control" disease. Maybe later enable some more default columns? (IQ, ...)
+    $aInstallSQL['Registering phenotype columns for healthy controls...'] =
+        array(
+            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
+            'UPDATE ' . TABLE_DISEASES . ' SET id = 0',
+            'ALTER TABLE ' . TABLE_DISEASES . ' auto_increment = 1',
+            // FIXME: Rather parse inc-sql-columns then to do this manually.
+            'ALTER TABLE ' . TABLE_PHENOTYPES . ' ADD COLUMN `Phenotype/Age` VARCHAR(12)',
+            'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Age", 0, NOW())',
+            'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, col_order, width, mandatory, description_form, description_legend_short, description_legend_full, select_options, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Age", 0, 100, 0, "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the individual was examined, if known. 04y08m = 4 years and 8 months.", "The age at which the individual was examined, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", "", 1, 1, 0, NOW())',
+        );
+
+    // (11) Creating standard custom links.
     require 'inc-sql-links.php';
     $nLinks = count($aLinkSQL);
     $aInstallSQL['Creating LOVD custom links...'] = $aLinkSQL;
     $nInstallSQL += $nLinks;
 
 
-    // (11) Creating LOVD status.
+    // (12) Creating LOVD status.
     $aInstallSQL['Registering LOVD system status...'] =
              array(
                     'INSERT INTO ' . TABLE_STATUS . ' VALUES (0, "' . $_SETT['system']['version'] . '", "' . $sSignature . '", NULL, NULL, NULL, NULL, NULL, NOW(), NULL)');
     $nInstallSQL ++;
 
 
-    // (12) Creating standard external sources.
+    // (13) Creating standard external sources.
     require 'inc-sql-sources.php';
     $nSources = count($aSourceSQL);
     $aInstallSQL['Creating external sources...'] = $aSourceSQL;
@@ -566,11 +624,11 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
                 // Empty port number, insert NULL instead of 0.
                 $_POST['proxy_port'] = NULL;
             }
-            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false, true);
+            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['proxy_username'], $_POST['proxy_password'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], "", $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false, true);
             if (!$q) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .
-                      '      I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', '[' . implode('] [', $_DB->errorInfo()) . ']') . '</DIV><BR><BR>' . "\n" .
+                      '      I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $_DB->formatError()) . '</DIV><BR><BR>' . "\n" .
                       '      A failed installation is most likely caused by a bug in LOVD.<BR>' . "\n" .
                       '      Please <A href="' . $_SETT['upstream_BTS_URL_new_ticket'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.<BR>' . "\n\n");
                 $_T->printFooter();

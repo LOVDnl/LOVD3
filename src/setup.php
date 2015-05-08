@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2012-06-11
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2013-05-17
+ * For LOVD    : 3.0-05
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -93,6 +93,14 @@ foreach ($aTotalVars as $nStatus => $nVars) {
 }
 print('</TD></TR></TABLE><BR>' . "\n\n");
 
+// Mention that LOVD can be updated!
+if ($_STAT['update_level']) {
+    $_STAT['update_level'] = 7;
+    lovd_showInfoTable('LOVD update available:<BR><B>' . $_STAT['update_version'] . '</B><BR>' . ($_STAT['update_level'] >= 7? ' It is ' . strtolower($_SETT['update_levels'][$_STAT['update_level']]) . ' to upgrade!' : '') . '<BR><A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'check_update\', \'CheckUpdate\', 650, 175); return false;">More information &raquo;</A>', ($_STAT['update_level'] >= 7? 'warning' : 'information'));
+}
+
+
+
 print('          </TD>' . "\n" .
       '          <TD valign="top" width="50%" style="padding-left : 10px; padding-right : 10px; border-right : 1px solid #224488;" id="setupLeft">' . "\n\n");
 
@@ -108,26 +116,12 @@ $aItems =
                         array('users?create', 'lovd_users_create.png', 'Create new authorized user', 'Create a new authorized user or submitter.'),
                         array('users', 'lovd_users_edit.png', 'View all users', 'Manage authorized users and submitters.'),
                       ),
-/*
-// Custom individual columns.
-print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
-      '              <TR>' . "\n" .
-      '                <TD colspan="2"><B>Custom individual columns</B></TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns.php?action=add\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_add.png" alt="Add pre-configured custom individual column" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Add unselected pre-configured custom individual column.</TD></TR>' . "\n" .
-      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns.php?action=view_all\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_edit.png" alt="Manage custom individual columns" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Manage selected custom individual columns.</TD></TR></TABLE><BR>' . "\n");
-*/
             'Custom data columns' =>
                  array(
                         array('columns?create', 'lovd_columns_create.png', 'Create new custom data column', 'Create new custom data column.'),
-                        array('columns', 'lovd_columns_view.png', 'Browse all custom data columns', 'Browse all custom data columns already available and view or edit their settings.'),
+                        array('columns', 'lovd_columns_view.png', 'Browse all custom data columns', 'Browse all custom data columns already available to enable or disable them, or view or edit their settings.'),
+                        array('download/columns', 'lovd_save.png', 'Download all LOVD custom columns', 'Download all LOVD custom columns in the LOVD import format.'),
 /*
-      '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_download.php\';">' . "\n" .
-      '                <TD align="center" width="40"><IMG src="gfx/lovd_save.png" alt="Download all LOVD custom columns" width="32" height="32"></TD>' . "\n" .
-      '                <TD>Download all LOVD custom columns.</TD></TR>' . "\n" .
       '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_import.php\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_import.png" alt="Import new LOVD custom columns" width="32" height="32"></TD>' . "\n" .
       '                <TD>Import new LOVD custom columns.</TD></TR>
@@ -154,9 +148,10 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
       '                <TD>Manage installed LOVD modules.</TD></TR>') .
       '</TABLE>' . "\n");
 */
-            'Download' =>
+            'Download & Import' =>
                  array(
-                        array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD (individuals, phenotypes, screenings &amp; variants).'),
+                        array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD import format (custom columns, genes, transcripts, diseases, individuals, phenotypes, screenings &amp; variants).'),
+                        array('import', 'lovd_import.png', 'Import data', 'Import data using the LOVD import format (custom columns, diseases, individuals, phenotypes, screenings &amp; variants).'),
                       ),
             'System logs' =>
                  array(
@@ -188,12 +183,12 @@ print('          </TD>' . "\n" .
       '          <TD valign="top" width="50%" style="padding-left : 10px;" id="setupRight">' . "\n\n");
 
 
-$aItems = 
+$aItems =
     array(
             'Gene databases' =>
                  array(
                         array('genes?create', 'lovd_genes_create.png', 'Create new gene database', 'Create a new gene database.'),
-                        array('genes', 'lovd_genes_edit.png', 'View all gene databases', 'Manage configured gene databases.'),
+                        array('genes', 'lovd_genes_view.png', 'View all gene databases', 'Manage configured gene databases.'),
                       ),
             'Transcripts' =>
                  array(

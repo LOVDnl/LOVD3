@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2012-05-11
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2014-03-13
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -61,18 +61,57 @@ if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = LEVEL_ADMIN;
 }
 
-// We can't authorize Curators without loading their level!
-if ($nNeededLevel == LEVEL_CURATOR && !empty($_AUTH['curates'])) {
+// 2013-06-28; 3.0-06; We can't allow just any custom viewlist without actually checking the shown objects. Screenings, for instance, does not have a built-in status check (since it doesn't have a status).
+// Building list of allowed combinations of objects for custom viewlists.
+if ($_GET['object'] == 'Custom_ViewList' && (!isset($_GET['object_id']) || !in_array($_GET['object_id'],
+            array(
+                'VariantOnGenome,Scr2Var,VariantOnTranscript', // Variants on I and S VEs.
+                'Transcript,VariantOnTranscript,VariantOnGenome', // IN_GENE.
+                'VariantOnTranscript,VariantOnGenome', // Gene-specific variant view.
+                'VariantOnTranscript,VariantOnGenome,Screening,Individual', // Gene-specific full data view.
+                'Gene,Transcript,DistanceToVar')))) { // Map variant to transcript.
+    die(AJAX_DATA_ERROR);
+}
+
+// We can't authorize Curators and Collaborators without loading their level!
+// 2014-03-13; 3.0-10; Collaborators should of course also get their level loaded!
+if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AUTH['collaborates']))) {
     if ($_GET['object'] == 'Column') {
         lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+    } elseif ($_GET['object'] == 'Transcript' && isset($_GET['search_geneid']) && preg_match('/^="([^"]+)"$/', $_GET['search_geneid'], $aRegs)) {
+        lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
     } elseif ($_GET['object'] == 'Shared_Column' && isset($_GET['object_id'])) {
         lovd_isAuthorized('gene', $_GET['object_id']); // Authorize for the gene currently loaded.
+    } elseif ($_GET['object'] == 'Custom_ViewList' && isset($_GET['id'])) {
+        // 2013-06-28; 3.0-06; We can't just authorize users based on the given ID without actually checking the shown objects and checking if the search results are actually limited or not.
+        // CustomVL_VOT_for_I_VE has no ID and does not require authorization (only public VOGs loaded).
+        // CustomVL_VOT_for_S_VE has no ID and does not require authorization (only public VOGs loaded).
+        // CustomVL_IN_GENE has no ID and does not require authorization (only public VOGs loaded).
+
+        // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
+        // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
+        if (in_array($_GET['object_id'], array('VariantOnTranscript,VariantOnGenome', 'VariantOnTranscript,VariantOnGenome,Screening,Individual')) && (!isset($_GET['search_transcriptid']) || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_GET['search_transcriptid'], $_GET['id']))->fetchColumn())) {
+            die(AJAX_NO_AUTH);
+        }
+        lovd_isAuthorized('gene', $_GET['id']); // Authorize for the gene currently loaded.
     }
 }
 
 // Require special clearance?
 if ($nNeededLevel && (!$_AUTH || $_AUTH['level'] < $nNeededLevel)) {
     // If not authorized, die with error message.
+    die(AJAX_NO_AUTH);
+}
+
+// Managers, and sometimes curators, are allowed to download lists...
+if (in_array(ACTION, array('download', 'downloadSelected'))) {
+    if ($_AUTH['level'] >= LEVEL_CURATOR) {
+        // We need this define() because the Object::viewList() may still throw some error which calls
+        // Template::printHeader(), which would then thow a "text/plain not allowed here" error.
+        define('FORMAT_ALLOW_TEXTPLAIN', true);
+    }
+}
+if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
     die(AJAX_NO_AUTH);
 }
 

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2014-03-03
+ * For LOVD    : 3.0-10
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -41,17 +41,40 @@ if ($_AUTH) {
 
 
 
-if (PATH_COUNT == 1 && !ACTION) {
+if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) {
     // URL: /screenings
+    // URL: /screenings/DMD
     // View all entries.
 
-    define('PAGE_TITLE', 'View screenings');
+    if (!empty($_PE[1])) {
+        $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
+        if ($sGene) {
+            // We need the authorization call if we would show the screenings with VARIANTS in gene X, not before!
+//            lovd_isAuthorized('gene', $sGene); // To show non public entries.
+
+            // FIXME; This doesn't work; searching for gene X also finds XYZ.
+            $_GET['search_genes'] = $sGene;
+        } else {
+            // Command or gene not understood.
+            // FIXME; perhaps a HTTP/1.0 501 Not Implemented? If so, provide proper output (gene not found) and
+            //   test if browsers show that output or their own error page. Also, then, use the same method at
+            //   the bottom of all files, as a last resort if command/URL is not understood. Do all of this LATER.
+            exit;
+        }
+    }
+
+    define('PAGE_TITLE', 'View screenings' . (isset($sGene)? ' that screened gene ' . $sGene : ''));
     $_T->printHeader();
     $_T->printTitle();
 
+    $aColsToHide = array();
+    if (isset($sGene)) {
+        $aColsToHide[] = 'genes';
+    }
+
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
-    $_DATA->viewList('Screenings', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $_DATA->viewList('Screenings', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
 
     $_T->printFooter();
     exit;
@@ -76,29 +99,19 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening($nID);
     $zData = $_DATA->viewEntry($nID);
-    
-    $sNavigation = '';
-    if ($_AUTH) {
-        if ($_AUTH['level'] >= LEVEL_OWNER) {
-            $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit screening information</A>';
-            if ($zData['variants_found']) {
-                $sNavigation .= ' | <A href="variants?create&amp;target=' . $nID . '">Add variant to screening</A>';
-                if ($zData['variants']) {
-                    $sNavigation .= ' | <A href="' . CURRENT_PATH . '?removeVariants">Remove variants from screening</A>';
-                } else {
-                    $sNavigation .= ' | <A style="color : #999999;">Remove variants from screening</A>';
-                }
-            }
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete screening entry</A>';
-            }
+
+    $aNavigation = array();
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
+        $aNavigation[CURRENT_PATH . '?edit']                   = array('menu_edit.png', 'Edit screening information', 1);
+        if ($zData['variants_found']) {
+            $aNavigation['variants?create&amp;target=' . $nID] = array('menu_plus.png', 'Add variant to screening', 1);
+            $aNavigation[CURRENT_PATH . '?removeVariants']     = array('cross.png', 'Remove variants from screening', ($zData['variants_found_'] > 0? 1 : 0));
+        }
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            $aNavigation[CURRENT_PATH . '?delete']             = array('cross.png', 'Delete screening entry', 1);
         }
     }
-
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
+    lovd_showJGNavigation($aNavigation, 'Screenings');
 
     if (!empty($zData['search_geneid'])) {
         $_GET['search_geneid'] = html_entity_decode(rawurldecode($zData['search_geneid']));
@@ -110,15 +123,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA->viewList('Genes_for_S_VE', array(), true, true);
         unset($_GET['search_geneid']);
     }
-    
+
     if ($zData['variants_found'] || !empty($zData['variants'])) {
-        $_GET['search_screeningids'] = $nID;
+        $_GET['search_screeningid'] = $nID;
         print('<BR><BR>' . "\n\n");
         $_T->printTitle('Variants found', 'H4');
-        require ROOT_PATH . 'class/object_genome_variants.php';
-        $_DATA = new LOVD_GenomeVariant();
-        $_DATA->setSortDefault('id');
-        $_DATA->viewList('VOG_for_S_VE', array('id', 'screeningids'));
+        require ROOT_PATH . 'class/object_custom_viewlists.php';
+        // VOG needs to be first, so it groups by the VOG ID.
+        $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
+        $_DATA->viewList('CustomVL_VOT_for_S_VE', array('transcriptid'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
     }
 
     $_T->printFooter();
@@ -158,6 +171,8 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
     $_DATA = new LOVD_Screening();
     require ROOT_PATH . 'inc-lib-form.php';
 
+    $bSubmit = (isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]));
+
     if (POST) {
         lovd_errorClean();
 
@@ -178,7 +193,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created screening information entry ' . $nID);
-            
+
             $aSuccessGenes = array();
             if (!empty($_POST['genes']) && is_array($_POST['genes'])) {
                 foreach ($_POST['genes'] as $sGene) {
@@ -201,64 +216,28 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
                 lovd_writeLog('Event', LOG_EVENT, 'Gene entries successfully added to screening ' . $nID);
             }
 
-            $bSubmitType = '';
-            if (isset($_SESSION['work']['submits']['individual'][$_POST['individualid']])) {
-                $bSubmitType = 'individual';
-
-                $nPanel = $_SESSION['work']['submits']['individual'][$_POST['individualid']]['panel_size'];
-
-                if (!isset($_SESSION['work']['submits']['individual'][$_POST['individualid']]['screenings'])) {
-                    $_SESSION['work']['submits']['individual'][$_POST['individualid']]['screenings'] = array();
+            if ($bSubmit) {
+                if (!isset($_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['screenings'])) {
+                    $_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['screenings'] = array();
                 }
+                $_AUTH['saved_work']['submissions']['individual'][$_POST['individualid']]['screenings'][] = $nID;
 
-                $_SESSION['work']['submits']['individual'][$_POST['individualid']]['screenings'][] = $nID;
             } else {
-                $bSubmitType = 'screening';
-
-                $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_POST['individualid']))->fetchColumn();
-
-                if (!isset($_SESSION['work']['submits']['screening'])) {
-                    $_SESSION['work']['submits']['screening'] = array();
+                if (!isset($_AUTH['saved_work']['submissions']['screening'])) {
+                    $_AUTH['saved_work']['submissions']['screening'] = array();
                 }
-
-                while (count($_SESSION['work']['submits']['screening']) >= 10) {
-                    unset($_SESSION['work']['submits']['screening'][min(array_keys($_SESSION['work']['submits']['screening']))]);
-                }
-
-                $_SESSION['work']['submits']['screening'][$nID] = array();
+                $_AUTH['saved_work']['submissions']['screening'][$nID] = array();
             }
 
-            $sPersons = ($nPanel > 1? 'this group of individuals' : 'this individual');
+            lovd_saveWork();
 
-            if ($bSubmitType == 'screening' && !$_POST['variants_found']) {
-                header('Location: ' . lovd_getInstallURL() . 'submit/finish/screening/' . $nID);
-                exit;
-            } else {
-                $_T->printHeader();
-                $_T->printTitle();
-                $aOptionsList = array();
-                print('      Were there any variants found with this mutation screening?<BR><BR>' . "\n\n");
-                if (!$_POST['variants_found']) {
-                    $aOptionsList['options'][0]['disabled'] = true;
-                    $aOptionsList['options'][0]['onclick']  = 'javascript:alert(\'You cannot add variants to this screening, because you have unchecked the &quot;Have variants been found?&quot; checkbox!\');';
-                } else {
-                    $aOptionsList['options'][0]['onclick'] = 'variants?create&amp;target=' . $nID;
-                }
-                $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit variants found by this mutation screening</B>';
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/screening/' . $nID);
 
-                if ($_POST['variants_found']) {
-                    $aOptionsList['options'][2]['disabled'] = $aOptionsList['options'][1]['disabled'] = true;
-                    $aOptionsList['options'][1]['onclick']  = 'javascript:alert(\'You cannot add a new screening to ' . $sPersons . ', because no variants have been added to this screening yet!\');';
-                    $aOptionsList['options'][2]['onclick']  = 'javascript:alert(\'You cannot finish your submission, because no variants have been added to this screening yet!\');';
-                } elseif ($bSubmitType == 'individual' && !$_POST['variants_found']) {
-                    $aOptionsList['options'][1]['onclick'] = 'screenings?create&amp;target=' . $_POST['individualid'];
-                    $aOptionsList['options'][2]['onclick'] = 'submit/finish/individual/' . $_POST['individualid'];
-                }
-                $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit another mutation screening on ' . $sPersons . ' instead</B>';
-                $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
+            $_T->printHeader();
+            $_T->printTitle();
 
-                print(lovd_buildOptionTable($aOptionsList));
-            }
+            lovd_showInfoTable('Successfully created the screening entry!', 'success');
 
             $_T->printFooter();
             exit;
@@ -292,7 +271,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
-                        array('', '', 'submit', 'Create screening information entry'),
+                        array('', '', 'print', '<INPUT type="submit" value="Create screening information entry">' . ($bSubmit? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/individual/' . $_POST['individualid'] . '\'; return false;" style="border : 1px solid #FF4422;">' : '')),
                       ));
     lovd_viewForm($aForm);
 
@@ -324,6 +303,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
+    $bSubmit = (isset($_AUTH['saved_work']['submissions']['screening'][$nID]) || (isset($_AUTH['saved_work']['submissions']['individual'][$zData['individualid']]['screenings']) && in_array($nID, $_AUTH['saved_work']['submissions']['individual'][$zData['individualid']]['screenings'])));
+
     if (POST) {
         lovd_errorClean();
 
@@ -332,17 +313,34 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         if (!lovd_error()) {
             // Fields to be used.
             $aFields = array_merge(
-                            array('variants_found', 'edited_by', 'edited_date'),
+                            array('variants_found'),
+                            (!$bSubmit || !empty($zData['edited_by'])? array('edited_by', 'edited_date') : array()),
                             $_DATA->buildFields());
 
             // Prepare values.
-            $_POST['variants_found'] = (empty($_POST['variants_found'])? '1' : $_POST['variants_found']);
+            $_POST['variants_found'] = (!isset($_POST['variants_found'])? '1' : $_POST['variants_found']);
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $aFieldsGenome[] = 'owned_by';
+                $aFields[] = 'owned_by';
             }
+            // Only actually committed to the database if we're not in a submission, or when they are already filled in.
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
-            
+
+            if (!$bSubmit) {
+                // Put $zData with the old values in $_SESSION for mailing.
+                // FIXME; change owner to owned_by_ in the load entry query of object_screenings.php.
+                $zData['owned_by_'] = $zData['owner'];
+                if ($zData['variants_found']) {
+                    $zData['variants_found_'] = $_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
+                    if (!$zData['variants_found_']) {
+                        $zData['variants_found_'] = 0;
+                    }
+                } else {
+                    $zData['variants_found_'] = 'None';
+                }
+                $_SESSION['work']['edits']['screening'][$nID] = $zData;
+            }
+
             // FIXME: implement versioning in updateEntry!
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
@@ -393,13 +391,18 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             }
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+            if ($bSubmit) {
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/screening/' . $nID);
 
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully edited the screening information entry!', 'success');
+                $_T->printHeader();
+                $_T->printTitle();
+                lovd_showInfoTable('Successfully edited the screening information entry!', 'success');
 
-            $_T->printFooter();
+                $_T->printFooter();
+            } else {
+                header('Location: ' . lovd_getInstallURL() . 'submit/finish/screening/' . $nID . '?edit');
+            }
+
             exit;
 
         } else {
@@ -436,7 +439,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $aForm = array_merge(
                  $_DATA->getForm(),
                  array(
-                        array('', '', 'submit', 'Edit screening information entry'),
+                        array('', '', 'print', '<INPUT type="submit" value="Edit screening information entry">' . ($bSubmit? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">' : '')),
                       ));
     lovd_viewForm($aForm);
 
@@ -456,7 +459,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     // Confirm existing variant entries within the same individual.
 
     $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'Confirm variant entries for with screening #' . $nID);
+    define('PAGE_TITLE', 'Confirm variant entries with screening #' . $nID);
     define('LOG_EVENT', 'VariantConfirm');
 
     $z = $_DB->query('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
@@ -484,6 +487,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     } else {
         $nIndividual = $z['individualid'];
         $_GET['search_screeningids'] = $_DB->query('SELECT GROUP_CONCAT(id SEPARATOR "|") FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ? AND id != ? GROUP BY individualid', array($nIndividual, $nID))->fetchColumn();
+    }
+
+    $bSubmit = false;
+    if (isset($_AUTH['saved_work']['submissions']['screening'][$nID])) {
+        $bSubmit = true;
+        $aSubmit = &$_AUTH['saved_work']['submissions']['screening'][$nID];
+    } elseif (isset($_AUTH['saved_work']['submissions']['individual'][$nIndividual])) {
+        $aSubmit = &$_AUTH['saved_work']['submissions']['individual'][$nIndividual];
+        if (isset($aSubmit['screenings']) && in_array($nID, $aSubmit['screenings'])) {
+            $bSubmit = true;
+        }
     }
 
     require ROOT_PATH . 'inc-lib-form.php';
@@ -534,54 +548,21 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Updated the list of variants confirmed with screening #' . $nID);
 
-            $bSubmit = false;
-            $sSubmitType = '';
-            if (isset($_SESSION['work']['submits']['screening'][$nID])) {
-                $bSubmit = true;
-                $aSubmit = &$_SESSION['work']['submits']['screening'][$nID];
-                $sSubmitType = 'screening';
-                $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nIndividual))->fetchColumn();
-            } elseif (isset($_SESSION['work']['submits']['individual'][$nIndividual])) {
-                $aSubmit = &$_SESSION['work']['submits']['individual'][$nIndividual];
-                if (isset($aSubmit['screenings']) && in_array($nID, $aSubmit['screenings'])) {
-                    $bSubmit = true;
-                    $sSubmitType = 'individual';
-                    $nPanel = $_SESSION['work']['submits']['individual'][$nIndividual]['panel_size'];
-                }
-            }
-
             if ($bSubmit) {
                 if (!isset($aSubmit['confirmedVariants'][$nID])) {
                     $aSubmit['confirmedVariants'][$nID] = array();
                 }
                 $aSubmit['confirmedVariants'][$nID] = array_merge($aNewVariants, $aSubmit['confirmedVariants'][$nID]);
 
+                lovd_saveWork();
+
+                // Thank the user...
+                header('Refresh: 3; url=' . lovd_getInstallURL() . 'submit/screening/' . $nID);
+
                 $_T->printHeader();
                 $_T->printTitle();
 
-                $sPersons = ($nPanel > 1? 'this group of individuals' : 'this individual');
-                print('      Were there more variants found with this mutation screening?<BR><BR>' . "\n\n");
-
-                $aOptionsList = array();
-                $aOptionsList['options'][0]['onclick']     = 'variants?create&amp;target=' . $nID;
-                $aOptionsList['options'][0]['option_text'] = '<B>Yes, I want to submit more variants found by this mutation screening</B>';
-                if ($sSubmitType == 'individual') {
-                    if (!$nVariantsChecked) {
-                        $aOptionsList['options'][1]['disabled'] = true;
-                        $aOptionsList['options'][1]['onclick']  = 'javascript:alert(\'You cannot add a new screening to ' . $sPersons . ', because there aren\&#39;t any variants connected to this screening yet!\');';
-                    } else {
-                        $aOptionsList['options'][1]['onclick'] = 'screenings?create&amp;target=' . $nIndividual;
-                    }
-                    $aOptionsList['options'][1]['option_text'] = '<B>No, I want to submit another screening instead</B>';
-                }
-                if (!$nVariantsChecked) {
-                    $aOptionsList['options'][2]['disabled'] = true;
-                    $aOptionsList['options'][2]['onclick']  = 'javascript:alert(\'You cannot finish this submission, because there aren\&#39;t any variants connected to this screening yet!\');';
-                } else {
-                    $aOptionsList['options'][2]['onclick'] = 'submit/finish/' . $sSubmitType . '/' . ($sSubmitType == 'individual'? $nIndividual : $nID);
-                }
-                $aOptionsList['options'][2]['option_text'] = '<B>No, I have finished my submission</B>';
-                print(lovd_buildOptionTable($aOptionsList));
+                lovd_showInfoTable('Successfully confirmed the variant entr' . (count($aNewVariants) > 1? 'ies' : 'y') . '!', 'success');
 
                 $_T->printFooter();
 
@@ -625,7 +606,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
                     array('POST', '', '', '', '0%', '0', '100%'),
                     array('', '', 'print', 'Enter your password for authorization'),
                     array('', '', 'password', 'password', 20),
-                    array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_confirmVariants\', function () { $(\'#confirmVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'screenings/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                    array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_confirmVariants\', function () { $(\'#confirmVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
 
@@ -672,6 +653,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
         exit;
     }
 
+    $bSubmit = false;
+    if (isset($_AUTH['saved_work']['submissions']['screening'][$nID])) {
+        $bSubmit = true;
+        $aSubmit = &$_AUTH['saved_work']['submissions']['screening'][$nID];
+    } elseif (isset($_AUTH['saved_work']['submissions']['individual'][$nIndividual])) {
+        $aSubmit = &$_AUTH['saved_work']['submissions']['individual'][$nIndividual];
+        if (isset($aSubmit['screenings']) && in_array($nID, $aSubmit['screenings'])) {
+            $bSubmit = true;
+        }
+    }
+
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (POST) {
@@ -712,13 +704,18 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Updated the list of variants confirmed with screening #' . $nID);
 
-            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
+            if ($bSubmit && !empty($aSubmit['confirmedVariants'][$nID]) && !empty($aToRemove)) {
+                $aSubmit['confirmedVariants'][$nID] = array_diff($aSubmit['confirmedVariants'][$nID], $aToRemove);
+                lovd_saveWork();
+            }
+
+            header('Refresh: 3; url=' . lovd_getInstallURL() . ($bSubmit? 'submit/screening/' . $nID : CURRENT_PATH));
 
             $_T->printHeader();
             $_T->printTitle();
 
             // Thank the user...
-            lovd_showInfoTable('Successfully updated the variant list!', 'success');
+            lovd_showInfoTable('Successfully removed the variant entr' . (count($aToRemove) > 1? 'ies' : 'y') . '!', 'success');
 
             $_T->printFooter();
 
@@ -755,7 +752,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
                     array('POST', '', '', '', '0%', '0', '100%'),
                     array('', '', 'print', 'Enter your password for authorization'),
                     array('', '', 'password', 'password', 20),
-                    array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_removeVariants\', function () { $(\'#removeVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . CURRENT_PATH . '\'; return false;" style="border : 1px solid #FF4422;">'),
+                    array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_removeVariants\', function () { $(\'#removeVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . ($bSubmit? 'submit/screening/' : 'screenings/') . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
 
@@ -775,8 +772,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
     define('LOG_EVENT', 'ScreeningDelete');
 
-    // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_isAuthorized('screening', $nID);
+    lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
@@ -784,6 +781,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     require ROOT_PATH . 'inc-lib-form.php';
 
     $a = $_DB->query('SELECT variantid, screeningid FROM ' . TABLE_SCR2VAR . ' GROUP BY variantid HAVING COUNT(screeningid) = 1 AND screeningid = ?', array($nID))->fetchAllColumn();
+    $aVariantsRemovable = array();
     if (!empty($a)) {
         $aVariantsRemovable = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (?' . str_repeat(', ?', count($a) - 1) . ')', array_merge(array($nID), $a))->fetchAllColumn();
     }
@@ -818,7 +816,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             lovd_writeLog('Event', LOG_EVENT, 'Deleted screening information entry ' . $nID);
 
             // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . 'individuals/' . $zData['individualid']);
 
             $_T->printHeader();
             $_T->printTitle();

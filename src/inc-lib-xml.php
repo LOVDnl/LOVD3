@@ -220,7 +220,7 @@ function lovd_getElementFromArray ($sPath = '', $aArray = array(), $sType = '')
 
     if (is_string($sPath) && strlen($sPath) > 0) {
         $aPath = explode("/", trim($sPath, '/'));
-    
+
         foreach ($aPath as $sElement) {
             $nIndex = 0;
             $sName  = $sElement;
@@ -258,7 +258,7 @@ function lovd_getAllValuesFromArray ($sPath = '', $aArray = array())
 {
     // Designed to easily parse the array returned by lovd_xml2array() 
     // Will loop through all elements(only current level of specified path) in $aArray and return their value if it is set
-    
+
     if (!empty($sPath)) {
         $aArray = lovd_getElementFromArray($sPath, $aArray, 'c');
     } else { 
@@ -290,7 +290,7 @@ function lovd_getAllValuesFromSingleElement ($sPath = '', $aArray = array())
 {
     // Designed to easily parse the array returned by lovd_xml2array() 
     // Will loop through the specified element in $aArray and return its values if they are set
-    
+
     if (!empty($sPath)) {
         $aArray = lovd_getElementFromArray($sPath, $aArray, '');
     } else { 

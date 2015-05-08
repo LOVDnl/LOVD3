@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-09-10
- * Modified    : 2012-01-26
- * For LOVD    : 3.0-beta-01
+ * Modified    : 2012-09-21
+ * For LOVD    : 3.0-beta-09
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -61,7 +61,7 @@ class ProgressBar {
         }
         $this->sID = $sID;
 
-        print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="440">' . "\n" .
+        print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="440" id="lovd_' . $this->sID . '_progress_table" >' . "\n" .
               '        <TR>' . "\n" .
               '          <TD width="400" style="border : 1px solid black; height : 15px;">' . "\n" .
               '            <IMG src="gfx/trans.png" alt="" title="0%" width="0%" height="15" id="lovd_' . $this->sID . '_progress_bar" style="background : #224488;"></TD>' . "\n" .
@@ -74,6 +74,7 @@ class ProgressBar {
               '      </DIV>' . "\n\n" .
               '      <SCRIPT type="text/javascript">' . "\n" .
               '        var oPB_' . $this->sID . ' = document.getElementById(\'lovd_' . $this->sID . '_progress_bar\');' . "\n" .
+              '        var oPB_' . $this->sID . '_table = document.getElementById(\'lovd_' . $this->sID . '_progress_table\');' . "\n" .
               '        var oPB_' . $this->sID . '_value = document.getElementById(\'lovd_' . $this->sID . '_progress_value\');' . "\n" .
               '        var oPB_' . $this->sID . '_message = document.getElementById(\'lovd_' . $this->sID . '_progress_message\');' . "\n" .
               '        var oPB_' . $this->sID . '_message_done = document.getElementById(\'lovd_' . $this->sID . '_progress_message_done\');' . "\n" .
@@ -86,11 +87,20 @@ class ProgressBar {
 
 
 
+    function appendMessage ($sMessage, $sType = '')
+    {
+        // Appends the message text in the specified <DIV>.
+        return $this->setMessage($sMessage, $sType, true);
+    }
+
+
+
+
+
     function redirectTo ($sURL, $nTime = 1)
     {
         // Sends the JS necessary to redirect the viewer to another URL.
-        // When using this class, PHP's header() function does not work anymore.
-        // So it's quite logical putting this function here.
+        // When using this class, PHP's header() function does not work anymore because we have output already.
 
         // Most likely, this function is available, but we can't be sure.
         if (function_exists('lovd_matchURL') && !lovd_matchURL($sURL, true)) {
@@ -110,7 +120,20 @@ class ProgressBar {
 
 
 
-    function setMessage ($sMessage, $sType = '')
+    function remove ()
+    {
+        // Hides the progress bar itself, not the messages.
+
+        print('<SCRIPT type="text/javascript">$(oPB_' . $this->sID . '_table).hide(); $(oPB_' . $this->sID . '_message).hide(); $(oPB_' . $this->sID . '_message_done).hide(); </SCRIPT>' . "\n");
+        flush();
+        return true;
+    }
+
+
+
+
+
+    function setMessage ($sMessage, $sType = '', $bAppend = false)
     {
         // Sets the message text in the specified <DIV>.
 
@@ -121,7 +144,7 @@ class ProgressBar {
             $sType = '';
         }
 
-        print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '_message' . (!$sType? '' : '_done') . '.innerHTML=\'' . str_replace(array('\'', "\r", "\n"), array('\\\'', '', '\n'), $sMessage) . '\';</SCRIPT>' . "\n");
+        print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '_message' . (!$sType? '' : '_done') . '.innerHTML' . ($bAppend? '+' : '') . '=\'' . str_replace(array('\'', "\r", "\n"), array('\\\'', '', '\n'), $sMessage) . '\';</SCRIPT>' . "\n");
         flush();
         return true;
     }

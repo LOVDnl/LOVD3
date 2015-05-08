@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-06-18
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2015-03-11
+ * For LOVD    : 3.0-13
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -125,19 +125,24 @@ class LOVD_Column extends LOVD_Object {
                                     'db'   => array('SUBSTRING(c.id, LOCATE("/", c.id)+1)', 'ASC', true)),
                         'head_column' => array(
                                     'view' => array('Heading', 150),
-                                    'db'   => array('c.head_column', 'ASC', true)),
+                                    'db'   => array('c.head_column', 'ASC', true),
+                                    'legend' => array('The header of this column in data listings.')),
                         'active_' => array(
                                     'view' => array('Active', 60, 'style="text-align : center;"'),
-                                    'db'   => array('IFNULL((a.created_by > 0), 0)', 'DESC', 'INT')),
+                                    'db'   => array('IFNULL((a.colid IS NOT NULL), 0)', 'DESC', 'INT'),
+                                    'legend' => array('Whether this column has been activated in LOVD. For shared columns (Phenotype or VariantOnTranscript columns) this does not mean this column is activated in all diseases or genes, respectively.')),
                         'hgvs_' => array(
                                     'view' => array('HGVS', 50, 'style="text-align : center;"'),
-                                    'db'   => array('c.hgvs', 'DESC', true)),
+                                    'db'   => array('c.hgvs', 'DESC', true),
+                                    'legend' => array('Whether this column is HGVS standard or not. HGVS standard columns can not be removed or disabled.')),
                         'standard_' => array(
                                     'view' => array('Standard', 80, 'style="text-align : center;"'),
-                                    'db'   => array('c.standard', 'DESC', true)),
+                                    'db'   => array('c.standard', 'DESC', true),
+                                    'legend' => array('Whether this column is activated by default. For shared columns (Phenotype or VariantOnTranscript columns) this means newly created diseases or genes, include this column by default.')),
                         'public_view_' => array(
                                     'view' => array('Public', 60, 'style="text-align : center;"'),
-                                    'db'   => array('c.public_view', 'DESC', true)),
+                                    'db'   => array('c.public_view', 'DESC', true),
+                                    'legend' => array('Whether the public can see this column\'s contents or not.')),
                         'col_order' => array(
                                     'view' => array('Order&nbsp;', 60, 'style="text-align : right;"'),
                                     'db'   => array('SUBSTRING_INDEX(c.id, "/", 1), col_order', 'ASC')),
@@ -156,10 +161,10 @@ class LOVD_Column extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
-        global $_AUTH, $_DB;
+        global $_DB;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -182,33 +187,48 @@ class LOVD_Column extends LOVD_Object {
 
         parent::checkFields($aData);
 
+        // Category; not chosen on this form, but we want to make sure it's correct anyways.
+        if (!empty($aData['category']) && !in_array($aData['category'], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
+            lovd_errorAdd('category', 'The category is not correct. Please choose one of the following: Individual, Phenotype, Screening, VariantOnGenome or VariantOnTranscript.');
+        }
+
         // ColID format.
         if (!empty($aData['colid']) && !preg_match('/^[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)*$/', $aData['colid'])) {
             lovd_errorAdd('colid', 'The column ID is not of the correct format. It can contain only letters, numbers and underscores. Subcategories must be divided by a slash (/).');
         }
 
-        // ColID must not exist in the database.
-        if (!empty($aData['category']) && !empty($aData['colid'])) {
-            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid']))->fetchColumn()) {
-                lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
+        // During an import ColID that exist in the database do not give a hard error. Error is handled in import.php
+        if (lovd_getProjectFile() != '/import.php') {
+            // ColID must not exist in the database.
+            if (!empty($aData['category']) && !empty($aData['colid'])) {
+                if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid']))->fetchColumn()) {
+                    lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
+                }
             }
         }
 
-        // Width can not be more than 3 digits.
-        if (!empty($aData['width']) && $aData['width'] > 999) {
-            $aData['width'] = 999;
-            lovd_errorAdd('width', 'The width can not be more than 3 digits!');
+        // Width can not be less than 20 or more than 500.
+        // These numbers are also defined in object_shared_columns.php and inc-js-columns.php.
+        if (isset($aData['width']) && strlen($aData['width']) > 0) {
+            if ($aData['width'] > 500) {
+                lovd_errorAdd('width', 'The width can not be more than 500 pixels!');
+            } elseif ($aData['width'] < 20) {
+                lovd_errorAdd('width', 'The width can not be less than 20 pixels!');
+            }
         }
 
         // MySQL type format.
-        if ($aData['mysql_type'] && !preg_match('/^(TEXT|VARCHAR\([0-9]{1,3}\)|DATE(TIME)?|((TINY|SMALL|MEDIUM|BIG)?INT\([0-9]{1,2}\)|DECIMAL\([0-9]{1,2}\,[0-9]{1,2}\))( UNSIGNED)?)( DEFAULT ([0-9]+|"[^"]+"))?$/i', $aData['mysql_type'])) {
+        if ($aData['mysql_type'] && !preg_match('/^(TEXT|VARCHAR\([0-9]{1,3}\)|DATE(TIME)?|((TINY|SMALL|MEDIUM|BIG)?INT\([0-9]{1,2}\)|DECIMAL\([0-9]{1,2}\,[0-9]{1,2}\)|FLOAT)( UNSIGNED)?)( DEFAULT ([0-9]+|"[^"]+"))?$/i', $aData['mysql_type'])) {
             lovd_errorAdd('mysql_type', 'The MySQL data type is not recognized. Please use the data type wizard to generate a proper MySQL data type.');
         }
 
-        // FIXME; are we just assuming that form_format is OK?
+        // Form type.
+        if ($aData['form_type'] && !preg_match('/^[^|]+\|[^|]*\|(checkbox|text\|[0-9]+|textarea\|[0-9]+\|[0-9]+|select\|[0-9]+\|[^|]*\|(false|true)\|(false|true))$/i', $aData['form_type'])) {
+            lovd_errorAdd('form_type', 'The form type is not recognized. Please use the data type wizard to generate a proper form type.');
+        }
 
         // XSS attack prevention. Deny input of HTML.
-        // Ignore the 'Description on short legend' and 'Description on full legend' fields.
+        // Ignore some fields that are allowed to contain HTML, or that might cause false positives.
         unset($aData['description_form'], $aData['preg_pattern'], $aData['description_legend_short'], $aData['description_legend_full']);
         lovd_checkXSS($aData);
     }
@@ -220,6 +240,12 @@ class LOVD_Column extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
         global $_PE, $_DB;
 
         // Get links list, to connect column to link.
@@ -285,6 +311,7 @@ class LOVD_Column extends LOVD_Object {
                 $this->aFormData['width'][0] .= ' *';
                 $this->aFormData['mandatory'][0] .= ' *';
                 $this->aFormData['public_view'][0] .= ' *';
+                $this->aFormData['public_add'][0] .= ' *';
                 $this->aFormData['apply_to_all'][0] = str_replace('{{ UNIT }}', 'diseases', $this->aFormData['apply_to_all'][0]);
                 break;
             case 'Screening':
@@ -306,6 +333,7 @@ class LOVD_Column extends LOVD_Object {
                 $this->aFormData['width'][0] .= ' *';
                 $this->aFormData['mandatory'][0] .= ' *';
                 $this->aFormData['public_view'][0] .= ' *';
+                $this->aFormData['public_add'][0] .= ' *';
                 $this->aFormData['apply_to_all'][0] = str_replace('{{ UNIT }}', 'genes', $this->aFormData['apply_to_all'][0]);
                 break;
         }

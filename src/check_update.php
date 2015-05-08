@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2012-05-11
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2014-09-19
+ * For LOVD    : 3.0-12
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -31,12 +31,17 @@
 
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+set_time_limit(0); // Can take a long time on large installations.
 
 if (!isset($_GET['icon'])) {
     // Only authorized people...
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
 }
+// Now we unlock the session. We have to do this because otherwise the session data is
+// locked by PHP to prevent race conditions. Without closing the session, the
+// user will not be able to do anything in LOVD until this script finishes.
+session_write_close();
 
 // For the first time, or forced check.
 if ($_STAT['update_checked_date'] == NULL || (isset($_GET['force_check']) && md5($_STAT['update_checked_date']) == $_GET['force_check'])) {
@@ -97,7 +102,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         // USING SUBSELECTS                   SELECT variants_without_individuals + SUM(variants_on_individuals) FROM (SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) AS variants_on_individuals FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub1, (SELECT COUNT(DISTINCT v.id) AS variants_without_individuals FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL) AS sub2;
         //$nVariants = array_sum($_DB->query('SELECT variants_without_individuals + SUM(variants_on_individuals) FROM (SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) AS variants_on_individuals FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub1, (SELECT COUNT(DISTINCT v.id) AS variants_without_individuals FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL) AS sub2')->fetchAllColumn());
         // EVEN SHORTER                     SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < 7, 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub
-        $nVariants = array_sum($_DB->query('SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < 7, 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub')->fetchAllColumn());
+        $nVariants = array_sum($_DB->query('SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < ' . STATUS_MARKED . ', 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= ' . STATUS_MARKED . ' GROUP BY i.id) AS sub')->fetchAllColumn());
         $sPOSTVars .= '&variant_count=' . $nVariants;
     }
 
@@ -112,8 +117,6 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         // Send gene edit dates, curator names, emails & institutes as well.
         // This is not very efficient, but for something done once a day (max) it will do.
         $aData = array('genes' => array(), 'users' => array(), 'diseases' => array());
-        $aUserIDs = array(); // Temporary array for query purposes only.
-        $aDiseaseIDs = array(); // Temporary array for query purposes only.
 
         // First, get the gene info (we store name, diseases, date last updated and curator ids).
         $q = $_DB->query('SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1 AND u2g.show_order > 0) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 GROUP BY g.id ORDER BY g.id', array());
@@ -124,26 +127,18 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
                             'diseases' => explode(',', $z['diseases']),
                             'updated_date' => $z['updated_date'],
                             'curators' => explode(',', $z['users']));
-            $aUserIDs = array_merge($aUserIDs, explode(',', $z['users']));
-            if ($z['diseases']) {
-                $aDiseaseIDs = array_merge($aDiseaseIDs, explode(',', $z['diseases']));
-            }
         }
-        $aUserIDs = array_values(array_unique($aUserIDs)); // Keys must be in order, otherwise PDO returns a query error.
-        $aDiseaseIDs = array_values(array_unique($aDiseaseIDs)); // Keys must be in order, otherwise PDO returns a query error.
 
         // Then, get the actual curator data (name, email, institute).
-        $q = $_DB->query('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' WHERE id IN (?' . str_repeat(', ?', count($aUserIDs)-1) . ') ORDER BY id', $aUserIDs, false);
+        $q = $_DB->query('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' AS u INNER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.allow_edit = 1 AND u2g.show_order != 0 ORDER BY u.id', array(), false);
         while ($z = $q->fetchAssoc()) {
             $aData['users'][$z['id']] = array('name' => $z['name'], 'email' => $z['email'], 'institute' => $z['institute']);
         }
 
         // Finally, get the actual disease data (ID, symbol, name).
-        if ($aDiseaseIDs) {
-            $q = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($aDiseaseIDs)-1) . ') ORDER BY id', $aDiseaseIDs, false);
-            while ($z = $q->fetchAssoc()) {
-                $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
-            }
+        $q = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ORDER BY d.id', array(), false);
+        while ($z = $q->fetchAssoc()) {
+            $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
         }
         $sData = serialize($aData);
         $sPOSTVars .= '&data=' . rawurlencode($sData);
@@ -236,13 +231,13 @@ if (isset($_GET['icon'])) {
 } else {
     // Print what we know about new versions...
     $_T->printHeader(false);
-    
+
     print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="100%" class="info" style="font-size : 11px;">' . "\n" .
           '        <TR>' . "\n" .
           '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_update_' . $sType . '.png" alt="' . ucfirst($sType) . '" title="' . ucfirst($sType) . '" width="32" height="32" hspace="4" vspace="4"></TD>' . "\n" .
           '          <TD valign="middle">Last checked for updates ' . date('Y-m-d H:i:s', strtotime($_STAT['update_checked_date'])) . ' (<A href="check_update?force_check=' . md5($_STAT['update_checked_date']) . '">check now</A>)<BR>' . "\n" .
           '            ' . str_replace("\n", "\n" . '            ', $sMessage) . '</TD></TR></TABLE>' . "\n\n");
-    
+
     $_T->printFooter();
 }
 ?>

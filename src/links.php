@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2013-01-23
+ * For LOVD    : 3.0-02
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -30,6 +30,7 @@
  *************/
 
 define('ROOT_PATH', './');
+define('TAB_SELECTED', 'setup');
 require ROOT_PATH . 'inc-init.php';
 
 if ($_AUTH) {
@@ -80,15 +81,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_Link();
     $zData = $_DATA->viewEntry($nID);
 
-    $sNavigation = '';
+    $aNavigation = array();
     // Authorized user (admin or manager) is logged in. Provide tools.
-    $sNavigation = '<A href="' . CURRENT_PATH . '?edit">Edit custom link</A>';
-    $sNavigation .= ' | <A href="' . CURRENT_PATH . '?delete">Delete custom link</A>';
+    $aNavigation[CURRENT_PATH . '?edit']   = array('menu_edit.png', 'Edit custom link', 1);
+    $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete custom link', 1);
 
-    if ($sNavigation) {
-        print('      <IMG src="gfx/trans.png" alt="" width="1" height="5"><BR>' . "\n");
-        lovd_showNavigation($sNavigation);
-    }
+    lovd_showJGNavigation($aNavigation, 'Links');
 
     $_T->printFooter();
     exit;
@@ -225,7 +223,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     if (!empty($_POST)) {
         lovd_errorClean();
 
-        $_DATA->checkFields($_POST);
+        $_DATA->checkFields($_POST, $zData);
 
         if (!lovd_error()) {
             // Fields to be used.

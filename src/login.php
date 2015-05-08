@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2013-02-20
+ * For LOVD    : 3.0-03
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -77,7 +77,7 @@ if (!empty($_POST)) {
                     lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/unlocking code');
                     $_SESSION['last_login'] = $_AUTH['last_login'];
                     // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
-                    if (function_exists('session_regenerate_id') && !(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
+                    if (!(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
                         session_regenerate_id();
                         // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
                         setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
@@ -117,7 +117,7 @@ if (!empty($_POST)) {
                     lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
                     $_SESSION['last_login'] = $_AUTH['last_login'];
                     // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
-                    if (function_exists('session_regenerate_id') && !(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
+                    if (!(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
                         session_regenerate_id();
                         // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
                         setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));

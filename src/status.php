@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-03
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2012-06-26
+ * For LOVD    : 3.0-beta-07
  *
  * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -51,6 +51,11 @@ require ROOT_PATH . 'class/graphs.php';
 $_G = new LOVD_Graphs();
 lovd_includeJS('lib/flot/jquery.flot.min.js');
 lovd_includeJS('lib/flot/jquery.flot.pie.min.js');
+//begin_fatim
+lovd_includeJS('lib/flot/jquery.flot.categories.js');
+lovd_includeJS('lib/flot/jquery.flot.time.js');
+lovd_includeJS('lib/flot/jquery.flot.axisLabels.js');
+//end_fatim
 print('      <!--[if lte IE 8]><SCRIPT type="text/javascript" src="lib/flot/excanvas.min.js"></SCRIPT><![endif]-->' . "\n\n");
 
 // Statistics about genes:
@@ -72,7 +77,7 @@ print('      <H5>Genes (' . $nGenes . ')</H5>' . "\n" .
 
 // Variant types (DNA level), whole database.
 print('      <H5>Variant type (DNA level)</H5>' . "\n" .
-      '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+      '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px; border-bottom : 3px double #CCC;">' . "\n" .
       '        <TR valign="top">' . "\n" .
       '          <TD width="50%">' . "\n" .
       '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
@@ -81,32 +86,55 @@ print('      <H5>Variant type (DNA level)</H5>' . "\n" .
       '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
       '            <DIV id="variantsTypeDNA_unique" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeDNA_unique_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
 
+//begin_fatim
+print('  <BR><H5>Distribution of genes per chromosome</H5>' . "\n\n\n" .
+      '  <BR><B> This bar chart illustrates the distribution of the genes included in this LOVD install on the human chromosomes.</B><BR><BR>' . "\n" .
+      '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 350px;  border-bottom : 3px double #CCC;">' . "\n" .
+      '        <TR valign="top">' . "\n" .
+      '          <TD>' . "\n" .
+      '            <B>Total number of genes</B><BR>'. "\n" .
+      '            	<DIV id="Chromosome_all" style="width : 750px; height : 500px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="Chromosome_all_hover">&nbsp;</DIV></TD></TR></TABLE>'. "\n\n");
+  
+print('   <BR><H5>Screening Techniques</H5>' . "\n" .
+    '          <BR><B>This pie charts plots the different screening techniques used to identify the variants, all genes</B><BR><BR>'. "\n" .
+	'      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px; border-bottom : 3px double #CCC">' . "\n" .
+    '        <TR valign="top">' . "\n" .
+    '          <TD width="50%">' . "\n" .
+    '            <DIV id="screeningTechniques_all" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="screeningTechniques_all_hover">&nbsp;</DIV></TD></TR></TABLE>'. "\n\n");
 
+print( '      <BR><H5>Data inclusion</H5><BR>' . "\n" .
+    ' 	<BR><B>This graph represents the evolution of data (patients ,  <SPAN STYLE="color:#50B432">cumulated</SPAN>'. "\n" .
+	'			 and  <SPAN STYLE="color:#AA4643">unique</SPAN> variants).</B><BR><BR>'. "\n" .
+	'      	<TABLE border="0" cellpadding="2" cellspacing="0" width="900px" style="height : 320px;">' . "\n" .
+    '           <TR valign="top">' . "\n" .
+    '			  <TD width="50%">' . "\n" .
+    '            	<DIV id="timechart" style="width : 850px; height : 600px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="timechart_hover">&nbsp;</DIV><BR></TD></TR></TABLE>'. "\n\n");
+//end_fatim 
 
 
 //begin_david
 // Variant types (DNA), whole database, pathogenic
 print('      <H5>Variant type (DNA level, pathogenic variants)</H5>' . "\n" .
-          '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
-          '        <TR valign="top">' . "\n" .
-          '          <TD width="50%">' . "\n" .
-          '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
-          '            <DIV id="variantsTypeDNA_all_pathogenic" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_all_pathogenic_hover">&nbsp;</DIV></TD>' . "\n" .
-          '          <TD width="50%">' . "\n" .
-          '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
-          '            <DIV id="variantsTypeDNA_unique_pathogenic" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_unique_pathogenic_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
+    '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+    '        <TR valign="top">' . "\n" .
+    '          <TD width="50%">' . "\n" .
+    '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
+    '            <DIV id="variantsTypeDNA_all_pathogenic" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_all_pathogenic_hover">&nbsp;</DIV></TD>' . "\n" .
+    '          <TD width="50%">' . "\n" .
+    '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
+    '            <DIV id="variantsTypeDNA_unique_pathogenic" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><BR><DIV id="variantsTypeDNA_unique_pathogenic_hover">&nbsp;</DIV></TD></TR></TABLE>'. "\n\n");
 
 
 // Screening techniques, whole database.
-print('      <H5>Screening techniques</H5>' . "\n" .
-      '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
-      '        <TR valign="top">' . "\n" .
-      '          <TD width="50%">' . "\n" .
-      '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' individuals</B><BR>'. "\n" .
-      '            <DIV id="screeningTechniques" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="screeningTechniques_hover">&nbsp;</DIV></TD>' . "\n" .
-      '          <TD width="50%">' . "\n" .
-      '            </TD></TR></TABLE>' . "\n\n");
-// Variant types (protein level), whole database.
+//print('      <H5>Screening techniques</H5>' . "\n" .
+      //'      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
+      //'        <TR valign="top">' . "\n" .
+      //'          <TD width="50%">' . "\n" .
+      //'            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' individuals</B><BR>'. "\n" .
+      //'            <DIV id="screeningTechniques" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="screeningTechniques_hover">&nbsp;</DIV></TD>' . "\n" .
+      //'          <TD width="50%">' . "\n" .
+      //'            </TD></TR></TABLE>' . "\n\n");
+//// Variant types (protein level), whole database.
 print('      <H5>Variant type (Protein level)</H5>' . "\n" .
       '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
       '        <TR valign="top">' . "\n" .
@@ -138,16 +166,23 @@ print('      <H5>Variant type (Protein level, pathogenic variants)</H5>' . "\n" 
 
 flush();
 @ob_end_flush(); // Can generate errors on the screen if no buffer found.
+$_T->printFooter(false);
+
 $_G->genesNumberOfVariants('genesNumberOfVariants', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR));
 $_G->genesLinkedDiseases('genesLinkedDiseases', '*');
 $_G->variantsTypeDNA('variantsTypeDNA_all', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, false);
 $_G->variantsTypeDNA('variantsTypeDNA_unique', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, false);
+//begin_fatim
+$_G->genes2chromosomes('Chromosome_all', ($_AUTH['level'] >= LEVEL_COLLABORATOR));
+$_G->screeningTechniques('screeningTechniques_all', ($_AUTH['level'] >= LEVEL_COLLABORATOR));
+$_G->timeline('timechart', ($_AUTH['level'] >= LEVEL_COLLABORATOR));
+//end_fatim
 
 //begin_david
 //screening techniques
 $_G->variantsTypeDNA2('variantsTypeDNA_all_pathogenic', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, true);
 $_G->variantsTypeDNA2('variantsTypeDNA_unique_pathogenic', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, true);
-$_G->screeningTechniques('screeningTechniques', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
+//$_G->screeningTechniques('screeningTechniques', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
 $_G->variantsTypeProtein('variantsTypeProtein_all', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, false);
 $_G->variantsTypeProtein('variantsTypeProtein_unique', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, false);
 $_G->variantsTypeProtein('variantsTypeProtein_all_pathogenic', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, true);
@@ -185,7 +220,6 @@ foreach ($zGenes as $aGene) {
 }
 */
 
-
-$_T->printFooter();
-
+print('</BODY>' . "\n" .
+      '</HTML>' . "\n");
 ?>

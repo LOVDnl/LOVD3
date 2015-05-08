@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2012-05-16
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2015-05-06
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -51,6 +51,7 @@ class LOVD_Disease extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
+        global $_AUTH;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT d.*, ' .
@@ -62,22 +63,26 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'd.*, ' .
-                                           'GROUP_CONCAT(DISTINCT g.id, ";", g.id_omim, ";", g.name ORDER BY g.id SEPARATOR ";;") AS __genes, ' .
+                                           '(SELECT COUNT(*) FROM lovd_v3_individuals AS i INNER JOIN lovd_v3_individuals2diseases AS i2d ON (i.id = i2d.individualid) WHERE i2d.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') AS individuals, ' .
+                                           '(SELECT COUNT(*) FROM lovd_v3_phenotypes AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
+                                           'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (d.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (d.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'd.id';
 
         // SQL code for viewing a list of entries.
-        $this->aSQLViewList['SELECT']   = 'd.*, ' .
-                                          'd.id AS diseaseid, ' .
-                                          'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ", ") AS genes_';
+        $this->aSQLViewList['SELECT']   = 'd.*, d.id AS diseaseid, ' .
+                                          '(SELECT COUNT(DISTINCT i.id) FROM ' . TABLE_IND2DIS . ' AS i2d LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') WHERE i2d.diseaseid = d.id) AS individuals, ' .
+                                          '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
+                                          'COUNT(g2d.geneid) AS gene_count, ' .
+                                          'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
+        $this->aSQLViewList['WHERE']    = 'd.id > 0';
         $this->aSQLViewList['GROUP_BY'] = 'd.id';
 
         // List of columns and (default?) order for viewing an entry.
@@ -86,7 +91,9 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol' => 'Official abbreviation',
                         'name' => 'Name',
                         'id_omim' => 'OMIM ID',
-                        'genes_' => 'Associated with genes',
+                        'individuals' => 'Individuals reported having this disease',
+                        'phenotypes_' => 'Phenotype entries for this disease',
+                        'genes_' => 'Associated with',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -108,9 +115,15 @@ class LOVD_Disease extends LOVD_Object {
                         'id_omim' => array(
                                     'view' => array('OMIM ID', 75),
                                     'db'   => array('d.id_omim', 'ASC', true)),
+                        'individuals' => array(
+                                    'view' => array('Individuals', 80, 'style="text-align : right;"'),
+                                    'db'   => array('individuals', 'DESC', 'INT_UNSIGNED')),
+                        'phenotypes' => array(
+                                    'view' => array('Phenotypes', 80, 'style="text-align : right;"'),
+                                    'db'   => array('phenotypes', 'DESC', 'INT_UNSIGNED')),
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
-                                    'db'   => array('genes_', false, 'TEXT')),
+                                    'db'   => array('_genes', false, 'TEXT')),
                       );
         $this->sSortDefault = 'symbol';
 
@@ -124,12 +137,13 @@ class LOVD_Disease extends LOVD_Object {
 
 
 
-    function checkFields ($aData)
+    function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
-        if (ACTION == 'edit') {
-            global $zData; // FIXME; this could be done more elegantly.
-        }
+        global $_AUTH, $_DB;
+
+        $bImport = (lovd_getProjectFile() == '/import.php');
+        $bCreate = ((ACTION && ACTION == 'create') || ($bImport && !$zData));
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -137,16 +151,49 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol',
                         'name',
                       );
-        parent::checkFields($aData);
+        $aData = parent::checkFields($aData);
 
-        $aGenes = lovd_getGeneList();
-        // FIXME; misschien heb je geen query nodig en kun je via de getForm() data ook bij de lijst komen.
-        //   De parent checkFields vraagt de getForm() namelijk al op.
-        //   Als die de data uit het formulier in een $this variabele stopt, kunnen we er bij komen.
-        if (isset($aData['genes']) && is_array($aData['genes'])) {
+        if (!empty($aData['id_omim']) && !preg_match('/^[1-9]\d{5}$/', $aData['id_omim'])) {
+            lovd_errorAdd('id_omim', 'The OMIM ID has to be six digits long and cannot start with a \'0\'.');
+        }
+        // Two diseases with the same OMIM ID are not allowed.
+        if (!empty($aData['id_omim']) && ($bCreate || $aData['id_omim'] != $zData['id_omim'])) {
+            $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?', array($aData['id_omim']))->fetchColumn();
+            if ($bExists) {
+                // IMPORTANT: when you change this message, also change the array_search argument in import.php in the Disease section.
+                lovd_errorAdd('id_omim', 'Another disease already exists with this OMIM ID!');
+            }
+        }
+        // We don't like two diseases with the exact same name, either.
+        if (!empty($aData['name']) && ($bCreate || $aData['name'] != $zData['name'])) {
+            $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aData['name']))->fetchColumn();
+            if ($bExists) {
+                // IMPORTANT: when you change this message, also change the array_search argument in import.php in the Disease section.
+                lovd_errorAdd('name', 'Another disease already exists with the same name!');
+            }
+        }
+
+        if (!$bImport && $_AUTH['level'] < LEVEL_MANAGER && empty($aData['genes'])) {
+            lovd_errorAdd('genes', 'You should at least select one of the genes you are curator of.');
+        }
+
+        $_POST['genes'] = array();
+        if (is_array($aData['genes'])) {
             foreach ($aData['genes'] as $sGene) {
-                if ($sGene && !in_array($sGene, $aGenes)) {
-                    lovd_errorAdd('genes', htmlspecialchars($sGene) . 'is not a valid gene.');
+                if (!lovd_isAuthorized('gene', $sGene, false) && $bCreate) {
+                    lovd_errorAdd('genes', 'You are not authorized to add this disease to gene ' . htmlspecialchars($sGene) . '.');
+                } else {
+                    $_POST['genes'][] = $sGene;
+                }
+            }
+        }
+        if (!$bCreate) {
+            if (is_array($aData['genes']) && isset($zData['genes']) && is_array($zData['genes'])) {
+                foreach ($zData['genes'] as $sGene) {
+                    if ($sGene && !in_array($sGene, $aData['genes']) && !lovd_isAuthorized('gene', $sGene, false)) {
+                        lovd_errorAdd('genes', 'You are not authorized to remove this disease from gene ' . htmlspecialchars($sGene) . '.');
+                        $_POST['genes'][] = $sGene;
+                    }
                 }
             }
         }
@@ -162,10 +209,25 @@ class LOVD_Disease extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-        global $_DB;
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
+        global $_DB, $_AUTH;
 
         // Get list of genes, to connect disease to gene.
-        $aGenesForm = $_DB->query('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllCombine();
+        if ($_AUTH['level'] == LEVEL_CURATOR) {
+            $aGenes = $_AUTH['curates'];
+            if (ACTION == 'edit') {
+                global $zData;
+                $aGenes = array_unique(array_merge($aGenes, $zData['genes']));
+            }
+            $aGenesForm = $_DB->query('SELECT id, name FROM ' . TABLE_GENES . ' WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') ORDER BY id', $aGenes)->fetchAllCombine();
+        } else {
+            $aGenesForm = $_DB->query('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllCombine();
+        }
         $nData = count($aGenesForm);
         foreach ($aGenesForm as $sID => $sGene) {
             $aGenesForm[$sID] = $sID . ' (' . lovd_shortenString($sGene, 50) . ')';
@@ -173,7 +235,7 @@ class LOVD_Disease extends LOVD_Object {
         if (!$nData) {
             $aGenesForm = array('' => 'No gene entries available');
         }
-        $nFieldSize = (count($aGenesForm) < 20? count($aGenesForm) : 20);
+        $nFieldSize = (count($aGenesForm) < 15? count($aGenesForm) : 15);
 
         // Array which will make up the form table.
         $this->aFormData =
@@ -183,12 +245,12 @@ class LOVD_Disease extends LOVD_Object {
                         'hr',
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
-                        array('OMIM ID', '', 'text', 'id_omim', 10),
+                        array('OMIM ID (optional)', '', 'text', 'id_omim', 10),
                         'hr',
                         'skip',
-                        array('', '', 'print', '<B>Relation to genes</B>'),
+                        array('', '', 'print', '<B>Relation to genes (optional)</B>'),
                         'hr',
-                        array('This disease has been linked to these genes', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
+            'aGenes' => array('This disease has been linked to these genes', '', 'select', 'genes', $nFieldSize, $aGenesForm, false, true, false),
                         'hr',
                         'skip',
                   );
@@ -213,20 +275,45 @@ class LOVD_Disease extends LOVD_Object {
 
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];
-            $zData['row_link'] = 'diseases/' . rawurlencode($zData['id']);
             $zData['symbol'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['symbol'] . '</A>';
+            $zData['genes_'] = '';
+            $i = 0;
+            if (count($zData['genes']) > 22) {
+                // Don't show all genes.
+                foreach ($zData['genes'] as $key => $sID) {
+                    $zData['genes_'] .= (!$key? '' : ', ') . $sID;
+                    $i++;
+                    if ($i >= 20) {
+                        break;
+                    }
+                }
+                $zData['genes_'] .= ', ' . ($zData['gene_count'] - $i) . ' more';
+            } else {
+                $zData['genes_'] = implode(', ', $zData['genes']);
+            }
         } else {
             if (!empty($zData['id_omim'])) {
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
             }
+            $zData['phenotypes_'] = $zData['phenotypes'];
+            if ($zData['phenotypes']) {
+                $zData['phenotypes_'] = '<A href="phenotypes/disease/' . $zData['id'] . '">' . $zData['phenotypes'] . '</A>';
+            }
+            // Provide links to gene symbols this disease is associated with.
+            $this->aColumnsViewEntry['genes_'] .= ' ' . count($zData['genes']) . ' gene' . (count($zData['genes']) == 1? '' : 's');
             $zData['genes_'] = '';
-            $zData['genes_omim_'] = '';
-            if (!empty($zData['genes'])) {
-                foreach ($zData['genes'] as $aGene) {
-                    list($sID, $nOMIMID, $sName) = $aGene;
-                    $zData['genes_'] .= (!$zData['genes_']? '' : ', ') . '<A href="genes/' . rawurlencode($sID) . '">' . $sID . '</A>';
-                    $zData['genes_omim_'] .= (!$zData['genes_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sName . ' (' . $sID . ')</A>';
+            $zData['genes_short_'] = '';
+            $i = 0;
+            foreach ($zData['genes'] as $key => $sID) {
+                $zData['genes_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sID . '">' . $sID . '</A>';
+                if ($i < 20) {
+                    $zData['genes_short_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sID . '">' . $sID . '</A>';
+                    $i++;
                 }
+            }
+            if (count($zData['genes']) > 22) {
+                // Replace long gene list by shorter one, allowing expand.
+                $zData['genes_'] = '<SPAN>' . $zData['genes_short_'] . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($zData['genes']) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $zData['genes_'] . '</SPAN>';
             }
         }
 

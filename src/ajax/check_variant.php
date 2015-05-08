@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2012-06-21
- * For LOVD    : 3.0-beta-06
+ * Modified    : 2014-07-25
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -33,9 +33,10 @@ require ROOT_PATH . 'inc-init.php';
 session_write_close();
 
 $aGenes = lovd_getGeneList();
-if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes) || !preg_match('/^UD_\d{12}\(' . $_GET['gene'] . '_v\d{3}\):c\..+$/', $_GET['variant']) ) {
+if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes) || !preg_match('/^((UD_\d{12}|NG_\d{6,}\.\d{1,2})\(' . $_GET['gene'] . '_v\d{3}\)):[cn]\..+$/', $_GET['variant'], $aVariantMatches)) {
     die(AJAX_DATA_ERROR);
 }
+$sProteinPrefix = str_replace('_v', '_i', $aVariantMatches[1]);
 
 // Requires at least LEVEL_SUBMITTER, anything lower has no $_AUTH whatsoever.
 if (!$_AUTH) {
@@ -43,21 +44,26 @@ if (!$_AUTH) {
     die(AJAX_NO_AUTH);
 }
 
-require ROOT_PATH . 'class/REST2SOAP.php';
-$_MutalyzerWS = new REST2SOAP($_CONF['mutalyzer_soap_url']);
-$aOutput = $_MutalyzerWS->moduleCall('runMutalyzer', array('variant' => $_GET['variant']));
-if (is_array($aOutput) && !empty($aOutput)) {
-    if (!empty($aOutput['messages'][0]['c'])) {
-        $aMessages = lovd_getAllValuesFromArray('messages/SoapMessage', $aOutput);
-    }
-    if (isset($aMessages['errorcode'])) {
-        print(trim($aMessages['errorcode']) . ':' . trim($aMessages['message']));
-    }
-    $sProteinDescriptions = implode(';', lovd_getAllValuesFromSingleElement('proteinDescriptions/string', $aOutput));
-    if (!empty($sProteinDescriptions)) {
-        print(';;' . trim($sProteinDescriptions));
-    }
-} else {
+require ROOT_PATH . 'class/soap_client.php';
+$_Mutalyzer = new LOVD_SoapClient();
+try {
+    $oOutput = $_Mutalyzer->runMutalyzer(array('variant' => $_GET['variant']))->runMutalyzerResult;
+} catch (SoapFault $e) {
+    // FIXME: Perhaps indicate an error? Like in the check_hgvs script?
     die(AJAX_FALSE);
 }
+
+if (!empty($oOutput->messages->SoapMessage)) {
+    foreach ($oOutput->messages->SoapMessage as $oMessage) {
+        if (isset($oMessage->errorcode)) {
+            print(trim($oMessage->errorcode) . ':' . trim($oMessage->message));
+        }
+        print('|');
+    }
+} else {
+    print('|');
+}
+$sProteinDescriptions = (empty($oOutput->proteinDescriptions->string)? '' : implode('|', $oOutput->proteinDescriptions->string));
+preg_match('/' . preg_quote($sProteinPrefix) . ':(p\..+?)(\||$)/', $sProteinDescriptions, $aProteinMatches);
+print('|' . (isset($aProteinMatches[1])? $aProteinMatches[1] : ''));
 ?>

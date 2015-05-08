@@ -4,7 +4,961 @@
  *
  *************/
 
-// DMD_SPECIFIC: CHECK THE DATE OF THE RELEASES IN THE CHANGELOG!!!
+/**************************
+ * 3.0 Build 14 (r...)
+ * 2015-0?-??
+ *********/
+ * Added URLs to show data by reference (DOI or PubMed currently supported),
+   e.g. /references/PMID:10677295.
+ * Fixed possible future problems with the longer new generic top level domains,
+   which could be rejected as invalid URLs for LOVDs to reside.
+ * Fixed bug; During import the panel IDs in the individual section where only
+   checked in the database and not in the import file. Same for father ID and
+   mother ID.
+ * Curators can simulate the import of an LOVD tab-delimited file.
+ * Fixed problem when LOVD is behind a proxy communicating over HTTPS with the
+   internet, but over normal HTTP with LOVD itself. LOVD then does not detect it
+   is running under HTTPS and includes other items using normal HTTP, causing
+   errors.
+   (thanks to Raymond Dalgleish, University of Leicester, UK, for reporting)
+ * Increased maximum of entries for sortable views to 250K.
+ * Fixed bug; When creating a download file, filters applied would sometimes
+   overwrite previously set filters, for instance causing the gene-specific
+   download to sometimes not contain all related diseases.
+ * Fixed bug; When an import file missed the preceding zeros in any numeric ID,
+   LOVD did not recognize the ID, even though it existed in the database.
+ * Improved the speed of the genes and diseases ViewEntries, where many linked
+   variants, individuals or phenotype entries slowed down the views.
+
+
+/**************************
+ * 3.0 Build 13 (r546)
+ * 2015-03-23
+ *********/
+ * Fixed bug; Given parent IDs were not properly checked during import.
+ * Updated the manual; added detail on installation requirements,  and clarified
+   that some extra fields during import are now optional.
+ * Fixed bug; Importing a file with phenotype or screening data without a given
+   individual ID, caused a fatal query error instead of an error message.
+ * Legend of a form field is available in data entry forms. Legend can now be
+   viewed in via help icons.
+ * Option added in the submission process to add a variant to a screening for
+   when a submitter returned to the individual, or when the submission process
+   is interrupted and continued through "Unfinished Submissions".
+ * Fixed bug; When deleting all variants and associated data of a gene,
+   deleting phenotypes while no individuals were found caused an error.
+ * Fixed bug; Solved bug with finding the proper path elements due to spaces in
+   the LOVD installation path.
+ * Added info table which explains the effect of deleting a gene.
+ * Fixed bug; When genes overlap, the protein change prediction predicted by the
+   variant mapper was sometimes incorrect.
+ * Fixed typo in the data importer.
+ * Fixed bug; Fixed fatal error when a user submits an individual with variants
+   for which is he both curator and submitter.
+ * Fixed bug; Diseases could not be linked to a big number of genes (hundreds).
+ * Fixed bug; The ORCID integration during user registration had to be updated
+   due to a discontinued service.
+ * Updated the year of the copyright notice in the footer.
+ * When rejecting a given DBID, LOVD now reports the incorrect DBID.
+ * Improved import; If a custom column, transcript or disease already exists in
+   the database, the IDs from the database are used and a soft error is set.
+   Custom columns and diseases that exist are not imported and import will
+   continue using the IDs from the database.
+ * Added chapter "Adding data to LOVD" to the manual and extended chapter
+   "Downloading & importing data".
+ * The Phenotype/Length column is now no longer enabled by default for healthy
+   controls.
+ * On the system-wide view of gene-specific columns, two menu links were enabled
+   for Curators, which led to non-available actions.
+ * Clarified some text in the Configuration area.
+ * Fixed bug; During phenotype data import, an incorrect warning message could
+   occur, about the disease not being inserted in the database yet.
+ * Improved the way a new disease can be created through a popup window from the
+   individual and gene data entry forms.
+ * Fixed bug; The gene-specific page for listing individuals sometimes showed
+   individuals screened for other genes, if those genes had a symbol partially
+   matching the selected gene.
+ * Multiple speed optimizations related to importing large files.
+
+
+/**************************
+ * 3.0 Build 12 (r480)
+ * 2014-10-09
+ *********/
+ * Fixed bug; When manually mapping a variant to a transcript, transcripts on
+   the reverse strand did not display the correctly calculated distance.
+ * Fixed bug; The number of non-public variants, shown on the gene homepage, was
+   always set to 0 for the public users, while it was meant to show the public
+   whether a gene database is really empty or not.
+ * Fixed bug; When no individuals with public variants are stored, the field for
+   this value on the gene homepage was empty, instead of showing a 0.
+ * When the Entrez Gene ID is available, the Gene homepage now shows a link to
+   PubMed, showing articles manually linked to the gene by the NCBI staff.
+ * Fixed bug; The SeattleSeq importer caused errors and warnings when trying to
+   generate a variant's description by itself, due to the recent changes to the
+   Mutalyzer interface.
+ * Fixed bug; The update checker could in large installations take a few minutes
+   to complete if statistics were shared; greatly improved the speed.
+ * Fixed bug; The custom viewlists didn't align numeric columns to the right.
+ * Updated the country list with information from wikipedia.org/wiki/ISO_3166-1.
+ * Fixed bug; The reference sequence parser couldn't download files from
+   Mutalyzer anymore due to their recent server update.
+ * Included version 3.0-12 of the official LOVD Reference Sequence Parser
+   script.
+ * Fixed bug; New LOVD 3.0-11 installations didn't connect to the correct Muta-
+   lyzer webservice, whereas installations upgraded from 3.0-10, did.
+
+
+/**************************
+ * 3.0 Build 11 (r463)
+ * 2014-08-07
+ *********/
+ * Checkbox values are now checked properly when importing data.
+ * Fixed bug; DB-IDs created for genes containing a hyphen followed by a number,
+   were rejected by LOVD.
+   (thanks to Efstathios Papachristos, Centogene, Germany, for reporting)
+ * Fixed bug; Due to changes in the ORCID API you could no longer register using
+   an ORCID ID.
+   (thanks to Sanna Matilainen, University of Helsinki, Finland, for reporting)
+ * Fixed bug; Selecting the "No transcripts available" note when creating a gene
+   that has no annotated transcripts, resulted in a fatal error.
+ * Fixed bug; Transcripts created from an NG reference sequence sometimes caused
+   the variant mapper to loop forever.
+ * Fixed bug; Some event log entries related to column edits were marked as er-
+   rors by mistake.
+ * Added "Not classified" as a value for the variant effect option list, which
+   is selected by default but not a valid input for submitters, forcing them to
+   make a conscious choice for a value for this field, and therefore showing the
+   difference between "Effect unknown" and "Not classified".
+ * When users try to reset the password but type in the wrong username, this is
+   now logged, so users can be helpt more easily. Also, it is mentioned that if
+   they do not receive an email, it might be because the username they entered
+   is incorrect.
+ * From 25 diseases or more, the diseases list on the individuals form shows a
+   link to the full disease list which can be searched and browsed in order to
+   find the disease abbreviation needed for the form.
+ * Included version 3.0-11 of the official LOVD Reference Sequence Parser
+   script.
+   - The user can now choose whether the gene-specific NG reference sequence is
+     used, if configured for that specific gene, or the chromosomal NC reference
+     sequence.
+ * The Configuration area is slightly restyled to mirror the view of the Setup
+   area, and includes the names and email addresses of the managers of the LOVD
+   installation, so Curators know who to turn to for help.
+ * Fixed bug; Variants with many genes associated with it could not be edited,
+   because MySQL applied a limit to the length of the gene list.
+ * Fixed bug; The variant mapper sometimes didn't return any RNA or Protein
+   prediction.
+ * Due to the HGNC changing their REST webservice output format, there were pro-
+   blems with creating multiple genes starting from Thursday, July 31th.
+ * Rewrote all communication with Mutalyzer to the new standard, which will be
+   required starting from the next Mutalyzer release, planned in September 2014.
+
+
+/**************************
+ * 3.0 Build 10 (r424)
+ * 2014-04-28
+ *********/
+ * Selecting a new transcript now also works with an NG reference sequence, not
+   only an UD. Sometimes UDs don't work in case of overlapping genes.
+ * Fixed bug; The API didn't return a proper date of last update. This is now
+   returned for the genes separately as for the variants.
+ * Added a chapter on the LOVD API to the manual, containing the sections
+   "Format" and "Possibilities".
+ * Fixed bug; The "Individuals" and "Phenotypes" columns in the Disease listing
+   were not handled as numeric columns by LOVD.
+ * The disease-specific Individuals and Phenotypes listings now have the options
+   menu enabled for managers and up.
+ * Added a help text on imprinting to the gene data entry form.
+ * Fixed bug; The links on the names of a gene's collaborators shown on the gene
+   homepage were pointing to other user's pages.
+ * Fixed bug; When importing large SeattleSeq files and being active in another
+   tab at the same time, both processes could lock each other.
+ * Fixed bug; The mappingInfo webservice from Mutalyzer didn't sort the returned
+   positions on the transcript level, so we need to do it.
+ * Sped up the SeattleSeq import by preventing unnecessary Mutalyzer webservice
+   calls.
+ * Improved the protein description prediction for the SeattleSeq import format.
+ * The owned_by and statusid fields are no longer mandatory while importing;
+   default values are filled in.
+ * Fixed bug; Checks on gene symbols passed through as part of the page URL are
+   now case-insensitive.
+ * Now FLOAT columns can be defined as well.
+ * Fixed bug; The variant mapper can end up in a endless loop while annotating
+   transcripts in genes without the UD set.
+ * Fixed bug; When looking for a transcript to map the variant to while
+   importing a SeattleSeq file, prefer the version provided in the SeattleSeq
+   annotation.
+ * Fixed bug; The VOG and Genes tables could not be in one VL sorted on the
+   chromosome field because of field name ambiguity.
+ * Fixed bug; The waiting time for forcing an LOVD upgrade was set to 3 seconds,
+   but should be 30.
+ * Fixed bug; Non-managers could get a menu item to download other user's data,
+   even though the action itself is not allowed.
+ * More information is shown when viewing your own account page.
+ * Fixed bug; Collaborators lost authorization when dynamically reloading a data
+   view, by searching, sorting or navigating the view.
+ * Switched the order of the options "Add phenotype information to individual"
+   and "Add screening to individual" in the individual detailed view menu.
+ * Fixed a typo in the menus for individuals, phenotypes and variants.
+
+
+/**************************
+ * 3.0 Build 09 (r383)
+ * 2014-02-13
+ *********/
+ * The script that fetches frequencies from the LOVD whole genome installation,
+   was keeping the session locked.
+ * Fixed bug; Editing or manually mapping unmappable variants could result in a
+   fatal error depending on the PHP settings.
+ * The variant checker (protein predictor) using the Mutalyzer services can now
+   also work with an NG reference sequence, not only a UD. Sometimes UDs don't
+   work in case of overlapping genes.
+ * Fixed bug; Editing a public variant by a submitter could result in a fatal
+   error.
+ * Fixed notices in the data listings caused by incorrect search expressions.
+ * Improved views for diseases associated with many genes; the data listings and
+   the detailed views of the diseases now show a maximum number of gene entries,
+   but always show the total number.
+ * Fixed bug; MySQL 5.6 reported to not have InnoDB, because the variable we use
+   to check this, has become unavailable.
+   Closes #26: "LOVD uninstallable on Xampp on Mac OS X 10.8.5".
+   (thanks to Tyler Hill, Oregon Health & Science Univ., USA, for reporting)
+ * From the "Your account" link in the top right-hand side of the screen, but
+   also for authorized users when viewing any user's details, links are provided
+   to view the data owned by the user in question.
+ * Due to the HGNC changing their URL schema again, no new genes could be
+   created starting from Wednesday, January 8th.
+ * Improved the speed of the variant overview on the Screenings or Individuals
+   detailed pages, especially noticable when having many VariantOnTranscript
+   columns.
+ * Fixed bug; Uploading a non-SeattleSeq file into the SeattleSeq parser resul-
+   ted in many notices, and the message only one variant was found (but not
+   imported). Now it doesn't throw the notices, and reports the correct number
+   of ignored variants.
+
+
+/**************************
+ * 3.0 Build 08 (r349)
+ * 2013-10-16
+ *********/
+ * Importing no longer has PHP's time limit imposed.
+ * Fixed bug; Users with special characters in their name could sometimes not
+   receive email from LOVD, because LOVD did not encode the names correctly.
+ * During installation, LOVD now checks for a valid mail server.
+ * Fixed bug; The StopForumSpam check at user registration could not deal with
+   multiple email addresses in the email field.
+ * Minor changes to the manual, improving clarity.
+ * Fixed bug; Custom links could not be assigned to all custom columns when the
+   number of columns had increased to large numbers.
+ * Applied speed improvements to the disease viewlist, and the numbers for the
+   "Individuals" and "Phenotypes" columns now also show non-public entries for
+   authorized users.
+ * On the genes data listing, the "Variants" and "Unique variants" columns now
+   also show non-public entries for authorized users.
+ * Fixed bug; When directly publishing a variant, the DBID assigned to it was
+   ignoring the mapping to any transcripts.
+ * The restriction site column is no longer enabled by default.
+ * While managing the transcripts for a certain variant, the distance between
+   the variant and the transcripts are now shown. The default sort order is on
+   this column, so nearly transcripts are easily picked.
+ * Fixed bug; Whenever a variant is not recognized because it's not correct HGVS
+   syntax, it couldn't be manually mapped to a different transcript.
+ * Clarified error messages related to panel size and panel ID on the data entry
+   form for individuals.
+ * Added script that fetches the average variant frequency of any variant in the
+   database from the LOVD whole genome installation, which stores variant
+   frequencies from various studies and populations. The variant's average
+   frequency can be viewed in the variant's detailed view, and includes a link
+   to the whole genome LOVD installation for a detailed view.
+ * IDs in the logs recognized by LOVD are now turned into links, allowing quick
+   navigation from the log entry to the data described by it.
+ * Fixed bug; LOVD3 did not support LOVD2-style redirects from the LOVD world-
+   wide variant search interface.
+ * Fixed bug; For large gene databases, the gene homepages showed an incorrect
+   number for individuals with public variants, because of database limitations.
+ * Fixed bug; The warning messages during import about lost values were repeated
+   several times when empty sections were found at the end of the imported file.
+ * When importing data from SeattleSeq files, the Allele field would default on
+   "Parent #1", instead of "Unknown".
+ * After deleting a screening, users are now forwarded to the individual's
+   detailed view.
+ * Fixed bug; Quick-curating entries sometimes triggered an incorrect error when
+   empty selection lists were involved.
+
+
+/**************************
+ * 3.0 Build 07 (r327)
+ * 2013-08-15
+ *********/
+ * Fixed bug; When importing data not directly associated to a gene, the log
+   entry describing the import seemed incomplete.
+ * When LOVD no longer sorts the data views, it now tries to sort on the primary
+   key, which should be fast and should keep the results in a reliable order.
+ * Updated minor parts of the manual.
+ * Added sections "Deleting custom columns", "Downloading custom column data to
+   text files" and "Importing custom column data from text files" to the custom
+   column chapter in the manual.
+ * Added a chapter about downloading & importing data to the manual, containing
+   the sections "The LOVD3 import format" and "Downloading data from LOVD".
+ * Added a chapter about data security to the manual, containing the sections
+   "Keeping your data secure", "Built-in security measures" and "What you can do
+   to protect your data".
+ * Added a chapter about troubleshooting to the manual.
+ * Fixed bug; When a data listing can't be sorted because it's too slow, LOVD on
+   first load claimed it's not sortable because of the number of results instead
+   of the loading time.
+ * Fixed typo in column legend.
+ * Fixed bug; Data owners had an option in the menu to publish their data, but
+   clicking this resulted in an unclear error message. Removed the menu option
+   to prevent confusion, but also improved the error message.
+ * All known age fields now support shorter input formats, which are converted
+   by LOVD to the full format. For instance; 5d is converted into 00y00m05d for
+   you automatically.
+ * The individuals view and the gene-specific full data view now allow sorting
+   on the disease column as well.
+ * Fixed bug; Searching full-match on text including an underscore didn't return
+   the expected results.
+ * When viewing a variant that was reported more than once, a link is displayed
+   next to the DBID field that allows viewing all reports.
+ * Fixed bug; Because the Ensembl genome browser doesn't support the offset tag
+   in the BED file, the variants were displayed on the wrong position.
+   Closes #23: "Variant offset is wrong in Ensembl genome browser".
+   (thanks to Rajaram Kaliyaperumal, LUMC, Leiden, Netherlands, for reporting)
+ * The number of variants in the individuals and screenings views did not show
+   non-public, but owned, variants for submitters.
+ * Submitters could not see their non-public data in the gene-specific variant
+   views.
+ * Minor changes to the screening data entry form.
+ * Improved labels on "Map variant" button to more clearly indicate its function
+   to users using the variant data entry form for the first time.
+ * Fixed bug; When creating a user account for somebody else, the email sent to
+   the new user contained a link to the creator's account instead of the created
+   account.
+
+
+/**************************
+ * 3.0 Build 06 (r316)
+ * 2013-06-28
+ *********/
+ * LOVD3 now requires PHP/5.3.0 although some code was already incompatible with
+   5.2.0.
+ * Fixed bug; The individual user pages were not open for submitters,
+   collaborators and curators, even though links to these pages were given.
+   These pages are now open to authorized users, and for users not logged in,
+   the links have been removed.
+   (thanks to Raymond Dalgleish, University of Leicester, UK, for reporting)
+ * Fixed bug; The individuals and screenings listings, as well as the screenings
+   detailed view, showed the total number of variants to the public, instead of
+   the number of public variants.
+ * The variant listings below individual and screenings detailed views now also
+   show the variant's effect on transcript level.
+   Closes #18: "View variants affecting transcripts in screening view".
+ * Diseases with OMIM ID but without abbreviation, now no longer have their full
+   name printed twice on the gene homepage.
+ * In the genes listing, diseases without abbreviation now have their full name
+   printed.
+ * Improved description on legend about Allele field.
+ * Added sections "Editing custom column settings", "Changing the order of
+   custom columns" and "Disabling custom columns" to the custom column chapter
+   in the manual.
+ * Fixed bug; When creating new shared custom column, "Show field on submission
+   form" was incorrectly not tagged as updatable per parent object (gene or
+   disease).
+ * Some numbers on the gene homepage (public variants, hidden variants) are now
+   clickable in case you are authorized to see these subsets.
+ * The disease listing now shows the number of phenotype entries associated with
+   each disease.
+ * The disease detailed view now shows the number of individuals reported having
+   this disease, and the number of phenotype entries associated with this
+   disease. The latter is a link leading to the phenotype data listing.
+ * Fixed bug; When curators removed custom columns from all genes or diseases
+   they control, the number of values reported to be lost could be too high.
+ * Now that LOVD provides information on values lost when removing custom
+   columns, curators are allowed again to delete phenotype columns containing
+   data.
+ * Clarified data entry form notes on the object-specific custom column edit
+   form.
+ * Fixed bug; The gene-specific overviews (variants and full data view) were not
+   showing non-public non-shared (Variants On Genome, Screenings, Individuals)
+   columns to curator level users due to a overly strict security check.
+ * Fixed notice in lovd_trimField() function during import.
+ * Fixed bug; Not specifying the HGVS column in the custom column import file
+   caused a fatal query error in LOVD.
+ * Fixed bug; Through certain manipulations, collaborators and curators would be
+   able to see (not edit) non-public data of genes they had no authorization
+   for.
+
+
+/**************************
+ * 3.0 Build 05 (r302)
+ * 2013-05-30
+ *********/
+ * Added note on VCF import page about pre-filtering the data.
+ * Changed wording somewhat on the user registration page.
+ * Fixed bug; The API didn't reveal the strand of the genes, like the LOVD2 API.
+ * Fixed bug; In the import script, the check for repeated IDs in each object's
+   data section was not working.
+ * Fixed bug; The import script resulted in a query error when two diseases were
+   added having the same OMIM ID, and adding two diseases with the same name was
+   not prevented.
+ * Fixed bug; When importing data, the diseaseid field in the Phenotypes section
+   was not mandatory.
+ * Variants can now be imported without specifying the DBID; it will be
+   automatically generated when left empty.
+ * While importing many phenotype entries of a disease not yet in the database,
+   the warning about this is no longer repeated for each phenotype entry.
+ * When the importer rejects a field's input because its value is not part of
+   the selection list's options, the allowed values are now listed in the error
+   message.
+ * When importing individuals with a fatherid or motherid, the IDs were not
+   matched with individuals in the import file.
+ * Fixed bug; The update checker failed in installations without curators.
+ * Fixed bug; Internet Explorer did not reload the data listings correctly, when
+   using the browser's back button. Also fixed other issues with using the
+   browser's back button while navigating data listings.
+   Closes #20: "Going back in browser does not change the view back to how it
+   was on Windows".
+   (thanks to Sirisha Hesketh, Oxford University Hospitals, UK, for reporting)
+ * Custom column data can now also be imported using the LOVD3 import format.
+ * When creating, editing or importing a custom column, the form type field is
+   now properly checked.
+ * The detailed view of an individual entry now shows links to the parents when
+   they are in the database as well.
+ * When during import non-fatal warnings occur with simulation mode on, the
+   warnings can be shown on the import form.
+ * Fixed bug; When re-importing previously downloaded data, quotes and
+   backslashes were not handled properly.
+ * When downloading the full LOVD data set, the custom column data is now also
+   included.
+ * Now allowing gene symbols longer than 20 characters, since
+   DTX2P1-UPK3BP1-PMS2P11 needs the space.
+ * The list of diseases now shows the number of individuals in the database
+   linked to these diseases.
+ * The list of individuals on the disease detailed view is now split in pages
+   and can be navigated.
+ * Fixed bug; On large installations, the check_update.php script took quite
+   some time and locked the session of the current user.
+
+
+/**************************
+ * 3.0 Build 04 (r297)
+ * 2013-04-18
+ *********/
+ * Fixed bug; When registering, the password fields were optional. This bug was
+   introduced over a year ago in r102 (3.0-alpha-07).
+ * Fixed notice in inc-ini.php when using older config.ini file.
+ * Custom columns can now be downloaded in the LOVD import format, to facilitate
+   backups or to share custom column settings with other LOVDs.
+ * Fixed bug; The function retrieving the NG ID for a gene also matched gene
+   symbols that end with the requested symbol.
+ * Fixed bug; When data owned by the LOVD user is edited, the email sent returns
+   due to the lack of an email address. LOVD will now never attempt an email
+   again if no address is known.
+ * The import script now supports a "simulate" mode, where the file is checked
+   for errors, but no import is done if no errors are found.
+ * The import script didn't allow the custom columns IDs to contain numbers even
+   though LOVD does allow such column IDs.
+ * Added the Phenotype/Age/Onset custom column.
+ * Added the option "Complex" for the Phenotype/Inheritance column.
+ * Fixed bug; When opening the configuration area without having selected a gene
+   first, the gene selection list allowed managers to select only genes they
+   curate.
+ * Fixed bug; Using a trick, curators could open the configuration area of genes
+   they do not curate, although this did not grant them any authorization.
+ * Fixed bug; Removing a Variant On Transcript column resulted in a query error.
+ * When removing or adding a shared custom column, LOVD now more intelligently
+   checks if there is a risk for a long duration of the query.
+ * Fixed bug; When changing the order of curators, the changes were applied
+   system wide.
+   (thanks to Anne Polvi, University of Helsinki, Finland, for reporting)
+ * On smaller screens, the menu tabs will no longer wrap.
+ * Added a chapter about custom columns to the manual, containing the sections
+   "Custom column categories", "Creating a new custom column" and
+   "Enabling custom columns".
+ * The hint on the custom column definition form displaying the column's width,
+   now updates instantaneous. The minimum width is now set to 20 pixels, and the
+   maximum to 500 pixels.
+ * From the documentation page, none of the information usually on the top right
+   hand side of the screen were available.
+
+
+/**************************
+ * 3.0 Build 03 (r288)
+ * 2013-03-06
+ *********/
+ * Added a chapter about gene transcripts to the manual and various other minor
+   additions.
+ * When during import, columns are being ignored, LOVD no longer stops import,
+   which was introduced in build 02.
+ * Fixed notice in the import procedure, caused when uploading an empty section.
+ * On forms where file uploads are enabled, the reasons for file size
+   restrictions are now explained to the user.
+ * Greatly improved the HGVS syntax checking on the data entry forms, which is
+   instant now.
+ * The HGVS syntax checking script is now also cached by the browser.
+ * The MySQL password setting in the config.ini.php file is no longer mandatory.
+ * Importing very large VCF files no longer result in a timeout.
+ * Fixed bug; The public could not see any contents in VariantOnTranscript
+   fields in the "View all variants affecting transcripts" custom viewlist due
+   to an over active security feature last changed in r214 (3.0-beta-07).
+ * Fixed bug; Curators could sometimes also not see contents in
+   VariantOnTranscript fields of random genes in the "View all variants
+   affecting transcripts" custom viewlist when the installation contained a lot
+   of genes.
+ * Improved the variant mapper speed, and greatly sped up the lovd_fetchDBID()
+   function, which together speeds up the variant mapping by about 8-20x with 1M
+   variants.
+ * Fixed bug; For variants spanning the entire gene, the RNA and protein change
+   prediction on the data entry form returned an JavaScript error.
+ * When data overviews get too slow, LOVD automatically disables the sorting
+   feature to reduce the strain on the database.
+ * When data overviews take too much time to load, LOVD speeds the views up by
+   determining the correct number of results only once every 15 minutes.
+
+
+/**************************
+ * 3.0 Build 02 (r280)
+ * 2013-01-30
+ *********/
+ * Managers and up can now also download other user's data.
+ * Fixed bug; When removing a non-shared column or when removing a shared column
+   from the last target, the actual removal was not logged.
+ * Fixed bug; When not allowed to remove a shared column from a target, the menu
+   link for removal on the column's detailed view is now disabled also.
+ * Disabled links in the dropdown menus now have their icons greyed out.
+ * Fixed bug; The Configuration tab's menu is no longer shown when a curator has
+   a gene selected that he/she has no rights on or when no gene is selected.
+ * Added some options to the tab's dropdown menus.
+ * Improved the handling of custom column removal; when removing columns you are
+   advised about the deletion of data in the given column and the number of
+   values that will be lost is provided.
+ * JS files generated by PHP are now cached.
+ * Fixed bug; In emails sent when a screening entry had been edited, the "Edited
+   by" field was numeric, instead of showing the user's name.
+ * Fixed bug; The "Download selected entries" option didn't work because of an
+   overly strict security feature.
+ * Pages belonging to the Setup area now have the Setup tab highlighted.
+ * Curators and up can now download all data specific to the selected gene.
+ * Fixed bug; The PubMed custom link was not activated by default for the
+   VariantOnGenome/Reference column.
+ * A link to the gene-specific graphs page is now also included in the Options
+   dropdown menu on the gene homepage.
+ * Implemented the "Empty gene database" feature, also present in LOVD2.
+ * Fixed bug; Importing a file failed when mime_content_type() was not available
+   in PHP.
+ * When certain columns are ignored during import because they are not present
+   in the database, LOVD now reports how many entries had values in these
+   columns.
+ * Added links to dbSNP from the VariantOnGenome/dbSNP column.
+ * Due to the HGNC changing their URL schema, no new genes could be created
+   starting from Wednesday, January 30th.
+
+
+/**************************
+ * 3.0 Build 01 (r273)
+ * 2012-12-19
+ *********/
+ * The list of diseases presented when activating phenotype columns, wasn't sor-
+   ting diseases without abbreviations correctly.
+ * Fixed bug; The variant type graphs analyzed all variants for non-authorized
+   users, and only the public variants for authorized users.
+ * Fixed bug; In the combined data listings, the individual's owner field was
+   set to the variant's owner field.
+ * Fixed bug; The first disease added to LOVD would have ID 2, instead of 1.
+ * Fixed bug; Genes created when importing SeattleSeq files didn't get their
+   Entrez Gene and OMIM IDs stored.
+ * Fixed problem with creating genes and transcripts when importing SeattleSeq
+   annotated files with MySQL's strict mode on.
+ * Fixed problem with creating transcripts by the variant mapper with MySQL's
+   strict mode on.
+ * Fixed bug; Mapping variants to transcripts not yet in LOVD failed because of
+   a bug introduced in r256.
+ * Fixed bug; The RNA field was not predicted when mapping variants onto tran-
+   scripts not yet in LOVD.
+ * Fixed notices during import of diseases without associated genes.
+ * Fixed bug; Diseases imported did not have the default phenotype columns
+   enabled.
+
+
+/**************************
+ * 3.0 Beta 12 (RC2) (r268)
+ * 2012-12-10
+ *********/
+ * Fixed bug; The newly introduced quick curate option in beta-11 (r258) intro-
+   duced a bug that made the import script ask for password verification for the
+   data that was being imported.
+ * Changed the data listing's help icon to "Legend" text to prevent confusion
+   what it provides help for, and added explanation on top of the full legend on
+   how to get the short legend texts.
+ * Fixed bug; Individuals without any diseases selected could not be published
+   using the quick curate option.
+ * The gene-specific data listings now also mention the data owner just like
+   most other data listings, and moving the mouse over the owner's name shows
+   the owner's information.
+ * Modified LOVD scripts to accept changed warning codes from Mutalyzer, which
+   now better reflect if they match the selected gene or not.
+ * LOVD now shows a sensible error message on the variant data entry form when
+   the given transcript is not in Mutalyzer's mapping database.
+ * When mapping variants, LOVD now also predicts the RNA field.
+
+
+/*******************
+ * 3.0 Beta 11 (RC1) (r264)
+ * 2012-12-03
+ *********/
+ * Added spam protection to the submitter registration form using the
+   StopForumSpam.com API.
+ * Fixed bug; '0' was never checked to be a valid entry for selection lists.
+ * Fixed problem with creating genes by the variant mapper with MySQL's strict
+   mode on.
+ * Added warning to the VCF import form that we don't support importing
+   deletions or insertions using VCF format 3.3 or lower.
+ * Fixed bug; The variant mapper miscalculated the progress percentage of all
+   runs except the first.
+ * Added support for XR reference sequences.
+ * Included version 3.0-beta-11 of official LOVD Reference Sequence Parser
+   script.
+   - Added support for transcripts other than NM transcripts.
+ * A gene database's version is only shown on the gene homepage when the
+   database already has an "updated" timestamp.
+ * Fixed bug; The "Sort curators" page never showed any error messages when no
+   curators were selected to be shown on the gene homepage, even though the form
+   was blocked for submission.
+ * Fixed bug; When the "Sort curators" page was submitted, but errors were
+   encountered, all curators were shown as hidden and could not be reselected
+   without restarting the form.
+ * The "Sort curators" page no longer shows collaborators.
+ * Fixed notices in import script when sections had been left out of the import
+   file.
+ * Fixed bug; When leaving the allele value empty in the Variants_On_Genome
+   section, a query error occurred. Now, LOVD will assume a default value.
+ * Added color coding to the status field on the detailed views of entries that
+   have a status.
+ * On the VariantOnGenome, Screening and Phenotype detailed views, the
+   individual's status is also shown and color coded.
+ * From the VariantOnGenome, Individual and Phenotype detailed views, you can
+   now directly publish (curate) an unpublished entry by using the publish
+   (curate) option in the Options menu.
+ * The phenotype data listings now also show the status column for those allowed
+   to see it.
+ * Fixed bug; In emails sent when an entry had been edited, the "Edited by"
+   field was numeric, instead of showing the user's names.
+ * Fixed awkward non-standard order of the "Data status" field in the submission
+   emails.
+ * The users list now shows which users already have their ORCID ID filled in,
+   and you can now sort on username.
+ * Fixed bug; When LOVD could not send an email, the error was logged twice.
+ * Fixed bug; DB IDs for ORF genes with additional letters after their number,
+   such as CXorf40A, were always considered incorrect.
+ * Fixed bug; After resorting or filtering the list of enabled phenotype columns
+   for a certain gene or disease, the links would stop working.
+ * The individual's detailed views now also show phenotype entries related to
+   diseases the individual is not or no longer linked to.
+ * Added missing form help text to the VariantOnGenome/DNA field.
+ * Added Documentation tab, where you can find the latest LOVD 3.0 manual, which
+   is still work in progress.
+ * When moving the mouse over a column's header in a data listing, a short text
+   describing the meaning of the column pops up. This has been implemented for
+   all custom columns, and some fixed columns.
+ * Data listings with a legend, now show a help icon if the pagination has been
+   activated, which opens the full legend.
+ * Removed the "date edited" column from the screenings listing, since no other
+   listing showed that column.
+ * Fixed bug; Data that got owned by LOVD for whatever reason, was automatically
+   assigned to the user first in the alphabetic user list when editing.
+ * Fixed bug; In emails sent when an entry had been edited, the "Data owner"
+   field was only shown when this was not the person editing, even though the
+   owner may have been changed in the edit.
+
+
+/*******************
+ * 3.0 Beta 10
+ * 2012-11-13
+ *********/
+ * Fixed bug; The import page would sometimes hide error messages and say there
+   was nothing to import.
+ * Unset option from the Configuration tab menu when not available because no
+   gene is selected.
+ * Fixed bug; When disabling a shared column in only some objects, the log entry
+   mentioned an incorrect number of objects.
+ * Fixed bug; The fields on the variant create and edit forms were checked in a
+   different order than how they are displayed, which may cause confusion when
+   reading the error messages.
+ * On a user's detailed view, the number of genes he/she curates or is
+   collaborator for, is now printed in the field's header.
+ * Added basic ORCID ID integration; while registering as a submitter or when
+   creating a new user account for somebody else, you can provide an ORCID ID
+   which is used to prefill as many fields of the registration form as possible.
+   The ID itself is stored for later use.
+ * Changed "Segregates with disease" to "Segregates with phenotype".
+ * Fixed bug; The XSS check protecting fields from unauthorized HTML injection
+   should not have been applied to the 'description_form' field when editing
+   shared columns, since it's not applied when creating the column, either.
+ * Fixed bug; Submitter registration emails were sent to the database
+   administrator always, even if he indicated not wanting them.
+ * After registering a submitter account, you are now forwarded to your account
+   details instead of the gene list.
+ * When creating a new user, you can have the account details mailed to him/her.
+ * Added support for non-coding genes with NR transcript reference sequences.
+ * Fixed bug; Transcripts could not be added to variants not HGVS compliant on
+   genomic level.
+ * Fixed bug; Importing would fail if spreadsheet programs had put quotes around
+   the file section's headers.
+ * Fixed notices while importing files without section headers.
+ * Fixed bug; When the import script finds less columns in a section than
+   expected, the missing columns are now defaulting to an empty field, instead
+   of generating error messages.
+ * Updated jQuery from 1.7.1 to 1.8.2 and jQuery UI from 1.8.18 to 1.9.1, also
+   adding the 'dialog' widget and its dependencies.
+ * Newly registered users are shown a message dialog hinting where to start
+   submitting new data.
+ * Rephrased and changed some pages in the submission process, hoping to make it
+   more clear to new users.
+ * The variant data entry forms now have links to the HGVS nomenclature pages
+   from the DNA, RNA and Protein change description fields.
+ * Changing a gene database's contents now actually updates the
+   "Last updated by" and "Date last updated" fields (importing new variants
+   through SeattleSeq or LOVD3 format, creating a new variant, editing a
+   variant, deleting a variant, changing the mapping of a variant).
+ * Added new custom link: DOI.
+ * Fixed inconsistency of the PubMed custom link's description between LOVDs
+   older than 3.0-beta-06 or newer.
+ * Fixed bug; Wrong DBIDs were predicted because of a bug introduced in r221
+   (3.0-beta-08) that should have prevented exactly that.
+ * The 'Human-readable reference sequence location' field on the gene data entry
+   form now also allows local URLs.
+ * Links to the reference sequences from the gene homepage are now opened in a
+   new window.
+ * The gene homepage and the transcript detailed page now also link to the exon/
+   intron information tables, if these are available. Other fields have also
+   been added to the gene homepages.
+ * Included version 3.0-beta-10 of official LOVD Reference Sequence Parser
+   script.
+   - When selecting the gene and transcript to work on, the list of transcripts
+     is now sorted on NCBI ID.
+ * Fixed bug; When manually mapping an unrecognized variant to a transcript,
+   LOVD would return a query error.
+ * Fixed notices shown when the "effectid" field was missing during import of
+   variants. This also triggered an error message too many.
+ * Added default values for the columns "effectid" and "mapping_flags" in the
+   import script.
+ * Fixed bug; During import, the created_* and edited_* defaults were only put
+   in place when the columns were defined in the input file.
+ * Ported the LOVD 2.0 RESTful API to LOVD 3.0, maintaining the same URL
+   structure.
+ * Added links from the gene homepage to the UCSC genome browser, the Ensembl
+   genome browser, and the NCBI sequence viewer.  Those who support it, show the
+   variants currently in the LOVD database as a separate track.  From the track,
+   links are provided to point back to the corresponding entry in LOVD.
+ * Added links to the download and import pages in the Setup tab dropdown menu.
+
+
+/*******************
+ * 3.0 Beta 09
+ * 2012-10-11
+ *********/
+ * Fixed bug; The list of variant screenings on the individual's detailed view
+   had gene symbols repeated in the "Genes screened" column, if more than one
+   variants had been found.
+ * Fixed notices after file import.
+ * When an individual has not been screened for variants, the "no screenings
+   found for this individual" message is simply hidden.
+ * We're now nicely handeling diseases without abbreviations in the individuals
+   listing and detailed view, the gene's full data view, the gene homepage, and
+   the gene and individual data entry forms.
+ * When data is updated, the mail sent by LOVD now has a subject different than
+   that of newly submitted data, so those mails can easily be identified based
+   on their subject.
+ * Users being curator for many genes didn't have all genes shown on their
+   account page, because of a default MySQL maximum length setting. LOVD now
+   increased this maximum length, but the list is collapsed by default to keep
+   the page short.
+ * Fixed bug; LOVD 3.0-beta-08 was actually non-installable due to a change in
+   table structure while the installation process was not updated accordingly.
+ * LOVD is now also installable with MySQL's strict mode on.
+   Closes #17: "installation error LOVD".
+   (thanks to Hana Lango Allen, University of Exeter, UK, for reporting)
+ * Diseases bearing the same name are no longer allowed.
+ * After deleting a phenotype entry, you will be forwarded to the individual's
+   detailed view.
+ * Fixed bug; Creating a personal data download for a user without submitted
+   data, generated an error.
+ * Fixed bug; In a full data download the Variants_On_Transcripts section also
+   contained data from the Variants_On_Genome section.
+ * Fixed bug; An owner of a screening could not be changed by editing the field.
+ * Implemented first version (alpha) of the data import feature. This requires a
+   new format compared to LOVD 2.0, that can be obtained by making a full data
+   download from the LOVD setup area. Currently implemented is an "insert all"
+   mode that regards any data in the file as new, and tries to import it.
+
+
+/*******************
+ * 3.0 Beta 08
+ * 2012-09-05
+ *********/
+ * Added the "Switch gene database" icon to the LOVD header; it will only be
+   shown where appropriate.
+ * Fixed bug; Under some circumstances, searching for active columns didn't show
+   all active columns in the overview.
+ * Implemented the gene-specific page header & footer.
+ * Fixed bug; The gene's "Text for own disclaimer" and "Notes for the LOVD gene
+   homepage" were not rendered as HTML enabled.
+ * Fixed bug; The lists of diseases on the individual and gene data entry forms,
+   are now sorted on value instead of ID.
+   The list on the individual's data entry form is also now bound to a maximum
+   width, to make sure that long disease names don't stretch the form anymore.
+   The list on the gene's data entry form was already restricted in width.
+ * A gene's full data view now also shows whether an individual is a panel
+   (group of individuals) or not.
+ * Fixed bug; The individual's panel_size is now taken into account on the gene
+   homepage's individual count.
+   (thanks to Anne Polvi, University of Helsinki, Finland, for reporting)
+ * Fixed bug; Submitters couldn't edit their own variants, if these were linked
+   to transcripts also. Curators had problems editing variants that were linked
+   to other genes as well as one of their genes.
+ * Included version 3.0-beta-08 of official LOVD Reference Sequence Parser
+   script.
+   - Fixed some small mistakes in the format of the reference sequence parser's
+     index file HTML output.
+   - Fixed problem in parsing the reference sequence ID out of the file.
+   - Will now also work behind a proxy server or with PHP's fopen wrappers off.
+ * Improved some texts on data entry forms to improve clarity.
+ * Proxy servers requiring Basic authentication are now also handled correctly;
+   a username and password can be set in the LOVD system settings.
+ * Curators were not able to delete any data, although links to do so were shown
+   in the menu.
+ * The email sent after a submission now also contains the names of the Curators
+   and/or Managers that have received the email, so that it's easier to track if
+   the mail has been forwarded.
+ * Fixed bug; The checkbox "Have variants been found?" in screening create &
+   edit forms didn't work anymore.
+ * It is now possible to add a phenotype to disease "Healthy/Control".
+ * The whole submission workflow has been changed.
+ * Added a "Cancel" button to all forms when you are in the middle of a full
+   submission.
+ * Link to "Unfinished submissions" has been added so you can see unfinished
+   submissions.
+ * The individual viewEntry now contains a list of diseases and the diseases
+   viewList below has been removed.
+ * Added some new options to the tab menu and fixed the occasional disappearance
+   of older ones.
+ * Fixed bug; LOVD no longer predicts & fills in a DBID for you which produces
+   an error on the form.
+ * Fixed bug; The backslashes issue in the URLs of some installations has now
+   been fixed.
+ * Fixed bug; The menu below the gene homepage no longer produces a JavaScript
+   error when "Create human-readable refseq file" is clicked in Internet
+   Explorer <= 7.
+ * Fixed bug; Uploading variants would make LOVD lose the currently selected
+   gene.
+ * Fixed bug; Curators and Collaborators can now also see the variants for which
+   they have viewing rights in the genomic variant viewlist.
+ * Added color highlighting for marked and non-public entries in viewLists.
+ * Fixed bug; The search fields on custom columns no longer produce an
+   unexpected "Bad syntax error".
+ * It is now possible to add and remove custom columns to the "Healthy/Control"
+   disease.
+ * When hovering your mouse over a search field, the current search expression
+   will be explained in more detail in the popup.
+ * No longer possible to add both a disease AND "Healthy/Control" to a
+   individual.
+ * Changed all viewEntry options to the new Jeegoo menu implementation.
+ * Curators can now create diseases, but can only do so when they connect them
+   to their own gene(s).
+ * Curators can now edit diseases, but can only do so when they are connected to
+   their own gene(s).
+ * Curators can now remove diseases, but can only do so when they are not
+   connected to other genes than their own gene(s).
+ * The screenings & individuals pages now have gene specific page, which shows
+   the entries that have been screened for the currently selected gene.
+ * Mails are now being sent to the appropriate users after an edit of data.
+
+
+/*******************
+ * 3.0 Beta 07
+ * 2012-07-26
+ *********/
+ * You can now open the Mutalyzer prediction page from the variant data entry
+   form, by clicking on the mark besides the protein field after a successful
+   prediction has been run.
+ * LOVD 3.0 can no longer be configured for hg18, but existing installations
+   will still be supported.
+ * Fixed some typos and textual changes.
+ * The quick download format for data lists are now only available for properly
+   authorized users.
+ * Included version 3.0-beta-07 of official LOVD Reference Sequence Parser
+   script.
+   - Compared to LOVD 2.0, the greatest improvement is that this script
+     downloads the reference sequence from Mutalyzer, and therefore no longer
+     requires GenBank files to be uploaded to LOVD.
+   - It does not support generating GenBank files, like in LOVD 2.0.
+ * When searching for a gene symbol on the "Create a new gene" form, LOVD now
+   also searches for aliases if no match is found.
+ * From the gene data entry form, you can now open a new window to create new
+   disease entries.
+ * From the individual data entry form, managers can now open a new window to
+   create new disease entries. Other users get a note that they can include a
+   missing disease in the individual's remarks field, such that a manager can
+   configure the requested disease in the LOVD.
+ * Fixed bug; Internet Explorer users couldn't configure new curators for genes
+   or use the Mutalyzer mapping / variant checking features.
+ * Improved the full download format; it now includes more data (genes,
+   transcripts, and diseases), and also includes the relationships between
+   individuals and diseases, screenings and genes, and screenings and variants.
+ * Submitters are no longer allowed to add submissions without adding individual
+   data also.
+ * Fixed bug; Curators could not open the detailed view of a variant's effect on
+   transcripts if the variant was non-public, even though the variant lies
+   within one of their genes.
+ * Fixed bug; On a disease's detailed view, in the list of genes the disease is
+   linked to, genes without an OMIM ID were left out.
+ * When there is an LOVD update available, this is now displayed in the Setup
+   area.
+ * Added the LOVD Configuration area; just like in LOVD 2.0 it serves as a gene-
+   specific starting page for curators.
+ * The Status column has been added to more data overviews, if the user is
+   authorized to see this column.
+ * The Phenotype/Inheritance column is now HGVS standard and enabled by default
+   for new diseases.
+ * You can now tag healthy controls as such by applying the "Healthy/Control"
+   disease to the individual in question.
+ * Fixed bug; A zero is now valid input for a mandatory column.
+ * Fixed bug; If a multiple selection list contained a value of zero, it was
+   incorrectly selected by itself due to some PHP strangeness.
+ * Several gene's fields are now HTML enabled; Text for own disclaimer, Page
+   header, Page footer, Notes for the LOVD gene homepage, and Notes for the
+   variant listings.
+ * On a user's detailed view, the genes this user is curator or collaborator of,
+   are now clickable. A curator or collaborator may now also see which genes he/
+   she is collaborator of.
+ * Fixed bug; Invalid search expressions caused one or two PHP errors as well as
+   generate a normal LOVD error message.
+ * If Mutalyzer is having problems, the HGVS syntax checker no longer claims the
+   variant's syntax is not correct.
+ * Fixed some PHP notices in variants.php.
+ * Updated descriptions, legends and sometimes types of all custom columns.
+   Only some of these changes will also be applied to existing installations.
+ * Added new custom column: Phenotype/Additional.
+ * Fixed some PHP notices and two display bugs in the "Add transcript to gene"
+   process.
+ * Protein prediction on the variant create and edit form can now return
+   multiple warnings/errors returned by Mutalyzer.
+ * Fixed bug; The check on the DBID during variant create/edit now only accepts
+   gene symbols that are actually present in the LOVD.
+ * Fixed bug; In some cases the variant create/edit forms would give a
+   javascript error.
+ * Fixed bug; Since Mutalyzer changed how upstream/downstream positions are
+   described, protein predictions could produce weird errors.
+ * Status columns are now automatically hidden if the users do not have all view
+   privileges on that entry.
+ * Implemented the "Show contents to public" and "Show field on submission form"
+   options for custom columns, so that they are actually hidden when deselected.
+ * Variant DBID's kan now only be filled in by Curators, Managers and
+   Administrators.
+ * The OMIM ID field now has a check to ensure that the number is 6 digits and
+   that the first digit is at least a 1 or higher.
+
 
 /*******************
  * 3.0 Beta 06
@@ -166,7 +1120,7 @@
  * Fixed bug; Changed all javascript links to absolute URLs, because IE does
    not respect the BASE tag.
    (thanks to Chris Watson, St. James's Univ Hospital, Leeds, UK, for reporting)
- * Fixed bug; The variant create & edit forms no longer produce an error despite 
+ * Fixed bug; The variant create & edit forms no longer produce an error despite
    having filled in a valid dbSNP number or DBID in the `VariantOnGenome/dbSNP`
    and `VariantOnGenome/DBID` field correctly.
  * Implemented the option of also removing variants when deleting a screening or
@@ -266,7 +1220,7 @@
    & external url fields to actual clickable links.
  * Now does not show some columns in the gene homepage when they are empty or
    when the user's level is not high enough.
- * Activated the Phenotype & VariantOnTranscript standard custom columns during 
+ * Activated the Phenotype & VariantOnTranscript standard custom columns during
    installation.
  * Added a few variant statistics to the gene homepage and fixed the variant
    statistics on the gene viewList.
@@ -406,7 +1360,7 @@
    the user is the owner of the data, curator or higher.
  * You can now specify that no variants were found with a particular screening.
  * Now a user is only able to select up to 15 genes that have been screened in
-   the screenings create & edit forms. For genome-wide analysis no genes should 
+   the screenings create & edit forms. For genome-wide analysis no genes should
    be selected.
  * Fixed bug; The DBID was not properly predicted in some cases.
  * Fixed bug; When creating a gene, there were in some specific cases no proper
@@ -537,7 +1491,7 @@
    just "1234567".
  * Fixed bug; The VariantOnTranscripts ViewList did not show any active custom
    columns.
- * Added the "Affects function" selection list to all variant create & edit 
+ * Added the "Affects function" selection list to all variant create & edit
    forms, which will be the replacement of the "Pathogenicity" field from LOVD2.
  * Added the option M (mitochondrial) to the chromosome selection list when
    creating a genomic variant.
@@ -798,7 +1752,7 @@
    contain @ and #.
  * Implemented a urldecode and urlencode in genes.php to allow special chars
    to be in the gene symbol and thus in the URL.
- * Implemented automatic exploding of GROUP_CONCAT data based on their name. 
+ * Implemented automatic exploding of GROUP_CONCAT data based on their name.
    So '_genes' = array (;) or '__active_diseases' = nested array(;;).
  * Added the temporary memory leak fix from genes?create also to genes?edit &
    transcripts?create.

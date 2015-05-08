@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2012-04-13
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2014-06-16
+ * For LOVD    : 3.0-11
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -30,12 +30,7 @@
  *************/
 
 // STILL TODO:
-// Transcripts misschien niet altijd aan genen vast? microRNA's?
-// All those IDs for the genes!!! Store differently?
-// "Parental_origin and Origin attributes have been merged into one attribute called as genetic_source."
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
-// Allow download staat nu per gen, en de losse varianten dan?
-// Human readable refseq velden staan nu bij gen, moeten naar transcript???
 // Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
 
 // DMD_SPECIFIC
@@ -58,6 +53,8 @@ $aTableSQL =
          , 'TABLE_USERS' =>
    'CREATE TABLE ' . TABLE_USERS . ' (
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+    orcid_id CHAR(19),
+    orcid_confirmed BOOLEAN NOT NULL DEFAULT 0,
     name VARCHAR(75) NOT NULL,
     institute VARCHAR(255) NOT NULL,
     department VARCHAR(255) NOT NULL,
@@ -66,6 +63,7 @@ $aTableSQL =
     city VARCHAR(255) NOT NULL,
     countryid CHAR(2),
     email TEXT NOT NULL,
+    email_confirmed BOOLEAN NOT NULL DEFAULT 0,
     reference VARCHAR(50) NOT NULL,
     username VARCHAR(20) NOT NULL,
     password CHAR(50) NOT NULL,
@@ -82,6 +80,7 @@ $aTableSQL =
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
+    UNIQUE (orcid_id),
     INDEX (countryid),
     UNIQUE (username),
     INDEX (created_by),
@@ -102,7 +101,7 @@ $aTableSQL =
 
          , 'TABLE_GENES' =>
    'CREATE TABLE ' . TABLE_GENES . ' (
-    id VARCHAR(20) NOT NULL,
+    id VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
     chromosome VARCHAR(2),
     chrom_band VARCHAR(20) NOT NULL,
@@ -151,7 +150,7 @@ $aTableSQL =
          , 'TABLE_CURATES' =>
    'CREATE TABLE ' . TABLE_CURATES . ' (
     userid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    geneid VARCHAR(20) NOT NULL,
+    geneid VARCHAR(25) NOT NULL,
     allow_edit BOOLEAN NOT NULL,
     show_order TINYINT(2) UNSIGNED NOT NULL DEFAULT 1,
     PRIMARY KEY (userid, geneid),
@@ -163,7 +162,7 @@ $aTableSQL =
          , 'TABLE_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_TRANSCRIPTS . ' (
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
-    geneid VARCHAR(20) NOT NULL,
+    geneid VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
     id_mutalyzer TINYINT(3) UNSIGNED ZEROFILL,
     id_ncbi VARCHAR(255) NOT NULL,
@@ -210,7 +209,7 @@ $aTableSQL =
 
          , 'TABLE_GEN2DIS' =>
    'CREATE TABLE ' . TABLE_GEN2DIS . ' (
-    geneid VARCHAR(20) NOT NULL,
+    geneid VARCHAR(25) NOT NULL,
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
     PRIMARY KEY (geneid, diseaseid),
     INDEX (diseaseid),
@@ -235,14 +234,16 @@ $aTableSQL =
 
          , 'TABLE_EFFECT' =>
    'CREATE TABLE ' . TABLE_EFFECT . ' (
-    id TINYINT(2) UNSIGNED NOT NULL,
+    id TINYINT(2) UNSIGNED ZEROFILL NOT NULL,
     name VARCHAR(5) NOT NULL,
     PRIMARY KEY (id))
     ' . $sSettings
-    
+
           , 'TABLE_INDIVIDUALS' =>
    'CREATE TABLE ' . TABLE_INDIVIDUALS . ' (
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+    fatherid MEDIUMINT(8) UNSIGNED ZEROFILL,
+    motherid MEDIUMINT(8) UNSIGNED ZEROFILL,
     panelid MEDIUMINT(8) UNSIGNED ZEROFILL,
     panel_size MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 1,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -252,10 +253,14 @@ $aTableSQL =
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
+    INDEX (fatherid),
+    INDEX (motherid),
     INDEX (owned_by),
     INDEX (statusid),
     INDEX (created_by),
     INDEX (edited_by),
+    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_fatherid FOREIGN KEY (fatherid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_motherid FOREIGN KEY (motherid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_panelid FOREIGN KEY (panelid) REFERENCES ' . TABLE_INDIVIDUALS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_INDIVIDUALS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -299,12 +304,13 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_VARIANTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     allele TINYINT(2) UNSIGNED NOT NULL,
-    effectid TINYINT(2) UNSIGNED,
+    effectid TINYINT(2) UNSIGNED ZEROFILL,
     chromosome VARCHAR(2),
     position_g_start INT(10) UNSIGNED,
     position_g_end INT(10) UNSIGNED,
     type VARCHAR(10),
-    mapping_flags TINYINT(3) UNSIGNED NOT NULL,
+    mapping_flags TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
+    average_frequency FLOAT UNSIGNED,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -315,6 +321,7 @@ $aTableSQL =
     INDEX (allele),
     INDEX (effectid),
     INDEX (chromosome, position_g_start, position_g_end),
+    INDEX (average_frequency),
     INDEX (owned_by),
     INDEX (statusid),
     INDEX (created_by),
@@ -364,7 +371,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL,
     transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    effectid TINYINT(2) UNSIGNED,
+    effectid TINYINT(2) UNSIGNED ZEROFILL,
     position_c_start MEDIUMINT,
     position_c_start_intron INT,
     position_c_end MEDIUMINT,
@@ -496,7 +503,7 @@ $aTableSQL =
          , 'TABLE_SCR2GENE' =>
    'CREATE TABLE ' . TABLE_SCR2GENE . ' (
     screeningid INT(10) UNSIGNED ZEROFILL NOT NULL,
-    geneid VARCHAR(20) NOT NULL,
+    geneid VARCHAR(25) NOT NULL,
     PRIMARY KEY (screeningid, geneid),
     INDEX (screeningid),
     INDEX (geneid),
@@ -528,7 +535,7 @@ $aTableSQL =
     description_legend_short TEXT NOT NULL,
     description_legend_full TEXT NOT NULL,
     mysql_type VARCHAR(255) NOT NULL,
-    form_type VARCHAR(255) NOT NULL,
+    form_type TEXT NOT NULL,
     select_options TEXT NOT NULL,
     preg_pattern VARCHAR(255) NOT NULL,
     public_view BOOLEAN NOT NULL,
@@ -558,7 +565,7 @@ $aTableSQL =
 
          , 'TABLE_SHARED_COLS' =>
    'CREATE TABLE ' . TABLE_SHARED_COLS . ' (
-    geneid VARCHAR(20),
+    geneid VARCHAR(25),
     diseaseid SMALLINT(5) UNSIGNED ZEROFILL,
     colid VARCHAR(100) NOT NULL,
     col_order TINYINT(3) UNSIGNED NOT NULL,
@@ -627,8 +634,11 @@ $aTableSQL =
     refseq_build VARCHAR(4) NOT NULL,
     proxy_host VARCHAR(255) NOT NULL,
     proxy_port SMALLINT(5) UNSIGNED,
-    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD_logo130x50.jpg",
-    mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "http://www.mutalyzer.nl/2.0/services",
+    proxy_username VARCHAR(255) NOT NULL,
+    proxy_password VARCHAR(255) NOT NULL,
+    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD3_logo145x50.jpg",
+    mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "https://mutalyzer.nl/services",
+    omim_apikey VARCHAR(40) NOT NULL,
     send_stats BOOLEAN NOT NULL,
     include_in_listing BOOLEAN NOT NULL,
     lock_users BOOLEAN NOT NULL,
@@ -685,17 +695,6 @@ $aTableSQL =
     installed_date DATE NOT NULL,
     updated_date DATE,
     PRIMARY KEY (id))
-    ' . $sSettings
-
-         , 'TABLE_HITS' =>
-   'CREATE TABLE ' . TABLE_HITS . ' (
-    geneid VARCHAR(20) NOT NULL,
-    type VARCHAR(10) NOT NULL,
-    year SMALLINT(4) UNSIGNED NOT NULL,
-    month TINYINT(2) UNSIGNED NOT NULL,
-    hits SMALLINT(5) UNSIGNED NOT NULL,
-    PRIMARY KEY (geneid, type, year, month),
-    CONSTRAINT ' . TABLE_HITS . '_fk_geneid FOREIGN KEY (geneid) REFERENCES ' . TABLE_GENES . ' (id) ON DELETE CASCADE ON UPDATE CASCADE)
     ' . $sSettings
           );
 
