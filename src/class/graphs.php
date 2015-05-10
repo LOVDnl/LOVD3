@@ -197,155 +197,6 @@ class LOVD_Graphs {
 
 
 
-    function variantsTypeProtein ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
-    {
-        // Shows a nice piechart about the variant types on protein level in a certain data set.
-        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
-        // $bNonPublic indicates whether or not only the public variants should be used.
-        // $bUnique indicates whether all variants or or the unique variants should be counted.
-        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
-        global $_DB;
-
-        if (empty($sDIV)) {
-            return false;
-        }
-
-        print('      <SCRIPT type="text/javascript">' . "\n");
-
-        if (empty($Data)) {
-            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsTypeProtein()<BR>No data received to create graph.");' . "\n" .
-                '      </SCRIPT>' . "\n\n");
-            return false;
-        }
-
-        $nPathogenicThreshold = 7;
-
-        // Keys need to be renamed.
-        $aTypes =
-            array(
-                'frameshift'    => array('Frameshifts', '#FD6'),
-                'inframedel'    => array('In frame deletions', '#A00'),
-                'inframedelins' => array('In frame indels', '#95F'),
-                'inframedup'    => array('In frame duplications', '#F90'),
-                'inframeins'    => array('In frame insertions', '#090'),
-                'missense'      => array('Missense changes', '#00C'),
-                'no_protein'    => array('No protein produced', '#600'),
-                'silent'        => array('Silent changes', '#0AC'),
-                'stop'          => array('Stop changes', '#969'),
-                ''              => array('Unknown', '#000'),
-            );
-
-        if (!is_array($Data)) {
-            // Restricting to a certain gene, or full database ($Data == '*').
-            if ($bUnique) {
-                // FIXME: This is not really correct. When grouping on VOT/Protein, we might in theory be grouping variants over multiple transcripts that are not one variant on DNA level, but just happen to have the same description on protein level. Vice versa, we're counting one variant twice if it has different descriptions on different transcripts.
-                if ($Data == '*') {
-                    $aProteinDescriptions = $_DB->query('SELECT DISTINCT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'))->fetchAllCombine();
-                } else {
-                    $aProteinDescriptions = $_DB->query('SELECT DISTINCT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'), array($Data))->fetchAllCombine();
-                }
-            } else {
-                if ($Data == '*') {
-                    $aProteinDescriptions = $_DB->query('SELECT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein')->fetchAllCombine();
-                } else {
-                    $aProteinDescriptions = $_DB->query('SELECT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein', array($Data))->fetchAllCombine();
-                }
-            }
-        } else {
-            // Using list of variant IDs.
-        }
-
-        $aData = array();
-        foreach ($aProteinDescriptions as $sProteinDescription => $nCount) {
-            // Sort of ordered on average percentage used, to spare the number of comparisons needed.
-            // However, make sure that the 'fs' check is always done before the missense and the stop-check, to prevent false positives.
-            // Also, del, dup and ins checks must be done before missense checks.
-            // The missense check is done a bit later, after more simper comparisons.
-            if (strpos($sProteinDescription, '=') !== false) {
-                $sType = 'silent';
-            } elseif (!$sProteinDescription || $sProteinDescription == '-' || strpos($sProteinDescription, '?') !== false) {
-                $sType = '';
-            } elseif (strpos($sProteinDescription, 'fs') !== false) {
-                $sType = 'frameshift';
-            } elseif (preg_match('/[\*X]/', $sProteinDescription)) {
-                $sType = 'stop';
-            } elseif (strpos($sProteinDescription, 'del') !== false) {
-                if (strpos($sProteinDescription, 'ins') !== false) {
-                    $sType = 'inframedelins';
-                } else {
-                    $sType = 'inframedel';
-                }
-            } elseif (strpos($sProteinDescription, 'dup') !== false) {
-                $sType = 'inframedup';
-            } elseif (strpos($sProteinDescription, 'ins') !== false) {
-                $sType = 'inframeins';
-            } elseif (preg_match('/p\.\(?([A-Za-z]{1,3})\d+([A-Za-z]{1,3})?\)?/', $sProteinDescription, $aRegs)) {
-                if (empty($aRegs[2]) || $aRegs[1] == $aRegs[2]) {
-                    $sType = 'silent';
-                } else {
-                    $sType = 'missense';
-                }
-            } elseif (strpos($sProteinDescription, '.0') !== false || preg_match('/^p\.\(?del\)?$/', $sProteinDescription)) {
-                $sType = 'no_protein';
-            } elseif (strpos($sProteinDescription, 'del') !== false) {
-                $sType = 'inframedel';
-            } elseif (preg_match('/dup/', $sProteinDescription)) {
-                $sType = 'inframedup';
-            } else {
-                $sType = '';
-            }
-
-            if (!isset($aData[$sType])) {
-                $aData[$sType] = 0;
-            }
-            $aData[$sType] += $nCount;
-        }
-
-        // Format $aData.
-        print('        var data = [');
-        ksort($aData); // May not work correctly, if keys are replaced...
-        $i = 0;
-        $nTotal = 0;
-        foreach ($aData as $sType => $nValue) {
-            if (isset($aTypes[$sType])) {
-                $sLabel = $aTypes[$sType][0];
-            } else {
-                $sLabel = $sType;
-            }
-            print(($i++? ',' : '') . "\n" .
-                '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
-            $nTotal += $nValue;
-        }
-        if (!$aData) {
-            // There was no data... give "fake" data such that the graph can still be generated.
-            print('{label: "No data to show", data: 1, color: "#000"}');
-            $nTotal = 1;
-        }
-        print('];' . "\n\n" .
-            '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
-            '        {' . "\n" .
-            '            series: {' . "\n" .
-            $this->getPieGraph() .
-            '            },' . "\n" .
-            '            grid: {hoverable: true}' . "\n" .
-            '        });' . "\n" .
-            '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
-
-            // Add the total number to the header above the graph.
-            '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
-
-            // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
-            $this->getHoverFunction($sDIV, $nTotal) .
-            '      </SCRIPT>' . "\n\n");
-
-        flush();
-        return true;
-    }
-
-
-
-
-
     function variantsPositions ($sDIV, $Data = array(), $bPublicOnly = true)
     {
         // Shows a nice piechart about the variant positions on DNA level in a certain data set.
@@ -1152,6 +1003,155 @@ function timeline($sDIV, $bPublicOnly = true) {
         // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
               $this->getHoverFunction($sDIV, $nTotal) .
               '      </SCRIPT>' . "\n\n");
+
+        flush();
+        return true;
+    }
+
+
+
+
+
+    function variantsTypeProtein ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
+    {
+        // Shows a nice piechart about the variant types on protein level in a certain data set.
+        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
+        // $bNonPublic indicates whether or not only the public variants should be used.
+        // $bUnique indicates whether all variants or or the unique variants should be counted.
+        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
+        global $_DB;
+
+        if (empty($sDIV)) {
+            return false;
+        }
+
+        print('      <SCRIPT type="text/javascript">' . "\n");
+
+        if (empty($Data)) {
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsTypeProtein()<BR>No data received to create graph.");' . "\n" .
+                '      </SCRIPT>' . "\n\n");
+            return false;
+        }
+
+        $nPathogenicThreshold = 7;
+
+        // Keys need to be renamed.
+        $aTypes =
+            array(
+                'frameshift'    => array('Frameshifts', '#FD6'),
+                'inframedel'    => array('In frame deletions', '#A00'),
+                'inframedelins' => array('In frame indels', '#95F'),
+                'inframedup'    => array('In frame duplications', '#F90'),
+                'inframeins'    => array('In frame insertions', '#090'),
+                'missense'      => array('Missense changes', '#00C'),
+                'no_protein'    => array('No protein produced', '#600'),
+                'silent'        => array('Silent changes', '#0AC'),
+                'stop'          => array('Stop changes', '#969'),
+                ''              => array('Unknown', '#000'),
+            );
+
+        if (!is_array($Data)) {
+            // Restricting to a certain gene, or full database ($Data == '*').
+            if ($bUnique) {
+                // FIXME: This is not really correct. When grouping on VOT/Protein, we might in theory be grouping variants over multiple transcripts that are not one variant on DNA level, but just happen to have the same description on protein level. Vice versa, we're counting one variant twice if it has different descriptions on different transcripts.
+                if ($Data == '*') {
+                    $aProteinDescriptions = $_DB->query('SELECT DISTINCT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'))->fetchAllCombine();
+                } else {
+                    $aProteinDescriptions = $_DB->query('SELECT DISTINCT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'), array($Data))->fetchAllCombine();
+                }
+            } else {
+                if ($Data == '*') {
+                    $aProteinDescriptions = $_DB->query('SELECT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein')->fetchAllCombine();
+                } else {
+                    $aProteinDescriptions = $_DB->query('SELECT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein', array($Data))->fetchAllCombine();
+                }
+            }
+        } else {
+            // Using list of variant IDs.
+        }
+
+        $aData = array();
+        foreach ($aProteinDescriptions as $sProteinDescription => $nCount) {
+            // Sort of ordered on average percentage used, to spare the number of comparisons needed.
+            // However, make sure that the 'fs' check is always done before the missense and the stop-check, to prevent false positives.
+            // Also, del, dup and ins checks must be done before missense checks.
+            // The missense check is done a bit later, after more simper comparisons.
+            if (strpos($sProteinDescription, '=') !== false) {
+                $sType = 'silent';
+            } elseif (!$sProteinDescription || $sProteinDescription == '-' || strpos($sProteinDescription, '?') !== false) {
+                $sType = '';
+            } elseif (strpos($sProteinDescription, 'fs') !== false) {
+                $sType = 'frameshift';
+            } elseif (preg_match('/[\*X]/', $sProteinDescription)) {
+                $sType = 'stop';
+            } elseif (strpos($sProteinDescription, 'del') !== false) {
+                if (strpos($sProteinDescription, 'ins') !== false) {
+                    $sType = 'inframedelins';
+                } else {
+                    $sType = 'inframedel';
+                }
+            } elseif (strpos($sProteinDescription, 'dup') !== false) {
+                $sType = 'inframedup';
+            } elseif (strpos($sProteinDescription, 'ins') !== false) {
+                $sType = 'inframeins';
+            } elseif (preg_match('/p\.\(?([A-Za-z]{1,3})\d+([A-Za-z]{1,3})?\)?/', $sProteinDescription, $aRegs)) {
+                if (empty($aRegs[2]) || $aRegs[1] == $aRegs[2]) {
+                    $sType = 'silent';
+                } else {
+                    $sType = 'missense';
+                }
+            } elseif (strpos($sProteinDescription, '.0') !== false || preg_match('/^p\.\(?del\)?$/', $sProteinDescription)) {
+                $sType = 'no_protein';
+            } elseif (strpos($sProteinDescription, 'del') !== false) {
+                $sType = 'inframedel';
+            } elseif (preg_match('/dup/', $sProteinDescription)) {
+                $sType = 'inframedup';
+            } else {
+                $sType = '';
+            }
+
+            if (!isset($aData[$sType])) {
+                $aData[$sType] = 0;
+            }
+            $aData[$sType] += $nCount;
+        }
+
+        // Format $aData.
+        print('        var data = [');
+        ksort($aData); // May not work correctly, if keys are replaced...
+        $i = 0;
+        $nTotal = 0;
+        foreach ($aData as $sType => $nValue) {
+            if (isset($aTypes[$sType])) {
+                $sLabel = $aTypes[$sType][0];
+            } else {
+                $sLabel = $sType;
+            }
+            print(($i++? ',' : '') . "\n" .
+                '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+            $nTotal += $nValue;
+        }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
+        print('];' . "\n\n" .
+            '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+            '        {' . "\n" .
+            '            series: {' . "\n" .
+            $this->getPieGraph() .
+            '            },' . "\n" .
+            '            grid: {hoverable: true}' . "\n" .
+            '        });' . "\n" .
+            '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+
+            // Add the total number to the header above the graph.
+            '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+
+            // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+            $this->getHoverFunction($sDIV, $nTotal) .
+            '      </SCRIPT>' . "\n\n");
 
         flush();
         return true;
