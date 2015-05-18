@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2015-05-08
+ * Modified    : 2015-05-18
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -104,7 +104,7 @@ class LOVD_Graphs {
 
     function screeningTechniques ($sDIV, $bPublicOnly = true)
     {
-        // Shows a nice piechart about the type/number of techniques used per individual in a certain data set.
+        // Shows a nice pie chart about the type/number of techniques used per individual in a certain data set.
         // $Data can be either a * (all genes), or an array of gene symbols.
         global $_DB;
 
@@ -197,11 +197,13 @@ class LOVD_Graphs {
 
 
 
-    function variantsPositions ($sDIV, $Data = array(), $bPublicOnly = true)
+    function variantsLocations ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
     {
-        // Shows a nice piechart about the variant positions on DNA level in a certain data set.
+        // Shows a nice pie chart about the variant locations on DNA level in a certain data set.
         // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
-        // $bPublicOnly indicates whether or not only the public variants should be used.
+        // $bNonPublic indicates whether or not only the public variants should be used.
+        // $bUnique indicates whether all variants or or the unique variants should be counted.
+        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
         global $_DB;
 
         if (empty($sDIV)) {
@@ -211,38 +213,77 @@ class LOVD_Graphs {
         print('      <SCRIPT type="text/javascript">' . "\n");
 
         if (empty($Data)) {
-            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsPositions()<BR>No data received to create graph.");' . "\n" .
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsLocations()<BR>No data received to create graph.");' . "\n" .
                   '      </SCRIPT>' . "\n\n");
             return false;
         }
+
+        $nPathogenicThreshold = 7;
+
+        // Keys need to be renamed.
+        $aTypes =
+            array(
+                '5UTR'     => array('5\'UTR', '#F90'),        // Orange.
+                'start'    => array('Start codon', '#600'),   // Dark dark red.
+                'coding'   => array('Coding', '#00C'),        // Blue.
+                'splice'   => array('Splice region', '#A00'), // Dark red.
+                'intron'   => array('Intron', '#0AC'),        // Light blue.
+                '3UTR'     => array('3\'UTR', '#090'),        // Green.
+                'multiple' => array('Multiple', '#95F'),      // Purple.
+                ''         => array('Unknown', '#000'),       // Black.
+        );
+
         if (!is_array($Data)) {
             // Retricting to a certain gene, or full database ($Data == '*').
-                // FIXME: Double check if multi-transcript genes don't mess up the statistics here.
-            if ($Data == '*') {
-                $qData = $_DB->query('SELECT position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE statusid >= ' . STATUS_MARKED . ' GROUP BY vot.position_c_start', array($Data));
+            // FIXME: Region "coding" doesn't make sense on non-coding transcripts, but in this case I won't handle for these situations.
+            //   I guess this should be called "exonic", also removing both UTR regions, but I will leave this for some other time, if ever.
+            if ($bUnique) {
+                if ($Data == '*') {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                } else {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                }
             } else {
-                $qData = $_DB->query('SELECT position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA` FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . (!$bPublicOnly? '' : ' AND statusid >= ' . STATUS_MARKED . ' GROUP BY vot.position_c_start'), array($Data));
-            }
-            $aData = array(
-                'Cannonical' => 0,
-                'Exonic' => 0,
-                'Intronic' => 0,
-                'LR' => 0,
-                'UTR3' => 0,
-                'UTR5' => 0,
-            );
-            while (list($sPosStart, $sPosStartIntron, $sPosEnd, $sPosEndIntron, $sName) = $qData->fetchRow()) {
-                if ($sPosStart != $sPosEnd) {$aData['LR'] ++;}
-                else if (preg_match("#u#", $sName)) {$aData['UTR5'] ++;}
-                else if (preg_match("#d#", $sName)) {$aData['UTR3'] ++;}
-                else if (preg_match("#^[-]?[12]$#", $sPosStartIntron)) {$aData['Cannonical'] ++;}
-                else if (preg_match("#^[-]?[12]$#", $sPosEndIntron)) {$aData['Cannonical'] ++;}
-                else if ($sPosStartIntron) {$aData['Intronic'] ++;}
-                else {$aData['Exonic'] ++;}
+                if ($Data == '*') {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                } else {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                }
             }
         } else {
             // Using list of variant IDs.
         }
+
+        $aData = array();
+        while (list($nCDSend, $nPosStart, $nPosStartIntron, $nPosEnd, $nPosEndIntron, $nCount) = $qPositions->fetchRow()) {
+            if (($nPosStart < 0 && $nPosEnd > 0) || ($nPosEnd > $nCDSend && $nPosStart < $nCDSend) || ($nPosStartIntron && !$nPosEndIntron) || ($nPosEndIntron && !$nPosStartIntron)) {
+                $sType = 'multiple';
+            } elseif ($nPosStartIntron && ($nPosEnd - $nPosStart) <= 1) {
+                // Only intron if we're in the same intron...! Otherwise, we'll call it coding (whole exon deletion or duplication).
+                if (abs($nPosStartIntron) <= 5 || abs($nPosEndIntron) <= 5) {
+                    $sType = 'splice';
+                } else {
+                    $sType = 'intron';
+                }
+            } elseif ($nPosStart < 0) {
+                $sType = '5UTR';
+            } elseif (($nPosStart > 0 && $nPosStart <= 3) || ($nPosEnd > 0 && $nPosEnd <= 3)) {
+                // Category 'start' is counted as well when just the start or end of the variant are located there, then 'multiple' is not selected.
+                $sType = 'start';
+            } elseif ($nPosStart < $nCDSend && !$nPosStartIntron) {
+                $sType = 'coding';
+            } elseif ($nPosStart >= $nCDSend) {
+                $sType = '3UTR';
+            } else {
+                $sType = '';
+            }
+
+            if (!isset($aData[$sType])) {
+                $aData[$sType] = 0;
+            }
+            $aData[$sType] += $nCount;
+        }
+
         // Format $aData.
         print('        var data = [');
         ksort($aData); // May not work correctly, if keys are replaced...
@@ -277,7 +318,7 @@ class LOVD_Graphs {
               '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
 
         // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
-        $this->getHoverFunction($sDIV, $nTotal) .
+              $this->getHoverFunction($sDIV, $nTotal) .
               '      </SCRIPT>' . "\n\n");
 
         flush();
@@ -289,7 +330,7 @@ class LOVD_Graphs {
 
     function genesLinkedDiseases ($sDIV, $Data = array())
     {
-        // Shows a nice piechart about the number of diseases per gene in a certain data set.
+        // Shows a nice pie chart about the number of diseases per gene in a certain data set.
         // $Data can be either a * (all genes), or an array of gene symbols.
         global $_DB;
 
@@ -384,7 +425,7 @@ class LOVD_Graphs {
 
     function genesNumberOfVariants ($sDIV, $Data = array(), $bNonPublic = false)
     {
-        // Shows a nice piechart about the number of variants per gene in a certain data set.
+        // Shows a nice pie chart about the number of variants per gene in a certain data set.
         // $Data can be either a * (all genes), or an array of gene symbols.
         // $bNonPublic indicates whether or not only the public variants should be used.
         global $_DB;
@@ -904,7 +945,7 @@ function timeline($sDIV, $bPublicOnly = true) {
 
     function variantsTypeDNA ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
     {
-        // Shows a nice piechart about the variant types on DNA level in a certain data set.
+        // Shows a nice pie chart about the variant types on DNA level in a certain data set.
         // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
         // $bNonPublic indicates whether or not only the public variants should be used.
         // $bUnique indicates whether all variants or or the unique variants should be counted.
@@ -1014,7 +1055,7 @@ function timeline($sDIV, $bPublicOnly = true) {
 
     function variantsTypeProtein ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
     {
-        // Shows a nice piechart about the variant types on protein level in a certain data set.
+        // Shows a nice pie chart about the variant types on protein level in a certain data set.
         // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
         // $bNonPublic indicates whether or not only the public variants should be used.
         // $bUnique indicates whether all variants or or the unique variants should be counted.
@@ -1055,15 +1096,15 @@ function timeline($sDIV, $bPublicOnly = true) {
             if ($bUnique) {
                 // FIXME: This is not really correct. When grouping on VOT/Protein, we might in theory be grouping variants over multiple transcripts that are not one variant on DNA level, but just happen to have the same description on protein level. Vice versa, we're counting one variant twice if it has different descriptions on different transcripts.
                 if ($Data == '*') {
-                    $aProteinDescriptions = $_DB->query('SELECT DISTINCT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'))->fetchAllCombine();
+                    $qProteinDescriptions = $_DB->query('SELECT DISTINCT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'));
                 } else {
-                    $aProteinDescriptions = $_DB->query('SELECT DISTINCT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'), array($Data))->fetchAllCombine();
+                    $qProteinDescriptions = $_DB->query('SELECT DISTINCT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'), array($Data));
                 }
             } else {
                 if ($Data == '*') {
-                    $aProteinDescriptions = $_DB->query('SELECT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein')->fetchAllCombine();
+                    $qProteinDescriptions = $_DB->query('SELECT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein');
                 } else {
-                    $aProteinDescriptions = $_DB->query('SELECT REPLACE(`VariantOnTranscript/Protein`, " ", "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein', array($Data))->fetchAllCombine();
+                    $qProteinDescriptions = $_DB->query('SELECT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein', array($Data));
                 }
             }
         } else {
@@ -1071,7 +1112,7 @@ function timeline($sDIV, $bPublicOnly = true) {
         }
 
         $aData = array();
-        foreach ($aProteinDescriptions as $sProteinDescription => $nCount) {
+        while (list($sProteinDescription, $nCount) = $qProteinDescriptions->fetchRow()) {
             // Sort of ordered on average percentage used, to spare the number of comparisons needed.
             // However, make sure that the 'fs' check is always done before the missense and the stop-check, to prevent false positives.
             // Also, del, dup and ins checks must be done before missense checks.
