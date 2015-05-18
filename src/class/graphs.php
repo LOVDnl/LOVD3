@@ -1020,7 +1020,7 @@ function timeline($sDIV, $bPublicOnly = true) {
                 $sLabel = $sType;
             }
             print(($i++? ',' : '') . "\n" .
-                '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
             $nTotal += $nValue;
         }
         if (!$aData) {
@@ -1070,7 +1070,7 @@ function timeline($sDIV, $bPublicOnly = true) {
 
         if (empty($Data)) {
             print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsTypeProtein()<BR>No data received to create graph.");' . "\n" .
-                '      </SCRIPT>' . "\n\n");
+                  '      </SCRIPT>' . "\n\n");
             return false;
         }
 
@@ -1169,7 +1169,7 @@ function timeline($sDIV, $bPublicOnly = true) {
                 $sLabel = $sType;
             }
             print(($i++? ',' : '') . "\n" .
-                '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
             $nTotal += $nValue;
         }
         if (!$aData) {
@@ -1178,21 +1178,21 @@ function timeline($sDIV, $bPublicOnly = true) {
             $nTotal = 1;
         }
         print('];' . "\n\n" .
-            '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
-            '        {' . "\n" .
-            '            series: {' . "\n" .
-            $this->getPieGraph() .
-            '            },' . "\n" .
-            '            grid: {hoverable: true}' . "\n" .
-            '        });' . "\n" .
-            '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+              '        {' . "\n" .
+              '            series: {' . "\n" .
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
+              '        });' . "\n" .
+              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
 
-            // Add the total number to the header above the graph.
-            '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+              // Add the total number to the header above the graph.
+              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
 
-            // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
-            $this->getHoverFunction($sDIV, $nTotal) .
-            '      </SCRIPT>' . "\n\n");
+              // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+              $this->getHoverFunction($sDIV, $nTotal) .
+              '      </SCRIPT>' . "\n\n");
 
         flush();
         return true;
