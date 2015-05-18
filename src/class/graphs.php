@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2012-12-13
- * For LOVD    : 3.0-01
+ * Modified    : 2015-05-18
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               David Baux <david.baux@inserm.fr>
  *
  *
  * This file is part of LOVD.
@@ -97,7 +98,7 @@ class LOVD_Graphs {
 
     function genesLinkedDiseases ($sDIV, $Data = array())
     {
-        // Shows a nice piechart about the number of diseases per gene in a certain data set.
+        // Shows a nice pie chart about the number of diseases per gene in a certain data set.
         // $Data can be either a * (all genes), or an array of gene symbols.
         global $_DB;
 
@@ -195,7 +196,7 @@ class LOVD_Graphs {
 
     function genesNumberOfVariants ($sDIV, $Data = array(), $bNonPublic = false)
     {
-        // Shows a nice piechart about the number of variants per gene in a certain data set.
+        // Shows a nice pie chart about the number of variants per gene in a certain data set.
         // $Data can be either a * (all genes), or an array of gene symbols.
         // $bNonPublic indicates whether or not only the public variants should be used.
         global $_DB;
@@ -287,14 +288,6 @@ class LOVD_Graphs {
               $this->getPieGraph() .
               '            },' . "\n" .
               '            grid: {hoverable: true}' . "\n" .
-
-/*
-        combine: {
-            threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
-            color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
-            label: any text value of what the combined slice should be labeled
-        }
-*/
               '        });' . "\n" .
               '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
 
@@ -305,16 +298,157 @@ class LOVD_Graphs {
         flush();
         return true;
     }
+/*
+        combine: {
+            threshold: 0-1 for the percentage value at which to combine slices (if they're too small)
+            color: any hexidecimal color value (other formats may or may not work, so best to stick with something like '#CCC'), if null, the plugin will automatically use the color of the first slice to be combined
+            label: any text value of what the combined slice should be labeled
+        }
+*/
 
 
 
 
 
-    function variantsTypeDNA ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false)
+    function variantsLocations ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
     {
-        // Shows a nice piechart about the variant types on DNA level in a certain data set.
+        // Shows a nice pie chart about the variant locations on DNA level in a certain data set.
         // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
         // $bNonPublic indicates whether or not only the public variants should be used.
+        // $bUnique indicates whether all variants or or the unique variants should be counted.
+        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
+        global $_DB;
+
+        if (empty($sDIV)) {
+            return false;
+        }
+
+        print('      <SCRIPT type="text/javascript">' . "\n");
+
+        if (empty($Data)) {
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsLocations()<BR>No data received to create graph.");' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+            return false;
+        }
+
+        $nPathogenicThreshold = 7;
+
+        // Keys need to be renamed.
+        $aTypes =
+            array(
+                '5UTR'     => array('5\'UTR', '#F90'),        // Orange.
+                'start'    => array('Start codon', '#600'),   // Dark dark red.
+                'coding'   => array('Coding', '#00C'),        // Blue.
+                'splice'   => array('Splice region', '#A00'), // Dark red.
+                'intron'   => array('Intron', '#0AC'),        // Light blue.
+                '3UTR'     => array('3\'UTR', '#090'),        // Green.
+                'multiple' => array('Multiple', '#95F'),      // Purple.
+                ''         => array('Unknown', '#000'),       // Black.
+            );
+
+        if (!is_array($Data)) {
+            // Retricting to a certain gene, or full database ($Data == '*').
+            // FIXME: Region "coding" doesn't make sense on non-coding transcripts, but in this case I won't handle for these situations.
+            //   I guess this should be called "exonic", also removing both UTR regions, but I will leave this for some other time, if ever.
+            if ($bUnique) {
+                if ($Data == '*') {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                } else {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                }
+            } else {
+                if ($Data == '*') {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                } else {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                }
+            }
+        } else {
+            // Using list of variant IDs.
+        }
+
+        $aData = array();
+        while (list($nCDSend, $nPosStart, $nPosStartIntron, $nPosEnd, $nPosEndIntron, $nCount) = $qPositions->fetchRow()) {
+            if (($nPosStart < 0 && $nPosEnd > 0) || ($nPosEnd > $nCDSend && $nPosStart < $nCDSend) || ($nPosStartIntron && !$nPosEndIntron) || ($nPosEndIntron && !$nPosStartIntron)) {
+                $sType = 'multiple';
+            } elseif ($nPosStartIntron && ($nPosEnd - $nPosStart) <= 1) {
+                // Only intron if we're in the same intron...! Otherwise, we'll call it coding (whole exon deletion or duplication).
+                if (abs($nPosStartIntron) <= 5 || abs($nPosEndIntron) <= 5) {
+                    $sType = 'splice';
+                } else {
+                    $sType = 'intron';
+                }
+            } elseif ($nPosStart < 0) {
+                $sType = '5UTR';
+            } elseif (($nPosStart > 0 && $nPosStart <= 3) || ($nPosEnd > 0 && $nPosEnd <= 3)) {
+                // Category 'start' is counted as well when just the start or end of the variant are located there, then 'multiple' is not selected.
+                $sType = 'start';
+            } elseif ($nPosStart < $nCDSend && !$nPosStartIntron) {
+                $sType = 'coding';
+            } elseif ($nPosStart >= $nCDSend) {
+                $sType = '3UTR';
+            } else {
+                $sType = '';
+            }
+
+            if (!isset($aData[$sType])) {
+                $aData[$sType] = 0;
+            }
+            $aData[$sType] += $nCount;
+        }
+
+        // Format $aData.
+        print('        var data = [');
+        ksort($aData); // May not work correctly, if keys are replaced...
+        $i = 0;
+        $nTotal = 0;
+        foreach ($aData as $sType => $nValue) {
+            if (isset($aTypes[$sType])) {
+                $sLabel = $aTypes[$sType][0];
+            } else {
+                $sLabel = $sType;
+            }
+            print(($i++? ',' : '') . "\n" .
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+            $nTotal += $nValue;
+        }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
+        print('];' . "\n\n" .
+              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+              '        {' . "\n" .
+              '            series: {' . "\n" .
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
+              '        });' . "\n" .
+              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+
+              // Add the total number to the header above the graph.
+              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+
+              // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+              $this->getHoverFunction($sDIV, $nTotal) .
+              '      </SCRIPT>' . "\n\n");
+
+        flush();
+        return true;
+    }
+
+
+
+
+
+    function variantsTypeDNA ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
+    {
+        // Shows a nice pie chart about the variant types on DNA level in a certain data set.
+        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
+        // $bNonPublic indicates whether or not only the public variants should be used.
+        // $bUnique indicates whether all variants or or the unique variants should be counted.
+        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
         global $_DB;
 
         if (empty($sDIV)) {
@@ -329,26 +463,27 @@ class LOVD_Graphs {
             return false;
         }
 
+        $nPathogenicThreshold = 7;
+
         // Keys need to be renamed.
         $aTypes =
-             array(
-                    ''       => array('Unknown', '#000'),
-                    'del'    => array('Deletions', '#A00'),
-                    'delins' => array('Indels', '#95F'),
-                    'dup'    => array('Duplications', '#F90'),
-                    'ins'    => array('Insertions', '#090'),
-                    'inv'    => array('Inversions', '#0AC'),
-                    'subst'  => array('Substitutions', '#00C'),
-                  );
+            array(
+                ''       => array('Unknown', '#000'),
+                'del'    => array('Deletions', '#A00'),
+                'delins' => array('Indels', '#95F'),
+                'dup'    => array('Duplications', '#F90'),
+                'ins'    => array('Insertions', '#090'),
+                'inv'    => array('Inversions', '#0AC'),
+                'subst'  => array('Substitutions', '#00C'),
+            );
 
         if (!is_array($Data)) {
-            // Retricting to a certain gene, or full database ($Data == '*').
+            // Restricting to a certain gene, or full database ($Data == '*').
             if ($bUnique) {
-                // FIXME: Double check if multi-transcript genes don't mess up the statistics here.
                 if ($Data == '*') {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog' . ($bNonPublic? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
                 } else {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
                 }
                 $aData = array();
                 while (list($sType, $nCount) = $qData->fetchRow()) {
@@ -363,9 +498,9 @@ class LOVD_Graphs {
                 }
             } else {
                 if ($Data == '*') {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog' . ($bNonPublic? '' : ' WHERE statusid >= ' . STATUS_MARKED) . ' GROUP BY type')->fetchAllCombine();
+                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY type')->fetchAllCombine();
                 } else {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . ' GROUP BY type', array($Data))->fetchAllCombine();
+                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.id IN (SELECT DISTINCT vot.id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?)' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY type', array($Data))->fetchAllCombine();
                 }
             }
         } else {
@@ -406,7 +541,156 @@ class LOVD_Graphs {
               '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
 
         // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
-        $this->getHoverFunction($sDIV, $nTotal) .
+              $this->getHoverFunction($sDIV, $nTotal) .
+              '      </SCRIPT>' . "\n\n");
+
+        flush();
+        return true;
+    }
+
+
+
+
+
+    function variantsTypeProtein ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
+    {
+        // Shows a nice pie chart about the variant types on protein level in a certain data set.
+        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
+        // $bNonPublic indicates whether or not only the public variants should be used.
+        // $bUnique indicates whether all variants or or the unique variants should be counted.
+        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
+        global $_DB;
+
+        if (empty($sDIV)) {
+            return false;
+        }
+
+        print('      <SCRIPT type="text/javascript">' . "\n");
+
+        if (empty($Data)) {
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsTypeProtein()<BR>No data received to create graph.");' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+            return false;
+        }
+
+        $nPathogenicThreshold = 7;
+
+        // Keys need to be renamed.
+        $aTypes =
+            array(
+                'frameshift'    => array('Frameshifts', '#FD6'),
+                'inframedel'    => array('In frame deletions', '#A00'),
+                'inframedelins' => array('In frame indels', '#95F'),
+                'inframedup'    => array('In frame duplications', '#F90'),
+                'inframeins'    => array('In frame insertions', '#090'),
+                'missense'      => array('Missense changes', '#00C'),
+                'no_protein'    => array('No protein produced', '#600'),
+                'silent'        => array('Silent changes', '#0AC'),
+                'stop'          => array('Stop changes', '#969'),
+                ''              => array('Unknown', '#000'),
+            );
+
+        if (!is_array($Data)) {
+            // Restricting to a certain gene, or full database ($Data == '*').
+            if ($bUnique) {
+                // FIXME: This is not really correct. When grouping on VOT/Protein, we might in theory be grouping variants over multiple transcripts that are not one variant on DNA level, but just happen to have the same description on protein level. Vice versa, we're counting one variant twice if it has different descriptions on different transcripts.
+                if ($Data == '*') {
+                    $qProteinDescriptions = $_DB->query('SELECT DISTINCT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'));
+                } else {
+                    $qProteinDescriptions = $_DB->query('SELECT DISTINCT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'), array($Data));
+                }
+            } else {
+                if ($Data == '*') {
+                    $qProteinDescriptions = $_DB->query('SELECT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein');
+                } else {
+                    $qProteinDescriptions = $_DB->query('SELECT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein', array($Data));
+                }
+            }
+        } else {
+            // Using list of variant IDs.
+        }
+
+        $aData = array();
+        while (list($sProteinDescription, $nCount) = $qProteinDescriptions->fetchRow()) {
+            // Sort of ordered on average percentage used, to spare the number of comparisons needed.
+            // However, make sure that the 'fs' check is always done before the missense and the stop-check, to prevent false positives.
+            // Also, del, dup and ins checks must be done before missense checks.
+            // The missense check is done a bit later, after more simper comparisons.
+            if (strpos($sProteinDescription, '=') !== false) {
+                $sType = 'silent';
+            } elseif (!$sProteinDescription || $sProteinDescription == '-' || strpos($sProteinDescription, '?') !== false) {
+                $sType = '';
+            } elseif (strpos($sProteinDescription, 'fs') !== false) {
+                $sType = 'frameshift';
+            } elseif (preg_match('/[\*X]/', $sProteinDescription)) {
+                $sType = 'stop';
+            } elseif (strpos($sProteinDescription, 'del') !== false) {
+                if (strpos($sProteinDescription, 'ins') !== false) {
+                    $sType = 'inframedelins';
+                } else {
+                    $sType = 'inframedel';
+                }
+            } elseif (strpos($sProteinDescription, 'dup') !== false) {
+                $sType = 'inframedup';
+            } elseif (strpos($sProteinDescription, 'ins') !== false) {
+                $sType = 'inframeins';
+            } elseif (preg_match('/p\.\(?([A-Za-z]{1,3})\d+([A-Za-z]{1,3})?\)?/', $sProteinDescription, $aRegs)) {
+                if (empty($aRegs[2]) || $aRegs[1] == $aRegs[2]) {
+                    $sType = 'silent';
+                } else {
+                    $sType = 'missense';
+                }
+            } elseif (strpos($sProteinDescription, '.0') !== false || preg_match('/^p\.\(?del\)?$/', $sProteinDescription)) {
+                $sType = 'no_protein';
+            } elseif (strpos($sProteinDescription, 'del') !== false) {
+                $sType = 'inframedel';
+            } elseif (preg_match('/dup/', $sProteinDescription)) {
+                $sType = 'inframedup';
+            } else {
+                $sType = '';
+            }
+
+            if (!isset($aData[$sType])) {
+                $aData[$sType] = 0;
+            }
+            $aData[$sType] += $nCount;
+        }
+
+        // Format $aData.
+        print('        var data = [');
+        ksort($aData); // May not work correctly, if keys are replaced...
+        $i = 0;
+        $nTotal = 0;
+        foreach ($aData as $sType => $nValue) {
+            if (isset($aTypes[$sType])) {
+                $sLabel = $aTypes[$sType][0];
+            } else {
+                $sLabel = $sType;
+            }
+            print(($i++? ',' : '') . "\n" .
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+            $nTotal += $nValue;
+        }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
+        print('];' . "\n\n" .
+              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+              '        {' . "\n" .
+              '            series: {' . "\n" .
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
+              '        });' . "\n" .
+              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+
+              // Add the total number to the header above the graph.
+              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+
+              // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+              $this->getHoverFunction($sDIV, $nTotal) .
               '      </SCRIPT>' . "\n\n");
 
         flush();
@@ -417,104 +701,6 @@ class LOVD_Graphs {
 
 
 /*************** OLD LOVD 2.0 CODE THAT NEEDS TO BE IMPLEMENTED ****************
-// DMD_SPECIFIC
-function lovd_determineLocation($sDNA) {
-    // Function to determine the location of DNA variants (5'ATG, coding, intron, 3'stop)
-    if (preg_match("/[0-9]+[\+\-][0-9]+/", $sDNA)) {
-        //variant is located in an intron
-        return 2;
-    } elseif (preg_match("/\-[0-9]+/", $sDNA)) {
-        //variant is located before the 5' ATG start codon
-        return 0;
-    } elseif (preg_match("/\*[0-9]+/", $sDNA)) {
-        //variant is located after the 3' stop codon
-        return 3;
-    } else {
-        //variant is located in the coding region
-        return 1;
-    }
-}
-
-$nBarWidth = 600;// Set the width for a 100% bar
-
-// Array with row headers for the final output tables
-$aVariants['sub']['header']             = 'substitutions';
-$aVariants['del']['header']             = 'deletions';
-$aVariants['dup']['header']             = 'duplications';
-$aVariants['ins']['header']             = 'insertions';
-$aVariants['delins']['header']          = 'insertion/deletions';
-$aVariants['inv']['header']             = 'inversions';
-$aVariants['twovars']['header']         = '2 variants in 1 allele';
-$aVariants['spl']['header']             = 'splice variants';
-$aVariants['fs']['header']              = 'frame shifts';
-$aVariants['no protein']['header']      = 'no protein variants';
-$aVariants['p.X']['header']             = 'nonstop variants';
-$aVariants['X']['header']               = 'nonsense';
-$aVariants['p.Met']['header']           = 'translation initiation variant';
-$aVariants['=']['header']               = 'silent';
-$aVariants['complex']['header']         = 'complex';
-$aVariants['unknown']['header']         = 'unknown';
-$aVariants['r.0']['header']             = 'no RNA produced';
-$aVariants['no effect']['header']       = 'no effect';
-
-
-// create regular expressions
-$sFraShift      = "/fs/";                                                       // frame shift
-$sPredFraShift  = "/\([a-zA-Z]{1,3}(\d)*[a-zA-Z]*fs/i";                         // frame shift (predicted)
-
-$sNonStop       = "/extX/";                                                     // nonstop
-$sPredNonStop   = "/\([a-zA-Z0-9_]*extX/";                                      // nonstop (predicted)
-
-// 2010-07-23; 2.0-28; also include the alternative writing with "*"
-$sNonsense      = "/X|\*//*";                                                     // nonsense
-$sPredNonsense  = "/\([a-zA-Z]{1,3}(\d)*(X|\*)/";                               // nonsense (predicted)
-
-$sNoProtein      = "/p\.0/";                                                    // no translation
-$sPredNoProtein  = "/p\.\(0\)[^\?]/";                                           // no translation (predicted)
-
-// 2011-01-25; 2.0-30; included position 1 when searching for translation inition variants
-$sTransInit     = "/p\.Met1/";                                                  // translation initiation
-$sPredTransInit = "/p\.\(Met1/";                                                // translation initiation (predicted)
-
-$sSilent        = "/=/";                                                        // silent
-
-$sUnknown       = "/\?|\(|^r\.$|^p\.$/";                                        // unknown
-
-$sSplice        = "/spl/";                                                      // splice variant
-$sPredSplice    = "/\(spl/";                                                    // splice variant (predicted)
-
-$sDelIns        = "/del(\w)*ins/";                                              // insertion/deletion
-$sPredDelIns    = "/\([a-zA-Z0-9_]*del(\w)*ins/";                               // insertion/deletion (predicted)
-
-$sInv           = "/inv/";                                                      // inversion
-$sPredInv       = "/\([a-zA-Z0-9_]*inv/";                                       // inversion
-
-$sIns           = "/ins/";                                                      // insertion
-$sPredIns       = "/\([a-zA-Z0-9_]*ins(\d)*//*";                                  // insertion
-
-$sDup           = "/dup/";                                                      // duplication
-$sPredDup       = "/\([a-zA-Z0-9_]*dup/";                                       // duplication
-
-$sDel           = "/del/";                                                      // deletion
-$sPredDel       = "/\([a-zA-Z0-9_]*del(\d)*//*";                                  // predicted deletion
-
-$sSub           = "/>/";                                                        // substitution
-
-// FIXME: Thinks p.Val123del is a substitution!
-$sProtSub       = "/(^p\.)?[^\[][a-zA-Z]{1,3}\d+[a-zA-Z]{1,3}/";                // protein substitution
-$sPredProtSub   = "/(^p\.)?\([a-zA-Z]{1,3}(\d)+[a-zA-Z]{1,3}\)$/";              // predicted protein substitution
-
-$sComma         = "/,/";                                                        // a comma denotes a complex situation
-
-$sTwoVars       = "/\;/";                                                       // a semicolon denotes 2 mutations in 1 allele
-$sPredTwoVars   = "/\([a-zA-Z0-9_]*\;/";                                        // a semicolon denotes 2 mutations in 1 allele
-
-$sNoRNA         = "/r\.0/";                                                     // no RNA produced
-
-$sProtComp      = "/^p\.\(\=\)/";                                               // (=) denotes a complex situation in case of protein (p.)
-$sProtUnknown   = "/\?/";                                                       // unknown in case of a protein
-
-
 // To check availability of the Variant/DNA, Variant/RNA, Variant/Protein and Patient/Times_reported columns, we need the CurrDB class.
 require ROOT_PATH . 'class/currdb.php';
 $_CURRDB = new CurrDB();
@@ -661,226 +847,6 @@ lovd_showInfoTable('Please note that numbers shown hereafter can deviate from th
 // 2009-09-01; 2.0-21 initialize an array in the session array for storage of variantid's to be used with the variant type links in the tables
 $_SESSION['variant_statistics'][$_SESSION['currdb']] = array();
 
-// Counting the DNA variants
-if ($_CURRDB->colExists('Variant/DNA')) {
-    // Checking the DNA column
-
-    // Initialize arrays for counting locations of DNA variants (5'ATG, coding, intron, 3'stop)
-    $aLocationSub       = array(0, 0, 0, 0);    //substitutions
-    $aLocationDel       = array(0, 0, 0, 0);    //deletions
-    $aLocationDup       = array(0, 0, 0, 0);    //duplications
-    $aLocationIns       = array(0, 0, 0, 0);    //insertions
-    $aLocationDelIns    = array(0, 0, 0, 0);    //insertions/deletions
-    $aLocationInv       = array(0, 0, 0, 0);    //inversions
-
-    // Initialize the counter array of DNA variants
-    $aCounts = array();
-    $aCounts['sub']     = $aLocationSub;    //substitutions
-    $aCounts['del']     = $aLocationDel;    //deletions
-    $aCounts['dup']     = $aLocationDup;    //duplications
-    $aCounts['ins']     = $aLocationIns;    //insertions
-    $aCounts['delins']  = $aLocationDelIns; //insertions/deletions
-    $aCounts['inv']     = $aLocationInv;    //inversions
-    $aCounts['twovars'] = 0;                //2 variants in 1 allel
-    $aCounts['complex'] = 0;                //complex variants
-    $aCounts['unknown'] = 0;                //unknown variants
-
-    // Initialize the total sum of the counter array
-    $nTotalSum = 0;
-
-    // 2009-12-16; 2.0-24; added v.type
-    if ($_CURRDB->colExists('Patient/Times_Reported')) {
-        // Use the Times_Reported column to count the number of patients.
-        $sQ = 'SELECT v.variantid, v.`Variant/DNA`, v.type, SUM(p.`Patient/Times_Reported`) AS sum' .
-              ' FROM ' . TABLE_CURRDB_VARS . ' AS v' .
-              ' LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (variantid)' .
-              ' LEFT JOIN ' . TABLE_PATIENTS . ' AS p USING (patientid)';
-    } else {
-        // No Times_Reported column found, consider every patient entry to be one case.
-        $sQ = 'SELECT v.variantid, v.`Variant/DNA`, v.type, COUNT(p2v.patientid) AS sum' .
-              ' FROM ' . TABLE_CURRDB_VARS . ' AS v' .
-              ' LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (variantid)';
-    }
-    $sQ .= ' WHERE p2v.symbol = "' . $_SESSION['currdb'] . '"' . (IS_CURATOR? '' : ' AND p2v.status >= ' . STATUS_MARKED) . ' AND `' . $sMutationCol . '` NOT IN ("c.=", "c.0")' .
-           ' GROUP BY v.variantid';
-
-    $qDNA = @mysql_query($sQ);
-    while (list($nVariantid, $sDNA, $sType, $nCount) = mysql_fetch_row($qDNA)) {
-        // 2009-12-16; 2.0-24; added $sType and use that for counting variant types if possible
-        // 2010-05-21; 2.0-27; added cases for duplications and inversions which were lacking
-        if ($sType) {
-            switch ($sType) {
-                case 'subst':
-                    // variant is a substitution
-                    $aCounts['sub'][lovd_determineLocation($sDNA)] += $nCount;
-                    $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_sub'][] = $nVariantid;
-                    break;
-                case 'del':
-                    // variant is a deletion
-                    $aCounts['del'][lovd_determineLocation($sDNA)] += $nCount;
-                    $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_del'][] = $nVariantid;
-                    break;
-                case 'dup':
-                    // variant is a duplication
-                    $aCounts['dup'][lovd_determineLocation($sDNA)] += $nCount;
-                    $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_dup'][] = $nVariantid;
-                    break;
-                case 'ins':
-                    // variant is an insertion
-                    $aCounts['ins'][lovd_determineLocation($sDNA)] += $nCount;
-                    $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_ins'][] = $nVariantid;
-                    break;
-                case 'inv':
-                    // variant is an inversion
-                    $aCounts['inv'][lovd_determineLocation($sDNA)] += $nCount;
-                    $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_inv'][] = $nVariantid;
-                    break;
-                case 'delins':
-                    // variant is an indel
-                    $aCounts['delins'][lovd_determineLocation($sDNA)] += $nCount;
-                    $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_delins'][] = $nVariantid;
-                    break;
-            }
-        } else {
-            if (preg_match($sTwoVars, $sDNA)) {
-                // two variants in one allele
-                $aCounts['twovars'] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_twovars'][] = $nVariantid;
-            } elseif (preg_match($sDelIns, $sDNA) || (preg_match($sIns, $sDNA) && preg_match($sDel, $sDNA))) {
-                // variant is an indel
-                $aCounts['delins'][lovd_determineLocation($sDNA)] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_delins'][] = $nVariantid;
-            } elseif (preg_match($sInv, $sDNA)) {
-                // variant is an inversion
-                $aCounts['inv'][lovd_determineLocation($sDNA)] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_inv'][] = $nVariantid;
-            } elseif (preg_match($sIns, $sDNA)) {
-                // variant is an insertion
-                $aCounts['ins'][lovd_determineLocation($sDNA)] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_ins'][] = $nVariantid;
-            } elseif (preg_match($sDup, $sDNA) && !preg_match($sDel, $sDNA)) {
-                // variant is a duplication (and not a deletion)
-                $aCounts['dup'][lovd_determineLocation($sDNA)] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_dup'][] = $nVariantid;
-            } elseif (preg_match($sDel, $sDNA)) {
-                // variant is a deletion
-                $aCounts['del'][lovd_determineLocation($sDNA)] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_del'][] = $nVariantid;
-            } elseif (preg_match($sSub, $sDNA)) {
-                // variant is a substitution
-                $aCounts['sub'][lovd_determineLocation($sDNA)] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_sub'][] = $nVariantid;
-            } elseif (preg_match($sUnknown, $sDNA) || !$sDNA) {
-                // unknown variant
-                $aCounts['unknown'] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_unknown'][] = $nVariantid;
-            } else {
-                // variant is complex
-                $aCounts['complex'] += $nCount;
-                $_SESSION['variant_statistics'][$_SESSION['currdb']]['DNA_complex'][] = $nVariantid;
-            }
-        }
-    }
-
-    // Calculate the total number of variants (total sum of the counter array)
-    foreach ($aCounts as $sVariant => $nVariants) {
-        if (is_array($nVariants)) {
-                $nTotalSum += array_sum($nVariants);
-        } else {
-                $nTotalSum += $nVariants;
-        }
-    }
-
-
-
-    // After fetching and counting data, print it to the screen.
-    // Table in a fixed order, also print zero values
-    // Print percentages in horizontal bars
-    print('      <SPAN class="S15"><B>DNA variants</B></SPAN><BR>' . "\n" .
-          '      <TABLE border cellpadding="2">' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TH>variant</TH>' . "\n" .
-          '          <TH>number</TH>' . "\n" .
-          '          <TH colspan=4>location</TH>' . "\n" .
-          '          <TH colspan=4>percentages</TH></TR>' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TH>&nbsp;</TH>' . "\n" .
-          '          <TH>&nbsp;</TH>' . "\n" .
-          '          <TH>5\'start</TH>' . "\n" .
-          '          <TH>coding</TH>' . "\n" .
-          '          <TH>intron</TH>' . "\n" .
-          '          <TH>3\'stop</TH><TD></TD></TR>' . "\n");
-
-    $aAbsentVariants = array(); //2009-06-24; 2.0-19; keep track of non-observed variants
-    foreach ($aCounts as $sVariant => $nVariants) {
-        // Print for each variant type a row.
-        if (is_array($nVariants)) {
-            // The substitutions, deletions, duplications, insertions, indels and inversions
-            // can be subdivided according to their location (before the 5' start, coding, intron
-            // or after the 3' stop
-            // First calculate the sum of the number of variants and print the row header and the total number for this variant
-            $nVariantsSum = array_sum($nVariants);
-            if ($nVariantsSum != 0) {
-                //2009-06-24; 2.0-19; print the observed variants only
-                print('        <TR>' . "\n" .
-                      '          <TD><A href="' . ROOT_PATH . 'variants.php?select_db=' . $sSymbol . '&action=view_all&view=DNA_' . str_replace('/', '', $sVariant) .'">' . $aVariants[$sVariant]['header'] . '</A></TD>' . "\n" .
-                      '          <TD align="right">' . $nVariantsSum . '</TD>' . "\n");
-                // Now print the numbers for each location
-                foreach ($nVariants as $location => $locnumber) {
-                    print('          <TD align="right">' . $locnumber . '</TD>' . "\n");
-                }
-            } else {
-                // 2009-06-24; 2.0-19; store non-observed variants
-                $aAbsentVariants[] = $aVariants[$sVariant]['header'];
-            }
-        } else {
-            // The other variants
-            // First calculate the sum of the number of variants
-            $nVariantsSum = $nVariants;
-            if ($nVariantsSum != 0) {
-                //2009-06-24; 2.0-19; print observed variants
-                print('        <TR>' . "\n" .
-                      '          <TD><A href="' . ROOT_PATH . 'variants.php?select_db=' . $sSymbol . '&action=view_all&view=DNA_' . str_replace('/', '', $sVariant) .'">' . $aVariants[$sVariant]['header'] . '</A></TD>' . "\n" .
-                      '          <TD align="right">' . $nVariantsSum . '</TD>' . "\n");
-                // Now print 4 times a '-'
-                for ($i = 0; $i < 4; $i++) {
-                    print('          <TD align="right">-</TD>' . "\n");
-                }
-            } else {
-                // 2009-06-24; 2.0-19; store non-observed variants
-                $aAbsentVariants[] = $aVariants[$sVariant]['header'];
-            }
-        }
-        // Print the bar with a length relative to the total for this variant.
-        // 2009-02-12; 2.0-16 prevent division by zero
-        $sPercentage = round($nVariantsSum/($nTotalSum+0.0000001)*100, 2) . '%';
-        if ($nVariantsSum != 0) {
-            print('          <TD><IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="' . $sPercentage . '" title="' . $sPercentage . '" width="' . round($nVariantsSum/($nTotalSum+0.0000001)*$nBarWidth) . '" height="15"></TD></TR>' . "\n");
-        }
-    }
-
-    // Totals row
-    print('        <TR>' . "\n" .
-          '          <TD>totals</TD>' . "\n" .
-          '          <TD align="right">' . $nTotalSum . '</TD>' . "\n");
-    for ($i = 0; $i < 4; $i++) {
-        print('          <TD align="right">' .
-              ($aCounts['sub'][$i] +
-               $aCounts['del'][$i] +
-               $aCounts['dup'][$i] +
-               $aCounts['ins'][$i] +
-               $aCounts['delins'][$i] +
-               $aCounts['inv'][$i]) .
-              '</TD>' . "\n");
-    }
-    print('          <TD><IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="100%" title="100%" width="' . $nBarWidth . '" height="15"></TD></TR></TABLE>' . "\n\n\n\n");
-    // 2009-06-24; 2.0-19; print non-observed variants
-    if (!empty($aAbsentVariants)) {
-        print('Variants not observed: ' . implode($aAbsentVariants, ', ') . '<BR><BR>' . "\n\n\n\n");
-    } else {
-        print('<BR>' . "\n\n\n\n");
-    }
-}
 
 
 
@@ -1014,227 +980,6 @@ if ($_CURRDB->colExists('Variant/RNA')) {
     }
 
 }
-
-
-
-
-// Counting the Protein variants
-if ($_CURRDB->colExists('Variant/Protein')) {
-    $nTotalSum = 0;
-    // Checking the Protein column.
-
-    // Initialize the counter arrays, true and predicted
-    $aCounts = array();
-    $aCountsPred = array();
-    $aCounts['sub']             = 0; // substitutions
-    $aCountsPred['sub']         = 0; // substitutions (predicted)
-    $aCounts['del']             = 0; // deletions
-    $aCountsPred['del']         = 0; // deletions (predicted)
-    $aCounts['dup']             = 0; // duplications
-    $aCountsPred['dup']         = 0; // duplications (predicted)
-    $aCounts['ins']             = 0; // insertions
-    $aCountsPred['ins']         = 0; // insertions (predicted)
-    $aCounts['delins']          = 0; // insertions/deletions
-    $aCountsPred['delins']      = 0; // insertions/deletions (predicted)
-    $aCounts['twovars']         = 0; // 2 variants in 1 allel
-    $aCountsPred['twovars']     = 0; // 2 variants in 1 allel (predicted)
-    $aCounts['fs']              = 0; // frame shift
-    $aCountsPred['fs']          = 0; // frame shift (predicted)
-    $aCounts['no protein']      = 0; // no protein
-    $aCountsPred['no protein']  = 0; // predicted no protein (predicted)
-    $aCounts['p.X']             = 0; // nonstop
-    $aCountsPred['p.X']         = 0; // nonstop (predicted)
-    $aCounts['X']               = 0; // nonsense
-    $aCountsPred['X']           = 0; // nonsense (predicted)
-    $aCounts['p.Met']           = 0; // translation initiation
-    $aCountsPred['p.Met']       = 0; // translation initiation (predicted)
-    $aCounts['=']               = 0; // silent
-    $aCountsPred['=']           = 0; // silent (predicted)
-    $aCounts['complex']         = 0; // complex variants
-    $aCountsPred['complex']     = 0; // complex variants (predicted)
-    $aCounts['unknown']         = 0; // unknown variants
-    $aCountsPred['unknown']     = 0; // unknown variants (predicted)
-
-
-    if ($_CURRDB->colExists('Patient/Times_Reported')) {
-        // Use the Times_Reported column to count the number of patients.
-        $sQ = 'SELECT v.variantid, v.`Variant/Protein`, SUM(p.`Patient/Times_Reported`) AS sum FROM ' . TABLE_CURRDB_VARS .
-              ' AS v LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (variantid) LEFT JOIN ' . TABLE_PATIENTS . ' AS p USING (patientid)';
-    } else {
-        // No Times_Reported column found, consider every patient entry to be one case.
-        $sQ = 'SELECT v.variantid, v.`Variant/Protein`, COUNT(p2v.patientid) AS sum FROM ' . TABLE_CURRDB_VARS . ' AS v' .
-              ' LEFT JOIN ' . TABLE_PAT2VAR . ' AS p2v USING (variantid)';
-    }
-    $sQ .= ' WHERE p2v.symbol = "' . $_SESSION['currdb'] . '"' . (IS_CURATOR? '' : ' AND p2v.status >= ' . STATUS_MARKED) . ' AND `' . $sMutationCol . '` NOT IN ("c.=", "c.0")' .
-           ' GROUP BY v.variantid';
-    $qProtein = @mysql_query($sQ);
-
-    // 2009-08-24; 2.0-21; countings split in true and predicted
-    while (list($nVariantid, $sProtein, $nCount) = mysql_fetch_row($qProtein)) {
-        if (preg_match($sPredTwoVars, $sProtein)) {
-            // two variants in one allele (predicted)
-            $aCountsPred['twovars'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_twovars'][] = $nVariantid;
-        } elseif (preg_match($sTwoVars, $sProtein)) {
-            // two variants in one allele
-            $aCounts['twovars'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_twovars'][] = $nVariantid;
-        } elseif (preg_match($sComma, $sProtein)) {
-            //complex variant
-            $aCounts['complex'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_complex'][] = $nVariantid;
-        } elseif (preg_match($sProtUnknown, $sProtein) || !$sProtein) {
-            // unknown variant
-            $aCounts['unknown'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_unknown'][] = $nVariantid;
-        } elseif (preg_match($sPredFraShift, $sProtein)) {
-            // predicted frame shift variant (predicted)
-            $aCountsPred['fs'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_fs'][] = $nVariantid;
-        } elseif (preg_match($sFraShift, $sProtein)) {
-            // frame shift variant
-            $aCounts['fs'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_fs'][] = $nVariantid;
-        } elseif (preg_match($sPredNonStop, $sProtein)) {
-            // nonstop variant (predicted)
-            $aCountsPred['p.X'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_p.X'][] = $nVariantid;
-        } elseif (preg_match($sNonStop, $sProtein)) {
-            // nonstop variant
-            $aCounts['p.X'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_p.X'][] = $nVariantid;
-        } elseif (preg_match($sPredNonsense, $sProtein)) {
-            // nonsense variant (predicted)
-            $aCountsPred['X'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_X'][] = $nVariantid;
-        } elseif (preg_match($sNonsense, $sProtein)) {
-            // nonsense variant
-            $aCounts['X'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_X'][] = $nVariantid;
-        } elseif (preg_match($sPredDelIns, $sProtein)) {
-            // variant is an indel (predicted)
-            $aCountsPred['delins'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_delins'][] = $nVariantid;
-        } elseif (preg_match($sDelIns, $sProtein)) {
-            // variant is an indel
-            $aCounts['delins'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_delins'][] = $nVariantid;
-        } elseif (preg_match($sPredDel, $sProtein)) {
-            // variant is a deletion (predicted)
-            $aCountsPred['del'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_del'][] = $nVariantid;
-        } elseif (preg_match($sDel, $sProtein)) {
-            // variant is an deletion
-            $aCounts['del'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_del'][] = $nVariantid;
-        } elseif (preg_match($sPredDup, $sProtein)) {
-            // variant is an duplication (predicted)
-            $aCountsPred['dup'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_dup'][] = $nVariantid;
-        } elseif (preg_match($sDup, $sProtein)) {
-            // variant is an duplication
-            $aCounts['dup'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_dup'][] = $nVariantid;
-        } elseif (preg_match($sPredIns, $sProtein)) {
-            // variant is an insertion (predicted)
-            $aCountsPred['ins'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_ins'][] = $nVariantid;
-        } elseif (preg_match($sIns, $sProtein)) {
-            // variant is an insertion
-            $aCounts['ins'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_ins'][] = $nVariantid;
-        } elseif (preg_match($sPredNoProtein, $sProtein)) {
-            // a no protein variant (predicted)
-            $aCountsPred['no protein'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_no protein'][] = $nVariantid;
-        } elseif (preg_match($sNoProtein, $sProtein)) {
-            // a no translation variant
-            $aCounts['no protein'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_no protein'][] = $nVariantid;
-        } elseif (preg_match($sPredTransInit, $sProtein)) {
-            // a predicted translation initiation variant
-            $aCountsPred['p.Met'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_p.Met'][] = $nVariantid;
-        } elseif (preg_match($sTransInit, $sProtein)) {
-            // a translation initiation variant
-            $aCounts['p.Met'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_p.Met'][] = $nVariantid;
-        } elseif (preg_match($sPredProtSub, $sProtein)) {
-            // variant is an predicted substitution
-            $aCountsPred['sub'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_sub'][] = $nVariantid;
-        } elseif (preg_match($sProtSub, $sProtein, $aMatch)) {
-            // variant is an substitution
-            $aCounts['sub'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_sub'][] = $nVariantid;
-        } elseif (preg_match($sProtComp, $sProtein)) {
-            // a complex variant
-            $aCounts['complex'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_complex'][] = $nVariantid;
-        } elseif (preg_match($sSilent, $sProtein)) {
-            // a silent variant
-            $aCounts['='] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_='][] = $nVariantid;
-        } else {
-            //a complex variant
-            $aCounts['complex'] += $nCount;
-            $_SESSION['variant_statistics'][$_SESSION['currdb']]['Prot_complex'][] = $nVariantid;
-        }
-    }
-
-    // After fetching and counting data, print it to the screen.
-    // Print percentages in horizontal bars
-    print('      <SPAN class="S15"><B>Protein variants</B></SPAN><BR>' . "\n" .
-          '      <TABLE border="1">' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TH>variant</TH>' . "\n" .
-          '          <TH>number</TH>' . "\n" .
-          '          <TH>percentages</TH></TR>' . "\n");
-
-    $aAbsentVariants = array(); //2009-06-24; 2.0-19; keep track of non-observed variants
-    $nSum = array_sum($aCounts) + array_sum($aCountsPred);
-    foreach ($aCounts as $sVariant => $nVariants) {
-        // 2009-02-12; 2.0-16 prevent division by zero
-        $nPercentage = round($nVariants/($nSum + 0.0000001) * 100, 2);
-        $nPercentagePred = round($aCountsPred[$sVariant]/($nSum + 0.0000001) *100, 2);
-        $sPercentageTotal = ($nPercentage + $nPercentagePred) . '%';
-        if ($nVariants != 0 || $aCountsPred[$sVariant] != 0) {
-            //2009-06-24; 2.0-19; print observed variants only
-            //2009-08-24; 2.0-21; print confirmed and predicted variants separately, except for the complex and unknown variants
-            print('        <TR>' . "\n" .
-                  '          <TD><A href="' . ROOT_PATH . 'variants.php?select_db=' . $sSymbol . '&action=view_all&view=Prot_' . $sVariant .'">' . $aVariants[$sVariant]['header'] . '</A></TD>' . "\n");
-            if (!in_array($sVariant, array('unknown', 'complex'))) {
-                print('          <TD align="right">' . ($nVariants?'confirmed: ' . $nVariants:'') . ($aCountsPred[$sVariant]?' predicted: ' . $aCountsPred[$sVariant]: '') . '</TD>' . "\n" .
-                      '          <TD>' .
-                      ($nPercentage ? '<IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="' . $nPercentage . '%" title="' . $nPercentage . '%" width="' . (round($nVariants/($nSum + 0.0000001) * $nBarWidth, 2)>1?round($nVariants/($nSum + 0.0000001) * $nBarWidth, 2):1) . '" height="15">' : '') .
-                      ($nPercentagePred ? '<IMG src="' . ROOT_PATH . 'gfx/lovd_summ_red.png" alt="' . $nPercentagePred . '%" title="' . $nPercentagePred . '%" width="' . (round($aCountsPred[$sVariant]/($nSum + 0.0000001)*$nBarWidth, 2)>1?round($aCountsPred[$sVariant]/($nSum + 0.0000001)*$nBarWidth, 2):1) . '" height="15">' : '') .
-                      '          </TD></TR>' . "\n");
-            } else {
-                print('          <TD align="right">' . $nVariants . '</TD>' . "\n" .
-                      '          <TD>' .
-                      ($nPercentage ? '<IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="' . $nPercentage . '%" title="' . $nPercentage . '%" width="' . (round($nVariants/($nSum + 0.0000001) * $nBarWidth, 2)>1?round($nVariants/($nSum + 0.0000001) * $nBarWidth, 2):1) . '" height="15">' : '') .
-                      '          </TD></TR>' . "\n");
-            }
-
-        } else {
-            // 2009-06-24; 2.0-19; store non-observed variants
-            $aAbsentVariants[] = $aVariants[$sVariant]['header'];
-        }
-    }
-    // Totals row
-    print('        <TR>' . "\n" .
-          '          <TD>total</TD>' . "\n" .
-          '          <TD align="right">' . $nSum . '</TD>' . "\n" .
-          '          <TD>' .
-          '<IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="100%" title="100%" width="' . $nBarWidth . '" height="15">' .       '          </TD></TR></TABLE>' . "\n\n\n\n");
-
-    // 2009-06-24; 2.0-19; print non-observed variants
-    if (!empty($aAbsentVariants)) {
-        print('Variants not observed: ' . implode($aAbsentVariants, ', ') . '<BR><BR>');
-    }
-    print('<BR>Legend: <IMG src="' . ROOT_PATH . 'gfx/lovd_summ_blue.png" alt="confirmed" title="confirmed" width="45" height="15"> confirmed <IMG src="' . ROOT_PATH . 'gfx/lovd_summ_red.png" alt="predicted" title="predicted" width="45" height="15"> predicted<BR>');
-}
-
 
 lovd_printGeneFooter();
 require ROOT_PATH . 'inc-bot.php';

@@ -29,6 +29,8 @@
    LOVD did not recognize the ID, even though it existed in the database.
  * Improved the speed of the genes and diseases ViewEntries, where many linked
    variants, individuals or phenotype entries slowed down the views.
+ * Major update to gene-specific graph page.
+   (thanks to David Baux, IURC, France, for initial code and ideas)
 
 
 /**************************
