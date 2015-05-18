@@ -1202,26 +1202,6 @@ function timeline($sDIV, $bPublicOnly = true) {
 
 
 /*************** OLD LOVD 2.0 CODE THAT NEEDS TO BE IMPLEMENTED ****************
-// DMD_SPECIFIC
-function lovd_determineLocation($sDNA) {
-    // Function to determine the location of DNA variants (5'ATG, coding, intron, 3'stop)
-    if (preg_match("/[0-9]+[\+\-][0-9]+/", $sDNA)) {
-        //variant is located in an intron
-        return 2;
-    } elseif (preg_match("/\-[0-9]+/", $sDNA)) {
-        //variant is located before the 5' ATG start codon
-        return 0;
-    } elseif (preg_match("/\*[0-9]+/", $sDNA)) {
-        //variant is located after the 3' stop codon
-        return 3;
-    } else {
-        //variant is located in the coding region
-        return 1;
-    }
-}
-
-$nBarWidth = 600;// Set the width for a 100% bar
-
 // To check availability of the Variant/DNA, Variant/RNA, Variant/Protein and Patient/Times_reported columns, we need the CurrDB class.
 require ROOT_PATH . 'class/currdb.php';
 $_CURRDB = new CurrDB();
@@ -1368,29 +1348,6 @@ lovd_showInfoTable('Please note that numbers shown hereafter can deviate from th
 // 2009-09-01; 2.0-21 initialize an array in the session array for storage of variantid's to be used with the variant type links in the tables
 $_SESSION['variant_statistics'][$_SESSION['currdb']] = array();
 
-// Counting the DNA variants
-if ($_CURRDB->colExists('Variant/DNA')) {
-    // Checking the DNA column
-
-    // After fetching and counting data, print it to the screen.
-    // Table in a fixed order, also print zero values
-    // Print percentages in horizontal bars
-    print('      <SPAN class="S15"><B>DNA variants</B></SPAN><BR>' . "\n" .
-          '      <TABLE border cellpadding="2">' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TH>variant</TH>' . "\n" .
-          '          <TH>number</TH>' . "\n" .
-          '          <TH colspan=4>location</TH>' . "\n" .
-          '          <TH colspan=4>percentages</TH></TR>' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TH>&nbsp;</TH>' . "\n" .
-          '          <TH>&nbsp;</TH>' . "\n" .
-          '          <TH>5\'start</TH>' . "\n" .
-          '          <TH>coding</TH>' . "\n" .
-          '          <TH>intron</TH>' . "\n" .
-          '          <TH>3\'stop</TH><TD></TD></TR>' . "\n");
-    print('      </TABLE>' . "\n\n\n\n");
-}
 
 
 
