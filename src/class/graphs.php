@@ -193,138 +193,6 @@ class LOVD_Graphs {
 
     }
 
-
-
-
-
-    function variantsLocations ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
-    {
-        // Shows a nice pie chart about the variant locations on DNA level in a certain data set.
-        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
-        // $bNonPublic indicates whether or not only the public variants should be used.
-        // $bUnique indicates whether all variants or or the unique variants should be counted.
-        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
-        global $_DB;
-
-        if (empty($sDIV)) {
-            return false;
-        }
-
-        print('      <SCRIPT type="text/javascript">' . "\n");
-
-        if (empty($Data)) {
-            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsLocations()<BR>No data received to create graph.");' . "\n" .
-                  '      </SCRIPT>' . "\n\n");
-            return false;
-        }
-
-        $nPathogenicThreshold = 7;
-
-        // Keys need to be renamed.
-        $aTypes =
-            array(
-                '5UTR'     => array('5\'UTR', '#F90'),        // Orange.
-                'start'    => array('Start codon', '#600'),   // Dark dark red.
-                'coding'   => array('Coding', '#00C'),        // Blue.
-                'splice'   => array('Splice region', '#A00'), // Dark red.
-                'intron'   => array('Intron', '#0AC'),        // Light blue.
-                '3UTR'     => array('3\'UTR', '#090'),        // Green.
-                'multiple' => array('Multiple', '#95F'),      // Purple.
-                ''         => array('Unknown', '#000'),       // Black.
-        );
-
-        if (!is_array($Data)) {
-            // Retricting to a certain gene, or full database ($Data == '*').
-            // FIXME: Region "coding" doesn't make sense on non-coding transcripts, but in this case I won't handle for these situations.
-            //   I guess this should be called "exonic", also removing both UTR regions, but I will leave this for some other time, if ever.
-            if ($bUnique) {
-                if ($Data == '*') {
-                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
-                } else {
-                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
-                }
-            } else {
-                if ($Data == '*') {
-                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
-                } else {
-                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
-                }
-            }
-        } else {
-            // Using list of variant IDs.
-        }
-
-        $aData = array();
-        while (list($nCDSend, $nPosStart, $nPosStartIntron, $nPosEnd, $nPosEndIntron, $nCount) = $qPositions->fetchRow()) {
-            if (($nPosStart < 0 && $nPosEnd > 0) || ($nPosEnd > $nCDSend && $nPosStart < $nCDSend) || ($nPosStartIntron && !$nPosEndIntron) || ($nPosEndIntron && !$nPosStartIntron)) {
-                $sType = 'multiple';
-            } elseif ($nPosStartIntron && ($nPosEnd - $nPosStart) <= 1) {
-                // Only intron if we're in the same intron...! Otherwise, we'll call it coding (whole exon deletion or duplication).
-                if (abs($nPosStartIntron) <= 5 || abs($nPosEndIntron) <= 5) {
-                    $sType = 'splice';
-                } else {
-                    $sType = 'intron';
-                }
-            } elseif ($nPosStart < 0) {
-                $sType = '5UTR';
-            } elseif (($nPosStart > 0 && $nPosStart <= 3) || ($nPosEnd > 0 && $nPosEnd <= 3)) {
-                // Category 'start' is counted as well when just the start or end of the variant are located there, then 'multiple' is not selected.
-                $sType = 'start';
-            } elseif ($nPosStart < $nCDSend && !$nPosStartIntron) {
-                $sType = 'coding';
-            } elseif ($nPosStart >= $nCDSend) {
-                $sType = '3UTR';
-            } else {
-                $sType = '';
-            }
-
-            if (!isset($aData[$sType])) {
-                $aData[$sType] = 0;
-            }
-            $aData[$sType] += $nCount;
-        }
-
-        // Format $aData.
-        print('        var data = [');
-        ksort($aData); // May not work correctly, if keys are replaced...
-        $i = 0;
-        $nTotal = 0;
-        foreach ($aData as $sType => $nValue) {
-            if (isset($aTypes[$sType])) {
-                $sLabel = $aTypes[$sType][0];
-            } else {
-                $sLabel = $sType;
-            }
-            print(($i++? ',' : '') . "\n" .
-                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
-            $nTotal += $nValue;
-        }
-        if (!$aData) {
-            // There was no data... give "fake" data such that the graph can still be generated.
-            print('{label: "No data to show", data: 1, color: "#000"}');
-            $nTotal = 1;
-        }
-        print('];' . "\n\n" .
-              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
-              '        {' . "\n" .
-              '            series: {' . "\n" .
-              $this->getPieGraph() .
-              '            },' . "\n" .
-              '            grid: {hoverable: true}' . "\n" .
-              '        });' . "\n" .
-              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
-
-        // Add the total number to the header above the graph.
-              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
-
-        // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
-              $this->getHoverFunction($sDIV, $nTotal) .
-              '      </SCRIPT>' . "\n\n");
-
-        flush();
-        return true;
-    }
-
     //end_david
 
 
@@ -938,6 +806,138 @@ function timeline($sDIV, $bPublicOnly = true) {
     return true;
     }
 //end_fatim
+
+
+
+
+
+    function variantsLocations ($sDIV, $Data = array(), $bNonPublic = false, $bUnique = false, $bPathogenicOnly = false)
+    {
+        // Shows a nice pie chart about the variant locations on DNA level in a certain data set.
+        // $Data can be either a * (whole database), a gene symbol or an array of variant IDs.
+        // $bNonPublic indicates whether or not only the public variants should be used.
+        // $bUnique indicates whether all variants or or the unique variants should be counted.
+        // $bPathogenicOnly indicates whether the graph should show the results for (likely) pathogenic variants only (reported or concluded, VOG effectid only).
+        global $_DB;
+
+        if (empty($sDIV)) {
+            return false;
+        }
+
+        print('      <SCRIPT type="text/javascript">' . "\n");
+
+        if (empty($Data)) {
+            print('        $("#' . $sDIV . '").html("Error: LOVD_Graphs::variantsLocations()<BR>No data received to create graph.");' . "\n" .
+                  '      </SCRIPT>' . "\n\n");
+            return false;
+        }
+
+        $nPathogenicThreshold = 7;
+
+        // Keys need to be renamed.
+        $aTypes =
+            array(
+                '5UTR'     => array('5\'UTR', '#F90'),        // Orange.
+                'start'    => array('Start codon', '#600'),   // Dark dark red.
+                'coding'   => array('Coding', '#00C'),        // Blue.
+                'splice'   => array('Splice region', '#A00'), // Dark red.
+                'intron'   => array('Intron', '#0AC'),        // Light blue.
+                '3UTR'     => array('3\'UTR', '#090'),        // Green.
+                'multiple' => array('Multiple', '#95F'),      // Purple.
+                ''         => array('Unknown', '#000'),       // Black.
+            );
+
+        if (!is_array($Data)) {
+            // Retricting to a certain gene, or full database ($Data == '*').
+            // FIXME: Region "coding" doesn't make sense on non-coding transcripts, but in this case I won't handle for these situations.
+            //   I guess this should be called "exonic", also removing both UTR regions, but I will leave this for some other time, if ever.
+            if ($bUnique) {
+                if ($Data == '*') {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                } else {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                }
+            } else {
+                if ($Data == '*') {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                } else {
+                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                }
+            }
+        } else {
+            // Using list of variant IDs.
+        }
+
+        $aData = array();
+        while (list($nCDSend, $nPosStart, $nPosStartIntron, $nPosEnd, $nPosEndIntron, $nCount) = $qPositions->fetchRow()) {
+            if (($nPosStart < 0 && $nPosEnd > 0) || ($nPosEnd > $nCDSend && $nPosStart < $nCDSend) || ($nPosStartIntron && !$nPosEndIntron) || ($nPosEndIntron && !$nPosStartIntron)) {
+                $sType = 'multiple';
+            } elseif ($nPosStartIntron && ($nPosEnd - $nPosStart) <= 1) {
+                // Only intron if we're in the same intron...! Otherwise, we'll call it coding (whole exon deletion or duplication).
+                if (abs($nPosStartIntron) <= 5 || abs($nPosEndIntron) <= 5) {
+                    $sType = 'splice';
+                } else {
+                    $sType = 'intron';
+                }
+            } elseif ($nPosStart < 0) {
+                $sType = '5UTR';
+            } elseif (($nPosStart > 0 && $nPosStart <= 3) || ($nPosEnd > 0 && $nPosEnd <= 3)) {
+                // Category 'start' is counted as well when just the start or end of the variant are located there, then 'multiple' is not selected.
+                $sType = 'start';
+            } elseif ($nPosStart < $nCDSend && !$nPosStartIntron) {
+                $sType = 'coding';
+            } elseif ($nPosStart >= $nCDSend) {
+                $sType = '3UTR';
+            } else {
+                $sType = '';
+            }
+
+            if (!isset($aData[$sType])) {
+                $aData[$sType] = 0;
+            }
+            $aData[$sType] += $nCount;
+        }
+
+        // Format $aData.
+        print('        var data = [');
+        ksort($aData); // May not work correctly, if keys are replaced...
+        $i = 0;
+        $nTotal = 0;
+        foreach ($aData as $sType => $nValue) {
+            if (isset($aTypes[$sType])) {
+                $sLabel = $aTypes[$sType][0];
+            } else {
+                $sLabel = $sType;
+            }
+            print(($i++? ',' : '') . "\n" .
+                  '            {label: "' . $sLabel . '", data: ' . $nValue . (!isset($aTypes[$sType][1])? '' : ', color: "' . $aTypes[$sType][1] . '"') . '}');
+            $nTotal += $nValue;
+        }
+        if (!$aData) {
+            // There was no data... give "fake" data such that the graph can still be generated.
+            print('{label: "No data to show", data: 1, color: "#000"}');
+            $nTotal = 1;
+        }
+        print('];' . "\n\n" .
+              '        $.plot($("#' . $sDIV . '"), data,' . "\n" .
+              '        {' . "\n" .
+              '            series: {' . "\n" .
+              $this->getPieGraph() .
+              '            },' . "\n" .
+              '            grid: {hoverable: true}' . "\n" .
+              '        });' . "\n" .
+              '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
+
+              // Add the total number to the header above the graph.
+              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+
+              // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
+              $this->getHoverFunction($sDIV, $nTotal) .
+              '      </SCRIPT>' . "\n\n");
+
+        flush();
+        return true;
+    }
 
 
 
