@@ -26,11 +26,15 @@
    overwrite previously set filters, for instance causing the gene-specific
    download to sometimes not contain all related diseases.
  * Fixed bug; When an import file missed the preceding zeros in any numeric ID,
-   LOVD did not recognize the ID, even though it existed in the database.
+   LOVD did not recognize the ID, even though it existed in the database. This
+   bug was introduced in 3.0-13.
  * Improved the speed of the genes and diseases ViewEntries, where many linked
    variants, individuals or phenotype entries slowed down the views.
  * Major update to gene-specific graph page.
    (thanks to David Baux, IURC, France, for initial code and ideas)
+ * Due to continuous changes in the reCAPTCHA appearance, changed the text that
+   describes the image.
+   (thanks to Raymond Dalgleish, University of Leicester, UK)
 
 
 /**************************

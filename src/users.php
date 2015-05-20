@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2015-01-26
- * For LOVD    : 3.0-13
+ * Modified    : 2015-05-06
+ * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -552,7 +552,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
             'skip',
             array('', '', 'print', '<B>Registration authentication</B>'),
             'hr',
-            array('Please fill in the two words that you see in the image', '', 'print', recaptcha_get_html('6Le0JQQAAAAAAPQ55JT0m0_AVX5RqgSnHBplWHxZ', $sCAPTCHAerror, SSL)),
+            array('Please fill in the word, words, or numbers that you see in the image', '', 'print', recaptcha_get_html('6Le0JQQAAAAAAPQ55JT0m0_AVX5RqgSnHBplWHxZ', $sCAPTCHAerror, SSL)),
             'hr',
             'skip',
             array('', '', 'submit', 'Register'),
