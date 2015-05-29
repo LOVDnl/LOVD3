@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2014-04-28
- * For LOVD    : 3.0-10
+ * Modified    : 2015-05-29
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -333,6 +334,7 @@ class LOVD_Object {
     function getCount ($nID = false)
     {
         // Returns the number of entries in the database table.
+        // ViewEntry() and ViewList() call this function to see if data exists at all, and actually don't require a precise number.
         global $_DB;
 
         if ($nID) {
@@ -1413,7 +1415,7 @@ class LOVD_Object {
 
             $zData = $this->autoExplode($zData);
 
-            $zData = $this->prepareData($zData);
+            $zData = $this->prepareData($zData, 'list', $sViewListID);
 
             if (FORMAT == 'text/html') {
                 // FIXME; rawurldecode() in the line below should have a better solution.

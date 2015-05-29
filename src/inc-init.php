@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-05-01
+ * Modified    : 2015-05-29
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -201,6 +202,7 @@ $_SETT = array(
                             0  => 'center',
                             1  => 'right',
                           ),
+                'unique_view_max_string_length' => 100,
                 'human_builds' =>
                      array(
                             '----' => array('ncbi_name' => 'non-Human'),

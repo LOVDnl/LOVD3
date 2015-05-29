@@ -4,14 +4,15 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-11-05
- * For LOVD    : 3.0-12
+ * Modified    : 2015-05-27
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Zuotian Tatum <Z.Tatum@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -156,9 +157,15 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
 
 if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     // URL: /variants/DMD
+    // URL: /variants/DMD/unique
     // URL: /variants/DMD/NM_004006.2
+    // URL: /variants/DMD/NM_004006.2/unique
     // View all entries in a specific gene, affecting a specific transcript.
 
+    $bUnique = false;
+    if ((isset($_PE[2]) && $_PE[2] == 'unique') || (isset($_PE[3]) && $_PE[3] == 'unique')) {
+        $bUnique = true;
+    }
     $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
     if ($sGene) {
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
@@ -173,11 +180,11 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $nTranscripts = count($aTranscripts);
 
         // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscripts.
-        if (!empty($_PE[2])) {
+        if (!empty($_PE[2]) && $_PE[2] != 'unique') {
             $nTranscript = array_search($_PE[2], $aTranscripts);
             if ($nTranscript === false) {
                 // NM does not exist. Throw error or just simply redirect?
-                header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1]);
+                header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . (!$bUnique? '' : '/unique'));
                 exit;
             } else {
                 $aTranscripts = array($nTranscript => $aTranscripts[$nTranscript]);
@@ -192,7 +199,11 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         exit;
     }
 
-    define('PAGE_TITLE', 'View transcript variants in ' . $sGene);
+    if ($bUnique) {
+        define('PAGE_TITLE', 'View unique variants in ' . $sGene);
+    } else {
+        define('PAGE_TITLE', 'View all transcript variants in ' . $sGene);
+    }
     $_T->printHeader();
     $_T->printTitle();
     lovd_printGeneHeader();
@@ -224,7 +235,15 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
     if ($nTranscripts > 0) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
-        $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
+        if ($bUnique) {
+            // When this ViewListID is changed, also change the prepareData in object_custom_viewluists.php
+            $sViewListID = 'CustomVL_VOTunique_VOG_' . $sGene;
+            $_DATA = new LOVD_CustomViewList(array('VariantOnTranscriptUnique', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
+            $_DATA->setRowLink($sViewListID, 'variants/' . $sGene . '?search_position_c_start={{position_c_start}}&search_position_c_start_intron={{position_c_start_intron}}&search_position_c_end={{position_c_end}}&search_position_c_end_intron={{position_c_end_intron}}&search_vot_clean_dna_change={{vot_clean_dna_change}}');
+        } else {
+            $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
+        }
+
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $_DATA->viewList($sViewListID, array('chromosome', 'allele_'), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
 

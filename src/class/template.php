@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2015-01-26
- * For LOVD    : 3.0-09
+ * Modified    : 2015-05-27
+ * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -100,6 +101,8 @@ class LOVD_Template {
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all genomic variants', 0),
                                 '/variants/in_gene' => array('menu_magnifying_glass.png', 'View all variants affecting transcripts', 0),
+                             'hr',
+                                '/variants/' . $_SESSION['currdb'] . '/unique' => array('menu_magnifying_glass.png', 'View unique variants in the ' . $_SESSION['currdb'] . ' gene', 0),
                                 '/variants/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all variants in the ' . $_SESSION['currdb'] . ' gene', 0),
                                 '/view/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'Full data view for the ' . $_SESSION['currdb'] . ' gene', 0),
                                 '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
@@ -210,6 +213,7 @@ class LOVD_Template {
             unset($this->aMenu['genes_']['/genes/']);
             unset($this->aMenu['genes_']['/genes//graphs']);
             unset($this->aMenu['transcripts_']['/transcripts/']);
+            unset($this->aMenu['variants_']['/variants//unique']);
             unset($this->aMenu['variants_']['/variants/']);
             unset($this->aMenu['variants_']['/view/']);
             unset($this->aMenu['individuals_']['/individuals/']);
@@ -703,6 +707,9 @@ function lovd_mapVariants ()
             if ($_SESSION['currdb']) {
                 if (in_array($sPrefix, array('configuration', 'genes', 'transcripts', 'variants', 'screenings', 'individuals'))) {
                     $sURL = $sPrefix . '/' . $_SESSION['currdb'];
+                    if ($sPrefix == 'variants') {
+                        $sURL .= '/unique';
+                    }
                 } elseif ($sPrefix == 'diseases') {
                     $sURL = $sPrefix . '?search_genes_=' . $_SESSION['currdb'];
                 }

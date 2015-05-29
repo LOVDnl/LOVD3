@@ -35,6 +35,9 @@
  * Due to continuous changes in the reCAPTCHA appearance, changed the text that
    describes the image.
    (thanks to Raymond Dalgleish, University of Leicester, UK)
+ * Unique variantview is available. When the variant tab is selected only
+   unique variants are displayed. The reported column is new in the unique
+   variantview and conaints the number a variant is reported.
 
 
 /**************************
