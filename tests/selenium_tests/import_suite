@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <title>Test Suite</title>
+</head>
+<body>
+<table id="suiteTable" cellpadding="1" cellspacing="1" border="1" class="selenium"><tbody>
+<tr><td><b>Test Suite</b></td></tr>
+<tr><td><a href="import_tests/install_LOVD">Install LOVD</a></td></tr>
+<tr><td><a href="import_tests/create_gene_IVD">create gene IVD</a></td></tr>
+<tr><td><a href="import_tests/create_gender_column">create_gender_column</a></td></tr>
+<tr><td><a href="import_tests/create_disease_IVA">create_disease_IVA</a></td></tr>
+<tr><td><a href="import_tests/create_data">create_data</a></td></tr>
+<tr><td><a href="import_tests/test_import">test_import</a></td></tr>
+<tr><td><a href="import_tests/uninstall_LOVD">Uninstall LOVD</a></td></tr>
+</tbody></table>
+</body>
+</html>

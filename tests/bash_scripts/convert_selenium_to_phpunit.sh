@@ -1,5 +1,5 @@
 #!/bin/bash
-# script for creating phpunit selenium tests from the selenium IDE files. See readme file for details. 
+# script for creating phpunit selenium tests from the selenium IDE files. See readme file for details.
 
 # This is a array with all folders which must be included in the test.
 testsuitelist[0]='temp_suite'
@@ -9,6 +9,7 @@ testsuitelist[3]='manager_suite'
 testsuitelist[4]='curator_suite'
 testsuitelist[5]='collaborator_suite'
 testsuitelist[6]='submitter_suite'
+testsuitelist[7]='import_suite'
 
 SCRIPT=$(readlink -f $0)
 SCRIPTPATH=$(dirname $SCRIPT)
@@ -65,7 +66,7 @@ echo "</tbody></table>">>TEMP_selenium_suite_test_all
 echo "</body>">>TEMP_selenium_suite_test_all
 echo "</html>">>TEMP_selenium_suite_test_all
 
-# Get directory names where selenium IDE files are stored. 
+# Get directory names where selenium IDE files are stored.
 directories=`grep href TEMP_selenium_suite_test_all | cut -d '"' -f 2 | grep / | cut -d / -f 1 | uniq`
 
 for dir in $directories
@@ -93,7 +94,7 @@ do
             echo "WARNING (Line:" $LINENO"): The Selenium IDE file '"${dir}/${file}"' seems to be modified after the file is exported to '"${dir}/${file}.php"'."
         fi
         # Ask to proceed, if continue all is selected, this question will not asked again.
-        if [ $moddatephpfile -lt $moddateedifile ] && [ $alwaysask = true ] ; then    
+        if [ $moddatephpfile -lt $moddateedifile ] && [ $alwaysask = true ] ; then
             echo "This can mean that the latest modifications in the the Selenium IDE files are not included in the phpunit tests."
             echo "Are you sure you want to contiue?"
             echo "(c)ontinue, continue (a)ll or (s)top and exit."
@@ -104,7 +105,7 @@ do
                      C|c|continue)
                           echo "Continue"
                           break
-                          ;; 
+                          ;;
                      A|a|all)
                           echo "Continue all."
                           alwaysask=false
@@ -121,19 +122,19 @@ do
             done
         fi
     done
-    
+
     #create class file name
     newfilename=`echo ${dir} | sed 's/_tests/Test/'`
-    
+
     # copy the setupscript to the new phpunit script. Each original directory will be the name of
     # each new phpunit class file.
-    
+
     # The setupscript contains a relative path to the folder where the screenshots are stored in case of an error.
-    # This relative path should be an absolute pathe. 
+    # This relative path should be an absolute pathe.
     screenshotPath=`grep "screenshotPath" setupscript.php | sed "s@Determined on convert@$NEWSCREENSHOTPATH@"`
     screenshotUrl=`grep "screenshotUrl" setupscript.php | sed "s@Determined on convert@$NEWSCHREENSHOTURL@"`
     setBrowserUrl=`grep "setBrowserUrl" setupscript.php | sed "s@Determined on convert@$NEWSETBROWSERURL@"`
-    
+
     # Here the setupscript is used as an header for each test class.
     # First sed is to change de modify date
     # Second sed is to change the class name
@@ -145,7 +146,7 @@ do
         sed "s@.*screenshotUrl.*@$screenshotUrl@" |
         sed "s@.*setBrowserUrl.*@$setBrowserUrl@">../phpunit_selenium/${newfilename}.php
     echo "create new class file with template setup script and new class name: '"$dir"'"
-    
+
     # Get the selenium php files from current directory
     files=`grep $dir TEMP_selenium_suite_test_all | cut -d '"' -f 2 | cut -d / -f 2`
     numberoftests=`grep $dir TEMP_selenium_suite_test_all | wc -l`
@@ -163,27 +164,28 @@ do
             echo "WARNING (Line:" $LINENO"): creation of class '"$dir"' is INTERUPTED!"
             break
         fi
-                
+
         # Get method from source file.
         methodfound=`grep -A 2000 "function testMyTestCase" ${dir}/${file}.php`
 
         # If no methods are found interupt conversion.
         if [ -z "$methodfound" ]; then
             echo "ERROR (Line:" $LINENO"): no method found in source file '"${dir}/${file}.php"'!"
+            echo "possible solution: Make sure to export the selenium test case as a PHP(PHPUnit)!"
             echo "WARNING (Line:" $LINENO"): creation of class '"$dir"' is interupted!"
             break
         fi
-        
+
         # Use selenium php file name to create new method name.
         # Last sed is to make method name CamelCase.
         method=`echo _${file} | sed 's/_\(.\)/\U\1/g'`
 
         # Replace original method name with new method name and addust so it is compattible with phpunit.
         # The second "sed" is to adjust indentation to 4 or a multiple of 4.
-        # The third "sed" is to change all https in http to avoid security exeptions errors. 
+        # The third "sed" is to change all https in http to avoid security exeptions errors.
         echo "${methodfound}" | head -n -2 | sed "s/MyTestCase/${method}/" |
-             sed 's/  /    /g' | sed 's/https/http/g'>>../phpunit_selenium/${newfilename}.php        
-        
+             sed 's/  /    /g' | sed 's/https/http/g'>>../phpunit_selenium/${newfilename}.php
+
         ((methodclassescount++))
         ((totalmethod++))
     done
@@ -198,7 +200,7 @@ do
     if [ ! $numberfiles -eq $methodclassescount ]; then
         echo "WARNING (Line:" $LINENO"): Number of tests in the directoty '"${dir}"' and number of created methods do not correspond!"
     fi
-    
+
     echo "New class '"$dir"' completed"
     echo "Number of methods created in class '"$dir"': "$methodclassescount
     echo
@@ -216,6 +218,7 @@ echo -----------------------end---------------------------
 # 1 The base url is not used. Therefore the directory in the open functions have to be modified.
 # 2 In some cases the ";" is not put at the end of a line.
 # 3 When files are imported the location must be modified, depending on the installation.
+# 4 When files are imported the location must be modified, depending on the installation.
 echo --------------Fix Selenium export bugs---------------
 for file in "${PHPUNITTESTTPATH}"/*
 do
@@ -223,11 +226,11 @@ do
     data=`grep -A 2000 "<?php" ${file} |
         sed "s@this->open(\".*./trunk/@this->open(\"$LOCALHOSTDIRTRUNK@" |
         sed 's/0)$/0);/' |
-        sed "s@name=variant_file.*./trunk/tests/test_data_files/@name=variant_file\"\, \"$TESTDATATPATH@"`
+        sed "s@name=variant_file.*./trunk/tests/test_data_files/@name=variant_file\"\, \"$TESTDATATPATH@" |
+        sed "s@name=import.*./trunk/tests/test_data_files/@name=import\"\, \"$TESTDATATPATH@"`
     echo "${data}">${file}
     sleep 1
     echo "done"
 done
 echo ----------------------Fix done-----------------------
 exit
-

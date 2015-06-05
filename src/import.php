@@ -109,14 +109,14 @@ function lovd_calculateDiffScore ($zData, $aLine)
 function lovd_endLine ()
 {
     // Ends the current line by cleaning up the memory and changing the line number.
-    global $aData, $i, $nLine, $_ERROR;
+    global $aData, $i, $nLine, $_ERROR, $aImportFlags;
 
     unset($aData[$i]);
     $nLine ++;
 
     // If we have too many errors, quit here (note that some errors can still flood the page,
     // since they do a continue or break before reaching this part of the code).
-    if (count($_ERROR['messages']) >= 50) {
+    if (count($_ERROR['messages']) >= $aImportFlags['max_errors']) {
         lovd_errorAdd('import', 'Too many errors, stopping file processing.');
         return false;
     }
@@ -233,7 +233,7 @@ if (POST) {
             ), array('allowed_columns' => array(), 'columns' => array(), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
         $aParsed['Genes_To_Diseases'] = $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('allowed_columns' => array(), 'data' => array()); // Just the data, nothing else!
         $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
-        $aImportFlags = array();
+        $aImportFlags = array('max_errors' => 50);
         $sFileVersion = $sFileType = $sCurrentSection = '';
         $bParseColumns = false;
         $nLine = 1;
@@ -432,7 +432,7 @@ if (POST) {
                                 // Note: Making this a reference (=& instead of =) slows down the parsing of a VOT line 3x. Don't understand why.
                                 $aSection['ids'] = $aParsed['Variants_On_Genome']['ids'];
                             } else {
-                                $aSection['ids'] = array_flip($_DB->query('SELECT ' . ($sCurrentSection == 'Genes'? 'id' : 'CAST(id AS UNSIGNED)') . ' FROM ' . $sTableName)->fetchAllColumn());
+                                $aSection['ids'] = array_flip($_DB->query('SELECT ' . (in_array($sCurrentSection, array('Columns', 'Genes'))? 'id' : 'CAST(id AS UNSIGNED)') . ' FROM ' . $sTableName)->fetchAllColumn());
                             }
                         }
                     }
@@ -1253,17 +1253,15 @@ if (POST) {
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Genomic Variant "' . htmlspecialchars($aLine['variantid']) . '" does not exist in the database and is not defined in this import file.');
                     }
 
-                    if (!lovd_error()) {
-                        // No problems left, just check now if insert is necessary or not.
-                        if (!$bScreeningInDB || !$bVariantInDB || ($sMode == 'insert' && ($bScreeningInFile || $bVariantInFile))) {
-                            // Screening and/or Variant is in file (will be inserted), so flag this to be inserted!
+                    // No problems left, just check now if insert is necessary or not.
+                    if (!$bScreeningInDB || !$bVariantInDB || ($sMode == 'insert' && ($bScreeningInFile || $bVariantInFile))) {
+                        // Screening and/or Variant is in file (will be inserted), so flag this to be inserted!
+                        $aLine['todo'] = 'insert';
+                    } else {
+                        // Screening & Variant are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
+                        $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid = ?', array($aLine['screeningid'], $aLine['variantid']))->fetchColumn();
+                        if (!$bInDB) {
                             $aLine['todo'] = 'insert';
-                        } else {
-                            // Screening & Variant are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
-                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid = ?', array($aLine['screeningid'], $aLine['variantid']))->fetchColumn();
-                            if (!$bInDB) {
-                                $aLine['todo'] = 'insert';
-                            }
                         }
                     }
                     break;

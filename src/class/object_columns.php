@@ -185,6 +185,13 @@ class LOVD_Column extends LOVD_Object {
             lovd_errorAdd('active_links', 'Only VARCHAR or TEXT columns can have custom links activated for it!');
         }
 
+        // parent::checkFields() is calling getForm(), which, when importing, in turn complains that $_POST data does not exist.
+        if (lovd_getProjectFile() == '/import.php') {
+            $_POST['category'] = $aData['category'];
+            $_POST['width'] = $aData['width'];
+            $_POST['workID'] = '';
+        }
+
         parent::checkFields($aData);
 
         // Category; not chosen on this form, but we want to make sure it's correct anyways.

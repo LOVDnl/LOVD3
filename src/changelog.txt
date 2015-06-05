@@ -38,7 +38,7 @@
  * Unique variantview is available. When the variant tab is selected only
    unique variants are displayed. The reported column is new in the unique
    variantview and conaints the number a variant is reported.
-
+ * Max errors during import can be changed in the import file.
 
 /**************************
  * 3.0 Build 13 (r546)
