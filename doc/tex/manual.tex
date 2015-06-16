@@ -219,7 +219,7 @@
 \title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \institute{Leiden University Medical Center}
-\date{2015-05-05} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\date{2015-06-16} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
   (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
 
@@ -2089,7 +2089,7 @@ Please note that if this shared custom column was not active yet and your databa
 If this is the case, LOVD will display a warning.
 From the ``Add this column to'' selection list, select the parent objects (diseases or genes) you wish to enable this column for.
 For help on how to use this type of selection list, move your mouse over the blue help icon.
-If the parent object you are looking for is not shown in this list, you have no authorization on the object to change its column's settings.
+If the parent object you are looking for is not shown in this list, you have no authorization on the object to change its column's settings, or the column is already active for the object.
 
 Finally, type in your password in the ``Enter your password for authorization'' field for verification of your authorization, and submit the form.
 The column is now enabled and visible in the data entry forms and the data listings and detailed views.
@@ -3118,6 +3118,11 @@ Custom columns are not listed here, since every LOVD installation has different
     97 & +/+?\\ \hline
     99 & +/+\\ \hline
   \end{tabular}
+  
+  In the Variants\_On\_Transcripts section, this field indicates the effect of the variant on this specific transcript.
+  In the Variants\_On\_Genome section, this field indicates the overall effect of the variant on the function
+   of any gene it influences; basically, the maximum score of all of the variant's effectid values.
+  
   \item[fatherid] (from section Individuals)\hfill \\
   Optional; The internal ID of the individual in the database that is the father of this individual.
   \item[form\_type] (from section Columns)\hfill \\
@@ -3202,14 +3207,14 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[position\_c\_start\_intron] (from section Variants\_On\_Transcripts)\hfill \\
   The position, relative to the start or end (whichever is closest) of the intron, of the first base of the variant.
   The first base of the variant is defined by the HGVS nomenclature rules, and may be the same as the last base.
-  This field only applies to variants that start or end in an intron.
+  This field only applies to variants that start in an intron.
   \item[position\_c\_end] (from section Variants\_On\_Transcripts)\hfill \\
   The position, relative to the translation start site, of the last base of the variant.
   The last base of the variant is defined by the HGVS nomenclature rules, and may be the same as the first base.
   \item[position\_c\_end\_intron] (from section Variants\_On\_Transcripts)\hfill \\
   The position, relative to the start or end (whichever is closest) of the intron, of the last base of the variant.
   The last base of the variant is defined by the HGVS nomenclature rules, and may be the same as the first base.
-  This field only applies to variants that start or end in an intron.
+  This field only applies to variants that end in an intron.
   \item[position\_g\_mrna\_start] (from section Transcripts)\hfill \\
   The genomic position, relative to the chromosome, of where the transcript starts.
   \item[position\_g\_mrna\_end] (from section Transcripts)\hfill \\
@@ -3331,6 +3336,7 @@ Also the order in the downloaded file is equal to the order of the entries on th
 
 
 
+\clearpage
 \hypertarget{ssec:importing_data}{}
 \subsection{Importing data sets into LOVD}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -3369,7 +3375,7 @@ In the future, the option ``Update existing data \& add new data''
 
 
 
- 
+
 
 \hypertarget{sec:download_import_full_data}{}
 \section{Downloading \& importing the complete data}
@@ -3524,7 +3530,6 @@ See ``\hyperlink{ssec:relation_to_disease}{\nameref{ssec:relation_to_disease}}''
 
 For more details on each section of the import file, see section
  ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}''.
-\clearpage
 
 
 
@@ -3623,7 +3628,7 @@ This API will be configurable, so submitters decide for themselves under
   \item Read the \hyperlink{sec:api_possibilities}{API possibilities} below carefully,
     and choose the most efficient method to query the API --- meaning,
     the least amount of requests to get the information you need.
-  \item Limit your requests to 5 per second per server/domain name.
+  \item Limit your requests to a maximum of 5 per second per server/domain name.
   \item If the API indicates a certain entry does not exist, do not repeat the same request for at least 4 hours,
     unless you have reason to believe the entry may exist now.
   \item Not required, but appreciated; please set a `User agent' string that identifies you, so we can see how the
