@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2015-05-27
+ * Modified    : 2015-06-17
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -239,7 +239,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
             // When this ViewListID is changed, also change the prepareData in object_custom_viewluists.php
             $sViewListID = 'CustomVL_VOTunique_VOG_' . $sGene;
             $_DATA = new LOVD_CustomViewList(array('VariantOnTranscriptUnique', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
-            $_DATA->setRowLink($sViewListID, 'variants/' . $sGene . '?search_position_c_start={{position_c_start}}&search_position_c_start_intron={{position_c_start_intron}}&search_position_c_end={{position_c_end}}&search_position_c_end_intron={{position_c_end_intron}}&search_vot_clean_dna_change={{vot_clean_dna_change}}');
+            $_DATA->setRowLink($sViewListID, 'variants/' . $sGene . '?search_position_c_start={{position_c_start}}&search_position_c_start_intron={{position_c_start_intron}}&search_position_c_end={{position_c_end}}&search_position_c_end_intron={{position_c_end_intron}}&search_vot_clean_dna_change=%3D%22{{vot_clean_dna_change}}%22');
         } else {
             $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
         }
@@ -2104,7 +2104,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     $_BAR->redirectTo(lovd_getInstallURL() . 'submit/finish/upload/' . $nUploadID);
                 }
             } else {
-                $_BAR->setMessage($aUploadData['num_variants'] . ' variant' . ($aUploadData['num_variants'] == 1? '' : 's') . ' where imported' . (!$aUploadData['num_variants_unsupported']? '.' : ', ' . $aUploadData['num_variants_unsupported'] . ' variant' . ($aUploadData['num_variants_unsupported'] == 1? '' : 's') . ' could not be imported.') .
+                $_BAR->setMessage($aUploadData['num_variants'] . ' variant' . ($aUploadData['num_variants'] == 1? '' : 's') . ' were imported' . (!$aUploadData['num_variants_unsupported']? '.' : ', ' . $aUploadData['num_variants_unsupported'] . ' variant' . ($aUploadData['num_variants_unsupported'] == 1? '' : 's') . ' could not be imported.') .
                 // If we're in a submission and some variants couldn't be imported, show them the list and replace it with the continuation questions when they click the Continue button.
                        ($bSubmit? '<P>' .
                                   '  <INPUT type="button" value="Continue &raquo;" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\';">' .

@@ -35,9 +35,10 @@
  * Due to continuous changes in the reCAPTCHA appearance, changed the text that
    describes the image.
    (thanks to Raymond Dalgleish, University of Leicester, UK)
- * Unique variantview is available. When the variant tab is selected only
+ * The unique variant view is available. When the variant tab is selected, only
    unique variants are displayed. The reported column is new in the unique
-   variantview and conaints the number a variant is reported.
+   variant view and contains the number of times the variant is reported.
+ * Fixed typo in variants.php.
  * Max errors during import can be changed in the import file.
 
 /**************************

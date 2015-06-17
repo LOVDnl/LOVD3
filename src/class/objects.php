@@ -1415,6 +1415,8 @@ class LOVD_Object {
 
             $zData = $this->autoExplode($zData);
 
+            // Only the CustomViewList object has this 3rd argument, but other objects' prepareDate()
+            // don't complain when called with this 3 argument they didn't define.
             $zData = $this->prepareData($zData, 'list', $sViewListID);
 
             if (FORMAT == 'text/html') {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2015-05-29
+ * Modified    : 2015-06-17
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -177,12 +177,14 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['GROUP_BY'] = 'vog.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                         $aSQL['ORDER_BY'] = 'vog.chromosome ASC, vog.position_g_start';
                     } elseif ($nKeyVOTUnique !== false && $nKeyVOTUnique < $nKey) {
-                        // For the unique variant view a GROUPCONCAT must be done for the variantOnGenome fields.
+                        // For the unique variant view a GROUP_CONCAT must be done for the variantOnGenome fields.
                         foreach ($this->aColumns as $sCol => $aCol) {
                             if (substr($sCol, 0, 15) == 'VariantOnGenome') {
-                                // Here all VariantOnGenome are grouped with GROUP_CONCAT. In the prepareData method a text is added
-                                // to the fields with a high number of items. To recognize the items in a field ;; is used as separator.
-                                $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`,"") SEPARATOR ";;") AS `' . $sCol . '`';
+                                // Here all VariantOnGenome columns are grouped with GROUP_CONCAT. In prepareData(),
+                                // these fields are exploded and the elements are counted, limiting the grouped values
+                                // to a certain length. To recognize the separate items, ;; is used as a separator.
+                                // The NULLIF() is used to not show empty values. GROUP_CONCAT handles NULL values well (ignores them), but not empty values (includes them).
+                                $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`, "") SEPARATOR ";;") AS `' . $sCol . '`';
                             }
                         }
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)';
@@ -250,19 +252,26 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscriptUnique':
-                    $aSQL['SELECT'] = '*, vot.id AS row_id'; // To ensure other table's id columns don't interfere.
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'REPLACE(REPLACE(TRIM(BOTH "?" FROM TRIM(BOTH "c." FROM `VariantOnTranscript/DNA`)), ")", ""), "(", "") AS vot_clean_dna_change';
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT et.name) AS vot_effect';
+                    $aSQL['SELECT'] = 'vot.*, vot.id AS row_id'; // To ensure other table's id columns don't interfere.
+                    // To group variants together that belong together (regardless of minor textual differences, we replace parentheses, remove the "c.", and trim for question marks.
+                    // This notation will be used to group on, and search on when navigating from the unique variant view to the full variant view.
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))) AS vot_clean_dna_change';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'COUNT(`VariantOnTranscript/DNA`) AS vot_reported';
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 
+                    // FIXME: On large databases, we might want to skip this, since a COUNT(*) on InnoDB tables isn't fast at all, and nCount doesn't need to be specific at all.
                     $this->nCount = $_DB->query('SELECT COUNT(DISTINCT `VariantOnTranscript/DNA`) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
 
-                    $aSQL['GROUP_BY'] = '`position_c_start`, `position_c_start_intron`, `position_c_end`, `position_c_end_intron`, REPLACE(REPLACE(REPLACE(REPLACE(`VariantOnTranscript/DNA`, "[", ""), "(", ""), ")", ""), "?", "")'; // Necessary for GROUP_CONCAT(), such as in Screening.
+                    $aSQL['GROUP_BY'] = '`position_c_start`, `position_c_start_intron`, `position_c_end`, `position_c_end_intron`, vot_clean_dna_change'; // Necessary for GROUP_CONCAT(), such as in Screening.
 
                     foreach ($this->aColumns as $sCol => $aCol) {
                         if (substr($sCol, 0, 19) == 'VariantOnTranscript') {
-                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT `' . $sCol . '` SEPARATOR ", ") AS `' . $sCol . '`';
+                            // Here all VariantOnTranscript columns are grouped with GROUP_CONCAT. In prepareData(),
+                            // these fields are exploded and the elements are counted, limiting the grouped values
+                            // to a certain length. To recognize the separate items, ;; is used as a separator.
+                            // The NULLIF() is used to not show empty values. GROUP_CONCAT handles NULL values well (ignores them), but not empty values (includes them).
+                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`, "") SEPARATOR ";;") AS `' . $sCol . '`';
                         }
                     }
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS et ON (vot.effectid = et.id)';
@@ -487,7 +496,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                         'db'   => array('vot.position_c_end_intron', 'ASC', true)),
                                 'vot_clean_dna_change' => array(
                                         'view' => false,
-                                        'db'   => array('REPLACE(REPLACE(TRIM(BOTH "?" FROM TRIM(BOTH "c." FROM `VariantOnTranscript/DNA`)), ")", ""), "(", "")', 'ASC', 'TEXT')),
+                                        'db'   => array('TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", "")))', 'ASC', 'TEXT')),
                                 'vot_effect' => array(
                                         'view' => array('Effect', 70),
                                         'db'   => array('et.name', 'ASC', true),
@@ -516,8 +525,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'vot_reported' => array(
                                         'view' => array('Reported', 70),
                                         'db'   => array('vot_reported', 'ASC', 'INT_UNSIGNED'),
-                                        'legend' => array('The number a variant is reported.',
-                                                          'The number a variant is reported.')),
+                                        'legend' => array('The number of times this variant has been reported.',
+                                                          'The number of times this variant has been reported in the database.')),
                                 ));
                     if (!$this->sSortDefault) {
                         // First data table in view.
@@ -710,7 +719,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $zData[$sCol] = implode(', ', array_unique(explode(';', $sVal)));
                 }
                 if (strpos($sViewListID, 'CustomVL_VOTunique') === 0 && (strpos($sCol, 'VariantOnGenome/') === 0 || strpos($sCol, 'VariantOnTranscript/') === 0)) {
-                    // In the GROUPCONTCAT query ;; is used as separator, so it can be recognized here.
+                    // In the GROUP_CONCAT query a double semicolon (;;) is used as a separator, so it can be recognized here.
                     $aElements = explode(';;', $sVal);
                     $nElements = count($aElements);
                     $sNewElement = '';
@@ -718,16 +727,15 @@ class LOVD_CustomViewList extends LOVD_Object {
 
                     // VariantOnGenome and VariantOnTranscript columns with more then 200 characters are cut off.
                     // A string is added which states how many more unique items are available.
-                    foreach ($aElements as $nKey => $sElements) {
-                        if ((strlen(strip_tags($sNewElement)) + strlen(strip_tags($sElements))) <= $_SETT['unique_view_max_string_length']) {
-                            $sNewElement .= ($sNewElement == ''? '' : ', ') . $sElements;
+                    foreach ($aElements as $nKey => $sElement) {
+                        if ((strlen(strip_tags($sNewElement)) + strlen(strip_tags($sElement))) <= $_SETT['unique_view_max_string_length']) {
+                            $sNewElement .= ($sNewElement === ''? '' : ', ') . $sElement;
                             $nCount ++;
                         }
-                        unset($aElements[$nKey]);
                     }
-                    $nNotPrinted = $nElements-$nCount;
+                    $nNotPrinted = $nElements - $nCount;
                     if ($nNotPrinted > 0) {
-                        $sNewElement .= ($sNewElement!=''? ', ' : '') . '<i>' . $nNotPrinted . ' more item' . ($nNotPrinted==1? '' : 's') . '</i>';
+                        $sNewElement .= ($sNewElement === ''? '' : ', ') . '<I>' . $nNotPrinted . ' more item' . ($nNotPrinted == 1? '' : 's') . '</I>';
                     }
                     $zData[$sCol] = $sNewElement;
                 }
