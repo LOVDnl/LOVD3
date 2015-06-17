@@ -40,6 +40,9 @@
    variant view and contains the number of times the variant is reported.
  * Fixed typo in variants.php.
  * Max errors during import can be changed in the import file.
+ * Fixed bug; After resorting columns from a certain category, LOVD forwarded
+   the user to the last column's view, instead of to the category's view.
+
 
 /**************************
  * 3.0 Build 13 (r546)
