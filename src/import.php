@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-05-06
+ * Modified    : 2015-06-17
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -61,7 +61,9 @@ require ROOT_PATH . 'inc-lib-form.php';
 
 $aModes =
     array(
-        'update' => 'Update existing data & add new data (not yet implemented)',
+		// for now there is a strict separation between insert and update.
+		// During an update, no insertsion will be done. But non existing records willl generate an error.
+        'update' => 'Update existing data',
         'insert' => 'Add only, treat all data as new',
     );
 
@@ -78,6 +80,10 @@ $aTypes =
         'Custom column download' => 'Col',
         'Owned data download' => 'Owned',
     );
+// Number of columns that may change during an update import. If changes in a column should be ignored, use the
+// lovd_calculateFieldDifferences() the function and set the ignore value for that column to true.
+// For now this is set to 1, increasing this number will increase the change that users accidentally update the wrong record.
+$nUpdateColumnsAllowed = 1;
 
 // An array with import file types wich are recognized but not accepted for import, with the error message.
 $aExcludedTypes =
@@ -104,6 +110,28 @@ function lovd_calculateDiffScore ($zData, $aLine)
         }
     }
     return round(100*($nDiffs / $nFields));
+}
+
+function lovd_calculateFieldDifferences ($zData, $aLine)
+{
+    // Create an array with changed columns, with values from the database and the values from the import file.
+	// By default the variable 'ignore' is set on false. Meaning that this field will be updated.
+    $aDiffs = array();
+    foreach ($zData as $sCol => $sValue) {
+    	// Empty fields in the import file is considered as data. So when a a field is filled in the DB
+	// and emty in the import file, the field is emptied in the database.
+        // When the columns do not exist in the import file, the columns are taken into acount.
+        if ($aLine[$sCol] && $sValue != $aLine[$sCol]) {
+            if (in_array($sCol, array('edited_by', 'edited_date', 'updated_date'))) {
+                // Changes in these fields are ingonred during an update import, because they are set by LOVD automaticly.
+                // But because we want to set a soft warning to inform the user, the fields must be included in the $aDiffs array.
+                $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => true);
+            }  else {
+                $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => false);
+            }
+        }
+    }
+    return $aDiffs;
 }
 
 function lovd_endLine ()
@@ -173,10 +201,6 @@ if (POST) {
         lovd_errorAdd('import', 'There was an unknown problem with receiving the file properly, possibly because of the current server settings. If the problem persists, please contact the database administrator.');
     }
 
-    if ($_POST['mode'] == 'update') {
-        lovd_errorAdd('mode', 'The "Update & Add" mode is not yet implemented!');
-    }
-
     if (!lovd_error()) {
         // Find out the MIME-type of the uploaded file. Sometimes mime_content_type() seems to return False. Don't stop processing if that happens.
         // However, when it does report something different, mention what type was found so we can debug it.
@@ -227,10 +251,14 @@ if (POST) {
 
     if (!lovd_error()) {
         // Prepare, find LOVD version and format type.
+		// 'update_columns_not_allowed' is already filled with to fields (edited_by and edited_date), these fields are never allowed to update and always should generate a softwarning.
+		// Later per section 'update_columns_not_allowed' is filled with fields which are not allowed to update, the error message when the are changed and the error type (soft or hard warning)
         $aParsed = array_fill_keys(
-            array(
-                'Columns', 'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Individuals_To_Diseases', 'Phenotypes', 'Screenings', 'Screenings_To_Genes', 'Variants_On_Genome', 'Variants_On_Transcripts', 'Screenings_To_Variants'
-            ), array('allowed_columns' => array(), 'columns' => array(), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
+            array('Columns', 'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Individuals_To_Diseases', 'Phenotypes', 'Screenings', 'Screenings_To_Genes', 'Variants_On_Genome', 'Variants_On_Transcripts', 'Screenings_To_Variants'),
+            array('allowed_columns' => array(), 'columns' => array(), 'update_columns_not_allowed' => array('edited_by' => array( 'message' => 'Edited by field is set by LOVD', 'error_type' => 'soft'),
+                                                                                                            'edited_date' => array('message' => 'Edited date field is set by LOVD', 'error_type' => 'soft'),
+                                                                                                            'created_by' => array('message' => 'Created by field is set by LOVD', 'error_type' => 'hard'),
+                                                                                                            'created_date' => array('message' => 'Created date field is set by LOVD', 'error_type' => 'hard')), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
         $aParsed['Genes_To_Diseases'] = $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('allowed_columns' => array(), 'data' => array()); // Just the data, nothing else!
         $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
         $aImportFlags = array('max_errors' => 50);
@@ -242,6 +270,7 @@ if (POST) {
         $sMode = $_POST['mode'];
         $sDate = date('Y-m-d H:i:s');
         $aDiseasesAlreadyWarnedFor = array(); // To prevent lots and lots of error messages for each phenotype entry created for the same disease that is not yet inserted into the database.
+        $aSectionAlreadyWarnedFor = array(); // To prevent lots and lots of error messages for a section that cannot be uppated in the database.
 
         foreach ($aData as $i => $sLine) {
             $sLine = trim($sLine);
@@ -325,6 +354,7 @@ if (POST) {
                         unset($aSection['nColumns']);
                         unset($aSection['required_columns']);
                         unset($aSection['settings']);
+                        unset($aSection['update_columns_not_allowed']);
                         if (lovd_error()) {
                             unset($aSection['allowed_columns']);
                             unset($aSection['object']);
@@ -363,12 +393,42 @@ if (POST) {
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_COLS';
                             require_once ROOT_PATH . 'class/object_columns.php';
                             $aSection['object'] = new LOVD_Column();
+                            // The following collumns are allowed for update: col_order, width, standard, mandatory, head_column, description_form, description_legend_short, description_legend_full,
+                            // mysql_type, form_type, select_options, preg_pattern, public_view, public_add, allow_count_all.
+                            $aSection['update_columns_not_allowed'] = array_merge($aSection['update_columns_not_allowed'], array('hgvs' => array('message' => 'Not allowed to change the HGVS standard status of any column.', 'error_type' => 'hard'),));
                             break;
                         case 'Genes':
+                            // The following collumns are allowed for update: chrom_band, imprinting, reference, url_homepage, url_external, allow_download, allow_index_wiki, show_hgmd, show_genecards,
+                            // show_genetests, note_index, note_listing, refseq, refseq_url, disclaimer, disclaimer_text, header, header_align,
+                            // footer, footer_align, updated_by,
+                            require_once ROOT_PATH . 'class/object_genes.php';
+                            $aSection['object'] = new LOVD_Gene();
+                            $aSection['update_columns_not_allowed'] = array_merge($aSection['update_columns_not_allowed'], array('name' => array('message' => 'Not allowed to change the gene name.', 'error_type' => 'hard'),
+                                                                                                                                 'chromosome' => array('message' => 'Not allowed to change the chromosome.', 'error_type' => 'hard'),
+                                                                                                                                 'refseq_genomic' => array('message' => 'Not allowed to change the Genomic reference sequence.', 'error_type' => 'hard'),
+                                                                                                                                 'refseq_UD' => array('message' => 'Not allowed to change the refseq_UD.', 'error_type' => 'hard'),
+                                                                                                                                 'id_hgnc' => array('message' => 'Not allowed to change the id_hgnc.', 'error_type' => 'hard'),
+                                                                                                                                 'id_entrez' => array('message' => 'Not allowed to change the id_entrez.', 'error_type' => 'hard'),
+                                                                                                                                 'id_omim' => array('message' => 'Not allowed to change the id_omim.', 'error_type' => 'hard'),
+                                                                                                                                 'updated_date' => array('message' => 'Updated date field is set by LOVD.', 'error_type' => 'soft')));
                             break;
                         case 'Transcripts':
+			    // The following collumns are allowed for update: id_ensembl, id_protein_ensembl, id_protein_uniprot.
+                            require_once ROOT_PATH . 'class/object_transcripts.php';
+                            $aSection['object'] = new LOVD_Transcript();
+                            $aSection['update_columns_not_allowed'] = array_merge($aSection['update_columns_not_allowed'], array('geneid' => array('message' => 'Not allowed to change the geneid.', 'error_type' => 'hard'),
+                                                                                                                                 'name' => array('message' => 'Not allowed to change the name.', 'error_type' => 'hard'),
+                                                                                                                                 'id_mutalyzer' => array('message' => 'Not allowed to change the id_mutalyzer.', 'error_type' => 'hard'),
+                                                                                                                                 'id_ncbi' => array('message' => 'Not allowed to change the id_ncbi', 'error_type' => 'hard'),
+                                                                                                                                 'id_protein_ncbi' => array('message' => 'Not allowed to change the id_protein_ncbi.', 'error_type' => 'hard'),
+                                                                                                                                 'position_c_mrna_start' => array('message' => 'Not allowed to change the position_c_mrna_start.', 'error_type' => 'hard'),
+                                                                                                                                 'position_c_mrna_end' => array('message' => 'Not allowed to change the position_c_mrna_end.', 'error_type' => 'hard'),
+                                                                                                                                 'position_c_cds_end' => array('message' => 'Not allowed to change the position_c_cds_end.', 'error_type' => 'hard'),
+                                                                                                                                 'position_g_mrna_start' => array('message' => 'Not allowed to change the position_g_mrna_start.', 'error_type' => 'hard'),
+                                                                                                                                 'position_g_mrna_end' => array('message' => 'Not allowed to change the position_g_mrna_end.', 'error_type' => 'hard')));
                             break;
                         case 'Diseases':
+			    // The following columns are allowed for update: symbol, name, id_omim.
                             require_once ROOT_PATH . 'class/object_diseases.php';
                             $aSection['object'] = new LOVD_Disease();
                             break;
@@ -376,6 +436,7 @@ if (POST) {
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_GEN2DIS';
                             break;
                         case 'Individuals':
+			    // The following columns are allowed for update: fatherid, motherid, panelid, panel_size, owned_by, statusid
                             require_once ROOT_PATH . 'class/object_individuals.php';
                             $aSection['object'] = new LOVD_Individual();
                             break;
@@ -383,29 +444,45 @@ if (POST) {
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_IND2DIS';
                             break;
                         case 'Phenotypes':
+                            // The following columns are allowed for update: owned_by, statusid.
                             $aSection['required_columns'][] = 'diseaseid';
                             $aSection['required_columns'][] = 'individualid';
                             require_once ROOT_PATH . 'class/object_phenotypes.php';
+                            $aSection['update_columns_not_allowed'] = array_merge($aSection['update_columns_not_allowed'], array('diseaseid' => array('message' => 'Not allowed to change the diseaseid.', 'error_type' => 'hard'),
+                                                                                                                                 'individualid' => array('message' => 'Not allowed to change the individualid.', 'error_type' => 'hard')));
                             // We don't create an object here, because we need to do that per disease. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
                             $aSection['objects'] = array();
                             break;
                         case 'Screenings':
+			    // The following columns are allowed for update: variants_found, owned_by
                             $aSection['required_columns'][] = 'individualid';
                             require_once ROOT_PATH . 'class/object_screenings.php';
+                            $aSection['update_columns_not_allowed'] = array_merge($aSection['update_columns_not_allowed'], array('individualid' => array('message' => 'Not allowed to change the individualid.', 'error_type' => 'hard')));
                             $aSection['object'] = new LOVD_Screening();
                             break;
                         case 'Screenings_To_Genes':
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_SCR2GENE';
                             break;
                         case 'Variants_On_Genome':
+			    // The following collumns are allowed for update: effectid, type, mapping_flags, average_frequency
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_VARIANTS';
                             require_once ROOT_PATH . 'class/object_genome_variants.php';
                             $aSection['object'] = new LOVD_GenomeVariant();
+                            $aSection['update_columns_not_allowed'] = array_merge($aSection['update_columns_not_allowed'], array('allele' => array('message' => 'Not allowed to change the allele.', 'error_type' => 'hard'),
+                                                                                                                                 'chromosome' => array('message' => 'Not allowed to change the chromosome.', 'error_type' => 'hard'),
+                                                                                                                                 'position_g_start' => array('message' => 'Not allowed to change the position_g_start.', 'error_type' => 'hard'),
+                                                                                                                                 'position_g_end' => array('message' => 'Not allowed to change the position_g_end.', 'error_type' => 'hard')));
                             break;
                         case 'Variants_On_Transcripts':
+			    // The following collumns are allowed for update: effectid.
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
                             $aSection['required_columns'][] = 'transcriptid';
                             require_once ROOT_PATH . 'class/object_transcript_variants.php';
+                            $aSection['update_columns_not_allowed'] = array_merge($aSection['update_columns_not_allowed'], array('transcriptid' => array('message' => 'Not allowed to change the transcriptid.', 'error_type' => 'hard'),
+                                                                                                                                 'position_c_start' => array('message' => 'Not allowed to change the position_c_start.', 'error_type' => 'hard'),
+                                                                                                                                 'position_c_start_intron' => array('message' => 'Not allowed to change the position_c_start_intron.', 'error_type' => 'hard'),
+                                                                                                                                 'position_c_end' => array('message' => 'Not allowed to change the position_c_end.', 'error_type' => 'hard'),
+                                                                                                                                 'position_c_end_intron' => array('message' => 'Not allowed to change the position_c_end_intron.', 'error_type' => 'hard')));
                             // We don't create an object here, because we need to do that per gene. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
                             $aSection['objects'] = array();
                             break;
@@ -432,12 +509,12 @@ if (POST) {
                                 // Note: Making this a reference (=& instead of =) slows down the parsing of a VOT line 3x. Don't understand why.
                                 $aSection['ids'] = $aParsed['Variants_On_Genome']['ids'];
                             } else {
-                                $aSection['ids'] = array_flip($_DB->query('SELECT ' . (in_array($sCurrentSection, array('Columns', 'Genes'))? 'id' : 'CAST(id AS UNSIGNED)') . ' FROM ' . $sTableName)->fetchAllColumn());
+                                $aSection['ids'] = $_DB->query('SELECT ' . (in_array($sCurrentSection, array('Columns', 'Genes'))? 'id' : 'CAST(id AS UNSIGNED)') . ', 1 FROM ' . $sTableName)->fetchAllCombine();
                             }
                         }
                     }
                     // For custom objects: all mandatory custom columns will be mandatory here, as well.
-                    if (isset($aSection['object']->aColumns)) {
+                    if (isset($aSection['object']->aColumns) && $sMode != 'update') {
                         foreach ($aSection['object']->aColumns as $sCol => $aCol) {
                             if ($aCol['mandatory']) {
                                 $aSection['required_columns'][] = $sCol;
@@ -538,6 +615,14 @@ if (POST) {
                 unset($aLine[$sCol]);
             }
 
+            // Data from LOVD downloads are escaped. Besides tabs, carriage returns and new lines, also quotes (both single and double) and backslashes are escaped.
+            foreach ($aLine as $key => $sVal) {
+                // First prepare the \t, \r and \n codes, so they won't get lost.
+                $sVal = str_replace(array('\r', '\n', '\t'), array('\\\r', '\\\n', '\\\t'), $sVal);
+                $sVal = stripslashes($sVal);
+                $aLine[$key] = str_replace(array('\r', '\n', '\t'), array("\r", "\n", "\t"), $sVal);
+            }
+
             // Create all the standard column's keys in $aLine, so we can safely reference to it.
             foreach ($aSection['allowed_columns'] as $sCol) {
                 if (!isset($aLine[$sCol])) {
@@ -601,29 +686,88 @@ if (POST) {
 
             // General checks: checkFields().
             $zData = false;
-            if (isset($aSection['object']) && is_object($aSection['object'])) {
-                // Object has been created. If we're updating, get the current info from the database.
-                if ($sMode == 'update') {
-                    // FIXME: First check in 'ids' to predict if it exists or not?
-                    // FIXME: Doesn't currently work for VOT because its objects are in an array, and it needs the transcriptid in a separate argument.
-                    $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
-                    if ($zData) {
-                        // Calculate difference score, and check authorization.
-                        $nDiffScore = lovd_calculateDiffScore($zData, $aLine);
-                        if ($nDiffScore > 0 && !lovd_isAuthorized(strtolower(rtrim($sCurrentSection, 's')), $aLine['id'], false)) {
-                            // Not allowed to edit at all!
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" refers to non-existing user.');
-                        } elseif ($nDiffScore > 0) {
-                            // FIXME: TEMPORARY: Deny changes, just like in LOVD 2.0.
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Data is not equal to data in database (diffscore: ' . $nDiffScore . '), editing through import is unfortunately not allowed yet (coming soon).');
-                        } elseif ($nDiffScore > 50) {
-                            // Difference too big, maybe he's trying to change different data.
-                            // FIXME: Shouldn't this be a hard error?
-                            $_BAR[0]->appendMessage('Warning: Will not edit ' . rtrim($sCurrentSection, 's') . ' "' . htmlspecialchars($aLine['id']) . '", the data in the database differs too much from the data in the import file, this looks like an unintended edit!<BR>', 'done');
+            // If we're updating, get the current info from the database.
+            if ($sMode == 'update') {
+               /*if ($sCurrentSection == 'Variants_On_Transcripts') {
+                    if (isset($aSection['ids'][(int)$aLine['id']])) {
+                        $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ? AND transcriptid = ?', array($aLine['id'], $aLine['transcriptid']))->fetchAssoc();
+                    }
+                } else {
+                    if (isset($aSection['ids'][(int)$aLine['id']]) || (in_array($sCurrentSection, array('Columns', 'Genes')) && isset($aSection['ids'][$aLine['id']]))) {
+                        $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
+                    }
+                }*/
+                switch ($sCurrentSection) {
+                    case 'Columns':
+                    case 'Genes':
+                        if (isset($aSection['ids'][$aLine['id']])) {
+                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
+                        }
+                        break;
+                    case 'Transcripts':
+                    case 'Diseases':
+                    case 'Individuals':
+                    case 'Phenotypes':
+                    case 'Screenings':
+                    case 'Variants_On_Genome':
+                        if (isset($aSection['ids'][(int)$aLine['id']])) {
+                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
+                        }
+                        break;
+                    case 'Variants_On_Transcripts':
+                        if (isset($aSection['ids'][(int)$aLine['id']])) {
+                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ? AND transcriptid = ?', array($aLine['id'], $aLine['transcriptid']))->fetchAssoc();
+                        }
+                        break;
+                    case 'Genes_To_Diseases':
+                    case 'Individuals_To_Diseases':
+                    case 'Screenings_To_Genes':
+                    case 'Screenings_To_Variants':
+                        if (isset(array_values($aLine)[0]) && isset(array_values($aLine)[1])) {
+                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE ' . array_keys($aLine)[0] . '= ? AND ' . array_keys($aLine)[1] . '= ?', array(array_values($aLine)[0], array_values($aLine)[1]))->fetchAssoc();
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                if ($zData) {
+                    // Here we create a array Array with all columns that are different in DB and in file.
+                    $aDifferences = lovd_calculateFieldDifferences($zData, $aLine);
+                    // Calculate number of differences.
+                    $nDifferences = 0;
+                    foreach ($aDifferences as $aDifference) {
+                        if ($aDifference['ignore'] === false) {
+                            $nDifferences ++;
                         }
                     }
-                }
 
+                    if ($nDifferences > 0 && !lovd_isAuthorized(strtolower(rtrim($sCurrentSection, 's')), $aLine['id'], false)) {
+                        // Not allowed to edit at all!
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on line "' . htmlspecialchars($aLine['id']) . '" in section "' . $sCurrentSection . '".');
+                    } elseif ($nDifferences > $nUpdateColumnsAllowed) {
+                        // Difference too big, maybe he's trying to change different data.
+                        unset($sFieldsChanged);
+                        foreach ($aDifferences as $key => $aFieldChanged) {
+                            if ($aFieldChanged['ignore'] === true) {
+                                continue;
+                            }
+                            if (isset($sFieldsChanged)) {
+                                $sFieldsChanged .= ', ' . $key;
+                            } else {
+                                $sFieldsChanged = $key;
+                            }
+                        }
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Will not edit ' . rtrim($sCurrentSection, 's') . ' "' . htmlspecialchars($aLine['id']) . '", to many fields are changed. The following fields are changed in the import file: <BR>' . $sFieldsChanged . '.');
+                    }
+                } else {
+                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): This line refers to non-existing entry. During update no new inserts can be done.');
+                    lovd_endLine ();
+                    continue;
+                }
+            }
+
+            if (isset($aSection['object']) && is_object($aSection['object'])) {
+                // Object has been created.
                 // For custom columns, we need to split the ID in category and colid.
                 if ($sCurrentSection == 'Columns') {
                     list($aLine['category'], $aLine['colid']) = explode('/', $aLine['id'], 2);
@@ -667,10 +811,11 @@ if (POST) {
                 if (isset($aSection['data'][$ID])) {
                     // We saw this ID before in this file!
                     lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" already defined at line ' . $aSection['data'][$ID]['nLine'] . '.');
+                    lovd_endLine ();
                     continue; // Skip to next line.
                 }
             }
-            if (in_array($sCurrentSection, array('Columns', 'Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome'))) {
+            if (in_array($sCurrentSection, array('Columns', 'Genes', 'Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome'))) {
                 foreach (array('created_by', 'edited_by') as $sCol) {
                     // Check is not needed for owned_by, because the form should have a selection list (which is checked separately).
                     if (!$zData || in_array($sCol, $aColumns)) {
@@ -714,7 +859,7 @@ if (POST) {
             switch ($sCurrentSection) {
                 case 'Columns':
                     // First check if column exist in database. If exists in the database, this column is not imported but import will continue.
-                    if (isset($aSection['ids'][$aLine['id']])) {
+                    if (isset($aSection['ids'][$aLine['id']]) && !$zData) {
                         $_BAR[0]->appendMessage('Warning: There is already a ' . $aLine['category'] . ' column with column ID ' . $aLine['colid'] . '. This column is not imported! <BR>', 'done');
                         $nWarnings ++;
                         // break: None of the following checks have to be done because column is not imported.
@@ -751,14 +896,24 @@ if (POST) {
                     }
 
                     if ($zData) {
-                        if ($nDiffScore && $_AUTH['level'] < LEVEL_MANAGER) {
-                            // Data is being updated, but user is not allowed to edit this entry!
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Column "' . htmlspecialchars($aLine['id']) . '".');
-                        }
-                        // Now allowed to change HGVS status.
-                        if ($aLine['hgvs'] != $zData['hgvs']) {
-                            // FIXME: Perhaps the DBA should be allowed to do this?
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Not allowed to change the HGVS standard status of any column.');
+                        if ($nDifferences) {
+                            if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                // Data is being updated, but user is not allowed to edit this entry!
+                                foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                    if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                    } else {
+                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                      Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                      - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                      (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. ');
+                                    }
+                                }
+                            }
+                            $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
                         // HGVS, never allowed when not editing.
@@ -774,14 +929,38 @@ if (POST) {
                     break;
 
                 case 'Genes':
+                    // FIXME not clear why is checked for filetype Genes.
                     if ($sFileType != 'Genes' && !isset($aSection['ids'][$aLine['id']])) {
                         // Do not allow genes that are not in the database, if we're not importing genes!
 //                        $_BAR[0]->appendMessage('Warning: gene "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import genes into LOVD using this file format.<BR>', 'done');
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Gene "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import genes into LOVD using this file format.');
+                        break;
+                    }
+                    if ($zData) {
+                        if ($nDifferences) {
+                            if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                // Data is being updated, but user is not allowed to edit this entry!
+                                foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                    if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                    } else {
+                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                      Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                      - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                      (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '.');
+                                    }
+                                }
+                            }
+                            $aLine['todo'] = 'update'; // OK, update only when there are differences.
+                        }
                     }
                     break;
 
                 case 'Transcripts':
+                    // FIXME not clear why is checked for filetype Genes and Transcripts.
                     if ($sFileType != 'Genes' && $sFileType != 'Transcripts') {
                         // Not importing genes or transcripts. Allowed are references to existing transcripts only!!!
 //                        $_BAR[0]->appendMessage('Warning: transcript "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['geneid'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import transcripts into LOVD using this file format.<BR>', 'done');
@@ -795,57 +974,95 @@ if (POST) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Transcript "' . htmlspecialchars($aLine['id']) . '" does not match the same gene and/or the same NCBI ID as in the database.');
                             $aLine['todo'] = '';
                         }
+
+                        if ($zData) {
+                            if ($nDifferences) {
+                                if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                    // Data is being updated, but user is not allowed to edit this entry!
+                                    foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                        if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                        } else {
+                                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                          Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                          - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                          (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '.');
+                                        }
+                                    }
+                                }
+                                $aLine['todo'] = 'update'; // OK, update only when there are differences.
+                            }
+                        }
                     }
                     break;
 
                 case 'Diseases':
+                    // We actually need to perform the same checks that are in the checkFields() to prevent double diseases, here, but then compare to the other diseases in this file.
+                    foreach ($aSection['data'] as $nID => $aDisease) {
+                        // Two diseases with the same OMIM ID are not allowed.
+                        if ($aLine['id_omim'] && $aLine['id_omim'] == $aDisease['id_omim']) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID at line ' . $aSection['data'][$nID]['nLine'] . '.');
+                        }
+                        // We don't like two diseases with the exact same name, either.
+                        if ($aLine['name'] && $aLine['name'] == $aDisease['name']) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name at line ' . $aSection['data'][$nID]['nLine'] . '.');
+                        }
+                    }
+
+                    $nDiseaseIdOmim = $_DB->query('SELECT id, id_omim FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aLine['name']))->fetchRow();
+                    if ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && $aLine['id_omim']) {
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Import file contains OMIM ID for disease ' . $aLine['name'] . ', while OMIM ID is missing in database.');
+                    }
+                    if (($nDiseaseIdOmim && $nDiseaseIdOmim[1] == $aLine['id_omim']) || ($nDiseaseIdOmim[1] && !$aLine['id_omim']) || ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && !$aLine['id_omim'])) {
+                        // Some error added in checkfields should be removes and because soft messages are used.
+                        $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name!', $_ERROR['messages']);
+                        // when key is false, no errors are set in checkfields.
+                        if ($nKey !== false) {
+                            unset($_ERROR['messages'][$nKey]);
+                            $_ERROR['messages'] = array_values($_ERROR['messages']);
+                        }
+
+                        $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID!', $_ERROR['messages']);
+                        // when key is false, no errors are set in checkfields.
+                        if ($nKey !== false) {
+                            unset($_ERROR['messages'][$nKey]);
+                            $_ERROR['messages'] = array_values($_ERROR['messages']);
+                        }
+                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . '. This disease is not imported! <BR>', 'done');
+                        $nWarnings ++;
+                        $aLine['newID'] = $nDiseaseIdOmim[0];
+                        $aLine['todo'] = 'map';
+                        break;
+                    }
+
                     if ($zData) {
-                        if ($nDiffScore && !lovd_isAuthorized('disease', $aLine['id'], false)) {
-                            // Data is being updated, but user is not allowed to edit this entry!
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Disease "' . htmlspecialchars($aLine['id']) . '".');
+                        if ($nDifferences) {
+                            if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                // Data is being updated, but user is not allowed to edit this entry!
+                                foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                    if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                    } else {
+                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                      Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                      - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                      (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '.');
+                                    }
+                                }
+                            }
+                            $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
                         // We're inserting. Curators at this moment are not allowed to insert diseases.
                         if ($_AUTH['level'] < LEVEL_MANAGER) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, currently manager level is required to import new disease entries.');
                         } else {
-                            // We actually need to perform the same checks that are in the checkFields() to prevent double diseases, here, but then compare to the other diseases in this file.
-                            foreach ($aSection['data'] as $nID => $aDisease) {
-                                // Two diseases with the same OMIM ID are not allowed.
-                                if ($aLine['id_omim'] && $aLine['id_omim'] == $aDisease['id_omim']) {
-                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID at line ' . $aSection['data'][$nID]['nLine'] . '.');
-                                }
-                                // We don't like two diseases with the exact same name, either.
-                                if ($aLine['name'] && $aLine['name'] == $aDisease['name']) {
-                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name at line ' . $aSection['data'][$nID]['nLine'] . '.');
-                                }
-                            }
-
-                            $nDiseaseIdOmim = $_DB->query('SELECT id, id_omim FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aLine['name']))->fetchRow();
-                            if ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && $aLine['id_omim']) {
-                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Import file contains OMIM ID for disease ' . $aLine['name'] . ', while OMIM ID is missing in database.');
-                            }
-                            if (($nDiseaseIdOmim && $nDiseaseIdOmim[1] == $aLine['id_omim']) || ($nDiseaseIdOmim[1] && !$aLine['id_omim']) || ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && !$aLine['id_omim'])) {
-                                // Some error added in checkfields should be removes and because soft messages are used.
-                                $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name!', $_ERROR['messages']);
-                                // when key is false, no errors are set in checkfields.
-                                if ($nKey !== false) {
-                                    unset($_ERROR['messages'][$nKey]);
-                                    $_ERROR['messages'] = array_values($_ERROR['messages']);
-                                }
-
-                                $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID!', $_ERROR['messages']);
-                                // when key is false, no errors are set in checkfields.
-                                if ($nKey !== false) {
-                                    unset($_ERROR['messages'][$nKey]);
-                                    $_ERROR['messages'] = array_values($_ERROR['messages']);
-                                }
-                                $_BAR[0]->appendMessage('Warning: There is already a disease with disease name ' . $aLine['name'] . '. This disease is not imported! <BR>', 'done');
-                                $nWarnings ++;
-                                $aLine['newID'] = $nDiseaseIdOmim[0];
-                                $aLine['todo'] = 'map';
-                                break;
-                            }
                             // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                             $aLine['todo'] = 'insert'; // OK, insert.
                         }
@@ -854,6 +1071,17 @@ if (POST) {
 
                 case 'Genes_To_Diseases':
                     // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
+                    // First check if zdata is filled. if so break and ignore the rest of this section.
+                    if ($zData) {
+                        // During update import a warning is set that updating for this section is not allowed, but we don't want that for every line.
+                        if (!in_array('Genes_To_Diseases', $aSectionAlreadyWarnedFor)) {
+                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
+                            $nWarnings ++;
+                            $aSectionAlreadyWarnedFor[] = $sCurrentSection;
+                        }
+                        break;
+                    }
+
                     // Create ID, so we can link to the data.
                     $aLine['id'] = $aLine['geneid'] . '|' . (int) $aLine['diseaseid']; // This also means we lack the check for repeated lines!
                     // Manually check for repeated lines, to prevent query errors in case of inserts.
@@ -910,82 +1138,96 @@ if (POST) {
                     break;
 
                 case 'Individuals':
+                    // Panel, Father and Mother IDs are checked.
+                    // It's assumed that in the import file, panels and parents are listed before panel individuals and children.
+                    if ($aLine['panelid']) {
+                        $bPanelInDB = isset($aParsed['Individuals']['ids'][(int) $aLine['panelid']]);
+                        $bPanelInFile = isset($aParsed['Individuals']['data'][(int) $aLine['panelid']]);
+                        if (!$bPanelInDB && !$bPanelInFile) {
+                            // Individual does not exist and is not defined in the import file.
+                            // Or the panel to which is referred is not yet parsed.
+                            // It's assumed that in the import file panels are listed above individuals referring to them.
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine['panelid']) . '" does not exist in the database and is not defined (properly) in this import file.<BR>When referring to panels that are also defined in the import file, make sure they are defined above the individuals referring to them. Therefore, make sure that in the import file individual "' . htmlspecialchars($aLine['panelid']) . '" is defined above individual "' . htmlspecialchars($aLine['id']) . '".');
+                        }
+
+                        // It is not allowed to import a record where the panelid and id are the same.
+                        if ($aLine['panelid'] == $aLine['id']) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'Panel ID\' can not link to itself; this field is used to indicate to which panel this individual belongs.');
+                        }
+
+                        // If individual ID exists in DB, then retrieve panel number from DB.
+                        // If it doesn't exist in DB retrieve panel number from parsed data.
+                        $nPanel = false;
+                        if ($bPanelInDB) {
+                            $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aLine['panelid']))->fetchColumn();
+                        } elseif ($bPanelInFile) {
+                            $nPanel = $aParsed['Individuals']['data'][(int) $aLine['panelid']]['panel_size'];
+                        }
+
+                        if ($nPanel !== false && $nPanel == 1) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel ID "' . htmlspecialchars($aLine['panelid']) . '" refers to an individual, not a panel (group of individuals). If you want to configure that individual as a panel, set its \'Panel size\' field to a value higher than 1.');
+                        } elseif ($nPanel !== false && $nPanel <= $aLine['panel_size']) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel size of Individual "' . htmlspecialchars($aLine['id']) . '" must be lower than the panel size of Individual "' . htmlspecialchars($aLine['panelid']) . '".');
+                        }
+                    }
+
+                    foreach (array('fatherid', 'motherid') as $sParentalField) {
+                        if ($aLine[$sParentalField]) {
+                            $bParentInDB = isset($aParsed['Individuals']['ids'][(int) $aLine[$sParentalField]]);
+                            $bParentInFile = isset($aParsed['Individuals']['data'][(int) $aLine[$sParentalField]]);
+                            if (!$bParentInDB && !$bParentInFile) {
+                                // Individual does not exist and is not defined in the import file.
+                                // Or the individual to which is referred is not yet parsed.
+                                // It's assumed that in the import file parent are on top of children.
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine[$sParentalField]) . '" does not exist in the database and is not defined (properly) in this import file.<BR>When referring to parents that are also defined in the import file, make sure they are defined above the children referring to them. Therefore, make sure that in the import file individual "' . htmlspecialchars($aLine[$sParentalField]) . '" is defined above individual "' . htmlspecialchars($aLine['id']) . '".');
+                            }
+
+                            // It is not allowed to import a record where the fatherid or motherid are the same as the individual id.
+                            if ($aLine[$sParentalField] == $aLine['id']) {
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'' . $sParentalField . '\' can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual.');
+                            }
+
+                            if ($_DB->query('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac WHERE ac.colid = ?', array('Individual/Gender'))->fetchColumn()) {
+                                $zParentData = array();
+                                if ($bParentInDB) {
+                                    $zParentData = $_DB->query('SELECT `Individual/Gender`, panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aLine[$sParentalField]))->fetchAssoc();
+                                } elseif ($bParentInFile) {
+                                    $zParentData = $aParsed['Individuals']['data'][(int) $aLine[$sParentalField]];
+                                }
+                                if (isset($zParentData['panel_size']) && $zParentData['panel_size'] > 1) {
+                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" refers to an panel (group of individuals), not an individual. If you want to configure that panel as an individual, set its \'Panel size\' field to value 1.');
+                                }
+
+                                if (isset($zParentData['Individual/Gender']) && $sParentalField == 'fatherid' && $zParentData['Individual/Gender'] == 'F') {
+                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" you entered does not refer to a male individual.');
+                                } elseif (isset($zParentData['Individual/Gender']) && $sParentalField == 'motherid' && $zParentData['Individual/Gender'] == 'M') {
+                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '"  you entered does not refer to a female individual.');
+                                }
+                            }
+                        }
+                    }
+
                     if ($zData) {
-                        if ($nDiffScore && !lovd_isAuthorized('individual', $aLine['id'], false)) {
-                            // Data is being updated, but user is not allowed to edit this entry!
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Individual "' . htmlspecialchars($aLine['id']) . '".');
+                        if ($nDifferences) {
+                            if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                // Data is being updated, but user is not allowed to edit this entry!
+                                foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                    if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                    } else {
+                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                      Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                      - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                      (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '.');
+                                    }
+                                }
+                            }
+                            $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
-                        // Panel, Father and Mother IDs are checked.
-                        // It's assumed that in the import file, panels and parents are listed before panel individuals and children.
-                        if ($aLine['panelid']) {
-                            $bPanelInDB = isset($aParsed['Individuals']['ids'][(int) $aLine['panelid']]);
-                            $bPanelInFile = isset($aParsed['Individuals']['data'][(int) $aLine['panelid']]);
-                            if (!$bPanelInDB && !$bPanelInFile) {
-                                // Individual does not exist and is not defined in the import file.
-                                // Or the panel to which is referred is not yet parsed.
-                                // It's assumed that in the import file panels are listed above individuals referring to them.
-                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine['panelid']) . '" does not exist in the database and is not defined (properly) in this import file.<BR>When referring to panels that are also defined in the import file, make sure they are defined above the individuals referring to them. Therefore, make sure that in the import file individual "' . htmlspecialchars($aLine['panelid']) . '" is defined above individual "' . htmlspecialchars($aLine['id']) . '".');
-                            }
-
-                            // It is not allowed to import a record where the panelid and id are the same.
-                            if ($aLine['panelid'] == $aLine['id']) {
-                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'Panel ID\' can not link to itself; this field is used to indicate to which panel this individual belongs.');
-                            }
-
-                            // If individual ID exists in DB, then retrieve panel number from DB.
-                            // If it doesn't exist in DB retrieve panel number from parsed data.
-                            $nPanel = false;
-                            if ($bPanelInDB) {
-                                $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aLine['panelid']))->fetchColumn();
-                            } elseif ($bPanelInFile) {
-                                $nPanel = $aParsed['Individuals']['data'][(int) $aLine['panelid']]['panel_size'];
-                            }
-
-                            if ($nPanel !== false && $nPanel == 1) {
-                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel ID "' . htmlspecialchars($aLine['panelid']) . '" refers to an individual, not a panel (group of individuals). If you want to configure that individual as a panel, set its \'Panel size\' field to a value higher than 1.');
-                            } elseif ($nPanel !== false && $nPanel <= $aLine['panel_size']) {
-                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel size of Individual "' . htmlspecialchars($aLine['id']) . '" must be lower than the panel size of Individual "' . htmlspecialchars($aLine['panelid']) . '".');
-                            }
-                        }
-
-                        foreach (array('fatherid', 'motherid') as $sParentalField) {
-                            if ($aLine[$sParentalField]) {
-                                $bParentInDB = isset($aParsed['Individuals']['ids'][(int) $aLine[$sParentalField]]);
-                                $bParentInFile = isset($aParsed['Individuals']['data'][(int) $aLine[$sParentalField]]);
-                                if (!$bParentInDB && !$bParentInFile) {
-                                    // Individual does not exist and is not defined in the import file.
-                                    // Or the individual to which is referred is not yet parsed.
-                                    // It's assumed that in the import file parent are on top of children.
-                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine[$sParentalField]) . '" does not exist in the database and is not defined (properly) in this import file.<BR>When referring to parents that are also defined in the import file, make sure they are defined above the children referring to them. Therefore, make sure that in the import file individual "' . htmlspecialchars($aLine[$sParentalField]) . '" is defined above individual "' . htmlspecialchars($aLine['id']) . '".');
-                                }
-
-                                // It is not allowed to import a record where the fatherid or motherid are the same as the individual id.
-                                if ($aLine[$sParentalField] == $aLine['id']) {
-                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'' . $sParentalField . '\' can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual.');
-                                }
-
-                                if ($_DB->query('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac WHERE ac.colid = ?', array('Individual/Gender'))->fetchColumn()) {
-                                    $zParentData = array();
-                                    if ($bParentInDB) {
-                                        $zParentData = $_DB->query('SELECT `Individual/Gender`, panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aLine[$sParentalField]))->fetchAssoc();
-                                    } elseif ($bParentInFile) {
-                                        $zParentData = $aParsed['Individuals']['data'][(int) $aLine[$sParentalField]];
-                                    }
-
-                                    if (isset($zParentData['panel_size']) && $zParentData['panel_size'] > 1) {
-                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" refers to an panel (group of individuals), not an individual. If you want to configure that panel as an individual, set its \'Panel size\' field to value 1.');
-                                    }
-
-                                    if(isset($zParentData['Individual/Gender']) && $sParentalField == 'fatherid' && $zParentData['Individual/Gender'] == 'F') {
-                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" you entered does not refer to a male individual.');
-                                    } elseif (isset($zParentData['Individual/Gender']) && $sParentalField == 'motherid' && $zParentData['Individual/Gender'] == 'M') {
-                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '"  you entered does not refer to a female individual.');
-                                    }
-                                }
-                            }
-                        }
-
                         // FIXME: Default values of custom columns?
                         // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                         $aLine['todo'] = 'insert'; // OK, insert.
@@ -994,6 +1236,17 @@ if (POST) {
 
                 case 'Individuals_To_Diseases':
                     // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
+                    // First check if zdata is filled. if so break and ignore the rest of this section.
+                    if ($zData) {
+                        // During update import a warning is set that updating for this section is not allowed, but we don't want that for every line.
+                        if (!in_array('Individuals_To_Diseases', $aSectionAlreadyWarnedFor)) {
+                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
+                            $nWarnings ++;
+                            $aSectionAlreadyWarnedFor[] = $sCurrentSection;
+                        }
+                        break;
+                    }
+
                     // Create ID, so we can link to the data.
                     $aLine['id'] = (int) $aLine['individualid'] . '|' . (int) $aLine['diseaseid']; // This also means we lack the check for repeated lines!
                     // Manually check for repeated lines, to prevent query errors in case of inserts.
@@ -1071,9 +1324,24 @@ if (POST) {
                     }
 
                     if ($zData) {
-                        if ($nDiffScore && !lovd_isAuthorized('phenotype', $aLine['id'], false)) {
-                            // Data is being updated, but user is not allowed to edit this entry!
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Phenotype "' . htmlspecialchars($aLine['id']) . '".');
+                        if ($nDifferences) {
+                            if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                // Data is being updated, but user is not allowed to edit this entry!
+                                foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                    if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                    } else {
+                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                      Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                      - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                      (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '.');
+                                    }
+                                }
+                            }
+                            $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
                         // FIXME: Default values of custom columns?
@@ -1094,9 +1362,24 @@ if (POST) {
                     }
 
                     if ($zData) {
-                        if ($nDiffScore && !lovd_isAuthorized('screening', $aLine['id'], false)) {
-                            // Data is being updated, but user is not allowed to edit this entry!
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Screening "' . htmlspecialchars($aLine['id']) . '".');
+                        if ($nDifferences) {
+                            if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                // Data is being updated, but user is not allowed to edit this entry!
+                                foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                    if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                    } else {
+                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                      Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                      - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                      (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '.');
+                                    }
+                                }
+                            }
+                            $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
                         // FIXME: Default values of custom columns?
@@ -1107,6 +1390,17 @@ if (POST) {
 
                 case 'Screenings_To_Genes':
                     // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
+                    // First check if zdata is filled. if so break and ignore the rest of this section.
+                    if ($zData) {
+                        // During update import a warning is set that updating for this section is not allowed, but we don't want that for every line.
+                        if (!in_array('Screenings_To_Genes', $aSectionAlreadyWarnedFor)) {
+                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
+                            $nWarnings ++;
+                            $aSectionAlreadyWarnedFor[] = $sCurrentSection;
+                        }
+                        break;
+                    }
+
                     // Create ID, so we can link to the data.
                     $aLine['id'] = (int) $aLine['screeningid'] . '|' . $aLine['geneid']; // This also means we lack the check for repeated lines!
                     // Manually check for repeated lines, to prevent query errors in case of inserts.
@@ -1150,9 +1444,24 @@ if (POST) {
                     }
 
                     if ($zData) {
-                        if ($nDiffScore && !lovd_isAuthorized('variant', $aLine['id'], false)) {
-                            // Data is being updated, but user is not allowed to edit this entry!
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Variant "' . htmlspecialchars($aLine['id']) . '".');
+                        if ($nDifferences) {
+                            if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                // Data is being updated, but user is not allowed to edit this entry!
+                                foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                    if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                    } else {
+                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                      Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                      - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                      (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '.');
+                                    }
+                                }
+                            }
+                            $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
                         if ($aLine['allele'] === '') {
@@ -1198,21 +1507,36 @@ if (POST) {
                         }
                     }
 
+                    if (!$bGeneInDB) {
+                        // We're inserting this variant, but the gene does not exist yet, so we're not sure about the exact columns that will be active. For variants, this is fatal.
+                        //   Actually, this error will always come with the error that the gene mentioned in the file is not yet inserted and that it can't be inserted by this script, right?
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The gene belonging to this variant entry is yet to be inserted into the database. First create the gene and set up the custom columns, then import the variants.');
+                    }
+
                     if ($zData) {
-                        if ($nDiffScore && !lovd_isAuthorized('variant', $aLine['id'], false)) {
-                            // Data is being updated, but user is not allowed to edit this entry!
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update on Variant "' . htmlspecialchars($aLine['id']) . '".');
+                        if ($nDifferences) {
+                            if ($aDifferences && array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed']))) {
+                                // Data is being updated, but user is not allowed to edit this entry!
+                                foreach (array_intersect(array_keys($aDifferences), array_keys($aSection['update_columns_not_allowed'])) as $sSameCol) {
+                                    if ($aSection['update_columns_not_allowed'][$sSameCol]['error_type'] == 'soft') {
+                                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                                - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                                (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '. <BR>', 'done');
+                                        $nWarnings ++;
+                                    } else {
+                                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '):
+                                                      Access denied for update on field "' . $sSameCol . '": ' . $aSection['update_columns_not_allowed'][$sSameCol]['message'] . ' <BR>
+                                                      - Database value is ' . (isset($aDifferences[$sSameCol]['DB'])?$aDifferences[$sSameCol]['DB']:'empty') . ' and value in the import file is ' .
+                                                      (isset($aDifferences[$sSameCol]['file'])?$aDifferences[$sSameCol]['file']:'empty') . '.');
+                                    }
+                                }
+                            }
+                            $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
                         // FIXME: Default values of custom columns?
 
                         // FIXME: Check if referenced variant is actually on the same chromosome?
-
-                        if (!$bGeneInDB) {
-                            // We're inserting this variant, but the gene does not exist yet, so we're not sure about the exact columns that will be active. For variants, this is fatal.
-                            //   Actually, this error will always come with the error that the gene mentioned in the file is not yet inserted and that it can't be inserted by this script, right?
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The gene belonging to this variant entry is yet to be inserted into the database. First create the gene and set up the custom columns, then import the variants.');
-                        }
 
                         // Entry might still have thrown an error, but because we want to draw out all errors, we will store this one in case it's referenced to.
                         if (!$bVariantInDB || !$bTranscriptInDB || ($sMode == 'insert' && ($bVariantInFile || $bTranscriptInFile))) {
@@ -1230,6 +1554,17 @@ if (POST) {
 
                 case 'Screenings_To_Variants':
                     // Editing will never be supported. Any change breaks the PK, so which entry would we edit?
+                    // First check if zdata is filled. if so break and ignore the rest of this section.
+                    if ($zData) {
+                        // During update import a warning is set that updating for this section is not allowed, but we don't want that for every line.
+                        if (!in_array('Screenings_To_Variants', $aSectionAlreadyWarnedFor)) {
+                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
+                            $nWarnings ++;
+                            $aSectionAlreadyWarnedFor[] = $sCurrentSection;
+                        }
+                        break;
+                    }
+
                     // Create ID, so we can link to the data.
                     $aLine['id'] = (int) $aLine['screeningid'] . '|' . (int) $aLine['variantid']; // This also means we lack the check for repeated lines!
                     // Manually check for repeated lines, to prevent query errors in case of inserts.
@@ -1277,6 +1612,9 @@ if (POST) {
                 $aLine['nLine'] = $nLine;
                 $nID = (ctype_digit($aLine['id'])? (int) $aLine['id'] : $aLine['id']);
                 $aSection['data'][$nID] = $aLine;
+                if ($aLine['todo'] == 'update') {
+                    $aSection['data'][$nID]['update_changes'] = $aDifferences;
+                }
                 $nDataTotal ++;
             }
 
@@ -1288,6 +1626,47 @@ if (POST) {
             }
         }
 
+        //
+        if ($sMode == 'update') {
+            foreach ($aParsed as $sSection => $aSection) {
+                switch ($sSection) {
+                    case 'Transcripts':
+                    case 'Columns':
+                    case 'Diseases':
+                    case 'Individuals':
+                    case 'Phenotypes':
+                    case 'Screenings':
+                    case 'Variants_On_Genome':
+                    case 'Variants_On_Transcripts':
+                        // We are going to count the number of changed line again when we do an update.
+                        $nDataTotal = 0;
+                        $bUpdate = false;
+                        foreach ($aSection['data'] as $key => $aData) {
+                            // In the section transcript the 'todo' is set to '' when an variant_on_transcript is changed. 
+							// Therefore we have to check if it is set to 'update'.
+                            if ($aData['todo'] == 'update' && $aData['update_changes']) {
+                                // We only need to update the changed fields that should not be ignored.
+                                // So therefore we need to get rid of the ignore fields with value true.
+                                foreach ($aData['update_changes'] as $key => $aFieldChanged) {
+                                    if ($aFieldChanged['ignore'] === true) {
+                                        unset($aData['update_changes'][$key]);
+                                        // We dont want to include the changed fields that should be ignored in the counter $nDataTotal.
+                                        continue;
+                                    }
+                                }
+                                $nDataTotal ++;
+                                $bUpdate = true;
+                            }
+                        }
+						// The string $sSectionUpdated is used for a message to inform users which sections are updated.
+                        if ($bUpdate && !isset($sSectionUpdated)) {
+                            $sSectionUpdated = $sSection;
+                        } elseif ($bUpdate) {
+                            $sSectionUpdated .= ', ' . $sSection;
+                        }
+                }
+            }
+        }
         // Clean up old section, if available.
         if ($sCurrentSection) {
             unset($aSection['columns']);
@@ -1320,9 +1699,12 @@ if (POST) {
 
 
         // Intercept simulate (dry run).
-        if (!empty($_POST['simulate']) && !lovd_error()) {
+        if (!empty($_POST['simulate']) && !lovd_error() && $nDataTotal) {
             // Stop here.
             lovd_errorAdd('', 'Simulation successful: no errors found.');
+            if ($sMode == 'update') {
+                lovd_errorAdd('', 'The following sections are modified and can be updated: ' . $sSectionUpdated .'.');
+            }
         }
 
 
@@ -1372,12 +1754,12 @@ if (POST) {
                         continue;
                     }
 
-                    // Data from LOVD downloads are escaped. Besides tabs, carriage returns and new lines, also quotes (both single and double) and backslashes are escaped.
-                    foreach ($aData as $key => $sVal) {
-                        // First prepare the \t, \r and \n codes, so they won't get lost.
-                        $sVal = str_replace(array('\r', '\n', '\t'), array('\\\r', '\\\n', '\\\t'), $sVal);
-                        $sVal = stripslashes($sVal);
-                        $aData[$key] = str_replace(array('\r', '\n', '\t'), array("\r", "\n", "\t"), $sVal);
+                    if ($aData['todo'] == 'update') {
+                        $aSection['object']->updateEntry($nID, $aData, array_keys($aData['update_changes']));
+                        $aDone[$sSection] ++;
+                        $nDone ++;
+                        $_BAR[1]->setProgress(($nEntry/$nDataTotal)*100);
+    					continue;
                     }
 
                     switch ($sSection) {
@@ -1586,7 +1968,11 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             }
             if (!$bError) {
                 $_DB->commit();
-                $_BAR[1]->setMessage('Done importing!', 'done');
+                if ($sMode == 'update') {
+                    $_BAR[1]->setMessage('Done importing! <BR> The following sections are modified and updated in the database: ' . $sSectionUpdated .'.', 'done');
+                } else {
+                    $_BAR[1]->setMessage('Done importing!', 'done');
+                }
                 $_BAR[1]->setMessageVisibility('done', true);
                 if (count($aDone)) {
                     $sMessage = '';
@@ -1614,7 +2000,11 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
         $_BAR[0]->setMessageVisibility('done', false);
 
         if (!lovd_error() && !$nDataTotal) {
-            lovd_showInfoTable('No entries found that need to be imported in the database. Either your uploaded file contains no variants, or all entries are already in the database.', 'stop');
+            if ($sMode == 'update')
+                lovd_showInfoTable('No entries found that can be updated via the import file.', 'stop');
+            if ($sMode == 'insert') {
+                lovd_showInfoTable('No entries found that need to be imported in the database. Either your uploaded file contains no variants, or all entries are already in the database.', 'stop');
+            }
             $_T->printFooter();
             exit;
         }

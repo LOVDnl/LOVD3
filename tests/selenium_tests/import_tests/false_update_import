@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="https://localhost/" />
+<title>update_import</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">update_import</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>/svn/LOVD3/trunk/src/import</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name=import</td>
+	<td>/www/svn/LOVD3/trunk/tests/test_data_files/FalseUpdateImport.txt</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>name=mode</td>
+	<td>label=Update existing data</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>name=simulate</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>link=Show 21 warnings</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Columns, line 8): Will not edit Column &quot;Individual/Age_of_death&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Columns, line 8): Incorrect value for field ?col_order?, which needs to be numeric, between 0 and 255.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Columns, line 8): Incorrect value for field ?standard?, which should be 0 or 1.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Columns, line 8): Select option #1 &quot;? = Unknown no = Non-consanguineous parents yes()* = Consanguineous parents&quot; not understood.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Columns, line 8): The ?Regular expression pattern? field does not seem to contain valid PHP Perl compatible regexp syntax.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Columns, line 8): Access denied for update on field &quot;hgvs&quot;: Not allowed to change the HGVS standard status of any column.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Columns, line 9): ID &quot;Individual/Age_of_death&quot; already defined at line 8.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Genes, line 14): Will not edit Gene &quot;IVD&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Genes, line 14): Access denied for update on field &quot;name&quot;: Not allowed to change the gene name.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Genes, line 14): Access denied for update on field &quot;chromosome&quot;: Not allowed to change the chromosome.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Genes, line 15): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Transcripts, line 20): Will not edit Transcript &quot;00001&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Transcripts, line 20): Transcript &quot;00001&quot; does not match the same gene and/or the same NCBI ID as in the database.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Transcripts, line 20): Access denied for update on field &quot;id_ncbi&quot;: Not allowed to change the id_ncbi*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Transcripts, line 21): ID &quot;00001&quot; already defined at line 20.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Diseases, line 27): Will not edit Disease &quot;00000&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Diseases, line 27): Another disease already exists with this OMIM ID at line 26.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Diseases, line 27): Another disease already exists with the same name at line 26.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Diseases, line 28): Will not edit Disease &quot;00002&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Diseases, line 28): Another disease already exists with the same name!*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Diseases, line 28): Import file contains OMIM ID for disease Majeed syndrome, while OMIM ID is missing in database.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Genes_To_Diseases, line 34): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 39): Individual &quot;00000022&quot; does not exist in the database and is not defined (properly) in this import file.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 40): Will not edit Individual &quot;00000002&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 40): The ?Panel ID? can not link to itself; this field is used to indicate to which panel this individual belongs.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 40): Panel size of Individual &quot;00000002&quot; must be lower than the panel size of Individual &quot;00000002&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 41): Will not edit Individual &quot;00000003&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 41): Panel ID &quot;00000001&quot; refers to an individual, not a panel (group of individuals). If you want to configure that individual as a panel, set its ?Panel size? field to a value higher than 1.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 41): The ?fatherid? can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 41): The fatherid &quot;00000003&quot; you entered does not refer to a male individual.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 41): Individual &quot;00000022&quot; does not exist in the database and is not defined (properly) in this import file.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 42): The motherid &quot;00000002&quot; refers to an panel (group of individuals), not an individual. If you want to configure that panel as an individual, set its ?Panel size? field to value 1.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals, line 43): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Individuals_To_Diseases, line 49): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Phenotypes, line 54): Will not edit Phenotype &quot;0000000001&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Phenotypes, line 54): Disease &quot;00004&quot; does not exist in the database and is not defined in this import file.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Phenotypes, line 54): Individual &quot;00000022&quot; does not exist in the database and is not defined in this import file.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Phenotypes, line 55): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Screenings, line 60): Will not edit Screening &quot;0000000001&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Screenings, line 60): Individual &quot;00000022&quot; does not exist in the database and is not defined in this import file.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Screenings, line 61): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Screenings_To_Genes, line 67): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Variants_On_Genome, line 72): Will not edit Variants_On_Genome &quot;0000000001&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Variants_On_Genome, line 72): Invalid value in the ?position_g_start? field: &quot;abc&quot; is not a numerical value.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Variants_On_Genome, line 72): Access denied for update on field &quot;position_g_start&quot;: Not allowed to change the position_g_start.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Variants_On_Genome, line 73): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Variants_On_Transcripts, line 78): Invalid value in the ?position_c_start? field: &quot;abc&quot; is not a numerical value.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Variants_On_Transcripts, line 78): Access denied for update on field &quot;position_c_start&quot;: Not allowed to change the position_c_start.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Variants_On_Transcripts, line 79): ID &quot;1|1&quot; already defined at line 78.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Variants_On_Transcripts, line 80): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Error (Screenings_To_Variants, line 86): This line refers to non-existing entry. During update no new inserts can be done.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Columns, line 8): Edited by field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Columns, line 8): Edited date field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Genes, line 14): Edited by field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Genes, line 14): Updated date field is set by LOVD. *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Transcripts, line 20): Edited by field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Transcripts, line 20): Edited date field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 26): There is already a disease with disease name isovaleric acidemia. This disease is not imported! *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 27): There is already a disease with disease name isovaleric acidemia. This disease is not imported! *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 28): Edited by field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 28): Edited date field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning: It is currently not possible to do an update on section Genes_To_Diseases via an import *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Individuals, line 39): Edited by field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Individuals, line 39): Edited date field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning: It is currently not possible to do an update on section Individuals_To_Diseases via an import *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Phenotypes, line 54): Edited by field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Phenotypes, line 54): Edited date field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Screenings, line 60): Edited by field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Screenings, line 60): Edited date field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning: It is currently not possible to do an update on section Screenings_To_Genes via an import *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Variants_On_Genome, line 72): Edited by field is set by LOVD *</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning: It is currently not possible to do an update on section Screenings_To_Variants via an import *</td>
+	<td></td>
+</tr>
+</tbody></table>
+</body>
+</html>

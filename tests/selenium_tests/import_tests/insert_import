@@ -19,7 +19,7 @@
 <tr>
 	<td>type</td>
 	<td>name=import</td>
-	<td>/www/svn/LOVD3/trunk/tests/test_data_files/StartImportData.txt</td>
+	<td>/www/svn/LOVD3/trunk/tests/test_data_files/InsertImport.txt</td>
 </tr>
 <tr>
 	<td>clickAndWait</td>

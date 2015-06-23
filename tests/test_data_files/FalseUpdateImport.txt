@@ -1,0 +1,86 @@
+### LOVD-version 3000-130 ### Full data download ### To import, do not remove or alter this header ###
+# charset = UTF-8
+# max_errors = 500
+
+## Columns ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{col_order}}"	"{{width}}"	"{{hgvs}}"	"{{standard}}"	"{{mandatory}}"	"{{head_column}}"	"{{description_form}}"	"{{description_legend_short}}"	"{{description_legend_full}}"	"{{mysql_type}}"	"{{form_type}}"	"{{select_options}}"	"{{preg_pattern}}"	"{{public_view}}"	"{{public_add}}"	"{{allow_count_all}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"
+"Individual/Age_of_death"	"abc"	"40"	"1"	"3"	"0"	"Consanguinity"	"Indicates whether the parents are related (consanguineous), not related (non-consanguineous) or whether consanguinity is not known (unknown)"	"Indicates whether the parents are related (consanguineous), not related (non-consanguineous) or whether consanguinity is not known (unknown)"	"Indicates whether the parents are related (consanguineous), not related (non-consanguineous) or whether consanguinity is not known (unknown)"	"VARCHAR(100)"	"Consanguinity||select|1|--Not specified--|false|false"	"? = Unknown\r\nno = Non-consanguineous parents\r\nyes()* = Consanguineous parents"	"/"	"1"	"1"	"1"	"00000"	"2015-06-02 15:42:07"	"00000"	"2015-06-02 15:42:07"
+"Individual/Age_of_death"	"248"	"100"	"0"	"0"	"0"	"Age of death"	"Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for still alive at 55, ? for unknown."	"The age at which the individual deceased, if known and applicable. 04y08m = 4 years and 8 months."	"The age at which the individual deceased, if known and applicable.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = still alive at 55</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>"	"VARCHAR(12)"	"Age of death|The age at which the individual deceased, if known and applicable. Numbers lower than 10 should be prefixed by a zero and the field should always begin with years, to facilitate sorting on this column.|text|10"	""	"/^([<>]?\\d{2,3}y(\\d{2}m(\\d{2}d)?)?)?\\??$/"	"1"	"1"	"1"	"00000"	"2015-06-12 15:33:25"	""	""
+
+## Genes ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{name}}"	"{{chromosome}}"	"{{chrom_band}}"	"{{imprinting}}"	"{{refseq_genomic}}"	"{{refseq_UD}}"	"{{reference}}"	"{{url_homepage}}"	"{{url_external}}"	"{{allow_download}}"	"{{allow_index_wiki}}"	"{{id_hgnc}}"	"{{id_entrez}}"	"{{id_omim}}"	"{{show_hgmd}}"	"{{show_genecards}}"	"{{show_genetests}}"	"{{note_index}}"	"{{note_listing}}"	"{{refseq}}"	"{{refseq_url}}"	"{{disclaimer}}"	"{{disclaimer_text}}"	"{{header}}"	"{{header_align}}"	"{{footer}}"	"{{footer_align}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{updated_by}}"	"{{updated_date}}"
+"IVD"	"isovaleryl-CoA dehydrogenase1"	"151"	"q14-q15"	"unknown"	"NG_011986.1"	"UD_142663684045"	""	""	""	"0"	"0"	"6186"	"3712"	"607036"	"1"	"1"	"1"	""	""	""	""	"1"	""	""	"-1"	""	"-1"	"00001"	"2015-06-02 15:42:21"	"00001"	""	"00001"	"2015-06-02 15:42:48"
+"ARSE"	"arylsulfatase E (chondrodysplasia punctata 1)"	"X"	"p22.33"	"unknown"	"NG_007091.1"	"UD_139310223054"	""	""	""	"0"	"0"	"719"	"415"	"300180"	"0"	"0"	"0"	""	""	""	""	"1"	""	""	"-1"	""	"-1"	"00001"	"2015-06-04 08:45:53"	""	""	""	""
+
+## Transcripts ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{geneid}}"	"{{name}}"	"{{id_mutalyzer}}"	"{{id_ncbi}}"	"{{id_ensembl}}"	"{{id_protein_ncbi}}"	"{{id_protein_ensembl}}"	"{{id_protein_uniprot}}"	"{{position_c_mrna_start}}"	"{{position_c_mrna_end}}"	"{{position_c_cds_end}}"	"{{position_g_mrna_start}}"	"{{position_g_mrna_end}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"
+"00001"	"IVD"	"transcript variant 1"	"001"	"NM_999999.3"	""	"NP_002216.2"	""	""	"-334"	"4331"	"1281"	"40405485"	"40421313"	"00001"	"2015-06-02 15:42:21"	"00001"	"2015-06-02 15:42:21"
+"00001"	"IVD"	"transcript variant 1"	"001"	"NM_002225.3"	""	"NP_002216.2"	""	""	"-334"	"4331"	"1281"	"40405485"	"40421313"	"00001"	"2015-06-12 15:33:40"	""	""
+
+## Diseases ## Do not remove or alter this header ##
+## Count = 3
+"{{id}}"	"{{symbol}}"	"{{name}}"	"{{id_omim}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"
+"00001"	"IVA"	"isovaleric acidemia"	"243500"	"00001"	"2015-06-02 15:42:23"	"00001"	"2015-06-02 15:42:23"
+"00000"	"IVA"	"isovaleric acidemia"	"243500"	"00001"	"2015-06-02 15:42:23"	""	""
+"00002"	"MajS"	"Majeed syndrome"	"123456"	"00001"	"2015-06-03 10:29:37"	"00001"	"2015-06-02 15:42:23"
+
+## Genes_To_Diseases ## Do not remove or alter this header ##
+## Count = 2
+"{{geneid}}"	"{{diseaseid}}"
+"IVD"	"00002"
+"DAAM1"	"00022"
+
+## Individuals ## Do not remove or alter this header ##
+## Count = 5
+"{{id}}"	"{{fatherid}}"	"{{motherid}}"	"{{panelid}}"	"{{panel_size}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"	"{{Individual/Gender}}"
+"00000001"	""	""	"00000022"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:26"	"00001"	"2015-06-03 11:30:26"	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	""
+"00000002"	""	""	"00000002"	"11"	"00001"	"9"	"00001"	"2015-06-03 11:30:33"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	""
+"00000003"	"00000003"	"00000022"	"00000001"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
+"00000004"	""	"00000002"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"M"
+"00000005"	""	""	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
+
+## Individuals_To_Diseases ## Do not remove or alter this header ##
+## Count = 2
+"{{individualid}}"	"{{diseaseid}}"
+"00000001"	"00001"
+"00000022"	"00022"
+
+## Phenotypes ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{diseaseid}}"	"{{individualid}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Phenotype/Additional}}"	"{{Phenotype/Inheritance}}"	"{{Phenotype/Age}}"
+"0000000001"	"00004"	"00000022"	"00001"	"9"	"00001"	"2015-06-02 15:42:32"	"00001"	"2015-06-02 15:42:32"	"Additional phenotype information"	"Familial"	""
+"0000000002"	"00022"	"00000001"	"00001"	"9"	"00001"	"2015-06-02 15:42:32"	""	""	"Additional phenotype information"	"Familial"	""
+
+## Screenings ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{individualid}}"	"{{variants_found}}"	"{{owned_by}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"
+"0000000001"	"00000022"	"1"	"00001"	"00001"	"2015-06-02 15:42:37"	"00001"	"2015-06-02 15:42:37"	"arrayCGH;arraySEQ;arraySNP"	"RNA;Protein"
+"0000000003"	"00000022"	"0"	"00001"	"00001"	"2015-06-02 15:42:57"	""	""	"SBE;SSCA;SSCAf"	"RNA;Protein"
+
+## Screenings_To_Genes ## Do not remove or alter this header ##
+## Count = 2
+"{{screeningid}}"	"{{geneid}}"
+"0000000001"	"IVD"
+"0000000022"	"DAAM1"
+
+## Variants_On_Genome ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{allele}}"	"{{effectid}}"	"{{chromosome}}"	"{{position_g_start}}"	"{{position_g_end}}"	"{{type}}"	"{{mapping_flags}}"	"{{average_frequency}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Frequency}}"	"{{VariantOnGenome/Reference}}"
+"0000000001"	"11"	"55"	"15"	"abc"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-02 15:42:48"	"00001"	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:[2011]:[2150333]}"
+"0000000002"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-03 11:31:16"	""	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:[2011]:[2150333]}"
+
+## Variants_On_Transcripts ## Do not remove or alter this header ##
+## Count = 3
+"{{id}}"	"{{transcriptid}}"	"{{effectid}}"	"{{position_c_start}}"	"{{position_c_start_intron}}"	"{{position_c_end}}"	"{{position_c_end_intron}}"	"{{VariantOnTranscript/DNA}}"	"{{VariantOnTranscript/Exon}}"	"{{VariantOnTranscript/Protein}}"	"{{VariantOnTranscript/RNA}}"
+"0000000001"	"00001"	"55"	"abc"	"0"	"345"	"0"	"c.345G>T"	"2"	"p.(Met115Ile)"	"r.(?)"
+"0000000001"	"00001"	"55"	"345"	"0"	"345"	"0"	"c.345G>T"	"2"	"p.(Met115Ile)"	"r.(?)"
+"0000000002"	"00001"	"55"	"abc"	"0"	"345"	"0"	"c.345G>T"	"2"	"p.(Met115Ile)"	"r.(?)"
+
+## Screenings_To_Variants ## Do not remove or alter this header ##
+## Count = 2
+"{{screeningid}}"	"{{variantid}}"
+"0000000001"	"0000000001"
+"0000000022"	"0000000022"

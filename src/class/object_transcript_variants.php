@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2014-07-15
- * For LOVD    : 3.0-11
+ * Modified    : 2015-06-23
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -375,6 +376,49 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 $_POST[$sCol] = $this->getDefaultValue($sColClean);
             }
         }
+    }
+
+
+
+
+
+    function updateEntry ($sID, $aData, $aFields = array())
+    {
+        // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
+        global $_DB;
+        list($nID, $nTranscriptID) = explode('|', $sID);
+        if (!trim($nID) && !trim($nTranscriptID)) {
+            lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive ID');
+        } elseif (!is_array($aData) || !count($aData)) {
+            lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive data array');
+        } elseif (!is_array($aFields) || !count($aFields)) {
+            $aFields = array_keys($aData);
+        }
+
+        // Query text.
+        $sSQL = 'UPDATE ' . constant($this->sTable) . ' SET ';
+        $aSQL = array();
+        foreach ($aFields as $key => $sField) {
+            $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
+            if (!isset($aData[$sField])) {
+                // Field may be not set, make sure it is (happens in very rare cases).
+                $aData[$sField] = '';
+            }
+            if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC', 'FLO'))) {
+                $aData[$sField] = NULL;
+            }
+            $aSQL[] = $aData[$sField];
+        }
+        $sSQL .= ' WHERE id = ? AND transcriptid = ?';
+        $aSQL[] = $nID;
+        $aSQL[] = $nTranscriptID;
+
+        if (!defined('LOG_EVENT')) {
+            define('LOG_EVENT', $this->sObject . '::updateEntry()');
+        }
+        $q = $_DB->query($sSQL, $aSQL, true, true);
+
+        return $q->rowCount();
     }
 
 

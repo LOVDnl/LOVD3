@@ -1,0 +1,90 @@
+### LOVD-version 3000-130 ### Full data download ### To import, do not remove or alter this header ###
+# charset = UTF-8
+
+
+## Columns ## Do not remove or alter this header ##
+## Count = 1
+"{{id}}"	"{{col_order}}"	"{{width}}"	"{{hgvs}}"	"{{standard}}"	"{{mandatory}}"	"{{head_column}}"	"{{description_form}}"	"{{description_legend_short}}"	"{{description_legend_full}}"	"{{mysql_type}}"	"{{form_type}}"	"{{select_options}}"	"{{preg_pattern}}"	"{{public_view}}"	"{{public_add}}"	"{{allow_count_all}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"
+
+## Genes ## Do not remove or alter this header ##
+## Count = 1
+"{{id}}"	"{{name}}"	"{{chromosome}}"	"{{chrom_band}}"	"{{imprinting}}"	"{{refseq_genomic}}"	"{{refseq_UD}}"	"{{reference}}"	"{{url_homepage}}"	"{{url_external}}"	"{{allow_download}}"	"{{allow_index_wiki}}"	"{{id_hgnc}}"	"{{id_entrez}}"	"{{id_omim}}"	"{{show_hgmd}}"	"{{show_genecards}}"	"{{show_genetests}}"	"{{note_index}}"	"{{note_listing}}"	"{{refseq}}"	"{{refseq_url}}"	"{{disclaimer}}"	"{{disclaimer_text}}"	"{{header}}"	"{{header_align}}"	"{{footer}}"	"{{footer_align}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{updated_by}}"	"{{updated_date}}"
+"IVD"	"isovaleryl-CoA dehydrogenase"	"15"	"q14-q15"	"unknown"	"NG_011986.1"	"UD_142663684045"	""	""	""	"0"	"0"	"6186"	"3712"	"607036"	"1"	"1"	"1"	""	""	""	""	"1"	""	""	"-1"	""	"-1"	"00001"	"2015-06-03 11:30:15"	""	""	"00001"	"2015-06-03 11:31:16"
+
+
+## Transcripts ## Do not remove or alter this header ##
+## Count = 1
+"{{id}}"	"{{geneid}}"	"{{name}}"	"{{id_mutalyzer}}"	"{{id_ncbi}}"	"{{id_ensembl}}"	"{{id_protein_ncbi}}"	"{{id_protein_ensembl}}"	"{{id_protein_uniprot}}"	"{{position_c_mrna_start}}"	"{{position_c_mrna_end}}"	"{{position_c_cds_end}}"	"{{position_g_mrna_start}}"	"{{position_g_mrna_end}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"
+"00001"	"IVD"	"transcript variant 1"	"001"	"NM_002225.3"	""	"NP_002216.2"	""	""	"-334"	"4331"	"1281"	"40405485"	"40421313"	"00001"	"2015-06-03 11:30:15"	""	""
+
+
+## Diseases ## Do not remove or alter this header ##
+## Count = 3
+"{{id}}"	"{{symbol}}"	"{{name}}"	"{{id_omim}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"
+"00003"	"MajS"	"Majeed syndrome"	""	"00001"	"2015-06-03 11:30:22"	""	""
+
+
+## Genes_To_Diseases ## Do not remove or alter this header ##
+## Count = 2
+"{{geneid}}"	"{{diseaseid}}"
+"IVD"	"00001"
+"IVD"	"00002"
+
+
+## Individuals ## Do not remove or alter this header ##
+## Count = 4
+"{{id}}"	"{{fatherid}}"	"{{motherid}}"	"{{panelid}}"	"{{panel_size}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"	"{{Individual/Gender}}"
+"00000001"	""	""	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:26"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	""
+"00000002"	""	""	""	"10"	"00001"	"9"	"00001"	"2015-06-03 11:30:33"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	""
+"00000003"	""	""	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
+"00000004"	""	""	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"M"
+
+
+## Individuals_To_Diseases ## Do not remove or alter this header ##
+## Count = 4
+"{{individualid}}"	"{{diseaseid}}"
+"00000001"	"00001"
+"00000002"	"00001"
+"00000003"	"00001"
+"00000004"	"00001"
+
+
+## Phenotypes ## Do not remove or alter this header ##
+## Count = 1
+"{{id}}"	"{{diseaseid}}"	"{{individualid}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Phenotype/Additional}}"	"{{Phenotype/Inheritance}}"	"{{Phenotype/Age}}"
+"0000000001"	"00001"	"00000001"	"00001"	"9"	"00001"	"2015-06-03 11:30:56"	""	""	"Additional phenotype information"	"Familial"	""
+
+
+## Screenings ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{individualid}}"	"{{variants_found}}"	"{{owned_by}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"
+"0000000001"	"00000001"	"1"	"00001"	"00001"	"2015-06-03 11:31:03"	""	""	"arrayCGH;arraySEQ;arraySNP"	"RNA;Protein"
+"0000000002"	"00000001"	"1"	"00001"	"00001"	"2015-06-03 11:31:26"	""	""	"SBE;SSCA;SSCAf"	"RNA;Protein"
+
+
+## Screenings_To_Genes ## Do not remove or alter this header ##
+## Count = 2
+"{{screeningid}}"	"{{geneid}}"
+"0000000001"	"IVD"
+"0000000002"	"IVD"
+
+
+## Variants_On_Genome ## Do not remove or alter this header ##
+## Count = 1
+"{{id}}"	"{{allele}}"	"{{effectid}}"	"{{chromosome}}"	"{{position_g_start}}"	"{{position_g_end}}"	"{{type}}"	"{{mapping_flags}}"	"{{average_frequency}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Frequency}}"	"{{VariantOnGenome/Reference}}"
+"0000000001"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-03 11:31:16"	""	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:[2011]:[2150333]}"
+
+
+## Variants_On_Transcripts ## Do not remove or alter this header ##
+## Count = 1
+"{{id}}"	"{{transcriptid}}"	"{{effectid}}"	"{{position_c_start}}"	"{{position_c_start_intron}}"	"{{position_c_end}}"	"{{position_c_end_intron}}"	"{{VariantOnTranscript/DNA}}"	"{{VariantOnTranscript/Exon}}"	"{{VariantOnTranscript/Protein}}"	"{{VariantOnTranscript/RNA}}"
+"0000000001"	"00001"	"55"	"345"	"0"	"345"	"0"	"c.345G>T"	"2"	"p.(Met115Ile)"	"r.(?)"
+
+
+## Screenings_To_Variants ## Do not remove or alter this header ##
+## Count = 2
+"{{screeningid}}"	"{{variantid}}"
+"0000000001"	"0000000001"
+"0000000002"	"0000000001"
+
+

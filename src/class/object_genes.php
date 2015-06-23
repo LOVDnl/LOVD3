@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-05-07
+ * Modified    : 2015-06-17
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -227,7 +228,7 @@ class LOVD_Gene extends LOVD_Object {
             }
         }
 
-        if (!in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
+        if (lovd_getProjectFile() != '/import.php' && !in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
             lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, or LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
         }
 
@@ -303,7 +304,11 @@ class LOVD_Gene extends LOVD_Object {
         }
 
         // References sequences (genomic and transcripts).
-        $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
+        if (lovd_getProjectFile() == '/import.php') {
+            $aSelectRefseqGenomic = array($zData['refseq_genomic']);
+        } else {
+            $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
+        }
         $aTranscriptNames = array();
         $aTranscriptsForm = array();
         if (!empty($zData['transcripts'])) {

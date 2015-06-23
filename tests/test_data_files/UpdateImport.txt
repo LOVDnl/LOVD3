@@ -1,0 +1,73 @@
+### LOVD-version 3000-130 ### Full data download ### To import, do not remove or alter this header ###
+# charset = UTF-8
+
+## Columns ## Do not remove or alter this header ##
+## Count = 44
+"{{id}}"	"{{col_order}}"	"{{width}}"	"{{hgvs}}"	"{{standard}}"	"{{mandatory}}"	"{{head_column}}"	"{{description_form}}"	"{{description_legend_short}}"	"{{description_legend_full}}"	"{{mysql_type}}"	"{{form_type}}"	"{{select_options}}"	"{{preg_pattern}}"	"{{public_view}}"	"{{public_add}}"	"{{allow_count_all}}"
+"Individual/importtest"	"255"	"200"	"0"	"0"	"0"	"importtest_heading_UPDATES_name"	"no notes"	"importtest short legend"	"importtest full legend"	"VARCHAR(255)"	"importtest|no help needed|text|30"	""	""	"1"	"1"	"1"
+
+## Genes ## Do not remove or alter this header ##
+
+## Transcripts ## Do not remove or alter this header ##
+
+
+## Diseases ## Do not remove or alter this header ##
+## Count = 5
+"{{id}}"	"{{symbol}}"	"{{name}}"	"{{id_omim}}"
+"00004"	"ID"	"Import disease UPDATED name"	"123456"
+
+
+## Genes_To_Diseases ## Do not remove or alter this header ##
+## Count = 4
+"{{geneid}}"	"{{diseaseid}}"
+"IVD"	"00004"
+
+
+## Individuals ## Do not remove or alter this header ##
+## Count = 5
+"{{id}}"	"{{fatherid}}"	"{{motherid}}"	"{{panelid}}"	"{{panel_size}}"	"{{owned_by}}"	"{{statusid}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"	"{{Individual/Gender}}"
+"00000005"	"00000004"	""	""	"1"	"00001"	"9"	"importUPDATE"	""	""	""	""
+
+
+## Individuals_To_Diseases ## Do not remove or alter this header ##
+## Count = 5
+"{{individualid}}"	"{{diseaseid}}"
+"00000005"	"00004"
+
+
+## Phenotypes ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{diseaseid}}"	"{{individualid}}"	"{{owned_by}}"	"{{statusid}}"	"{{Phenotype/Additional}}"	"{{Phenotype/Inheritance}}"	"{{Phenotype/Age}}"
+"0000000002"	"00004"	"00000005"	"00001"	"9"	"import phenotype UPDATE information"	""	"9y"
+
+
+## Screenings ## Do not remove or alter this header ##
+## Count = 3
+"{{id}}"	"{{individualid}}"	"{{variants_found}}"	"{{owned_by}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"
+"0000000003"	"00000005"	"1"	"00001"	"arrayCGH"	"DNA"
+
+
+## Screenings_To_Genes ## Do not remove or alter this header ##
+## Count = 3
+"{{screeningid}}"	"{{geneid}}"
+"0000000003"	"IVD"
+
+
+## Variants_On_Genome ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{allele}}"	"{{effectid}}"	"{{chromosome}}"	"{{position_g_start}}"	"{{position_g_end}}"	"{{type}}"	"{{mapping_flags}}"	"{{average_frequency}}"	"{{owned_by}}"	"{{statusid}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Frequency}}"	"{{VariantOnGenome/Reference}}"
+"0000000002"	"0"	"50"	"15"	"40698142"	"40698142"	"subst"	"0"	""	"00001"	"9"	"IVD_000002"	"g.40698142A>T"	"0.8"	""
+
+
+## Variants_On_Transcripts ## Do not remove or alter this header ##
+## Count = 3
+"{{id}}"	"{{transcriptid}}"	"{{effectid}}"	"{{position_c_start}}"	"{{position_c_start_intron}}"	"{{position_c_end}}"	"{{position_c_end_intron}}"	"{{VariantOnTranscript/DNA}}"	"{{VariantOnTranscript/Exon}}"	"{{VariantOnTranscript/Protein}}"	"{{VariantOnTranscript/RNA}}"
+"0000000002"	"00001"	"50"	"123"	"0"	"123"	"0"	"c.123A>T"	"1"	"p.(=)"	"r.(=)"
+
+
+## Screenings_To_Variants ## Do not remove or alter this header ##
+## Count = 3
+"{{screeningid}}"	"{{variantid}}"
+"0000000003"	"0000000002"
+
+
