@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2015-06-17
+ * Modified    : 2015-06-24
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -167,7 +167,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnGenome':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') . (in_array('Individual', $aObjects)? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') . ', dsg.id AS var_statusid, dsg.name AS var_status';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.*, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') .
+                                       (in_array('Individual', $aObjects) || in_array('VariantOnTranscriptUnique', $aObjects)? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') . (in_array('VariantOnTranscriptUnique', $aObjects)? '' : ', dsg.id AS var_statusid, dsg.name AS var_status');
                     $nKeyVOTUnique = array_search('VariantOnTranscriptUnique', $aObjects);
                     if (!$aSQL['FROM']) {
                         // First data table in query.
@@ -257,6 +258,11 @@ class LOVD_CustomViewList extends LOVD_Object {
                     // This notation will be used to group on, and search on when navigating from the unique variant view to the full variant view.
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))) AS vot_clean_dna_change';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_';
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) SEPARATOR ";;") AS __owner';
+                    // dsg.id GROUP_CONCAT is descending ordered. This is done for the color marking.
+                    // In the prepare data the highest var_statusid is used to determine the coloring.
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id DESC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'COUNT(`VariantOnTranscript/DNA`) AS vot_reported';
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 
@@ -675,7 +681,10 @@ class LOVD_CustomViewList extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         // Mark all statusses from Marked and lower; Marked will be red, all others gray.
-        $bVarStatus = (!empty($zData['var_statusid']) && $zData['var_statusid'] <= STATUS_MARKED);
+        // In the VariantOnTranscriptUnique view the var_statusid can contain multiple id's, these id's are separated by a ",".
+        // Php always takes the first element of a string when a string and an integer are compared.
+        // But to avoid problems in the future, the first element is substracted and compared.
+        $bVarStatus = (!empty($zData['var_statusid']) && substr($zData['var_statusid'], 0, 1) <= STATUS_MARKED);
         $bIndStatus = (!empty($zData['ind_statusid']) && $zData['ind_statusid'] <= STATUS_MARKED);
 
         if ($bVarStatus && $bIndStatus) {
