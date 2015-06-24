@@ -1628,6 +1628,8 @@ if (POST) {
 
         //
         if ($sMode == 'update') {
+            // We are going to count the number of changed line again when we do an update.
+            $nDataTotal = 0;
             foreach ($aParsed as $sSection => $aSection) {
                 switch ($sSection) {
                     case 'Transcripts':
@@ -1638,8 +1640,6 @@ if (POST) {
                     case 'Screenings':
                     case 'Variants_On_Genome':
                     case 'Variants_On_Transcripts':
-                        // We are going to count the number of changed line again when we do an update.
-                        $nDataTotal = 0;
                         $bUpdate = false;
                         foreach ($aSection['data'] as $key => $aData) {
                             // In the section transcript the 'todo' is set to '' when an variant_on_transcript is changed. 
