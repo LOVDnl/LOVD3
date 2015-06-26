@@ -37,7 +37,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     }
 
     $this->setTimeout(3000)
-    $this->assertEquals("138 variants where imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
+    $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
     $this->click("css=input[type=\"button\"]");
     $this->waitForPageToLoad("30000");
   }
