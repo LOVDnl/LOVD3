@@ -42,6 +42,8 @@
  * Max errors during import can be changed in the import file.
  * Fixed bug; After resorting columns from a certain category, LOVD forwarded
    the user to the last column's view, instead of to the category's view.
+ * Fixed bug; During import, checking the Variants_On_Transcripts section got
+   slower as more variants within the same gene were checked.
 
 
 /**************************
