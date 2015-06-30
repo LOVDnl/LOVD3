@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2015-06-24
+ * Modified    : 2015-06-30
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -260,9 +260,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) SEPARATOR ";;") AS __owner';
-                    // dsg.id GROUP_CONCAT is descending ordered. This is done for the color marking.
-                    // In the prepare data the highest var_statusid is used to determine the coloring.
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id DESC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status';
+                    // dsg.id GROUP_CONCAT is ascending ordered. This is done for the color marking.
+                    // In the prepare data the lowest var_statusid is used to determine the coloring.
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id ASC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'COUNT(`VariantOnTranscript/DNA`) AS vot_reported';
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 

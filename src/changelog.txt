@@ -44,6 +44,9 @@
    the user to the last column's view, instead of to the category's view.
  * Fixed bug; During import, checking the Variants_On_Transcripts section got
    slower as more variants within the same gene were checked.
+ * Update via an import is available. Managers and higher are allowed to update
+   fields via the import. Per line one field can be changed. Curators can run a
+   simulate update import.
 
 
 /**************************
