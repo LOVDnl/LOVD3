@@ -98,11 +98,6 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Transcripts, line 20): Will not edit Transcript &quot;00001&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
 	<td>*Error (Transcripts, line 20): Transcript &quot;00001&quot; does not match the same gene and/or the same NCBI ID as in the database.*</td>
 	<td></td>
 </tr>
@@ -233,11 +228,6 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Screenings, line 60): Will not edit Screening &quot;0000000001&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
 	<td>*Error (Screenings, line 60): Individual &quot;00000022&quot; does not exist in the database and is not defined in this import file.*</td>
 	<td></td>
 </tr>
@@ -249,11 +239,6 @@
 <tr>
 	<td>assertBodyText</td>
 	<td>*Error (Screenings_To_Genes, line 67): This line refers to non-existing entry. During update no new inserts can be done.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Error (Variants_On_Genome, line 72): Will not edit Variants_On_Genome &quot;0000000001&quot;, to many fields are changed. The following fields are changed in the import file: *</td>
 	<td></td>
 </tr>
 <tr>
@@ -328,12 +313,12 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Diseases, line 26): There is already a disease with disease name isovaleric acidemia. This disease is not imported! *</td>
+	<td>*Warning (Diseases, line 26): There is already a disease with disease name isovaleric acidemia and/or OMIM ID 243500. This disease is not imported!*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Diseases, line 27): There is already a disease with disease name isovaleric acidemia. This disease is not imported! *</td>
+	<td>*Warning (Diseases, line 27): There is already a disease with disease name isovaleric acidemia and/or OMIM ID 243500. This disease is not imported!*</td>
 	<td></td>
 </tr>
 <tr>

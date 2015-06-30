@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-06-17
+ * Modified    : 2015-06-30
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -122,7 +122,7 @@ function lovd_calculateFieldDifferences ($zData, $aLine)
 	// and emty in the import file, the field is emptied in the database.
         // When the columns do not exist in the import file, the columns are taken into acount.
         if ($aLine[$sCol] && $sValue != $aLine[$sCol]) {
-            if (in_array($sCol, array('edited_by', 'edited_date', 'updated_date'))) {
+            if (in_array($sCol, array('created_by', 'created_date', 'edited_by', 'edited_date', 'updated_date', 'updated_by'))) {
                 // Changes in these fields are ingonred during an update import, because they are set by LOVD automaticly.
                 // But because we want to set a soft warning to inform the user, the fields must be included in the $aDiffs array.
                 $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => true);
@@ -400,7 +400,7 @@ if (POST) {
                         case 'Genes':
                             // The following collumns are allowed for update: chrom_band, imprinting, reference, url_homepage, url_external, allow_download, allow_index_wiki, show_hgmd, show_genecards,
                             // show_genetests, note_index, note_listing, refseq, refseq_url, disclaimer, disclaimer_text, header, header_align,
-                            // footer, footer_align, updated_by,
+                            // footer, footer_align,
                             require_once ROOT_PATH . 'class/object_genes.php';
                             $aSection['object'] = new LOVD_Gene();
                             $aSection['update_columns_not_allowed'] = array_merge($aSection['update_columns_not_allowed'], array('name' => array('message' => 'Not allowed to change the gene name.', 'error_type' => 'hard'),
@@ -410,7 +410,8 @@ if (POST) {
                                                                                                                                  'id_hgnc' => array('message' => 'Not allowed to change the id_hgnc.', 'error_type' => 'hard'),
                                                                                                                                  'id_entrez' => array('message' => 'Not allowed to change the id_entrez.', 'error_type' => 'hard'),
                                                                                                                                  'id_omim' => array('message' => 'Not allowed to change the id_omim.', 'error_type' => 'hard'),
-                                                                                                                                 'updated_date' => array('message' => 'Updated date field is set by LOVD.', 'error_type' => 'soft')));
+                                                                                                                                 'updated_date' => array('message' => 'Updated date field is set by LOVD.', 'error_type' => 'soft'),
+                                                                                                                                 'updated_by' => array('message' => 'Updated by field is set by LOVD.', 'error_type' => 'soft')));
                             break;
                         case 'Transcripts':
 			    // The following collumns are allowed for update: id_ensembl, id_protein_ensembl, id_protein_uniprot.
@@ -818,7 +819,10 @@ if (POST) {
             if (in_array($sCurrentSection, array('Columns', 'Genes', 'Diseases', 'Individuals', 'Phenotypes', 'Screenings', 'Variants_On_Genome'))) {
                 foreach (array('created_by', 'edited_by') as $sCol) {
                     // Check is not needed for owned_by, because the form should have a selection list (which is checked separately).
-                    if (!$zData || in_array($sCol, $aColumns)) {
+                    if ($zData && $sCol == 'edited_by'){
+                        // If zData is set, always set the edited by
+                        $aLine[$sCol] = $_AUTH['id'];
+                    } elseif (!$zData || in_array($sCol, $aColumns)) {
                         if ($aLine[$sCol] && !in_array($aLine[$sCol], $aUsers)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" refers to non-existing user.');
                         } elseif (($sCol != 'edited_by' || $aLine['edited_date']) && !$aLine[$sCol]) {
@@ -828,7 +832,10 @@ if (POST) {
                     }
                 }
                 foreach (array('created_date', 'edited_date') as $sCol) {
-                    if (!$zData || in_array($sCol, $aColumns)) {
+                    if ($zData && $sCol == 'edited_date'){
+                        // If zData is set, always set the edited date
+                            $aLine[$sCol] = $sDate;
+                    } elseif (!$zData || in_array($sCol, $aColumns)) {
                         if ($aLine[$sCol] && !lovd_matchDate($aLine[$sCol], true)) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" is not a correct date format, use the format YYYY-MM-DD HH:MM:SS.');
                         } elseif (($sCol == 'created_date' || $aLine['edited_by']) && !$aLine[$sCol]) {
@@ -1031,7 +1038,7 @@ if (POST) {
                             unset($_ERROR['messages'][$nKey]);
                             $_ERROR['messages'] = array_values($_ERROR['messages']);
                         }
-                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . '. This disease is not imported! <BR>', 'done');
+                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (!empty($aLine['id_omim'])?' and/or OMIM ID ' . $aLine['id_omim']:'') . '. This disease is not imported! <BR>', 'done');
                         $nWarnings ++;
                         $aLine['newID'] = $nDiseaseIdOmim[0];
                         $aLine['todo'] = 'map';
@@ -1615,7 +1622,10 @@ if (POST) {
                 if ($aLine['todo'] == 'update') {
                     $aSection['data'][$nID]['update_changes'] = $aDifferences;
                 }
-                $nDataTotal ++;
+                // To avoid that $aLine['map'] is counted as a change.
+                if (in_array($aLine['todo'], array('insert', 'update'))) {
+                    $nDataTotal ++;
+                }
             }
 
             $_BAR[0]->setProgress(($nLine/$nLines)*100);
@@ -1623,48 +1633,6 @@ if (POST) {
             if (!lovd_endLine()) {
                 // Too many errors.
                 break;
-            }
-        }
-
-        //
-        if ($sMode == 'update') {
-            // We are going to count the number of changed line again when we do an update.
-            $nDataTotal = 0;
-            foreach ($aParsed as $sSection => $aSection) {
-                switch ($sSection) {
-                    case 'Transcripts':
-                    case 'Columns':
-                    case 'Diseases':
-                    case 'Individuals':
-                    case 'Phenotypes':
-                    case 'Screenings':
-                    case 'Variants_On_Genome':
-                    case 'Variants_On_Transcripts':
-                        $bUpdate = false;
-                        foreach ($aSection['data'] as $key => $aData) {
-                            // In the section transcript the 'todo' is set to '' when an variant_on_transcript is changed. 
-							// Therefore we have to check if it is set to 'update'.
-                            if ($aData['todo'] == 'update' && $aData['update_changes']) {
-                                // We only need to update the changed fields that should not be ignored.
-                                // So therefore we need to get rid of the ignore fields with value true.
-                                foreach ($aData['update_changes'] as $key => $aFieldChanged) {
-                                    if ($aFieldChanged['ignore'] === true) {
-                                        unset($aData['update_changes'][$key]);
-                                        // We dont want to include the changed fields that should be ignored in the counter $nDataTotal.
-                                        continue;
-                                    }
-                                }
-                                $nDataTotal ++;
-                                $bUpdate = true;
-                            }
-                        }
-						// The string $sSectionUpdated is used for a message to inform users which sections are updated.
-                        if ($bUpdate && !isset($sSectionUpdated)) {
-                            $sSectionUpdated = $sSection;
-                        } elseif ($bUpdate) {
-                            $sSectionUpdated .= ', ' . $sSection;
-                        }
-                }
             }
         }
         // Clean up old section, if available.
@@ -1691,6 +1659,50 @@ if (POST) {
         // Clean up all stored ID lists.
         foreach ($aParsed as $sSection => $aSection) {
             unset($aParsed[$sSection]['ids']);
+        }
+
+        // We have to run this after the unset($aSection), else it will mess up the loop.
+        if ($sMode == 'update') {
+            // We are going to count the number of changed line again when we do an update.
+            $nDataTotal = 0;
+            //foreach ($aParsed as $sSection => $aSection) {
+            foreach ($aParsed as $sSection => $aSection) {
+                switch ($sSection) {
+                    case 'Genes';
+                    case 'Transcripts':
+                    case 'Columns':
+                    case 'Diseases':
+                    case 'Individuals':
+                    case 'Phenotypes':
+                    case 'Screenings':
+                    case 'Variants_On_Genome':
+                    case 'Variants_On_Transcripts':
+                        $bUpdate = false;
+                        foreach ($aSection['data'] as $key => $aData) {
+                            // In the section transcript the 'todo' is set to '' when an variant_on_transcript is changed.
+                            // Therefore we have to check if it is set to 'update'.
+                            if ($aData['todo'] == 'update' && $aData['update_changes']) {
+                                // We only need to update the changed fields that should not be ignoreddat
+                                // So therefore we need to get rid of the ignore fields with value true.
+                                foreach ($aData['update_changes'] as $keyField => $aFieldChanged) {
+                                    if ($aFieldChanged['ignore'] === true) {
+                                        unset($aParsed[$sSection]['data'][$key]['update_changes'][$keyField]);
+                                        // We dont want to include the changed fields that should be ignored in the counter $nDataTotal.
+                                        continue;
+                                    }
+                                }
+                                $nDataTotal ++;
+                                $bUpdate = true;
+                            }
+                        }
+			// The string $sSectionUpdated is used for a message to inform users which sections are updated.
+                        if ($bUpdate && !isset($sSectionUpdated)) {
+                            $sSectionUpdated = $sSection;
+                        } elseif ($bUpdate) {
+                            $sSectionUpdated .= ', ' . $sSection;
+                        }
+                }
+            }
         }
         $_BAR[0]->setProgress(100); // To make sure we're at 100% (some errors skip the lovd_endLine()).
 
@@ -1737,7 +1749,6 @@ if (POST) {
             $bError = false;
             $aDone = array();
             $nDone = 0;
-            $aGenes = array();
             $_DB->beginTransaction();
 
             foreach ($aParsed as $sSection => $aSection) {
@@ -1756,6 +1767,11 @@ if (POST) {
 
                     if ($aData['todo'] == 'update') {
                         $aSection['object']->updateEntry($nID, $aData, array_keys($aData['update_changes']));
+                        if ($sSection != 'Variants_On_Transcripts') {
+                            $aSection['object']->updateEntry($nID, $aData, array('edited_date', 'edited_by'));
+                        }
+                        //These updated ids are used to determine which genes are updated.
+                        $aParsed[$sSection]['updatedIDs'][] = $aData['id'];
                         $aDone[$sSection] ++;
                         $nDone ++;
                         $_BAR[1]->setProgress(($nEntry/$nDataTotal)*100);
@@ -1802,10 +1818,11 @@ if (POST) {
                             }
                             if ($sSection == 'Variants_On_Transcripts') {
                                 $aData['id'] = lovd_findImportedID('Variants_On_Genome', $aData['variantid']);
-                                $aGenes[] = $aParsed['Transcripts']['data'][(int) $aData['transcriptid']]['geneid'];
                             }
                             $nNewID = $aSection['object']->insertEntry($aData, $aFields);
                             $aParsed[$sSection]['data'][$nID]['newID'] = $nNewID;
+                            //These updated ids are used to determine which genes are updated.
+                            $aParsed[$sSection]['updatedIDs'][] = $nNewID;
 
                             if ($sSection == 'Diseases') {
                                 // New diseases need to have the default custom columns enabled.
@@ -1831,6 +1848,14 @@ if (POST) {
                             }
                             if (isset($aData['variantid'])) {
                                 $aData['variantid'] = lovd_findImportedID('Variants_On_Genome', $aData['variantid']);
+                            }
+                            if ($sSection == 'Screenings_To_Genes') {
+                                //These updated ids are used to determine which genes are updated. We only need the screeningid to check via s2v-VOT-transcripts
+                                $aParsed[$sSection]['updatedIDs'][] = $aData['screeningid'];
+                            }
+                            if ($sSection == 'Screenings_To_Variants') {
+                                //These updated ids are used to determine which genes are updated. We only need the variantid to check via VOT-transcripts
+                                $aParsed[$sSection]['updatedIDs'][] = $aData['variantid'];
                             }
                             $sSQL = 'INSERT INTO ' . constant($aSection['table_name']) . ' (';
                             $aSQL = array();
@@ -1968,6 +1993,66 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             }
             if (!$bError) {
                 $_DB->commit();
+                // Determine which gene data is effected. The $aGenes array is needed for the function lovd_setUpdatedDate().
+                // This function sets the field updated date in genes.
+                $aGenes = array();
+                foreach ($aParsed as $sSection => $aSection) {
+                    $aTempGenes = array();
+                    if (isset($aSection['updatedIDs'])) {
+                        switch ($sSection) {
+                            case 'Phenotypes':
+                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) ' .
+                                                        'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                                        'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (p.individualid = s.individualid) ' .
+                                                        'WHERE p.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                break;
+                            case 'Individuals':
+                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) ' .
+                                                        'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                                        'WHERE s.individualid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                break;
+                            case 'Screenings_To_Genes':
+                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) ' .
+                                                        'WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                break;
+                            case 'Screenings':
+                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) ' .
+                                                        'WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                break;
+                            case 'Screenings_To_Variants':
+                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                                          'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                          'WHERE vot.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                break;
+                            case 'Variants_On_Genome':
+                            case 'Variants_On_Transcripts':
+                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                          'WHERE vot.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                break;
+                            case 'Transcripts':
+                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                                          'WHERE t.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                break;
+                            default:
+                                break;
+                        }
+                        if (!empty($aGenes)) {
+                            $aGenes = array_merge($aGenes, $aTempGenes);
+                        } else {
+                            $aGenes = $aTempGenes;
+                        }
+                    }
+                }
+
                 if ($sMode == 'update') {
                     $_BAR[1]->setMessage('Done importing! <BR> The following sections are modified and updated in the database: ' . $sSectionUpdated .'.', 'done');
                 } else {

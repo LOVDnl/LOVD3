@@ -298,12 +298,12 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Diseases, line 27): There is already a disease with disease name isovaleric acidemia. This disease is not imported! *</td>
+	<td>*Warning (Diseases, line 27): There is already a disease with disease name isovaleric acidemia and/or OMIM ID 243500. This disease is not imported!*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Diseases, line 29): There is already a disease with disease name isovaleric acidemia. This disease is not imported! *</td>
+	<td>*Warning (Diseases, line 29): There is already a disease with disease name isovaleric acidemia and/or OMIM ID 243500. This disease is not imported!*</td>
 	<td></td>
 </tr>
 <tr>
