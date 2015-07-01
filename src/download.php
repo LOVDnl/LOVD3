@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2015-05-01
+ * Modified    : 2015-07-01
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -340,18 +340,20 @@ foreach ($aObjectsToBeFiltered as $sObject) {
 
     // Build the query.
     // Ugly hack: we will change $sTable for the VOT to a string that joins VOG such that we can apply filters.
+    // We'll add table alias 't' everywhere to make sure the SELECT * doesn't take data from both tables, if we're using two tables here.
+    //   VOG values can overwrite VOT values (effectid).
     if ($sObject == 'Variants_On_Transcripts') {
-        $sTable = TABLE_VARIANTS_ON_TRANSCRIPTS . ' INNER JOIN ' . TABLE_VARIANTS . ' USING (id)';
+        $sTable = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS . ' USING (id)';
     } elseif ($sObject == 'Columns') {
-        $sTable = TABLE_COLS;
+        $sTable = TABLE_COLS . ' AS t';
     } else {
-        $sTable = @constant('TABLE_' . strtoupper($sObject));
+        $sTable = @constant('TABLE_' . strtoupper($sObject)) . ' AS t';
         if (!$sTable) {
             die('Error: Could not find data table for object ' . $sObject . "\r\n");
         }
     }
     // Store in data array.
-    $aObjects[$sObject]['query'] = 'SELECT * FROM ' . $sTable . (!$sWHERE? '' : ' WHERE ' . $sWHERE) . ' ORDER BY ' . (empty($aSettings['order_by'])? 'id' : $aSettings['order_by']);
+    $aObjects[$sObject]['query'] = 'SELECT t.* FROM ' . $sTable . (!$sWHERE? '' : ' WHERE ' . $sWHERE) . ' ORDER BY ' . (empty($aSettings['order_by'])? 'id' : $aSettings['order_by']);
     $aObjects[$sObject]['args']  = $aArgs;
 
     // If prefetch is requested, request data right here. We will then loop through the results to create the filters for the other objects.

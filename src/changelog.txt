@@ -47,6 +47,8 @@
  * Update via an import is available. Managers and higher are allowed to update
    fields via the import. Per line one field can be changed. Curators can run a
    simulate update import.
+ * Fixed bug; When downloading variant data, the given Variant_On_Transcripts
+   effectid had been overwritten in the file by the Variants_On_Genome effectid.
 
 
 /**************************
