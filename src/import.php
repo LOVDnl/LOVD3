@@ -1775,7 +1775,7 @@ if (POST) {
                         $aDone[$sSection] ++;
                         $nDone ++;
                         $_BAR[1]->setProgress(($nEntry/$nDataTotal)*100);
-    					continue;
+                        continue;
                     }
 
                     switch ($sSection) {
@@ -1850,11 +1850,11 @@ if (POST) {
                                 $aData['variantid'] = lovd_findImportedID('Variants_On_Genome', $aData['variantid']);
                             }
                             if ($sSection == 'Screenings_To_Genes') {
-                                //These updated ids are used to determine which genes are updated. We only need the screeningid to check via s2v-VOT-transcripts
+                                //These updated ids are used to determine which genes are updated. We only need the screeningid to check via s2v-VOG-VOT-transcripts
                                 $aParsed[$sSection]['updatedIDs'][] = $aData['screeningid'];
                             }
                             if ($sSection == 'Screenings_To_Variants') {
-                                //These updated ids are used to determine which genes are updated. We only need the variantid to check via VOT-transcripts
+                                //These updated ids are used to determine which genes are updated. We only need the variantid to check via VOG-VOT-transcripts
                                 $aParsed[$sSection]['updatedIDs'][] = $aData['variantid'];
                             }
                             $sSQL = 'INSERT INTO ' . constant($aSection['table_name']) . ' (';
@@ -2003,40 +2003,41 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                             case 'Phenotypes':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                                         'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) ' .
+                                                        'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
                                                         'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
-                                                        'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (p.individualid = s.individualid) ' .
-                                                        'WHERE p.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                                        'INNER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i.id = s.individualid) ' .
+                                                        'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (p.individualid = i.id) ' .
+                                                        'WHERE vog.statusid >= ' . STATUS_MARKED .
+                                                        ' AND i.statusid >= ' . STATUS_MARKED .
+                                                        ' AND p.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Individuals':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                                         'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) ' .
+                                                        'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
                                                         'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
-                                                        'WHERE s.individualid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                                        'WHERE vog.statusid >= ' . STATUS_MARKED . ' '.
+                                                        ' AND s.individualid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Screenings_To_Genes':
-                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) ' .
-                                                        'WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
-                                break;
                             case 'Screenings':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                                         'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) ' .
-                                                        'WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                                        'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                                        'WHERE vog.statusid >= ' . STATUS_MARKED .
+                                                        ' AND s2v.screeningid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Screenings_To_Variants':
-                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                                          'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                          'WHERE vot.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
-                                break;
                             case 'Variants_On_Genome':
                             case 'Variants_On_Transcripts':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                          'WHERE vot.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                        'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                                        'WHERE vog.statusid >= ' . STATUS_MARKED .
+                                                        ' AND vog.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Transcripts':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .

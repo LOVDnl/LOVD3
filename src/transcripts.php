@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2014-07-25
- * For LOVD    : 3.0-11
+ * Modified    : 2015-07-01
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -386,6 +387,15 @@ if (ACTION == 'create') {
                 if (count($aSuccessTranscripts)) {
                     lovd_writeLog('Event', LOG_EVENT, 'Transcript information entries successfully added to gene ' . $zData['gene']['id'] . ' - ' . $zData['gene']['name']);
                 }
+
+                // Get genes which are linked to the added transcripts.
+                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                      'WHERE t.id_ncbi IN (?' . str_repeat(', ?', count($aSuccessTranscripts) - 1) . ')', $aSuccessTranscripts)->fetchAllColumn();
+                if ($aGenes) {
+                    $aGenes = array_unique($aGenes);
+                    // Change updated date for genes
+                    lovd_setUpdatedDate($aGenes);
+                }
             }
 
             unset($_SESSION['work'][$sPathBase][$_POST['workID']]);
@@ -487,6 +497,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
             $_DATA->updateEntry($nID, $_POST, $aFields);
 
+            // Get genes which are linked to the modified transcrip.
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                  'WHERE t.id = ?', array($nID))->fetchAllColumn();
+            if ($aGenes) {
+                $aGenes = array_unique($aGenes);
+                // Change updated date for genes
+                lovd_setUpdatedDate($aGenes);
+            }
+
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited transcript information entry #' . $nID . ' (' . $zData['geneid'] . ')');
 
@@ -571,8 +590,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
         if (!lovd_error()) {
             // Query text.
+            // Get genes which are linked to the modified transcript. This is done before the delete, else we kan not find the link.
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                  'WHERE t.id = ?', array($nID))->fetchAllColumn();
             // This also deletes the entries in variants.
             $_DATA->deleteEntry($nID);
+            if ($aGenes) {
+                $aGenes = array_unique($aGenes);
+                // Change updated date for genes
+                lovd_setUpdatedDate($aGenes);
+            }
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Deleted transcript information entry ' . $nID . ' - ' . $zData['geneid'] . ' (' . $zData['name'] . ')');

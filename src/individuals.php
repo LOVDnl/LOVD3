@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2015-03-11
- * For LOVD    : 3.0-13
+ * Modified    : 2015-07-01
+ * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -207,6 +207,22 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
 
+            // Get genes which are modified only when individual and variant status is marked or puplic.
+            if ($_POST['statusid']>=STATUS_MARKED){
+                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                    'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                    'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                    'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                    'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                    'WHERE vog.statusid >= ? ' .
+                                    'AND s.individualid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
+                if ($aGenes) {
+                    $aGenes = array_unique($aGenes);
+                    // Change updated date for genes
+                    lovd_setUpdatedDate($aGenes);
+                }
+            }
+
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Created individual information entry ' . $nID);
 
@@ -353,6 +369,22 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             // FIXME: implement versioning in updateEntry!
             $_DATA->updateEntry($nID, $_POST, $aFields);
+
+            // Get genes which are modified only when individual and variant status is marked or puplic.
+            if ($zData['statusid']>=STATUS_MARKED || $_POST['statusid']>=STATUS_MARKED){
+                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                    'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                    'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                    'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                    'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                    'WHERE vog.statusid >= ? ' .
+                                    'AND s.individualid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
+                if ($aGenes) {
+                    $aGenes = array_unique($aGenes);
+                    // Change updated date for genes
+                    lovd_setUpdatedDate($aGenes);
+                }
+            }
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited individual information entry ' . $nID);
@@ -509,7 +541,24 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                 }
             }
 
+            // Get genes which are modified only when individual and variant status is marked or puplic.
+            if ($_POST['statusid']>=STATUS_MARKED){
+                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                    'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                    'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                    'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                    'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                    'WHERE vog.statusid >= ? ' .
+                                    'AND s.individualid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
+            }
+
             $_DATA->deleteEntry($nID);
+
+            if ($_POST['statusid']>=STATUS_MARKED && $aGenes) {
+                $aGenes = array_unique($aGenes);
+                // Change updated date for genes
+                lovd_setUpdatedDate($aGenes);
+            }
 
             $_DB->commit();
 
