@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2015-06-26
+ * Modified    : 2015-07-01
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -390,8 +390,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     {
         // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
         global $_DB;
+
         list($nID, $nTranscriptID) = explode('|', $sID);
-        if (!trim($nID) && !trim($nTranscriptID)) {
+        if (!trim($nID) || !trim($nTranscriptID)) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive ID');
         } elseif (!is_array($aData) || !count($aData)) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive data array');

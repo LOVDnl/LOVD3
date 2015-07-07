@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-06-17
+ * Modified    : 2015-07-01
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -305,7 +305,7 @@ class LOVD_Gene extends LOVD_Object {
 
         // References sequences (genomic and transcripts).
         if (lovd_getProjectFile() == '/import.php') {
-            $aSelectRefseqGenomic = array($zData['refseq_genomic']);
+            $aSelectRefseqGenomic = array_combine(array($zData['refseq_genomic']), array($zData['refseq_genomic']));
         } else {
             $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
         }
