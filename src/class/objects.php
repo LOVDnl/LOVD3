@@ -248,7 +248,11 @@ class LOVD_Object {
                     foreach ($Val as $sValue) {
                         $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
                         if (!in_array($sValue, $aOptions)) {
-                            lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                            if (lovd_getProjectFile() == '/import.php') {
+                                lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aOptions) . '\'.');
+                            } else {
+                                lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                            }
                         }
                     }
                 }
