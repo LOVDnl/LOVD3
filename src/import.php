@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-07-07
+ * Modified    : 2015-07-08
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -401,8 +401,11 @@ if (POST) {
                             // The following columns are allowed for update: chrom_band, imprinting, reference, url_homepage, url_external, allow_download, allow_index_wiki, show_hgmd, show_genecards,
                             // show_genetests, note_index, note_listing, refseq, refseq_url, disclaimer, disclaimer_text, header, header_align,
                             // footer, footer_align.
-                            require_once ROOT_PATH . 'class/object_genes.php';
-                            $aSection['object'] = new LOVD_Gene();
+                            if ($sMode == 'update') {
+                                // Not allowed to be inserted yet, so we don't want checkFields() to be run like that.
+                                require_once ROOT_PATH . 'class/object_genes.php';
+                                $aSection['object'] = new LOVD_Gene();
+                            }
                             $aSection['update_columns_not_allowed'] =
                                 array_merge(
                                     $aSection['update_columns_not_allowed'],
@@ -421,8 +424,11 @@ if (POST) {
                             break;
                         case 'Transcripts':
                             // The following columns are allowed for update: id_ensembl, id_protein_ensembl, id_protein_uniprot.
-                            require_once ROOT_PATH . 'class/object_transcripts.php';
-                            $aSection['object'] = new LOVD_Transcript();
+                            if ($sMode == 'update') {
+                                // Not allowed to be inserted yet, so we don't want checkFields() to be run like that.
+                                require_once ROOT_PATH . 'class/object_transcripts.php';
+                                $aSection['object'] = new LOVD_Transcript();
+                            }
                             $aSection['update_columns_not_allowed'] =
                                 array_merge(
                                     $aSection['update_columns_not_allowed'],
@@ -1031,7 +1037,7 @@ if (POST) {
                             unset($_ERROR['messages'][$nKey]);
                             $_ERROR['messages'] = array_values($_ERROR['messages']);
                         }
-                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (!empty($aLine['id_omim'])?' and/or OMIM ID ' . $aLine['id_omim']:'') . '. This disease is not imported! <BR>', 'done');
+                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (empty($aLine['id_omim'])? '' : ' and/or OMIM ID ' . $aLine['id_omim']) . '. This disease is not imported! <BR>', 'done');
                         $nWarnings ++;
                         $aLine['newID'] = $nDiseaseIdOmim[0];
                         $aLine['todo'] = 'map';
@@ -1648,12 +1654,15 @@ if (POST) {
 
                     // Updating?
                     if ($aData['todo'] == 'update') {
-                        $aSection['object']->updateEntry($nID, $aData, array_keys($aData['update_changes']));
+                        $aFieldsToUpdate = array_keys($aData['update_changes']);
                         if ($sSection != 'Variants_On_Transcripts') {
-                            $aSection['object']->updateEntry($nID, $aData, array('edited_date', 'edited_by'));
+                            $aFieldsToUpdate = array_merge($aFieldsToUpdate, array('edited_by', 'edited_date'));
                         }
-                        // These updated IDs are used to determine which genes are updated.
-                        $aParsed[$sSection]['updatedIDs'][] = $aData['id'];
+                        $aSection['object']->updateEntry($nID, $aData, $aFieldsToUpdate);
+                        if (isset($aData['statusid']) && $aData['statusid'] >= LEVEL_MARKED) {
+                            // These updated IDs are used to determine which genes are updated.
+                            $aParsed[$sSection]['updatedIDs'][] = $aData['id'];
+                        }
                         $aDone[$sSection] ++;
                         $nDone ++;
                         $_BAR[1]->setProgress(($nEntry/$nDataTotal)*100);
@@ -1704,8 +1713,10 @@ if (POST) {
                             }
                             $nNewID = $aSection['object']->insertEntry($aData, $aFields);
                             $aParsed[$sSection]['data'][$nID]['newID'] = $nNewID;
-                            //These updated ids are used to determine which genes are updated.
-                            $aParsed[$sSection]['updatedIDs'][] = $nNewID;
+                            if (isset($aData['statusid']) && $aData['statusid'] >= LEVEL_MARKED) {
+                                // These updated IDs are used to determine which genes are updated.
+                                $aParsed[$sSection]['updatedIDs'][] = $nNewID;
+                            }
 
                             if ($sSection == 'Diseases') {
                                 // New diseases need to have the default custom columns enabled.
@@ -1733,12 +1744,12 @@ if (POST) {
                                 $aData['variantid'] = lovd_findImportedID('Variants_On_Genome', $aData['variantid']);
                             }
                             if ($sSection == 'Screenings_To_Genes') {
-                                //These updated ids are used to determine which genes are updated. We only need the screeningid to check via s2v-VOG-VOT-transcripts
+                                // These updated IDs are used to determine which genes are updated. We only need the screeningid to check via s2v-VOG-VOT-transcripts.
                                 $aParsed[$sSection]['updatedIDs'][] = $aData['screeningid'];
                             }
                             if ($sSection == 'Screenings_To_Variants') {
-                                //These updated ids are used to determine which genes are updated. We only need the variantid to check via VOG-VOT-transcripts
-                                $aParsed[$sSection]['updatedIDs'][] = $aData['variantid'];
+                                // These updated IDs are used to determine which genes are updated. We only need the variantid to check via VOG-VOT-transcripts.
+                                $aParsed[$sSection]['updatedIDs'][] = $aData['screeningid'];
                             }
                             $sSQL = 'INSERT INTO ' . constant($aSection['table_name']) . ' (';
                             $aSQL = array();
@@ -1876,6 +1887,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
             }
             if (!$bError) {
                 $_DB->commit();
+
                 // Determine which gene data is effected. The $aGenes array is needed for the function lovd_setUpdatedDate().
                 // This function sets the field updated date in genes.
                 $aGenes = array();
@@ -1885,42 +1897,43 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                         switch ($sSection) {
                             case 'Phenotypes':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
-                                                        'INNER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i.id = s.individualid) ' .
-                                                        'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (p.individualid = i.id) ' .
-                                                        'WHERE vog.statusid >= ' . STATUS_MARKED .
-                                                        ' AND i.statusid >= ' . STATUS_MARKED .
-                                                        ' AND p.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                                          'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                          'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                                          'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                                          'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                                          'INNER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i.id = s.individualid) ' .
+                                                          'INNER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (p.individualid = i.id) ' .
+                                                          'WHERE vog.statusid >= ' . STATUS_MARKED .
+                                                          ' AND i.statusid >= ' . STATUS_MARKED .
+                                                          ' AND p.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Individuals':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
-                                                        'WHERE vog.statusid >= ' . STATUS_MARKED . ' '.
-                                                        ' AND s.individualid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                                          'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                          'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                                          'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                                          'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                                          'WHERE vog.statusid >= ' . STATUS_MARKED . ' ' .
+                                                          ' AND s.individualid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Screenings_To_Genes':
                             case 'Screenings':
-                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                                        'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                                        'WHERE vog.statusid >= ' . STATUS_MARKED .
-                                                        ' AND s2v.screeningid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
-                                break;
                             case 'Screenings_To_Variants':
+                                // FIXME: A change in screening should actually go up to individual (checking its status), and then down to genes.
+                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                                          'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                          'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                                          'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                                          'WHERE vog.statusid >= ' . STATUS_MARKED .
+                                                          ' AND s2v.screeningid IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                break;
                             case 'Variants_On_Genome':
                             case 'Variants_On_Transcripts':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                                        'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                                        'WHERE vog.statusid >= ' . STATUS_MARKED .
-                                                        ' AND vog.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
+                                                          'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                                          'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                                          'WHERE vog.statusid >= ' . STATUS_MARKED .
+                                                          ' AND vog.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Transcripts':
                                 $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
@@ -1955,7 +1968,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 $aGenes = array_unique($aGenes);
                 $nGenes = count($aGenes);
                 lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries' . (!$aGenes? '' : ' (' . ($nGenes > 100? $nGenes . ' genes' : implode(', ', $aGenes)) . ')') . '.');
-                lovd_setUpdatedDate($aGenes); // FIXME; regardless of variant status... oh, well...
+                lovd_setUpdatedDate($aGenes);
             }
             // FIXME: Why is this not empty?
             //var_dump(implode("\n", $aData));
