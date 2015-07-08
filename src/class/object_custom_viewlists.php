@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2015-06-30
+ * Modified    : 2015-07-08
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -260,8 +260,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) SEPARATOR ";;") AS __owner';
-                    // dsg.id GROUP_CONCAT is ascending ordered. This is done for the color marking.
-                    // In the prepare data the lowest var_statusid is used to determine the coloring.
+                    // dsg.id GROUP_CONCAT is ascendingly ordered. This is done for the color marking.
+                    // In prepareData() the lowest var_statusid is used to determine the coloring.
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id ASC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'COUNT(`VariantOnTranscript/DNA`) AS vot_reported';
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
@@ -681,17 +681,17 @@ class LOVD_CustomViewList extends LOVD_Object {
         $zData = parent::prepareData($zData, $sView);
 
         // Mark all statusses from Marked and lower; Marked will be red, all others gray.
-        // In the VariantOnTranscriptUnique view the var_statusid can contain multiple id's, these id's are separated by a ",".
-        // Php always takes the first element of a string when a string and an integer are compared.
-        // But to avoid problems in the future, the first element is substracted and compared.
+        // In the VariantOnTranscriptUnique view the var_statusid can contain multiple IDs, these IDs are separated by a ",".
+        // PHP always takes the first integer-like part of a string when a string and an integer are compared.
+        // But to avoid problems in the future, only the first character is compared.
         $bVarStatus = (!empty($zData['var_statusid']) && substr($zData['var_statusid'], 0, 1) <= STATUS_MARKED);
         $bIndStatus = (!empty($zData['ind_statusid']) && $zData['ind_statusid'] <= STATUS_MARKED);
 
         if ($bVarStatus && $bIndStatus) {
-            $nStatus = min($zData['var_statusid'], $zData['ind_statusid']);
+            $nStatus = min(substr($zData['var_statusid'], 0, 1), $zData['ind_statusid']);
             $zData['class_name'] = ($nStatus == STATUS_MARKED? 'marked' : 'del');
         } elseif ($bVarStatus) {
-            $zData['class_name'] = ($zData['var_statusid'] == STATUS_MARKED? 'marked' : 'del');
+            $zData['class_name'] = (substr($zData['var_statusid'], 0, 1) == STATUS_MARKED? 'marked' : 'del');
         } elseif ($bIndStatus) {
             $zData['class_name'] = ($zData['ind_statusid'] == STATUS_MARKED? 'marked' : 'del');
         }
