@@ -1,0 +1,216 @@
+\documentclass[a4paper,oneside,openany,12pt]{memoir}
+\usepackage[T1]{fontenc} % To get different font encoding, thus allow \guillemotright.
+% Undo bad "side effects" of T1 font encoding (ugly font && chapters in small caps).
+% Note that it's now not shown in small caps simply because the selected font does not support it.
+\usepackage{lmodern}
+\usepackage{graphicx} % For images
+\graphicspath{{../gfx/}}
+%\usepackage[english]{babel} % For correct word hyphenating.
+\usepackage{color}    % For colored links and boxes.
+\usepackage[dvipsnames]{xcolor}
+\definecolor{LOVDdark}{HTML}{224488}
+\definecolor{LOVDlight}{HTML}{F0F3FF}
+\usepackage{float}    % For custom floats (the info boxes).
+\usepackage{wrapfig}  % For floating boxes meant for small notes.
+% When loaded before float, doesn't work.
+% For figures, maybe not do an frame but a box without border and with background color?
+\usepackage[format=hang,font=footnotesize,labelfont=bf,skip=5pt]{caption} % To format captions.
+\usepackage{hyperref} % For URLs.
+\usepackage{tikz}
+\usepackage{xr}
+
+% Include all of this in a separate file!
+\newcommand{\HRule}{\rule{\linewidth}{1mm}} % Doet height (zie style) hetzelfde?
+\newcommand{\institute}[1]{\gdef\inst{#1}}  % Beamer supplies \institute. We want that, too.
+\newcommand{\inst}{}                        % Beamer supplies \institute. We want that, too.
+\newcommand{\funding}[1]{\gdef\fund{#1}}    % Provide funding line.
+\newcommand{\fund}{}                        % Provide funding line.
+\newcommand{\setcreativecommons}[1]{\gdef\creativecommons{#1}}	% Provide creative commons line.
+\newcommand{\creativecommons}{}                       			 		% Provide creative commons line.
+\newcommand{\setLOVDversion}[1]{\gdef\LOVDversion{#1}} % Provide the current LOVD version.
+\newcommand{\LOVDversion}{}                            % Provide the current LOVD version.
+\newcommand{\setpointercolor}[1]{\gdef\pointercolor{#1}}%
+\newcommand{\pointercolor}{}  													%
+\newcommand{\setpointerwidth}[1]{\gdef\pointerwidth{#1}}%
+\newcommand{\pointerwidth}{}  													%
+\newcommand{\setgrid}[1]{\gdef\drawgrid{#1}}						% Used for drawing a grid over a figure
+\newcommand{\drawgrid}{} 																%
+\newcommand{\setmanualversion}[1]{\gdef\manualversion{#1}} 	% Provide the current manual version.
+\newcommand{\manualversion}{}                            		% Provide the current manual version.
+
+\setlrmarginsandblock{2cm}{2cm}{*} % LEFT-RIGHT
+\setulmarginsandblock{2cm}{2cm}{*} % TOP-BOTTOM
+\checkandfixthelayout % Without this, nothing works. Took me ages before I found out.
+\fixpdflayout % Not sure if we need this, but it was recommended someplace.
+
+
+
+%%%%% PAGE HEADERS AND FOOTERS %%%%%
+\makepagestyle{LOVD}
+
+% Because we don't have odd or even pages, we only need to define odd pages.
+\makeoddhead{LOVD}{\normalfont\leftmark}{}{\normalfont\rightmark}
+\makeheadrule{LOVD}{\textwidth}{\normalrulethickness}
+\makeoddfoot{LOVD}{}{\normalfont\thepage}{}
+\makefootrule{LOVD}{\textwidth}{\normalrulethickness}{\footruleskip}
+
+% Style "plain" is called from chapters. We want chapters to have a footer as well.
+\makeoddfoot{plain}{}{\normalfont\thepage}{}
+\makefootrule{plain}{\textwidth}{\normalrulethickness}{\footruleskip}
+
+% Additional changes:
+\makepsmarks{LOVD}{%
+  \nouppercaseheads
+
+  \createmark{chapter}{left}{shownumber}{}{.\space} % (\leftmark) number, followed by a . and a space.
+  \createmark{section}{right}{nonumber}{}{.\space} % (\rightmark) no number, (useless: followed by a . and a space).
+  % Change "shownumber" to "nonumber" if you don't want the chapter/section number displayed at the header.
+}
+% Activate your new pagestyle
+\pagestyle{LOVD}
+
+
+
+%%%%% TITLE PAGE FORMAT %%%%%
+\setlength{\droptitle}{-3cm} % Moves the title (logo, title, authors etc) 3cm up.
+\pretitle{
+  \begin{center}
+  	\includegraphics[width=16cm]{logo.jpg}
+    \vskip 1.5cm
+   	\includegraphics[width=3cm]{hgvs.png} \hspace{1.5cm}
+		\includegraphics[width=3cm]{human_variome.png} \hspace{1.5cm}
+    \includegraphics[width=3cm]{gen2phen.jpg}
+    \vskip 3cm
+    \HRule\par\HUGE\bfseries\sffamily} %% Need proper font!
+\posttitle{\par\HRule\end{center}\vskip 1cm}
+\preauthor{\flushright \vskip12em}
+\postauthor{\par\inst\par\vskip 5mm}
+\predate{\hfill  Last updated: }
+\postdate{\par\vskip 5mm\hfill Version: \manualversion 
+	\par\hfill Based on LOVD: \LOVDversion 
+	\par\clearpage \hfill \vskip50em \small \noindent \fund \creativecommons} 
+
+
+
+%%%%% CHAPTER STYLE (CHAPTER HEADS) %%%%%
+\makechapterstyle{LOVD}{%
+  \setlength\beforechapskip{10pt} % A small distance just above the new Chapter title.
+  \setlength\afterchapskip{20pt} % A small distance between the Chapter title and the text.
+  \renewcommand{\chapterheadstart}{\vspace*{\beforechapskip}\hrule height 2pt \medskip} % Nice ruler above the Capter title.
+  \renewcommand{\chapnamefont}{\normalfont\large\scshape} % CHAPTER
+  \renewcommand{\chapnumfont}{\normalfont\huge\bfseries\scshape} % 1
+  \renewcommand{\chaptitlefont}{\normalfont\huge\bfseries\scshape} % e.g. "Introduction"
+  \renewcommand{\printchaptername}{} % Empty text instead of "Chapter".
+                  \renewcommand{\chapternamenum}{ } % Weet niet wat dit anders doet.
+                  \renewcommand{\printchapternum}{\chapnumfont \thechapter} % Weet niet wat dit anders doet.
+  \renewcommand{\afterchapternum}{. } % Just a dot after the Chapter number, no new line.
+  \renewcommand{\afterchaptertitle}{\par\nobreak\medskip\hrule\vskip\afterchapskip} % Nice ruler below the Capter title.
+}
+\chapterstyle{LOVD}
+
+
+
+%%%%% LINK CONFIGURATION %%%%%
+\definecolor{linkblue}{rgb}{0.1, 0, 1}
+\hypersetup{
+  colorlinks,
+  citecolor=linkblue,
+  filecolor=linkblue,
+  linkcolor=linkblue,
+  urlcolor=linkblue
+}
+
+
+
+%%%%% INFOTABLE AND WARNTABLE DEFINITIONS %%%%%
+\newsavebox{\infobox}
+\newlength{\infoboxlength}
+\newlength{\infoboxinnerlength}
+\setlength{\infoboxlength}{\textwidth}
+\addtolength{\infoboxlength}{-2\fboxsep}
+\addtolength{\infoboxlength}{-2\fboxrule}
+\addtolength{\infoboxlength}{-1.7cm} % Manually configured value making sure the whole box doesn't exceed the line width.
+\setlength{\infoboxinnerlength}{\infoboxlength}
+\addtolength{\infoboxinnerlength}{-5pt} % Manually configured value making sure the text doesn't get too near the right border.
+
+%%%%%% DEFINITIONS FOR \FBOX %%%%%%%
+\setlength{\fboxsep}{2pt}%
+\setlength{\fboxrule}{2pt}%
+
+\newenvironment{infotable}
+  {\begin{lrbox}{\infobox}%
+    \begin{minipage}[t]{1.5cm}
+      \centering
+      \vspace{0pt}
+      \includegraphics[width=1cm,height=1cm]{lovd_information.png}
+    \end{minipage}
+   \begin{minipage}[t]{\infoboxlength}\vspace{5pt}\begin{minipage}{\infoboxinnerlength}}
+  {\vspace{6pt}\end{minipage}\end{minipage}\end{lrbox}%
+   \begin{center}
+   \fcolorbox{black}{LOVDlight}{\usebox{\infobox}}
+   \end{center}}
+
+\newenvironment{warntable}
+  {\begin{lrbox}{\infobox}%
+    \begin{minipage}[t]{1.5cm}
+      \centering
+      \vspace{0pt}
+      \includegraphics[width=1cm,height=1cm]{lovd_warning.png}
+    \end{minipage}
+   \begin{minipage}[t]{\infoboxlength}\vspace{5pt}\begin{minipage}{\infoboxinnerlength}}
+  {\vspace{6pt}\end{minipage}\end{minipage}\end{lrbox}%
+   \begin{center}
+   \fcolorbox{black}{LOVDlight}{\usebox{\infobox}}
+   \end{center}}
+
+
+
+%%%%% CONFIGURE LEFTBAR (FRAMED PACKAGE) %%%%%
+% Taken and adapted from http://tex.stackexchange.com/questions/22526/regarding-the-leftbar-environment
+% (thanks, xport & Martin Scharrer)
+% I still don't like the space between the bar and the colorbox (can be removed by taking out the \hspace), but
+% I want that space *inside* the colorbox.
+\renewenvironment{leftbar}[1][\hsize]
+{%
+    \def\FrameCommand
+    {%
+        {\color{LOVDdark}\vrule width 3pt \hspace{5pt}}%
+        \colorbox{LOVDlight}%
+    }%
+    \MakeFramed{\hsize#1\advance\hsize-\width\FrameRestore}%
+}
+{\endMakeFramed}
+
+
+
+%%%%% CONFIGURE IMAGES %%%%%
+\definecolor{shadecolor}{RGB}{240, 243, 255} %F0F3FF
+\setgrid{\draw[help lines,xstep=.05,ystep=.05] (0,0) grid (1,1);
+	\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {0.\x}; }
+	\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {0.\y}; }}
+%\newlength{\imagewidth}
+%\setlength{\imagewidth}{\textwidth}
+%\addtolength{\imagewidth}{-2\FrameSep}
+%\addtolength{\imagewidth}{-2\FrameRule}
+
+%%%%% SETTINGS FOR THE TITLE PAGE %%%%%
+\institute{Leiden University Medical Center}
+\funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
+  (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
+\setcreativecommons{
+	\begin{flushleft}
+
+	\includegraphics[width=3cm]{cc88x31.png} 
+	\vskip1em
+	\noindent This work is licensed under the Creative Commons
+	Attribution-ShareAlike 4.0 International License. 
+	To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+ 	or send a letter to: Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+\end{flushleft}}
+
+
+%%%%% Cross-referencing between different files %%%%%
+\externaldocument[create_gene_]{Create_a_gene_variant_database}
+\externaldocument[curate_gene_]{Curate_a_gene_variant_database}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% NEW MAXIMUM LINE LENGTH (120 char) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

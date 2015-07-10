@@ -1,227 +1,14 @@
-% Requires texlive-latex-recommended and texlive-fonts-recommended packages (Debian, Ubuntu).
-\documentclass[a4paper,oneside,openany,12pt]{memoir}
-\usepackage[T1]{fontenc} % To get different font encoding, thus allow \guillemotright.
-% Undo bad "side effects" of T1 font encoding (ugly font && chapters in small caps).
-% Note that it's now not shown in small caps simply because the selected font does not support it.
-\usepackage{lmodern}
-\usepackage{graphicx} % For images
-\graphicspath{{../gfx/}}
-%\usepackage[english]{babel} % For correct word hyphenating.
-\usepackage{color}    % For colored links and boxes.
-\definecolor{LOVDdark}{RGB}{34, 68, 136} %224488 % Why does the "HTML" color model not work?
-\definecolor{LOVDlight}{RGB}{240, 243, 255} %F0F3FF % Why does the "HTML" color model not work?
-% For using html color in stead of rgb, use:
-	%\usepackage[dvipsnames]{xcolor}
-	%\definecolor{LOVDdark}{HTML}{224488}
-	%\definecolor{LOVDlight}{HTML}{F0F3FF}
-\usepackage{float}    % For custom floats (the info boxes).
-\usepackage{wrapfig}  % For floating boxes meant for small notes.
-% When loaded before float, doesn't work.
-% For figures, maybe not do an frame but a box without border and with background color?
-\usepackage[format=hang,font=footnotesize,labelfont=bf,skip=5pt]{caption} % To format captions.
-\usepackage{hyperref} % For URLs.
-
+%Requires texlive-latex-recommended and texlive-fonts-recommended packages (Debian, Ubuntu).
+\input{config.tex}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% NEW MAXIMUM LINE LENGTH (120 char) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Include all of this in a separate file!
-\newcommand{\HRule}{\rule{\linewidth}{1mm}} % Doet height (zie style) hetzelfde?
-\newcommand{\institute}[1]{\gdef\inst{#1}}  % Beamer supplies \institute. We want that, too.
-\newcommand{\inst}{}                        % Beamer supplies \institute. We want that, too.
-\newcommand{\funding}[1]{\gdef\fund{#1}}    % Provide funding line.
-\newcommand{\fund}{}                        % Provide funding line.
-\newcommand{\setLOVDversion}[1]{\gdef\LOVDversion{#1}} % Provide the current LOVD version.
-\newcommand{\LOVDversion}{}                            % Provide the current LOVD version.
-
-\setlrmarginsandblock{2cm}{2cm}{*} % LEFT-RIGHT
-\setulmarginsandblock{2cm}{2cm}{*} % TOP-BOTTOM
-\checkandfixthelayout % Without this, nothing works. Took me ages before I found out.
-\fixpdflayout % Not sure if we need this, but it was recommended someplace.
-
-
-
-%%%%% PAGE HEADERS AND FOOTERS %%%%%
-\makepagestyle{LOVD}
-
-% Because we don't have odd or even pages, we only need to define odd pages.
-\makeoddhead{LOVD}{\normalfont\leftmark}{}{\normalfont\rightmark}
-\makeheadrule{LOVD}{\textwidth}{\normalrulethickness}
-\makeoddfoot{LOVD}{}{\normalfont\thepage}{}
-\makefootrule{LOVD}{\textwidth}{\normalrulethickness}{\footruleskip}
-
-% Style "plain" is called from chapters. We want chapters to have a footer as well.
-\makeoddfoot{plain}{}{\normalfont\thepage}{}
-\makefootrule{plain}{\textwidth}{\normalrulethickness}{\footruleskip}
-
-% Additional changes:
-\makepsmarks{LOVD}{%
-  \nouppercaseheads
-
-  \createmark{chapter}{left}{shownumber}{}{.\space} % (\leftmark) number, followed by a . and a space.
-  \createmark{section}{right}{nonumber}{}{.\space} % (\rightmark) no number, (useless: followed by a . and a space).
-  % Change "shownumber" to "nonumber" if you don't want the chapter/section number displayed at the header.
-
-%  \createplainmark{toc}{both}{\contentsname}
-%  \createplainmark{lof}{both}{\listfigurename}
-%  \createplainmark{lot}{both}{\listtablename}
-%  \createplainmark{bib}{both}{\bibname}
-%  \createplainmark{index}{both}{\indexname}
-%  \createplainmark{glossary}{both}{\glossaryname}
-  % Might want to keep those, see the manual for further information.
-}
-% Activate your new pagestyle
-\pagestyle{LOVD}
-
-
-
-%\newcommand{\maketitle}{%
-%  \vspace*{\droptitle}
-%  \maketitlehooka
-%  {\pretitle \title \posttitle}
-%  \maketitlehookb
-%  {\preauthor \author \postauthor}
-%  \maketitlehookc
-%  {\predate \date \postdate}
-%  \maketitlehookd
-%  \thispagestyle{title}
-%}
-
-
-
-%%%%% TITLE PAGE FORMAT %%%%%
-\setlength{\droptitle}{-3cm} % Moves the title (logo, title, authors etc) 3cm up.
-\pretitle{
-  \begin{center}
-    \includegraphics[width=17cm]{logo.jpg}
-    \vskip 4cm
-    \HRule\par\HUGE\bfseries\sffamily} %% Need proper font!
-\posttitle{\par\HRule\end{center}\vskip 3cm}
-\preauthor{\flushright}
-\postauthor{\par\inst\par\vskip 1cm}
-\predate{\hfill Last updated } % \hfill aligns the rest of the line to the right. \flushright would have done the same.
-\postdate{\par\vskip 2cm \noindent \small \fund}
-
-
-
-%%%%% CHAPTER STYLE (CHAPTER HEADS) %%%%%
-\makechapterstyle{LOVD}{%
-  \setlength\beforechapskip{10pt} % A small distance just above the new Chapter title.
-  \setlength\afterchapskip{20pt} % A small distance between the Chapter title and the text.
-  \renewcommand{\chapterheadstart}{\vspace*{\beforechapskip}\hrule height 2pt \medskip} % Nice ruler above the Capter title.
-  \renewcommand{\chapnamefont}{\normalfont\large\scshape} % CHAPTER
-  \renewcommand{\chapnumfont}{\normalfont\huge\bfseries\scshape} % 1
-  \renewcommand{\chaptitlefont}{\normalfont\huge\bfseries\scshape} % e.g. "Introduction"
-  \renewcommand{\printchaptername}{} % Empty text instead of "Chapter".
-                  \renewcommand{\chapternamenum}{ } % Weet niet wat dit anders doet.
-                  \renewcommand{\printchapternum}{\chapnumfont \thechapter} % Weet niet wat dit anders doet.
-  \renewcommand{\afterchapternum}{. } % Just a dot after the Chapter number, no new line.
-  \renewcommand{\afterchaptertitle}{\par\nobreak\medskip\hrule\vskip\afterchapskip} % Nice ruler below the Capter title.
-}
-\chapterstyle{LOVD}
-
-
-
-%%%%% LINK CONFIGURATION %%%%%
-\definecolor{linkblue}{rgb}{0.1, 0, 1}
-\hypersetup{
-  colorlinks,
-  citecolor=linkblue,
-  filecolor=linkblue,
-  linkcolor=linkblue,
-  urlcolor=linkblue
-}
-
-
-
-% The custom floats.
-%\floatstyle{ruled}
-%\newfloat{infobox}{h!}{floats}
-%\floatname{infobox}{}
-
-%\floatstyle{boxed}
-%\newfloat{notebox}{h!}{floats}
-%\floatname{notebox}{Note:}
-
-% Give all figures a boxed float.
-%\floatstyle{boxed}
-%\restylefloat{figure}
-
-
-
-%%%%% INFOTABLE AND WARNTABLE DEFINITIONS %%%%%
-\newsavebox{\infobox}
-\newlength{\infoboxlength}
-\newlength{\infoboxinnerlength}
-\setlength{\infoboxlength}{\textwidth}
-\addtolength{\infoboxlength}{-2\fboxsep}
-\addtolength{\infoboxlength}{-2\fboxrule}
-\addtolength{\infoboxlength}{-1.7cm} % Manually configured value making sure the whole box doesn't exceed the line width.
-\setlength{\infoboxinnerlength}{\infoboxlength}
-\addtolength{\infoboxinnerlength}{-5pt} % Manually configured value making sure the text doesn't get too near the right border.
-
-\newenvironment{infotable}
-  {\begin{lrbox}{\infobox}%
-    \begin{minipage}[t]{1.5cm}
-      \centering
-      \vspace{0pt}
-      \includegraphics[width=1cm,height=1cm]{lovd_information.png}
-    \end{minipage}
-   \begin{minipage}[t]{\infoboxlength}\vspace{5pt}\begin{minipage}{\infoboxinnerlength}}
-  {\vspace{6pt}\end{minipage}\end{minipage}\end{lrbox}%
-   \begin{center}
-   \fcolorbox{black}{LOVDlight}{\usebox{\infobox}}
-   \end{center}}
-
-\newenvironment{warntable}
-  {\begin{lrbox}{\infobox}%
-    \begin{minipage}[t]{1.5cm}
-      \centering
-      \vspace{0pt}
-      \includegraphics[width=1cm,height=1cm]{lovd_warning.png}
-    \end{minipage}
-   \begin{minipage}[t]{\infoboxlength}\vspace{5pt}\begin{minipage}{\infoboxinnerlength}}
-  {\vspace{6pt}\end{minipage}\end{minipage}\end{lrbox}%
-   \begin{center}
-   \fcolorbox{black}{LOVDlight}{\usebox{\infobox}}
-   \end{center}}
-
-
-
-%%%%% CONFIGURE LEFTBAR (FRAMED PACKAGE) %%%%%
-% Taken and adapted from http://tex.stackexchange.com/questions/22526/regarding-the-leftbar-environment
-% (thanks, xport & Martin Scharrer)
-% I still don't like the space between the bar and the colorbox (can be removed by taking out the \hspace), but
-% I want that space *inside* the colorbox.
-\renewenvironment{leftbar}[1][\hsize]
-{%
-    \def\FrameCommand
-    {%
-        {\color{LOVDdark}\vrule width 3pt \hspace{5pt}}%
-        \colorbox{LOVDlight}%
-    }%
-    \MakeFramed{\hsize#1\advance\hsize-\width\FrameRestore}%
-}
-{\endMakeFramed}
-
-
-
-%%%%% CONFIGURE IMAGES %%%%%
-\definecolor{shadecolor}{RGB}{240, 243, 255} %F0F3FF
-%\newlength{\imagewidth}
-%\setlength{\imagewidth}{\textwidth}
-%\addtolength{\imagewidth}{-2\FrameSep}
-%\addtolength{\imagewidth}{-2\FrameRule}
-
-
-
-
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-13}
-\title{LOVD 3.0 user manual \\\vskip 1cm Build \LOVDversion}
+\setLOVDversion{3.0-14}
+\setmanualversion{1.01}
+\title{LOVD 3.0 user manual \\\vskip 0.2cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
-\institute{Leiden University Medical Center}
-\date{2015-06-16} % I guess it's easier to use this as a "Last modified" column. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\funding{LOVD has received funding from the European Community's Seventh Framework Programme\\
-  (FP7/2007-2013) under grant agreement no 200754 - the GEN2PHEN project.}
+\setpointercolor{red}
+\setpointerwidth{9pt}
 
 
 
@@ -2846,6 +2633,7 @@ This way, transcripts are connected to genes.
     \begin{verbatim}
 ### LOVD-version 3000-010 ### Full data download ### To import, do not remove or alter this header ###
 # charset = UTF-8
+# max_errors = 50
 
 ## Genes ## Do not remove or alter this header ##
 "{{id}}"	"{{name}}"	"{{chromosome}}"	"{{chrom_band}}"	"{{id_hgnc}}"	"{{id_entrez}}"	"{{id_omim}}"
@@ -2891,6 +2679,7 @@ This way, transcripts are connected to genes.
     Please note that a full LOVD download contains many more sections, and more columns.
     This file has been shortened to fit this page.
     \emph{This example file is therefore not a valid import file.}}
+    \label{fig:example_import_format}
   \end{shaded}
 \end{figure}
 
@@ -2972,6 +2761,14 @@ The following settings are currently recognized:
     Indicates which carset was used when creating the file.
     During import, usually the file encoding is detected given the file's contents,
      in which case this setting is ignored.
+
+	\item[max\_errors] \hfill \\
+		When this setting is not defined in the import file, LOVD stops processing an import file when 50 errors occurs.
+		This default value can be modified in the import file with variable ``max\_errors''.
+		Increasing the ``max\_errors'' allows LOVD to process the import file without interruption. 
+		Decreasing the ``max\_errors'' interrupts the import process earlier.
+		Regardless of the value of ``max\_errors'', all errors must be solved before the import is saved to LOVD. 
+		Warnings do not interrupt the import process, data can be saved in LOVD even when warnings are displayed. 
 \end{description}
 
 Each section header is followed immediately by a line that indicates the names of the fields used in this section.
@@ -2994,6 +2791,7 @@ Other special characters are \texttt{\textbackslash{}t} for a tab character,
 
 
 \subsection{Specific fields explained}
+\label{ssec:fields_explained}
 For each section, the import format contains all fields that are stored in the database.
 Some of these fields are not displayed on the normal LOVD data entry forms, and therefore may cause confusion.
 Others are displayed, but for the user appear as selection lists with human-readable values,
@@ -3006,7 +2804,8 @@ Custom columns are not listed here, since every LOVD installation has different
 \begin{description}
   \item[allele] (from section Variants\_On\_Genome)\hfill \\
   Indicates on which allele the variant is located.
-  Does not necessarily imply inheritance!\\
+  Does not necessarily imply inheritance!
+  This field cannot be updated during an import.\\
   \begin{tabular}{>{\bfseries}p{0.6cm} p{4.0cm} p{10.0cm}}
     ID & \textbf{Name} & \textbf{Description}\\ \hline \hline
     0 & Unknown & Heterozygous, parents not screened, or de novo and allele couldn't be confirmed\\ \hline
@@ -3026,6 +2825,7 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[chromosome] (from sections Genes and Variants\_On\_Genome)\hfill \\
   The chromosome related to this entry (gene or variant).
   When importing, do not fill `chr' here as prefix, just the chromosome number or letter.
+  This field cannot be updated during an import.
   \item[chrom\_band] (from section Genes)\hfill \\
   The chomosome band, like `q15'.
   \item[col\_order] (from section Columns)\hfill \\
@@ -3038,9 +2838,11 @@ Custom columns are not listed here, since every LOVD installation has different
    as the creator of this data entry.
   Creators are allowed to edit the entry and add new data to the entry.
   They are fixed, and can not be re-assigned at a later time.
+  This field cannot be updated during an import.
   \item[created\_date] (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes,
    Screenings and Variants\_On\_Genome)\hfill \\
   The date the entry was created, in the format YYYY-MM-DD HH:MM:SS.
+  This field cannot be updated during an import.
   \item[description\_form] (from section Columns)\hfill \\
   The column's notes on the data entry form.
   This text is shown on the data entry form, just below the data field, for instance as clarification.
@@ -3051,6 +2853,9 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[description\_legend\_full] (from section Columns)\hfill \\
   Description on full legend for this custom column.
   See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  \item[diseaseid] (from sections Phenotypes) \hfill \\
+  Id referring to the id in section Diseases.
+  This field cannot be updated during an import. 
   \item[effectid] (from sections Variants\_On\_Genome and Variants\_On\_Transcripts)\hfill \\
   The variant's affect on a protein's function.
   The first digit indicates the reported variant's effect.
@@ -3138,9 +2943,23 @@ Custom columns are not listed here, since every LOVD installation has different
   These columns can not be removed.
   This setting can not be set when importing columns.
   Default value is 0.
-%  \item[id\_mutalyzer] (from section Transcripts)\hfill \\
+  \item[id\_entrez] (from section Genes)\hfill \\
+  This field cannot be updated during an import.
+  \item[id\_hgnc] (from section Genes)\hfill \\
+  This field cannot be updated during an import.
+  \item[id\_mutalyzer] (from section Transcripts)\hfill \\
+  This field cannot be updated during an import.
+  \item[id\_ncbi] (from section Transcripts)\hfill \\
+  This field cannot be updated during an import.
+  \item[id\_omim] (from section Genes)\hfill \\
+  This field cannot be updated during an import.
+  \item[id\_protein\_ncbi] (from section Transcripts)\hfill \\
+  This field cannot be updated during an import.
   \item[imprinting] (from section Genes)\hfill \\
   Whether or not a gene is imprinted (either maternal or paternal).
+  \item[individualid] (from sections Screenings and Phenotypes) \hfill \\
+  Id referring to the id in section Individuals.
+  This field cannot be updated during an import.  
   \item[mandatory] (from section Columns)\hfill \\
   If set to 1, this column is mandatory.
   When entering new data, this custom column's field must be filled in.
@@ -3195,36 +3014,47 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[position\_c\_cds\_end] (from section Transcripts)\hfill \\
   The position, relative to the translation start site, of where the translation ends.
   Is always a positive whole number, should always be dividable by three.
+  This field cannot be updated during an import.
   \item[position\_c\_mrna\_start] (from section Transcripts)\hfill \\
   The position, relative to the translation start site, of where the transcript starts.
   Is always a negative whole number.
+  This field cannot be updated during an import.
   \item[position\_c\_mrna\_end] (from section Transcripts)\hfill \\
   The position, relative to the translation start site, of where the transcript ends.
   Is always a positive whole number.
+  This field cannot be updated during an import.
   \item[position\_c\_start] (from section Variants\_On\_Transcripts)\hfill \\
   The position, relative to the translation start site, of the first base of the variant.
   The first base of the variant is defined by the HGVS nomenclature rules, and may be the same as the last base.
+  This field cannot be updated during an import.
   \item[position\_c\_start\_intron] (from section Variants\_On\_Transcripts)\hfill \\
   The position, relative to the start or end (whichever is closest) of the intron, of the first base of the variant.
   The first base of the variant is defined by the HGVS nomenclature rules, and may be the same as the last base.
   This field only applies to variants that start in an intron.
+  This field cannot be updated during an import.
   \item[position\_c\_end] (from section Variants\_On\_Transcripts)\hfill \\
   The position, relative to the translation start site, of the last base of the variant.
   The last base of the variant is defined by the HGVS nomenclature rules, and may be the same as the first base.
+  This field cannot be updated during an import.
   \item[position\_c\_end\_intron] (from section Variants\_On\_Transcripts)\hfill \\
   The position, relative to the start or end (whichever is closest) of the intron, of the last base of the variant.
   The last base of the variant is defined by the HGVS nomenclature rules, and may be the same as the first base.
   This field only applies to variants that end in an intron.
+  This field cannot be updated during an import.
   \item[position\_g\_mrna\_start] (from section Transcripts)\hfill \\
   The genomic position, relative to the chromosome, of where the transcript starts.
+  This field cannot be updated during an import.
   \item[position\_g\_mrna\_end] (from section Transcripts)\hfill \\
   The genomic position, relative to the chromosome, of where the transcript ends.
+  This field cannot be updated during an import.
   \item[position\_g\_start] (from section Variants\_On\_Genome)\hfill \\
   The genomic position, relative to the chromosome, of the first base of the variant.
   The first base of the variant is defined by the HGVS nomenclature rules, and may be the same as the last base.
+  This field cannot be updated during an import.
   \item[position\_g\_end] (from section Variants\_On\_Genome)\hfill \\
   The genomic position, relative to the chromosome, of the last base of the variant.
   The last base of the variant is defined by the HGVS nomenclature rules, and may be the same as the first base.
+  This field cannot be updated during an import.
   \item[preg\_pattern] (from section Columns)\hfill \\
   For text field custom columns, regular expression checks can be performed.
   See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
@@ -3234,8 +3064,11 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[public\_add] (from section Columns)\hfill \\
   If set to 1, submitters can fill in this field.
   Otherwise, only curators and higher level users can enter data in this field.
+  \item[refseq\_genomic] (from section Genes)\hfill \\
+  The genomic reference sequence, this field cannot be updated during an import.
   \item[refseq\_UD] (from section Genes)\hfill \\
   This is an internal ID for the genomic reference sequence, generated by Mutalyzer.
+  This field cannot be updated during an import.
   \item[select\_options] (from section Columns)\hfill \\
   When the custom column is a selection field, the selection options are listed here.
   See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}'' for the format.
@@ -3274,6 +3107,9 @@ Custom columns are not listed here, since every LOVD installation has different
   When no value is provided during import, this value is set to `9' (Public).
   \item[symbol] (from section Diseases) \hfill \\
   The disease's abbreviation, preferably the most commonly used one.
+  \item[transcriptid] (from section Variants\_On\_Transcripts) \hfill \\
+  Id referring to the id in section Transcripts.
+  This field cannot be updated during an import.
   \item[type] (from section Variants\_On\_Genome)\hfill \\
   The type of variant on DNA level, as defined by the Mutalyzer web service.
   All possible values are:\\
@@ -3287,6 +3123,12 @@ Custom columns are not listed here, since every LOVD installation has different
     ins & Insertion & Insertion of one or more DNA bases; when not a duplication\\ \hline
     subst & Substitution & One DNA base has been replaced by another\\ \hline
   \end{tabular}
+  \item[updated\_by] (from section Genes)\hfill \\
+  The internal ID of the user who was the last to modify data that is linked to the gene.
+  This field cannot be updated during an import.
+  \item[updated\_data] (from section Genes)\hfill \\
+  The date data linked to the gene was modified last.
+  This field cannot be updated during an import.
   \item[variants\_found] (from section Screenings)\hfill \\
   If set to 1, this screening is reported to have found variants.
   If set to 0, this screening is reported to not have found variants.
@@ -3336,7 +3178,6 @@ Also the order in the downloaded file is equal to the order of the entries on th
 
 
 
-\clearpage
 \hypertarget{ssec:importing_data}{}
 \subsection{Importing data sets into LOVD}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -3353,7 +3194,8 @@ See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_impor
 Files created or modified using spreadsheet software such as OpenOffice.org Calc or MS Excel must be saved as
  a text file.
 The file must be tab delimited, otherwise LOVD will produce an error.
-
+diseaseid and individualid in section phenotypes
+individualid in section screenings
 To import a dataset to LOVD, click the ``Import data'' link from the ``Setup'' tab dropdown menu,
  or from the setup area, click the ``Import data using the LOVD import format'' link listed under
  ``Download \& Import''.
@@ -3366,12 +3208,54 @@ This option is always enabled for curators, and cannot be disabled.
 This allows curators to test their import files,
  but it still requires a manager or up to actually import the file.
 
-The import mode is an option which will be extended in the near future.
-For now only ``Add only, treat all data a new'' is available.
-This means all importable data in the import file, is inserted as new in the database,
+On the import page the section import options has a dropdown menu for import mode. 
+The two options available are ``Update existing data'' (see section ``{\nameref{ssec:update_existing_data}}'') and 
+ ``Add only, treat all data as new'' (see section ``{\nameref{ssec:import_new_data}}'').
+
+\subsection{Insert new data via import}
+\label{ssec:import_new_data}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
+The option ``add only'' on the import page will inserted all data in the import file as new,
  also if the identifiers used are already present in the database.
-In the future, the option ``Update existing data \& add new data''
- will allow updating data in the database by importing a file.
+See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}'' 
+ for more details about the file format.
+
+
+
+\subsection{Update existing data via import}
+\label{ssec:update_existing_data}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Curator\\
+    Available from: LOVD 3.0 Build 14
+  \end{leftbar}
+\end{wrapfigure}
+For managers and higher it is possible to update certain data via an import (curators can run a simulate).
+There are some restrictions on what you can modify and what not.
+In general you can say, when you can modify certain data via the LOVD views,
+ you can modify them via the update import as well.
+Furthermore you can only modify one field per line.
+
+For sections columns, genes, transcripts, diseases, individuals, phenotypes, screenings and 
+ variants on genome you cannot modify the created\_by, created\_date, edited\_by, edited\_date fields.
+These fields are set by LOVD and changes in these fields are ignored.
+See the section {\nameref{ssec:fields_explained}} to check which fields you are not allowed to update. 
+
+The id's in the import file of each section is used to identify the records in the LOVD database.
+Therefore you cannot modify the id fields in your import file.
+To make sure your id's in the lovd database correspond with the id's in your import file,
+ it is recommended to download a complete data set, custom columns, own data set or a gene's data set,
+ depending on what you would like to update.
+
+On the import page select the ``Update existing data'' option if you wish to modify data in your LOVD database.
+You can use the simulate option to check your file for errors.
 
 
 
