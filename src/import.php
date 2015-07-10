@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-07-08
+ * Modified    : 2015-07-10
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -721,7 +721,6 @@ if (POST) {
                     $bGeneInDB = true;
                     // Store for the next VOT.
                     $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']] = array('id' => $aLine['transcriptid'], 'geneid' => $sGene, 'todo' => '');
-                    $nDataTotal ++; // Otherwise it's messing up our statistics.
                 }
                 if (!isset($aSection['objects'][$sGene])) {
                     $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
@@ -1529,7 +1528,9 @@ if (POST) {
                 if ($aLine['todo'] == 'update') {
                     $aSection['data'][$nID]['update_changes'] = $aDifferences;
                 }
-                $nDataTotal ++;
+                if (in_array($aLine['todo'], array('insert', 'update'))) {
+                    $nDataTotal ++;
+                }
             }
 
             $_BAR[0]->setProgress(($nLine/$nLines)*100);
@@ -1564,6 +1565,7 @@ if (POST) {
         foreach ($aParsed as $sSection => $aSection) {
             unset($aParsed[$sSection]['ids']);
         }
+
 
         // We have to run this after the unset($aSection), else it will mess up the loop.
         if ($sMode == 'update') {
@@ -1647,10 +1649,10 @@ if (POST) {
                 $aDone[$sSection] = 0;
 
                 foreach ($aSection['data'] as $nID => $aData) {
-                    $nEntry++;
                     if (!$aData['todo'] || !in_array($aData['todo'], array('insert', 'update'))) {
                         continue;
                     }
+                    $nEntry++;
 
                     // Updating?
                     if ($aData['todo'] == 'update') {
@@ -1659,7 +1661,7 @@ if (POST) {
                             $aFieldsToUpdate = array_merge($aFieldsToUpdate, array('edited_by', 'edited_date'));
                         }
                         $aSection['object']->updateEntry($nID, $aData, $aFieldsToUpdate);
-                        if (isset($aData['statusid']) && $aData['statusid'] >= LEVEL_MARKED) {
+                        if (isset($aData['statusid']) && $aData['statusid'] >= STATUS_MARKED) {
                             // These updated IDs are used to determine which genes are updated.
                             $aParsed[$sSection]['updatedIDs'][] = $aData['id'];
                         }
@@ -1713,7 +1715,7 @@ if (POST) {
                             }
                             $nNewID = $aSection['object']->insertEntry($aData, $aFields);
                             $aParsed[$sSection]['data'][$nID]['newID'] = $nNewID;
-                            if (isset($aData['statusid']) && $aData['statusid'] >= LEVEL_MARKED) {
+                            if (isset($aData['statusid']) && $aData['statusid'] >= STATUS_MARKED) {
                                 // These updated IDs are used to determine which genes are updated.
                                 $aParsed[$sSection]['updatedIDs'][] = $nNewID;
                             }
