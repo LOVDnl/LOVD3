@@ -45,10 +45,12 @@
  * Fixed bug; During import, checking the Variants_On_Transcripts section got
    slower as more variants within the same gene were checked.
  * Update via an import is available. Managers and higher are allowed to update
-   fields via the import. Per line one field can be changed. Curators can run a
+   fields via the import. Per line, one field can be changed. Curators can run a
    simulate update import.
  * Fixed bug; When downloading variant data, the given Variant_On_Transcripts
    effectid had been overwritten in the file by the Variants_On_Genome effectid.
+ * Added gene symbol as a new column to the variant views on the Individual and
+   Screening detailed views.
 
 
 /**************************

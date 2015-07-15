@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2015-07-08
+ * Modified    : 2015-07-15
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -226,11 +226,16 @@ class LOVD_CustomViewList extends LOVD_Object {
                         // SELECT will be different: we will GROUP_CONCAT the whole lot, per column.
                         // Sort GROUP_CONCAT() based on transcript name. We'll have to join Transcripts for that.
                         //   That will break if somebody wants to join transcripts themselves, but why would somebody want that?
-                        $sGCOrderBy = 't.id_ncbi';
+                        $sGCOrderBy = 't.geneid, t.id_ncbi';
                         foreach ($this->aColumns as $sCol => $aCol) {
                             if (substr($sCol, 0, 19) == 'VariantOnTranscript') {
                                 $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT ' . ($sCol != 'VariantOnTranscript/DNA'? '`' . $sCol . '`' : 'CONCAT(t.id_ncbi, ":", `' . $sCol . '`)') . ' ORDER BY ' . $sGCOrderBy . ' SEPARATOR ", ") AS `' . $sCol . '`';
                             }
+                        }
+                        // If we're joining to Scr2Var, we're showing the Individual- and Screening-specific views, and we want to show a gene as well.
+                        //   We can't use _geneid below, because LOVD will explode that into an array.
+                        if (array_search('Scr2Var', $aObjects) !== false) {
+                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT t.geneid ORDER BY ' . $sGCOrderBy . ' SEPARATOR ", ") AS genes';
                         }
                         // Security checks in this file's prepareData() need geneid to see if the column in question is set to non-public for one of the genes.
                         $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS _geneid';
@@ -503,12 +508,20 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'vot_clean_dna_change' => array(
                                         'view' => false,
                                         'db'   => array('TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", "")))', 'ASC', 'TEXT')),
+                                'genes' => array(
+                                        'view' => array('Gene', 100),
+                                        'db'   => array('t.geneid', 'ASC', true)),
                                 'vot_effect' => array(
                                         'view' => array('Effect', 70),
                                         'db'   => array('et.name', 'ASC', true),
                                         'legend' => array('The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
                                                           'The variant\'s affect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                               ));
+                    // Only show the gene symbol when we have Scr2Var included, because these are the Individual- and Screening-specific views.
+                    // FIXME: Perhaps it would be better to always show this column with VOT, but then hide it in all views that don't need it.
+                    if (array_search('Scr2Var', $aObjects) === false) {
+                        unset($this->aColumnsViewList['genes']);
+                    }
                     if (!$this->sSortDefault) {
                         // First data table in view.
                         $this->sSortDefault = 'VariantOnTranscript/DNA';
