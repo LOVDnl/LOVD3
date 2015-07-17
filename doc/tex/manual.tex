@@ -2761,14 +2761,13 @@ The following settings are currently recognized:
     Indicates which carset was used when creating the file.
     During import, usually the file encoding is detected given the file's contents,
      in which case this setting is ignored.
-
-	\item[max\_errors] \hfill \\
-		When this setting is not defined in the import file, LOVD stops processing an import file when 50 errors occurs.
-		This default value can be modified in the import file with variable ``max\_errors''.
-		Increasing the ``max\_errors'' allows LOVD to process the import file without interruption. 
-		Decreasing the ``max\_errors'' interrupts the import process earlier.
-		Regardless of the value of ``max\_errors'', all errors must be solved before the import is saved to LOVD. 
-		Warnings do not interrupt the import process, data can be saved in LOVD even when warnings are displayed. 
+  \item[max\_errors] \hfill \\
+    When this setting is not defined in the import file, LOVD stops processing an import file when 50 errors occurs.
+    This default value can be modified in the import file with variable ``max\_errors''.
+    Increasing the ``max\_errors'' allows LOVD to process the import file without interruption.
+    Decreasing the ``max\_errors'' interrupts the import process earlier.
+    Regardless of the value of ``max\_errors'', all errors must be solved before the import is saved to LOVD.
+    Warnings however, do not interrupt the import process, and data can be saved in LOVD even when warnings are displayed.
 \end{description}
 
 Each section header is followed immediately by a line that indicates the names of the fields used in this section.
@@ -2854,8 +2853,8 @@ Custom columns are not listed here, since every LOVD installation has different
   Description on full legend for this custom column.
   See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
   \item[diseaseid] (from sections Phenotypes) \hfill \\
-  Id referring to the id in section Diseases.
-  This field cannot be updated during an import. 
+  ID referring to the ID in section Diseases.
+  This field cannot be updated during an import.
   \item[effectid] (from sections Variants\_On\_Genome and Variants\_On\_Transcripts)\hfill \\
   The variant's affect on a protein's function.
   The first digit indicates the reported variant's effect.
@@ -2923,11 +2922,11 @@ Custom columns are not listed here, since every LOVD installation has different
     97 & +/+?\\ \hline
     99 & +/+\\ \hline
   \end{tabular}
-  
+
   In the Variants\_On\_Transcripts section, this field indicates the effect of the variant on this specific transcript.
   In the Variants\_On\_Genome section, this field indicates the overall effect of the variant on the function
    of any gene it influences; basically, the maximum score of all of the variant's effectid values.
-  
+
   \item[fatherid] (from section Individuals)\hfill \\
   Optional; The internal ID of the individual in the database that is the father of this individual.
   \item[form\_type] (from section Columns)\hfill \\
@@ -2958,8 +2957,8 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[imprinting] (from section Genes)\hfill \\
   Whether or not a gene is imprinted (either maternal or paternal).
   \item[individualid] (from sections Screenings and Phenotypes) \hfill \\
-  Id referring to the id in section Individuals.
-  This field cannot be updated during an import.  
+  ID referring to the ID in section Individuals.
+  This field cannot be updated during an import.
   \item[mandatory] (from section Columns)\hfill \\
   If set to 1, this column is mandatory.
   When entering new data, this custom column's field must be filled in.
@@ -3108,7 +3107,7 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[symbol] (from section Diseases) \hfill \\
   The disease's abbreviation, preferably the most commonly used one.
   \item[transcriptid] (from section Variants\_On\_Transcripts) \hfill \\
-  Id referring to the id in section Transcripts.
+  ID referring to the ID in section Transcripts.
   This field cannot be updated during an import.
   \item[type] (from section Variants\_On\_Genome)\hfill \\
   The type of variant on DNA level, as defined by the Mutalyzer web service.
@@ -3194,23 +3193,24 @@ See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_impor
 Files created or modified using spreadsheet software such as OpenOffice.org Calc or MS Excel must be saved as
  a text file.
 The file must be tab delimited, otherwise LOVD will produce an error.
-diseaseid and individualid in section phenotypes
-individualid in section screenings
+
 To import a dataset to LOVD, click the ``Import data'' link from the ``Setup'' tab dropdown menu,
  or from the setup area, click the ``Import data using the LOVD import format'' link listed under
  ``Download \& Import''.
-Curators can import data from the Configuration area. 
+Curators can import data from the Configuration area.
 Click the ``Import data using the LOVD import format'' link listed under ``Download \& Import''.
 
 The LOVD import has a simulate option, allowing you to check if the import file is correct, without importing anything.
 Check the ``Simulate (don't actually import the data)'' checkbox to use this simulation option.
-This option is always enabled for curators, and cannot be disabled.
+\emph{This option is always enabled for curators, and cannot be disabled.}
 This allows curators to test their import files,
  but it still requires a manager or up to actually import the file.
 
-On the import page the section import options has a dropdown menu for import mode. 
-The two options available are ``Update existing data'' (see section ``{\nameref{ssec:update_existing_data}}'') and 
+On the import form, in the ``Import options'' section, you'll find the ``Import mode''.
+The two options available are ``Update existing data'' (see section ``{\nameref{ssec:update_existing_data}}'') and
  ``Add only, treat all data as new'' (see section ``{\nameref{ssec:import_new_data}}'').
+
+
 
 \subsection{Insert new data via import}
 \label{ssec:import_new_data}
@@ -3221,9 +3221,9 @@ The two options available are ``Update existing data'' (see section ``{\nameref{
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-The option ``add only'' on the import page will inserted all data in the import file as new,
+The option ``add only'' on the import page will insert all data in the import file as new,
  also if the identifiers used are already present in the database.
-See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}'' 
+See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}''
  for more details about the file format.
 
 
@@ -3239,23 +3239,25 @@ See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_impor
 \end{wrapfigure}
 For managers and higher it is possible to update certain data via an import (curators can run a simulate).
 There are some restrictions on what you can modify and what not.
-In general you can say, when you can modify certain data via the LOVD views,
+In general, when you can modify certain data via the LOVD data entry forms,
  you can modify them via the update import as well.
-Furthermore you can only modify one field per line.
+Furthermore, to prevent unintended edits, you can currently only modify one field per line.
 
-For sections columns, genes, transcripts, diseases, individuals, phenotypes, screenings and 
- variants on genome you cannot modify the created\_by, created\_date, edited\_by, edited\_date fields.
+You cannot modify the created\_by, created\_date, edited\_by, edited\_date fields
+ (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes, Screenings and Variants\_On\_Genome).
 These fields are set by LOVD and changes in these fields are ignored.
-See the section {\nameref{ssec:fields_explained}} to check which fields you are not allowed to update. 
+See the section {\nameref{ssec:fields_explained}} to check which fields you are not allowed to update.
 
-The id's in the import file of each section is used to identify the records in the LOVD database.
-Therefore you cannot modify the id fields in your import file.
-To make sure your id's in the lovd database correspond with the id's in your import file,
- it is recommended to download a complete data set, custom columns, own data set or a gene's data set,
- depending on what you would like to update.
+The IDs in the import file are used to identify the records in the LOVD database.
+Therefore, you cannot modify the ID fields in your import file.
+To make sure your IDs in the LOVD database correspond with the IDs in your import file,
+ and to prevent unintended edits, it is recommended to make a new download
+ (complete data set, custom columns, own data set or a gene's data set, depending on what you would like to update)
+ before you start preparing your changes.
 
-On the import page select the ``Update existing data'' option if you wish to modify data in your LOVD database.
-You can use the simulate option to check your file for errors.
+On the import form, select the ``Update existing data'' option for the ``Import mode'' field,
+ if you wish to modify data in your LOVD database.
+You can use the simulate option to check your file for errors first.
 
 
 
@@ -3886,7 +3888,14 @@ If that doesn't resolve your problem or answer your question, please follow the 
 \end{infobox}
 
 % Add to text explaining how to log in:
-Cookies are small text files stored on your computer that help a website identify you. LOVD uses this to keep you identified after you log into the system. If this setting is disabled, LOVD will include a so-called session id in the URL, to keep track of the authenticated users. However, this is much less secure because including the session id in the URL may expose this session id in log files on your computer or on proxy servers. This may allow others to hijack your user's accounts. So leaving this option set is highly recommended.
+Cookies are small text files stored on your computer that help a website identify you.
+LOVD uses this to keep you identified after you log into the system.
+If this setting is disabled, LOVD will include a so-called session ID in the URL,
+ to keep track of the authenticated users.
+However, this is much less secure because including the session ID in the URL may
+ expose this session ID in log files on your computer or on proxy servers.
+This may allow others to hijack your user's accounts.
+So leaving this option set is highly recommended.
 
 % Maybe move to create individual?
 List of possible diseases associated with variants in the available genes: Specify a list of phenotypes that are used in this LOVD installation. This list will appear on the full legend and will allow a submitter to select a phenotype from the list. If no phenotypes are specified, the submitter will need to fill in the phenotype in a common text field.
