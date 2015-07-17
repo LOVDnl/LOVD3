@@ -1184,6 +1184,7 @@ if (POST) {
                                 } elseif ($bParentInFile) {
                                     $zParentData = $aParsed['Individuals']['data'][(int) $aLine[$sParentalField]];
                                 }
+
                                 if (isset($zParentData['panel_size']) && $zParentData['panel_size'] > 1) {
                                     lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" refers to an panel (group of individuals), not an individual. If you want to configure that panel as an individual, set its \'Panel size\' field to value 1.');
                                 }
@@ -1540,6 +1541,7 @@ if (POST) {
                 break;
             }
         }
+
         // Clean up old section, if available.
         if ($sCurrentSection) {
             unset($aSection['columns']);

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2015-07-01
+ * Modified    : 2015-07-17
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -213,17 +213,16 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
                 }
             }
 
-            // Search for effected genes after the insertion on SCR2GENE. Then we have to perform this query only once.
-            // Get genes which are modified only when linked variant is marked or puplic.
+            // Get genes which are modified only when linked individual is marked or public.
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                'WHERE vog.statusid >= ? ' .
-                                'AND s2v.screeningid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
+                                  'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                  'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                  'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                  'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                  'INNER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i.id = s.individualid) ' .
+                                  'WHERE vog.statusid >= ? AND i.statusid >= ? AND i.id = ?', array(STATUS_MARKED, STATUS_MARKED, $_POST['individualid']))->fetchAllColumn();
             if ($aGenes) {
-                $aGenes = array_unique($aGenes);
-                // Change updated date for genes
+                // Change updated date for genes.
                 lovd_setUpdatedDate($aGenes);
             }
 
@@ -375,14 +374,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             }
 
             if ($aToRemove) {
-                // Search for effected genes before the deletion on SCR2VAR, else we can't find the link.
-                // Get genes which are modified only when linked variant is marked or puplic.
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                    'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                    'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                    'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                    'WHERE vog.statusid >= ? ' .
-                                    'AND s2v.screeningid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
                 $q = $_DB->query('DELETE FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove), false);
                 if (!$q) {
                     // Silent error.
@@ -407,23 +398,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 }
             }
 
-            // Search for effected genes after the insertion on SCR2GENE.
-            // Get genes which are modified only when linked variant is marked or puplic.
-            $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                    'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                    'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                    'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                    'WHERE vog.statusid >= ? ' .
-                                    'AND s2v.screeningid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
-            if (!empty($aGenes)) {
-                // It might be filed with genes which are effected by deleting the link in the SCR2GENE table.
-                $aGenes = array_merge($aGenes, $aTempGenes);
-            } else {
-                $aGenes = $aTempGenes;
-            }
-
+            // Get genes which are modified only when linked variant is marked or public.
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                  'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                  'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                  'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                  'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                  'INNER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i.id = s.individualid) ' .
+                                  'WHERE vog.statusid >= ? AND i.statusid >= ? AND s2v.screeningid = ?', array(STATUS_MARKED, STATUS_MARKED, $nID))->fetchAllColumn();
             if ($aGenes) {
-                $aGenes = array_unique($aGenes);
                 // Change updated date for genes
                 lovd_setUpdatedDate($aGenes);
             }
@@ -590,16 +573,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
             $_DB->commit();
             unset($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']);
 
-            // Search for effected genes after the insertion on SCR2VAR.
-            // Get genes which are modified only when linked variant is marked or puplic.
+            // Get genes which are modified only when linked variant is marked or public.
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                'WHERE vog.statusid >= ? ' .
-                                'AND s2v.screeningid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
+                                  'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                  'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                  'WHERE vog.statusid >= ? AND vog.id IN (?' . str_repeat(', ?', count($aNewVariants) - 1) . ')', array_merge(array(STATUS_MARKED), $aNewVariants))->fetchAllColumn();
             if ($aGenes) {
-                $aGenes = array_unique($aGenes);
                 // Change updated date for genes
                 lovd_setUpdatedDate($aGenes);
             }
@@ -716,8 +695,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     if (isset($_AUTH['saved_work']['submissions']['screening'][$nID])) {
         $bSubmit = true;
         $aSubmit = &$_AUTH['saved_work']['submissions']['screening'][$nID];
-    } elseif (isset($_AUTH['saved_work']['submissions']['individual'][$nIndividual])) {
-        $aSubmit = &$_AUTH['saved_work']['submissions']['individual'][$nIndividual];
+    } elseif (isset($_AUTH['saved_work']['submissions']['individual'][$z['individualid']])) {
+        $aSubmit = &$_AUTH['saved_work']['submissions']['individual'][$z['individualid']];
         if (isset($aSubmit['screenings']) && in_array($nID, $aSubmit['screenings'])) {
             $bSubmit = true;
         }
@@ -752,14 +731,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
 
             $aToRemove = $_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']['checked'];
             if (!empty($aToRemove)) {
-                // Search for effected genes before the deletion on SCR2VAR, else we can't find the link.
-                // Get genes which are modified only when linked variant is marked or puplic.
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                    'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                    'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                    'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                    'WHERE vog.statusid >= ? ' .
-                                    'AND s2v.screeningid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
                 // Remove variants from screening...
                 $_DB->query('DELETE FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
             }
@@ -768,8 +739,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
             $_DB->commit();
             unset($_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']);
 
+            // Get genes which are modified only when linked variant is marked or public.
+            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                  'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                  'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                  'WHERE vog.statusid >= ? AND vog.id IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array(STATUS_MARKED), $aToRemove))->fetchAllColumn();
             if ($aGenes) {
-                $aGenes = array_unique($aGenes);
                 // Change updated date for genes
                 lovd_setUpdatedDate($aGenes);
             }
@@ -878,24 +853,24 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             $_DB->beginTransaction();
 
             // Search for effected genes before the deletion on SCR2VAR, else we can't find the link.
-            // Get genes which are modified only when linked variant is marked or puplic.
+            // Get genes which are modified only when linked variant is marked or public.
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                'WHERE vog.statusid >= ? ' .
-                                'AND s2v.screeningid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
+                                  'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                                  'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                                  'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                                  'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                                  'INNER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i.id = s.individualid) ' .
+                                  'WHERE vog.statusid >= ? AND i.statusid >= ? AND s2v.screeningid = ?', array(STATUS_MARKED, STATUS_MARKED, $nID))->fetchAllColumn();
 
             if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
                 // This also deletes the entries in TABLE_SCR2VAR.
                 $_DB->query('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVariantsRemovable) - 1) . ')', $aVariantsRemovable);
             }
 
-            // This also deletes the entries in TABLE_SCR2GENES
+            // This also deletes the entries in TABLE_SCR2GENES and TABLE_SCR2VAR.
             $_DATA->deleteEntry($nID);
 
             if ($aGenes) {
-                $aGenes = array_unique($aGenes);
                 // Change updated date for genes
                 lovd_setUpdatedDate($aGenes);
             }
