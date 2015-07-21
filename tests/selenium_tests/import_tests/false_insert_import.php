@@ -67,8 +67,8 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Screenings_To_Variants, line 106\): Genomic Variant "0000000022" does not exist in the database and is not defined in this import file\.[\s\S]*$/',$this->getBodyText()));
     $this->assertTrue((bool)preg_match('/^[\s\S]*Warning: There is already a Individual column with column ID Age_of_death\. This column is not imported! [\s\S]*$/',$this->getBodyText()));
     $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 26\): There is already a disease with disease name Healthy individual \/ control\. This disease is not imported! [\s\S]*$/',$this->getBodyText()));
-    $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 27\): There is already a disease with disease name isovaleric acidemia and\/or OMIM ID 243500\. This disease is not imported![\s\S]*$/',$this->getBodyText()));
-    $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 29\): There is already a disease with disease name isovaleric acidemia and\/or OMIM ID 243500\. This disease is not imported![\s\S]*$/',$this->getBodyText()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 27\): There is already a disease with disease name isovaleric acidemia and\/or OMIM ID 243500\. This disease is not imported! [\s\S]*$/',$this->getBodyText()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 29\): There is already a disease with disease name isovaleric acidemia and\/or OMIM ID 243500\. This disease is not imported! [\s\S]*$/',$this->getBodyText()));
     $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Phenotypes, line 68\): The disease belonging to this phenotype entry is yet to be inserted into the database\. Perhaps not all this phenotype entry[\s\S]s custom columns will be enabled for this disease![\s\S]*$/',$this->getBodyText()));
   }
 }
