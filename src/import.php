@@ -684,7 +684,7 @@ if (POST) {
                 $aLine['owned_by'] = $_AUTH['id'];
             }
             // Data status.
-            if (in_array('statusid', $aSection['allowed_columns']) && empty($aLine['statusid'])) {
+            if (in_array('statusid', $aSection['allowed_columns']) && empty($aLine['statusid']) && $sMode != 'update') {
                 // Status not filled in. Set to Public.
                 $aLine['statusid'] = STATUS_OK;
             }
@@ -758,8 +758,13 @@ if (POST) {
                     case 'Individuals_To_Diseases':
                     case 'Screenings_To_Genes':
                     case 'Screenings_To_Variants':
-                        if (isset(array_values($aLine)[0]) && isset(array_values($aLine)[1])) {
-                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE ' . array_keys($aLine)[0] . ' = ? AND ' . array_keys($aLine)[1] . ' = ?', array(array_values($aLine)[0], array_values($aLine)[1]))->fetchAssoc();
+                        reset($aLine);
+                        for ($i = 1; list($key, $val) = each($aLine); $i ++) {
+                            $id[$i] = $key;
+                            $value[$i] = $val;
+                        }
+                        if (isset($value[1]) && isset($value[2])) {
+                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE ' . $id[1] . ' = ? AND ' . $id[2] . ' = ?', array($value[1], $value[2]))->fetchAssoc();
                         }
                         break;
                 }
