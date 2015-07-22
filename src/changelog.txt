@@ -53,6 +53,8 @@
    Screening detailed views.
  * Fixed bug; Editing a transcript entry didn't update the "Last edited by" and
    "Date last edited" fields.
+ * Fixed bug; When gene symbols with wrong capitalization are used in URLs, some
+   features and pages caused errors.
 
 
 /**************************
