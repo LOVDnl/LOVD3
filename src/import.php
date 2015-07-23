@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-07-21
+ * Modified    : 2015-07-23
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,7 +63,7 @@ $aModes =
     array(
         // For now there is a strict separation between insert and update.
         // During an update, no insertion will be done, but non-existing records will generate an error instead.
-        'update' => 'Update existing data',
+        'update' => 'Update existing data (in beta)',
         'insert' => 'Add only, treat all data as new',
     );
 
@@ -2001,8 +2001,9 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 
 } else {
     // Default values.
-//    $_POST['charset'] = 'utf8';
-    $_POST['mode'] = 'insert';
+    if (in_array(ACTION, array_keys($aModes))) {
+        $_POST['mode'] = ACTION;
+    }
 }
 
 
@@ -2045,7 +2046,7 @@ lovd_errorPrint();
 // Tooltip JS code.
 lovd_includeJS('inc-js-tooltip.php');
 
-print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" enctype="multipart/form-data">' . "\n" .
+print('      <FORM action="' . CURRENT_PATH . '" method="post" enctype="multipart/form-data">' . "\n" .
       '        <INPUT type="hidden" name="MAX_FILE_SIZE" value="' . $nMaxSize . '">' . "\n");
 
 $aForm =
@@ -2060,9 +2061,9 @@ $aForm =
         array('', '', 'print', '<B>Import options</B>'),
         'hr',
         array('Import mode', 'Available modes:<BR>' .
-            '<B>' . $aModes['update'] . '</B>: LOVD will compare all IDs given in the file with the contents of the database. LOVD will try and update entries already found in the database using the data in the file, and LOVD will add entries that exist in the file, but not in the database.<BR>' .
+            '<B>' . $aModes['update'] . '</B>: LOVD will compare all IDs given in the file with the contents of the database. LOVD will search for differences between the file and the database, and update the entries in the database using the data in the file.<BR>' .
             '<B>' . $aModes['insert'] . '</B>: LOVD will use the IDs given in the file only to link the data together. All data in the file will be treated as new, and all data will receive new IDs once imported. The biggest advantage of this mode is that you do not need to know which IDs are free in the database.',
-            'select', 'mode', 1, $aModes, false, false, false),
+            'select', 'mode', 1, $aModes, true, false, false),
         array('', '', 'note', 'Please select which import mode LOVD should use; <I>' . implode('</I> or <I>', $aModes) . '</I>. For more information on the modes, move your mouse over the ? icon.'),
         array('Character encoding of imported file', 'If your file contains special characters like &egrave;, &ouml; or even just fancy quotes like &ldquo; or &rdquo;, LOVD needs to know the file\'s character encoding to ensure the correct display of the data.', 'select', 'charset', 1, $aCharSets, false, false, false),
         array('', '', 'note', 'Please only change this setting in case you encounter problems with displaying special characters in imported data. Technical information about character encoding can be found <A href="http://en.wikipedia.org/wiki/Character_encoding" target="_blank">on Wikipedia</A>.'),
