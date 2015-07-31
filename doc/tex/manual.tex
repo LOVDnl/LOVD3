@@ -2821,6 +2821,8 @@ Custom columns are not listed here, since every LOVD installation has different
       information\\ \hline
     21 & Maternal (confirmed) & Variant is on maternal allele, confirmed in mother\\ \hline
   \end{tabular}
+  
+  If left empty during import, the default value is ``0''.
 %  \item[allow\_count\_all] (from section Columns)\hfill \\
   \item[chromosome] (from sections Genes and Variants\_On\_Genome)\hfill \\
   The chromosome related to this entry (gene or variant).
@@ -2927,6 +2929,7 @@ Custom columns are not listed here, since every LOVD installation has different
   In the Variants\_On\_Transcripts section, this field indicates the effect of the variant on this specific transcript.
   In the Variants\_On\_Genome section, this field indicates the overall effect of the variant on the function
    of any gene it influences; basically, the maximum score of all of the variant's effectid values.
+  If left empty during import, the default value will be ``55''.
 
   \item[fatherid] (from section Individuals)\hfill \\
   Optional; The internal ID of the individual in the database that is the father of this individual.
@@ -2974,6 +2977,7 @@ Custom columns are not listed here, since every LOVD installation has different
   Possible values:\\
   \begin{tabular}{>{\bfseries}p{0.6cm} p{7.7cm} p{6.3cm}}
     ID & \textbf{Name} & \textbf{Description}\\ \hline \hline
+    0 & & No mapping allowed\\ \hline
     1 & MAPPING\_ALLOW & When set, the variant can be map\-ped by the LOVD mapping script\\ \hline
     2 & MAPPING\_ALLOW\_CREATE\_GENES & When set, LOVD is allowed to create new genes in the database if needed to
       annotate the variant\\ \hline
@@ -2989,6 +2993,7 @@ Custom columns are not listed here, since every LOVD installation has different
   For instance, a value of 11 means for this variant mapping has been enabled (1), LOVD is allowed to create new genes
     while mapping the variant (2), but LOVD does not recognize the variant and therefore can not map it (8). 1 + 2 + 8
     = 11.
+  If left empty during import, the default value will be ``0''.
   \item[motherid] (from section Individuals)\hfill \\
   Optional; The internal ID of the individual in the database that is the mother of this individual.
   \item[mysql\_type] (from section Columns)\hfill \\
@@ -3417,6 +3422,7 @@ See ``\hyperlink{ssec:relation_to_disease}{\nameref{ssec:relation_to_disease}}''
 
 For more details on each section of the import file, see section
  ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}''.
+\clearpage
 
 
 
