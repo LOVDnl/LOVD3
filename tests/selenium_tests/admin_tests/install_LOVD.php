@@ -17,7 +17,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=institute", "Leiden University Medical Center");
     $this->type("name=department", "Human Genetics");
     $this->type("name=address", "Einthovenweg 20\n2333 ZC Leiden");
-    $this->type("name=email", "I.F.A.C.Fokkema@LUMC.nl");
+    $this->type("name=email", "test@lovd.nl");
     $this->type("name=telephone", "+31 (0)71 526 9438");
     $this->type("name=username", "admin");
     $this->type("name=password_1", "test1234");
@@ -35,10 +35,6 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/install\/[\s\S]step=3$/',$this->getLocation()));
     $this->type("name=institute", "Leiden University Medical Center");
     $this->type("name=email_address", "noreply@LOVD.nl");
-    $this->type("name=proxy_host", "localhost");
-    $this->type("name=proxy_port", "3128");
-    $this->type("name=proxy_username", "test");
-    $this->type("name=proxy_password", "test");
     $this->click("name=send_stats");
     $this->click("name=include_in_listing");
     $this->uncheck("name=lock_uninstall");

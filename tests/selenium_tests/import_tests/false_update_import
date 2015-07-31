@@ -24,7 +24,7 @@
 <tr>
 	<td>select</td>
 	<td>name=mode</td>
-	<td>label=Update existing data</td>
+	<td>label=Update existing data (in beta)</td>
 </tr>
 <tr>
 	<td>click</td>

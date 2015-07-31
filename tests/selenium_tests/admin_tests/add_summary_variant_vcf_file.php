@@ -38,7 +38,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
     $this->waitForPageToLoad("4000");
-    sleep(100);
+    sleep(200);
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");

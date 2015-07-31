@@ -14,7 +14,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=institute", "Leiden University Medical Center");
     $this->type("name=department", "Human Genetics");
     $this->type("name=address", "Einthovenweg 20\n2333 ZC Leiden");
-    $this->type("name=email", "I.F.A.C.Fokkema@LUMC.nl");
+    $this->type("name=email", "d.asscheman@lumc.nl");
     $this->type("name=username", "curator");
     $this->type("name=password_1", "test1234");
     $this->type("name=password_2", "test1234");

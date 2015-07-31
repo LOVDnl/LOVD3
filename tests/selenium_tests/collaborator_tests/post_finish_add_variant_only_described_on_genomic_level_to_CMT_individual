@@ -127,8 +127,13 @@
 	<td>label=Effect unknown</td>
 </tr>
 <tr>
-	<td>clickAndWait</td>
+	<td>click</td>
 	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>css=table[class=info]</td>
 	<td></td>
 </tr>
 <tr>

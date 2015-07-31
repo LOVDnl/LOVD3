@@ -11,19 +11,49 @@ testsuitelist[5]='collaborator_suite'
 testsuitelist[6]='submitter_suite'
 testsuitelist[7]='import_suite'
 
+# When a php export file is older then a selenium file, the latest changes made in the selenium file might not be included in the php file.
+# There for the user is asked what to do. Default is always ask what to do.
+alwaysask=true
+
+# As default it is assumed that 'svn' the first localhost folder is. ie http://localhost/svn
+# When the first folder is different, it must be given as input.
+FIRSTLOCALHOSTFOLDER='svn'
+
+for i in "$@"
+do
+    case $i in
+        -l=*|--localhost=*)
+            FIRSTLOCALHOSTFOLDER="${i#*=}"
+        ;;
+        -c|--continueall)
+            alwaysask=false
+            # check if input is correct is done later.
+        ;;
+        *)
+            echo Unknown input
+            echo Usage:
+            column -t -s "/" <<<'    -l=<folder> /|/ --localhost=<folder> / Give the first localhost folder when it is not "svn". This is used in the Travis CI test.
+        -c /|/ --continueall / If set, it will not ask for actions during convert, but always continues with convert. This might create corrupt phpunit test files.'
+            echo "Specify no file when you want te test all testfiles in the phpunit_selenium folder."
+            exit
+        ;;
+    esac
+done
+
 SCRIPT=$(readlink -f $0)
 SCRIPTPATH=$(dirname $SCRIPT)
 SELENIUMTESTTPATH=$(dirname $SCRIPTPATH)/selenium_tests
 PHPUNITTESTTPATH=$(dirname $SCRIPTPATH)/phpunit_selenium
 TESTDATATPATH=$(dirname $SCRIPTPATH)/test_data_files/
-LOCALHOSTDIR=`echo ${SCRIPTPATH} | sed "s@.*svn@/svn@" | sed "s@trunk.*@@"`
-LOCALHOSTDIRTRUNK=`echo ${SCRIPTPATH} | sed "s@.*svn@/svn@" | sed "s@trunk.*@trunk/@"`
+##DOCROOT=$(grep -h DocumentRoot /etc/apache2/sites-enabled/*default* | head -n 1 | awk '{print $2};') ##| sed 's\//\\\//g');
+##LOCALHOSTDIR=`echo $SCRIPTPATH | sed "s/.*${DOCROOT}//" | sed "s@/trunk.*@@"`
+LOCALHOSTDIR=`echo ${SCRIPTPATH} | sed "s@.*$FIRSTLOCALHOSTFOLDER@/$FIRSTLOCALHOSTFOLDER@" | sed "s@/trunk.*@@"`
 TRUNKDIR=`echo ${SCRIPT} | sed "s@trunk.*@@"`
 
 # These are used to replace the locations in the setup script.
 NEWSETBROWSERURL="http://localhost"${LOCALHOSTDIR}
 NEWSCREENSHOTPATH=${TRUNKDIR}"trunk/tests/test_results/error_screenshots"
-NEWSCHREENSHOTURL=${newsetBrowserUrl}"trunk/tests/test_results/error_screenshots"
+NEWSCHREENSHOTURL=${NEWSETBROWSERURL}"/trunk/tests/test_results/error_screenshots"
 
 # Used to change de modify date.
 DATE=`date +%Y-%m-%d:%H:%M:%S`
@@ -35,10 +65,6 @@ methodclassescount=0
 totalmethod=0
 numberoftests=0
 totalnumberoftests=0
-
-# When a php export file is older then a selenium file, the latest changes made in the selenium file might not be included in the php file.
-# There for the user is asked what to do. Default is always ask what to do.
-alwaysask=true
 
 cd ${SELENIUMTESTTPATH}
 
@@ -224,7 +250,7 @@ for file in "${PHPUNITTESTTPATH}"/*
 do
     echo "Fix:" ${file}
     data=`grep -A 2000 "<?php" ${file} |
-        sed "s@this->open(\".*./trunk/@this->open(\"$LOCALHOSTDIRTRUNK@" |
+        sed "s@this->open(\".*./trunk/@this->open(\"$LOCALHOSTDIR/trunk/@" |
         sed 's/0)$/0);/' |
         sed "s@name=variant_file.*./trunk/tests/test_data_files/@name=variant_file\"\, \"$TESTDATATPATH@" |
         sed "s@name=import.*./trunk/tests/test_data_files/@name=import\"\, \"$TESTDATATPATH@"`

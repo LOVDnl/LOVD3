@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2014-12-19
- * Modified    : 2015-03-18:14:49:34
+ * Modified    : 2015-07-31:14:40:39
  * For LOVD    : 3.0-12
  *
  * Copyright   : 2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,20 +31,20 @@
 class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
 {
     protected $captureScreenshotOnFailure = TRUE;
-    protected $screenshotPath = '/home/dasscheman/svn/LOVD3/trunk/tests/test_results/error_screenshots';
-    protected $screenshotUrl = 'trunk/tests/test_results/error_screenshots';
+    protected $screenshotPath = '/home/dasscheman/svn/LOVD3_development/trunk/tests/test_results/error_screenshots';
+    protected $screenshotUrl = 'http://localhost/svn/LOVD3_development/trunk/tests/test_results/error_screenshots';
   
     protected function setUp()
     {
         $this->setHost('localhost');
         $this->setPort(4444);
         $this->setBrowser("firefox");
-        $this->setBrowserUrl("http://localhost/svn/LOVD3/");
+        $this->setBrowserUrl("http://localhost/svn/LOVD3_development");
         $this->shareSession(true);
     }
     public function testInstallLOVD()
     {
-        $this->open("/svn/LOVD3/trunk/src/install/");
+        $this->open("/svn/LOVD3_development/trunk/src/install/");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/install\/[\s\S]step=1$/',$this->getLocation()));
@@ -52,7 +52,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
         $this->type("name=address", "Einthovenweg 20\n2333 ZC Leiden");
-        $this->type("name=email", "I.F.A.C.Fokkema@LUMC.nl");
+        $this->type("name=email", "test@lovd.nl");
         $this->type("name=telephone", "+31 (0)71 526 9438");
         $this->type("name=username", "admin");
         $this->type("name=password_1", "test1234");
@@ -70,10 +70,6 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/install\/[\s\S]step=3$/',$this->getLocation()));
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=email_address", "noreply@LOVD.nl");
-        $this->type("name=proxy_host", "localhost");
-        $this->type("name=proxy_port", "3128");
-        $this->type("name=proxy_username", "test");
-        $this->type("name=proxy_password", "test");
         $this->click("name=send_stats");
         $this->click("name=include_in_listing");
         $this->uncheck("name=lock_uninstall");
@@ -89,13 +85,13 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateGeneIVD()
     {
-        $this->open("/svn/LOVD3/trunk/src/logout");
-        $this->open("/svn/LOVD3/trunk/src/login");
+        $this->open("/svn/LOVD3_development/trunk/src/logout");
+        $this->open("/svn/LOVD3_development/trunk/src/login");
         $this->type("name=username", "admin");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
-        $this->open("/svn/LOVD3/trunk/src/genes?create");
+        $this->open("/svn/LOVD3_development/trunk/src/genes?create");
         $this->type("name=hgnc_id", "IVD");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("50000");
@@ -109,12 +105,12 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateUserManager()
     {
-        $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
+        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
         $this->type("name=name", "Test Manager");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
         $this->type("name=address", "Einthovenweg 20\n2333 ZC Leiden");
-        $this->type("name=email", "I.F.A.C.Fokkema@LUMC.nl");
+        $this->type("name=email", "d.asscheman@lumc.nl");
         $this->type("name=username", "manager");
         $this->type("name=password_1", "test1234");
         $this->type("name=password_2", "test1234");
@@ -129,12 +125,12 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateUserCurator()
     {
-        $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
+        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
         $this->type("name=name", "Test Curator");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
         $this->type("name=address", "Einthovenweg 20\n2333 ZC Leiden");
-        $this->type("name=email", "I.F.A.C.Fokkema@LUMC.nl");
+        $this->type("name=email", "d.asscheman@lumc.nl");
         $this->type("name=username", "curator");
         $this->type("name=password_1", "test1234");
         $this->type("name=password_2", "test1234");
@@ -149,7 +145,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testMakeUserCuratorIVD()
     {
-        $this->open("/svn/LOVD3/trunk/src/genes/IVD?authorize");
+        $this->open("/svn/LOVD3_development/trunk/src/genes/IVD?authorize");
         $this->click("link=Test Curator");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
@@ -158,12 +154,12 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateUserSubmitter()
     {
-        $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
+        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
         $this->type("name=name", "Test Submitter");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
         $this->type("name=address", "Einthovenweg 20\n2333 ZC Leiden");
-        $this->type("name=email", "I.F.A.C.Fokkema@LUMC.nl");
+        $this->type("name=email", "d.asscheman@lumc.nl");
         $this->type("name=username", "submitter");
         $this->type("name=password_1", "test1234");
         $this->type("name=password_2", "test1234");
@@ -178,7 +174,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateDiseaseIVA()
     {
-        $this->open("/svn/LOVD3/trunk/src/diseases?create");
+        $this->open("/svn/LOVD3_development/trunk/src/diseases?create");
         $this->type("name=symbol", "IVA");
         $this->type("name=name", "isovaleric acidemia");
         $this->type("name=id_omim", "243500");
@@ -189,7 +185,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateIndividualDiagnosedWithHealtyControl()
     {
-        $this->open("/svn/LOVD3/trunk/src/submit");
+        $this->open("/svn/LOVD3_development/trunk/src/submit");
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals[\s\S]create$/',$this->getLocation()));
@@ -254,7 +250,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->type("name=00001_VariantOnTranscript/Exon", "2");
         $this->type("name=00001_VariantOnTranscript/DNA", "c.456T>G");
         $this->click("css=button.mapVariant");
-        sleep(3);
+        sleep(10);
         $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
         $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
@@ -288,15 +284,15 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&type=SeattleSeq&target=0000000001$/',$this->getLocation()));
-        $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3/trunk/tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt");
+        $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3_development/trunk/tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt");
         $this->select("name=hg_build", "label=hg19");
         $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
         $this->select("name=autocreate", "label=Create genes and transcripts");
         $this->select("name=owned_by", "label=LOVD3 Admin");
         $this->select("name=statusid", "label=Public");
         $this->click("css=input[type=\"submit\"]");
-        // Importing seatlleseq can take some time, therefore the timeout is extended. And seet back to 3000 after seatlleseq is successfully imported.
-        sleep(30);
+        // Importing seatlleseq can take some time, therefore the pause for 200 seconds.
+        sleep(200);
         for ($second = 0; ; $second++) {
                 if ($second >= 60) $this->fail("timeout");
                 try {
@@ -305,8 +301,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
                 sleep(1);
         }
 
-        sleep(30);
-        $this->assertEquals("138 variants where imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
+        $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
         $this->click("css=input[type=\"button\"]");
         $this->waitForPageToLoad("30000");
         $this->waitForPageToLoad("4000");
@@ -344,7 +339,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateIndividualDiagnosedWithIVA()
     {
-        $this->open("/svn/LOVD3/trunk/src/submit");
+        $this->open("/svn/LOVD3_development/trunk/src/submit");
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals[\s\S]create$/',$this->getLocation()));
@@ -409,7 +404,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->type("name=00001_VariantOnTranscript/Exon", "2");
         $this->type("name=00001_VariantOnTranscript/DNA", "c.345G>T");
         $this->click("css=button.mapVariant");
-        sleep(3);
+        sleep(10);
         $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
         $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
@@ -504,7 +499,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&type=VCF&target=0000000003$/',$this->getLocation()));
-        $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3/trunk/tests/test_data_files/ShortVCFfilev1.vcf");
+        $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3_development/trunk/tests/test_data_files/ShortVCFfilev1.vcf");
         $this->select("name=hg_build", "label=hg19");
         $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
         $this->select("name=genotype_field", "label=Use Phred-scaled genotype likelihoods (PL)");
@@ -514,42 +509,47 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->select("name=statusid", "label=Public");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
-        $this->assertEquals("138 variants where imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
+        $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
         $this->click("css=input[type=\"button\"]");
         $this->waitForPageToLoad("30000");
-        sleep(100);
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+        sleep(200);
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
         $this->assertEquals("0 99 There are no variants to map in the database", $this->getText("css=body"));
     }
     public function testFinishIndividualDiagnosedWithIVA()
     {
-        $this->open("/svn/LOVD3/trunk/src/submit/screening/0000000002");
+        $this->open("/svn/LOVD3_development/trunk/src/submit/screening/0000000002");
         $this->click("//tr[3]/td[2]/b");
-        $this->waitForPageToLoad("30000");
+        for ($second = 0; ; $second++) {
+                if ($second >= 60) $this->fail("timeout");
+                try {
+                        if ($this->isElementPresent("css=table[class=info]")) break;
+                } catch (Exception $e) {}
+                sleep(1);
+        }
+
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
-        $this->waitForPageToLoad("4000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals\/00000002$/',$this->getLocation()));
     }
     public function testAddSummaryVariantLocatedWithinGene()
     {
@@ -615,7 +615,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->open("/svn/LOVD3/trunk/src/variants?create&reference=Genome");
+        $this->open("/svn/LOVD3_development/trunk/src/variants?create&reference=Genome");
         $this->select("name=allele", "label=Paternal (confirmed)");
         $this->select("name=chromosome", "label=15");
         $this->type("name=VariantOnGenome/DNA", "g.40702976G>T");
@@ -648,15 +648,15 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&type=SeattleSeq$/',$this->getLocation()));
-        $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3/trunk/tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt");
+        $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3_development/trunk/tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt");
         $this->select("name=hg_build", "label=hg19");
         $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
         $this->select("name=autocreate", "label=Create genes and transcripts");
         $this->select("name=owned_by", "label=LOVD3 Admin");
         $this->select("name=statusid", "label=Public");
         $this->click("css=input[type=\"submit\"]");
-        $this->waitForPageToLoad("30000");
-        // Importing seatlleseq can take some time, therefore the timeout is extended. And seet back to 3000 after seatlleseq is successfully imported.
+        // Importing seatlleseq can take some time, therefore the pause for 200 seconds.
+        sleep(200);
         for ($second = 0; ; $second++) {
                 if ($second >= 60) $this->fail("timeout");
                 try {
@@ -665,7 +665,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
                 sleep(1);
         }
 
-        $this->assertEquals("138 variants where imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
+        $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
@@ -685,8 +685,8 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->open("/svn/LOVD3/trunk/src/variants/upload?create&type=VCF");
-        $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3/trunk/tests/test_data_files/ShortVCFfilev1.vcf");
+        $this->open("/svn/LOVD3_development/trunk/src/variants/upload?create&type=VCF");
+        $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3_development/trunk/tests/test_data_files/ShortVCFfilev1.vcf");
         $this->select("name=hg_build", "label=hg19");
         $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
         $this->select("name=genotype_field", "label=Use Phred-scaled genotype likelihoods (PL)");
@@ -696,76 +696,76 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->select("name=statusid", "label=Public");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
-        $this->assertEquals("138 variants where imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
+        $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
         $this->waitForPageToLoad("4000");
-        sleep(100);
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+        sleep(200);
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
         $this->assertEquals("0 99 There are no variants to map in the database", $this->getText("css=body"));
     }
     public function testPostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividual()
     {
-        $this->open("/svn/LOVD3/trunk/src");
+        $this->open("/svn/LOVD3_development/trunk/src");
         $this->click("id=tab_screenings");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings\/IVD$/',$this->getLocation()));
@@ -888,7 +888,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testDeleteGeneIVD()
     {
-        $this->open("/svn/LOVD3/trunk/src/phenotypes/0000000003");
+        $this->open("/svn/LOVD3_development/trunk/src/phenotypes/0000000003");
         $this->click("id=tab_genes");
         $this->waitForPageToLoad("30000");
         $this->click("id=viewentryOptionsButton_Genes");
@@ -904,13 +904,13 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testUninstallLOVD()
     {
-        $this->open("/svn/LOVD3/trunk/src/logout");
-        $this->open("/svn/LOVD3/trunk/src/login");
+        $this->open("/svn/LOVD3_development/trunk/src/logout");
+        $this->open("/svn/LOVD3_development/trunk/src/login");
         $this->type("name=username", "admin");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
-        $this->open("/svn/LOVD3/trunk/src/uninstall");
+        $this->open("/svn/LOVD3_development/trunk/src/uninstall");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");

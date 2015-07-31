@@ -38,7 +38,14 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=VariantOnGenome/Frequency", "11/10000");
     $this->select("name=effect_reported", "label=Effect unknown");
     $this->click("css=input[type=\"submit\"]");
-    $this->waitForPageToLoad("30000");
+    for ($second = 0; ; $second++) {
+        if ($second >= 60) $this->fail("timeout");
+        try {
+            if ($this->isElementPresent("css=table[class=info]")) break;
+        } catch (Exception $e) {}
+        sleep(1);
+    }
+
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
     $this->waitForPageToLoad("4000");
   }

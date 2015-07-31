@@ -22,6 +22,11 @@
 	<td>/www/svn/LOVD3/trunk/tests/test_data_files/FalseInsertImport.txt</td>
 </tr>
 <tr>
+	<td>select</td>
+	<td>name=mode</td>
+	<td>label=Add only, treat all data as new</td>
+</tr>
+<tr>
 	<td>click</td>
 	<td>name=simulate</td>
 	<td></td>

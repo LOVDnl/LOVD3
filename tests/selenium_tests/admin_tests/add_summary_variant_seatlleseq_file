@@ -97,11 +97,16 @@
 	<td>label=Public</td>
 </tr>
 <tr>
-	<td>clickAndWait</td>
+	<td>click</td>
 	<td>css=input[type=&quot;submit&quot;]</td>
 	<td></td>
 </tr>
-<!--Importing seatlleseq can take some time, therefore the timeout is extended. And seet back to 3000 after seatlleseq is successfully imported.-->
+<!--Importing seatlleseq can take some time, therefore the pause for 200 seconds.-->
+<tr>
+	<td>pause</td>
+	<td>200000</td>
+	<td></td>
+</tr>
 <tr>
 	<td>waitForElementPresent</td>
 	<td>css=input[type=&quot;submit&quot;]</td>

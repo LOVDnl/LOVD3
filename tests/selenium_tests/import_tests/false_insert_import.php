@@ -11,6 +11,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
   {
     $this->open("/svn/LOVD3/trunk/src/import");
     $this->type("name=import", "/www/svn/LOVD3/trunk/tests/test_data_files/FalseInsertImport.txt");
+    $this->select("name=mode", "label=Add only, treat all data as new");
     $this->click("name=simulate");
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");

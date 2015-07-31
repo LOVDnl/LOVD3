@@ -81,20 +81,15 @@
 	<td>css=input[type=&quot;submit&quot;]</td>
 	<td></td>
 </tr>
-<!--Importing seatlleseq can take some time, therefore the timeout is extended. And seet back to 3000 after seatlleseq is successfully imported.-->
+<!--Importing seatlleseq can take some time, therefore the pause for 120 seconds.-->
 <tr>
-	<td>setTimeout</td>
-	<td>100000</td>
+	<td>pause</td>
+	<td>120000</td>
 	<td></td>
 </tr>
 <tr>
 	<td>waitForElementPresent</td>
 	<td>css=input[type=&quot;button&quot;]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>setTimeout</td>
-	<td>3000</td>
 	<td></td>
 </tr>
 <tr>
