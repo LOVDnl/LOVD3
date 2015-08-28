@@ -100,6 +100,7 @@ $nMaxSize = min(
 
 function lovd_calculateFieldDifferences ($zData, $aLine)
 {
+	global $aSection;
     // Creates an array with changed columns, with values from the database and the values from the import file.
     // By default, the variable 'ignore' is set to false. Meaning that this field is allowed to be updated.
 
@@ -110,8 +111,9 @@ function lovd_calculateFieldDifferences ($zData, $aLine)
         // When the columns do not exist in the import file, the columns are not taken into account.
         // We trust that $aLine has already been filled with all columns from $zData.
         if ($aLine[$sCol] && $sValue != $aLine[$sCol]) {
-            if (in_array($sCol, array('created_by', 'created_date', 'edited_by', 'edited_date', 'updated_by', 'updated_date'))) {
-                // Changes in these fields are ignored during an update import, because they are set by LOVD automatically.
+			if (in_array($sCol, array_keys($aSection['update_columns_not_allowed'])) &&
+				$aSection['update_columns_not_allowed'][$sCol]['error_type']) {
+                // Changes in these fields are ignored during an update import, because they are not allowed to modify.
                 // But because we might want to set a warning to inform the user, the fields must be included in the $aDiffs array.
                 // Whether changes in these columns are soft or hard errors or ignored silently, is defined in $aSection['update_columns_not_allowed'].
                 $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => true);
@@ -260,7 +262,6 @@ if (POST) {
         $sMode = $_POST['mode'];
         $sDate = date('Y-m-d H:i:s');
         $aDiseasesAlreadyWarnedFor = array(); // To prevent lots and lots of error messages for each phenotype entry created for the same disease that is not yet inserted into the database.
-        $aSectionsAlreadyWarnedFor = array(); // To prevent lots and lots of error messages for a section that cannot be updated in the database.
 
         foreach ($aData as $i => $sLine) {
             $sLine = trim($sLine);
@@ -504,7 +505,6 @@ if (POST) {
                                 array_merge(
                                     $aSection['update_columns_not_allowed'],
                                     array(
-                                        'allele' => array('message' => 'Not allowed to change the allele.', 'error_type' => 'hard'),
                                         'chromosome' => array('message' => 'Not allowed to change the chromosome.', 'error_type' => 'hard'),
                                         'position_g_start' => array('message' => 'Not allowed to change the genomic start position.', 'error_type' => 'hard'),
                                         'position_g_end' => array('message' => 'Not allowed to change the genomic end position.', 'error_type' => 'hard'),
@@ -925,7 +925,7 @@ if (POST) {
                         // break: None of the following checks have to be done because column is not imported.
                         break;
                     }
-                    // Columns normally not on the form, are not checked properly...
+                    // Following checks are not present in checkfields because they come from the data type wizard. And therefore repeated here.
                     // Col_order; numeric and 0 <= col_order <= 255.
                     if ($aLine['col_order'] === '') {
                         $aLine['col_order'] = 0;
@@ -943,7 +943,7 @@ if (POST) {
                     }
                     // Select_options.
                     if (!empty($aLine['select_options'])) {
-                        $aOptions = explode('\r\n', $aLine['select_options']);
+                        $aOptions = explode("\r\n", $aLine['select_options']);
                         foreach ($aOptions as $n => $sOption) {
                             if (!preg_match('/^([^=]+|[A-Z0-9 \/\()?._+-]+ *= *[^=]+)$/i', $sOption)) {
                                 lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Select option #' . ($n + 1) . ' &quot;' . htmlspecialchars($sOption) . '&quot; not understood.');
@@ -1039,9 +1039,14 @@ if (POST) {
                             unset($_ERROR['messages'][$nKey]);
                             $_ERROR['messages'] = array_values($_ERROR['messages']);
                         }
-                        $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (empty($aLine['id_omim'])? '' : ' and/or OMIM ID ' . $aLine['id_omim']) . '. This disease is not imported! <BR>', 'done');
-                        $nWarnings ++;
-                        $aLine['newID'] = $nDiseaseIdOmim[0];
+
+						if (!$zData) {
+							// Do not set soft warnings when we do an update.
+							$_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (empty($aLine['id_omim'])? '' : ' and/or OMIM ID ' . $aLine['id_omim']) . '. This disease is not imported! <BR>', 'done');
+							$nWarnings ++;
+						}
+
+						$aLine['newID'] = $nDiseaseIdOmim[0];
                         $aLine['todo'] = 'map';
                         break;
                     }
@@ -1066,12 +1071,7 @@ if (POST) {
                     //  Unless we would give preference over the first key (Genes, in this case), and would replace all entries of the first key with the one(s) in the file.
                     // First check if $zData is filled. If so, break and ignore the rest of this section.
                     if ($zData) {
-                        // During update import a warning is set that updating for this section is not allowed, but we don't want that for every line.
-                        if (!in_array($sCurrentSection, $aSectionsAlreadyWarnedFor)) {
-                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import.<BR>', 'done');
-                            $nWarnings ++;
-                            $aSectionsAlreadyWarnedFor[] = $sCurrentSection;
-                        }
+                        // This section cannot be updated during an import. So ther is no need to do the checks or give warnings or errors.
                         break;
                     }
 
@@ -1217,12 +1217,7 @@ if (POST) {
                     //  Unless we would give preference over the first key (Individuals, in this case), and would replace all entries of the first key with the one(s) in the file.
                     // First check if $zData is filled. If so, break and ignore the rest of this section.
                     if ($zData) {
-                        // During update import a warning is set that updating for this section is not allowed, but we don't want that for every line.
-                        if (!in_array($sCurrentSection, $aSectionsAlreadyWarnedFor)) {
-                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
-                            $nWarnings ++;
-                            $aSectionsAlreadyWarnedFor[] = $sCurrentSection;
-                        }
+                        // This section cannot be updated during an import. So ther is no need to do the checks or give warnings or errors.
                         break;
                     }
 
@@ -1340,12 +1335,7 @@ if (POST) {
                     //  Unless we would give preference over the first key (Screenings, in this case), and would replace all entries of the first key with the one(s) in the file.
                     // First check if $zData is filled. If so, break and ignore the rest of this section.
                     if ($zData) {
-                        // During update import a warning is set that updating for this section is not allowed, but we don't want that for every line.
-                        if (!in_array($sCurrentSection, $aSectionsAlreadyWarnedFor)) {
-                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
-                            $nWarnings ++;
-                            $aSectionsAlreadyWarnedFor[] = $sCurrentSection;
-                        }
+                        // This section cannot be updated during an import. So ther is no need to do the checks or give warnings or errors.
                         break;
                     }
 
@@ -1473,12 +1463,7 @@ if (POST) {
                     //  Unless we would give preference over the first key (Screenings, in this case), and would replace all entries of the first key with the one(s) in the file.
                     // First check if $zData is filled. If so, break and ignore the rest of this section.
                     if ($zData) {
-                        // During update import a warning is set that updating for this section is not allowed, but we don't want that for every line.
-                        if (!in_array($sCurrentSection, $aSectionsAlreadyWarnedFor)) {
-                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
-                            $nWarnings ++;
-                            $aSectionsAlreadyWarnedFor[] = $sCurrentSection;
-                        }
+                        // This section cannot be updated during an import. So ther is no need to do the checks or give warnings or errors.
                         break;
                     }
 
