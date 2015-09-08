@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-07-23
+ * Modified    : 2015-09-08
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -249,8 +249,8 @@ if (POST) {
             array('Columns', 'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Individuals_To_Diseases', 'Phenotypes', 'Screenings', 'Screenings_To_Genes', 'Variants_On_Genome', 'Variants_On_Transcripts', 'Screenings_To_Variants'),
             array('allowed_columns' => array(), 'columns' => array(), 'update_columns_not_allowed' => array('edited_by' => array( 'message' => 'Edited by field is set by LOVD', 'error_type' => 'soft'),
                                                                                                             'edited_date' => array('message' => 'Edited date field is set by LOVD', 'error_type' => 'soft'),
-                                                                                                            'created_by' => array('message' => 'Created by field is set by LOVD', 'error_type' => 'hard'),
-                                                                                                            'created_date' => array('message' => 'Created date field is set by LOVD', 'error_type' => 'hard')), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
+                                                                                                            'created_by' => array('message' => 'Created by field is set by LOVD', 'error_type' => 'soft'),
+                                                                                                            'created_date' => array('message' => 'Created date field is set by LOVD', 'error_type' => 'soft')), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
         $aParsed['Genes_To_Diseases'] = $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('allowed_columns' => array(), 'data' => array()); // Just the data, nothing else!
         $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
         $aImportFlags = array('max_errors' => 50);
@@ -785,7 +785,9 @@ if (POST) {
                         }
                     }
 
-                    if ($nDifferences) {
+                    // When ignore is true, we still want to display the errors or warnings.
+                    // Therefore use $aDifferences instead of $nDifferences to check if it is required to set warnings and/or errors.
+                    if (!empty($aDifferences)) {
                         if (!lovd_isAuthorized($sCurrentAuthorization, $aLine['id'], false)) {
                             // Not allowed to edit at all!
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied for update of ' . $sCurrentAuthorization . ' entry ' . htmlspecialchars($aLine['id']) . '.');
