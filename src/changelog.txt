@@ -59,6 +59,8 @@
    country.
  * Importing data with status pending is now possible.
  * Fixed typo in reset_password.php.
+ * Fixed bug; The "Select all" link didn't work for the custom column data
+   listing.
 
 
 /**************************
