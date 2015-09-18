@@ -100,7 +100,7 @@ $nMaxSize = min(
 
 function lovd_calculateFieldDifferences ($zData, $aLine)
 {
-	global $aSection;
+    global $aSection;
     // Creates an array with changed columns, with values from the database and the values from the import file.
     // By default, the variable 'ignore' is set to false. Meaning that this field is allowed to be updated.
 
@@ -111,9 +111,9 @@ function lovd_calculateFieldDifferences ($zData, $aLine)
         // When the columns do not exist in the import file, the columns are not taken into account.
         // We trust that $aLine has already been filled with all columns from $zData.
         if ($aLine[$sCol] && $sValue != $aLine[$sCol]) {
-			if (in_array($sCol, array_keys($aSection['update_columns_not_allowed'])) &&
-				$aSection['update_columns_not_allowed'][$sCol]['error_type']) {
-                // Changes in these fields are ignored during an update import, because they are not allowed to modify.
+            if (in_array($sCol, array_keys($aSection['update_columns_not_allowed'])) &&
+                $aSection['update_columns_not_allowed'][$sCol]['error_type']) {
+                // Changes in these fields are ignored during an update import, because they are not allowed to be modified.
                 // But because we might want to set a warning to inform the user, the fields must be included in the $aDiffs array.
                 // Whether changes in these columns are soft or hard errors or ignored silently, is defined in $aSection['update_columns_not_allowed'].
                 $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => true);
@@ -1042,13 +1042,13 @@ if (POST) {
                             $_ERROR['messages'] = array_values($_ERROR['messages']);
                         }
 
-						if (!$zData) {
-							// Do not set soft warnings when we do an update.
-							$_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (empty($aLine['id_omim'])? '' : ' and/or OMIM ID ' . $aLine['id_omim']) . '. This disease is not imported! <BR>', 'done');
-							$nWarnings ++;
-						}
+                        if (!$zData) {
+                            // Do not set soft warnings when we do an update.
+                            $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (empty($aLine['id_omim'])? '' : ' and/or OMIM ID ' . $aLine['id_omim']) . '. This disease is not imported! <BR>', 'done');
+                            $nWarnings ++;
+                        }
 
-						$aLine['newID'] = $nDiseaseIdOmim[0];
+                        $aLine['newID'] = $nDiseaseIdOmim[0];
                         $aLine['todo'] = 'map';
                         break;
                     }
