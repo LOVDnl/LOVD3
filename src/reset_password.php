@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2014-07-15
- * For LOVD    : 3.0-11
+ * Modified    : 2015-09-04
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -59,7 +59,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $_T->printTitle();
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for non-existent account ' . $_POST['username']);
             print('      If you entered the username correctly, we have successfully reset your password.<BR>' . "\n" .
-                  '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login.php">unlock your account</A> and choose a new password.<BR><BR>' . "\n" .
+                  '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login">unlock your account</A> and choose a new password.<BR><BR>' . "\n" .
                   '      If you don\'t receive this email, it is possible that the username you entered is not correct. Please double-check it.<BR><BR>' . "\n\n");
             $_T->printFooter();
             exit;

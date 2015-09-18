@@ -57,7 +57,8 @@
    features and pages caused errors.
  * Added hidden column on data ViewLists for searching on the data owner's
    country.
- * Importing data with status pending is now possible. 
+ * Importing data with status pending is now possible.
+ * Fixed typo in reset_password.php.
 
 
 /**************************
