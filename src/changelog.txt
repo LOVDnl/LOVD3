@@ -61,6 +61,8 @@
  * Fixed typo in reset_password.php.
  * Fixed bug; The "Select all" link didn't work for the custom column data
    listing.
+ * Fixed bug; When removing a transcript from a variant, if the transcript was
+   the only one in the database, an interface error occured.
 
 
 /**************************
