@@ -65,6 +65,11 @@
    the only one in the database, an interface error occured.
  * Fixed bug; The position converter on the variant data entry form always used
    hg19.
+ * Added support for hg38 for new LOVD3 installations. It is also the new
+   default for new LOVD3 installations.
+ * Updated links to Ensembl as they changed the default URL to point to hg38.
+ * Fixed bug; For each new gene, the UD (Mutalyzer reference sequence) retrieved
+   was hg38 instead of the active human build.
 
 
 /**************************

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-07-22
+ * Modified    : 2015-09-18
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -258,7 +258,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 } else {
                     // Get UD from mutalyzer.
                     try {
-                        $sRefseqUD = $_Mutalyzer->sliceChromosomeByGene(array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'))->sliceChromosomeByGeneResult;
+                        $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
                     } catch (SoapFault $e) {
                         lovd_soapError($e);
                     }

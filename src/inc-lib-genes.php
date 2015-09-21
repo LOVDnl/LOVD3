@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2014-12-23
- * For LOVD    : 3.0-13
+ * Modified    : 2015-09-18
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -377,5 +377,41 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
         }
     }
     return false;
+}
+
+
+
+
+
+function lovd_getUDForGene ($sBuild, $sGene)
+{
+    // Retrieves an UD for any given gene and genome build.
+    // In principle, any build is supported, but we'll check against the available builds supported in LOVD.
+    global $_CONF, $_SETT;
+
+    if (!$sBuild || !is_string($sBuild) || !isset($_SETT['human_builds'][$sBuild])) {
+        return false;
+    }
+
+    if (!$sGene || !is_string($sGene)) {
+        return false;
+    }
+
+    $sUD = '';
+
+    // Let's get the mapping information.
+    $sJSONResponse = @file_get_contents(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene);
+    if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
+        $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
+        $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
+        $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
+        $sJSONResponse = @file_get_contents('https://mutalyzer.nl/json/sliceChromosome?chromAccNo=' . $sChromosome . '&start=' . $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2));
+        if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
+            $sResponse = (!is_array($aResponse)? $aResponse : implode('', $aResponse));
+            $sUD = $sResponse;
+        }
+    }
+
+    return $sUD;
 }
 ?>
