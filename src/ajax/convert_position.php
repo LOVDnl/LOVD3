@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-09
- * Modified    : 2014-07-25
- * For LOVD    : 3.0-11
+ * Modified    : 2015-09-21
+ * For LOVD    : 3.0-14
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -47,7 +47,7 @@ require ROOT_PATH . 'class/soap_client.php';
 $_Mutalyzer = new LOVD_SoapClient();
 
 try {
-    $oOutput = $_Mutalyzer->numberConversion(array('build' => 'hg19', 'variant' => $_GET['variant'], 'gene' => $_GET['gene']))->numberConversionResult;
+    $oOutput = $_Mutalyzer->numberConversion(array('build' => $_CONF['refseq_build'], 'variant' => $_GET['variant'], 'gene' => $_GET['gene']))->numberConversionResult;
 } catch (SoapFault $e) {
     // FIXME: Perhaps indicate an error? Like in the check_hgvs script?
     die(AJAX_FALSE);

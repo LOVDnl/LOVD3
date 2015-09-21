@@ -63,6 +63,8 @@
    listing.
  * Fixed bug; When removing a transcript from a variant, if the transcript was
    the only one in the database, an interface error occured.
+ * Fixed bug; The position converter on the variant data entry form always used
+   hg19.
 
 
 /**************************
