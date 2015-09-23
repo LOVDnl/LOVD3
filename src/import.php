@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-09-08
+ * Modified    : 2015-09-23
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -262,6 +262,7 @@ if (POST) {
         $sMode = $_POST['mode'];
         $sDate = date('Y-m-d H:i:s');
         $aDiseasesAlreadyWarnedFor = array(); // To prevent lots and lots of error messages for each phenotype entry created for the same disease that is not yet inserted into the database.
+        $aSectionsAlreadyWarnedFor = array(); // To prevent lots and lots of error messages for a section that cannot be updated in the database.
 
         foreach ($aData as $i => $sLine) {
             $sLine = trim($sLine);
@@ -763,6 +764,11 @@ if (POST) {
                         list($sCol2, $nID2) = each($aLine);
                         if (isset($nID1) && isset($nID2)) {
                             $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE ' . $sCol1 . ' = ? AND ' . $sCol2 . ' = ?', array($nID1, $nID2))->fetchAssoc();
+                        }
+                        if (!$zData && !in_array($sCurrentSection, $aSectionsAlreadyWarnedFor)) {
+                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
+                            $nWarnings ++;
+                            $aSectionsAlreadyWarnedFor[] = $sCurrentSection;
                         }
                         break;
                 }
