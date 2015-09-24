@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2015-09-18
+ * Modified    : 2015-09-24
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -405,7 +405,7 @@ function lovd_getUDForGene ($sBuild, $sGene)
         $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
         $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
         $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
-        $sJSONResponse = @file_get_contents('https://mutalyzer.nl/json/sliceChromosome?chromAccNo=' . $sChromosome . '&start=' . $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2));
+        $sJSONResponse = @file_get_contents(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/sliceChromosome?chromAccNo=' . $sChromosome . '&start=' . $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2));
         if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
             $sResponse = (!is_array($aResponse)? $aResponse : implode('', $aResponse));
             $sUD = $sResponse;
