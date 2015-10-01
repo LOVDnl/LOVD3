@@ -1,0 +1,39 @@
+language: php
+php:
+#  - 5.3.3
+  # aliased to 5.3.29
+#  - 5.3
+  # aliased to a recent 5.4.x version
+#  - 5.4
+  # aliased to a recent 5.5.x version
+  - 5.5
+  # aliased to a recent 5.6.xversion  
+#  - 5.6
+  # aliased to a recent 7.x version
+#  - 7.0
+#  - hhvm
+#  - nightly
+
+sudo: required
+
+before_install:
+  - ./tests/travis/setup/setup_mysql.sh
+
+before_script:
+  - ./tests/travis/setup/setup_apache.sh
+  ## IMPORTANT! convert must be run AFTER the setup_apache.sh
+  ## setup_apache.sh fix some assumptions where the files are stored!
+  - ./tests/bash_scripts/convert_selenium_to_phpunit.sh --localhost=trunk --continueall
+  - ./tests/travis/setup/setup_selenium_server.sh
+
+script:
+##  - phpunit --verbose --debug --coverage-text ./trunk/tests/travis/tests/
+##  - phpunit --debug --coverage-text ./tests/phpunit_selenium/adminTest.php
+##  - phpunit --debug --coverage-text ./tests/phpunit_selenium/importTest.php
+  
+## Run all tests
+  - phpunit --debug --coverage-text ./tests/phpunit_selenium/
+
+notifications:
+  email:
+    - d.asscheman@lumc.nl
