@@ -1,0 +1,12 @@
+{
+    "require": {
+        "phpunit/phpunit-selenium": ">=1.2",
+        "phpunit/phpunit": "4.4.*",
+        "phpunit/php-invoker": "*",
+        "phpunit/dbunit": "*",
+        "phpunit/phpunit-story": "*",
+        "sebastian/comparator": "~1.0",
+        "ext-curl": "*",
+        "ext-dom": "*",
+    }
+}
