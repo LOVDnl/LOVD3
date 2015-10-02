@@ -38,22 +38,17 @@
 </tr>
 <tr>
 	<td>click</td>
-	<td>link=Show 21 warnings</td>
+	<td>link=Show 33 warnings</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Columns, line 8): Will not update column Individual/Age_of_death, too many fields are different from the database (col_order, width, hgvs, standard, head_column, description_form, description_legend_short, description_legend_full, mysql_type, form_type, select_options, preg_pattern). There is a maximum of 1 difference to prevent accidental updates.*</td>
+	<td>*Error (Columns, line 8): Will not update column Individual/Age_of_death, too many fields are different from the database (col_order, width, standard, head_column, description_form, description_legend_short, description_legend_full, mysql_type, form_type, select_options, preg_pattern). There is a maximum of 1 difference to prevent accidental updates.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
 	<td>*Error (Columns, line 8): Can?t update hgvs for column entry Individual/Age_of_death: Not allowed to change the HGVS standard status of any column. Value is currently &quot;0&quot; and value in the import file is &quot;1&quot;.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Error (Columns, line 8): Can?t update created_date for column entry Individual/Age_of_death: Created date field is set by LOVD Value is currently &quot;*&quot; and value in the import file is &quot;2015-06-02 15:42:07&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
@@ -68,7 +63,7 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Columns, line 8): Select option #1 &quot;? = Unknown no = Non-consanguineous parents yes()* = Consanguineous parents&quot; not understood.*</td>
+	<td>*Error (Columns, line 8): Select option #3 &quot;yes()* = Consanguineous parents&quot; not understood.*</td>
 	<td></td>
 </tr>
 <tr>
@@ -83,17 +78,7 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Genes, line 14): Will not update gene IVD, too many fields are different from the database (name, chromosome). There is a maximum of 1 difference to prevent accidental updates.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
 	<td>*Error (Genes, line 14): Can?t update chromosome for gene entry IVD: Not allowed to change the chromosome. Value is currently &quot;15&quot; and value in the import file is &quot;151&quot;.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Error (Genes, line 14): Can?t update created_date for gene entry IVD: Created date field is set by LOVD Value is currently &quot;*&quot; and value in the import file is &quot;2015-06-02 15:42:21&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
@@ -113,11 +98,6 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Transcripts, line 20): Can?t update created_date for transcript entry 00001: Created date field is set by LOVD Value is currently &quot;*&quot; and value in the import file is &quot;2015-06-02 15:42:21&quot;.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
 	<td>*Error (Transcripts, line 20): Transcript &quot;00001&quot; does not match the same gene and/or the same NCBI ID as in the database.*</td>
 	<td></td>
 </tr>
@@ -133,16 +113,6 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Diseases, line 27): Can?t update created_by for disease entry 00000: Created by field is set by LOVD Value is currently &quot;00000&quot; and value in the import file is &quot;00001&quot;.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Error (Diseases, line 27): Can?t update created_date for disease entry 00000: Created date field is set by LOVD Value is currently &quot;*&quot; and value in the import file is &quot;2015-06-02 15:42:23&quot;.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
 	<td>*Error (Diseases, line 27): Another disease already exists with this OMIM ID at line 26.*</td>
 	<td></td>
 </tr>
@@ -154,11 +124,6 @@
 <tr>
 	<td>assertBodyText</td>
 	<td>*Error (Diseases, line 28): Will not update disease 00002, too many fields are different from the database (symbol, name, id_omim). There is a maximum of 1 difference to prevent accidental updates.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Error (Diseases, line 28): Can?t update created_date for disease entry 00002: Created date field is set by LOVD Value is currently &quot;*&quot; and value in the import file is &quot;2015-06-03 10:29:37&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
@@ -238,22 +203,12 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Phenotypes, line 54): Will not update phenotype 0000000001, too many fields are different from the database (diseaseid, individualid). There is a maximum of 1 difference to prevent accidental updates.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
 	<td>*Error (Phenotypes, line 54): Can?t update diseaseid for phenotype entry 0000000001: Not allowed to change the disease. Value is currently &quot;00001&quot; and value in the import file is &quot;00004&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
 	<td>*Error (Phenotypes, line 54): Can?t update individualid for phenotype entry 0000000001: Not allowed to change the individual. Value is currently &quot;00000001&quot; and value in the import file is &quot;00000022&quot;.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Error (Phenotypes, line 54): Can?t update created_date for phenotype entry 0000000001: Created date field is set by LOVD Value is currently &quot;*&quot; and value in the import file is &quot;2015-06-02 15:42:32&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
@@ -278,11 +233,6 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Screenings, line 60): Can?t update created_date for screening entry 0000000001: Created date field is set by LOVD Value is currently &quot;*&quot; and value in the import file is &quot;2015-06-02 15:42:37&quot;.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
 	<td>*Error (Screenings, line 60): Individual &quot;00000022&quot; does not exist in the database and is not defined in this import file.*</td>
 	<td></td>
 </tr>
@@ -299,11 +249,6 @@
 <tr>
 	<td>assertBodyText</td>
 	<td>*Error (Variants_On_Genome, line 72): Can?t update position_g_start for variant entry 0000000001: Not allowed to change the genomic start position. Value is currently &quot;40702876&quot; and value in the import file is &quot;abc&quot;.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Error (Variants_On_Genome, line 72): Can?t update created_date for variant entry 0000000001: Created date field is set by LOVD Value is currently &quot;*&quot; and value in the import file is &quot;2015-06-02 15:42:48&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
@@ -328,11 +273,6 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Variants_On_Transcripts, line 79): ID &quot;1|1&quot; already defined at line 78.*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
 	<td>*Error (Variants_On_Transcripts, line 80): This line refers to a non-existing entry. When the import mode is set to update, no new inserts can be done.*</td>
 	<td></td>
 </tr>
@@ -343,52 +283,97 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Columns, line 8): Edited by field is set by LOVD *</td>
+	<td>*Warning (Columns, line 8): Created date field is set by LOVD Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-02 15:42:07&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Columns, line 8): Edited date field is set by LOVD *</td>
+	<td>*Warning (Columns, line 8): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00000&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Genes, line 14): Edited by field is set by LOVD *</td>
+	<td>*Warning (Columns, line 8): Edited date field is set by LOVD Value is currently empty and the value in the import file is &quot;2015-06-02 15:42:07&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Genes, line 14): Updated date field is set by LOVD. *</td>
+	<td>*Warning (Columns, line 9): Created date field is set by LOVD Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-12 15:33:25&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Transcripts, line 20): Edited by field is set by LOVD *</td>
+	<td>*Warning (Genes, line 14): Created date field is set by LOVD Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-02 15:42:21&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Transcripts, line 20): Edited date field is set by LOVD *</td>
+	<td>*Warning (Genes, line 14): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00001&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Diseases, line 26): There is already a disease with disease name isovaleric acidemia and/or OMIM ID 243500. This disease is not imported! *</td>
+	<td>*Warning (Genes, line 14): Updated date field is set by LOVD. Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-02 15:42:48&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Diseases, line 27): There is already a disease with disease name isovaleric acidemia and/or OMIM ID 243500. This disease is not imported! *</td>
+	<td>*Warning (Transcripts, line 20): Created date field is set by LOVD Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-02 15:42:21&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Diseases, line 28): Edited by field is set by LOVD *</td>
+	<td>*Warning (Transcripts, line 20): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00001&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Diseases, line 28): Edited date field is set by LOVD *</td>
+	<td>*Warning (Transcripts, line 20): Edited date field is set by LOVD Value is currently empty and the value in the import file is &quot;2015-06-02 15:42:21&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Transcripts, line 21): Created date field is set by LOVD Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-12 15:33:40&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 26): Created date field is set by LOVD Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-02 15:42:23&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 26): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00001&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 26): Edited date field is set by LOVD Value is currently empty and the value in the import file is &quot;2015-06-02 15:42:23&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 27): Created by field is set by LOVD Value is currently &quot;00000&quot; and the value in the import file is &quot;00001&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 27): Created date field is set by LOVD Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-02 15:42:23&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 28): Created date field is set by LOVD Value is currently &quot;*&quot; and the value in the import file is &quot;2015-06-03 10:29:37&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 28): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00001&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Diseases, line 28): Edited date field is set by LOVD Value is currently empty and the value in the import file is &quot;2015-06-02 15:42:23&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
@@ -398,52 +383,67 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Individuals, line 39): Edited by field is set by LOVD *</td>
+	<td>*Warning (Individuals, line 39): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00001&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Individuals, line 39): Edited date field is set by LOVD *</td>
+	<td>*Warning (Individuals, line 39): Edited date field is set by LOVD Value is currently empty and the value in the import file is &quot;2015-06-03 11:30:26&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning: It is currently not possible to do an update on section Individuals_To_Diseases via an import *</td>
+	<td>*Warning: It is currently not possible to do an update on section Individuals_To_Diseases via an import*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Phenotypes, line 54): Edited by field is set by LOVD *</td>
+	<td>*Warning (Phenotypes, line 54): Created date field is set by LOVD Value is currently &quot;2015-06-03 11:30:56&quot; and the value in the import file is &quot;2015-06-02 15:42:32&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Phenotypes, line 54): Edited date field is set by LOVD *</td>
+	<td>*Warning (Phenotypes, line 54): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00001&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Screenings, line 60): Edited by field is set by LOVD *</td>
+	<td>*Warning (Phenotypes, line 54): Edited date field is set by LOVD Value is currently empty and the value in the import file is &quot;2015-06-02 15:42:32&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Screenings, line 60): Edited date field is set by LOVD *</td>
+	<td>*Warning (Screenings, line 60): Created date field is set by LOVD Value is currently &quot;2015-06-03 11:31:03&quot; and the value in the import file is &quot;2015-06-02 15:42:37&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning: It is currently not possible to do an update on section Screenings_To_Genes via an import *</td>
+	<td>*Warning (Screenings, line 60): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00001&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning (Variants_On_Genome, line 72): Edited by field is set by LOVD *</td>
+	<td>*Warning (Screenings, line 60): Edited date field is set by LOVD Value is currently empty and the value in the import file is &quot;2015-06-02 15:42:37&quot;.*</td>
 	<td></td>
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Warning: It is currently not possible to do an update on section Screenings_To_Variants via an import *</td>
+	<td>*Warning: It is currently not possible to do an update on section Screenings_To_Genes via an import*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Variants_On_Genome, line 72): Created date field is set by LOVD Value is currently &quot;2015-06-03 11:31:16&quot; and the value in the import file is &quot;2015-06-02 15:42:48&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning (Variants_On_Genome, line 72): Edited by field is set by LOVD Value is currently empty and the value in the import file is &quot;00001&quot;.*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertBodyText</td>
+	<td>*Warning: It is currently not possible to do an update on section Screenings_To_Variants via an import*</td>
 	<td></td>
 </tr>
 </tbody></table>

@@ -35,6 +35,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/install\/[\s\S]step=3$/',$this->getLocation()));
     $this->type("name=institute", "Leiden University Medical Center");
     $this->type("name=email_address", "noreply@LOVD.nl");
+    $this->select("name=refseq_build", "label=hg19 / GRCh37");
     $this->click("name=send_stats");
     $this->click("name=include_in_listing");
     $this->uncheck("name=lock_uninstall");

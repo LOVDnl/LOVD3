@@ -31,6 +31,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->type("name=institute", "Leiden University Medical Center");
     $this->type("name=email_address", "noreply@LOVD.nl");
+    $this->select("name=refseq_build", "label=hg19 / GRCh37");
     $this->click("name=send_stats");
     $this->click("name=include_in_listing");
     $this->click("name=lock_uninstall");

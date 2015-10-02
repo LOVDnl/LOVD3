@@ -53,7 +53,7 @@
 </tr>
 <tr>
 	<td>assertBodyText</td>
-	<td>*Error (Columns, line 9): Select option #1 &quot;? = Unknown no = Non-consanguineous parents yes()* = Consanguineous parents&quot; not understood.*</td>
+	<td>*Error (Columns, line 9): Select option #3 &quot;yes()* = Consanguineous parents&quot; not understood.*</td>
 	<td></td>
 </tr>
 <tr>

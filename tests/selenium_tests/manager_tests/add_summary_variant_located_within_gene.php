@@ -22,8 +22,6 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->assertTrue((bool)preg_match('/^[\s\S]*trunk\/src\/variants[\s\S]create&reference=Transcript&geneid=ARSD$/',$this->getLocation()));
     $this->uncheck("name=ignore_00002");
     $this->uncheck("name=ignore_00003");
-    $this->check("name=ignore_00004");
-    $this->check("name=ignore_00005");
     $this->type("name=00002_VariantOnTranscript/Exon", "3");
     $this->type("name=00002_VariantOnTranscript/DNA", "c.62T>A");
     $this->click("css=button.mapVariant");

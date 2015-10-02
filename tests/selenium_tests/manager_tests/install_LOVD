@@ -102,6 +102,11 @@
 	<td>noreply@LOVD.nl</td>
 </tr>
 <tr>
+	<td>select</td>
+	<td>name=refseq_build</td>
+	<td>label=hg19 / GRCh37</td>
+</tr>
+<tr>
 	<td>click</td>
 	<td>name=send_stats</td>
 	<td></td>

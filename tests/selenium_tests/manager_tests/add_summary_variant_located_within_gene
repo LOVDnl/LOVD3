@@ -67,16 +67,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>check</td>
-	<td>name=ignore_00004</td>
-	<td></td>
-</tr>
-<tr>
-	<td>check</td>
-	<td>name=ignore_00005</td>
-	<td></td>
-</tr>
-<tr>
 	<td>type</td>
 	<td>name=00002_VariantOnTranscript/Exon</td>
 	<td>3</td>
