@@ -7,6 +7,6 @@
         "phpunit/phpunit-story": "*",
         "sebastian/comparator": "~1.0",
         "ext-curl": "*",
-        "ext-dom": "*",
+        "ext-dom": "*"
     }
 }
