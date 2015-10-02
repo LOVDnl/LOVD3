@@ -168,7 +168,7 @@
 </tr>
 <tr>
 	<td>storeEval</td>
-	<td>window.document.getElementById('variantForm').elements[37].value</td>
+	<td>window.document.getElementById('variantForm').elements[19].value</td>
 	<td>GenomicDnaChange</td>
 </tr>
 <tr>

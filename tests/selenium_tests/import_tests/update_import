@@ -32,26 +32,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>assertBodyText</td>
-	<td>*Warning: It is currently not possible to do an update on section Genes_To_Diseases via an import*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Warning: It is currently not possible to do an update on section Individuals_To_Diseases via an import*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Warning: It is currently not possible to do an update on section Screenings_To_Genes via an import*</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertBodyText</td>
-	<td>*Warning: It is currently not possible to do an update on section Screenings_To_Variants via an import*</td>
-	<td></td>
-</tr>
-<tr>
 	<td>assertText</td>
 	<td>id=lovd_sql_progress_message_done</td>
 	<td>*The following sections are modified and updated in the database: Columns, Diseases, Individuals, Phenotypes, Screenings, Variants_On_Genome, Variants_On_Transcripts.</td>

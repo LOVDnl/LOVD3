@@ -42,7 +42,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=00003_effect_reported", "label=Probably affects function");
     $this->select("name=00003_effect_concluded", "label=Probably does not affect function");
     $this->select("name=allele", "label=Maternal (confirmed)");
-    $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[37].value");
+    $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[19].value");
     $this->assertEquals("g.2843789A>T", $this->getExpression($GenomicDnaChange));
     $this->click("link=PubMed");
     $this->type("name=VariantOnGenome/Reference", "{PMID:[2011]:[2150333]}");
