@@ -23,7 +23,7 @@ before_script:
   - ./tests/travis/setup/setup_apache.sh
   ## IMPORTANT! convert must be run AFTER the setup_apache.sh
   ## setup_apache.sh fix some assumptions where the files are stored!
-  - ./tests/bash_scripts/convert_selenium_to_phpunit.sh --localhost=trunk --continueall
+  - ./tests/bash_scripts/convert_selenium_to_phpunit.sh --localhost=src --continueall
   - ./tests/travis/setup/setup_selenium_server.sh
 
 script:
