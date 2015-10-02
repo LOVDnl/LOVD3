@@ -48,12 +48,16 @@ TESTDATATPATH=$(dirname $SCRIPTPATH)/test_data_files/
 ##DOCROOT=$(grep -h DocumentRoot /etc/apache2/sites-enabled/*default* | head -n 1 | awk '{print $2};') ##| sed 's\//\\\//g');
 ##LOCALHOSTDIR=`echo $SCRIPTPATH | sed "s/.*${DOCROOT}//" | sed "s@/trunk.*@@"`
 LOCALHOSTDIR=`echo ${SCRIPTPATH} | sed "s@.*$FIRSTLOCALHOSTFOLDER@/$FIRSTLOCALHOSTFOLDER@" | sed "s@/trunk.*@@"`
+echo Localhost directory: ${LOCALHOSTDIR}
 TRUNKDIR=`echo ${SCRIPT} | sed "s@trunk.*@@"`
-
 # These are used to replace the locations in the setup script.
 NEWSETBROWSERURL="http://localhost"${LOCALHOSTDIR}
 NEWSCREENSHOTPATH=${TRUNKDIR}"trunk/tests/test_results/error_screenshots"
 NEWSCHREENSHOTURL=${NEWSETBROWSERURL}"/trunk/tests/test_results/error_screenshots"
+
+echo Default browser URL: ${NEWSETBROWSERURL}
+echo Screenshot Path: ${NEWSCREENSHOTPATH}
+echo Screenshot URL: ${NEWSCHREENSHOTURL}
 
 # Used to change de modify date.
 DATE=`date +%Y-%m-%d:%H:%M:%S`
