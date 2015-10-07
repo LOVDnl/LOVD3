@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-10-02
+ * Modified    : 2015-10-07
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -163,40 +163,6 @@ function lovd_endLine ()
 
 
 
-function lovd_trimField ($sVal)
-{
-    // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
-    // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
-
-    $sVal = trim($sVal);
-    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
-        $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
-    }
-    return trim($sVal);
-}
-
-
-
-
-
-function utf8_encode_array ($Data)
-{
-    // Recursively loop array to encode values.
-
-    if (!is_array($Data)) {
-        return utf8_encode($Data);
-    } else {
-        foreach ($Data as $key => $val) {
-            $Data[$key] = utf8_encode_array($val);
-        }
-        return $Data;
-    }
-}
-
-
-
-
-
 /**
  * lovd_setEmptyCheckboxFields checks for all fields in the import file if it is a checkbox type
  * and if it has a valid value (0 or 1). When the field has no value ('') it is set to 0.
@@ -224,6 +190,40 @@ function lovd_setEmptyCheckboxFields ($aForm)
                 lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain either a \'0\' or a \'1\'.');
             }
         }
+    }
+}
+
+
+
+
+
+function lovd_trimField ($sVal)
+{
+    // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
+    // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
+
+    $sVal = trim($sVal);
+    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
+        $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
+    }
+    return trim($sVal);
+}
+
+
+
+
+
+function utf8_encode_array ($Data)
+{
+    // Recursively loop array to encode values.
+
+    if (!is_array($Data)) {
+        return utf8_encode($Data);
+    } else {
+        foreach ($Data as $key => $val) {
+            $Data[$key] = utf8_encode_array($val);
+        }
+        return $Data;
     }
 }
 
