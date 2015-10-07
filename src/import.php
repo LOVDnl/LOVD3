@@ -98,52 +98,49 @@ $nMaxSize = min(
     lovd_convertIniValueToBytes(ini_get('upload_max_filesize')),
     lovd_convertIniValueToBytes(ini_get('post_max_size')));
 
-function lovd_calculateFieldDifferences ($zData, $aLine)
+
+
+
+
+function lovd_calculateFieldDifferences ($zData, &$aLine)
 {
-    global $aSection;
     // Creates an array with changed columns, with values from the database and the values from the import file.
     // By default, the variable 'ignore' is set to false. Meaning that this field is allowed to be updated.
+    global $aSection;
 
     $aDiffs = array();
     foreach ($zData as $sCol => $sValue) {
         // Empty fields in the import file is considered valid. So when a field is filled in the database
         // but is empty in the import file, the field is emptied in the database.
         // When the database columns do not exist in the import file, the columns are not taken into account in this function.
-        // Function lovd_appendDbDataToImportAndUpdateArray() takes care of fields that
-        // exist in the database but not in the import file.
-        if (in_array($sCol, array_keys($aLine)) && $sValue != $aLine[$sCol]) {
-            if (in_array($sCol, array_keys($aSection['update_columns_not_allowed'])) &&
-                $aSection['update_columns_not_allowed'][$sCol]['error_type']) {
-                // Changes in these fields are ignored during an update import, because they are not allowed to be modified.
-                // But because we might want to set a warning to inform the user, the fields must be included in the $aDiffs array.
-                // Whether changes in these columns are soft or hard errors or ignored silently, is defined in $aSection['update_columns_not_allowed'].
-                $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => true);
-            } else {
-                $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => false);
+        // Below we take care of fields that exist in the database but not in the import file.
+        if (isset($aLine[$sCol])) {
+            if ($sValue != $aLine[$sCol]) {
+                if (isset($aSection['update_columns_not_allowed'][$sCol]) &&
+                    $aSection['update_columns_not_allowed'][$sCol]['error_type']) {
+                    // Changes in these fields are ignored during an update import, because they are not allowed to be modified.
+                    // But because we might want to set a warning to inform the user, the fields must be included in the $aDiffs array.
+                    // Whether changes in these columns are soft or hard errors or ignored silently, is defined in $aSection['update_columns_not_allowed'].
+                    $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => true);
+                } else {
+                    $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => false);
+                }
             }
-        }
-    }
-    return $aDiffs;
-}
-
-/**
- * During an update import we do not want to update fields which are not present in the import file with the default values.
- * Therefor we going to add all the missing columns of the database to $aLine and set error_type on false and ingnore on true.
- * In this way, the fields will not be updated and no warning or error is set.
- **/
-function lovd_appendDbDataToLineAndDiffArray ($zData)
-{
-    global $aSection, $aDifferences, $aLine;
-
-    foreach ($zData as $sCol => $sValue) {
-        if (! in_array($sCol, array_keys($aLine))){
+        } else {
+            // During an update import we do not want to update fields, not present in the import file, with the default values.
+            // Therefore we are going to add all the missing columns of the database to $aLine and set 'error_type' on false and 'ignore' on true.
+            // In this way, the fields will not be updated and no warning or error is set.
             $aLine[$sCol] = $sValue;
             $aSection['update_columns_not_allowed'][$sCol]['error_type'] = false;
             $aDifferences[$sCol] = array('DB' => $sValue, 'file' => 'Does not exist in import file', 'ignore' => true);
         }
     }
-    return;
+    return $aDiffs;
 }
+
+
+
+
 
 function lovd_endLine ()
 {
@@ -162,6 +159,10 @@ function lovd_endLine ()
     return true;
 }
 
+
+
+
+
 function lovd_trimField ($sVal)
 {
     // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
@@ -173,6 +174,10 @@ function lovd_trimField ($sVal)
     }
     return trim($sVal);
 }
+
+
+
+
 
 function utf8_encode_array ($Data)
 {
@@ -188,12 +193,17 @@ function utf8_encode_array ($Data)
     }
 }
 
+
+
+
+
 /**
  * lovd_setEmptyCheckboxFields checks for all fields in the import file if it is a checkbox type
- * and if it has an valid value (0 or 1). When the field has no value ('') it is set to 0.
+ * and if it has a valid value (0 or 1). When the field has no value ('') it is set to 0.
  * When it has an invalid value (>1) an error is set.
  **/
-function lovd_setEmptyCheckboxFields($aForm){
+function lovd_setEmptyCheckboxFields ($aForm)
+{
     global $aLine;
 
     foreach ($aForm as $aField) {
@@ -201,13 +211,11 @@ function lovd_setEmptyCheckboxFields($aForm){
             // 'skip', 'hr', etc...
             continue;
         }
-        @list($sHeader, $sDummyHelp, $sType, $sName) = $aField;
+        @list($sHeader, , $sType, $sName) = $aField;
         if ($sType == 'checkbox') {
-            /**
-             * If a checkbox field is left empty in the import file, it is filled with 0.
-             * If it does not exist in the import file it should not be added here.
-             * Because during update we want to ingore fields that are not available and during insert it will generate an ERROR when mandatory.
-             */
+            // If a checkbox field is left empty in the import file, it is filled with 0.
+            // If it does not exist in the import file it should not be added here.
+            // Because during update we want to ignore fields that are not available, and during insert it will generate an error when mandatory.
             if (isset($aLine[$sName]) && $aLine[$sName] === '') {
                 // All data in $aLine is handled as a string, therefor we set the checkbox variable as string.
                 $aLine[$sName] = '0';
@@ -219,42 +227,9 @@ function lovd_setEmptyCheckboxFields($aForm){
     }
 }
 
-/**
- * Returns the form from the object $aSection.
- * $sCurrentSection is necessary to determine what to return.
- * $aLine is required for section Phenotypes.
- * $sGene is required for section Variants On Transcripts.
- **/
-function lovd_getFormForCurrentSection($sCurrentSection, $aSection, $aLine, $sGene){
-    if ($sCurrentSection == 'Phenotypes') {
-        return $aSection['objects'][(int) $aLine['diseaseid']]->getForm();
-    }
 
-    if ($sCurrentSection == 'Variants_On_Transcripts'){
-        return $aSection['objects'][$sGene]->getForm();
-    }
 
-    return $aSection['object']->getForm();
-}
 
-/**
- * For section columns the $aLine['id'] must be split in $aLine['category'] and $aLine['colid']
- * and $_POST values are filled.
- * These later are neseccary when getForm() and checkField are called for object columns.
- **/
-function lovd_splitColumnIdAndSetPostValues($sCurrentSection){
-    global $aLine, $_POST;
-    if ($sCurrentSection == 'Columns') {
-        // For custom columns, we need to split the ID in category and colid.
-        list($aLine['category'], $aLine['colid']) = explode('/', $aLine['id'], 2);
-
-        // Calling getForm() complains that $_POST data does not exist.
-        // These globals are needed in getForm() and checkFields()
-        $_POST['category'] = $aLine['category'];
-        $_POST['width'] = $aLine['width'];
-        $_POST['workID'] = '';
-    }
-}
 
 $nWarnings = 0;
 if (POST) {
@@ -753,14 +728,12 @@ if (POST) {
                 $aLine[$key] = str_replace(array('\r', '\n', '\t'), array("\r", "\n", "\t"), $sVal);
             }
 
-            /**
-             * When we are updating we don't want to add all allowed columns to de import data ($aLine).
-             * Because when the column is not in the import file during an import,
-             * the user probably doesn't want to change that column.
-             * The function appendDbDataToImportAndUpdateArray() adds all the database fields to $aLine
-             * and set error_type on false and ingnore on true.
-             * In this way, the fields will not be updated and no warning or error is set.
-             **/
+            // When we are updating we don't want to add all allowed columns to the import data ($aLine),
+            // because when the column is not in the import file during an import,
+            // the user probably doesn't want to change that column.
+            // When updating, the function lovd_calculateFieldDifferences() adds all the database fields to $aLine,
+            // sets 'error_type' to false and 'ignore' on true.
+            // This way, the fields will not be updated and no warning or error is set.
             if ($sMode != 'update') {
                 // Create all the standard column's keys in $aLine, so we can safely reference to it.
                 foreach ($aSection['allowed_columns'] as $sCol) {
@@ -823,11 +796,28 @@ if (POST) {
                 $aSection['object'] =& $aSection['objects'][$sGene];
             }
 
-            lovd_splitColumnIdAndSetPostValues($sCurrentSection);
+            // Special actions for section Columns.
+            if ($sCurrentSection == 'Columns') {
+                // For custom columns, we need to split the ID in category and colid.
+                list($aLine['category'], $aLine['colid']) = explode('/', $aLine['id'], 2);
 
-            // Exclude section Genes, because it is not allowed to import this section it is not necessary to run the getForm()
+                // Calling getForm() from import.php complains that $_POST data does not exist.
+                // These globals are needed in getForm().
+                $_POST['category'] = $aLine['category'];
+                $_POST['width'] = $aLine['width'];
+                $_POST['workID'] = '';
+            }
+
+            // Build the form, necessary for field-specific actions (currently for checkboxes only).
+            // Exclude section Genes, because it is not allowed to import this section it is not necessary to run the getForm().
             if (isset($aSection['object']) && is_object($aSection['object']) && $sCurrentSection != 'Genes') {
-                $aForm = lovd_getFormForCurrentSection($sCurrentSection, $aSection, $aLine, $sGene);
+                if ($sCurrentSection == 'Phenotypes') {
+                    $aForm = $aSection['objects'][(int) $aLine['diseaseid']]->getForm();
+                } elseif ($sCurrentSection == 'Variants_On_Transcripts'){
+                    $aForm = $aSection['objects'][$sGene]->getForm();
+                } else {
+                    $aForm = $aSection['object']->getForm();
+                }
                 lovd_setEmptyCheckboxFields($aForm);
             }
 
@@ -878,7 +868,6 @@ if (POST) {
                 if ($zData) {
                     // Here we create an array with all columns that are different in the DB and in the file.
                     $aDifferences = lovd_calculateFieldDifferences($zData, $aLine);
-                    lovd_appendDbDataToLineAndDiffArray($zData);
                     // Calculate number of differences.
                     // Note: This also filters out any linking tables, because they can't have a difference between $zData and $aLine.
                     $nDifferences = 0;
