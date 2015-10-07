@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2015-06-05
+ * Modified    : 2015-09-24
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -183,13 +184,6 @@ class LOVD_Column extends LOVD_Object {
             unset($this->aCheckMandatory['colid']);
         } elseif (!empty($aData['active_links']) && !preg_match('/^TEXT|VARCHAR/', $aData['mysql_type'])) {
             lovd_errorAdd('active_links', 'Only VARCHAR or TEXT columns can have custom links activated for it!');
-        }
-
-        // parent::checkFields() is calling getForm(), which, when importing, in turn complains that $_POST data does not exist.
-        if (lovd_getProjectFile() == '/import.php') {
-            $_POST['category'] = $aData['category'];
-            $_POST['width'] = $aData['width'];
-            $_POST['workID'] = '';
         }
 
         parent::checkFields($aData);

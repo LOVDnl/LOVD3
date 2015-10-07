@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2013-08-08
+ * Modified    : 2015-09-23
  * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -240,7 +241,7 @@ class LOVD_Screening extends LOVD_Custom {
         if (ACTION == 'create' || (ACTION == 'publish' && GET)) {
             // When creating, or when publishing without any changes, unset the authorization.
             unset($this->aFormData['authorization']);
-        } else {
+        } elseif (lovd_getProjectFile() != '/import.php') {
             if ($_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn()) {
                 unset($this->aFormData['variants_found']);
             };

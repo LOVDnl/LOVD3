@@ -70,7 +70,8 @@
  * Updated links to Ensembl as they changed the default URL to point to hg38.
  * Fixed bug; For each new gene, the UD (Mutalyzer reference sequence) retrieved
    was hg38 instead of the active human build.
-
+ * Fixed bug; When a checkbox field was left empty in the import file, an sql
+   error occured during the import.
 
 /**************************
  * 3.0 Build 13 (r546)
