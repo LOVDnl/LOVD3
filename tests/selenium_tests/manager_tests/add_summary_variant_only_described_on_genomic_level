@@ -13,7 +13,7 @@
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/0000000279</td>
+	<td>*/src/variants/0000000279</td>
 	<td></td>
 </tr>
 <tr>
@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit</td>
+	<td>*/src/submit</td>
 	<td></td>
 </tr>
 <tr>
@@ -48,7 +48,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create</td>
+	<td>*/src/variants?create</td>
 	<td></td>
 </tr>
 <tr>
@@ -58,7 +58,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;reference=Genome</td>
+	<td>*/src/variants?create&amp;reference=Genome</td>
 	<td></td>
 </tr>
 <tr>

@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/login</td>
+	<td>*/src/login</td>
 	<td></td>
 </tr>
 <tr>
@@ -53,7 +53,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/screenings</td>
+	<td>*/src/screenings</td>
 	<td></td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/screenings/0000000002</td>
+	<td>*/src/screenings/0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -78,7 +78,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;target=0000000002</td>
+	<td>*/src/variants?create&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -88,7 +88,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;reference=Genome&amp;target=0000000002</td>
+	<td>*/src/variants?create&amp;reference=Genome&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>

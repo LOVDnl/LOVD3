@@ -24,6 +24,9 @@ do
     case $i in
         -l=*|--localhost=*)
             FIRSTLOCALHOSTFOLDER="${i#*=}"
+			#The input is refering to the github project.
+			#For local development: /LOVD3_development
+			#For LUMC development : /LOVD3
         ;;
         -c|--continueall)
             alwaysask=false
@@ -45,15 +48,19 @@ SCRIPTPATH=$(dirname $SCRIPT)
 SELENIUMTESTTPATH=$(dirname $SCRIPTPATH)/selenium_tests
 PHPUNITTESTTPATH=$(dirname $SCRIPTPATH)/phpunit_selenium
 TESTDATATPATH=$(dirname $SCRIPTPATH)/test_data_files/
-##DOCROOT=$(grep -h DocumentRoot /etc/apache2/sites-enabled/*default* | head -n 1 | awk '{print $2};') ##| sed 's\//\\\//g');
-##LOCALHOSTDIR=`echo $SCRIPTPATH | sed "s/.*${DOCROOT}//" | sed "s@/trunk.*@@"`
-LOCALHOSTDIR=`echo ${SCRIPTPATH} | sed "s@.*$FIRSTLOCALHOSTFOLDER@/$FIRSTLOCALHOSTFOLDER@" | sed "s@/trunk.*@@"`
+#DOCROOT=$(grep -h DocumentRoot /etc/apache2/sites-enabled/*default* | head -n 1 | awk '{print $2}' | sed 's\//\\\//g');
+#LOCALHOSTDIR=`echo $SCRIPTPATH | sed "s/.*${DOCROOT}//" | sed "s@/trunk.*@@"`
+echo ${SCRIPTPATH}
+LOCALHOSTDIR=`echo ${SCRIPTPATH} | sed "s@.*$FIRSTLOCALHOSTFOLDER@/$FIRSTLOCALHOSTFOLDER@" | sed "s@/test.*@@"`
+TRUNKDIR=`echo ${SCRIPT} | sed "s@test.*@@"`
+
 echo Localhost directory: ${LOCALHOSTDIR}
-TRUNKDIR=`echo ${SCRIPT} | sed "s@trunk.*@@"`
+echo ${TRUNKDIR}
+
 # These are used to replace the locations in the setup script.
 NEWSETBROWSERURL="http://localhost"${LOCALHOSTDIR}
-NEWSCREENSHOTPATH=${TRUNKDIR}"trunk/tests/test_results/error_screenshots"
-NEWSCHREENSHOTURL=${NEWSETBROWSERURL}"/trunk/tests/test_results/error_screenshots"
+NEWSCREENSHOTPATH=${TRUNKDIR}"tests/test_results/error_screenshots"
+NEWSCHREENSHOTURL=${NEWSETBROWSERURL}"/tests/test_results/error_screenshots"
 
 echo Default browser URL: ${NEWSETBROWSERURL}
 echo Screenshot Path: ${NEWSCREENSHOTPATH}
@@ -246,18 +253,20 @@ echo -----------------------end---------------------------
 
 # There are three bugs/issues with the selenium export file.
 # 1 The base url is not used. Therefore the directory in the open functions have to be modified.
-# 2 In some cases the ";" is not put at the end of a line.
-# 3 When files are imported the location must be modified, depending on the installation.
+# 2 The base url is not used. Therefore the directory in the open functions have to be modified.
+# 3 In some cases the ";" is not put at the end of a line.
 # 4 When files are imported the location must be modified, depending on the installation.
+# 5 When files are imported the location must be modified, depending on the installation.
 echo --------------Fix Selenium export bugs---------------
 for file in "${PHPUNITTESTTPATH}"/*
 do
     echo "Fix:" ${file}
     data=`grep -A 2000 "<?php" ${file} |
-        sed "s@this->open(\".*./trunk/@this->open(\"$LOCALHOSTDIR/trunk/@" |
+        sed "s@this->open(\".*./src@this->open(\"$LOCALHOSTDIR/src@" |
+        sed "s@this->open(\".*./tests@this->open(\"$LOCALHOSTDIR/tests@" |
         sed 's/0)$/0);/' |
-        sed "s@name=variant_file.*./trunk/tests/test_data_files/@name=variant_file\"\, \"$TESTDATATPATH@" |
-        sed "s@name=import.*./trunk/tests/test_data_files/@name=import\"\, \"$TESTDATATPATH@"`
+        sed "s@name=variant_file.*./tests/test_data_files/@name=variant_file\"\, \"$TESTDATATPATH@" |
+        sed "s@name=import.*./tests/test_data_files/@name=import\"\, \"$TESTDATATPATH@"`
     echo "${data}">${file}
     sleep 1
     echo "done"

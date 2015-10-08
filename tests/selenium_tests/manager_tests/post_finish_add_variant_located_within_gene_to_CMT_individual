@@ -13,7 +13,7 @@
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/0000000557</td>
+	<td>*/src/variants/0000000557</td>
 	<td></td>
 </tr>
 <tr>
@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/screenings/GJB1</td>
+	<td>*/src/screenings/GJB1</td>
 	<td></td>
 </tr>
 <tr>
@@ -33,7 +33,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/screenings/0000000002</td>
+	<td>*/src/screenings/0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -48,7 +48,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;target=0000000002</td>
+	<td>*/src/variants?create&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;reference=Transcript&amp;geneid=GJB1&amp;target=0000000002</td>
+	<td>*/src/variants?create&amp;reference=Transcript&amp;geneid=GJB1&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -88,7 +88,7 @@
 </tr>
 <tr>
 	<td>pause</td>
-	<td>3000</td>
+	<td>10000</td>
 	<td></td>
 </tr>
 <tr>

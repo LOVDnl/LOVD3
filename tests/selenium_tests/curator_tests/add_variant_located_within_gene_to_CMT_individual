@@ -13,7 +13,7 @@
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit/screening/0000000001</td>
+	<td>*/src/submit/screening/0000000001</td>
 	<td></td>
 </tr>
 <tr>
@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;target=0000000001</td>
+	<td>*/src/variants?create&amp;target=0000000001</td>
 	<td></td>
 </tr>
 <tr>
@@ -38,7 +38,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;reference=Transcript&amp;geneid=GJB1&amp;target=0000000001</td>
+	<td>*/src/variants?create&amp;reference=Transcript&amp;geneid=GJB1&amp;target=0000000001</td>
 	<td></td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 </tr>
 <tr>
 	<td>pause</td>
-	<td>3000</td>
+	<td>20000</td>
 	<td></td>
 </tr>
 <tr>

@@ -11,7 +11,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
   {
     $this->click("link=Create a new disease information entry");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/diseases[\s\S]create$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/diseases[\s\S]create$/',$this->getLocation()));
     $this->type("name=symbol", "CMT");
     $this->type("name=name", "Charcot Marie Tooth Disease");
     $this->type("name=id_omim", "302800");
@@ -20,7 +20,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the disease information entry!", $this->getText("css=table[class=info]"));
     $this->waitForPageToLoad("4000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/diseases\/00001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/diseases\/00001$/',$this->getLocation()));
   }
 }
 ?>

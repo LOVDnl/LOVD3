@@ -18,7 +18,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit</td>
+	<td>*/src/submit</td>
 	<td></td>
 </tr>
 <tr>
@@ -43,7 +43,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create</td>
+	<td>*/src/variants?create</td>
 	<td></td>
 </tr>
 <tr>
@@ -53,7 +53,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create</td>
+	<td>*/src/variants/upload?create</td>
 	<td></td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create&amp;type=SeattleSeq</td>
+	<td>*/src/variants/upload?create&amp;type=SeattleSeq</td>
 	<td></td>
 </tr>
 <tr>

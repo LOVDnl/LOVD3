@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/genes?create</td>
+	<td>*/src/genes?create</td>
 	<td></td>
 </tr>
 <tr>
@@ -78,7 +78,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/genes/GJB1</td>
+	<td>*/src/genes/GJB1</td>
 	<td></td>
 </tr>
 </tbody></table>

@@ -43,7 +43,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create</td>
+	<td>*/src/variants/upload?create</td>
 	<td></td>
 </tr>
 <tr>
@@ -53,7 +53,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create&amp;type=VCF</td>
+	<td>*/src/variants/upload?create&amp;type=VCF</td>
 	<td></td>
 </tr>
 <tr>

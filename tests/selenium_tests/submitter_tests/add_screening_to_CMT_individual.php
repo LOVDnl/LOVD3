@@ -9,10 +9,10 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
 
   public function testMyTestCase()
   {
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/individual\/00000001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/',$this->getLocation()));
     $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings[\s\S]create&target=00000001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings[\s\S]create&target=00000001$/',$this->getLocation()));
     $this->addSelection("name=Screening/Template[]", "label=RNA (cDNA)");
     $this->addSelection("name=Screening/Template[]", "label=Protein");
     $this->addSelection("name=Screening/Technique[]", "label=array for Comparative Genomic Hybridisation");

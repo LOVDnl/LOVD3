@@ -9,13 +9,13 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
 
   public function testMyTestCase()
   {
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
     $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000001$/',$this->getLocation()));
     $this->click("//table[2]/tbody/tr[2]/td[2]/b");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&reference=Genome&target=0000000001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Genome&target=0000000001$/',$this->getLocation()));
     $this->select("name=allele", "label=Paternal (confirmed)");
     $this->select("name=chromosome", "label=15");
     $this->type("name=VariantOnGenome/DNA", "g.40702876G>T");

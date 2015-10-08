@@ -13,7 +13,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->click("link=Create a new gene entry");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/genes[\s\S]create$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes[\s\S]create$/',$this->getLocation()));
     $this->type("name=hgnc_id", "GJB1");
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");
@@ -25,7 +25,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the gene information entry!", $this->getText("css=table[class=info]"));
     $this->waitForPageToLoad("4000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/genes\/GJB1$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes\/GJB1$/',$this->getLocation()));
   }
 }
 ?>

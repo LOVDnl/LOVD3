@@ -18,7 +18,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/individuals/IVD</td>
+	<td>*/src/individuals/IVD</td>
 	<td></td>
 </tr>
 <tr>
@@ -28,7 +28,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/individuals/00000002</td>
+	<td>*/src/individuals/00000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -43,7 +43,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/screenings?create&amp;target=00000002</td>
+	<td>*/src/screenings?create&amp;target=00000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -103,7 +103,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit/screening/0000000004</td>
+	<td>*/src/submit/screening/0000000004</td>
 	<td></td>
 </tr>
 </tbody></table>

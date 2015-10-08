@@ -10,7 +10,7 @@ $back = strpos($file, '.xml');
 			<?php echo "Date test run: " . substr($file, $front, ($back - $front)); ?>
 		</h4>
 		<?php $xml=simplexml_load_file($file);
-		
+
 		foreach($xml->children() as $classe)
 		{
 			?><b><?php echo "Number of tests: "; ?></b><?php
@@ -27,12 +27,12 @@ $back = strpos($file, '.xml');
 			$seconds = sprintf( '%02d', $seconds );
 			echo $minutes.":".$seconds."  (min:sec) <br>";
 			//echo $classe->attributes()->time . "<br>";
-	
+
 			// There are small differences in the xml files for one test class and for
 			// multiple test classes. These require diferent layouts.
 			$classname = $classe->attributes()->file;
 			if(file_exists($classname))
-			{			
+			{
 				?><b><?php echo "Class: "; ?></b><?php
 				echo $classe->attributes()->name . "<br>";
 				printLayoutSingleClass($classe);
@@ -43,7 +43,7 @@ $back = strpos($file, '.xml');
 				echo $classe->attributes()->name . "<br>";
 				printLayoutMultipleleClasses($classe);
 			}
-			
+
 		}
 		?>
 	</body>
@@ -54,7 +54,7 @@ $back = strpos($file, '.xml');
 function printLayoutSingleClass($classe)
 {
 	?><ol type="1"><?php
-								
+
 	foreach($classe->children() as $testcase)
 	{
 		?><li><b><?php echo "Method name: " ?></b>
@@ -63,17 +63,17 @@ function printLayoutSingleClass($classe)
 
 		printTestCases($testcase);
 	}
-	?></ol>	<?php	
+	?></ol>	<?php
 }
 
 function printLayoutMultipleleClasses($classe)
-{	 
+{
 	foreach($classe->children() as $testsuite)
 	{
 		?><b><?php echo "Class name: "; ?></b><?php
 		echo $testsuite->attributes()->name . "<br>";
 		?><ol type="1"><?php
-								
+
 		foreach($testsuite->children() as $testcase)
 		{
 			?><li><b><?php echo "Method name: " ?></b>
@@ -82,7 +82,7 @@ function printLayoutMultipleleClasses($classe)
 
 			printTestCases($testcase);
 		}
-		?></ol>	<?php	
+		?></ol>	<?php
 	}
 }
 
@@ -98,17 +98,17 @@ function printTestCases($testcase)
 		// Extract the URL on failure from the error.
 		$urlonerror = strpos($breakdownerrors[1], 'Screenshot') - 1;
 		echo "URL on failure: " . substr($breakdownerrors[1], 0, $urlonerror) . "<br>";
-		
+
 		// Extract the path for screenshots on failure from the error.
 		$screenshotpath = strpos($breakdownerrors[2], '.png') + 4;
 		$localhost = substr($breakdownerrors[1], 0, $urlonerror);
 		$localhost = explode('/trunk/src', $localhost);
 		$filename = substr($breakdownerrors[2], 0 ,$screenshotpath);
-		$imageLocation = $localhost[0]."/".$filename;
-		
-		echo "Image path: " . $imageLocation . "<br>";
-		print('<IMG src="'.$imageLocation.'" alt="Screenshot on Failure" style="width:40%;height:40%;border:5px outset black"><BR><BR>');
+		//$imageLocation = $localhost[0]."/".$filename;
+
+		echo "Image path: " . $filename . "<br>";
+		print('<IMG src="'.$filename.'" alt="Screenshot on Failure" style="width:40%;height:40%;border:5px outset black"><BR><BR>');
 	}
-	
-	
+
+
 }

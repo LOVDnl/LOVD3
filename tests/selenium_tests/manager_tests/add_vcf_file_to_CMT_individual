@@ -13,7 +13,7 @@
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit/screening/0000000002</td>
+	<td>*/src/submit/screening/0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -48,7 +48,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;target=0000000002</td>
+	<td>*/src/variants?create&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -58,7 +58,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create&amp;target=0000000002</td>
+	<td>*/src/variants/upload?create&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -68,7 +68,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create&amp;type=VCF&amp;target=0000000002</td>
+	<td>*/src/variants/upload?create&amp;type=VCF&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -128,12 +128,12 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit/screening/0000000002</td>
+	<td>*/src/submit/screening/0000000002</td>
 	<td></td>
 </tr>
 <tr>
 	<td>pause</td>
-	<td>200000</td>
+	<td>400000</td>
 	<td></td>
 </tr>
 <tr>

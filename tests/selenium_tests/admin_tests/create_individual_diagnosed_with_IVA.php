@@ -12,7 +12,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->open("/svn/LOVD3/trunk/src/submit");
     $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals[\s\S]create$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/',$this->getLocation()));
     $this->type("name=Individual/Lab_ID", "12345IVA");
     $this->click("link=PubMed");
     $this->type("name=Individual/Reference", "{PMID:[2011]:[21520333]}");

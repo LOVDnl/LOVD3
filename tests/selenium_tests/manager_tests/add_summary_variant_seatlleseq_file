@@ -13,7 +13,7 @@
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/0000000280</td>
+	<td>*/src/variants/0000000280</td>
 	<td></td>
 </tr>
 <tr>
@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit</td>
+	<td>*/src/submit</td>
 	<td></td>
 </tr>
 <tr>
@@ -53,7 +53,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create</td>
+	<td>*/src/variants/upload?create</td>
 	<td></td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create&amp;type=SeattleSeq</td>
+	<td>*/src/variants/upload?create&amp;type=SeattleSeq</td>
 	<td></td>
 </tr>
 <tr>
@@ -97,8 +97,13 @@
 	<td>label=Public</td>
 </tr>
 <tr>
-	<td>clickAndWait</td>
+	<td>click</td>
 	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr><!--Importing seatlleseq can take some time, therefore the pause for 200 seconds.-->
+<tr>
+	<td>pause</td>
+	<td>200000</td>
 	<td></td>
 </tr>
 <tr>

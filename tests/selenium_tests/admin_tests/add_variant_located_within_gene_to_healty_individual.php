@@ -9,19 +9,26 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
 
   public function testMyTestCase()
   {
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
     $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000001$/',$this->getLocation()));
     $this->click("//table[2]/tbody/tr/td[2]/b");
     $this->click("//tr[@id='IVD']/td[2]");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&reference=Transcript&geneid=IVD&target=0000000001$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=IVD&target=0000000001$/',$this->getLocation()));
     $this->uncheck("name=ignore_00001");
     $this->type("name=00001_VariantOnTranscript/Exon", "2");
     $this->type("name=00001_VariantOnTranscript/DNA", "c.456T>G");
     $this->click("css=button.mapVariant");
-    sleep(10);
+    sleep(3);
+    for ($second = 0; ; $second++) {
+        if ($second >= 60) $this->fail("timeout");
+        try {
+            if ($this->isElementPresent("css=img[alt=\"Prediction OK!\"]")) break;
+        } catch (Exception $e) {}
+        sleep(1);
+    }
     $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
     $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
     $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");

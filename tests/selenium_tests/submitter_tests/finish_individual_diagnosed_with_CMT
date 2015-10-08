@@ -18,7 +18,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit/screening/0000000002</td>
+	<td>*/src/submit/screening/0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -38,7 +38,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/individuals/00000001</td>
+	<td>*/src/individuals/00000001</td>
 	<td></td>
 </tr>
 </tbody></table>

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2014-12-19
- * Modified    : 2015-07-31:14:40:39
+ * Modified    : 2015-10-08:14:28:10
  * For LOVD    : 3.0-12
  *
  * Copyright   : 2014 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,19 +32,19 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
 {
     protected $captureScreenshotOnFailure = TRUE;
     protected $screenshotPath = '/home/dasscheman/svn/LOVD3_development/trunk/tests/test_results/error_screenshots';
-    protected $screenshotUrl = 'http://localhost/svn/LOVD3_development/trunk/tests/test_results/error_screenshots';
+    protected $screenshotUrl = 'http://localhost/LOVD3_development/trunk/tests/test_results/error_screenshots';
   
     protected function setUp()
     {
         $this->setHost('localhost');
         $this->setPort(4444);
         $this->setBrowser("firefox");
-        $this->setBrowserUrl("http://localhost/svn/LOVD3_development");
+        $this->setBrowserUrl("http://localhost/LOVD3_development/trunk");
         $this->shareSession(true);
     }
     public function testInstallLOVD()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/install/");
+        $this->open("/LOVD3_development/trunk/src/install/");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
         $this->type("name=name", "LOVD3 Admin");
@@ -66,6 +66,7 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=email_address", "noreply@LOVD.nl");
+        $this->select("name=refseq_build", "label=hg19 / GRCh37");
         $this->click("name=send_stats");
         $this->click("name=include_in_listing");
         $this->click("name=lock_uninstall");
@@ -75,11 +76,11 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->click("css=button");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/setup[\s\S]newly_installed$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/setup[\s\S]newly_installed$/',$this->getLocation()));
     }
     public function testCreateUserManager()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
+        $this->open("/LOVD3_development/trunk/src/users?create&no_orcid");
         $this->type("name=name", "Test Manager");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
@@ -99,9 +100,9 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testLoginAsManager()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/logout");
-        $this->open("/svn/LOVD3_development/trunk/src/login");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/login$/',$this->getLocation()));
+        $this->open("/LOVD3_development/trunk/src/logout");
+        $this->open("/LOVD3_development/trunk/src/login");
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/login$/',$this->getLocation()));
         $this->type("name=username", "manager");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
@@ -109,7 +110,7 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateUserManager2()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
+        $this->open("/LOVD3_development/trunk/src/users?create&no_orcid");
         $this->assertNotEquals("Manager", $this->getSelectedLabel("name=level"));
     }
     public function testCreateGeneGJB()
@@ -118,7 +119,7 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->click("link=Create a new gene entry");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/genes[\s\S]create$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes[\s\S]create$/',$this->getLocation()));
         $this->type("name=hgnc_id", "GJB1");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
@@ -130,11 +131,11 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->assertEquals("Successfully created the gene information entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/genes\/GJB1[\s\S]authorize$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes\/GJB1[\s\S]authorize$/',$this->getLocation()));
     }
     public function testCreateUserSubmitter()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
+        $this->open("/LOVD3_development/trunk/src/users?create&no_orcid");
         $this->type("name=name", "Test Submitter");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
@@ -154,7 +155,7 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testCreateUserCurator()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/users?create&no_orcid");
+        $this->open("/LOVD3_development/trunk/src/users?create&no_orcid");
         $this->type("name=name", "Test Curator");
         $this->type("name=institute", "Leiden University Medical Center");
         $this->type("name=department", "Human Genetics");
@@ -174,7 +175,7 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testMakeUserCuratorGJB()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/genes/GJB1?authorize");
+        $this->open("/LOVD3_development/trunk/src/genes/GJB1?authorize");
         $this->click("link=Test Curator");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
@@ -185,7 +186,7 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     {
         $this->click("link=Create a new disease information entry");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/diseases[\s\S]create$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/diseases[\s\S]create$/',$this->getLocation()));
         $this->type("name=symbol", "CMT");
         $this->type("name=name", "Charcot Marie Tooth Disease");
         $this->type("name=id_omim", "302800");
@@ -194,16 +195,16 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->assertEquals("Successfully created the disease information entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/diseases\/00001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/diseases\/00001$/',$this->getLocation()));
     }
     public function testCreateIndividualDiagnosedWithCMT()
     {
         $this->click("id=tab_submit");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals[\s\S]create$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/',$this->getLocation()));
         $this->type("name=Individual/Lab_ID", "12345CMT");
         $this->click("link=PubMed");
         $this->type("name=Individual/Reference", "{PMID:[2011]:[21520333]}");
@@ -219,10 +220,10 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddPhenotypeInfoToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/individual\/00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/phenotypes[\s\S]create&target=00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes[\s\S]create&target=00000001$/',$this->getLocation()));
         $this->type("name=Phenotype/Additional", "Additional phenotype information");
         $this->select("name=Phenotype/Inheritance", "label=Familial");
         $this->select("name=owned_by", "label=LOVD3 Admin");
@@ -234,10 +235,10 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddScreeningToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/individual\/00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings[\s\S]create&target=00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings[\s\S]create&target=00000001$/',$this->getLocation()));
         $this->addSelection("name=Screening/Template[]", "label=RNA (cDNA)");
         $this->addSelection("name=Screening/Template[]", "label=Protein");
         $this->addSelection("name=Screening/Technique[]", "label=array for Comparative Genomic Hybridisation");
@@ -253,19 +254,19 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddVariantLocatedWithinGeneToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000001$/',$this->getLocation()));
         $this->click("//table[2]/tbody/tr/td[2]/b");
         $this->click("link=GJB1");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1&target=0000000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1&target=0000000001$/',$this->getLocation()));
         $this->uncheck("name=ignore_00001");
         $this->type("name=00001_VariantOnTranscript/Exon", "2");
         $this->type("name=00001_VariantOnTranscript/DNA", "c.34G>T");
         $this->click("css=button.mapVariant");
-        sleep(3);
+        sleep(10);
         $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
         $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
@@ -289,13 +290,13 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddVariantOnlyDescribedOnGenomicLevelToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000001$/',$this->getLocation()));
         $this->click("//table[2]/tbody/tr[2]/td[2]");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&reference=Genome&target=0000000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Genome&target=0000000001$/',$this->getLocation()));
         $this->select("name=allele", "label=Maternal (confirmed)");
         $this->select("name=chromosome", "label=X");
         $this->type("name=VariantOnGenome/DNA", "g.70443591G>T");
@@ -313,15 +314,15 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testConfirmVariantToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
         $this->chooseOkOnNextConfirmation();
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]");
         $this->assertTrue((bool)preg_match('/^[\s\S]*Are you sure you are done with submitting the variants found with this screening[\s\S][\s\S]*$/',$this->getConfirmation()));
         sleep(4);
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/individual\/00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings[\s\S]create&target=00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings[\s\S]create&target=00000001$/',$this->getLocation()));
         $this->addSelection("name=Screening/Template[]", "label=RNA (cDNA)");
         $this->addSelection("name=Screening/Template[]", "label=Protein");
         $this->addSelection("name=Screening/Technique[]", "label=Single Base Extension");
@@ -334,13 +335,13 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->assertEquals("Successfully created the screening entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings\/0000000002[\s\S]confirmVariants$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/0000000002[\s\S]confirmVariants$/',$this->getLocation()));
         $this->click("id=check_0000000001");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
@@ -350,16 +351,16 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddSeatlleseqFileToCMTIndividual()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/submit/screening/0000000002");
+        $this->open("/LOVD3_development/trunk/src/submit/screening/0000000002");
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
         $this->click("//tr[3]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create&target=0000000002$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&type=SeattleSeq&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create&type=SeattleSeq&target=0000000002$/',$this->getLocation()));
         $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3_development/trunk/tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt");
         $this->select("name=hg_build", "label=hg19");
         $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
@@ -383,7 +384,7 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddVcfFileToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
         $this->chooseOkOnNextConfirmation();
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]");
         $this->assertTrue((bool)preg_match('/^[\s\S]*Are you sure you are done with submitting the variants found with this screening[\s\S][\s\S]*$/',$this->getConfirmation()));
@@ -392,13 +393,13 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->click("css=#0000000002 > td.ordered");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
         $this->click("//tr[3]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create&target=0000000002$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&type=VCF&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create&type=VCF&target=0000000002$/',$this->getLocation()));
         $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3_development/trunk/tests/test_data_files/ShortVCFfilev1.vcf");
         $this->select("name=hg_build", "label=hg19");
         $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
@@ -412,73 +413,73 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
         $this->click("css=input[type=\"button\"]");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
-        sleep(90);
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
+        sleep(400);
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
         $this->assertEquals("0 99 There are no variants to map in the database", $this->getText("css=body"));
     }
     public function testFinishIndividualDiagnosedWithCMT()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/submit/screening/0000000002");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
+        $this->open("/LOVD3_development/trunk/src/submit/screening/0000000002");
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
         $this->click("//tr[3]/td[2]/b");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
         $this->waitForPageToLoad("6000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals\/00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000001$/',$this->getLocation()));
     }
     public function testAddSummaryVariantLocatedWithinGene()
     {
         $this->click("id=tab_submit");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/',$this->getLocation()));
         $this->chooseOkOnNextConfirmation();
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/',$this->getConfirmation()));
@@ -489,12 +490,10 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*trunk\/src\/variants[\s\S]create&reference=Transcript&geneid=ARSD$/',$this->getLocation()));
         $this->uncheck("name=ignore_00002");
         $this->uncheck("name=ignore_00003");
-        $this->check("name=ignore_00004");
-        $this->check("name=ignore_00005");
         $this->type("name=00002_VariantOnTranscript/Exon", "3");
         $this->type("name=00002_VariantOnTranscript/DNA", "c.62T>A");
         $this->click("css=button.mapVariant");
-        sleep(3);
+        sleep(10);
         $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
         $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
@@ -511,7 +510,7 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->select("name=00003_effect_reported", "label=Probably affects function");
         $this->select("name=00003_effect_concluded", "label=Probably does not affect function");
         $this->select("name=allele", "label=Maternal (confirmed)");
-        $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[37].value");
+        $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[19].value");
         $this->assertEquals("g.2843789A>T", $this->getExpression($GenomicDnaChange));
         $this->click("link=PubMed");
         $this->type("name=VariantOnGenome/Reference", "{PMID:[2011]:[2150333]}");
@@ -527,18 +526,18 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddSummaryVariantOnlyDescribedOnGenomicLevel()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/0000000279$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000279$/',$this->getLocation()));
         $this->click("id=tab_submit");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/',$this->getLocation()));
         $this->chooseOkOnNextConfirmation();
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/',$this->getConfirmation()));
         sleep(4);
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&reference=Genome$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Genome$/',$this->getLocation()));
         $this->select("name=allele", "label=Paternal (confirmed)");
         $this->select("name=chromosome", "label=15");
         $this->type("name=VariantOnGenome/DNA", "g.40702976G>T");
@@ -556,20 +555,20 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testAddSummaryVariantSeatlleseqFile()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/0000000280$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000280$/',$this->getLocation()));
         $this->click("id=tab_submit");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/',$this->getLocation()));
         $this->chooseOkOnNextConfirmation();
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/',$this->getConfirmation()));
         sleep(4);
         $this->click("//tr[3]/td[2]");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&type=SeattleSeq$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create&type=SeattleSeq$/',$this->getLocation()));
         $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3_development/trunk/tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt");
         $this->select("name=hg_build", "label=hg19");
         $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
@@ -602,10 +601,10 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         sleep(4);
         $this->click("//tr[3]/td[2]");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create&type=VCF$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create&type=VCF$/',$this->getLocation()));
         $this->type("name=variant_file", "/home/dasscheman/svn/LOVD3_development/trunk/tests/test_data_files/ShortVCFfilev1.vcf");
         $this->select("name=hg_build", "label=hg19");
         $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
@@ -622,78 +621,78 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
         $this->waitForPageToLoad("4000");
         sleep(60);
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
-        $this->open("/svn/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
+        $this->open("/LOVD3_development/trunk/src/ajax/map_variants.php");
         $this->assertEquals("0 99 There are no variants to map in the database", $this->getText("css=body"));
     }
     public function testPostFinishAddVariantOnlyDescribedOnGenomicLevelToCMTIndividual()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/");
+        $this->open("/LOVD3_development/trunk/src/");
         $this->click("id=tab_screenings");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings\/GJB1$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/GJB1$/',$this->getLocation()));
         $this->click("css=#0000000002 > td.ordered");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings\/0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/0000000002$/',$this->getLocation()));
         $this->click("id=viewentryOptionsButton_Screenings");
         $this->click("link=Add variant to screening");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
         $this->click("//table[2]/tbody/tr[2]/td[2]/b");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&reference=Genome&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Genome&target=0000000002$/',$this->getLocation()));
         $this->select("name=allele", "label=Maternal (confirmed)");
         $this->select("name=chromosome", "label=X");
         $this->type("name=VariantOnGenome/DNA", "g.40702876G>T");
@@ -711,26 +710,26 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testPostFinishAddVariantLocatedWithinGeneToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/0000000557$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000557$/',$this->getLocation()));
         $this->click("id=tab_screenings");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings\/GJB1$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/GJB1$/',$this->getLocation()));
         $this->click("css=#0000000002 > td.ordered");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings\/0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/0000000002$/',$this->getLocation()));
         $this->click("id=viewentryOptionsButton_Screenings");
         $this->click("link=Add variant to screening");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
         $this->click("//table[2]/tbody/tr/td[2]/b");
         $this->click("css=td.ordered");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1&target=0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1&target=0000000002$/',$this->getLocation()));
         $this->uncheck("name=ignore_00001");
         $this->type("name=00001_VariantOnTranscript/Exon", "2");
         $this->type("name=00001_VariantOnTranscript/DNA", "c.251T>A");
         $this->click("css=button.mapVariant");
-        sleep(3);
+        sleep(10);
         $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
         $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
@@ -754,17 +753,17 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testPostFinishAddScreeningToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/0000000558$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000558$/',$this->getLocation()));
         $this->click("id=tab_individuals");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals\/GJB1$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/GJB1$/',$this->getLocation()));
         $this->click("css=td.ordered");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals\/00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000001$/',$this->getLocation()));
         $this->click("id=viewentryOptionsButton_Individuals");
         $this->click("link=Add screening to individual");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings[\s\S]create&target=00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings[\s\S]create&target=00000001$/',$this->getLocation()));
         $this->addSelection("name=Screening/Template[]", "label=RNA (cDNA)");
         $this->addSelection("name=Screening/Template[]", "label=Protein");
         $this->addSelection("name=Screening/Technique[]", "label=array for Comparative Genomic Hybridisation");
@@ -780,17 +779,17 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
     }
     public function testPostFinishAddPhenotypeInfoToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000003$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000003$/',$this->getLocation()));
         $this->click("id=tab_individuals");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals\/GJB1$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/GJB1$/',$this->getLocation()));
         $this->click("css=td.ordered");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals\/00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000001$/',$this->getLocation()));
         $this->click("id=viewentryOptionsButton_Individuals");
         $this->click("link=Add phenotype information to individual");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/phenotypes[\s\S]create&target=00000001$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes[\s\S]create&target=00000001$/',$this->getLocation()));
         $this->type("name=Phenotype/Additional", "Additional phenotype information");
         $this->select("name=Phenotype/Inheritance", "label=Familial");
         $this->select("name=owned_by", "label=LOVD3 Admin");
@@ -799,34 +798,34 @@ class manager_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
         $this->waitForPageToLoad("4000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/phenotypes\/0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes\/0000000002$/',$this->getLocation()));
     }
     public function testDeleteGeneGJB()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/phenotypes\/0000000002$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes\/0000000002$/',$this->getLocation()));
         $this->click("id=tab_genes");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/genes\/GJB1$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes\/GJB1$/',$this->getLocation()));
         $this->click("id=viewentryOptionsButton_Genes");
         $this->click("link=Delete gene entry");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/genes\/GJB1[\s\S]delete$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes\/GJB1[\s\S]delete$/',$this->getLocation()));
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
         $this->assertEquals("Successfully deleted the gene information entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/genes$/',$this->getLocation()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes$/',$this->getLocation()));
     }
     public function testUninstallLOVD()
     {
-        $this->open("/svn/LOVD3_development/trunk/src/logout");
-        $this->open("/svn/LOVD3_development/trunk/src/login");
+        $this->open("/LOVD3_development/trunk/src/logout");
+        $this->open("/LOVD3_development/trunk/src/login");
         $this->type("name=username", "admin");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");
-        $this->open("/svn/LOVD3_development/trunk/src/uninstall");
+        $this->open("/LOVD3_development/trunk/src/uninstall");
         $this->type("name=password", "test1234");
         $this->click("css=input[type=\"submit\"]");
         $this->waitForPageToLoad("30000");

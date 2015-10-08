@@ -33,7 +33,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/genes/IVD?delete</td>
+	<td>*/src/genes/IVD?delete</td>
 	<td></td>
 </tr>
 <tr>
@@ -58,7 +58,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/genes</td>
+	<td>*/src/genes</td>
 	<td></td>
 </tr>
 </tbody></table>

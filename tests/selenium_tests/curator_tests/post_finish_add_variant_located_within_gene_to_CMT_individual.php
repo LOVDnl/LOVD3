@@ -9,26 +9,33 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
 
   public function testMyTestCase()
   {
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/0000000005$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000005$/',$this->getLocation()));
     $this->click("id=tab_screenings");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings$/',$this->getLocation()));
     $this->click("css=#0000000002 > td.ordered");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings\/0000000002$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/0000000002$/',$this->getLocation()));
     $this->click("id=viewentryOptionsButton_Screenings");
     $this->click("link=Add variant to screening");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/',$this->getLocation()));
     $this->click("//table[2]/tbody/tr/td[2]/b");
     $this->click("css=td.ordered");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1&target=0000000002$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1&target=0000000002$/',$this->getLocation()));
     $this->uncheck("name=ignore_00001");
     $this->type("name=00001_VariantOnTranscript/Exon", "2");
     $this->type("name=00001_VariantOnTranscript/DNA", "c.251T>A");
     $this->click("css=button.mapVariant");
     sleep(3);
+    for ($second = 0; ; $second++) {
+        if ($second >= 60) $this->fail("timeout");
+        try {
+            if ($this->isElementPresent("css=img[alt=\"Prediction OK!\"]")) break;
+        } catch (Exception $e) {}
+        sleep(1);
+    }
     $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
     $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
     $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");

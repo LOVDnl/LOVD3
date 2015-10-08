@@ -11,15 +11,15 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
   {
     $this->click("link=Submit new data");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/',$this->getLocation()));
     $this->chooseOkOnNextConfirmation();
     $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
     $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/',$this->getConfirmation()));
     sleep(4);
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants[\s\S]create$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create$/',$this->getLocation()));
     $this->click("//tr[3]/td[2]/b");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/variants\/upload[\s\S]create$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create$/',$this->getLocation()));
     $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
     $this->waitForPageToLoad("30000");
     $this->open("/svn/LOVD3/trunk/src/variants/upload?create&type=VCF");

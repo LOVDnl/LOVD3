@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;target=0000000002</td>
+	<td>*/src/variants?create&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -33,7 +33,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create&amp;target=0000000002</td>
+	<td>*/src/variants/upload?create&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -43,7 +43,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/upload?create&amp;type=SeattleSeq&amp;target=0000000002</td>
+	<td>*/src/variants/upload?create&amp;type=SeattleSeq&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>

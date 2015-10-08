@@ -18,7 +18,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit</td>
+	<td>*/src/submit</td>
 	<td></td>
 </tr>
 <tr>
@@ -43,7 +43,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create</td>
+	<td>*/src/variants?create</td>
 	<td></td>
 </tr>
 <tr>
@@ -58,7 +58,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;reference=Transcript&amp;geneid=ARSD</td>
+	<td>*/src/variants?create&amp;reference=Transcript&amp;geneid=ARSD</td>
 	<td></td>
 </tr>
 <tr>
@@ -92,8 +92,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>pause</td>
-	<td>3000</td>
+	<td>waitForElementPresent</td>
+	<td>css=img[alt=&quot;Prediction OK!&quot;]</td>
 	<td></td>
 </tr>
 <tr>
@@ -223,7 +223,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/0000000281</td>
+	<td>*/src/variants/0000000281</td>
 	<td></td>
 </tr>
 </tbody></table>

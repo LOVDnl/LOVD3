@@ -13,7 +13,7 @@
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit/screening/0000000001</td>
+	<td>*/src/submit/screening/0000000001</td>
 	<td></td>
 </tr>
 <tr>
@@ -38,7 +38,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit/individual/00000001</td>
+	<td>*/src/submit/individual/00000001</td>
 	<td></td>
 </tr>
 <tr>
@@ -48,7 +48,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/screenings?create&amp;target=00000001</td>
+	<td>*/src/screenings?create&amp;target=00000001</td>
 	<td></td>
 </tr>
 <tr>
@@ -103,7 +103,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/submit/screening/0000000002</td>
+	<td>*/src/submit/screening/0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -113,7 +113,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants?create&amp;target=0000000002</td>
+	<td>*/src/variants?create&amp;target=0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -123,7 +123,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/screenings/0000000002?confirmVariants</td>
+	<td>*/src/screenings/0000000002?confirmVariants</td>
 	<td></td>
 </tr>
 <tr>

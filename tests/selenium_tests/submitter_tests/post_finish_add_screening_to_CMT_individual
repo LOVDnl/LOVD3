@@ -13,7 +13,7 @@
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/variants/0000000004</td>
+	<td>*/src/variants/0000000004</td>
 	<td></td>
 </tr>
 <tr>
@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/individuals</td>
+	<td>*/src/individuals</td>
 	<td></td>
 </tr>
 <tr>
@@ -33,7 +33,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/individuals/00000001</td>
+	<td>*/src/individuals/00000001</td>
 	<td></td>
 </tr>
 <tr>
@@ -48,7 +48,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/screenings?create&amp;target=00000001</td>
+	<td>*/src/screenings?create&amp;target=00000001</td>
 	<td></td>
 </tr>
 <tr>

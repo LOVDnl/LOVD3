@@ -13,7 +13,7 @@
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/phenotypes/0000000002</td>
+	<td>*/src/phenotypes/0000000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -23,7 +23,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/genes/GJB1</td>
+	<td>*/src/genes/GJB1</td>
 	<td></td>
 </tr>
 <tr>
@@ -38,7 +38,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/genes/GJB1?delete</td>
+	<td>*/src/genes/GJB1?delete</td>
 	<td></td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/genes</td>
+	<td>*/src/genes</td>
 	<td></td>
 </tr>
 </tbody></table>

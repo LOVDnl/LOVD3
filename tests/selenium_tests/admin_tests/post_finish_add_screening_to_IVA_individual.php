@@ -11,14 +11,14 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
   {
     $this->click("id=tab_individuals");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals\/IVD$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/IVD$/',$this->getLocation()));
     $this->click("css=#00000002 > td.ordered");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/individuals\/00000002$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000002$/',$this->getLocation()));
     $this->click("id=viewentryOptionsButton_Individuals");
     $this->click("link=Add screening to individual");
     $this->waitForPageToLoad("30000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/screenings[\s\S]create&target=00000002$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings[\s\S]create&target=00000002$/',$this->getLocation()));
     $this->addSelection("name=Screening/Template[]", "label=RNA (cDNA)");
     $this->addSelection("name=Screening/Template[]", "label=Protein");
     $this->addSelection("name=Screening/Technique[]", "label=array for Comparative Genomic Hybridisation");
@@ -31,7 +31,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the screening entry!", $this->getText("css=table[class=info]"));
     $this->waitForPageToLoad("4000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/trunk\/src\/submit\/screening\/0000000004$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000004$/',$this->getLocation()));
   }
 }
 ?>

@@ -18,7 +18,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/individuals/IVD</td>
+	<td>*/src/individuals/IVD</td>
 	<td></td>
 </tr>
 <tr>
@@ -28,7 +28,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/individuals/00000002</td>
+	<td>*/src/individuals/00000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -43,7 +43,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/phenotypes?create&amp;target=00000002</td>
+	<td>*/src/phenotypes?create&amp;target=00000002</td>
 	<td></td>
 </tr>
 <tr>
@@ -83,7 +83,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/phenotypes/0000000003</td>
+	<td>*/src/phenotypes/0000000003</td>
 	<td></td>
 </tr>
 </tbody></table>

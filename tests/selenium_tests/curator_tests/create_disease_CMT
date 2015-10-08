@@ -18,7 +18,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/diseases?create</td>
+	<td>*/src/diseases?create</td>
 	<td></td>
 </tr>
 <tr>
@@ -58,7 +58,7 @@
 </tr>
 <tr>
 	<td>assertLocation</td>
-	<td>*/trunk/src/diseases/00001</td>
+	<td>*/src/diseases/00001</td>
 	<td></td>
 </tr>
 </tbody></table>

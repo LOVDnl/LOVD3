@@ -15,6 +15,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->click("name=simulate");
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");
+    sleep(20);
     $this->click("link=Show 33 warnings");
     $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Columns, line 8\): Will not update column Individual\/Age_of_death, too many fields are different from the database \(col_order, width, standard, head_column, description_form, description_legend_short, description_legend_full, mysql_type, form_type, select_options, preg_pattern\)\. There is a maximum of 1 difference to prevent accidental updates\.[\s\S]*$/',$this->getBodyText()));
     $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Columns, line 8\): Can[\s\S]t update hgvs for column entry Individual\/Age_of_death: Not allowed to change the HGVS standard status of any column\. Value is currently "0" and value in the import file is "1"\.[\s\S]*$/',$this->getBodyText()));
