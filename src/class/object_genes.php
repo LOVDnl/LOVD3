@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-09-21
+ * Modified    : 2015-10-09
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -126,7 +126,7 @@ class LOVD_Gene extends LOVD_Object {
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
                         'variants_' => 'Total number of public variants reported',
-                        'uniq_variants' => 'Unique public DNA variants reported',
+                        'uniq_variants_' => 'Unique public DNA variants reported',
                         'count_individuals' => 'Individuals with public variants',
                         'hidden_variants_' => 'Hidden variants',
                         'note_index' => 'Notes',
@@ -547,7 +547,10 @@ class LOVD_Gene extends LOVD_Object {
             if ($zData['variants']) {
                 $zData['variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['variants'] . '</A>';
             }
-            //'uniq_variants' => 'Unique public DNA variants reported',
+            $zData['uniq_variants_'] = 0;
+            if ($zData['uniq_variants']) {
+                $zData['uniq_variants_'] = '<A href="variants/' . $zData['id'] . '/unique?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['uniq_variants'] . '</A>';
+            }
             //'count_individuals' => 'Individuals with public variants',
             $zData['hidden_variants_'] = $zData['hidden_variants'];
             if ($zData['hidden_variants'] && $_AUTH['level'] >= LEVEL_CURATOR) {
