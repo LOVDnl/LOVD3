@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2015-09-01
+ * Modified    : 2015-10-09
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,7 +56,7 @@ class LOVD_CustomViewList extends LOVD_Object {
     function __construct ($aObjects = array(), $sOtherID = '')
     {
         // Default constructor.
-        global $_DB, $_AUTH;
+        global $_AUTH, $_CONF, $_DB;
 
         if (!is_array($aObjects)) {
             $aObjects = explode(',', $aObjects);
@@ -638,6 +638,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                         // Unset status column for non-collaborators. We're assuming here, that lovd_isAuthorized() only gets called for gene-specific overviews.
                         unset($this->aColumnsViewList['var_status']);
                     }
+                    // 2015-10-09; 3.0-14; Add genome build name to the VOG/DNA field.
+                    $this->aColumnsViewList['VariantOnGenome/DNA']['view'][0] .= ' (' . $_CONF['refseq_build'] . ')';
                     break;
 
                 case 'Individual':

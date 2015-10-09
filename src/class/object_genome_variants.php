@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2015-09-02
+ * Modified    : 2015-10-09
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,7 +55,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH;
+        global $_AUTH, $_CONF, $_SETT;
 
         // SQL code for loading an entry for an edit form.
         // FIXME; change owner to owned_by_ in the load entry query below.
@@ -176,6 +176,10 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ));
 
         $this->sSortDefault = 'VariantOnGenome/DNA';
+
+        // 2015-10-09; 3.0-14; Add genome build name to the VOG/DNA field.
+        $this->aColumnsViewEntry['VariantOnGenome/DNA'] .= ' (Relative to ' . $_CONF['refseq_build'] . ' / ' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . ')';
+        $this->aColumnsViewList['VariantOnGenome/DNA']['view'][0] .= ' (' . $_CONF['refseq_build'] . ')';
 
         // Because the information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
@@ -307,7 +311,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
         }
 
-        // Add '(hg19)' to VOG/DNA field. NOTE: If you choose to remove this, make sure the additional fix after the aFormData array creation is also removed.
+        // Add genome build name to VOG/DNA field.
         $this->aColumns['VariantOnGenome/DNA']['description_form'] = '<B>Relative to ' . $_CONF['refseq_build'] . ' / ' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . '.</B>' .
             (!$this->aColumns['VariantOnGenome/DNA']['description_form']? '' : '<BR>' . $this->aColumns['VariantOnGenome/DNA']['description_form']);
 
@@ -348,9 +352,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['effect'], $this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
         }
-        // Reset VOG/DNA field to normal, because getForm() can be called twice per page load (checkFields && normal call).
-        // NOTE: Bastardly annoying preg pattern, very hard to make it not eat everything away. Maybe just put the hg reference in the field's name?
-        $this->aColumns['VariantOnGenome/DNA']['description_form'] = preg_replace('/^<B>[^<]+<\/B>(<BR>)?/', '', $this->aColumns['VariantOnGenome/DNA']['description_form']);
 
         return parent::getForm();
     }

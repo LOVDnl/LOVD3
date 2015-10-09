@@ -6,7 +6,7 @@
 
 /**************************
  * 3.0 Build 14 (r...)
- * 2015-0?-??
+ * 2015-10-09
  *********/
  * Added URLs to show data by reference (DOI or PubMed currently supported),
    e.g. /references/PMID:10677295.
@@ -72,6 +72,8 @@
    was hg38 instead of the active human build.
  * Fixed bug; When a checkbox field was left empty in the import file, an SQL
    error occured during the import.
+ * Added the genome build to the genomic DNA field headers in variant listings
+   and detailed views.
 
 
 /**************************
