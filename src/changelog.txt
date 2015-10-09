@@ -5,7 +5,7 @@
  *************/
 
 /**************************
- * 3.0 Build 14 (r...)
+ * 3.0 Build 14 (r657)
  * 2015-10-09
  *********/
  * Added URLs to show data by reference (DOI or PubMed currently supported),
@@ -74,6 +74,7 @@
    error occured during the import.
  * Added the genome build to the genomic DNA field headers in variant listings
    and detailed views.
+ * Increased maximum length of disease's abbreviation to 25.
 
 
 /**************************
