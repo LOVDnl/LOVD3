@@ -477,7 +477,7 @@ class LOVD_User extends LOVD_Object {
                 $nOwnes = 0;
                 $sOwnes = '';
 
-                // FIXME: Phenotypes is not included, because we don't have a phenotypes overview (must be disease-specific).
+                // FIXME: Phenotypes is not included, because we don't have a phenotypes overview to link to (must be disease-specific).
                 foreach (array('individuals', 'screenings', 'variants') as $sDataType) {
                     $n = $_DB->query('SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sDataType)) . ' WHERE owned_by = ?', array($zData['id']))->fetchColumn();
                     if ($n) {

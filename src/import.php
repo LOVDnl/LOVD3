@@ -940,7 +940,6 @@ if (POST) {
 
                 // Use the object's checkFields() to have the values checked.
                 $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
-                // During the update import we dont want to a mandatory fields, but we do want to run checkfields.
                 $aSection['object']->checkFields($aLine, $zData);
                 for ($i = $nErrors; isset($_ERROR['messages'][$i]); $i++) {
                     $_ERROR['fields'][$i] = ''; // It wants to highlight a field that's not here right now.
