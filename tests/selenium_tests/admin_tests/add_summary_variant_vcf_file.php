@@ -33,13 +33,23 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=statusid", "label=Public");
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");
-    $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
+    $this->assertEquals("76 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
     $this->waitForPageToLoad("4000");
     $this->setTimeout(60000)
-    sleep(200);
+    sleep(400);
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
+    $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");

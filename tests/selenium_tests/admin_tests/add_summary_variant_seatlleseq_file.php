@@ -39,7 +39,6 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
         } catch (Exception $e) {}
         sleep(1);
     }
-
     $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");

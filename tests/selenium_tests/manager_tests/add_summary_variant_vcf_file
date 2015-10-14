@@ -104,7 +104,7 @@
 <tr>
 	<td>assertText</td>
 	<td>id=lovd__progress_message</td>
-	<td>138 variants were imported, 1 variant could not be imported.</td>
+	<td>76 variants were imported, 1 variant could not be imported.</td>
 </tr>
 <tr>
 	<td>clickAndWait</td>

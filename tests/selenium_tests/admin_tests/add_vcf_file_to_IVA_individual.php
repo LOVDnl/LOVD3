@@ -29,7 +29,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=statusid", "label=Public");
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");
-    $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
+    $this->assertEquals("76 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
     $this->click("css=input[type=\"button\"]");
     $this->waitForPageToLoad("30000");
     $this->setTimeout(60000)
