@@ -12,7 +12,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->open("/svn/LOVD3/trunk/src/genes?create");
     $this->type("name=hgnc_id", "IVD");
     $this->click("css=input[type=\"submit\"]");
-    $this->waitForPageToLoad("50000");
+    $this->waitForPageToLoad("120000");
     $this->addSelection("name=active_transcripts[]", "label=transcript variant 1 (NM_002225.3)");
     $this->click("name=show_hgmd");
     $this->click("name=show_genecards");

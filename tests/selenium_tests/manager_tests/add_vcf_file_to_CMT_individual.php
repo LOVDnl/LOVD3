@@ -39,6 +39,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->click("css=input[type=\"button\"]");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
+    $this->setTimeout(60000)
     sleep(400);
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
@@ -89,6 +90,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->open("/svn/LOVD3/trunk/src/ajax/map_variants.php");
     $this->assertEquals("0 99 There are no variants to map in the database", $this->getText("css=body"));
+    $this->setTimeout(30000)
   }
 }
 ?>

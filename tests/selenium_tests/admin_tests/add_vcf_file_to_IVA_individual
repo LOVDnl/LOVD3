@@ -102,6 +102,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>setTimeout</td>
+	<td>60000</td>
+	<td></td>
+</tr>
+<tr>
 	<td>pause</td>
 	<td>400000</td>
 	<td></td>
@@ -270,6 +275,11 @@
 	<td>assertText</td>
 	<td>css=body</td>
 	<td>0 99 There are no variants to map in the database</td>
+</tr>
+<tr>
+	<td>setTimeout</td>
+	<td>30000</td>
+	<td></td>
 </tr>
 </tbody></table>
 </body>

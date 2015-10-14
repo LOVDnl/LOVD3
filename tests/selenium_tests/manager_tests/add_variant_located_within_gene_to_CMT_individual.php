@@ -21,7 +21,14 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=00001_VariantOnTranscript/Exon", "2");
     $this->type("name=00001_VariantOnTranscript/DNA", "c.34G>T");
     $this->click("css=button.mapVariant");
-    sleep(10);
+    sleep(3);
+    for ($second = 0; ; $second++) {
+        if ($second >= 60) $this->fail("timeout");
+        try {
+            if ($this->isElementPresent("css=img[alt=\"Prediction OK!\"]")) break;
+        } catch (Exception $e) {}
+        sleep(1);
+    }
     $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
     $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
     $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");

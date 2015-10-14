@@ -83,7 +83,12 @@
 </tr>
 <tr>
 	<td>pause</td>
-	<td>10000</td>
+	<td>3000</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>css=img[alt=&quot;Prediction OK!&quot;]</td>
 	<td></td>
 </tr>
 <tr>
