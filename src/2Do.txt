@@ -7,23 +7,30 @@ If bugs have been closed, mark them in the changelog.
 Commit, svn update, svn log, create svn tag.
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
-Update download.php, news.php, package_update.php. Update trac. Update Facebook.
-If bugs have been closed, mark them in the news.
+Update download.php, news.php (mark closed bugs), package_update.php, sync docs dirs. Update trac. Update Facebook & twitter.
 
 Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /antwerpen/ heeft aangepaste .htaccess.
+/my_genome/ heeft een aangepaste ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/template.php, individuals.php, screenings.php, submit.php, variants.php.
 /shared/ heeft een aangepaste class/graphs.php en class/template.php.
 /VKGL/ heeft aangepaste .htaccess.
 /whole_genome/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
-/whole_genome_mirror/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
+/whole_genome_mirror/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! (MAG WEL VAN WHOLE_GENOME, excl. de config.ini)
 After updating all installations, send email to team with all improvements summarized.
+
+To debug: XDEBUG_PROFILE=1
 
 Prioritize:
 ===========
+- Find a better way to select diseases on the Individual data entry form.
+  - Also fix, that changes in this field (and other linking tables?) are not displayed in the submission emails?
+  - Use code used to select users to become curators? In a pop over, using JS to read out currently selected options, and enable them on the pop over. When submitting, the form's selection needs to be adapted.
+- mappingInfo sort problem, fix in all spots in variants.php?
 - Indicate the parents using the data entry form, not just the import. Also check the given IDs for the correct (at least not conflicting) gender value, and make sure that during import, the ID is first matched to the file (ignoring own line), and then to the database.
   - Also implement check if given parent is used as both mother and father? Or add check when filling in gender, if it conflicts with used as fatherid/motherid?
   - Check if motherid and fatherid are the same individual?
+- File having gene to disease associations, with disease name and disease OMIM ID, currently of 3266 genes: ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id
 - Genen lijst apart laten genereren, cache van een minuut? Of huidig gen meesturen, zodat refresh als zelf gen aangemaakt?
   Of misschien gewoon een file die opnieuw gegenereerd wordt, als er een gen wordt toegevoegd of verwijderd?
   Toch hier misschien nog even heel goed over nadenken...
@@ -78,8 +85,6 @@ Prioritize:
 - LOVD3 site: how to go back to LOVD2 easily?
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
-- Unique variants (Ammar Husami, Anne Polvi). Met counts, waar op gezocht en gesorteerd kan worden.
-  + Zoeken met WHERE of HAVING? Eerst WHERE (met waarschuwing), later HAVING?
 - Implement an HGNC mirror (student project?)
   + REST API can still be used I guess, but a raw download would be useful for at least variants.php, which downloads a full copy.
 - RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
@@ -93,14 +98,11 @@ Prioritize:
 - Over het algemeen: focus op het toevoegen van features die ook al in LOVD2 zaten!!!
 - Belangrijke features zijn: mass-curate en verbeteren import.
 - Import has some 2Do, such as predicting DBIDs and such.
-  + At this time Import cannot work with Owned data sets, because it's missing one section (Genes_To_Diseases), some columns (in Genes, Transcripts, Diseases) and it has a different name.
-    Actually, so what?
   + Also, some sections are actually labelled as not to be imported. This is not recognized either.
-  + Hij klaagt nu als een disease al in de DB staat, maar als alles hetzelfde is (iig id, id_omim, name), negeer die regel dan en ga gewoon door.
   + Ignore (broken, all?) user links and point everything to me? As a setting that you can put in the file? Or only when reporting an error, then allow users to ignore "live"? (js that sets an hidden form field)
 - Inbouwen op full view, dat de andere varianten in de individu ook worden getoond, tot een bepaalde max
 - Mensen curator maken moet op de bekende manier.
-  + Interessante advanced selection list: http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/   (search in options, easy to select multiple, not easy for ranges)
+  + Interessante advanced selection list: http://www.erichynds.com/examples/jquery-ui-multiselect-widget/demos/   (search in options, easy to select multiple, not easy for ranges)
   + Interessante multiselect (2 lists: selected, unselected): http://quasipartikel.at/multiselect/   (search in options to add (not to remove), easy to see what is already selected and unselected, not easy for ranges)
 - Handling ORCID ID:
   + inbouwen in edit (niet zo makkelijk, want voor een edit moet je het veld nooit tonen als de database 'm heeft).
@@ -108,8 +110,6 @@ Prioritize:
   + Nieuwe API ondersteunt login mogelijkheden?
   + (student / medewerker?)
 - Download/all/mine gebruikt te veel geheugen, niet alles laten prefetchen!
-- When making a gene specific download, the Gen2Dis doesn't seem to filter the Diseases section at all.
-- Log texts sometimes have #ID, sometimes ID. Use #ID, so the later the texts can be parsed and links created from the logs using prepareData().
 - Curator authorize: report diffs in logs, toch wel handig, denk ik.
 - Updated date van genen klopt niet (variant map, screening add/edit/delete, phenotype?, individual).
 - Het is niet duidelijk, hoe een variant aan een bestaande individu toe te voegen (moet dus via screening). Dat moet duidelijk gemaakt worden.
@@ -209,6 +209,8 @@ Prioritize:
   + http://databases.lovd.nl/shared/variants/GLDC
 - Mark "In progess" data also? If so, perhaps the CASE statement in the relevant object_* files should become an IF with < STATUS_MARKED or so.
 =============== Below here needs to be re-evaluated for priority ===============
+- LOVD2 had a list of references on the gene homepage, include that again. Also then, point to the /references/ID URL to show all the data.
+- Website: Improve file download links, remove ampersands and make sure the name when downloading makes sense.
 - Shared columns VE: add "active for parent objects" with list. Make sure you treat the list as the curator's gene list, so that it is shortened when necessary.
 - 5.3.0 required, use bcrypt! Set dan wel maximale ww lengte die verwerkt wordt, om DOS aanval te voorkomen.
 - Diseases hebben alias field nodig (lange tekst), maar nog geen speciale handelingen nodig op het moment.
@@ -337,7 +339,6 @@ Prioritize:
 - VOT/Published_as is op zich niet nodig als VOG/Published_as is toegevoegd. Hier dan ook een stokje voor steken?
 - Als send_stats uit staat, heeft include_in_listing weinig zin...
 - Gene removed, refseq files deleted?
-- Unit tests via Selenium (student?)
 - Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - Johan: 2011-08-18: een ontwikkeling die ik momenteel zie is dat submitters bereid zijn alle varianten verbonden aan één patient te submitten,
   maar wel zelf willen kunnen zien welke varianten allemaal bij die patient horen maar niet dat anderen dat kunnen zien (database bezoekers).
@@ -359,7 +360,7 @@ Prioritize:
   + Student project?
   + Ook support mededelingen: voor versies alpha-01 t/m alpha-10 het bericht dat alpha niet meer ondersteund wordt, dus je moet upgraden. Of voor alle installs op onze server (signature check): downtime dan en dan. Op versie of op signature??? Zoiets.
   + Ook instellen per user level (submitter, curator, manager, db admin).
-  + Na het inloggen, indien er een update is, een tooltip weergeven rechtsonder dat er een update is! Niet de hele tijd dus, alleen nadat je net bent ingelogd.
+  + Na het inloggen, indien er een update is, een tooltip weergeven rechtsonder dat er een update is! Niet de hele tijd dus, alleen nadat je net bent ingelogd, of tenminste eens per dag?
     * Je kunt $_STAT gewoon analyseren, want het icoon is al geladen tijdens het inloggen dus hoort al te weten dat er een update is!
     * Popup heeft andere kleur aan de hand van update belangrijkheid...
     * Kan popup zo'n hoekje hebben die naar het logo wijst?
@@ -640,7 +641,6 @@ Wat moet ik onthouden tijdens het coden?
 =========================================
 * $_SERVER['PHP_SELF'] werkt niet meer! Want daar kan vanalles in staan. SCRIPT_NAME niet gebruiken voor doorsturen, omdat we geen .php in de URL willen.
     Af en toe ff zoeken, om te kijken of het stiekem toch gebruikt wordt.
-* Unique variant overview toont alleen DNA veld???
 * SELECT COUNT(*) FROM t = slower on InnoDB (index scan needed). SHOW TABLE STATUS also can be used if an *approximate* row count is sufficient.
 * TRUNCATE TABLE == DELETE FROM @ InnoDB. As of MySQL 4.1.13, truncate operations cause an implicit commit. Before 4.1.13, truncate operations are not transaction-safe; an error occurs when attempting one in the course of an active transaction.
     - Some older versions may not reset the AUTO_INCREMENT value. In this case, you can use ALTER TABLE tbl_name AUTO_INCREMENT=1  after the TRUNCATE TABLE statement.
@@ -712,11 +712,3 @@ Needed before release
         Select: waarde i.p.v. yes (-- select --) or no..
     Gebruikers de external sources laten beheren?
     Kunnen we bij de upgrade zien of een upgrade al gedaan is? Dat een foutmelding "duplicate key" ofzo ondervangen wordt, zodat ie doorgaat?
-
-
-
-OTHER:
-    If family ID column present, report in unique variant overview how many entries in total AND how many families in total.
-    Internationalization?
-- Boven log entries een paar blokken plaatsen; per log eentje. JS er op, die search_name invult, en formulier submit.
-  * Eventueel met highlight.

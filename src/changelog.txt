@@ -12,7 +12,7 @@
    e.g. /references/PMID:10677295.
  * Fixed possible future problems with the longer new generic top level domains,
    which could be rejected as invalid URLs for LOVDs to reside.
- * Fixed bug; During import the panel IDs in the individual section where only
+ * Fixed bug; During import the panel IDs in the individual section were only
    checked in the database and not in the import file. Same for father ID and
    mother ID.
  * Curators can simulate the import of an LOVD tab-delimited file.
