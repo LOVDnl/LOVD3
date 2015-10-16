@@ -9,7 +9,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
 
   public function testMyTestCase()
   {
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000279$/',$this->getLocation()));
+    $this->assertContains("/src/variants/0000000166" ,$this->getLocation());
     $this->click("id=tab_submit");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/',$this->getLocation()));

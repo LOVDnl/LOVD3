@@ -9,7 +9,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
 
   public function testMyTestCase()
   {
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000281$/',$this->getLocation()));
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000168$/',$this->getLocation()));
     $this->click("link=Submit new data");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/',$this->getLocation()));
@@ -35,7 +35,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
     $this->waitForPageToLoad("4000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000282$/',$this->getLocation()));
+    $this->assertContains("/src/variants/0000000169" ,$this->getLocation());
   }
 }
 ?>

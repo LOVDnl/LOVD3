@@ -35,6 +35,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
         } catch (Exception $e) {}
         sleep(1);
     }
+
     $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
     $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
     $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
@@ -55,7 +56,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
     $this->waitForPageToLoad("4000");
-    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000560$/',$this->getLocation()));
+    $this->assertContains("/src/variants/0000000334", $this->getLocation());
   }
 }
 ?>

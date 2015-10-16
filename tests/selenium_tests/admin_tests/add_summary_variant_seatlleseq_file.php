@@ -30,16 +30,16 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
     $this->click("css=input[type=\"submit\"]");
-    // Importing seatlleseq can take some time, therefore the pause for 200 seconds.
-    sleep(200);
+    $this->waitForPageToLoad("60000");
     for ($second = 0; ; $second++) {
-        if ($second >= 60) $this->fail("timeout");
-        try {
-            if ($this->isElementPresent("css=input[type=\"submit\"]")) break;
-        } catch (Exception $e) {}
+        if ($second >= 300) $this->fail("timeout");
+        if ($this->isElementPresent("id=lovd__progress_message")) {
+            break;
+        }
         sleep(1);
     }
-    $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
+
+    $this->assertContains("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));

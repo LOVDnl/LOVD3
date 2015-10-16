@@ -103,7 +103,7 @@
 </tr>
 <!--Importing seatlleseq can take some time, therefore the pause for 200 seconds.-->
 <tr>
-	<td>pause</td>
+	<td>setTimeout</td>
 	<td>200000</td>
 	<td></td>
 </tr>
@@ -126,6 +126,11 @@
 	<td>assertText</td>
 	<td>css=table[class=info]</td>
 	<td>Successfully processed your submission and sent an email notification to the relevant curator*</td>
+</tr>
+<tr>
+	<td>setTimeout</td>
+	<td>30000</td>
+	<td></td>
 </tr>
 </tbody></table>
 </body>

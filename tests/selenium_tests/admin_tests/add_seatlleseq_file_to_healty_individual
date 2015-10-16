@@ -83,7 +83,7 @@
 </tr>
 <!--Importing seatlleseq can take some time, therefore the pause for 200 seconds.-->
 <tr>
-	<td>pause</td>
+	<td>setTimeout</td>
 	<td>200000</td>
 	<td></td>
 </tr>
@@ -105,6 +105,11 @@
 <tr>
 	<td>waitForPageToLoad</td>
 	<td>4000</td>
+	<td></td>
+</tr>
+<tr>
+	<td>setTimeout</td>
+	<td>30000</td>
 	<td></td>
 </tr>
 </tbody></table>
