@@ -75,6 +75,10 @@
  * Added the genome build to the genomic DNA field headers in variant listings
    and detailed views.
  * Increased maximum length of disease's abbreviation to 25.
+ * Patch 01: 2015-10-19 (r666): Fixed bug; The diseases detailed view showed a
+   query error because table names were used directly (with a non-standard table
+   prefix) instead of using the table constants.
+   Closes #41: "Diseases Query error".
 
 
 /**************************
