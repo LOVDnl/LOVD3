@@ -17,10 +17,9 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/',$this->getConfirmation()));
         sleep(4);
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
-        $this->click("//tr[@id='ARSD']/td[2]");
-        //$this->click("css=#ARSD > td.ordered");
+        $this->click("css=#ARSD > td.ordered");
         $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*trunk\/src\/variants[\s\S]create&reference=Transcript&geneid=ARSD$/',$this->getLocation()));
+        $this->assertContains((bool)preg_match('/^[\s\S]*src\/variants[\s\S]create&reference=Transcript&geneid=ARSD$/',$this->getLocation()));
         for ($second = 0; ; $second++) {
             if ($second >= 60) $this->fail("timeout");
             try {
