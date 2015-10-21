@@ -19,7 +19,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
         $this->click("css=#ARSD > td.ordered");
         $this->waitForPageToLoad("30000");
-        $this->assertContains((bool)preg_match('/^[\s\S]*src\/variants[\s\S]create&reference=Transcript&geneid=ARSD$/',$this->getLocation()));
+        $this->assertContains("src/variants?create&reference=Transcript&geneid=ARSD", $this->getLocation());
         for ($second = 0; ; $second++) {
             if ($second >= 60) $this->fail("timeout");
             try {
