@@ -5,6 +5,13 @@
  *************/
 
 /**************************
+ * 3.0 Build 15
+ *********/
+ * Fixed bug; During update import the file processing was not stopped after too many
+   errors. The message "Too many errors, stopping file processing." was displayed
+   more than once.
+
+/**************************
  * 3.0 Build 14 (r657)
  * 2015-10-09
  *********/
