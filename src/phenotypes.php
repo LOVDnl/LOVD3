@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2015-07-17
- * For LOVD    : 3.0-14
+ * Modified    : 2015-10-28
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -108,7 +108,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this phenotype entry.
+    // Load appropriate user level for this phenotype entry.
     lovd_isAuthorized('phenotype', $nID);
 
     require ROOT_PATH . 'class/object_phenotypes.php';
@@ -354,7 +354,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     define('PAGE_TITLE', 'Edit phenotype #' . $nID);
     define('LOG_EVENT', 'PhenotypeEdit');
 
-    // Load appropiate user level for this phenotype entry.
+    // Load appropriate user level for this phenotype entry.
     lovd_isAuthorized('phenotype', $nID);
     if (ACTION == 'publish') {
         lovd_requireAUTH(LEVEL_CURATOR);
@@ -504,7 +504,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('LOG_EVENT', 'PhenotypeDelete');
 
     // FIXME; hier moet een goede controle komen, wanneer lager is toegestaan.
-    // Load appropiate user level for this phenotype entry.
+    // Load appropriate user level for this phenotype entry.
     lovd_isAuthorized('phenotype', $nID);
     lovd_requireAUTH(LEVEL_CURATOR);
 

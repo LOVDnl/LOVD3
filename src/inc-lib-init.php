@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-03-05
- * For LOVD    : 3.0-13
+ * Modified    : 2015-10-28
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -124,7 +124,7 @@ function lovd_createPasswordHash ($sPassword, $sSalt = '')
 {
     // Creates a password hash like how it's stored in the database. If no salt
     // is given, it will generate a new salt. If a salt has been given, it's not
-    // checked if it is an appropiate salt.
+    // checked if it is an appropriate salt.
 
     if (!$sPassword) {
         return false;

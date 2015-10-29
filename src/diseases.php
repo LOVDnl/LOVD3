@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2015-03-11
- * For LOVD    : 3.0-13
+ * Modified    : 2015-10-28
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -79,7 +79,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $nID = -1;
     }
 
-    // Load appropiate user level for this disease.
+    // Load appropriate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
 
     require ROOT_PATH . 'class/object_diseases.php';
@@ -292,7 +292,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         $nID = -1;
     }
 
-    // Load appropiate user level for this disease.
+    // Load appropriate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
     lovd_requireAUTH(LEVEL_CURATOR);
 
@@ -531,7 +531,7 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) 
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this disease.
+    // Load appropriate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
     lovd_requireAUTH(LEVEL_CURATOR);
 
@@ -568,7 +568,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized($sUnit, $sParentID);
     lovd_requireAUTH(LEVEL_CURATOR); // Will also stop user if gene given is fake.
 
@@ -607,7 +607,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
     define('PAGE_TITLE', 'Edit settings for custom data column ' . $sColumnID . ' for ' . $sUnit . ' #' . $sParentID);
     define('LOG_EVENT', 'SharedColEdit');
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized($sUnit, $sParentID);
     lovd_requireAUTH(LEVEL_CURATOR); // Will also stop user if gene given is fake.
 
@@ -707,7 +707,7 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION ==
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this disease.
+    // Load appropriate user level for this disease.
     lovd_isAuthorized('disease', $nID); // This call will make database queries if necessary.
     lovd_requireAUTH(LEVEL_CURATOR);
 

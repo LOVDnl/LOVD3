@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2015-07-17
- * For LOVD    : 3.0-14
+ * Modified    : 2015-10-28
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -97,7 +97,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this individual.
+    // Load appropriate user level for this individual.
     lovd_isAuthorized('individual', $nID);
 
     require ROOT_PATH . 'class/object_individuals.php';
@@ -293,7 +293,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     define('PAGE_TITLE', 'Edit individual #' . $nID);
     define('LOG_EVENT', 'IndividualEdit');
 
-    // Load appropiate user level for this individual.
+    // Load appropriate user level for this individual.
     lovd_isAuthorized('individual', $nID);
     if (ACTION == 'publish') {
         lovd_requireAUTH(LEVEL_CURATOR);

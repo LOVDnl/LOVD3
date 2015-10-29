@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2015-07-17
- * For LOVD    : 3.0-14
+ * Modified    : 2015-10-28
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -86,7 +86,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this transcript.
+    // Load appropriate user level for this transcript.
     lovd_isAuthorized('transcript', $nID); // This call will make database queries if necessary.
 
     require ROOT_PATH . 'class/object_transcripts.php';
@@ -465,7 +465,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     define('PAGE_TITLE', 'Edit transcript #' . $nID);
     define('LOG_EVENT', 'TranscriptEdit');
 
-    // Load appropiate user level for this transcript.
+    // Load appropriate user level for this transcript.
     lovd_isAuthorized('transcript', $nID); // This call will make database queries if necessary.
     lovd_requireAUTH(LEVEL_CURATOR);
 
@@ -554,7 +554,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
     define('LOG_EVENT', 'TranscriptDelete');
 
-    // Load appropiate user level for this transcript.
+    // Load appropriate user level for this transcript.
     lovd_isAuthorized('transcript', $nID); // This call will make database queries if necessary.
     lovd_requireAUTH(LEVEL_CURATOR);
 

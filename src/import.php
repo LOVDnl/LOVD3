@@ -238,13 +238,13 @@ if (POST) {
 
     // If the file does not arrive (too big), it doesn't exist in $_FILES.
     if (empty($_FILES['import']) || ($_FILES['import']['error'] > 0 && $_FILES['import']['error'] < 4)) {
-        lovd_errorAdd('import', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server.') . '.');
+        lovd_errorAdd('import', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server') . '.');
 
-    } else if ($_FILES['import']['error'] == 4 || !$_FILES['import']['size']) {
+    } elseif ($_FILES['import']['error'] == 4 || !$_FILES['import']['size']) {
         lovd_errorAdd('import', 'Please select a file to upload.');
 
-    } else if ($_FILES['import']['size'] > $nMaxSize) {
-        lovd_errorAdd('import', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server.') . '.');
+    } elseif ($_FILES['import']['size'] > $nMaxSize) {
+        lovd_errorAdd('import', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server') . '.');
 
     } elseif ($_FILES['import']['error']) {
         // Various errors available from 4.3.0 or later.

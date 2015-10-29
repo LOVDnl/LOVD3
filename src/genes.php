@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-09-24
- * For LOVD    : 3.0-14
+ * Modified    : 2015-10-28
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -78,7 +78,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     $_T->printTitle();
     lovd_printGeneHeader();
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized('gene', $sID);
 
     require ROOT_PATH . 'class/object_genes.php';
@@ -601,7 +601,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     define('PAGE_TITLE', 'Edit gene information entry');
     define('LOG_EVENT', 'GeneEdit');
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized('gene', $sID);
     lovd_requireAUTH(LEVEL_CURATOR);
 
@@ -792,7 +792,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized('gene', $sID);
     lovd_requireAUTH(LEVEL_CURATOR);
 
@@ -1044,7 +1044,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized('gene', $sID);
     lovd_requireAUTH(LEVEL_CURATOR);
 
@@ -1081,7 +1081,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized($sUnit, $sParentID);
     lovd_requireAUTH(LEVEL_CURATOR); // Will also stop user if gene given is fake.
 
@@ -1120,7 +1120,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])
     define('PAGE_TITLE', 'Edit settings for custom data column ' . $sColumnID . ' for ' . $sUnit . ' ' . $sParentID);
     define('LOG_EVENT', 'SharedColEdit');
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized($sUnit, $sParentID);
     lovd_requireAUTH(LEVEL_CURATOR); // Will also stop user if gene given is fake.
 
@@ -1220,7 +1220,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     $_T->printHeader();
     $_T->printTitle();
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized('gene', $sID);
     lovd_requireAUTH(LEVEL_CURATOR);
 
@@ -1436,7 +1436,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
     }
     $sID = $sVerifiedID;
 
-    // Load appropiate user level for this gene.
+    // Load appropriate user level for this gene.
     lovd_isAuthorized('gene', $sID);
 
     if (ACTION == 'authorize' && $_AUTH['level'] < LEVEL_MANAGER) {
