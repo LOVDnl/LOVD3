@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2013-09-30
- * For LOVD    : 3.0-08
+ * Modified    : 2015-10-30
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -113,7 +113,7 @@ class LOVD_Log extends LOVD_Object {
             case 'ColAdd':
             case 'ColEdit':
             case 'ColRemove':
-                $zData['entry'] = preg_replace('/olumn ([A-Z][A-Za-z\/_]+) /', 'olumn <A href="columns/$1">$1</A> ', $zData['entry']);
+                $zData['entry'] = preg_replace('/olumn ([A-Z][A-Za-z0-9\/_]+) /', 'olumn <A href="columns/$1">$1</A> ', $zData['entry']);
                 break;
             case 'DiseaseCreate':
             case 'DiseaseEdit':

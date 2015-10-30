@@ -5,11 +5,15 @@
  *************/
 
 /**************************
- * 3.0 Build 15
+ * 3.0 Build 15 (r...)
+ * 2016-03-..
  *********/
- * Fixed bug; During update import the file processing was not stopped after too many
-   errors. The message "Too many errors, stopping file processing." was displayed
-   more than once.
+ * Fixed bug; During update import the file processing was not stopped after too
+   many errors. The message "Too many errors, stopping file processing." was
+   displayed more than once.
+ * Fixed bug; Custom columns with numbers in the names were not converted to
+   links in the log entries.
+
 
 /**************************
  * 3.0 Build 14 (r657)
