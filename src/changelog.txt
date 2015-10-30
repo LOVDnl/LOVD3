@@ -13,6 +13,8 @@
    displayed more than once.
  * Fixed bug; Custom columns with numbers in the names were not converted to
    links in the log entries.
+ * After creating a user account for somebody else, you will now always be for-
+   warded to the account page of that new user.
 
 
 /**************************

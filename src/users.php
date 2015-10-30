@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2015-05-06
- * For LOVD    : 3.0-14
+ * Modified    : 2015-10-30
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -488,11 +488,12 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                 $bMail = 0; // Does not evaluate to True (mention we've sent the email), but doesn't equal False either (mention we failed to send the email).
             }
 
-            if ($bMail) {
-                // Thank the user...
+            if ($bMail !== false) {
+                // Forward the user if we didn't fail to send the email (or we may not have tried to send it).
                 header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID . '?&new_submitter');
             }
 
+            // Thank the user...
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable('Successfully created '  . (ACTION == 'create'? 'the user' : 'your') . ' account!' .
