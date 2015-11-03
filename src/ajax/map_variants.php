@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2014-12-11
- * For LOVD    : 3.0-13
+ * Modified    : 2015-11-03
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -335,7 +335,7 @@ if (!empty($aVariants)) {
     // We'll need a list of transcripts in the database on this chromosome.
     $aTranscriptsInLOVD = array();
     // FIXME: Restrict range somewhat based on variant's range? Query takes 0.03s with 22K transcripts, but we have $nStart and $nEnd available.
-    $qTranscriptsInLOVD = $_DB->query('SELECT t.id, geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid) WHERE chromosome = ?', array($sChromosome));
+    $qTranscriptsInLOVD = $_DB->query('SELECT t.id, geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid) WHERE chromosome = ?', array($sChromosome));
     while ($aTranscriptInLOVD = $qTranscriptsInLOVD->fetchAssoc()) {
         $aTranscriptsInLOVD[$aTranscriptInLOVD['geneid']][$aTranscriptInLOVD['id']] = array('id' => $aTranscriptInLOVD['id'], 'id_ncbi' => $aTranscriptInLOVD['id_ncbi']);
     }
@@ -395,7 +395,7 @@ if (!empty($aVariants)) {
 
         // Find out on which transcripts this variant has been mapped already.
         $aVariant['alreadyMappedTranscripts'] = array();
-        $zVariantInfo = $_DB->query('SELECT t.id, id_ncbi, geneid, `VariantOnTranscript/DNA` AS dna FROM ' . TABLE_TRANSCRIPTS . ' AS t JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid AND vot.id = ' . $aVariant['id'] . ')')->fetchAllAssoc();
+        $zVariantInfo = $_DB->query('SELECT t.id, id_ncbi, geneid, `VariantOnTranscript/DNA` AS dna FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid AND vot.id = ' . $aVariant['id'] . ')')->fetchAllAssoc();
         foreach ($zVariantInfo as $a) {
             $aVariant['alreadyMappedTranscripts'][] = $a['id_ncbi'];
             // Fake the POST variables that DBID needs to make a better prediction.
