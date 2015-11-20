@@ -23,7 +23,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->addSelection("name=Screening/Technique[]", "label=Single Base Extension");
     $this->addSelection("name=Screening/Technique[]", "label=Single-Strand DNA Conformation polymorphism Analysis (SSCP)");
     $this->addSelection("name=Screening/Technique[]", "label=SSCA, fluorescent (SSCP)");
-    $this->addSelection("name=genes[]", "label=GJB1 (gap junction protein, beta 1, 32kDa)");
+    $this->addSelection("name=genes[]", "value=GJB1");
     $this->check("name=variants_found");
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->click("css=input[type=\"submit\"]");

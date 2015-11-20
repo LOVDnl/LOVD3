@@ -17,7 +17,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=hgnc_id", "GJB1");
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");
-    $this->addSelection("name=active_transcripts[]", "label=transcript variant 1 (NM_001097642.2)");
+    $this->addSelection("name=active_transcripts[]", "value=NM_001097642.2");
     $this->check("name=show_hgmd");
     $this->check("name=show_genecards");
     $this->check("name=show_genetests");

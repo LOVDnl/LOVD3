@@ -18,7 +18,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->addSelection("name=Screening/Technique[]", "label=array for Comparative Genomic Hybridisation");
     $this->addSelection("name=Screening/Technique[]", "label=array for resequencing");
     $this->addSelection("name=Screening/Technique[]", "label=array for SNP typing");
-    $this->addSelection("name=genes[]", "label=GJB1 (gap junction protein, beta 1, 32kDa)");
+    $this->addSelection("name=genes[]", "value=GJB1");
     $this->check("name=variants_found");
     $this->click("css=input[type=\"submit\"]");
     $this->waitForPageToLoad("30000");
