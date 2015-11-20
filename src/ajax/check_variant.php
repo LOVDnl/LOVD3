@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2014-07-25
- * For LOVD    : 3.0-11
+ * Modified    : 2015-11-20
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -33,7 +34,22 @@ require ROOT_PATH . 'inc-init.php';
 session_write_close();
 
 $aGenes = lovd_getGeneList();
-if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes) || !preg_match('/^((UD_\d{12}|NG_\d{6,}\.\d{1,2})\(' . $_GET['gene'] . '_v\d{3}\)):[cn]\..+$/', $_GET['variant'], $aVariantMatches)) {
+
+// First check if $_GET is filled, to avoid errors and notices.
+if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes)) {
+    die(AJAX_DATA_ERROR);
+}
+
+$sGene = $_GET['gene'];
+$sVariant = $_GET['variant'];
+// If gene is defined in the mito_genes_aliases in file inc-init.php use the ncbi gene symbol.
+if (isset($_SETT['mito_genes_aliases'][$_GET['gene']])) {
+	$sGene = $_SETT['mito_genes_aliases'][$_GET['gene']];
+	$sVariant = str_replace($_GET['gene'], $sGene, $_GET['variant']);
+}
+
+// Check if variant is an UD, NC or NG and discribed as c or n vatiant.
+if (!preg_match('/^((UD_\d{12}|N(?:C|G)_\d{6,}\.\d{1,2})\(' . $sGene . '_v\d{3}\)):[cn]\..+$/', $sVariant, $aVariantMatches)) {
     die(AJAX_DATA_ERROR);
 }
 $sProteinPrefix = str_replace('_v', '_i', $aVariantMatches[1]);
@@ -47,7 +63,7 @@ if (!$_AUTH) {
 require ROOT_PATH . 'class/soap_client.php';
 $_Mutalyzer = new LOVD_SoapClient();
 try {
-    $oOutput = $_Mutalyzer->runMutalyzer(array('variant' => $_GET['variant']))->runMutalyzerResult;
+    $oOutput = $_Mutalyzer->runMutalyzer(array('variant' => $sVariant))->runMutalyzerResult;
 } catch (SoapFault $e) {
     // FIXME: Perhaps indicate an error? Like in the check_hgvs script?
     die(AJAX_FALSE);

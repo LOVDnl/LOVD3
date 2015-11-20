@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-10-09
- * For LOVD    : 3.0-14
+ * Modified    : 2015-11-20
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -305,8 +305,40 @@ $_SETT = array(
                                                             'M'  => 'NC_012920.1',
                                                           ),
                                           ),
-                          ),
-              );
+                    ),
+		// Mitochondrial aliases. The key is the gene symbol used by HGNC the values are the gene symbol used by NCBI.
+                'mito_genes_aliases'=>
+                    array(
+                            'MT-TF' => 'TRNF',
+                            'MT-RNR1' => 'RNR1',
+                            'MT-TV' => 'TRNV',
+                            'MT-RNR2' => 'RNR2',
+                            'MT-TL1' => 'TRNL1',
+                            'MT-ND1' => 'ND1',
+                            'MT-TI' => 'TRNI',
+                            'MT-TM' => 'TRNM',
+                            'MT-ND2' => 'ND2',
+                            'MT-TW' => 'TRNW',
+                            'MT-CO1' => 'COX1',
+                            'MT-TD' => 'TRND',
+                            'MT-CO2' => 'COX2',
+                            'MT-TK' => 'TRNK',
+                            'MT-ATP8' => 'ATP8',
+                            'MT-ATP6' => 'ATP6',
+                            'MT-CO3' => 'COX3',
+                            'MT-TG' => 'TRNG',
+                            'MT-ND3' => 'ND3',
+                            'MT-TR' => 'TRNR',
+                            'MT-ND4L' => 'ND4L',
+                            'MT-ND4' => 'ND4',
+                            'MT-TH' => 'TRNH',
+                            'MT-TS2' => 'TRNS2',
+                            'MT-TL2' => 'TRNL2',
+                            'MT-ND5' => 'ND5',
+                            'MT-CYB' => 'CYTB',
+                            'MT-TT' => 'TRNT',
+                    ),
+            );
 
 // Complete version info.
 list($_SETT['system']['tree'], $_SETT['system']['build']) = explode('-', $_SETT['system']['version'], 2);
