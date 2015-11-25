@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2015-11-20
+ * Modified    : 2015-11-25
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -191,9 +191,7 @@ class LOVD_Transcript extends LOVD_Object {
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
 
-        if ($sView == 'list') {
-            $zData['id_'] = '<A href="' . str_replace('{{ID}}', $zData['id'], $this->sRowLink) . '" class="hide">' . $zData['id'] . '</A>';
-        } else {
+        if ($sView != 'list') {
             $zData['gene_name_'] = '<A href="genes/' . rawurlencode($zData['geneid']) . '">' . $zData['geneid'] . '</A> (' . $zData['gene_name'] . ')';
 
             $sNCBILink = $zData['id_ncbi'] ;

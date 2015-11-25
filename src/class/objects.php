@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2015-09-21
- * For LOVD    : 3.0-14
+ * Modified    : 2015-11-25
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -495,9 +495,16 @@ class LOVD_Object {
         }
 
         if ($sView == 'list') {
-            // By default, we put an anchor in the id_ field, if present.
-            if ($zData['row_link'] && array_key_exists('id_', $this->aColumnsViewList) && $zData['id']) {
-                $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+            // By default, we put anchors in the id_ and DNA fields, if present.
+            if ($zData['row_link']) {
+                if (isset($this->aColumnsViewList['id_']) && $zData['id']) {
+                    $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
+                }
+                foreach (array('VariantOnGenome/DNA', 'VariantOnTranscript/DNA') as $sCol) {
+                    if (isset($this->aColumnsViewList[$sCol])) {
+                        $zData[$sCol] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData[$sCol] . '</A>';
+                    }
+                }
             }
             // If we find an owned_by_ field, and an owner array, we set up the popups as well (but not for the "LOVD" user).
             if (isset($zData['owned_by']) && (int) $zData['owned_by'] && !empty($zData['owner'])) {
