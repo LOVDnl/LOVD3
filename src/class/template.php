@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2015-07-27
- * For LOVD    : 3.0-14
+ * Modified    : 2015-11-25
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -114,7 +114,7 @@ class LOVD_Template {
                         'individuals_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all individuals', 0),
-                                '/individuals/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all individuals screened for ' . $_SESSION['currdb'], 0),
+                                '/individuals/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all individuals with variants for ' . $_SESSION['currdb'], 0),
                                 'create' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                                 'hr',
                                 '/columns/Individual?search_active_=1' => array('menu_columns.png', 'View active custom columns', LEVEL_MANAGER),

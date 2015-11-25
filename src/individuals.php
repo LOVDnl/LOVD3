@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2015-10-28
+ * Modified    : 2015-11-25
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,7 +46,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     // URL: /individuals
     // URL: /individuals/DMD
     // View all entries.
-
+   
     if (!empty($_PE[1])) {
         $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
         if ($sGene) {
@@ -67,13 +67,14 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View individuals' . (isset($sGene)? ' screened for gene ' . $sGene : ''));
+    define('PAGE_TITLE', 'View individuals' . (isset($sGene)? ' with variants for gene ' . $sGene : ''));
     $_T->printHeader();
     $_T->printTitle();
 
     $aColsToHide = array('panelid', 'diseaseids');
     if (isset($sGene)) {
         $aColsToHide[] = 'genes_screened_';
+        $aColsToHide[] = 'variants_in_genes_';
     }
 
     require ROOT_PATH . 'class/object_individuals.php';

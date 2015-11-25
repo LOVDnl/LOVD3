@@ -15,7 +15,9 @@
    links in the log entries.
  * After creating a user account for somebody else, you will now always be for-
    warded to the account page of that new user.
-
+ * Adding mitochondrial genes to LOVD is implemented.
+ * The view 'Individuals screened for a gene' is changed to the view 'Individual 
+   with variants for a gene'.
 
 /**************************
  * 3.0 Build 14 (r657)
