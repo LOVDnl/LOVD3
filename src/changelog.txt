@@ -20,8 +20,9 @@
    were selected to be remapped as well.
  * Removed the X-MSMail-Priority header from emails sent by LOVD, to lower the
    spam score.
- * The view 'Individuals screened for a gene' is changed to the view 'Individual
-   with variants for a gene'.
+ * The view 'Individuals screened for gene X' has been replaced by the view
+   'Individuals with variants in gene X'.
+
 
 /**************************
  * 3.0 Build 14 (r657)
