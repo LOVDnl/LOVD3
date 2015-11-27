@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-11-20
+ * Modified    : 2015-11-25
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -147,9 +147,11 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_genes.php';
+    // FIXME: This is just to use two functions of the object that don't actually use the object. Better put them elsewhere.
     require ROOT_PATH . 'class/object_transcripts.php';
     require ROOT_PATH . 'inc-lib-form.php';
     $_DATA['Genes'] = new LOVD_Gene();
+    // FIXME: This is just to use two functions of the object that don't actually use the object. Better put them elsewhere.
     $_DATA['Transcript'] = new LOVD_transcript();
 
     $sPath = CURRENT_PATH . '?' . ACTION;
@@ -268,11 +270,11 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress($nProgress += 17);
                 if ($sChromosome == 'M') {
-                    // For mitochandrial genes an alias must be used to get the transcripts and info.
-                    // List of aliasses are hard-coded in inc-init.php
+                    // For mitochondrial genes, an alias must be used to get the transcripts and info.
+                    // List of aliases are hard-coded in inc-init.php.
                     $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
                 } else {
-                    // TEMP later this if-else statement should be removed. The function $_DATA['Transcript']->getTranscriptPositions
+                    // FIXME; Later this if-else statement should be removed. The function $_DATA['Transcript']->getTranscriptPositions()
                     // should be called for all genes. For the sake of clarity this will be done in a separate commit.
                     try {
                         // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
@@ -285,19 +287,21 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         $aTranscriptInfo = array();
                     }
 
-                    $aTranscripts['id'] = array();
-                    $aTranscripts['name'] = array();
-                    $aTranscripts['mutalyzer'] = array();
-                    $aTranscripts['positions'] = array();
-                    $aTranscripts['protein'] = array();
+                    $aTranscripts = array(
+                        'id' => array(),
+                        'name' => array(),
+                        'mutalyzer' => array(),
+                        'positions' => array(),
+                        'protein' => array(),
+                    );
                     $nTranscripts = count($aTranscriptInfo);
                     foreach($aTranscriptInfo as $oTranscript) {
-                        $nProgress += ((100 - $nProgress) /$nTranscripts);
+                        $nProgress += ((100 - $nProgress) / $nTranscripts);
                         $_BAR->setMessage('Collecting ' . $oTranscript->id . ' info...');
                         if ($oTranscript->id) {
                             $aTranscripts['id'][] = $oTranscript->id;
-                            // Untill revison 679 the transcript version was not used in the index. The version number was removed with a preg_replace.
-                            // Can not figure out why version is not included. Therefor for now we will do without preg_replace.
+                            // Until revision 679 the transcript version was not used in the index. The version number was removed with a preg_replace.
+                            // Can not figure out why version is not included. Therefore, for now we will do without preg_replace.
                             $aTranscripts['name'][$oTranscript->id] = str_replace($sGeneName . ', ', '', $oTranscript->product);
                             $aTranscripts['mutalyzer'][$oTranscript->id] = str_replace($sSymbol . '_v', '', $oTranscript->name);
                             $aTranscripts['positions'][$oTranscript->id] =
@@ -389,6 +393,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             lovd_errorClean();
 
             $_DATA['Genes']->checkFields($_POST, $zData);
+
             if (!lovd_error()) {
                 // Fields to be used.
                 $aFields = array(
@@ -447,7 +452,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         if (!$sTranscript) {
                             continue;
                         }
-                        // TEMP!! If else statement is temporary. Now we only use the transcript object to save the transcripts for mitrchonrial genes.
+                        // FIXME; If else statement is temporary. Now we only use the transcript object to save the transcripts for mitochondrial genes.
                         // Later all transcripts will be saved like this. For the sake of clarity this will be done in a separate commit.
                         if ($zData['chromosome'] == 'M') {
                             $zDataTranscript = array(
@@ -465,9 +470,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                 'position_g_mrna_start' => $zData['transcriptPositions'][$sTranscript]['chromTransStart'],
                                 'position_g_mrna_end' => $zData['transcriptPositions'][$sTranscript]['chromTransEnd'],
                                 'created_date' => date('Y-m-d H:i:s'),
-                                'created_by' => $_POST['created_by']
+                                'created_by' => $_POST['created_by'],
                             );
-                            
+
                             if (!$_DATA['Transcript']->insertEntry($zDataTranscript, array_keys($zDataTranscript))) {
                                 // Silent error.
                                 lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
@@ -476,10 +481,11 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
                             $aSuccessTranscripts[] = $sTranscript;
                             $_DATA['Transcript']->turnOffMappingDone($_POST['chromosome'], $zData['transcriptPositions'][$sTranscript]);
+
                         } else {
                             // Gather transcript information from session.
-                            // Untill revison 679 the transcript version was not used in the index.
-                            // Can not figure out why version is not included. Therefor for now we will do without.
+                            // Until revision 679 the transcript version was not used in the index.
+                            // Can not figure out why version is not included. Therefore, for now we will do without.
                             $nMutalyzerID = $zData['transcriptMutalyzer'][$sTranscript];
                             $sTranscriptProtein = $zData['transcriptsProtein'][$sTranscript];
                             $sTranscriptName = $zData['transcriptNames'][$sTranscript];
@@ -495,10 +501,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                 $aSuccessTranscripts[] = $sTranscript;
 
                                 // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
-                                $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_DONE . ' WHERE chromosome = ? AND ' .
+                                $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_DONE . ' WHERE chromosome = ? AND (' .
                                                  '(position_g_start BETWEEN ? AND ?) OR ' .
                                                  '(position_g_end   BETWEEN ? AND ?) OR ' .
-                                                 '(position_g_start < ? AND position_g_end > ?)',
+                                                 '(position_g_start < ? AND position_g_end > ?))',
                                                  array($_POST['chromosome'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd']));
                                 if ($q->rowCount()) {
                                     // If we have changed variants, turn on mapping immediately.

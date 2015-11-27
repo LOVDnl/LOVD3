@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-11-20
+ * Modified    : 2015-11-26
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -306,8 +306,8 @@ $_SETT = array(
                                                           ),
                                           ),
                     ),
-		// Mitochondrial aliases. The key is the gene symbol used by HGNC the values are the gene symbol used by NCBI.
-                'mito_genes_aliases'=>
+                // Mitochondrial aliases. The key is the gene symbol used by HGNC, the value is the gene symbol used by NCBI.
+                'mito_genes_aliases' =>
                     array(
                             'MT-TF' => 'TRNF',
                             'MT-RNR1' => 'RNR1',
@@ -799,7 +799,6 @@ if (!defined('NOT_INSTALLED')) {
         $_SETT['email_headers'] = 'MIME-Version: 1.0' . PHP_EOL .
                                   'Content-Type: text/plain; charset=UTF-8' . PHP_EOL .
                                   'X-Priority: 3' . PHP_EOL .
-                                  'X-MSMail-Priority: Normal' . PHP_EOL .
                                   'X-Mailer: PHP/' . phpversion() . PHP_EOL .
                                   'From: ' . (ON_WINDOWS? '' : '"LOVD (' . lovd_shortenString($_CONF['system_title'], 50) . ')" ') . '<' . $_CONF['email_address'] . '>';
         $_SETT['email_mime_headers'] =

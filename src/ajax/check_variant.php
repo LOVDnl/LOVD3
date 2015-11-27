@@ -42,13 +42,13 @@ if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], 
 
 $sGene = $_GET['gene'];
 $sVariant = $_GET['variant'];
-// If gene is defined in the mito_genes_aliases in file inc-init.php use the ncbi gene symbol.
+// If gene is defined in the mito_genes_aliases in file inc-init.php use the NCBI gene symbol.
 if (isset($_SETT['mito_genes_aliases'][$_GET['gene']])) {
-	$sGene = $_SETT['mito_genes_aliases'][$_GET['gene']];
-	$sVariant = str_replace($_GET['gene'], $sGene, $_GET['variant']);
+    $sGene = $_SETT['mito_genes_aliases'][$_GET['gene']];
+    $sVariant = str_replace($_GET['gene'], $sGene, $_GET['variant']);
 }
 
-// Check if variant is an UD, NC or NG and discribed as c or n vatiant.
+// Check if variant is an UD, NC or NG and described as a c or n variant.
 if (!preg_match('/^((UD_\d{12}|N(?:C|G)_\d{6,}\.\d{1,2})\(' . $sGene . '_v\d{3}\)):[cn]\..+$/', $sVariant, $aVariantMatches)) {
     die(AJAX_DATA_ERROR);
 }
