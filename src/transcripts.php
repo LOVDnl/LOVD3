@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2015-11-27
+ * Modified    : 2015-12-01
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,7 +42,7 @@ if ($_AUTH) {
 
 
 
-if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])))) {
+if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])))) {
     // URL: /transcripts
     // URL: /transcripts/DMD
     // View all entries.

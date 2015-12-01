@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-11-25
+ * Modified    : 2015-12-01
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -68,7 +68,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && !ACTION) {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && !ACTION) {
     // URL: /genes/DMD
     // View specific entry.
 
@@ -587,7 +587,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && ACTION == 'edit') {
     // URL: /genes/DMD?edit
     // Edit an entry.
 
@@ -776,7 +776,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && ACTION == 'empty') {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && ACTION == 'empty') {
     // URL: /genes/DMD?empty
     // Empty the gene database (delete all variants and associated data).
 
@@ -940,7 +940,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && ACTION == 'delete') {
     // URL: /genes/DMD?delete
     // Drop specific entry.
 
@@ -1029,7 +1029,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && !ACTION) {
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && !ACTION) {
     // URL: /genes/DMD/columns
     // View enabled columns for this gene.
 
@@ -1059,7 +1059,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && !ACTION) {
+if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && !ACTION) {
     // URL: /genes/DMD/columns/DNA
     // URL: /genes/DMD/columns/GVS/Function
     // View specific enabled column for this gene.
@@ -1099,7 +1099,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])
 
 
 
-if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && ACTION == 'edit') {
+if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && ACTION == 'edit') {
     // URL: /genes/DMD/columns/DNA?edit
     // URL: /genes/DMD/columns/GVS/Function?edit
     // Edit specific enabled column for this gene.
@@ -1204,7 +1204,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])
 
 
 
-if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && ACTION == 'order') {
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && ACTION == 'order') {
     // URL: /genes/DMD/columns?order
     // Change order of enabled columns for this gene.
 
@@ -1297,7 +1297,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && $_PE[2] == 'graphs' && !ACTION) {
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'graphs' && !ACTION) {
     // URL: /genes/DMD/graphs
     // Show different graphs about this gene; variant type (DNA, RNA & Protein level), ...
 
@@ -1410,7 +1410,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($_PE[1])) && in_array(ACTION, array('authorize', 'sortCurators'))) {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && in_array(ACTION, array('authorize', 'sortCurators'))) {
     // URL: /genes/DMD?authorize
     // URL: /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.

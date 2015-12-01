@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2015-03-31
- * For LOVD    : 3.0-14
+ * Modified    : 2015-12-01
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -52,7 +52,7 @@ $aPathElements[1] = implode('/', array_slice($aPathElements, 1));
 
 
 
-if (!ACTION && (empty($aPathElements[1]) || preg_match('/^[a-z][a-z0-9#@-]+$/i', rawurldecode($aPathElements[1])))) {
+if (!ACTION && (empty($aPathElements[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($aPathElements[1])))) {
     // URL: /references
     // URL: /references/DMD
     // View all entries (optionally restricted by gene).
