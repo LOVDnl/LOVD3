@@ -3,8 +3,8 @@ LOVD v.3.0 INSTALLATION GUIDE
 
 REQUIREMENTS
 ============
-LOVD 3.0 requires a webserver (preferably Apache), PHP >= 5.1.0 and 
-MySQL >= 4.1.2.
+LOVD 3.0 requires a webserver (preferably Apache), PHP >= 5.3.0 with mbstring
+and SOAP support enabled and libxml and openssl installed, and MySQL >= 4.1.2.
 
 
 PREPARATIONS
