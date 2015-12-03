@@ -10,7 +10,8 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
   public function testMyTestCase()
   {
     $this->open("/svn/LOVD3/trunk/src/install/");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Start >>']");
+    $this->isElementPresent("//input[@value='Start >>']");
     $this->waitForPageToLoad("30000");
     $this->type("name=name", "LOVD3 Admin");
     $this->type("name=institute", "Leiden University Medical Center");
@@ -23,22 +24,27 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=password_2", "test1234");
     $this->select("name=countryid", "label=Netherlands");
     $this->type("name=city", "Leiden");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Continue »']");
     $this->waitForPageToLoad("30000");
-    $this->click("css=input[type=\"submit\"]");
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=1&sent=true$/',$this->getLocation()));
+    $this->click("//input[@value='Next >>']");
     $this->waitForPageToLoad("30000");
-    $this->click("css=input[type=\"submit\"]");
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=2$/',$this->getLocation()));
+    $this->click("//input[@value='Next >>']");
     $this->waitForPageToLoad("30000");
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=3$/',$this->getLocation()));
     $this->type("name=institute", "Leiden University Medical Center");
     $this->type("name=email_address", "noreply@LOVD.nl");
     $this->select("name=refseq_build", "label=hg19 / GRCh37");
     $this->click("name=send_stats");
     $this->click("name=include_in_listing");
-    $this->click("name=lock_uninstall");
-    $this->click("css=input[type=\"submit\"]");
+    $this->uncheck("name=lock_uninstall");
+    $this->click("//input[@value='Continue »']");
     $this->waitForPageToLoad("30000");
-    $this->click("css=input[type=\"submit\"]");
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=3&sent=true$/',$this->getLocation()));
+    $this->click("//input[@value='Next >>']");
     $this->waitForPageToLoad("30000");
+    $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=4$/',$this->getLocation()));
     $this->click("css=button");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/setup[\s\S]newly_installed$/',$this->getLocation()));

@@ -17,7 +17,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->open("/svn/LOVD3/trunk/src/genes?create");
     $this->type("name=hgnc_id", "IVD");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Continue »']");
     $this->waitForPageToLoad("30000");
     $this->addSelection("name=active_transcripts[]", "label=transcript variant 1 (NM_002225.3)");
     $this->click("name=show_hgmd");

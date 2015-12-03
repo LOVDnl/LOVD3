@@ -1127,42 +1127,40 @@ if (POST) {
                         }
                     }
 
-                    $nDiseaseIdOmim = $_DB->query('SELECT id, id_omim FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aLine['name']))->fetchRow();
-                    if ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && $aLine['id_omim']) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Import file contains OMIM ID for disease ' . $aLine['name'] . ', while OMIM ID is missing in database.');
-                    }
-                    if (($nDiseaseIdOmim && $nDiseaseIdOmim[1] == $aLine['id_omim']) || ($nDiseaseIdOmim[1] && !$aLine['id_omim']) || ($nDiseaseIdOmim && !$nDiseaseIdOmim[1] && !$aLine['id_omim'])) {
-                        // Some error added in checkfields should be removes and because soft messages are used.
-                        $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name!', $_ERROR['messages']);
-                        // when key is false, no errors are set in checkfields.
-                        if ($nKey !== false) {
-                            unset($_ERROR['messages'][$nKey]);
-                            $_ERROR['messages'] = array_values($_ERROR['messages']);
-                        }
-
-                        $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID!', $_ERROR['messages']);
-                        // when key is false, no errors are set in checkfields.
-                        if ($nKey !== false) {
-                            unset($_ERROR['messages'][$nKey]);
-                            $_ERROR['messages'] = array_values($_ERROR['messages']);
-                        }
-
-                        if (!$zData) {
-                            // Do not set soft warnings when we do an update.
-                            $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (empty($aLine['id_omim'])? '' : ' and/or OMIM ID ' . $aLine['id_omim']) . '. This disease is not imported! <BR>', 'done');
-                            $nWarnings ++;
-                        }
-
-                        $aLine['newID'] = $nDiseaseIdOmim[0];
-                        $aLine['todo'] = 'map';
-                        break;
-                    }
-
-                    if ($zData) {
+                    if ($zData) {                        
                         if ($nDifferences) {
                             $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
+                        // Create: Attempt to map the disease in the file to a disease in the database.
+                        $rDiseaseIdOmim = $_DB->query('SELECT id, id_omim FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aLine['name']))->fetchRow();
+                        if ($rDiseaseIdOmim && !$rDiseaseIdOmim[1] && $aLine['id_omim']) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Import file contains OMIM ID for disease ' . $aLine['name'] . ', while OMIM ID is missing in database.');
+                        }
+                        if ($rDiseaseIdOmim && (($rDiseaseIdOmim[1] == $aLine['id_omim']) || ($rDiseaseIdOmim[1] && !$aLine['id_omim']) || (!$rDiseaseIdOmim[1] && !$aLine['id_omim']))) {
+                            // Some error added in checkfields should be removed because soft messages are used.
+                            $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name!', $_ERROR['messages']);
+                            // when key is false, no errors are set in checkfields.
+                            if ($nKey !== false) {
+                                unset($_ERROR['messages'][$nKey]);
+                                $_ERROR['messages'] = array_values($_ERROR['messages']);
+                            }
+
+                            $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID!', $_ERROR['messages']);
+                            // when key is false, no errors are set in checkfields.
+                            if ($nKey !== false) {
+                                unset($_ERROR['messages'][$nKey]);
+                                $_ERROR['messages'] = array_values($_ERROR['messages']);
+                            }
+
+                            // Do not set soft warnings when we do an update.
+                            $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (empty($aLine['id_omim'])? '' : ' and/or OMIM ID ' . $aLine['id_omim']) . '. This disease is not imported! <BR>', 'done');
+                            $nWarnings ++;
+                            $aLine['newID'] = $rDiseaseIdOmim[0];
+                            $aLine['todo'] = 'map';
+                            break;
+                        }
+
                         // We're inserting. Curators at this moment are not allowed to insert diseases.
                         if ($_AUTH['level'] < LEVEL_MANAGER) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Access denied, currently manager level is required to import new disease entries.');

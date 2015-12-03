@@ -13,7 +13,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->open("/svn/LOVD3/trunk/src/login");
     $this->type("name=username", "admin");
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Continue »']");
     $this->waitForPageToLoad("30000");
     $this->open("/svn/LOVD3/trunk/src/genes?create");
     $this->type("name=hgnc_id", "IVD");

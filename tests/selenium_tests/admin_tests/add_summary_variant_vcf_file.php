@@ -15,7 +15,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->chooseOkOnNextConfirmation();
     $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
     $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/',$this->getConfirmation()));
-    $this->setTimeout(60000)
+    $this->setTimeout(60000);
     sleep(4);
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create$/',$this->getLocation()));
     $this->click("//tr[3]/td[2]/b");

@@ -15,7 +15,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes[\s\S]create$/',$this->getLocation()));
     $this->type("name=hgnc_id", "GJB1");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Continue »']");
     $this->waitForPageToLoad("30000");
     $this->addSelection("name=active_transcripts[]", "value=NM_001097642.2");
     $this->check("name=show_hgmd");

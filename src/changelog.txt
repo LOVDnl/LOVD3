@@ -22,6 +22,8 @@
    spam score.
  * The view 'Individuals screened for gene X' has been replaced by the view
    'Individuals with variants in gene X'.
+ * Fixed bug; Update import did not recognize changes in the disease section of 
+   the import file.
 
 
 /**************************
