@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2015-10-09
- * For LOVD    : 3.0-14
+ * Modified    : 2015-12-03
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -32,6 +32,18 @@
 // STILL TODO:
 // variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
 // Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
+
+// IDs:
+// userid SMALLINT(5) UNSIGNED (65K)
+// geneid VARCHAR(25) (25 characters)
+// transcriptid MEDIUMINT(8) UNSIGNED (16M)
+// diseaseid SMALLINT(5) UNSIGNED (65K)
+// individualid MEDIUMINT(8) UNSIGNED (16M)
+// variantid INT(10) UNSIGNED (4294M)
+// phenotypeid INT(10) UNSIGNED (4294M)
+// screeningid INT(10) UNSIGNED (4294M)
+// colid VARCHAR(100) (100 characters)
+// linkid TINYINT(3) UNSIGNED (255)
 
 // DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {
@@ -161,7 +173,7 @@ $aTableSQL =
 
          , 'TABLE_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_TRANSCRIPTS . ' (
-    id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+    id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     geneid VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
     id_mutalyzer TINYINT(3) UNSIGNED ZEROFILL,
@@ -370,7 +382,7 @@ $aTableSQL =
          , 'TABLE_VARIANTS_ON_TRANSCRIPTS' =>
    'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (
     id INT(10) UNSIGNED ZEROFILL NOT NULL,
-    transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+    transcriptid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL,
     effectid TINYINT(2) UNSIGNED ZEROFILL,
     position_c_start MEDIUMINT,
     position_c_start_intron INT,
