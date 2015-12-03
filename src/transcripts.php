@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2015-12-01
+ * Modified    : 2015-12-03
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /transcripts/00001
     // View specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'View transcript #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -517,7 +517,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /transcripts/00001?edit
     // Edit a transcript
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'Edit transcript #' . $nID);
     define('LOG_EVENT', 'TranscriptEdit');
 
@@ -606,7 +606,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /transcripts/00001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
     define('LOG_EVENT', 'TranscriptDelete');
 

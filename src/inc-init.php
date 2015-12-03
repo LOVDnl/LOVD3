@@ -728,7 +728,7 @@ if (!defined('NOT_INSTALLED')) {
     }
     $aObjectPadding = array(
                         'variants' => 10,
-                        'transcripts' => 5,
+                        'transcripts' => 8,
                         'diseases' => 5,
                         'individuals' => 8,
                         'screenings' => 10,
