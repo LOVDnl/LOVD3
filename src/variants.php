@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2015-11-03
+ * Modified    : 2015-12-04
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -800,7 +800,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     foreach ($_POST as $key => $val) {
         if (substr($key, 0, 7) == 'ignore_') {
             // First check the checkbox. Then the event first triggers the click and THEN changes the checked state. Recheck the checkbox.
-            echo '$( \'input[name="ignore_' . substr($key, 7, 5) . '"]\' ).attr(\'checked\', true).trigger(\'click\').attr(\'checked\', true);' . "\n";
+            echo '$( \'input[name="ignore_' . substr($key, 7, $_SETT['objectid_length']['transcripts']) . '"]\' ).attr(\'checked\', true).trigger(\'click\').attr(\'checked\', true);' . "\n";
         }
     }
 

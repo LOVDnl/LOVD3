@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2015-03-11
- * For LOVD    : 3.0-13
+ * Modified    : 2015-12-04
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -409,7 +409,9 @@ class LOVD_Custom extends LOVD_Object {
     function checkInputRegExp ($sCol, $val)
     {
         // Checks if field input corresponds to the given regexp pattern.
-        $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
+        global $_SETT;
+
+        $sColClean = preg_replace('/^\d{' . $_SETT['objectid_length']['transcripts'] . '}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
         if ($this->aColumns[$sColClean]['preg_pattern'] && $val) {
             if (!preg_match($this->aColumns[$sColClean]['preg_pattern'], $val)) {
                 lovd_errorAdd($sCol, 'The input in the \'' . (lovd_getProjectFile() == '/import.php'? $sColClean : $this->aColumns[$sColClean]['form_type'][0]) . '\' field does not correspond to the required input pattern.');
@@ -424,7 +426,9 @@ class LOVD_Custom extends LOVD_Object {
     function checkSelectedInput ($sCol, $Val)
     {
         // Checks if the selected values are indeed from the selection list.
-        $sColClean = preg_replace('/^\d{5}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
+        global $_SETT;
+
+        $sColClean = preg_replace('/^\d{' . $_SETT['objectid_length']['transcripts'] . '}_/', '', $sCol); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
         if ($this->aColumns[$sColClean]['form_type'][2] == 'select' && $this->aColumns[$sColClean]['form_type'][3] >= 1) {
             if (!empty($Val)) {
                 $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sColClean]['select_options']); // Trim whitespace from the options.

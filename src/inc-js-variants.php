@@ -39,6 +39,8 @@ define('AJAX_UNKNOWN_RESPONSE', '6');
 define('AJAX_CONNECTION_ERROR', '7');
 define('AJAX_NO_AUTH', '8');
 define('AJAX_DATA_ERROR', '9');
+
+$_SETT = array('objectid_length' => array('transcripts' => 8));
 ?>
 
 function lovd_checkHGVS (e)
@@ -69,7 +71,7 @@ function lovd_checkHGVS (e)
     }
 
     // Grab the corresponding protein description field if it exists.
-    var oProtein = $(oVariantDNA).parent().parent().siblings().find('input[name="' + $(oVariantDNA).attr('name').substring(0,5) + '_VariantOnTranscript/Protein"]');
+    var oProtein = $(oVariantDNA).parent().parent().siblings().find('input[name="' + $(oVariantDNA).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>) + '_VariantOnTranscript/Protein"]');
 
     // Add a transparent placeholder for the indicator at the protein field, so that the form will not shift when it is added.
     oProtein.siblings('img:first').removeClass().attr('src', 'gfx/trans.png');
@@ -194,7 +196,7 @@ function lovd_convertPosition (oElement)
         }
     } else {
         // This function was called from a transcript variant, so prepare the variant accordingly for mutalyzer.
-        var nTranscriptID = oThisDNA.attr('name').substring(0,5);
+        var nTranscriptID = oThisDNA.attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>);
         var sVariantNotation = aTranscripts[nTranscriptID][0] + ':' + oThisDNA.val();
         // This value will not be used by mutalyzer for mapping to the genome, but we
         // need to fill something in for the call.
@@ -227,7 +229,7 @@ function lovd_convertPosition (oElement)
                                     // is no use to run this function again when the DNA field hasn't changed.
                                     oInput.siblings('button:eq(0)').hide();
                                     // Grab the corresponding protein description field if it exists.
-                                    var oProtein = $(oInput).parent().parent().siblings().find('input[name="' + $(oInput).attr('name').substring(0,5) + '_VariantOnTranscript/Protein"]');
+                                    var oProtein = $(oInput).parent().parent().siblings().find('input[name="' + $(oInput).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>) + '_VariantOnTranscript/Protein"]');
                                     if (!oInput[0].disabled) {
                                         // Transcript is not disabled, so let mutalyzer predict the protein description.
                                         lovd_getProteinChange(oProtein);
@@ -307,7 +309,7 @@ function lovd_getProteinChange (oElement)
         title: 'Loading...'
     }).show();
     // Collect the corresponding transcript variant information, because Mutalyzer needs it to make a prediction.
-    var nTranscriptID = $(oThisProtein).attr('name').substring(0,5);
+    var nTranscriptID = $(oThisProtein).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>);
     var oThisDNA = $(oElement).parent().parent().siblings().find('input[name="' + nTranscriptID + '_VariantOnTranscript/DNA"]');
     var sVariantNotation = aUDrefseqs[aTranscripts[nTranscriptID][1]] + '(' + aTranscripts[nTranscriptID][1] + '_v' + aTranscripts[nTranscriptID][2] + '):' + $(oThisDNA).val();
     var oThisRNA = $(oElement).parent().parent().siblings().find('input[name="' + nTranscriptID + '_VariantOnTranscript/RNA"]');
@@ -547,7 +549,7 @@ $(function ()
         var nTranscriptVariants = oTranscriptVariants.size();
         for (i=0; i < nTranscriptVariants; i++) {
             // Add an artificial attribute "id_ncbi" to the transcripts DNA input field. This is needed to link the response from Mutalyzer to this field, if needed.
-            $(oTranscriptVariants[i]).attr('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0,5)][0]);
+            $(oTranscriptVariants[i]).attr('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>)][0]);
         }
         // Add an onChange event that runs lovd_checkHGVS.
         oTranscriptVariants.change(lovd_checkHGVS);

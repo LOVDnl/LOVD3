@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2015-12-03
+ * Modified    : 2015-12-04
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -34,6 +34,7 @@
 // Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
 
 // IDs:
+// WARNING: If editing any of these, also edit $_SETT['objectid_length']!
 // userid SMALLINT(5) UNSIGNED (65K)
 // geneid VARCHAR(25) (25 characters)
 // transcriptid MEDIUMINT(8) UNSIGNED (16M)
