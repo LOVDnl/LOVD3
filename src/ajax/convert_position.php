@@ -48,9 +48,9 @@ require ROOT_PATH . 'class/soap_client.php';
 $_Mutalyzer = new LOVD_SoapClient();
 
 $sGene = $_GET['gene'];
-// If gene is defined in the mito_genes_aliases in file inc-init.php use the ncbi gene symbol.
+// If the gene is defined in the mito_genes_aliases in inc-init.php, use the NCBI gene symbol.
 if (isset($_SETT['mito_genes_aliases'][$_GET['gene']])) {
-	$sGene = $_SETT['mito_genes_aliases'][$_GET['gene']];
+    $sGene = $_SETT['mito_genes_aliases'][$_GET['gene']];
 }
 
 try {

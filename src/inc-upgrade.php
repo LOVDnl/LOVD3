@@ -1,5 +1,4 @@
 <?php
-// DMD_SPECIFIC: REMEMBER. If you add code that adds SQL for all genes, you MUST add the key first to the large array. Otherwise, the order in which upgrades are done is WRONG!!!
 /*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
@@ -342,7 +341,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  ),
                  '3.0-05' =>
                  array(
-/////////////////// DMD_SPECIFIC: I would expect these to fail if I don't remove the FKs first. But they don't.
+                     // I would expect these to fail if I don't remove the FKs first. But they don't. Apparently, VARCHARs are different than INT columns (see 3.0-14b update).
                      'ALTER TABLE ' . TABLE_GENES . ' MODIFY COLUMN id VARCHAR(25) NOT NULL',
                      'ALTER TABLE ' . TABLE_CURATES . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
                      'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
