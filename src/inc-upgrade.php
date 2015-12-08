@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2015-12-03
+ * Modified    : 2015-12-08
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -407,9 +407,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      array(
                          // In order to resize the transcript's ID column, we need to drop the foreign key contraint, otherwise it won't allow us to modify the column.
                          'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP FOREIGN KEY ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid',
-                         'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL',
+                         'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
                          'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN transcriptid MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL',
                          'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE',
+                     ),
+                 '3.0-14c' =>
+                     array(
+                         'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
                      ),
              );
 
