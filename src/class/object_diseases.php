@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2015-10-19
- * For LOVD    : 3.0-14.patch01
+ * Modified    : 2015-12-08
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -167,7 +168,7 @@ class LOVD_Disease extends LOVD_Object {
         // We don't like two diseases with the exact same name, either.
         if (!empty($aData['name']) && ($bCreate || $aData['name'] != $zData['name'])) {
             $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aData['name']))->fetchColumn();
-            if ($bExists) {
+            if ($bExists && ($bCreate || $zData['id'] != $bExists)) {
                 // IMPORTANT: when you change this message, also change the array_search argument in import.php in the Disease section.
                 lovd_errorAdd('name', 'Another disease already exists with the same name!');
             }
