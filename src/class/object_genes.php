@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-11-20
+ * Modified    : 2015-12-09
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -73,10 +73,10 @@ class LOVD_Gene extends LOVD_Object {
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
-                                           '(SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) WHERE vot.transcriptid = t.id AND vog.statusid >= ' . STATUS_MARKED . ') AS variants, ' .
-                                           '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) WHERE vot.transcriptid = t.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ' .
+                                           '(SELECT COUNT(DISTINCT vog.id) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS variants, ' .
+                                           '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ' .
                                            '"" AS count_individuals, ' . // Temporarely value, prepareData actually runs this query.
-                                           '(SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS hidden_vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS hidden_vot ON (hidden_vog.id = hidden_vot.id) WHERE hidden_vot.transcriptid = t.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') AS hidden_variants';
+                                           '(SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS hidden_vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS hidden_vot ON (hidden_vog.id = hidden_vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (hidden_vot.transcriptid = t.id) WHERE t.geneid = g.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') AS hidden_variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .

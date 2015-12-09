@@ -27,8 +27,10 @@
  * Fixed bug; The links from user profile pages to data owned by the user didn't
    work for users with some special characters in their names.
  * LOVD now allows more transcripts to be stored; up to 16 million.
- * Fixed bug; During update import it was not possible to change the capitals of
-   a disease name.
+ * Fixed bug; When updating using an import file, it was not possible to change
+   the capitalization of a disease name.
+ * Fixed bug; Variants counts on the gene homepage were counted using the gene's
+   first transcript in the database only.
 
 
 /**************************
