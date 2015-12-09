@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-10-23
+ * Modified    : 2015-12-09
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1128,7 +1128,10 @@ if (POST) {
                     }
 
                     if ($zData) {                        
-                        if ($nDifferences) {
+                        // Diseases is the only table with a record for ID 0. 
+                        // This ID is reserved for healty individual / control and is not allowed to change.
+                        // Changes on this record are ingored. 
+                        if ($nDifferences && (int) $zData['id'] !== 0) {
                             $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
                     } else {
