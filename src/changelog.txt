@@ -31,6 +31,10 @@
    the capitalization of a disease name.
  * Fixed bug; Variants counts on the gene homepage were counted using the gene's
    first transcript in the database only.
+ * Fixed bug; Attempting to make changes to the "Healty/Control" disease using
+   an import file resulted in a fatal error.
+ * Fixed bug; Under certain circumstances, fatal errors would not be logged even
+   though LOVD reported they had been logged.
 
 
 /**************************

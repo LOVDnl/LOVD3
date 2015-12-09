@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-10-28
+ * Modified    : 2015-12-09
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -145,7 +145,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Writes an error message to the errorlog and displays the same message on
     // screen for the user. This function halts PHP processing in all cases.
-    global $_AUTH, $_DB, $_SETT, $_CONF, $_STAT, $_T;
+    global $_DB, $_SETT, $_T;
 
     $_T->printHeader(!($sError == 'Init'));
     if (defined('PAGE_TITLE')) {
@@ -154,6 +154,12 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
 
     // Write to log file... if we're not here because we don't have MySQL.
     if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers())) {
+        // lovd_displayError() always halts LOVD. If we're in a transaction, any log we'll write
+        // to the DB will be gone since PHP will rollback() any transaction that is still open.
+        // So we'd better rollback() ourselves first!
+        try {
+            @$_DB->rollBack(); // In case we were in a transaction. // FIXME; we can know from PHP >= 5.3.3.
+        } catch (PDOException $eNoTransaction) {}
         $bLog = lovd_writeLog($sLogFile, $sError, $sMessage);
     } else {
         $bLog = false;
