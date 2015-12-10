@@ -799,7 +799,7 @@ if (POST) {
                     $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']] = array('id' => $aLine['transcriptid'], 'geneid' => $sGene, 'todo' => '');
                 }
                 // Only instantiate an object when a gene is found for a transcript.
-                if($sGene){
+                if ($sGene) {
                     if (!isset($aSection['objects'][$sGene])) {
                         $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
                     }
@@ -820,13 +820,15 @@ if (POST) {
             }
 
             // Build the form, necessary for field-specific actions (currently for checkboxes only).
-            // Exclude section Genes, because it is not allowed to import this section it is not necessary to run the getForm().
+            // Exclude section Genes, because it is not allowed to import this section, it is not necessary to run the getForm().
             if (isset($aSection['object']) && is_object($aSection['object']) && $sCurrentSection != 'Genes') {
+                $aForm = array();
                 switch ($sCurrentSection) {
                     case 'Phenotypes':
                         $aForm = $aSection['objects'][(int) $aLine['diseaseid']]->getForm();
                         break;
                     case 'Variants_On_Transcripts':
+                        // Only get $aForm when we're sure we've got an object. We might not, which happens if we don't have a valid transcriptid.
                         if (isset($aSection['objects'][$sGene])) {
                             $aForm = $aSection['objects'][$sGene]->getForm();
                         }
@@ -1135,10 +1137,10 @@ if (POST) {
                         }
                     }
 
-                    if ($zData) {                        
-                        // Diseases is the only table with a record for ID 0. 
+                    if ($zData) {
+                        // Diseases is the only table with a record for ID 0.
                         // This ID is reserved for healty individual / control and is not allowed to change.
-                        // Changes on this record are ingored. 
+                        // Changes on this record are ignored.
                         if ($nDifferences && (int) $zData['id'] !== 0) {
                             $aLine['todo'] = 'update'; // OK, update only when there are differences.
                         }
@@ -1167,6 +1169,7 @@ if (POST) {
                             // Do not set soft warnings when we do an update.
                             $_BAR[0]->appendMessage('Warning (' . $sCurrentSection . ', line ' . $nLine . '): There is already a disease with disease name ' . $aLine['name'] . (empty($aLine['id_omim'])? '' : ' and/or OMIM ID ' . $aLine['id_omim']) . '. This disease is not imported! <BR>', 'done');
                             $nWarnings ++;
+
                             $aLine['newID'] = $rDiseaseIdOmim[0];
                             $aLine['todo'] = 'map';
                             break;
