@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-12-09
+ * Modified    : 2015-12-10
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -798,10 +798,13 @@ if (POST) {
                     // Store for the next VOT.
                     $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']] = array('id' => $aLine['transcriptid'], 'geneid' => $sGene, 'todo' => '');
                 }
-                if (!isset($aSection['objects'][$sGene])) {
-                    $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
+                // Only instantiate an object when a gene is found for a transcript.
+                if($sGene){
+                    if (!isset($aSection['objects'][$sGene])) {
+                        $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
+                    }
+                    $aSection['object'] =& $aSection['objects'][$sGene];
                 }
-                $aSection['object'] =& $aSection['objects'][$sGene];
             }
 
             // Special actions for section Columns.
@@ -819,12 +822,17 @@ if (POST) {
             // Build the form, necessary for field-specific actions (currently for checkboxes only).
             // Exclude section Genes, because it is not allowed to import this section it is not necessary to run the getForm().
             if (isset($aSection['object']) && is_object($aSection['object']) && $sCurrentSection != 'Genes') {
-                if ($sCurrentSection == 'Phenotypes') {
-                    $aForm = $aSection['objects'][(int) $aLine['diseaseid']]->getForm();
-                } elseif ($sCurrentSection == 'Variants_On_Transcripts'){
-                    $aForm = $aSection['objects'][$sGene]->getForm();
-                } else {
-                    $aForm = $aSection['object']->getForm();
+                switch ($sCurrentSection) {
+                    case 'Phenotypes':
+                        $aForm = $aSection['objects'][(int) $aLine['diseaseid']]->getForm();
+                        break;
+                    case 'Variants_On_Transcripts':
+                        if (isset($aSection['objects'][$sGene])) {
+                            $aForm = $aSection['objects'][$sGene]->getForm();
+                        }
+                        break;
+                    default:
+                        $aForm = $aSection['object']->getForm();
                 }
                 lovd_setEmptyCheckboxFields($aForm);
             }
