@@ -13,7 +13,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=import", "/www/svn/LOVD3/trunk/tests/test_data_files/FalseUpdateImport.txt");
     $this->select("name=mode", "label=Update existing data (in beta)");
     $this->click("name=simulate");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Import file']");
     $this->waitForPageToLoad("30000");
     sleep(20);
     $this->click("link=Show 33 warnings");

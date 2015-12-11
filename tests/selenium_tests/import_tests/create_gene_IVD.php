@@ -13,7 +13,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->open("/svn/LOVD3/trunk/src/login");
     $this->type("name=username", "admin");
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Log in']");
     $this->waitForPageToLoad("30000");
     $this->open("/svn/LOVD3/trunk/src/genes?create");
     $this->type("name=hgnc_id", "IVD");
@@ -23,7 +23,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->click("name=show_hgmd");
     $this->click("name=show_genecards");
     $this->click("name=show_genetests");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Create gene information entry']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the gene information entry!", $this->getText("css=table[class=info]"));
   }

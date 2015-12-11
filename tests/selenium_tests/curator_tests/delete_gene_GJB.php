@@ -20,7 +20,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes\/GJB1[\s\S]empty$/',$this->getLocation()));
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Empty gene database']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully emptied the GJB1 gene database!", $this->getText("css=table[class=info]"));
     $this->waitForPageToLoad("4000");

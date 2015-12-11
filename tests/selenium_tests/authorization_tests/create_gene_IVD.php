@@ -17,7 +17,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->click("name=show_hgmd");
     $this->click("name=show_genecards");
     $this->click("name=show_genetests");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Create gene information entry']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the gene information entry!", $this->getText("css=table[class=info]"));
   }

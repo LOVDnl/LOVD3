@@ -29,7 +29,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=autocreate", "label=Create genes and transcripts");
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Upload SeattleSeq file']");
     $this->waitForPageToLoad("60000");
     for ($second = 0; ; $second++) {
         if ($second >= 300) $this->fail("timeout");
@@ -40,7 +40,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     }
 
     $this->assertContains("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Continue »']");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
   }

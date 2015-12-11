@@ -13,14 +13,14 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->open("/svn/LOVD3/trunk/src/login");
     $this->type("name=username", "admin");
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Log in']");
     $this->waitForPageToLoad("30000");
     $this->open("/svn/LOVD3/trunk/src/uninstall");
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Next >>']");
     $this->waitForPageToLoad("30000");
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Uninstall LOVD']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("LOVD successfully uninstalled!\nThank you for having used LOVD!", $this->getText("css=div[id=lovd__progress_message]"));
   }

@@ -28,7 +28,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=VariantOnGenome/Reference", "{PMID:[2011]:[21520333]}");
     $this->type("name=VariantOnGenome/Frequency", "11/10000");
     $this->select("name=effect_reported", "label=Effect unknown");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Create variant entry']");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
     $this->waitForPageToLoad("4000");

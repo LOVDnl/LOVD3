@@ -9,9 +9,11 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
 
   public function testMyTestCase()
   {
-    $this->open("/svn/LOVD3/trunk/src/install/");
+	$this->open("/svn/LOVD3/trunk/src/install/");
+	$this->assertContains("/src/install/", $this->getLocation());
+	$this->assertContains("install", $this->getBodyText());
+	$this->isElementPresent("//input[@value='Start >>']");
     $this->click("//input[@value='Start >>']");
-    $this->isElementPresent("//input[@value='Start >>']");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=1$/',$this->getLocation()));
     $this->type("name=name", "LOVD3 Admin");

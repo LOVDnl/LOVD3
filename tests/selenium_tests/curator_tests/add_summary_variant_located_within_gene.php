@@ -21,9 +21,9 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->click("css=#GJB1 > td.ordered");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1$/',$this->getLocation()));
-    $this->uncheck("name=ignore_00001");
-    $this->type("name=00001_VariantOnTranscript/Exon", "3");
-    $this->type("name=00001_VariantOnTranscript/DNA", "c.62G>A");
+    $this->uncheck("name=ignore_00000001");
+    $this->type("name=00000001_VariantOnTranscript/Exon", "3");
+    $this->type("name=00000001_VariantOnTranscript/DNA", "c.62G>A");
     $this->click("css=button.mapVariant");
     sleep(3);
     for ($second = 0; ; $second++) {
@@ -37,8 +37,8 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
     $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
     $this->assertEquals("p.(Gly21Asp)", $this->getExpression($ProteinChange));
-    $this->select("name=00001_effect_reported", "label=Probably affects function");
-    $this->select("name=00001_effect_concluded", "label=Probably does not affect function");
+    $this->select("name=00000001_effect_reported", "label=Probably affects function");
+    $this->select("name=00000001_effect_concluded", "label=Probably does not affect function");
     $this->select("name=allele", "label=Maternal (confirmed)");
     $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[10].value");
     $this->assertEquals("g.70443619G>A", $this->getExpression($GenomicDnaChange));
@@ -49,7 +49,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=effect_concluded", "label=Affects function");
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Create variant entry']");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',$this->getText("css=table[class=info]")));
     $this->waitForPageToLoad("4000");

@@ -14,7 +14,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=name", "isovaleric acidemia");
     $this->type("name=id_omim", "243500");
     $this->addSelection("name=genes[]", "label=IVD (isovaleryl-CoA dehydrogenase)");
-    $this->click("css=input[type=\"submit\"]");
+	$this->click("//input[@value='Create disease information entry']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the disease information entry!", $this->getText("css=table[class=info]"));
     $this->open("/svn/LOVD3/trunk/src/diseases?create");
@@ -22,7 +22,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=name", "isovaleric acidemia TWEE");
     $this->type("name=id_omim", "243522");
     $this->addSelection("name=genes[]", "label=IVD (isovaleryl-CoA dehydrogenase)");
-    $this->click("css=input[type=\"submit\"]");
+	$this->click("//input[@value='Create disease information entry']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the disease information entry!", $this->getText("css=table[class=info]"));
   }

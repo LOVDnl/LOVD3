@@ -26,7 +26,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=effect_concluded", "label=Effect unknown");
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Create variant entry']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the variant entry!", $this->getText("css=table[class=info]"));
     $this->waitForPageToLoad("4000");

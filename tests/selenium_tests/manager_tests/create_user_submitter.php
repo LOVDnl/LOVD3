@@ -23,7 +23,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=level", "Submitter");
     $this->click("name=send_email");
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Create user']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the user account!", $this->getText("css=table[class=info]"));
   }

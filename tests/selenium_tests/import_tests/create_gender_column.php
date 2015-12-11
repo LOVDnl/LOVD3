@@ -14,7 +14,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->click("link=Enable column");
     $this->waitForPageToLoad("30000");
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Add/enable custom data column Individual/Gender']");
     $this->waitForPageToLoad("30000");
   }
 }

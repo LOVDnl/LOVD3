@@ -24,15 +24,15 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
         for ($second = 0; ; $second++) {
             if ($second >= 60) $this->fail("timeout");
             try {
-                if ($this->isElementPresent("name=ignore_00002")) break;
+                if ($this->isElementPresent("name=ignore_00000002")) break;
             } catch (Exception $e) {}
             sleep(1);
         }
-        $this->uncheck("name=ignore_00002");
-        $this->uncheck("name=ignore_00003");
-        $this->type("name=00002_VariantOnTranscript/Exon", "3");
-        $this->type("name=00003_VariantOnTranscript/Exon", "3");
-        $this->type("name=00002_VariantOnTranscript/DNA", "c.62T>C");
+        $this->uncheck("name=ignore_00000002");
+        $this->uncheck("name=ignore_00000003");
+        $this->type("name=00000002_VariantOnTranscript/Exon", "3");
+        $this->type("name=00000003_VariantOnTranscript/Exon", "3");
+        $this->type("name=00000002_VariantOnTranscript/DNA", "c.62T>C");
         $this->click("css=button.mapVariant");
         sleep(3);
         for ($second = 0; ; $second++) {
@@ -46,14 +46,14 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChange)));
         $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
         $this->assertEquals("p.(Leu21Pro)", $this->getExpression($ProteinChange));
-        $this->select("name=00002_effect_reported", "label=Probably affects function");
-        $this->select("name=00002_effect_concluded", "label=Probably does not affect function");
+        $this->select("name=00000002_effect_reported", "label=Probably affects function");
+        $this->select("name=00000002_effect_concluded", "label=Probably does not affect function");
         $RnaChangeTwo = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/',$this->getExpression($RnaChangeTwo)));
         $ProteinChangeTwo = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
         $this->assertEquals("p.(Leu21Pro)", $this->getExpression($ProteinChangeTwo));
-        $this->select("name=00003_effect_reported", "label=Probably affects function");
-        $this->select("name=00003_effect_concluded", "label=Probably does not affect function");
+        $this->select("name=00000003_effect_reported", "label=Probably affects function");
+        $this->select("name=00000003_effect_concluded", "label=Probably does not affect function");
         $this->select("name=allele", "label=Maternal (confirmed)");
         $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[19].value");
         $this->assertEquals("g.2843789A>G", $this->getExpression($GenomicDnaChange));
@@ -64,7 +64,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
         $this->select("name=effect_concluded", "label=Affects function");
         $this->select("name=owned_by", "label=LOVD3 Admin");
         $this->select("name=statusid", "label=Public");
-        $this->click("css=input[type=\"submit\"]");
+		$this->click("//input[@value='Create variant entry']");
         for ($second = 0; ; $second++) {
             if ($second >= 60) $this->fail("timeout");
             if ($this->isElementPresent("css=table[class=info]")) {

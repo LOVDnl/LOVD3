@@ -25,17 +25,17 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=autocreate", "label=Create genes and transcripts");
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Upload SeattleSeq file']");
     for ($second = 0; ; $second++) {
         if ($second >= 300) $this->fail("timeout");
         try {
-            if ($this->isElementPresent("css=input[type=\"button\"]")) break;
+            if ($this->isElementPresent("//input[@value='Continue »']")) break;
         } catch (Exception $e) {}
         sleep(1);
     }
 
     $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
-    $this->click("css=input[type=\"button\"]");
+    $this->click("//input[@value='Continue »']");
     $this->waitForPageToLoad("30000");
   }
 }

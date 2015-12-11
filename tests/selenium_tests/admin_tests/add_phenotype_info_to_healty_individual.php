@@ -17,7 +17,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=Phenotype/Age", "35y");
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Create phenotype information entry']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the phenotype entry!", $this->getText("css=table[class=info]"));
     $this->waitForPageToLoad("4000");

@@ -15,7 +15,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes[\s\S]create&target=00000001$/',$this->getLocation()));
     $this->type("name=Phenotype/Additional", "Additional phenotype information");
     $this->select("name=Phenotype/Inheritance", "label=Familial");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Create phenotype information entry']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the phenotype entry!", $this->getText("css=table[class=info]"));
     $this->waitForPageToLoad("4000");

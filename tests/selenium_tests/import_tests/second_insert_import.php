@@ -12,7 +12,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->open("/svn/LOVD3/trunk/src/import");
     $this->type("name=import", "/www/svn/LOVD3/trunk/tests/test_data_files/SecondInsertImport.txt");
     $this->select("name=mode", "label=Add only, treat all data as new");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Import file']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Done importing!", $this->getText("id=lovd_sql_progress_message_done"));
   }

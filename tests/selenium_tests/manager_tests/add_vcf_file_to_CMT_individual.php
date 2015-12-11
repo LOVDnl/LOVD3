@@ -33,10 +33,10 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->check("name=allow_create_genes");
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Upload VCF file']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("25 variants were imported, 1 variant could not be imported.", $this->getText("id=lovd__progress_message"));
-    $this->click("css=input[type=\"button\"]");
+    $this->click("//input[@value='Continue »']");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/',$this->getLocation()));
     for ($second = 0; ; $second++) {

@@ -13,7 +13,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=import", "/www/svn/LOVD3/trunk/tests/test_data_files/FalseInsertImport.txt");
     $this->select("name=mode", "label=Add only, treat all data as new");
     $this->click("name=simulate");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Import file']");
     $this->waitForPageToLoad("30000");
     $this->click("link=Show 5 warnings");
     $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Columns, line 9\): Incorrect value for field [\s\S]col_order[\s\S], which needs to be numeric, between 0 and 255\.[\s\S]*$/',$this->getBodyText()));

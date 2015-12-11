@@ -14,7 +14,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->click("link=Test Collaborator");
     $this->uncheck("xpath=(//input[@name='allow_edit[]'])[2]");
     $this->type("name=password", "test1234");
-    $this->click("css=input[type=\"submit\"]");
+    $this->click("//input[@value='Save curator list']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully updated the curator list!", $this->getText("css=table[class=info]"));
   }
