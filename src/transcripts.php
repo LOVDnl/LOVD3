@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2015-12-03
+ * Modified    : 2015-12-21
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -257,68 +257,8 @@ if (ACTION == 'create') {
         $_BAR->setMessage('Collecting all available transcripts...');
         $_BAR->setProgress(0);
 
-        if (isset($_SETT['mito_genes_aliases'][$zGene['id']])) {
-            // For mitochondrial genes, an alias must be used to get the transcripts and info.
-            // List of aliases are hard-coded in inc-init.php.
-            $aTranscripts = $_DATA->getTranscriptPositions($zGene['refseq_UD'], $zGene['id'], $zGene['name'], $nProgress);
-        } else {
-            // FIXME; Later this if-else statement should be removed. The function $_DATA['Transcript']->getTranscriptPositions
-            // should be called for all genes. For the sake of clarity this will be done in a separate commit.
+        $aTranscripts = $_DATA->getTranscriptPositions($zGene['refseq_UD'], $zGene['id'], $zGene['name'], $nProgress);
 
-            try {
-                // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
-                $aTranscriptInfo = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $zGene['refseq_UD'], 'geneName' => $zGene['id']))->getTranscriptsAndInfoResult->TranscriptInfo;
-            } catch (SoapFault $e) {
-                lovd_soapError($e);
-            }
-            if (empty($aTranscriptInfo)) {
-                // No transcripts found.
-                $aTranscriptInfo = array();
-            }
-            $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array();
-            $aTranscripts = array(
-                'id' => array(),
-                'name' => array(),
-                'mutalyzer' => array(),
-                'positions' => array(),
-                'protein' => array(),
-            );
-            // Get list of transcripts already added to the database.
-            $aTranscripts['added'] = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? ORDER BY id_ncbi', array($zGene['id']))->fetchAllColumn();
-            // Count transcripts that still can be added (needed for reliable progress reporting).
-            $nTranscripts = 0;
-            foreach ($aTranscriptInfo as $oTranscript) {
-                if (!in_array($oTranscript->id, $aTranscripts['added'])) {
-                    $nTranscripts += 1;
-                }
-            }
-            $nTranscripts = max($nTranscripts, 1); // To prevent division-by-zero errors...
-            $nProgress = 0.0;
-            foreach($aTranscriptInfo as $oTranscript) {
-                if (!in_array($oTranscript->id, $aTranscripts['added'])) {
-                    $nProgress += (100/$nTranscripts);
-                    $_BAR->setMessage('Collecting ' . $oTranscript->id . ' info...');
-                    if ($oTranscript->id) {
-                        $aTranscripts['id'][] = $oTranscript->id;
-                        // Until revision 679 the transcript version was not used in the index. The version number was removed with preg_replace.
-                        // Can not figure out why version is not included. Therefore, for now we will do without preg_replace.
-                        $aTranscripts['name'][$oTranscript->id] = str_replace($zGene['name'] . ', ', '', $oTranscript->product);
-                        $aTranscripts['mutalyzer'][$oTranscript->id] = str_replace($zGene['id'] . '_v', '', $oTranscript->name);
-                        // 2014-01-14; 3.0-10; When getting transcripts from an NG rather than an NC, we are missing some fields. Make sure they're set.
-                        $aTranscripts['positions'][$oTranscript->id] =
-                            array(
-                                'chromTransStart' => (isset($oTranscript->chromTransStart)? $oTranscript->chromTransStart : 0),
-                                'chromTransEnd' => (isset($oTranscript->chromTransEnd)? $oTranscript->chromTransEnd : 0),
-                                'cTransStart' => $oTranscript->cTransStart,
-                                'cTransEnd' => $oTranscript->sortableTransEnd,
-                                'cCDSStop' => $oTranscript->cCDSStop,
-                            );
-                        $aTranscripts['protein'][$oTranscript->id] = (!isset($oTranscript->proteinTranscript)? '' : $oTranscript->proteinTranscript->id);
-                    }
-                    $_BAR->setProgress($nProgress);
-                }
-            }
-        }
         $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array(
                                                                   'gene' => $zGene,
                                                                   'transcripts' => $aTranscripts['id'],

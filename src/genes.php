@@ -275,54 +275,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // FIXME: When changing code here, check in transcripts?create if you need to make changes there, too.
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress($nProgress += 17);
-                if ($sChromosome == 'M') {
-                    // For mitochondrial genes, an alias must be used to get the transcripts and info.
-                    // List of aliases are hard-coded in inc-init.php.
-                    $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
-                } else {
-                    // FIXME; Later this if-else statement should be removed. The function $_DATA['Transcript']->getTranscriptPositions()
-                    // should be called for all genes. For the sake of clarity this will be done in a separate commit.
-                    try {
-                        // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
-                        $aTranscriptInfo = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $sRefseqUD, 'geneName' => $sSymbol))->getTranscriptsAndInfoResult->TranscriptInfo;
-                    } catch (SoapFault $e) {
-                        lovd_soapError($e);
-                    }
-                    if (empty($aTranscriptInfo)) {
-                        // No transcripts found.
-                        $aTranscriptInfo = array();
-                    }
-
-                    $aTranscripts = array(
-                        'id' => array(),
-                        'name' => array(),
-                        'mutalyzer' => array(),
-                        'positions' => array(),
-                        'protein' => array(),
-                    );
-                    $nTranscripts = count($aTranscriptInfo);
-                    foreach($aTranscriptInfo as $oTranscript) {
-                        $nProgress += ((100 - $nProgress) / $nTranscripts);
-                        $_BAR->setMessage('Collecting ' . $oTranscript->id . ' info...');
-                        if ($oTranscript->id) {
-                            $aTranscripts['id'][] = $oTranscript->id;
-                            // Until revision 679 the transcript version was not used in the index. The version number was removed with a preg_replace.
-                            // Can not figure out why version is not included. Therefore, for now we will do without preg_replace.
-                            $aTranscripts['name'][$oTranscript->id] = str_replace($sGeneName . ', ', '', $oTranscript->product);
-                            $aTranscripts['mutalyzer'][$oTranscript->id] = str_replace($sSymbol . '_v', '', $oTranscript->name);
-                            $aTranscripts['positions'][$oTranscript->id] =
-                                array(
-                                    'chromTransStart' => (isset($oTranscript->chromTransStart)? $oTranscript->chromTransStart : 0),
-                                    'chromTransEnd' => (isset($oTranscript->chromTransEnd)? $oTranscript->chromTransEnd : 0),
-                                    'cTransStart' => $oTranscript->cTransStart,
-                                    'cTransEnd' => $oTranscript->sortableTransEnd,
-                                    'cCDSStop' => $oTranscript->cCDSStop,
-                                );
-                            $aTranscripts['protein'][$oTranscript->id] = (!isset($oTranscript->proteinTranscript)? '' : $oTranscript->proteinTranscript->id);
-                        }
-                        $_BAR->setProgress($nProgress);
-                    }
-                }
+                
+                $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
+                
                 $_BAR->setProgress(100);
                 $_BAR->setMessage('Information collected, now building form...');
                 $_BAR->setMessageVisibility('done', true);
