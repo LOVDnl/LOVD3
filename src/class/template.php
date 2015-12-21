@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2015-11-27
+ * Modified    : 2015-12-21
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -506,37 +506,50 @@ function lovd_mapVariants ()
 <?php
             return true;
         }
+        
+        $sCurrSymbol = $sCurrGene = '';
+        if (!empty($_SESSION['currdb'])) {
+            $sGeneSwitchURL = preg_replace('/(\/)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
+            // Just use currently selected database.
+            $sCurrSymbol = $_SESSION['currdb'];
+            $sCurrGene = $_SETT['currdb']['name'];
+        }
 ?>
 
   <SCRIPT type="text/javascript">
-    <!--
-
-<?php
-        if (!empty($_SESSION['currdb'])) {
-            // A quick way to switch genes, regardless of on which page you are.
-            // FIXME; Currently we don't support "=GENE" matching (for instance, on the disease tab) because changing that value will not trigger a change in CURRDB... Yet.
-            //$sGeneSwitchURL = preg_replace('/(\/|=)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
-            $sGeneSwitchURL = preg_replace('/(\/)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
-            print('    var sURL = "' . $sGeneSwitchURL . '";' . "\n" .
-                  '    function lovd_switchGeneInline () {' . "\n" .
-            // FIXME; It is very very difficult to keep the hash, it should be selective since otherwise you might be loading the EXACT SAME VL, BUT ON A DIFFERENT PAGE (viewing variants belonging to gene X, on a page that says you're looking at gene Y).
-//              '      var sForm = \'<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="document.location.href=(sURL.replace(\\\'{{GENE}}\\\', $(this).children(\\\'select\\\').val()) + (!window.location.hash? \\\'\\\' : window.location.hash)); return false;">' .
-                  '      var sForm = \'<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="document.location.href=(sURL.replace(\\\'{{GENE}}\\\', $(this).children(\\\'select\\\').val())); return false;">' .
-                                      '<SELECT name="select_db" onchange="$(this).parent().submit();">');
-            $qGenes = $_DB->query('SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id');
-            while ($zGene = $qGenes->fetchAssoc()) {
-                // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
-                $zGene['name'] = lovd_shortenString($zGene['name'], 75);
-                print('<OPTION value="' . $zGene['id'] . '"' . ($_SESSION['currdb'] == $zGene['id']? ' selected' : '') . '>' . addslashes($zGene['name']) . '</OPTION>');
+    var geneSwitcher="";
+    
+    function lovd_switchGene(){ 
+        $.get('ajax/get_gene_switcher.php',function(sData, sStatus){
+            geneSwitcher = sData
+            if (geneSwitcher === '<?php echo AJAX_DATA_ERROR; ?>') {
+                alert('Error when retrieving a list of genes');
+                return;
             }
-            print('</SELECT>' .
-                  '<INPUT type="submit" value="Switch"></FORM>\';' . "\n" .
-                  '      document.getElementById(\'gene_name\').innerHTML=sForm;' . "\n" .
-                  '    }' . "\n");
-        }
-        ?>
+            $("#gene_name").hide(); 
+            
+            $('#gene_switcher').html(geneSwitcher['html']);
+            if (geneSwitcher['switchType'] === 'autocomplete') {
+                $("#select_gene_autocomplete").autocomplete({
+                    source: geneSwitcher['data'],
+                    minLength: 3
+                });
+            }
+        },"json"
+        ).fail(function (sData, sStatus) {
+            alert('Error when retrieving a list of genes: ' + sStatus);                
+        });
+    }   
 
-    //-->
+    function lovd_changeURL () {
+        var sURL = "<?php if (!empty($_SESSION['currdb'])) {echo $sGeneSwitchURL;} ?>";
+        if (geneSwitcher['switchType'] === 'autocomplete') {         
+            document.location.href = (sURL.replace('{{GENE}}', document.getElementById('select_gene_autocomplete').value));
+        } else { 
+            document.location.href = (sURL.replace('{{GENE}}', document.getElementById('select_gene_dropdown').value));
+        }
+    }
+
   </SCRIPT>
   <LINK rel="stylesheet" type="text/css" href="lib/jQuery/css/cupertino/jquery-ui.custom.css">
 </HEAD>
@@ -560,24 +573,29 @@ function lovd_mapVariants ()
               '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
               '    </TD>' . "\n");
 
-        $sCurrSymbol = $sCurrGene = '';
-/*
         // FIXME; how will we handle this?
         // During submission, show the gene we're submitting to instead of the currently selected gene.
-        if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
-            // Fetch gene's info from db... we don't have it anywhere yet.
-            list($sCurrSymbol, $sCurrGene) = $_DB->query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene']))->fetchRow();
-        } else*/if (!empty($_SESSION['currdb'])) {
-            // Just use currently selected database.
-            $sCurrSymbol = $_SESSION['currdb'];
-            $sCurrGene = $_SETT['currdb']['name'];
-        }
+        //if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
+        //    // Fetch gene's info from db... we don't have it anywhere yet.
+        //    list($sCurrSymbol, $sCurrGene) = $_DB->query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene']))->fetchRow();
+        //}
 
         print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
-              '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>' . "\n" .
-              (!($sCurrSymbol && $sCurrGene)? '' : '      <H5 id="gene_name">' . $sCurrGene . ' (' . $sCurrSymbol . ')' .
-              (strpos($sGeneSwitchURL, '{{GENE}}') === false? '' : '&nbsp;<A href="#" onclick="lovd_switchGeneInline(); return false;"><IMG src="gfx/lovd_genes_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top"></A>') .
-              '</H5>' . "\n") .
+              '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
+                       
+        if ($sCurrSymbol && $sCurrGene) { 
+            print('      <H5 id="gene_name" style="display:inline">' . $sCurrGene . ' (' . $sCurrSymbol . ')' . "\n");
+            if (strpos($sGeneSwitchURL, '{{GENE}}') !== false) { 
+                print('        <A href="#" onclick="lovd_switchGene(); return false;">' . "\n" .
+                      '          <IMG src="gfx/lovd_genes_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top">' . "\n" .
+                      '        </A>' . "\n");
+            }
+            print('      </H5>' . "\n");
+        }
+        
+        // With a ajax call H5 with id gene_switcher is filled with a dropdown or a autocomplete field.
+        // This is done with function lovd_switchGene().
+        print('      <H5 id="gene_switcher"></H5>' . "\n" .
               '    </TD>' . "\n" .
               '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
               '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] .

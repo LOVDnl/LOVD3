@@ -501,10 +501,12 @@ button.ui-button::-moz-focus-inner {
 .ui-state-focus,
 .ui-widget-content .ui-state-focus,
 .ui-widget-header .ui-state-focus {
-	border: 1px solid #74b2e2;
+    /* Disabled 2015-12-01 by dasscheman; Made the autocomplete style similar to the dropdown menu.*/
+	/* border: 1px solid #74b2e2;
 	background: #e4f1fb url("images/ui-bg_glass_100_e4f1fb_1x400.png") 50% 50% repeat-x;
-	font-weight: bold;
-	color: #0070a3;
+	font-weight: bold; */
+    background: #4A90D9;
+	color: #e4f1fb;
 }
 .ui-state-hover a,
 .ui-state-hover a:hover,
