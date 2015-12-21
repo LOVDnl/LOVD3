@@ -38,6 +38,9 @@
  * Fixed bug; During an insert import the progress bar was hanging when a 
    transcript ID is missing in the section variants on transcripts.
  * The geneswitcher in the header is now an autocomplete field for large databases.
+ * Improved error message when LOVD could not retrieve a valid gene reference
+   sequence from Mutalyzer.
+
 
 /**************************
  * 3.0 Build 14 (r657)
