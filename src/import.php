@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2015-12-10
+ * Modified    : 2016-01-14
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
@@ -115,7 +115,7 @@ function lovd_calculateFieldDifferences ($zData, &$aLine)
         // When the database columns do not exist in the import file, the columns are not taken into account in this function.
         // Below we take care of fields that exist in the database but not in the import file.
         if (isset($aLine[$sCol])) {
-            if ($sValue != $aLine[$sCol]) {
+            if (strval($sValue) !== $aLine[$sCol]) {
                 if (isset($aSection['update_columns_not_allowed'][$sCol]) &&
                     $aSection['update_columns_not_allowed'][$sCol]['error_type']) {
                     // Changes in these fields are ignored during an update import, because they are not allowed to be modified.

@@ -40,6 +40,8 @@
  * The geneswitcher in the header is now an autocomplete field for large databases.
  * Improved error message when LOVD could not retrieve a valid gene reference
    sequence from Mutalyzer.
+ * Fixed bug; During update import no difference was seen between '02' and '2', 
+   this is not correct for string fields. 
 
 
 /**************************
