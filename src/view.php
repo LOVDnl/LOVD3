@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2014-03-03
- * For LOVD    : 3.0-10
+ * Modified    : 2016-01-20
+ * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -79,7 +80,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         exit;
     }
 
-    define('PAGE_TITLE', 'Full data view for ' . $sGene);
+    define('PAGE_TITLE', 'Full data view for gene ' . $sGene);
     define('TAB_SELECTED', 'variants');
     $_T->printHeader();
     $_T->printTitle();

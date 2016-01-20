@@ -42,6 +42,11 @@
    sequence from Mutalyzer.
  * Fixed bug; During update import no difference was seen between '02' and '2', 
    this is not correct for string fields. 
+ * The view page titles are made consistent with the menu options in the 
+   dropdown menus of the tabs genes, transcripts, variants, individuals, 
+   diseases, screenings and users.
+ * The view all diseases associated with gene option was missing in the 
+   diseases tab.
 
 
 /**************************

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2015-12-21
+ * Modified    : 2016-01-20
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -85,7 +85,7 @@ class LOVD_Template {
                         'genes_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all genes', 0),
-                                '/genes/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View the ' . $_SESSION['currdb'] . ' gene homepage', 0),
+                                '/genes/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View ' . $_SESSION['currdb'] . ' gene homepage', 0),
                                 '/genes/' . $_SESSION['currdb'] . '/graphs' => array('menu_graphs.png', 'View graphs about the ' . $_SESSION['currdb'] . ' gene database', 0),
                                 'create' => array('plus.png', 'Create a new gene entry', LEVEL_MANAGER),
                               ),
@@ -93,7 +93,7 @@ class LOVD_Template {
                         'transcripts_' =>
                          array(
                                 '' => array('menu_transcripts.png', 'View all transcripts', 0),
-                                '/transcripts/' . $_SESSION['currdb'] => array('menu_transcripts.png', 'View all transcripts of the ' . $_SESSION['currdb'] . ' gene', 0),
+                                '/transcripts/' . $_SESSION['currdb'] => array('menu_transcripts.png', 'View all transcripts of gene ' . $_SESSION['currdb'], 0),
                                 'create' => array('plus.png', 'Create a new transcript information entry', LEVEL_CURATOR),
                               ),
                         'variants' => 'View variants',
@@ -102,9 +102,9 @@ class LOVD_Template {
                                 '' => array('menu_magnifying_glass.png', 'View all genomic variants', 0),
                                 '/variants/in_gene' => array('menu_magnifying_glass.png', 'View all variants affecting transcripts', 0),
                              'hr',
-                                '/variants/' . $_SESSION['currdb'] . '/unique' => array('menu_magnifying_glass.png', 'View unique variants in the ' . $_SESSION['currdb'] . ' gene', 0),
-                                '/variants/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all variants in the ' . $_SESSION['currdb'] . ' gene', 0),
-                                '/view/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'Full data view for the ' . $_SESSION['currdb'] . ' gene', 0),
+                                '/variants/' . $_SESSION['currdb'] . '/unique' => array('menu_magnifying_glass.png', 'View unique variants in gene ' . $_SESSION['currdb'], 0),
+                                '/variants/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all variants in gene ' . $_SESSION['currdb'], 0),
+                                '/view/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'Full data view for gene ' . $_SESSION['currdb'], 0),
                                 '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                              'hr',
                              '/columns/VariantOnGenome?search_active_=1' => array('menu_columns.png', 'View active genomic custom columns', LEVEL_MANAGER),
@@ -114,15 +114,17 @@ class LOVD_Template {
                         'individuals_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all individuals', 0),
-                                '/individuals/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all individuals with variants in ' . $_SESSION['currdb'], 0),
+                                '/individuals/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all individuals with variants in gene ' . $_SESSION['currdb'], 0),
                                 'create' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                                 'hr',
                                 '/columns/Individual?search_active_=1' => array('menu_columns.png', 'View active custom columns', LEVEL_MANAGER),
                                 '/columns/Individual?search_active_=0' => array('menu_columns.png', 'Enable more custom columns', LEVEL_MANAGER),
                               ),
                         'diseases' => 'View diseases',
+                        'diseases_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all diseases', 0),
+                                'search_genes_=' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all diseases associated with gene ' . $_SESSION['currdb'], 0),
                                 'create' => array('plus.png', 'Create a new disease information entry', LEVEL_CURATOR),
                                 'hr',
                                 '/columns/Phenotype' => array('menu_columns_add.png', 'View available phenotype columns', LEVEL_CURATOR),
@@ -131,7 +133,7 @@ class LOVD_Template {
                         'screenings_' =>
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all screenings', 0),
-                                '/screenings/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all screenings for the ' . $_SESSION['currdb'] . ' gene', 0),
+                                '/screenings/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all screenings for gene ' . $_SESSION['currdb'], 0),
                                 '/submit' => array('plus.png', 'Create a new data submission', LEVEL_SUBMITTER),
                                 'hr',
                                 '/columns/Screening?search_active_=1' => array('menu_columns.png', 'View active custom columns', LEVEL_MANAGER),
@@ -217,6 +219,7 @@ class LOVD_Template {
             unset($this->aMenu['variants_']['/variants/']);
             unset($this->aMenu['variants_']['/view/']);
             unset($this->aMenu['individuals_']['/individuals/']);
+            unset($this->aMenu['diseases_']['search_genes_=']);
             unset($this->aMenu['screenings_']['/screenings/']);
             unset($this->aMenu['configuration_']);
         }

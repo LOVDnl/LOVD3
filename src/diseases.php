@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2015-10-28
+ * Modified    : 2016-01-20
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -45,8 +45,21 @@ if ($_AUTH) {
 if (PATH_COUNT == 1 && !ACTION) {
     // URL: /diseases
     // View all entries.
-
-    define('PAGE_TITLE', 'View diseases');
+    
+    $aColsToHide = array();
+    
+    // Check the path if we are looking for disease associated with a specific gene
+    $sGene = str_replace('diseases?search_genes_=','', $sPath);    
+    if ($_SESSION['currdb'] === $sGene) {
+        define('PAGE_TITLE', 'View all diseases associated with gene ' . $_SESSION['currdb']);
+        // When we are viewing diseases associated with a gene, we don't want to see the associated gene column. 
+        // This is inline with genes_screened_', 'variants_in_genes_ in the view all individuals page and genes in
+        // the view all screenings page.
+        $aColsToHide[] = 'genes_';
+    } else {
+        define('PAGE_TITLE', 'View all diseases');
+    }
+    
     $_T->printHeader();
     $_T->printTitle();
 
@@ -56,7 +69,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     if (isset($_GET['no_links'])) {
         $_DATA->setRowLink('Diseases', '');
     }
-    $_DATA->viewList('Diseases', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $_DATA->viewList('Diseases', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
 
     $_T->printFooter();
     exit;
