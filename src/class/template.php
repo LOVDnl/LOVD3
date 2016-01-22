@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2015-12-21
+ * Modified    : 2016-01-07
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -314,7 +314,7 @@ class LOVD_Template {
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  &copy;2004-2015 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  &copy;2004-2016 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -506,7 +506,7 @@ function lovd_mapVariants ()
 <?php
             return true;
         }
-        
+
         $sCurrSymbol = $sCurrGene = '';
         if (!empty($_SESSION['currdb'])) {
             $sGeneSwitchURL = preg_replace('/(\/)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
@@ -518,16 +518,16 @@ function lovd_mapVariants ()
 
   <SCRIPT type="text/javascript">
     var geneSwitcher="";
-    
-    function lovd_switchGene(){ 
-        $.get('ajax/get_gene_switcher.php',function(sData, sStatus){
+
+    function lovd_switchGene() {
+        $.get('ajax/get_gene_switcher.php',function(sData, sStatus) {
             geneSwitcher = sData
             if (geneSwitcher === '<?php echo AJAX_DATA_ERROR; ?>') {
                 alert('Error when retrieving a list of genes');
                 return;
             }
-            $("#gene_name").hide(); 
-            
+            $("#gene_name").hide();
+
             $('#gene_switcher').html(geneSwitcher['html']);
             if (geneSwitcher['switchType'] === 'autocomplete') {
                 $("#select_gene_autocomplete").autocomplete({
@@ -537,15 +537,15 @@ function lovd_mapVariants ()
             }
         },"json"
         ).fail(function (sData, sStatus) {
-            alert('Error when retrieving a list of genes: ' + sStatus);                
+            alert('Error when retrieving a list of genes: ' + sStatus);
         });
-    }   
+    }
 
     function lovd_changeURL () {
         var sURL = "<?php if (!empty($_SESSION['currdb'])) {echo $sGeneSwitchURL;} ?>";
-        if (geneSwitcher['switchType'] === 'autocomplete') {         
+        if (geneSwitcher['switchType'] === 'autocomplete') {
             document.location.href = (sURL.replace('{{GENE}}', document.getElementById('select_gene_autocomplete').value));
-        } else { 
+        } else {
             document.location.href = (sURL.replace('{{GENE}}', document.getElementById('select_gene_dropdown').value));
         }
     }
@@ -582,17 +582,17 @@ function lovd_mapVariants ()
 
         print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
-                       
-        if ($sCurrSymbol && $sCurrGene) { 
+
+        if ($sCurrSymbol && $sCurrGene) {
             print('      <H5 id="gene_name" style="display:inline">' . $sCurrGene . ' (' . $sCurrSymbol . ')' . "\n");
-            if (strpos($sGeneSwitchURL, '{{GENE}}') !== false) { 
+            if (strpos($sGeneSwitchURL, '{{GENE}}') !== false) {
                 print('        <A href="#" onclick="lovd_switchGene(); return false;">' . "\n" .
                       '          <IMG src="gfx/lovd_genes_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top">' . "\n" .
                       '        </A>' . "\n");
             }
             print('      </H5>' . "\n");
         }
-        
+
         // With a ajax call H5 with id gene_switcher is filled with a dropdown or a autocomplete field.
         // This is done with function lovd_switchGene().
         print('      <H5 id="gene_switcher"></H5>' . "\n" .
