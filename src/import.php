@@ -767,13 +767,13 @@ if (POST) {
 
             // General checks: required fields defined by import.
             foreach ($aSection['required_columns'] as $sCol) {
-                if (empty($aLine[$sCol])) {
+                if (!isset($aLine[$sCol]) || $aLine[$sCol] === '') {
                     lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Missing value for required column "' . htmlspecialchars($sCol) . '".');
                 }
             }
 
             // For shared objects, load the correct object.
-            if ($sCurrentSection == 'Phenotypes' && $aLine['diseaseid']) {
+            if ($sCurrentSection == 'Phenotypes' && $aLine['diseaseid'] !== '') {
                 if (!isset($aSection['objects'][(int) $aLine['diseaseid']])) {
                     $aSection['objects'][(int) $aLine['diseaseid']] = new LOVD_Phenotype($aLine['diseaseid']);
                 }
