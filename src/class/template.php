@@ -533,7 +533,7 @@ function lovd_mapVariants ()
                 $("#select_gene_autocomplete").autocomplete({
                     source: geneSwitcher['data'],
                     minLength: 3
-                });
+                }).on( "autocompleteselect", function( e, ui ) { alert(ui.prop('value')); } );
             }
         },"json"
         ).fail(function (sData, sStatus) {
