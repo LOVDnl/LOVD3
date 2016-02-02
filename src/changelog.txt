@@ -43,6 +43,8 @@
  * Fixed bug; During update import no difference was seen between '02' and '2', 
    this is not correct for string fields. 
  * Fixed bug; During import, disease ID '0' was not recognized.
+ * Fixed bug; When LOVD could not connect to the database, the error message was
+   not shown because of a fatal error when trying to log the message.
 
 
 /**************************
