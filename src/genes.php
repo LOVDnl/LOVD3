@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-12-21
+ * Modified    : 2016-02-02
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -260,12 +260,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     // Get UD from mutalyzer.
                     try {
                         $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
-                        // Function may return an empty string. This is not a SOAP error, but still an error. For instance a type of gene we don't support.
-                        // To prevent further problems (getting transcripts, let's handle this nicely, shall we?
-                        $_BAR->setMessage('Failed to retreive gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
-                        $_BAR->setMessageVisibility('done', true);
-                        die('</BODY>' . "\n" .
-                            '</HTML>' . "\n");
+                        if ($sRefseqUD === '') {
+                            // Function may return an empty string. This is not a SOAP error, but still an error. For instance a type of gene we don't support.
+                            // To prevent further problems (getting transcripts, let's handle this nicely, shall we?
+                            $_BAR->setMessage('Failed to retreive gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
+                            $_BAR->setMessageVisibility('done', true);
+                            die('</BODY>' . "\n" .
+                                '</HTML>' . "\n");
+                        }
                     } catch (SoapFault $e) {
                         lovd_soapError($e);
                     }
@@ -275,9 +277,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // FIXME: When changing code here, check in transcripts?create if you need to make changes there, too.
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress($nProgress += 17);
-                
+
                 $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
-                
+
                 $_BAR->setProgress(100);
                 $_BAR->setMessage('Information collected, now building form...');
                 $_BAR->setMessageVisibility('done', true);
