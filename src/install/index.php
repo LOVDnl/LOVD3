@@ -340,7 +340,7 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
     $sSignature = 'ifokkema_local_3.0';
 } elseif ($_SERVER['SERVER_ADMIN'] == 'd.asscheman@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
     $sSignature = 'dasscheman_local_3.0';
-} elseif (isset($_SERVER['USER']) && $_SERVER['USER'] ==='travis'){
+} elseif (isset($_SERVER['USER']) && $_SERVER['USER'] === 'travis') {
     $sSignature = 'travis_CI_3.0';
 }
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
