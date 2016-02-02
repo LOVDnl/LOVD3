@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2015-11-20
+ * Modified    : 2016-02-02
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
@@ -31,28 +31,30 @@
 
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
+require ROOT_PATH . 'inc-lib-variants.php';
 session_write_close();
 
 $aGenes = lovd_getGeneList();
 
 // First check if $_GET is filled, to avoid errors and notices.
-if (empty($_GET['variant']) || empty($_GET['gene']) || !in_array($_GET['gene'], $aGenes)) {
+if (empty($_GET['variant']) || empty($_GET['gene']) || empty($_GET['DNAChange'])) {
     die(AJAX_DATA_ERROR);
 }
 
 $sGene = $_GET['gene'];
 $sVariant = $_GET['variant'];
+$sDNAChange = $_GET['DNAChange'];
 // If gene is defined in the mito_genes_aliases in file inc-init.php use the NCBI gene symbol.
 if (isset($_SETT['mito_genes_aliases'][$_GET['gene']])) {
     $sGene = $_SETT['mito_genes_aliases'][$_GET['gene']];
     $sVariant = str_replace($_GET['gene'], $sGene, $_GET['variant']);
 }
 
-// Check if variant is an UD, NC or NG and described as a c or n variant.
-if (!preg_match('/^((UD_\d{12}|N(?:C|G)_\d{6,}\.\d{1,2})\(' . $sGene . '_v\d{3}\)):[cn]\..+$/', $sVariant, $aVariantMatches)) {
+// This check must be done after a possible check for mitochondrial genes. 
+// Else we might check for a gene name with a mitochondrial gene alias name.
+if (!in_array($_GET['gene'], $aGenes)) {
     die(AJAX_DATA_ERROR);
 }
-$sProteinPrefix = str_replace('_v', '_i', $aVariantMatches[1]);
 
 // Requires at least LEVEL_SUBMITTER, anything lower has no $_AUTH whatsoever.
 if (!$_AUTH) {
@@ -60,26 +62,6 @@ if (!$_AUTH) {
     die(AJAX_NO_AUTH);
 }
 
-require ROOT_PATH . 'class/soap_client.php';
-$_Mutalyzer = new LOVD_SoapClient();
-try {
-    $oOutput = $_Mutalyzer->runMutalyzer(array('variant' => $sVariant))->runMutalyzerResult;
-} catch (SoapFault $e) {
-    // FIXME: Perhaps indicate an error? Like in the check_hgvs script?
-    die(AJAX_FALSE);
-}
-
-if (!empty($oOutput->messages->SoapMessage)) {
-    foreach ($oOutput->messages->SoapMessage as $oMessage) {
-        if (isset($oMessage->errorcode)) {
-            print(trim($oMessage->errorcode) . ':' . trim($oMessage->message));
-        }
-        print('|');
-    }
-} else {
-    print('|');
-}
-$sProteinDescriptions = (empty($oOutput->proteinDescriptions->string)? '' : implode('|', $oOutput->proteinDescriptions->string));
-preg_match('/' . preg_quote($sProteinPrefix) . ':(p\..+?)(\||$)/', $sProteinDescriptions, $aProteinMatches);
-print('|' . (isset($aProteinMatches[1])? $aProteinMatches[1] : ''));
+$result = lovd_getRNAProteinPrediction($sVariant, $sGene, $sDNAChange);
+print(json_encode($result));
 ?>
