@@ -517,32 +517,39 @@ function lovd_mapVariants ()
 ?>
 
   <SCRIPT type="text/javascript">
-    var geneSwitcher="";
+    var geneSwitcher = '';
 
-    function lovd_switchGene() {
-        $.get('ajax/get_gene_switcher.php',function(sData, sStatus) {
-            geneSwitcher = sData
+    function lovd_switchGene()
+    {
+        // Fetches the gene switcher data from LOVD. Might be a form with a
+        // dropdown, or a form with a text field for autocomplete.
+        $.get('ajax/get_gene_switcher.php', function (sData, sStatus)
+        {
+            geneSwitcher = sData;
             if (geneSwitcher === '<?php echo AJAX_DATA_ERROR; ?>') {
                 alert('Error when retrieving a list of genes');
                 return;
             }
-            $("#gene_name").hide();
+            $('#gene_name').hide();
 
             $('#gene_switcher').html(geneSwitcher['html']);
             if (geneSwitcher['switchType'] === 'autocomplete') {
-                $("#select_gene_autocomplete").autocomplete({
+                $('#select_gene_autocomplete').autocomplete({
                     source: geneSwitcher['data'],
                     minLength: 3
-                }).on( "autocompleteselect", function( e, ui ) { alert(ui.prop('value')); } );
+                }).on('autocompleteselect', function (e, ui) { $(this).val(ui['item']['value']); $(this).parent().parent().submit(); }); // Autosubmit on selecting the gene from the list.
             }
         },"json"
-        ).fail(function (sData, sStatus) {
+        ).fail(function (sData, sStatus)
+        {
             alert('Error when retrieving a list of genes: ' + sStatus);
         });
     }
 
-    function lovd_changeURL () {
-        var sURL = "<?php if (!empty($_SESSION['currdb'])) {echo $sGeneSwitchURL;} ?>";
+    function lovd_changeURL ()
+    {
+        // Replaces the gene in the current URL with the one selected.
+        var sURL = '<?php if (!empty($_SESSION['currdb'])) { echo $sGeneSwitchURL; } ?>';
         if (geneSwitcher['switchType'] === 'autocomplete') {
             document.location.href = (sURL.replace('{{GENE}}', document.getElementById('select_gene_autocomplete').value));
         } else {
