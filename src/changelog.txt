@@ -35,13 +35,14 @@
    an import file resulted in a fatal error.
  * Fixed bug; Under certain circumstances, fatal errors would not be logged even
    though LOVD reported they had been logged.
- * Fixed bug; During an insert import the progress bar was hanging when a 
-   transcript ID is missing in the section variants on transcripts.
- * The geneswitcher in the header is now an autocomplete field for large databases.
+ * Fixed bug; During an insert import, the progress bar was hanging when a
+   transcript ID was missing in the section Variants_On_Transcripts.
+ * The geneswitcher in the header is now an autocomplete field for large
+   databases.
  * Improved error message when LOVD could not retrieve a valid gene reference
    sequence from Mutalyzer.
- * Fixed bug; During update import no difference was seen between '02' and '2', 
-   this is not correct for string fields. 
+ * Fixed bug; During update import no difference was seen between '02' and '2',
+   this is not correct for string fields.
  * Fixed bug; During import diseaseID 0 was not recognized.
 
 

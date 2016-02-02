@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-11-27
- * Modified    : 2015-12-21
+ * Modified    : 2016-02-02
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -79,7 +79,7 @@ if (count($zGenes) < $nMaxDropDown) {
         'html' =>
             '<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="lovd_changeURL(); return false;">' . "\n" .
             '  <DIV id="div_gene_autocomplete">' . "\n" .
-            '    <INPUT name="select_db" id="select_gene_autocomplete">' . "\n" .
+            '    <INPUT name="select_db" id="select_gene_autocomplete" style="width : 75ex;">' . "\n" .
             '    <INPUT type="submit" value="Switch" id="select_gene_switch">' . "\n" .
             '  </DIV>' . "\n" .
             '</FORM>',
