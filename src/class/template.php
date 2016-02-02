@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-01-07
+ * Modified    : 2016-02-02
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -509,44 +509,62 @@ function lovd_mapVariants ()
 
         $sCurrSymbol = $sCurrGene = '';
         if (!empty($_SESSION['currdb'])) {
+            // FIXME; Currently we don't support "=GENE" matching (for instance, on the disease tab) because changing that value will not trigger a change in CURRDB... Yet.
             $sGeneSwitchURL = preg_replace('/(\/)' . preg_quote($_SESSION['currdb'], '/') . '\b/', "$1{{GENE}}", $_SERVER['REQUEST_URI']);
             // Just use currently selected database.
             $sCurrSymbol = $_SESSION['currdb'];
             $sCurrGene = $_SETT['currdb']['name'];
         }
+
+        // FIXME; how will we handle this? (if we'll handle this)
+        // During submission, show the gene we're submitting to instead of the currently selected gene.
+        //if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
+        //    // Fetch gene's info from db... we don't have it anywhere yet.
+        //    list($sCurrSymbol, $sCurrGene) = $_DB->query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene']))->fetchRow();
+        //}
 ?>
 
   <SCRIPT type="text/javascript">
-    var geneSwitcher="";
+    var geneSwitcher = '';
 
-    function lovd_switchGene() {
-        $.get('ajax/get_gene_switcher.php',function(sData, sStatus) {
-            geneSwitcher = sData
+    function lovd_switchGene()
+    {
+        // Fetches the gene switcher data from LOVD. Might be a form with a
+        // dropdown, or a form with a text field for autocomplete.
+        $.get('ajax/get_gene_switcher.php', function (sData, sStatus)
+        {
+            geneSwitcher = sData;
             if (geneSwitcher === '<?php echo AJAX_DATA_ERROR; ?>') {
                 alert('Error when retrieving a list of genes');
                 return;
             }
-            $("#gene_name").hide();
+            $('#gene_name').hide();
 
             $('#gene_switcher').html(geneSwitcher['html']);
             if (geneSwitcher['switchType'] === 'autocomplete') {
-                $("#select_gene_autocomplete").autocomplete({
+                $('#select_gene_autocomplete').autocomplete({
                     source: geneSwitcher['data'],
                     minLength: 3
-                });
+                }).on('autocompleteselect', function (e, ui) { $(this).val(ui['item']['value']); $(this).parent().parent().submit(); }); // Auto submit on selecting the gene from the list.
+                // And set focus to the field, too.
+                $('#select_gene_autocomplete').focus();
             }
-        },"json"
-        ).fail(function (sData, sStatus) {
+        },'json'
+        ).fail(function (sData, sStatus)
+        {
             alert('Error when retrieving a list of genes: ' + sStatus);
         });
     }
 
-    function lovd_changeURL () {
-        var sURL = "<?php if (!empty($_SESSION['currdb'])) {echo $sGeneSwitchURL;} ?>";
+    function lovd_changeURL ()
+    {
+        // Replaces the gene in the current URL with the one selected.
+        var sURL = '<?php if (!empty($_SESSION['currdb'])) { echo $sGeneSwitchURL; } ?>';
+        // FIXME; It is very very difficult to keep the hash, it should be selective since otherwise you might be loading the EXACT SAME VL, BUT ON A DIFFERENT PAGE (viewing variants belonging to gene X, on a page that says you're looking at gene Y).
         if (geneSwitcher['switchType'] === 'autocomplete') {
-            document.location.href = (sURL.replace('{{GENE}}', document.getElementById('select_gene_autocomplete').value));
+            document.location.href = sURL.replace('{{GENE}}', $('#select_gene_autocomplete').val());
         } else {
-            document.location.href = (sURL.replace('{{GENE}}', document.getElementById('select_gene_dropdown').value));
+            document.location.href = sURL.replace('{{GENE}}', $('#select_gene_dropdown').val());
         }
     }
 
@@ -573,13 +591,6 @@ function lovd_mapVariants ()
               '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
               '    </TD>' . "\n");
 
-        // FIXME; how will we handle this?
-        // During submission, show the gene we're submitting to instead of the currently selected gene.
-        //if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
-        //    // Fetch gene's info from db... we don't have it anywhere yet.
-        //    list($sCurrSymbol, $sCurrGene) = $_DB->query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene']))->fetchRow();
-        //}
-
         print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
 
@@ -593,7 +604,7 @@ function lovd_mapVariants ()
             print('      </H5>' . "\n");
         }
 
-        // With a ajax call H5 with id gene_switcher is filled with a dropdown or a autocomplete field.
+        // With an ajax call, the H5 with ID 'gene_switcher' is filled with a dropdown or an autocomplete field.
         // This is done with function lovd_switchGene().
         print('      <H5 id="gene_switcher"></H5>' . "\n" .
               '    </TD>' . "\n" .

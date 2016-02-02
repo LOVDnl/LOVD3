@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-11-27
- * Modified    : 2015-12-21
+ * Modified    : 2016-02-02
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,46 +33,56 @@ require ROOT_PATH . 'inc-init.php';
 session_write_close();
 $nMaxDropDown = 10;
 
-$qGenes = $_DB->query('SELECT id, id as value, CONCAT(id, " (", name, ")") AS label FROM ' . TABLE_GENES . ' ORDER BY id');
-//$qGenes = $_DB->query('SELECT id, id as value, CONCAT(id, " (", name, ")") AS label FROM ' . TABLE_GENES . ' WHERE id = ?', array('ARSE'));
+$qGenes = $_DB->query('SELECT id AS value, CONCAT(id, " (", name, ")") AS label FROM ' . TABLE_GENES . ' ORDER BY id');
 $zGenes = $qGenes->fetchAllAssoc();
 
 if (empty($zGenes)) {
     die(json_encode(AJAX_DATA_ERROR));
 }
 
-foreach ($zGenes as $key => $value) {
-    //This will shorten the gene names nicely, to prevent long gene names from messing up the form.
-    $zGenes[$key]['label'] = lovd_shortenString($zGenes[$key]['label'], 75);
+foreach ($zGenes as $key => $aValues) {
+    // This will shorten the gene names nicely, to prevent long gene names from messing up the form.
+    $zGenes[$key]['label'] = lovd_shortenString($aValues['label'], 75);
 }
 
 if (count($zGenes) < $nMaxDropDown) {
     // Create the option elements.
-    $options = '';
-    foreach ($zGenes as $aGene) { 
-        $options .= '<OPTION value=' . $aGene['id'] . '>' . $aGene['label'] . ' </OPTION>' . "\n";
+    // Try to determine the currently selected gene, so we can pre-select that one,
+    // making it easier to select genes close alphabetically, and also ensuring the
+    // onChange() to run if the first gene from the list is selected.
+    // This code is similar to inc-init.php's parsing to find CurrDB.
+    $sCurrDB = '';
+    if (!empty($_SERVER['HTTP_REFERER']) && preg_match('/^' . preg_quote(lovd_getInstallURL(), '/') . '(configuration|genes|transcripts|variants|individuals|view)\/([^\/]+)/', $_SERVER['HTTP_REFERER'], $aRegs)) {
+        if (!in_array($aRegs[2], array('in_gene', 'upload')) && !ctype_digit($aRegs[2])) {
+            $sCurrDB = strtoupper($aRegs[2]); // Not checking capitalization here yet.
+        }
+    }
+
+    $sOptions = '';
+    foreach ($zGenes as $aGene) {
+        $sOptions .= '<OPTION value="' . $aGene['value'] . '"' . (!$sCurrDB || $sCurrDB != strtoupper($aGene['value'])? '' : ' selected') . '>' . $aGene['label'] . ' </OPTION>' . "\n";
     }
     die(json_encode(array(
         'switchType' => 'dropdown',
-        'html' => 
+        'html' =>
             '<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="lovd_changeURL(); return false;">' . "\n" .
-            '   <DIV id="div_gene_dropdown">' . "\n" .
-            '        <SELECT name="select_db" id="select_gene_dropdown" onchange="$(this).parent().submit();">' . "\n" .
-                        $options .
-            '       </SELECT>' . "\n" .
-            '       <INPUT type="submit" value="Switch" id="select_gene_switch">' . "\n" .
-            '    </DIV>' . "\n" .
+            '  <DIV id="div_gene_dropdown">' . "\n" .
+            '    <SELECT name="select_db" id="select_gene_dropdown" onchange="$(this).parent().parent().submit();">' . "\n" .
+                   $sOptions .
+            '    </SELECT>' . "\n" .
+            '    <INPUT type="submit" value="Switch" id="select_gene_switch">' . "\n" .
+            '  </DIV>' . "\n" .
             '</FORM>')));
 } else {
     die(json_encode(array(
         'switchType' => 'autocomplete',
-        'html' => 
+        'html' =>
             '<FORM action="" id="SelectGeneDBInline" method="get" style="margin : 0px;" onsubmit="lovd_changeURL(); return false;">' . "\n" .
-            '   <DIV id="div_gene_autocomplete">' . "\n" .
-            '       <INPUT name="select_db" id="select_gene_autocomplete" onchange="$(this).parent().submit();">' . "\n" .
-            '       <INPUT type="submit" value="Switch" id="select_gene_switch">' . "\n" .
-            '   </DIV>' . "\n" .
-            '</FORM>', 
+            '  <DIV id="div_gene_autocomplete">' . "\n" .
+            '    <INPUT name="select_db" id="select_gene_autocomplete" style="width : 75ex;">' . "\n" .
+            '    <INPUT type="submit" value="Switch" id="select_gene_switch">' . "\n" .
+            '  </DIV>' . "\n" .
+            '</FORM>',
         'data' => $zGenes)));
 }
 ?>
