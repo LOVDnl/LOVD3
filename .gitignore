@@ -1,0 +1,8 @@
+.idea
+src/_sett
+src/refseq
+src/lib/flot/__excanvas
+src/lib/flot/__flot
+src/lib/jQuery/__jquery
+src/lib/jeegoocontext/__jeegoocontext
+
