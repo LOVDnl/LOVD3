@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2015-12-08
+ * Modified    : 2016-02-03
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *
@@ -282,8 +282,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             'UPDATE ' . TABLE_COLS . ' SET form_type = "GVS function||select|1|true|false|false", select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nutr-3\r\nnear-gene-3" WHERE id = "VariantOnTranscript/GVS/Function" and form_type LIKE "GVS function|%|text|%"',
                             'UPDATE ' . TABLE_COLS . ' SET form_type = "Protein change (HGVS format)|Description of variant at protein level (following HGVS recommendations); e.g. p.(Arg345Pro) = change predicted from DNA (RNA not analysed), p.Arg345Pro = change derived from RNA analysis, p.0 (no protein produced), p.? (unknown effect).|text|30" WHERE id = "VariantOnTranscript/Protein" and form_type LIKE "Protein change (HGVS format)||text|%"',
                             'UPDATE ' . TABLE_COLS . ' SET form_type = "RNA change (HGVS format)|Description of variant at RNA level (following HGVS recommendations); e.g. r.123c>u, r.? = unknown, r.(?) = RNA not analysed but probably transcribed copy of DNA variant, r.spl? = RNA not analysed but variant probably affects splicing, r.(spl?) = RNA not analysed but variant may affect splicing.|text|30" WHERE id = "VariantOnTranscript/RNA" and form_type LIKE "RNA change (HGVS format)||text|%"',
-                            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
-                            'UPDATE ' . TABLE_DISEASES . ' SET id = 0 WHERE id_omim IS NULL AND created_by = 0 AND symbol = "Healty/Control"',
+                            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healthy/Control", "Healthy individual / control", 0, NOW())',
+                            'UPDATE ' . TABLE_DISEASES . ' SET id = 0 WHERE id_omim IS NULL AND created_by = 0 AND symbol = "Healthy/Control"',
                         ),
                     '3.0-beta-08' =>
                         array(
@@ -414,6 +414,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-14c' =>
                      array(
                          'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY COLUMN id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT',
+                     ),
+                 '3.0-14d' =>
+                     array(
+                         'UPDATE ' . TABLE_DISEASES . ' SET symbol = "Healthy/Control" WHERE id_omim IS NULL AND created_by = 0 AND symbol = "Healty/Control"',
                      ),
              );
 

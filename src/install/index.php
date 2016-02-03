@@ -5,10 +5,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-12-21
+ * Modified    : 2016-02-03
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -507,7 +507,7 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
     // (10) Creating the "Healthy / Control" disease. Maybe later enable some more default columns? (IQ, ...)
     $aInstallSQL['Registering phenotype columns for healthy controls...'] =
         array(
-            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healty/Control", "Healthy individual / control", 0, NOW())',
+            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healthy/Control", "Healthy individual / control", 0, NOW())',
             'UPDATE ' . TABLE_DISEASES . ' SET id = 0',
             'ALTER TABLE ' . TABLE_DISEASES . ' auto_increment = 1',
             // FIXME: Rather parse inc-sql-columns then to do this manually.
