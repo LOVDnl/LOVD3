@@ -5,4 +5,4 @@ src/lib/flot/__excanvas
 src/lib/flot/__flot
 src/lib/jQuery/__jquery
 src/lib/jeegoocontext/__jeegoocontext
-
+src/config.ini.php
