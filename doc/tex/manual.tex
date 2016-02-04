@@ -94,7 +94,7 @@ For VCF file imports, LOVD allows for automatic annotation of the variants.
 Both formats support the automatic creation of genes and transcripts in the system,
 greatly reducing the amount of work required by curators to get LOVD set up for their research data.
 
-LOVD 3.0 reached beta stage in January 2012.
+LOVD 3.0 reached beta stage in January 2012, and the first stable release was in December of that year.
 Currently, the latest release is \LOVDversion.
 Keep an eye on our \href{http://www.lovd.nl/3.0/news}{news page} for the latest information on LOVD 3.0 development.
 \vskip \baselineskip
@@ -117,274 +117,345 @@ Please bear with us while we finish this manual.
 
 
 
-\chapter{View and search data in a LOVD installation}
-To navigate in an LOVD installation you can use the tabs on the top of the page. 
-Which tabs you can see depends on if you are logged in or not and when you logged in on your user level.
-When you are not logged in or you are logged in as a submitter you can see the tabs Genes, Transcripts, Variants, Individuals, Diseases, Screening, Submit and Documentation.
-On top of that, curators, managers and admin can see the tab Configuration and only managers and admin can see the Users and Setup tab. 
+\chapter{View and search data in an LOVD installation}
+To navigate in an LOVD installation you can use the tabs on the top of the page.
+Which tabs you can see depends on whether you are logged in or not, and your user level.
+When you are not logged in or you are logged in as a submitter, you see the following tabs:
+ Genes, Transcripts, Variants, Individuals, Diseases, Screenings, Submit and Documentation.
+Additionally, Curator-level users and up can see the Configuration tab and
+ only Managers and the Database administrator can see the Users and Setup tabs.
 
-Each tab does have a dropdown menu and the tab itself does have a default page to which you will go when you click on the tab.
-The content of this dropdown menu depends on what your user level is.
+Each tab has a dropdown menu and the tab itself has a default page to which you will go when you click on the tab.
+The options of the dropdown menus depend on your user level.
 
 
 
-\section{Search and sort}
+
+
+\section{Searching and sorting}
 All list views have search fields which can be used to search data.
 You can search for a complete word or you can search for a part of a search term.
-For example in the all genes view you can search for ``AAM''. 
-LOVD will not only find genes starting with ``AAM'', but also containing ``AAM'', like ``DAAM1'' and ``DAAM2''.
+For example, when you search for ``AAM'' in the Symbol field of the genes listing,
+ LOVD will not only find genes starting with ``AAM'', but also containing ``AAM'', like ``DAAM1'' and ``DAAM2''.
+
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{search_for_gene.png}}
   \caption{
-    Results when searching for gene containing ``AAM''. 
-    Note that the search is case insensetive, so ``aam'' gives the same result.
-    The up and down arrow next to the column name can be used to sort the data.}
+    Results when searching for a gene symbol containing ``AAM''.
+    Note that the search is case insensitive, so ``aam'' gives the same result.}
   \end{shaded}
 \end{figure}
 
-You can use different operators to specify your search request: 
+To sort on a certain column, click on the column header or on the arrows.
+If that column is already selected to sort on, the sort order will be swapped.
+The column currently sorted on has a darker blue background color than the other columns.
+The up and down arrows next to the column name indicate the current sorting direction.
+When sorting on any field other than the default, LOVD will sort secondarily on the default sort column.
+\vskip \baselineskip
 
+LOVD allows boolean search terms, meaning you can construct complex queries with AND, OR and NOT logic.
+Typing a space between search terms is treated as AND.
+OR is indicated with a pipe '|' with no spaces around it and NOT is indicated by an exclamation mark '!',
+ not followed by a space.
+If you enclose two or more words in double quotes,
+ LOVD will search for the combination of those words only exactly in the order you specify.
+Note that search terms are case-insensitive and that wildcards such as * are treated as normal text!
 
-\begin{tabular}{>{\bfseries}p{2.3cm} p{2.3cm} p{10.7cm}}
+\noindent
+You can use different operators to specify your search request:\\
+\begin{tabular}{>{\bfseries}p{2.3cm} p{2.3cm} p{11.1cm}}
   Operator & \textbf{Example} & \textbf{Description}\\ \hline \hline
-  {space} & AM DA & This gives results where both AM and DA are occuring.\\ \hline
-  | & AM|DA & This gives results where either AM or DA occures.\\ \hline
+  space & AM DA & This gives results where both AM and DA are occuring.\\ \hline
+  | & AM|DA & This gives results where either AM or DA occurs.\\ \hline
   ="" & ="AM" & Returns results which exactly matches AM.\\ \hline
-  != & !=AM & Returns results which does not contain AM.\\ \hline
+  ! & !AM & Returns results which does not contain AM.\\ \hline
   !="" & !="AM" & Returns results which does not exactly match AM.\\ \hline
-  > & >23 & Filter for values higher than 23\\ \hline
-  < & <23 & Filter for values lower than 23\\ \hline
+  > & >23 & Filter for values higher than 23 (numeric and date columns).\\ \hline
+  < & <23 & Filter for values lower than 23 (numeric and date columns).\\ \hline
+\end{tabular}
+\vskip \baselineskip
+
+\noindent
+Some more advanced examples:\\
+\begin{tabular}{>{\bfseries}p{5.4cm} p{10.7cm}}
+  Asian & Shows ``Asian'', but also ``Caucasian'' entries.\\ \hline
+  Asian !Caucasian & Shows ``Asian'', but no ``Caucasian'' entries.\\ \hline
+  Asian|African !Caucasian & Shows ``Asian'' or ``African'', but no ``Caucasian'' entries.\\ \hline
+  "South Asian" & Shows ``South Asian'', but no ``South East Asian'' entries.\\ \hline
 \end{tabular}
 
-\newpage
+
+
+
+
 \section{Genes}
-\begin{wrapfigure}[10]{r}{8cm} % Only wrap for 3 lines
+\begin{wrapfigure}[9]{r}{7cm} % Wrap for 9 lines.
   \vspace{-25pt}
-	\begin{shaded}
-  		\frame{\includegraphics[width=0.95\linewidth]{gene_menu.png}}\centering
-  		\caption[]{
-  			Gene menu.}
-	\end{shaded}
+  \begin{shaded}
+    \frame{\includegraphics[width=0.95\linewidth]{gene_menu.png}}
+    \centering
+  	\caption{Gene menu.}
+  \end{shaded}
 \end{wrapfigure}
+When no gene is selected, the default page of the genes tab shows all genes.
+When a gene is selected (shown in the page header), the default page of the gene tab is the gene homepage.
+\vskip \baselineskip
 
-When no gene is selected in the header, the default page of the genes tab is the view all genes page.
-When a gene is selected in the header the default page of the gene tab is the gene homepage. 
+\begin{description}
+  \item[View all genes] \hfill \\
+  Here you can see all the genes for this installation. 
+  When you click on a gene entry, you're taken to the gene homepage.
+  \item[View gene homepage] \hfill \\
+  Here you can see the details of a gene.
+  For more information, see section ``\hyperlink{sec:gene_homepage}{\nameref{sec:gene_homepage}}''.
+  This menu item is not available when no gene has been selected.
+\end{description}
+
+% We'll have to separate the description lists, because somehow it keeps wrapping around the figure otherwise.
+\begin{description}
+  \item[View graphs] \hfill \\
+  This displays the statistics of the variants within a gene.
+  This menu item is not available when no gene has been selected.
+  \item[Create a new gene entry] \hfill \\
+  This menu item is only available for Managers or higher.
+  See section ``\hyperlink{sec:gene_create}{\nameref{sec:gene_create}}'' on how to add a new gene.
+\end{description}
 
 
-\textbf{View all genes}: 
-Here you can see all the genes for this installation. 
-You can click on a gene to go to the View gene homepage.
 
-\textbf{View gene homepage}: 
-Here you can see the details of a gene. See for more information: \hyperlink{sec:gene_homepage}{\nameref{sec:gene_homepage}}.
-This menu item is not available when no gene is selected in the header.
 
-\textbf{View graphs for a gene}: 
-This displays the statistics of the variants within a gene. 
-This menu item is not available when no gene is selected in the header.
-
-\textbf{Create a new gene entry}: 
-This menu item is only available for user with user level managers or higher.
-See section \hyperlink{sec:gene_create}{\nameref{sec:gene_create}} on how to add a new gene.
 
 \section{Transcripts}
-\begin{wrapfigure}[9]{l}{8cm} % Only wrap for 3 lines
+\begin{wrapfigure}[5]{l}{7cm} % Wrap for 5 lines.
   \vspace{-25pt}
-	\begin{shaded}
-  		\frame{\includegraphics[width=0.95\linewidth]{transcript_menu.png}}\centering
-  		\caption[]{
-  			Transcript menu.}
-	\end{shaded}
+  \begin{shaded}
+    \frame{\includegraphics[width=0.95\linewidth]{transcript_menu.png}}
+    \centering
+    \caption{Transcript menu.}
+  \end{shaded}
 \end{wrapfigure}
-When no gene is selected in the header, the default page of the transcripts tab is the view all transcripts page.
-When a gene is selected in the header the default page of the transcript tab is the view all transcripts of a gene. 
+When no gene is selected, the default page of the transcripts tab shows all transcripts.
+When a gene is selected (shown in the page header),
+ the default page of the transcripts tab shows all transcripts of the selected gene.
+\clearpage
 
-\textbf{View all transcripts} and \textbf{View all transcripts of a gene} are both views which list the transcripts. In both views you can click on a transcript to view the detail of this transcript on the View transcript page. 
-The view all transcripts of a gene menu item is not available when no gene is selected in the header.
-
-\textbf{Create a new transcript information entry}: 
-Create a new transcript information entry is only available for curators or higher.
-See section \hyperlink{sec:transcript_create}{\nameref{sec:transcript_create}} on how to add a new transcript to a gene.
-
-\textbf{View transcript page}: 
-To get to the view transcript page you have to select a transcript in the view all transcript page or the view all transcript of a gene page. 
-On this page you can find details about the transcript and below the transcript details are all variants found on the transcript. 
-You can click on a variant in the variant list, this will bring you to the view genomic variant page.
+\begin{description}
+  \item [View all transcripts] \hfill \\
+  View all transcripts stored in the database.
+  Click on the transcript to view the transcript's details and variant overview.
+  \item [View all transcripts of a gene] \hfill \\
+  View all transcripts of the currently selected gene.
+  Click on the transcript to view the transcript's details and variant overview.
+  This menu item is not available when no gene has been selected.
+  \item [Create a new transcript information entry] \hfill \\
+  This menu item is only available for Curators or higher.
+  See section ``\hyperlink{sec:transcript_create}{\nameref{sec:transcript_create}}''
+   on how to add a new transcript to a gene.
+  \item [Transcript detailed view] \hfill \\
+  When clicking a transcript from one of the transcript data listings, the transcript's details are shown.
+  Below the transcript's details, a variant listing is shown of all variants found on this transcript.
+  Click on a variants to view the variant's details.
+\end{description}
 
 
 
 
 
 \section{Variants}
-When no gene is selected in the header, the default page of the variants tab is the view all genomic variants page.
-When a gene is selected in the header the default page of the variants tab is the view unique variants in a gene. 
-
-\textbf{View all genomic variants}:
-This list view displays all genomic variants in this LOVD installation.
-You can click on a variant, this will bring you to the view genomic variant page.
-
-\textbf{View all variants affecting transcripts}:
-This view displays all variants in this LOVD installation found on a transcript.
-You can click on the a variant, this will bring you to the view genomic variant page.
-
-\begin{wrapfigure}[16]{r}{8cm}
+\begin{wrapfigure}[16]{r}{7cm}
   \vspace{-25pt}
-	\begin{shaded}
-  		\frame{\includegraphics[width=0.95\linewidth]{variant_menu.png}}\centering
-  		\caption[]{
-  			Variants menu.}
-	\end{shaded}
+  \begin{shaded}
+    \frame{\includegraphics[width=0.95\linewidth]{variant_menu.png}}
+    \centering
+    \caption{Variants menu.}
+  \end{shaded}
 \end{wrapfigure}
+When no gene is selected, the default page of the variants tab shows all genomic variants.
+When a gene is selected (shown in the page header),
+ the default page of the variants tab shows all unique variants in the selected gene.
 
-\textbf{View unique variants in a gene}:
-This list view displays the unique variants for a gene. The number of times a variant is found is displayed in the field ``reported''.
-The information in other fields are summarised and not all information for the variants are displayed.
-Click on a row to see all reported items of a variant.
-This menu item is not available when no gene is selected in the header.
+\begin{description}
+  \item [View all genomic variants] \hfill \\
+  This view displays all genomic variants in this LOVD installation.
+  Variants within, but also outside of genes are shown.
+  You can click on a variant to view its details.
+  \item [View all variants affecting transcripts] \hfill \\
+  This view displays all variants in this LOVD installation that are found within a gene,
+   and have been mapped to a transcript.
+  You can click on the a variant to view its details.
+  \item [View unique variants in a gene] \hfill \\
+  This view displays the gene's unique variants.
+  Each variant is shown only once, regardless of the number of observations.
+  The number of times a variant is found is displayed in the field ``Reported''.
+  The information in other fields are summarized and not all information for the variants may be displayed.
+  Click on a variant to see all reported observations.
+  This menu item is not available when no gene has been selected.
+\end{description}
 
-\textbf{View all variants in a gene}:
-List view of all reported variants for a gene. Same variants are not grouped as done in the unique variant view.
-This menu item is not available when no gene is selected in the header.
-
-\textbf{Full data view for a gene}:
-This menu item is not available when no gene is selected in the header.
-
-\textbf{Create a new data submission}:
-Create a new gene entry is only availabile for submitters and higher. 
-See chapter \hyperlink{chap:add_data}{\nameref{chap:add_data}} on how to create a new data submission.
-
-\textbf{View active genomic custom columns} and \textbf{Enable more genomic custom columns}:
-This menu item is only available for users with user level curator or higher. 
-See section \hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}} how to enable custom columns.
-
-\textbf{View genomic variant page}:
-To get to the view genomic variant page you have to select a variant in one of the variant list view. 
-In the detail view of a genomic variant you can see which variant on transcripts are found and which screening is used.
-
+% We'll have to separate the description lists, because somehow it keeps wrapping around the figure otherwise.
+\begin{description}
+  \item [View all variants in a gene] \hfill \\
+  View of all variants reported in the selected gene.
+  Variants are not grouped like in the unique variant view.
+  Click on a variant to see the variant's details.
+  This menu item is not available when no gene has been selected.
+  \item [Full data view for a gene] \hfill \\
+  This view shows all variant observations together with the variant screening(s)
+   and the individual in which the variant has been reported.
+  Although this data view is very wide,
+   it allows searching for variants only found in individuals with certain characteristics.
+  Click on a variant to see the variant's details.
+  This menu item is not available when no gene has been selected.
+  \item [Create a new data submission] \hfill \\
+  This menu item is only available when logged in.
+  See chapter ``\hyperlink{chap:add_data}{\nameref{chap:add_data}}'' on how to create a new data submission.
+  \item [View active genomic custom columns] \hfill \\
+  This menu item is only available for Managers or higher.
+  See chapter ``\hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}}'' for more information on custom columns.
+  \item [Enable more genomic custom columns] \hfill \\
+  This menu item is only available for Managers or higher.
+  See section ``\hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}}''
+   on how to enable custom columns.
+  \item [Variant detailed view] \hfill \\
+  When clicking on a variant from one of the variant data listings, its details are shown.
+  If the variant is affecting any transcripts, a listing is shown below the variant's genomic details.
+  Click on any of the entries to view the data in a tabular view.
+  If the variant has been found in an individual,
+   at the bottom of the page the listing for the variant screenings used to identify the variant is shown.
+  On the top of the page a link is shown to the individual in which the variant is found.
+\end{description}
 
 
 
 
 
 \section{Individuals}
-When no gene is selected in the header, the default page of the individuals tab is the view all individuals page.
-When a gene is selected in the header the default page of the individuals tab is the view all individuals with variants in a gene. 
-
-\begin{wrapfigure}[12]{l}{8cm}
+\begin{wrapfigure}[10]{r}{7cm}
   \vspace{-25pt}
-	\begin{shaded}
-  		\frame{\includegraphics[width=0.95\linewidth]{individual_menu.png}}\centering
-  		\caption[]{
-  			Individuals menu.}
-	\end{shaded}
+  \begin{shaded}
+    \frame{\includegraphics[width=0.95\linewidth]{individual_menu.png}}
+    \centering
+    \caption{Individuals menu.}
+  \end{shaded}
 \end{wrapfigure}
+When no gene is selected, the default page of the individuals tab shows all individuals.
+When a gene is selected (shown in the page header),
+ the default page of the individuals tab shows all individuals with variants in the selected gene.
 
-\textbf{View all individuals}:
-All individuals in the database are displayed and can be searched. 
-When you click on a individual row you will go to the detail view of the selected individual.
+\begin{description}
+  \item [View all individuals] \hfill \\
+  This view shows all individuals in this LOVD installation.
+  You can click on an individual to view its details.
+  \item [View all individuals with variants in a gene] \hfill \\
+  This view displays all individuals with variants in the currently selected gene.
+  You can click on an individual to view its details.
+  This menu item is not available when no gene has been selected.
+\end{description}
 
-\textbf{View all individuals with variants in a gene}:
-This view displays all individuals with variants for current selected gene. 
-When you click on a individual row you will go to the detail view of the selected individual.
-This menu item is not available when no gene is selected in the header.
-
-\textbf{Create a new data submission}:
-Create a new gene entry is only availabile for submitters and higher. 
-See chapter \hyperlink{chap:add_data}{\nameref{chap:add_data}} on how to create a new data submission.
-
-\textbf{View active custom columns} and \textbf{Enable more custom columns}:
-This menu item is only available for users with user level curator or higher. 
-See section \hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}} how to enable custom columns.
-
-\textbf{View individual page}:
-This is the detail view of a individual.
-The top gives details about the individual. 
-below the details the phenotype of the individual, the screenings used and the variants found in this individual are displayed.
-
+% We'll have to separate the description lists, because somehow it keeps wrapping around the figure otherwise.
+\begin{description}
+  \item [Create a new data submission] \hfill \\
+  This menu item is only available when logged in.
+  See chapter ``\hyperlink{chap:add_data}{\nameref{chap:add_data}}'' on how to create a new data submission.
+  \item [View active custom columns] \hfill \\
+  This menu item is only available for Managers or higher.
+  See chapter ``\hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}}'' for more information on custom columns.
+  \item [Enable more custom columns] \hfill \\
+  This menu item is only available for Managers or higher.
+  See section ``\hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}}''
+   on how to enable custom columns.
+  \item [Individual detailed view] \hfill \\
+  When clicking on an individual from one of the data listings, the individual's details are shown.
+  Below the individual's details, the phenotype entries are shown if any are stored.
+  Also variant screenings performed are listed, and variants found in this individual.
+  Clicking on any of these entries will show the respective details.
+\end{description}
 
 
 
 
 
 \section{Diseases}
-When no gene is selected in the header, the default page of the diseases tab is the view all diseases page.
-When a gene is selected in the header the default page of the diseases tab is the view all diseases associated with a gene. 
-
-\begin{wrapfigure}[10]{r}{8cm}
+\begin{wrapfigure}[12]{r}{7cm}
   \vspace{-25pt}
-	\begin{shaded}
-  		\frame{\includegraphics[width=0.95\linewidth]{disease_menu.png}}\centering
-  		\caption[]{
-  			Diseases menu.}
-	\end{shaded}
+  \begin{shaded}
+    \frame{\includegraphics[width=0.95\linewidth]{disease_menu.png}}
+    \centering
+	\caption{Diseases menu.}
+  \end{shaded}
 \end{wrapfigure}
+When no gene is selected, the default page of the diseases tab shows all diseases.
+When a gene is selected (shown in the page header),
+ the default page of the diseases tab shows all diseases associated with the selected gene.
 
-\textbf{View all diseases}:
-This page displays all the diseases in the database.
-Also the number of individuals reported with this disease is displayed and the number of phenotypes reported.
-When you click on a disease row you will go to the detail view of a disease.
+\begin{description}
+  \item [View all diseases] \hfill \\
+  This view shows all the diseases in the database.
+  Also the number of individuals reported with this disease is displayed and the number of phenotypes reported.
+  You can click on a disease to view its details.
+  \item [View all diseases associated with a gene] \hfill \\
+  This view displays all diseases associated with the currently selected gene.
+  Also the number of individuals reported with this disease is displayed and the number of phenotypes reported.
+  You can click on a disease to view its details.
+  This menu item is not available when no gene has been selected.
+\end{description}
 
-\textbf{View all diseases associated with a gene}:
-This page displays all the diseases which are associated with a gene.
-Also the number of individuals reported with this disease is displayed and the number of phenotypes reported.
-When you click on a disease row you will go to the detail view of a disease.
-
-\textbf{Create a new data submission}:
-Create a new gene entry is only availabile for submitters and higher. 
-See chapter \hyperlink{chap:add_data}{\nameref{chap:add_data}} on how to create a new data submission.
-
-\textbf{View available phenotype columns}:
-This menu item is only available for users with user level curator or higher.
-See chapter \hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}} about custom columns.
-
-\textbf{View disease page}:
-This is the detail view of a disease.
-On top you can see some characteristics of the disease.
-Below you can see a list view of all individuals diagnosed with current disease.
+% We'll have to separate the description lists, because somehow it keeps wrapping around the figure otherwise.
+\begin{description}
+  \item [Create a new data submission] \hfill \\
+  This menu item is only available when logged in.
+  See chapter ``\hyperlink{chap:add_data}{\nameref{chap:add_data}}'' on how to create a new data submission.
+  \item [View available phenotype columns] \hfill \\
+  This menu item is only available for Curators or higher.
+  See chapter ``\hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}}'' for more information on custom columns.
+  \item [Disease detailed view] \hfill \\
+  On the disease's detailed view, all individuals diagnosed with this disease are listed.
+  From the table, a link is provided to view all phenotype entries for this disease.
+\end{description}
 
 
 
 
-\section{Screening}
-When no gene is selected in the header, the default page of the screenings tab is the view screenings page.
-When a gene is selected in the header the default page of the screenings tab is the view screenings that screened for a gene.
 
-\begin{wrapfigure}[12]{l}{8cm}
+\section{Screenings}
+\begin{wrapfigure}[9]{l}{7cm}
   \vspace{-25pt}
-	\begin{shaded}
-  		\frame{\includegraphics[width=0.95\linewidth]{screening_menu.png}}\centering
-  		\caption[]{
-  			Screenings menu.}
-	\end{shaded}
+  \begin{shaded}
+    \frame{\includegraphics[width=0.95\linewidth]{screening_menu.png}}
+    \centering
+    \caption{Screenings menu.}
+  \end{shaded}
 \end{wrapfigure}
+When no gene is selected, the default page of the screenings tab shows all screenings.
+When a gene is selected (shown in the page header),
+ the default page of the screenings tab shows all screenings that screened for variants in the selected gene.
 
+\begin{description}
+  \item [View all screenings] \hfill \\
+  This view shows all the screenings in the database.
+  You can click on a screening to view its details.
+\end{description}
 
-\textbf{View all screenings}:
-All screenings in the database are displayed and can be searched.
-When you click on a screening row you will go to the detail view of the selected screening.
-
-\textbf{View all screenings for a gene}:
-This view displays all screenings that screened current selected gene.
-When you click on a screening row you will go to the detail view of the selected screening.
-This menu item is not available when no gene is selected in the header.
-
-\textbf{Create a new data submission}:
-Create a new gene entry is only availabile for submitters and higher. 
-See chapter \hyperlink{chap:add_data}{\nameref{chap:add_data}} on how to create a new data submission.
-
-\textbf{View active custom columns} and \textbf{Enable more custom columns}:
-This menu item is only available for users with user level curator or higher. 
-See section \hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}} how to enable custom columns.
-
-\textbf{View screening page}:
-This is the detail view of a screening.
-The top gives details about the screening.
-Below a list view of all genes screened with current screening and a list view of all variants found with current screening.
-
-
-
-
+% We'll have to separate the description lists, because somehow it keeps wrapping around the figure otherwise.
+\begin{description}
+  \item [View all screenings for a gene] \hfill \\
+  This view displays all screenings that screened for variants in the currently selected gene.
+  You can click on a screening to view its details.
+  This menu item is not available when no gene has been selected.
+  \item [Create a new data submission] \hfill \\
+  This menu item is only available when logged in.
+  See chapter ``\hyperlink{chap:add_data}{\nameref{chap:add_data}}'' on how to create a new data submission.
+  \item [View active custom columns] \hfill \\
+  This menu item is only available for Managers or higher.
+  See chapter ``\hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}}'' for more information on custom columns.
+  \item [Enable more custom columns] \hfill \\
+  This menu item is only available for Managers or higher.
+  See section ``\hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}}''
+   on how to enable custom columns.
+  \item [Screening detailed view] \hfill \\
+  On the screening's detailed view, all genes screened for variants are listed, as well as any variants found.
+\end{description}
 
 
 
@@ -834,7 +905,7 @@ For successful and unsuccessful login attempts the given username and the length
  so you can easily uncover brute force attempts where in general the attacker will try many random passwords.
 If a user can't log in because of the IP restriction on the account, the current IP restriction is also stored in the log entry.
 Please note that it is recommended to have LOVD lock user accounts after three failed login attempts.
-See subsection \hyperlink{ssec:security_settings}{Security settings} for more information.
+See subsection ``\hyperlink{ssec:security_settings}{Security settings}'' for more information.
 
 % TODO: Insert list of possible log options, or at least a link to an appendix where they are mentioned.
 
@@ -980,7 +1051,7 @@ However, also the database administrator or a manager can act as a curator by be
 \vskip \baselineskip
 
 To assign a user to become curator, follow the steps explained in section
- ``\hyperlink{sec:gene_assign_curators}{assigning curators and collaborators}'' (available for managers and up).
+ ``\hyperlink{sec:gene_assign_curators}{Assigning curators and collaborators}'' (available for managers and up).
 
 \subsubsection{Collaborator}
 The collaborator level user is a new type of user, introduced in LOVD 3.0.
