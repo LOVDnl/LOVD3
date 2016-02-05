@@ -73,7 +73,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     // View specific entry.
 
     $sID = rawurldecode($_PE[1]);
-    define('PAGE_TITLE', 'View gene ' . $sID);
+    define('PAGE_TITLE', 'View ' . $sID . ' gene homepage');
     $_T->printHeader();
     $_T->printTitle();
     lovd_printGeneHeader();

@@ -46,6 +46,8 @@
  * Fixed bug; During import, disease ID '0' was not recognized.
  * Fixed bug; When LOVD could not connect to the database, the error message was
    not shown because of a fatal error when trying to log the message.
+ * The page titles are made consistent with the dropdown menu options of the
+   page tabs, and missing menu items are added.
 
 
 /**************************

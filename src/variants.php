@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2015-12-04
+ * Modified    : 2016-01-20
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
@@ -84,7 +84,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PE[1]))) 
         $sChr = '';
     }
 
-    define('PAGE_TITLE', 'View genomic variants' . (!$sChr? '' : ' on chromosome ' . substr($sChr, 3)));
+    define('PAGE_TITLE', 'View all genomic variants' . (!$sChr? '' : ' on chromosome ' . substr($sChr, 3)));
     $_T->printHeader();
     $_T->printTitle();
 
@@ -114,7 +114,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View transcript variants');
+    define('PAGE_TITLE', 'View all variants affecting transcripts');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -200,9 +200,9 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     }
 
     if ($bUnique) {
-        define('PAGE_TITLE', 'View unique variants in ' . $sGene);
+        define('PAGE_TITLE', 'View unique variants in gene ' . $sGene);
     } else {
-        define('PAGE_TITLE', 'View all transcript variants in ' . $sGene);
+        define('PAGE_TITLE', 'View all transcript variants in gene ' . $sGene);
     }
     $_T->printHeader();
     $_T->printTitle();
