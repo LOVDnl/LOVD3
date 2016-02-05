@@ -10,7 +10,7 @@ firefox --version
 
 echo "Download Selenium"
 if [ ! -f $serverFile ]; then
-    wget http://selenium-release.storage.googleapis.com/2.44/$serverFile
+    wget http://selenium-release.storage.googleapis.com/2.50/$serverFile
 fi
 if [ ! -e ${serverFile} ]; then
     echo "Cannot find Selenium Server!"
@@ -37,7 +37,7 @@ sleep 3
 wget --retry-connrefused --tries=120 --waitretry=3 --output-file=/dev/null $serverUrl/wd/hub/status -O /dev/null
 if [ ! $? -eq 0 ]; then
     echo "Selenium Server not started --> EXIT!"
-    exit
+    exit 1
 else
     echo "Finished setup and selenium is started"
 fi
