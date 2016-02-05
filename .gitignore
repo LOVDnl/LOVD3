@@ -1,4 +1,8 @@
 .idea
+doc/tex/manual.aux
+doc/tex/manual.log
+doc/tex/manual.out
+doc/tex/manual.toc
 src/_sett
 src/refseq
 src/lib/flot/__excanvas
