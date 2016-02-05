@@ -449,20 +449,10 @@ class LOVD_User extends LOVD_Object {
                 // This is only visible for Curators, so we don't want to mess around with aColumnsViewEntry when this field is no longer there.
                 $this->aColumnsViewEntry['collaborates_'][0] .= ' ' . count($zData['collaborates']) . ' gene' . (count($zData['collaborates']) == 1? '' : 's');
             }
-            $zData['curates_'] = '';
-            $zData['curates_short_'] = '';
-            $i = 0;
-            foreach ($zData['curates'] as $key => $sGene) {
-                $zData['curates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
-                if ($i < 20) {
-                    $zData['curates_short_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
-                    $i++;
-                }
-            }
-            if (count($zData['curates']) > 22) {
-                // Replace long gene list by shorter one, allowing expand.
-                $zData['curates_'] = '<SPAN>' . $zData['curates_short_'] . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($zData['curates']) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $zData['curates_'] . '</SPAN>';
-            }
+
+            // Get HTML links for genes curated by current user.
+            $zData['curates_'] = LOVD_Template::lovd_getObjectLinksHTML($zData['curates'], 'genes/%s');
+
             $zData['collaborates_'] = '';
             foreach ($zData['collaborates'] as $key => $sGene) {
                 $zData['collaborates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';

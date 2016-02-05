@@ -72,11 +72,16 @@ class LOVD_Column extends LOVD_Object {
                                            'SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, ' .
                                            '(a.colid IS NOT NULL) AS active, ' .
                                            'uc.name AS created_by_, ' .
-                                           'ue.name AS edited_by_';
+                                           'ue.name AS edited_by_, ' .
+                                           'GROUP_CONCAT(sc.geneid) as geneids,' .
+                                           'GROUP_CONCAT(sc.diseaseid) as diseaseids';
         $this->aSQLViewEntry['FROM']     = TABLE_COLS . ' AS c ' .
                                            'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
                                            'LEFT JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) ' .
-                                           'LEFT JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id)';
+                                           'LEFT JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id)' .
+                                           'LEFT JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid)';
+
+        $this->aSQLViewEntry['GROUP_BY'] = 'sc.colid';
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'c.*, ' .
@@ -397,6 +402,24 @@ class LOVD_Column extends LOVD_Object {
             $zData['form_type_']       = lovd_describeFormType($zData) . '<BR>' . $zData['form_type'];
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';
+
+
+            if ($zData['category'] == 'VariantOnTranscript') {
+                // Show genes for which this column is activated.
+                $this->aColumnsViewEntry['related_genes'] = 'Column activated for genes';
+
+                $aGenes = explode(',', $zData['geneids']);
+                $zData['related_genes'] = LOVD_Template::lovd_getObjectLinksHTML($aGenes, 'genes/%s');
+
+            } elseif ($zData['category'] == 'Phenotype') {
+                // Show diseases for which this column is activated.
+                $this->aColumnsViewEntry['related_diseases'] = "Column activated for diseases";
+                var_dump($zData['diseaseids']);
+                $aDiseases = explode(',', $zData['diseaseids']);
+                $zData['related_diseases'] = LOVD_Template::lovd_getObjectLinksHTML($aDiseases, 'diseases/%s');
+
+            }
+
         }
         // FIXME; for titles use tooltips?
         $zData['active_']      = '<IMG src="gfx/mark_' . (int) $zData['active'] . '.png" alt="" width="11" height="11">';
