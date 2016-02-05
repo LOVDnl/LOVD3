@@ -33,7 +33,7 @@
 if (!defined('ROOT_PATH')) {
     exit;
 }
-    require_once ROOT_PATH . 'class/soap_client.php';
+
 /**
  * This method can predict a protein description of a variant based on a
  * transcript DNA field.
@@ -43,6 +43,8 @@ if (!defined('ROOT_PATH')) {
  **/
 function lovd_getRNAProteinPrediction ($sVariant, $sGene)
 {
+    // Needs to be a require_once in case other code has already included this, and also for repeated calls to this function.
+    require_once ROOT_PATH . 'class/soap_client.php';
     $aMutalyzerData = array();
 
     // Check if variant is an UD, NC or NG and described as a c or n variant.
@@ -69,7 +71,7 @@ function lovd_getRNAProteinPrediction ($sVariant, $sGene)
         }
     }
 
-    if(isset($oOutput->messages->SoapMessage)){
+    if (isset($oOutput->messages->SoapMessage)) {
         foreach ($oOutput->messages->SoapMessage as $aSoapMessage) {
             if (preg_match('/_OTHER$/', $aSoapMessage->errorcode) !== 0) {
                 // Whatever error it is, it's not about this gene!

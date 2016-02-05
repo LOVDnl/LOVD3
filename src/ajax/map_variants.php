@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2016-02-03
+ * Modified    : 2016-02-05
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -30,6 +30,7 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 require ROOT_PATH . 'inc-lib-actions.php';
@@ -439,10 +440,10 @@ if (!empty($aVariants)) {
                                 $sTranscriptNum = $_DB->query('SELECT id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sTranscriptNM))->fetchColumn();
                                 // This takes about 0.9-1.1 second...
                                 $sVariant = $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][7];
-                                $aPrediction = lovd_getRNAProteinPrediction($sVariant, $aTranscript['gene'],  $aSQL[1][7]);
-                              
-                                $aSQL[1][8] = $aPrediction['predict']['RNA']?$aPrediction['predict']['RNA']:'';;
-                                $aSQL[1][9] = $aPrediction['predict']['protein']?$aPrediction['predict']['protein']:'';
+                                $aPrediction = lovd_getRNAProteinPrediction($sVariant, $aTranscript['gene']);
+
+                                $aSQL[1][8] = (empty($aPrediction['predict']['RNA'])? '' : $aPrediction['predict']['RNA']);
+                                $aSQL[1][9] = (empty($aPrediction['predict']['protein'])? '' : $aPrediction['predict']['protein']);
                                 if ($_DB->query($aSQL[0], $aSQL[1], false)) {
                                     // If the insert succeeded, save some data in the variant array for lovd_fetchDBID().
                                     $aVariant['aTranscripts'][$aSQL[1][1]] = array($sTranscriptNM, $aTranscript['gene']);
@@ -663,10 +664,10 @@ if (!empty($aVariants)) {
 
                     // Get the p. description too.
                     $sVariant = $sRefseqUD . '(' . $sSymbol . '_v' . $aFieldsTranscript['id_mutalyzer'] . '):' . $aVariantOnTranscriptSQL[1][7];
-                    $aPrediction = lovd_getRNAProteinPrediction($sVariant, $sSymbol, $aVariantOnTranscriptSQL[1][7]);
+                    $aPrediction = lovd_getRNAProteinPrediction($sVariant, $sSymbol);
 
-                    $aVariantOnTranscriptSQL[1][8] = $aPrediction['predict']['RNA']?$aPrediction['predict']['RNA']:'';
-                    $aVariantOnTranscriptSQL[1][9] = $aPrediction['predict']['protein']?$aPrediction['predict']['protein']:'';
+                    $aVariantOnTranscriptSQL[1][8] = (empty($aPrediction['predict']['RNA'])? '' : $aPrediction['predict']['RNA']);
+                    $aVariantOnTranscriptSQL[1][9] = (empty($aPrediction['predict']['protein'])? '' : $aPrediction['predict']['protein']);
 
                     // Map the variant to the newly inserted transcript.
                     $aVariantOnTranscriptSQL[1][1] = $nID;
