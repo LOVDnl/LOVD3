@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2016-02-02
+ * Modified    : 2016-02-05
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,31 +37,30 @@ session_write_close();
 $aGenes = lovd_getGeneList();
 
 // First check if $_GET is filled, to avoid errors and notices.
-if (empty($_GET['variant']) || empty($_GET['gene']) || empty($_GET['DNAChange'])) {
-    die(AJAX_DATA_ERROR);
+if (empty($_GET['variant']) || empty($_GET['gene'])) {
+    die(json_encode(AJAX_DATA_ERROR));
 }
 
 $sGene = $_GET['gene'];
 $sVariant = $_GET['variant'];
-$sDNAChange = $_GET['DNAChange'];
 // If gene is defined in the mito_genes_aliases in file inc-init.php use the NCBI gene symbol.
 if (isset($_SETT['mito_genes_aliases'][$_GET['gene']])) {
     $sGene = $_SETT['mito_genes_aliases'][$_GET['gene']];
     $sVariant = str_replace($_GET['gene'], $sGene, $_GET['variant']);
 }
 
-// This check must be done after a possible check for mitochondrial genes. 
+// This check must be done after a possible check for mitochondrial genes.
 // Else we might check for a gene name with a mitochondrial gene alias name.
 if (!in_array($_GET['gene'], $aGenes)) {
-    die(AJAX_DATA_ERROR);
+    die(json_encode(AJAX_DATA_ERROR));
 }
 
 // Requires at least LEVEL_SUBMITTER, anything lower has no $_AUTH whatsoever.
 if (!$_AUTH) {
     // If not authorized, die with error message.
-    die(AJAX_NO_AUTH);
+    die(json_encode(AJAX_NO_AUTH));
 }
 
-$result = lovd_getRNAProteinPrediction($sVariant, $sGene, $sDNAChange);
-print(json_encode($result));
+$aResult = lovd_getRNAProteinPrediction($sVariant, $sGene);
+print(json_encode($aResult));
 ?>

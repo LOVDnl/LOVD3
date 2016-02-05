@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2016-02-02
+ * Modified    : 2016-02-05
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -316,24 +316,26 @@ function lovd_getProteinChange (oElement)
     $(oThisRNA).attr('value', '');
     $(oThisRNA).removeClass();
 
-    $.get('ajax/check_variant.php', { variant: sVariantNotation, gene: aTranscripts[nTranscriptID][1], DNAChange: oThisDNA.val() },
-        function(sData, sStatus) {
-            if (sData.length == 1 || sData['mutalyzer_error']) {
+    $.get('ajax/check_variant.php', { variant: sVariantNotation, gene: aTranscripts[nTranscriptID][1] },
+        function(aData, sStatus) {
+            if (aData.length == 1 || aData['mutalyzer_error']) {
                 // Either Mutalyzer says No, our regexp didn't match with the full variant notation or user lost $_AUTH.
-                if (sData === '<?php echo AJAX_NO_AUTH; ?>') {
+                if (aData === '<?php echo AJAX_NO_AUTH; ?>') {
                     alert('Lost your session!');
+                } else if (aData === '<?php echo AJAX_DATA_ERROR; ?>') {
+                    alert('Invalid input, or input missing.');
                 }
                 if (!oThisProtein.attr('disabled')) {
                     $(oThisProtein).siblings('img:first').attr({
                         src: 'gfx/cross.png',
                         onclick: '',
                         style: '',
-                        alt: 'Error on mutalyzer request!\nError code: ' + sData['mutalyzer_error'],
-                        title: 'Error on mutalyzer request!\nError code: ' + sData['mutalyzer_error']
+                        alt: 'Error on mutalyzer request!\nError code: ' + (!$.isArray(aData)? aData : aData['mutalyzer_error']),
+                        title: 'Error on mutalyzer request!\nError code: ' + (!$.isArray(aData)? aData : aData['mutalyzer_error'])
                     }).show();
                 }
 
-            } else if (sData === '' && oThisDNA.val().lastIndexOf('n.', 0) === 0) {
+            } else if (aData === '' && oThisDNA.val().lastIndexOf('n.', 0) === 0) {
                 // No data, but no errors either! No wonder... it's an n. variant!
                 // No prediction on protein level possible!
                 oThisProtein.siblings('img:first').attr({
@@ -348,14 +350,14 @@ function lovd_getProteinChange (oElement)
             } else {
                 // Decide what to do with the analyzed Mutalyzer output.
                 var sErrorMessages = '';
-                if (sData['error'] || !sData['predict']) {
-                    // Mutalyzer returned one or more errors, so we add the err class to make the field red. We Also add an image with a tooltip that shows the error.
+                if (aData['error'] || !aData['predict']) {
+                    // Mutalyzer returned one or more errors, so we add the err class to make the field red. We also add an image with a tooltip that shows the error.
                     var firstError = true;
-                    for (index in sData['error']) {
+                    for (index in aData['error']) {
                         if (firstError !== true) {
                             sErrorMessages += '<BR>';
                         }
-                        sErrorMessages +=  '<B>' + index + ':</B> ' + sData['error'][index];
+                        sErrorMessages +=  '<B>' + index + ':</B> ' + aData['error'][index];
                         firstError = false;
                     }
                     if (!oThisProtein.attr('disabled')) {
@@ -380,14 +382,14 @@ function lovd_getProteinChange (oElement)
 
                 } else {
                     // No errors returned by Mutalyzer.
-                    if (sData['warning']) {
-                        // Mutalyzer returned a warning so we add the warn class to make the field yellow. We Also add an image with a tooltip that shows the warning.
+                    if (aData['warning']) {
+                        // Mutalyzer returned a warning so we add the warn class to make the field yellow. We also add an image with a tooltip that shows the warning.
                         var firstWarning = true;
-                        for (index in sData['warning']) {
+                        for (index in aData['warning']) {
                             if (firstWarning !== true) {
                                 sErrorMessages += '<BR>';
                             }
-                            sErrorMessages +=  '<B>' + index + ':</B> ' + sData['warning'][index];
+                            sErrorMessages +=  '<B>' + index + ':</B> ' + aData['warning'][index];
                             firstWarning = false;
                         }
                         if (!oThisProtein.attr('disabled')) {
@@ -409,8 +411,8 @@ function lovd_getProteinChange (oElement)
                             title : 'HGVS compliant!'
                         }).show();
                     }
-                    $(oThisRNA).attr('value', sData['predict']['RNA']);
-                    $(oThisProtein).attr('value', sData['predict']['protein']);
+                    $(oThisRNA).attr('value', aData['predict']['RNA']);
+                    $(oThisProtein).attr('value', aData['predict']['protein']);
                     lovd_highlightInput(oThisRNA);
                     lovd_highlightInput(oThisProtein);
 
