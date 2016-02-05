@@ -1,20 +1,12 @@
 serverUrl='http://127.0.0.1:4444'
-serverFile=selenium-server-standalone-2.44.0.jar
-firefoxUrl=http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/37.0.2/linux-x86_64/en-US/firefox-37.0.2.tar.bz2
-firefoxFile=firefox.tar.bz2
+serverFile=selenium-server-standalone-2.50.1.jar
+
 phpVersion=`php -v`
 
-sudo apt-get -qq update
-
-##echo "Updating Composer"
-##sudo /home/travis/.phpenv/versions/5.3/bin/composer self-update
-
-echo "Installing dependencies"
 composer install
 
-echo "Download Firefox"
-wget $firefoxUrl -O $firefoxFile
-tar xvjf $firefoxFile
+echo "check firefox version"
+firefox --version
 
 echo "Download Selenium"
 if [ ! -f $serverFile ]; then
@@ -27,7 +19,21 @@ if [ ! -e ${serverFile} ]; then
 fi
 
 echo "Starting xvfb and Selenium"
+export DISPLAY=:99.0
+
+## You can start the selenium in two ways. The second method prints all selenium 
+## server logs in travis. This might give long logs errors. Therefore the first 
+## method is preferred. The second one might be convenient when debugging.
+# 1:
 sudo xvfb-run java -jar $serverFile > /tmp/selenium.log &
+
+# 2:
+#sh -e /etc/init.d/xvfb start
+#sleep 3
+#sudo java -jar $serverFile -port 4444 > /tmp/selenium.log &
+
+sleep 3
+
 wget --retry-connrefused --tries=120 --waitretry=3 --output-file=/dev/null $serverUrl/wd/hub/status -O /dev/null
 if [ ! $? -eq 0 ]; then
     echo "Selenium Server not started --> EXIT!"
