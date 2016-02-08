@@ -409,14 +409,14 @@ class LOVD_Column extends LOVD_Object {
                 $this->aColumnsViewEntry['related_genes'] = 'Column activated for genes';
 
                 $aGenes = explode(',', $zData['geneids']);
-                $zData['related_genes'] = LOVD_Template::lovd_getObjectLinksHTML($aGenes, 'genes/%s');
+                $zData['related_genes'] = LOVD_Object::lovd_getObjectLinksHTML($aGenes, 'genes/%s');
 
             } elseif ($zData['category'] == 'Phenotype') {
                 // Show diseases for which this column is activated.
                 $this->aColumnsViewEntry['related_diseases'] = "Column activated for diseases";
-                var_dump($zData['diseaseids']);
+
                 $aDiseases = explode(',', $zData['diseaseids']);
-                $zData['related_diseases'] = LOVD_Template::lovd_getObjectLinksHTML($aDiseases, 'diseases/%s');
+                $zData['related_diseases'] = LOVD_Object::lovd_getObjectLinksHTML($aDiseases, 'diseases/%s');
 
             }
 

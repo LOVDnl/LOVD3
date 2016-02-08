@@ -861,33 +861,5 @@ function lovd_mapVariants ()
         }
         print('      <' . $sStyle . ' class="LOVD">' . $sTitle . '</' . $sStyle . '>' . "\n\n");
     }
-
-
-
-    public static function lovd_getObjectLinksHTML($aIDs, $urlFormat='genes/%s')
-    {
-        // Returns a list of gene links in HTML.
-        // Parameter $genes is an array with gene symbols as values.
-        // Parameter $urlPattern designates the target of the links, where %s
-        // will be substituted with the gene symbol.
-    
-        $sShortDescription = '';
-        $sHTMLoutput = '';
-        $i = 0;
-        foreach ($aIDs as $key => $sObjectID) {
-            $sHTMLoutput .= (!$key ? '' : ', ') . '<A href="' . sprintf($urlFormat, $sObjectID) .
-                            '">' . $sObjectID . '</A>';
-            if ($i < 20) {
-                $sShortDescription .= (!$key ? '' : ', ') . '<A href="' .
-                                      sprintf($urlFormat, $sObjectID) . '">' . $sObjectID . '</A>';
-                $i++;
-            }
-        }
-        if (count($aIDs) > 22) {
-            // Replace long gene list by shorter one, allowing expand.
-            $sHTMLoutput = '<SPAN>' . $sShortDescription . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($aIDs) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $sHTMLoutput . '</SPAN>';
-        }
-        return $sHTMLoutput;
-    }
 }
 ?>

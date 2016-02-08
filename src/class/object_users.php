@@ -451,7 +451,7 @@ class LOVD_User extends LOVD_Object {
             }
 
             // Get HTML links for genes curated by current user.
-            $zData['curates_'] = LOVD_Template::lovd_getObjectLinksHTML($zData['curates'], 'genes/%s');
+            $zData['curates_'] = LOVD_Object::lovd_getObjectLinksHTML($zData['curates'], 'genes/%s');
 
             $zData['collaborates_'] = '';
             foreach ($zData['collaborates'] as $key => $sGene) {
