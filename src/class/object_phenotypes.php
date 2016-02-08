@@ -116,7 +116,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         $this->aColumnsViewList = array_merge(
                  array(
                         'id_' => array(
-                                    'view' => array('Phenotype ID', 110),
+                                    'view' => array('Phenotype ID', 110, 'style="text-align : right;"'),
                                     'db'   => array('p.id', 'ASC', true)),
                       ),
                  $this->buildViewList(),
@@ -132,10 +132,10 @@ class LOVD_Phenotype extends LOVD_Custom {
                                     'db'   => array('ds.name', false, true),
                                     'auth' => LEVEL_COLLABORATOR),
                         'individualid' => array(
-                                    'view' => array('Individual ID', 70),
+                                    'view' => array('Individual ID', 70, 'style="text-align : right;"'),
                                     'db'   => array('p.individualid', 'ASC', true)),
                         'diseaseid' => array(
-                                    'view' => array('Disease ID', 70),
+                                    'view' => array('Disease ID', 70, 'style="text-align : right;"'),
                                     'db'   => array('p.diseaseid', 'ASC', true)),
                       ));
 

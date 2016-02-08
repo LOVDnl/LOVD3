@@ -105,7 +105,7 @@ class LOVD_Disease extends LOVD_Object {
         $this->aColumnsViewList =
                  array(
                         'diseaseid' => array(
-                                    'view' => array('ID', 45),
+                                    'view' => array('ID', 45, 'style="text-align : right;"'),
                                     'db'   => array('d.id', 'ASC', true)),
                         'symbol' => array(
                                     'view' => array('Abbreviation', 110),
@@ -114,7 +114,7 @@ class LOVD_Disease extends LOVD_Object {
                                     'view' => array('Name', 300),
                                     'db'   => array('d.name', 'ASC', true)),
                         'id_omim' => array(
-                                    'view' => array('OMIM ID', 75),
+                                    'view' => array('OMIM ID', 75, 'style="text-align : right;"'),
                                     'db'   => array('d.id_omim', 'ASC', true)),
                         'individuals' => array(
                                     'view' => array('Individuals', 80, 'style="text-align : right;"'),

@@ -103,7 +103,7 @@ class LOVD_Transcript extends LOVD_Object {
         $this->aColumnsViewList =
             array(
                 'id_' => array(
-                    'view' => array('ID', 70),
+                    'view' => array('ID', 70, 'style="text-align : right;"'),
                     'db'   => array('t.id', 'ASC', true)),
                 'chromosome' => array(
                     'view' => array('Chr', 40),
@@ -121,7 +121,7 @@ class LOVD_Transcript extends LOVD_Object {
                     'view' => array('NCBI Protein ID', 120),
                     'db'   => array('t.id_protein_ncbi', 'ASC', true)),
                 'variants' => array(
-                    'view' => array('Variants', 70),
+                    'view' => array('Variants', 70, 'style="text-align : right;"'),
                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
             );
         $this->sSortDefault = 'geneid';

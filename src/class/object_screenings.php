@@ -128,10 +128,10 @@ class LOVD_Screening extends LOVD_Custom {
                                     'view' => false,
                                     'db'   => array('s.id', 'ASC', true)),
                         'id' => array(
-                                    'view' => array('Screening ID', 110),
+                                    'view' => array('Screening ID', 110, 'style="text-align : right;"'),
                                     'db'   => array('s.id', 'ASC', true)),
                         'individualid' => array(
-                                    'view' => array('Individual ID', 110),
+                                    'view' => array('Individual ID', 110, 'style="text-align : right;"'),
                                     'db'   => array('s.individualid', 'ASC', true)),
                       ),
                  $this->buildViewList(),
@@ -140,7 +140,7 @@ class LOVD_Screening extends LOVD_Custom {
                                     'view' => array('Genes screened', 20),
                                     'db'   => array('genes', 'ASC', 'TEXT')),
                         'variants_found_' => array(
-                                    'view' => array('Variants found', 100),
+                                    'view' => array('Variants found', 100, 'style="text-align : right;"'),
                                     'db'   => array('variants_found_', 'ASC', 'INT_UNSIGNED')),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
