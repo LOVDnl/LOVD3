@@ -23,7 +23,7 @@
 ## Diseases ## Do not remove or alter this header ##
 ## Count = 2
 "{{id}}"	"{{symbol}}"	"{{name}}"	"{{id_omim}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"
-"00000"	"Healty/Control"	"Healthy individual / control"	""	"00000"	"2015-06-02 15:42:09"	""	""
+"00000"	"Healthy/Control"	"Healthy individual / control"	""	"00000"	"2015-06-02 15:42:09"	""	""
 "00001"	"IVA"	"isovaleric acidemia"	"243500"	"00001"	"2015-06-02 15:42:23"	""	""
 "00002"	"MajS"	"Majeed syndrome"	"123456"	"00001"	"2015-06-03 10:29:37"	""	""
 "00003"	"IVA"	"isovaleric acidemia"	"243500"	"00001"	"2015-06-02 15:42:23"	""	""

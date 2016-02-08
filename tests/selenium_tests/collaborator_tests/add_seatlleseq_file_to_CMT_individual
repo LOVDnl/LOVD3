@@ -4,12 +4,12 @@
 <head profile="http://selenium-ide.openqa.org/profiles/test-case">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="selenium.base" href="https://localhost/svn/LOVD3/trunk/src/install/" />
-<title>selenium_test_add_seatlleseq_file_to_healty_individual</title>
+<title>selenium_test_add_seatlleseq_file_to_healthy_individual</title>
 </head>
 <body>
 <table cellpadding="1" cellspacing="1" border="1">
 <thead>
-<tr><td rowspan="1" colspan="3">selenium_test_add_seatlleseq_file_to_healty_individual</td></tr>
+<tr><td rowspan="1" colspan="3">selenium_test_add_seatlleseq_file_to_healthy_individual</td></tr>
 </thead><tbody>
 <tr>
 	<td>open</td>

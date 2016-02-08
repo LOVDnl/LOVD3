@@ -4,12 +4,12 @@
 <head profile="http://selenium-ide.openqa.org/profiles/test-case">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="selenium.base" href="https://localhost/" />
-<title>selenium_test_create_individual_diagnosed_with_Healty_Control</title>
+<title>selenium_test_create_individual_diagnosed_with_Healthy_Control</title>
 </head>
 <body>
 <table cellpadding="1" cellspacing="1" border="1">
 <thead>
-<tr><td rowspan="1" colspan="3">selenium_test_create_individual_diagnosed_with_Healty_Control</td></tr>
+<tr><td rowspan="1" colspan="3">selenium_test_create_individual_diagnosed_with_Healthy_Control</td></tr>
 </thead><tbody>
 <tr>
 	<td>open</td>
@@ -29,7 +29,7 @@
 <tr>
 	<td>type</td>
 	<td>name=Individual/Lab_ID</td>
-	<td>12345HealtyCtrl</td>
+	<td>12345HealthyCtrl</td>
 </tr>
 <tr>
 	<td>click</td>
@@ -54,7 +54,7 @@
 <tr>
 	<td>addSelection</td>
 	<td>name=active_diseases[]</td>
-	<td>label=Healty/Control (Healthy individual / control)</td>
+	<td>label=Healthy/Control (Healthy individual / control)</td>
 </tr>
 <tr>
 	<td>select</td>

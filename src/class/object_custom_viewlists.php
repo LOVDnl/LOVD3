@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2015-10-28
+ * Modified    : 2016-02-05
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -448,7 +449,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                          array(
                              'distance_to_var' => array(
-                                 'view' => array('Distance (bp)', 90),
+                                 'view' => array('Distance (bp)', 90, 'style="text-align : right;"'),
                                  'db'   => array('distance_to_var', 'ASC', false)),
                               ));
                     // Always force default sorting...
@@ -542,7 +543,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                         'legend' => array('The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
                                                           'The variant\'s affect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                                 'vot_reported' => array(
-                                        'view' => array('Reported', 70),
+                                        'view' => array('Reported', 70, 'style="text-align : right;"'),
                                         'db'   => array('vot_reported', 'ASC', 'INT_UNSIGNED'),
                                         'legend' => array('The number of times this variant has been reported.',
                                                           'The number of times this variant has been reported in the database.')),
@@ -562,7 +563,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                              array(
                                     'id' => array(
-                                            'view' => array('Screening ID', 110),
+                                            'view' => array('Screening ID', 110, 'style="text-align : right;"'),
                                             'db'   => array('s.id', 'ASC', true)),
                                   ));
                         $this->sSortDefault = 'id';
@@ -648,7 +649,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         array(
                             // NOTE: there are more columns defined a little further up.
                             'panel_size' => array(
-                                'view' => array('Panel size', 70),
+                                'view' => array('Panel size', 70, 'style="text-align : right;"'),
                                 'db'   => array('i.panel_size', 'DESC', true)),
                             'owned_by_' => array(
                                 'view' => array('Owner', 160),

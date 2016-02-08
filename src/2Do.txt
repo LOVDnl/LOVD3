@@ -23,6 +23,30 @@ To debug: XDEBUG_PROFILE=1
 
 Prioritize:
 ===========
+Website:
+- Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
+
+- Data licensing:
+  - How to store and select the license; should we just store the license code, or store the attributes of the license - allowed to share, allowed for commercial parties, etc.
+  - The Flickr search site (search.flickr.com) has an example of how a search could look like - so not for license, but for ``I want data that I can edit, that I can use commercially'', etc.
+  - Storage could still anyways be one column (bit column), but it makes it a bit more simple for the querying method.
+- Multiple builds: (LOVD 3.5): We should add the flag on which genome is leading also to the transcript side.
+- Email (registration): Add a header similar to "NOTE: this mail contains your password, do not forward to others"
+- Config area variant status list: uncurated does not show pending variants.
+- Emails: "was previously empty" is also given when "0" is changed to "" (at least in a text field), and that's not correct.
+- During installation, the URL check doesn't work. It says the URL is accessible, but it's not the mail URL of the installation.
+  The reason is, that the checker tries to find a cookie, but the page loaded doesn't send a cookie, but instead a page saying the settings could not be loaded.
+- Create LOVD2/Simple table -> LOVD3 converter (or student).
+- Check all column definitions, do we need to remove help text somewhere, because the legend is now in place?
+- Adapt column form, so make clear that the full legend text is also put under the question mark icon, and add with the question mark field, that the full legend will be included by default, so that this is really meant for data entry help.
+- When enabled, data sent to LOVD.nl needs to be extended with HGNC ID, diseases, etc. See LSDB list needs.
+  - Add clearly that selecting the installation to be published, allows us to publish the LOVD installation on our site, and allows us to try and increase traffic to this LOVD by publishing genomic variant locations on genome browsers and non-commercial variant annotation services.
+- Link to Ensembl doesn't seem to work anymore, I guess they changed things on their side again (AJAX error)
+  * Fix problem with Ajax error, check how to properly load the URL.
+- After creating a new screening and selecting that you want to confirm variants, you are requested your password, but nowhere in a complete submission are you ever requested your password...
+  - We should remove that thing, if we're in a complete submission (check how it's done in other forms).
+  - Also, clicking the variant in the list actually takes you there. I thought we prevented that... :O (check Authorize Users code, or code below Users VE to see how we blocked that)
+- How can the public see, which phenotype columns are active for a certain disease?
 - Find a better way to select diseases on the Individual data entry form.
   - Also fix, that changes in this field (and other linking tables?) are not displayed in the submission emails?
   - Use code used to select users to become curators? In a pop over, using JS to read out currently selected options, and enable them on the pop over. When submitting, the form's selection needs to be adapted.
@@ -150,9 +174,6 @@ Prioritize:
   + http://grenada.lumc.nl/LOVD2/mendelian_genes/refseq/CYP2C19_codingDNA.html  (NM_000769.1)
     Gen waar de ATG meteen het start van het transcript is. g. nummering gaat helemaal fout op de cDNA pagina.
     The RefSeq parser doesn't annotate the intron files correctly, if the introns are 3' UTR.
-- Individual viewList: add column "variants in genes" with gene symbols.
-  + Then, add option to dropdown menu if we have a currdb (replace: individuals screened for gene X).
-  + After that, change the default link when clicking the individual tab.
 - Hoe kan een gebruiker op een zojuist geopend edit formulier de Mutalyzer namechecker openen in een nieuwe window?
   + Voor de losse predict trigger (dus niet via map variant), confirm geven of XXX vervangen moet worden door YYY?
   + Namechecker ook de gekozen refseq laten gebruiken? Of niet, omdat we niet weten of dit transcript daar wel te vinden is?

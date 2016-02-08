@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-12-09
+ * Modified    : 2016-02-05
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -180,13 +181,13 @@ class LOVD_Gene extends LOVD_Object {
                     'view' => array('Band', 70),
                     'db'   => array('g.chrom_band', false, true)),
                 'transcripts' => array(
-                    'view' => array('Transcripts', 90),
+                    'view' => array('Transcripts', 90, 'style="text-align : right;"'),
                     'db'   => array('transcripts', 'DESC', 'INT_UNSIGNED')),
                 'variants' => array(
-                    'view' => array('Variants', 70),
+                    'view' => array('Variants', 70, 'style="text-align : right;"'),
                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
                 'uniq_variants' => array(
-                    'view' => array('Unique variants', 70),
+                    'view' => array('Unique variants', 70, 'style="text-align : right;"'),
                     'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
                 'updated_date_' => array(
                     'view' => array('Last updated', 110),

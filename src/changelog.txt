@@ -31,18 +31,23 @@
    the capitalization of a disease name.
  * Fixed bug; Variants counts on the gene homepage were counted using the gene's
    first transcript in the database only.
- * Fixed bug; Attempting to make changes to the "Healty/Control" disease using
+ * Fixed bug; Attempting to make changes to the "Healthy/Control" disease using
    an import file resulted in a fatal error.
  * Fixed bug; Under certain circumstances, fatal errors would not be logged even
    though LOVD reported they had been logged.
- * Fixed bug; During an insert import the progress bar was hanging when a 
-   transcript ID is missing in the section variants on transcripts.
- * The geneswitcher in the header is now an autocomplete field for large databases.
+ * Fixed bug; During an insert import, the progress bar was hanging when a
+   transcript ID was missing in the section Variants_On_Transcripts.
+ * The geneswitcher in the header is now an autocomplete field for large
+   databases.
  * Improved error message when LOVD could not retrieve a valid gene reference
    sequence from Mutalyzer.
- * Fixed bug; During update import no difference was seen between '02' and '2', 
-   this is not correct for string fields. 
- * Fixed bug; During import diseaseID 0 was not recognized.
+ * Fixed bug; During update import no difference was seen between '02' and '2',
+   this is not correct for string fields.
+ * Fixed bug; During import, disease ID '0' was not recognized.
+ * Fixed bug; When LOVD could not connect to the database, the error message was
+   not shown because of a fatal error when trying to log the message.
+ * The page titles are made consistent with the dropdown menu options of the
+   page tabs, and missing menu items are added.
 
 
 /**************************

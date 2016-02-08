@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2015-11-27
+ * Modified    : 2016-02-05
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -140,10 +141,10 @@ class LOVD_Individual extends LOVD_Custom {
                                     'view' => false,
                                     'db'   => array('i.id', 'ASC', true)),
                         'id' => array(
-                                    'view' => array('Individual ID', 110),
+                                    'view' => array('Individual ID', 110, 'style="text-align : right;"'),
                                     'db'   => array('i.id', 'ASC', true)),
                         'panelid' => array(
-                                    'view' => array('Panel ID', 70),
+                                    'view' => array('Panel ID', 70, 'style="text-align : right;"'),
                                     'db'   => array('i.panelid', 'ASC', true)),
                       ),
                  $this->buildViewList(),
@@ -165,10 +166,10 @@ class LOVD_Individual extends LOVD_Custom {
                                     'db'   => array('variants_in_genes_', false, true),
                                     'legend' => array('The individual has variants for this gene.')),
                         'variants_' => array(
-                                    'view' => array('Variants', 75),
+                                    'view' => array('Variants', 75, 'style="text-align : right;"'),
                                     'db'   => array('variants_', 'DESC', 'INT_UNSIGNED')),
                         'panel_size' => array(
-                                    'view' => array('Panel size', 70),
+                                    'view' => array('Panel size', 70, 'style="text-align : right;"'),
                                     'db'   => array('i.panel_size', 'DESC', true),
                                     'legend' => array('How many individuals does this entry represent?')),
                         'owned_by_' => array(

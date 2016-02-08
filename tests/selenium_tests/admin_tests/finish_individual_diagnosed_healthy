@@ -4,12 +4,12 @@
 <head profile="http://selenium-ide.openqa.org/profiles/test-case">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="selenium.base" href="https://localhost/" />
-<title>selenium_test_finish_individual_diagnosed_healty</title>
+<title>selenium_test_finish_individual_diagnosed_healthy</title>
 </head>
 <body>
 <table cellpadding="1" cellspacing="1" border="1">
 <thead>
-<tr><td rowspan="1" colspan="3">selenium_test_finish_individual_diagnosed_healty</td></tr>
+<tr><td rowspan="1" colspan="3">selenium_test_finish_individual_diagnosed_healthy</td></tr>
 </thead><tbody>
 <tr>
 	<td>assertLocation</td>

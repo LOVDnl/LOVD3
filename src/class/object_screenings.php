@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2015-09-23
+ * Modified    : 2016-02-05
  * For LOVD    : 3.0-07
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -128,10 +129,10 @@ class LOVD_Screening extends LOVD_Custom {
                                     'view' => false,
                                     'db'   => array('s.id', 'ASC', true)),
                         'id' => array(
-                                    'view' => array('Screening ID', 110),
+                                    'view' => array('Screening ID', 110, 'style="text-align : right;"'),
                                     'db'   => array('s.id', 'ASC', true)),
                         'individualid' => array(
-                                    'view' => array('Individual ID', 110),
+                                    'view' => array('Individual ID', 110, 'style="text-align : right;"'),
                                     'db'   => array('s.individualid', 'ASC', true)),
                       ),
                  $this->buildViewList(),
@@ -140,7 +141,7 @@ class LOVD_Screening extends LOVD_Custom {
                                     'view' => array('Genes screened', 20),
                                     'db'   => array('genes', 'ASC', 'TEXT')),
                         'variants_found_' => array(
-                                    'view' => array('Variants found', 100),
+                                    'view' => array('Variants found', 100, 'style="text-align : right;"'),
                                     'db'   => array('variants_found_', 'ASC', 'INT_UNSIGNED')),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),

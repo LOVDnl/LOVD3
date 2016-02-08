@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2014-12-19
- * Modified    : 2015-10-08:14:28:10
- * For LOVD    : 3.0-12
+ * Modified    : 2016-02-03
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -33,7 +34,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
     protected $captureScreenshotOnFailure = TRUE;
     protected $screenshotPath = '/home/dasscheman/svn/LOVD3_development/trunk/tests/test_results/error_screenshots';
     protected $screenshotUrl = 'http://localhost/LOVD3_development/trunk/tests/test_results/error_screenshots';
-  
+
     protected function setUp()
     {
         $this->setHost('localhost');
@@ -186,18 +187,18 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->assertEquals("Successfully created the disease information entry!", $this->getText("css=table[class=info]"));
     }
-    public function testCreateIndividualDiagnosedWithHealtyControl()
+    public function testCreateIndividualDiagnosedWithHealthyControl()
     {
         $this->open("/LOVD3_development/trunk/src/submit");
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]");
         $this->waitForPageToLoad("30000");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/',$this->getLocation()));
-        $this->type("name=Individual/Lab_ID", "12345HealtyCtrl");
+        $this->type("name=Individual/Lab_ID", "12345HealthyCtrl");
         $this->click("link=PubMed");
         $this->type("name=Individual/Reference", "{PMID:[2011]:[21520333]}");
         $this->type("name=Individual/Remarks", "No Remarks");
         $this->type("name=Individual/Remarks_Non_Public", "Still no remarks");
-        $this->addSelection("name=active_diseases[]", "label=Healty/Control (Healthy individual / control)");
+        $this->addSelection("name=active_diseases[]", "label=Healthy/Control (Healthy individual / control)");
         $this->select("name=owned_by", "label=LOVD3 Admin");
         $this->select("name=statusid", "label=Public");
         $this->click("css=input[type=\"submit\"]");
@@ -205,7 +206,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertEquals("Successfully created the individual information entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
     }
-    public function testAddPhenotypeInfoToHealtyIndividual()
+    public function testAddPhenotypeInfoToHealthyIndividual()
     {
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
@@ -220,7 +221,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertEquals("Successfully created the phenotype entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
     }
-    public function testAddScreeningToHealtyIndividual()
+    public function testAddScreeningToHealthyIndividual()
     {
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b");
@@ -239,7 +240,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertEquals("Successfully created the screening entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
     }
-    public function testAddVariantLocatedWithinGeneToHealtyIndividual()
+    public function testAddVariantLocatedWithinGeneToHealthyIndividual()
     {
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
@@ -282,7 +283,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertEquals("Successfully created the variant entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
     }
-    public function testAddSeatlleseqFileToHealtyIndividual()
+    public function testAddSeatlleseqFileToHealthyIndividual()
     {
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]");
@@ -316,7 +317,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->waitForPageToLoad("30000");
         $this->waitForPageToLoad("4000");
     }
-    public function testAddVariantOnlyDescribedOnGenomicLevelToHealtyIndividual()
+    public function testAddVariantOnlyDescribedOnGenomicLevelToHealthyIndividual()
     {
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
         $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
@@ -340,7 +341,7 @@ class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
         $this->assertEquals("Successfully created the variant entry!", $this->getText("css=table[class=info]"));
         $this->waitForPageToLoad("4000");
     }
-    public function testFinishIndividualDiagnosedHealty()
+    public function testFinishIndividualDiagnosedHealthy()
     {
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/',$this->getLocation()));
         $this->click("//tr[3]/td[2]/b");

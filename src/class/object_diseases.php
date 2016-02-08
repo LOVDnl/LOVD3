@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2015-12-08
+ * Modified    : 2016-02-05
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -105,7 +106,7 @@ class LOVD_Disease extends LOVD_Object {
         $this->aColumnsViewList =
                  array(
                         'diseaseid' => array(
-                                    'view' => array('ID', 45),
+                                    'view' => array('ID', 45, 'style="text-align : right;"'),
                                     'db'   => array('d.id', 'ASC', true)),
                         'symbol' => array(
                                     'view' => array('Abbreviation', 110),
@@ -114,7 +115,7 @@ class LOVD_Disease extends LOVD_Object {
                                     'view' => array('Name', 300),
                                     'db'   => array('d.name', 'ASC', true)),
                         'id_omim' => array(
-                                    'view' => array('OMIM ID', 75),
+                                    'view' => array('OMIM ID', 75, 'style="text-align : right;"'),
                                     'db'   => array('d.id_omim', 'ASC', true)),
                         'individuals' => array(
                                     'view' => array('Individuals', 80, 'style="text-align : right;"'),

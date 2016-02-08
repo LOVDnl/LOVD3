@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2015-12-09
+ * Modified    : 2016-01-29
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -153,7 +153,7 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     }
 
     // Write to log file... if we're not here because we don't have MySQL.
-    if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers())) {
+    if (!empty($_DB) && class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers())) {
         // lovd_displayError() always halts LOVD. If we're in a transaction, any log we'll write
         // to the DB will be gone since PHP will rollback() any transaction that is still open.
         // So we'd better rollback() ourselves first!
