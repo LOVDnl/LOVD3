@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2015-09-24
+ * Modified    : 2016-02-08
  * For LOVD    : 3.0-14
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  * This file is part of LOVD.
  *
@@ -65,6 +65,10 @@ class LOVD_Column extends LOVD_Object {
                                  'LEFT OUTER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (c.id = c2l.colid) ' .
                                'WHERE c.id = ? ' .
                                'GROUP BY c.id';
+
+        // SQL code for preparing view entry query.
+        // Increase DB limits to allow concatenation of large number of gene/disease IDs.
+        $this->sSQLPreViewEntry = 'SET group_concat_max_len = 200000';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'c.*, ' .

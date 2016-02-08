@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2015-12-08
+ * Modified    : 2016-02-08
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -54,6 +55,10 @@ class LOVD_Disease extends LOVD_Object {
         // Default constructor.
         global $_AUTH;
 
+        // SQL code for preparing load entry query.
+        // Increase DB limits to allow concatenation of large number of gene IDs.
+        $this->sSQLPreLoadEntry = 'SET group_concat_max_len = 200000';
+
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT d.*, ' .
                                'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes ' .
@@ -61,6 +66,10 @@ class LOVD_Disease extends LOVD_Object {
                                'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ' .
                                'WHERE d.id = ? ' .
                                'GROUP BY d.id';
+
+        // SQL code for preparing view entry query.
+        // Increase DB limits to allow concatenation of large number of gene IDs.
+        $this->sSQLPreViewEntry = 'SET group_concat_max_len = 200000';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'd.*, ' .

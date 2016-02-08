@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2015-12-13
+ * Modified    : 2016-02-08
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -65,6 +66,10 @@ class LOVD_User extends LOVD_Object {
         foreach ($_SETT['user_levels'] as $nLevel => $sLevel) {
             $sLevelQuery .= ' WHEN "' . $nLevel . '" THEN "' . $nLevel . $sLevel . '"';
         }
+
+        // SQL code for preparing view entry query.
+        // Increase DB limits to allow concatenation of large number of gene IDs.
+        $this->sSQLPreViewEntry = 'SET group_concat_max_len = 200000';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .

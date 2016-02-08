@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2015-12-04
+ * Modified    : 2016-02-08
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -46,7 +47,9 @@ class LOVD_Object {
     var $sTable = '';
     var $aFormData = array();
     var $aCheckMandatory = array();
+    var $sSQLPreLoadEntry = '';     // Query to be executed before $sSQLLoadEntry (as preparation)
     var $sSQLLoadEntry = '';
+    var $sSQLPreViewEntry = '';     // Query to be executed before $aSQLViewEntry (as preparation)
     var $aSQLViewEntry =
              array(
                     'SELECT' => '',
@@ -433,6 +436,11 @@ class LOVD_Object {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::loadEntry() - Method didn\'t receive ID');
         }
 
+        if ($this->sSQLPreLoadEntry !== '') {
+            // $sSQLPreLoadEntry is defined, execute it.
+            $_DB->query($this->sSQLPreLoadEntry);
+        }
+
         // Build query.
         if ($this->sSQLLoadEntry) {
             $sSQL = $this->sSQLLoadEntry;
@@ -683,6 +691,10 @@ class LOVD_Object {
 
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::viewEntry()');
+        }
+
+        if ($this->sSQLPreViewEntry !== '') {
+            $_DB->query($this->sSQLPreViewEntry);
         }
 
         // Manipulate WHERE to include ID, and build query.
