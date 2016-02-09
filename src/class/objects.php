@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-08
+ * Modified    : 2016-02-09
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -475,6 +475,36 @@ class LOVD_Object {
         $zData = $this->autoExplode($zData);
 
         return $zData;
+    }
+
+
+
+
+
+    public static function lovd_getObjectLinksHTML($aIDs, $urlFormat)
+    {
+        // Returns a list of gene links in HTML.
+        // Parameter $aIDs is an array with object IDs as values.
+        // Parameter $urlFormat designates the target of the links, where %s
+        // will be substituted with the object ID (e.g. "genes/%s").
+
+        $sShortDescription = '';
+        $sHTMLoutput = '';
+        $i = 0;
+        foreach ($aIDs as $key => $sObjectID) {
+            $sHTMLoutput .= (!$key ? '' : ', ') . '<A href="' . sprintf($urlFormat, $sObjectID) .
+                '">' . $sObjectID . '</A>';
+            if ($i < 20) {
+                $sShortDescription .= (!$key ? '' : ', ') . '<A href="' .
+                    sprintf($urlFormat, $sObjectID) . '">' . $sObjectID . '</A>';
+                $i++;
+            }
+        }
+        if (count($aIDs) > 22) {
+            // Replace long gene list by shorter one, allowing expand.
+            $sHTMLoutput = '<SPAN>' . $sShortDescription . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($aIDs) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $sHTMLoutput . '</SPAN>';
+        }
+        return $sHTMLoutput;
     }
 
 
@@ -1529,32 +1559,6 @@ class LOVD_Object {
         }
 
         return $nTotal;
-    }
-
-    public static function lovd_getObjectLinksHTML($aIDs, $urlFormat)
-    {
-        // Returns a list of gene links in HTML.
-        // Parameter $genes is an array with gene symbols as values.
-        // Parameter $urlPattern designates the target of the links, where %s
-        // will be substituted with the gene symbol.
-
-        $sShortDescription = '';
-        $sHTMLoutput = '';
-        $i = 0;
-        foreach ($aIDs as $key => $sObjectID) {
-            $sHTMLoutput .= (!$key ? '' : ', ') . '<A href="' . sprintf($urlFormat, $sObjectID) .
-                '">' . $sObjectID . '</A>';
-            if ($i < 20) {
-                $sShortDescription .= (!$key ? '' : ', ') . '<A href="' .
-                    sprintf($urlFormat, $sObjectID) . '">' . $sObjectID . '</A>';
-                $i++;
-            }
-        }
-        if (count($aIDs) > 22) {
-            // Replace long gene list by shorter one, allowing expand.
-            $sHTMLoutput = '<SPAN>' . $sShortDescription . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($aIDs) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $sHTMLoutput . '</SPAN>';
-        }
-        return $sHTMLoutput;
     }
 }
 ?>
