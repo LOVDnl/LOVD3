@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-01-20
+ * Modified    : 2016-02-08
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -51,7 +52,7 @@ if (PATH_COUNT == 1 && !ACTION) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View all users');
+    define('PAGE_TITLE', 'View user accounts');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -101,8 +102,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
-    // Increase the max group_concat() length, so that curators of many many genes still have all genes mentioned here.
-    $_DB->query('SET group_concat_max_len = 150000');
+
     $zData = $_DATA->viewEntry($nID);
 
     $aNavigation = array();

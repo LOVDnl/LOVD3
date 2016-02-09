@@ -48,6 +48,8 @@
    not shown because of a fatal error when trying to log the message.
  * The page titles are made consistent with the dropdown menu options of the
    page tabs, and missing menu items are added.
+ * For each shared custom column, the list of genes or diseases that this column
+   is active for, is now shown on the column's detailed view.
 
 
 /**************************

@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2016-02-04
+ * Modified    : 2016-02-08
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -96,8 +97,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
-    // Increase the max group_concat() length, so that diseases linked to many many genes still have all genes mentioned here.
-    $_DB->query('SET group_concat_max_len = 150000');
+
     $zData = $_DATA->viewEntry($nID);
 
     $aNavigation = array();
@@ -310,8 +310,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
-    // Increase the max group_concat() length, so that diseases linked to many many genes still have all genes mentioned here.
-    $_DB->query('SET group_concat_max_len = 150000');
+
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
