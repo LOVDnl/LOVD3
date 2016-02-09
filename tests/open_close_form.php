@@ -15,14 +15,14 @@ require ROOT_PATH . 'inc-lib-form.php';
 
 
 
-require ROOT_PATH . 'inc-top.php';
-lovd_printHeader(PAGE_TITLE);
+$_T->printHeader();
+$_T->printTitle();
 
 // Tooltip JS code.
 lovd_includeJS('inc-js-tooltip.php');
 
 // Table.
-print('      <FORM action="' . $_PATH_ELEMENTS[0] . '?' . ACTION . '" method="post">' . "\n");
+print('      <FORM action="' . $_PE[0] . '?' . ACTION . '" method="post">' . "\n");
 
 // Array which will make up the form table.
 $aForm =
@@ -58,5 +58,5 @@ lovd_viewForm($aForm);
 
 print('</FORM>' . "\n\n");
 
-require ROOT_PATH . 'inc-bot.php';
+$_T->printFooter();
 exit;

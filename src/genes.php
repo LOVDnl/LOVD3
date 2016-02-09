@@ -4,14 +4,15 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2015-12-21
+ * Modified    : 2016-02-08
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -73,7 +74,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     // View specific entry.
 
     $sID = rawurldecode($_PE[1]);
-    define('PAGE_TITLE', 'View gene ' . $sID);
+    define('PAGE_TITLE', 'View ' . $sID . ' gene homepage');
     $_T->printHeader();
     $_T->printTitle();
     lovd_printGeneHeader();
@@ -181,11 +182,12 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Gene Symbol must be unique.
                 // Enforced in the table, but we want to handle this gracefully.
                 // When numeric, we search the id_hgnc field. When not, we search the id (gene symbol) field.
-                $sSQL = 'SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id' . (!ctype_digit($_POST['hgnc_id'])? '' : '_hgnc') . ' = ?';
+                $sSQL = 'SELECT id, id_hgnc FROM ' . TABLE_GENES . ' WHERE id' . (!ctype_digit($_POST['hgnc_id'])? '' : '_hgnc') . ' = ?';
                 $aSQL = array($_POST['hgnc_id']);
+                $result = $_DB->query($sSQL, $aSQL)->fetchObject();
 
-                if ($_DB->query($sSQL, $aSQL)->fetchColumn()) {
-                    lovd_errorAdd('hgnc_id', 'This gene entry is already present in this LOVD installation.');
+                if ($result !== false) {
+                    lovd_errorAdd('hgnc_id', sprintf('This gene entry (%s, HGNC-ID=%d) is already present in this LOVD installation.', $result->id, $result->id_hgnc));
                 } else {
                     // This call already makes the needed lovd_errorAdd() calls.
                     $aGeneInfo = lovd_getGeneInfoFromHGNC($_POST['hgnc_id']);
@@ -260,12 +262,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     // Get UD from mutalyzer.
                     try {
                         $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
-                        // Function may return an empty string. This is not a SOAP error, but still an error. For instance a type of gene we don't support.
-                        // To prevent further problems (getting transcripts, let's handle this nicely, shall we?
-                        $_BAR->setMessage('Failed to retreive gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
-                        $_BAR->setMessageVisibility('done', true);
-                        die('</BODY>' . "\n" .
-                            '</HTML>' . "\n");
+                        if ($sRefseqUD === '') {
+                            // Function may return an empty string. This is not a SOAP error, but still an error. For instance a type of gene we don't support.
+                            // To prevent further problems (getting transcripts, let's handle this nicely, shall we?
+                            $_BAR->setMessage('Failed to retreive gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
+                            $_BAR->setMessageVisibility('done', true);
+                            die('</BODY>' . "\n" .
+                                '</HTML>' . "\n");
+                        }
                     } catch (SoapFault $e) {
                         lovd_soapError($e);
                     }
@@ -275,9 +279,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // FIXME: When changing code here, check in transcripts?create if you need to make changes there, too.
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress($nProgress += 17);
-                
+
                 $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
-                
+
                 $_BAR->setProgress(100);
                 $_BAR->setMessage('Information collected, now building form...');
                 $_BAR->setMessageVisibility('done', true);
@@ -1599,7 +1603,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
           '        <UL id="curator_list" class="sortable" style="margin-top : 0px; width : 550px;">' . "\n");
     // Now loop the items in the order given.
     foreach ($aCurators as $nID => $aVal) {
-        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . $aVal['name'] . '</TD>');
+        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . $aVal['name'] . ' (#' . $nID . ')</TD>');
         if (ACTION == 'authorize') {
             print('<TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' . $aVal['level'] . ' >= ' . LEVEL_MANAGER . ') { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($aVal['allow_edit'] || $aVal['level'] >= LEVEL_MANAGER? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['allow_edit']? ($aVal['shown']? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right">' . ($aVal['level'] >= $_AUTH['level'] && $nID != $_AUTH['id']? '&nbsp;' : '<A href="#" onclick="lovd_unauthorizeUser(\'Genes_AuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A>') . '</TD>');
         } else {
