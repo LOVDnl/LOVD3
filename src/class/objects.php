@@ -481,22 +481,32 @@ class LOVD_Object {
 
 
 
-    public static function lovd_getObjectLinksHTML($aIDs, $urlFormat)
+    public static function lovd_getObjectLinksHTML($aIDs, $sURLFormat)
     {
-        // Returns a list of gene links in HTML.
-        // Parameter $aIDs is an array with object IDs as values.
-        // Parameter $urlFormat designates the target of the links, where %s
-        // will be substituted with the object ID (e.g. "genes/%s").
+        // Returns a list of object links in HTML format.
+        // Parameter $aIDs is an array with object IDs, and optionally, values.
+        // Parameter $sURLFormat designates the target of the links, where any
+        //   sprintf() recognized format (like %s) will be substituted with the
+        //   object ID, e.g. "genes/%s".
+        // For more information on formats to use, see:
+        //   http://php.net/manual/en/function.sprintf.php
 
         $sShortDescription = '';
         $sHTMLoutput = '';
         $i = 0;
-        foreach ($aIDs as $key => $sObjectID) {
-            $sHTMLoutput .= (!$key ? '' : ', ') . '<A href="' . sprintf($urlFormat, $sObjectID) .
-                '">' . $sObjectID . '</A>';
+        foreach ($aIDs as $key => $val) {
+            if (is_array($val)) {
+                $sObjectID = $val[0];
+                $sObjectValue = $val[1];
+            } else {
+                $sObjectID = $sObjectValue = $val;
+            }
+
+            $sHTMLoutput .= (!$key ? '' : ', ') . '<A href="' . sprintf($sURLFormat, $sObjectID) .
+                '">' . $sObjectValue . '</A>';
             if ($i < 20) {
                 $sShortDescription .= (!$key ? '' : ', ') . '<A href="' .
-                    sprintf($urlFormat, $sObjectID) . '">' . $sObjectID . '</A>';
+                    sprintf($sURLFormat, $sObjectID) . '">' . $sObjectValue . '</A>';
                 $i++;
             }
         }

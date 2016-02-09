@@ -46,6 +46,8 @@
  * Fixed bug; During import, disease ID '0' was not recognized.
  * Fixed bug; When LOVD could not connect to the database, the error message was
    not shown because of a fatal error when trying to log the message.
+ * For each shared custom column, the list of genes or diseases that this column
+   is active for, is now shown on the column's detailed view.
 
 
 /**************************

@@ -77,15 +77,15 @@ class LOVD_Column extends LOVD_Object {
                                            '(a.colid IS NOT NULL) AS active, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
-                                           'GROUP_CONCAT(sc.geneid ORDER BY sc.geneid SEPARATOR ";") AS _geneids,' .
-                                           'GROUP_CONCAT(sc.diseaseid ORDER BY sc.diseaseid SEPARATOR ";") as _diseaseids';
+                                           'GROUP_CONCAT(sc.geneid ORDER BY sc.geneid SEPARATOR ";") AS _genes, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases';
         $this->aSQLViewEntry['FROM']     = TABLE_COLS . ' AS c ' .
-                                           'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
-                                           'LEFT JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) ' .
-                                           'LEFT JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id)' .
-                                           'LEFT JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid)';
-
-        $this->aSQLViewEntry['GROUP_BY'] = 'sc.colid';
+                                           'LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (sc.diseaseid = d.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'c.id';
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'c.*, ' .
@@ -118,6 +118,7 @@ class LOVD_Column extends LOVD_Object {
                         'public_view_' => 'Show to public',
                         'public_add_' => 'Show on submission form',
                         'allow_count_all_' => 'Include in search form',
+                        'parent_objects' => 'Column activated for',
                         'created_by_' => 'Created by',
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
@@ -410,13 +411,15 @@ class LOVD_Column extends LOVD_Object {
 
             if ($zData['category'] == 'VariantOnTranscript') {
                 // Show genes for which this column is activated.
-                $this->aColumnsViewEntry['related_genes'] = 'Column activated for genes';
-                $zData['related_genes'] = $this->lovd_getObjectLinksHTML($zData['geneids'], 'genes/%s');
+                $this->aColumnsViewEntry['parent_objects'] = 'Column activated for genes';
+                $zData['parent_objects'] = $this->lovd_getObjectLinksHTML($zData['genes'], 'genes/%s');
 
             } elseif ($zData['category'] == 'Phenotype') {
                 // Show diseases for which this column is activated.
-                $this->aColumnsViewEntry['related_diseases'] = "Column activated for diseases";
-                $zData['related_diseases'] = $this->lovd_getObjectLinksHTML($zData['diseaseids'], 'diseases/%s');
+                $this->aColumnsViewEntry['parent_objects'] = "Column activated for diseases";
+                $zData['parent_objects'] = $this->lovd_getObjectLinksHTML($zData['diseases'], 'diseases/%s');
+            } else {
+                unset($this->aColumnsViewEntry['parent_objects']);
             }
 
         }
