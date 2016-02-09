@@ -3,6 +3,7 @@ serverFile=selenium-server-standalone-2.50.1.jar
 
 phpVersion=`php -v`
 
+echo "Installing dependencies"
 composer install
 
 echo "check firefox version"
