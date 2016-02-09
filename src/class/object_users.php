@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-08
+ * Modified    : 2016-02-09
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
@@ -456,7 +456,7 @@ class LOVD_User extends LOVD_Object {
             }
 
             // Get HTML links for genes curated by current user.
-            $zData['curates_'] = LOVD_Object::lovd_getObjectLinksHTML($zData['curates'], 'genes/%s');
+            $zData['curates_'] = $this->lovd_getObjectLinksHTML($zData['curates'], 'genes/%s');
 
             $zData['collaborates_'] = '';
             foreach ($zData['collaborates'] as $key => $sGene) {
