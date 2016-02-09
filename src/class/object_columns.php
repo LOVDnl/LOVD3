@@ -77,8 +77,8 @@ class LOVD_Column extends LOVD_Object {
                                            '(a.colid IS NOT NULL) AS active, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
-                                           'GROUP_CONCAT(sc.geneid) as geneids,' .
-                                           'GROUP_CONCAT(sc.diseaseid) as diseaseids';
+                                           'GROUP_CONCAT(sc.geneid ORDER BY sc.geneid SEPARATOR ";") AS _geneids,' .
+                                           'GROUP_CONCAT(sc.diseaseid ORDER BY sc.diseaseid SEPARATOR ";") as _diseaseids';
         $this->aSQLViewEntry['FROM']     = TABLE_COLS . ' AS c ' .
                                            'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
                                            'LEFT JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) ' .
@@ -411,17 +411,12 @@ class LOVD_Column extends LOVD_Object {
             if ($zData['category'] == 'VariantOnTranscript') {
                 // Show genes for which this column is activated.
                 $this->aColumnsViewEntry['related_genes'] = 'Column activated for genes';
-
-                $aGenes = explode(',', $zData['geneids']);
-                $zData['related_genes'] = $this->lovd_getObjectLinksHTML($aGenes, 'genes/%s');
+                $zData['related_genes'] = $this->lovd_getObjectLinksHTML($zData['geneids'], 'genes/%s');
 
             } elseif ($zData['category'] == 'Phenotype') {
                 // Show diseases for which this column is activated.
                 $this->aColumnsViewEntry['related_diseases'] = "Column activated for diseases";
-
-                $aDiseases = explode(',', $zData['diseaseids']);
-                $zData['related_diseases'] = $this->lovd_getObjectLinksHTML($aDiseases, 'diseases/%s');
-
+                $zData['related_diseases'] = $this->lovd_getObjectLinksHTML($zData['diseaseids'], 'diseases/%s');
             }
 
         }
