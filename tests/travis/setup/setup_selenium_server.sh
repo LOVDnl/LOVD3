@@ -1,3 +1,9 @@
+#!/bin/bash
+
+## This file is used in Travis CI.
+## In this file composer is used to install the dependencies defined in composer.json
+## Then the selenium server is downloaded and started. 
+## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
 serverUrl='http://127.0.0.1:4444'
 serverFile=selenium-server-standalone-2.50.1.jar
 
