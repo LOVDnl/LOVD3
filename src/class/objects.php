@@ -421,7 +421,8 @@ class LOVD_Object {
                 // but non-alias columns that are used for sorting must also be kept in the JOIN!
                 // Parse ORDER BY! Can be a mix of real columns and aliases.
                 // Adding a comma in the end, so we can use a simpler pattern that always ends with one.
-                if (preg_match_all('/\b(?:(\w+)\.)?(\w+)(?:\s(?:ASC|DESC))?,/', $aSQL['ORDER_BY'] . ',', $aRegs)) {
+                // FIXME: Wait, why are we parsing the ORDER_BY??? We can just drop it... and drop the cols which it uses... right?
+                if (false && preg_match_all('/\b(?:(\w+)\.)?(\w+)(?:\s(?:ASC|DESC))?,/', $aSQL['ORDER_BY'] . ',', $aRegs)) {
                     // This code is the same as for the GROUP BY parsing.
                     for ($i = 0; $i < count($aRegs[0]); $i ++) {
                         // 1: table referred to (real columns without alias only);
