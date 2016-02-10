@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-07-25
- * Modified    : 2013-10-16
- * For LOVD    : 3.0-08
+ * Modified    : 2016-02-10
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -31,23 +31,14 @@
 define('FORMAT_ALLOW_TEXTPLAIN', true);
 $_GET['format'] = 'text/plain';
 
-assert_options(ASSERT_ACTIVE, 1);
-assert_options(ASSERT_WARNING, 0);
-assert_options(ASSERT_BAIL, 1);
-assert_options(ASSERT_QUIET_EVAL, 0);
-assert_options(ASSERT_CALLBACK, 'lovd_assertFailed');
-
-function lovd_assertFailed ($sFile, $nLine, $sCode)
-{
-    print('Assertion Failed!' . "\n" .
-//          '  File: ' . $sFile . "\n" .
-          '  Line: ' . $nLine . "\n" .
-          '  Code: ' . $sCode . "\n\n");
-}
+require 'inc-lib-tests.php';
 
 define('ROOT_PATH', '../../src/');
 require ROOT_PATH . 'inc-init.php';
 
+// FIXME: This code depends on certain contents of the database.
+//   This function needs to be rewritten to match the contents of the database
+//   in the selenium tests. Then, then can be included in the selenium tests.
 
 // Assertions for DATABASE ADMINISTRATOR.
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 1')->fetchAssoc();
@@ -140,5 +131,5 @@ assert("lovd_isAuthorized('screening', 'ASDFASDFASDF', false) === false");
 assert("lovd_isAuthorized('variant', 'ASDFASDFASDF', false) === false");
 assert("lovd_isAuthorized('asdfasdf', '1', false) === false");
 
-die('Complete, all successful');
+die('Complete, all successful.');
 ?>
