@@ -3,49 +3,76 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-10
- * Modified    : 2015-02-17
- * For LOVD    : 3.0-13
+ * Modified    : 2016-02-10
+ * For LOVD    : 3.0-15
  *
  *************************/
 
 This is the procedure to make and run test with selenium and phpunit. 
 
+/*
+ * Quick start local:
+ */
+ Run composer install in your project folder.
+ Run convert_selenium_to_phpunit.sh --projectfolder="your project folder"
+ Run run_phptest.sh to run all tests
+ Check "you project folder"/tests/test_results/test_overview.php".
+ To see the test results.
+
+
+
 /***************************
  * Overview and IMPORTENT remarks
  ***************************/
-Make your tests with the Selenium add-on in Firefox..
-Modify the tests only in the Selenium add-on in Firefox and not in the php files. 
+Make your tests with the Selenium add-on in Firefox. And export them to PHP (phpunit)
+You can change the tests in the php files, but you can not convert them back to selenium tests.
+
 
 Directory structure:
     -tests
 	-bash_scripts (contains scripts to convert and run tests.)
-	-phpunit_selenium (contains phpunit tests. Do not modify these files, the are generated.)
+	-phpunit_selenium (contains phpunit tests. This folder is empty in github, 
+            the files are generated with the convert_selenium_to_phpunit.sh script.)
 	-selenium_tests (contains the Selenium test suites, these files you can modify in Selenium.)
 	    -setupscript.php (is copied to all new classes)
-	    -(folders with test of the testsuites.)
-	-test_data_files (data files used in the tests.)
+	    -(folders with testcases. The test cases are the selenium files and 
+                the php files. Appart from the extension the exported php should 
+                have the same name as the corresponding selenium testcase.)
+	-test_data_files (data files used in the tests. For example the lovd-import files)
 	-test_results
 	    -error_screenshots (screenshots are created and stored here when an error occurs during a test.)
 	    -reports (xml phpunit reports are stored here.)
 	    -test_overview.php (page with overview of all tests done.)
 	    -tests_results.php (page with details on the test results, can only opened via test_overview.php.)
-   
+        -travis
+            -setup 
+                Files necessary for Travis CI
+            -tests 
+                Tests to test if travis works.
+            
 Assumptions:
-    -The "tests" and "src" folder must both be in the folder "trunk"
-    -"svn" must be the highest internet folder, you can do this with a link.
-	Examples
-	    The following directory structures are fine:
-	    -www/svn/trunk
-	    -www/svn/LOVD3/trunk
-	    -www/svn/LOVD3test/trunk
-	    -home/user/svn/trunk (with a soft link of svn to www.)
+    -The "tests" and "src" folder must both be in a project folder
   
    
 /*******************
  * Convert Selenium php files to PHPUnit files
  ************************/
 Before you can run the test you must do a conversion, also when no changes are made to the tests. 
-The conversion script not only converts selenium php export files to phpunit files, but adjust the directory references in the files depending on where you installed you LOVD. So, unless your LOVD installation is installed in "www/svn/LOVD3/trunk", you must run the script "convert_selenium_to_phpunit.sh" first. 
+The conversion script not only converts selenium php export files to phpunit files, 
+but adjust the directory references in the files depending on where you installed you LOVD. 
+So, unless your LOVD installation is installed in "www/svn/LOVD3/trunk", 
+you must run the script "convert_selenium_to_phpunit.sh" first. 
+
+The convert_selenium_to_phpunit.sh requires input for parameter --projectfolder
+This is the project folder relative to the localhost.
+
+Examples local:
+    -www/svn/trunk --> --projectfolder=svn/trunk
+    -www/svn/LOVD3/trunk --> --projectfolder=svn/LOVD3/trunk
+Examples for travis:
+    use the only projectname, the githubaccount wil be the root of localhost
+    -->  --projectfolder=LOVD3
+
 
 When everything converted fine, the script will output some overview data (number of test, classes etc).
 The errors and warnings which can occur when something is not okey, are self-explanatory.
@@ -56,13 +83,12 @@ When no warnings or error occurred, you can run the script "run_phptest.sh".
 /*******************
  * Run the phpunit tests
  ************************/
- 
-To run the test phpunit and selenium (version 2.44.0) are required. see https://phpunit.de/manual/current/en/selenium.html
-The selenium server must be installed some where in a bin folder: /bin/selenium-server-standalone-2.44.0.jar
+To run the test user "run_phptest.sh". This script assumes that all dependencies 
+are installed with composer.
 
-To run "run_phptest.sh"
-Use -f=<file> | --file=<file> to test one specific file which is located in the phpunit_selenium folder. Specify no file when you want to test all test files in the phpunit_selenium folder.
-Use -p=<folder> | --phpunit=<folder> to define the phpunit folder when you can not call phpunit directly.
+Use -f=<file> | --file=<file> to test one specific file which is located in the 
+phpunit_selenium folder. Specify no file when you want to test all test 
+files in the phpunit_selenium folder.
 
 You can see a list of all test run in "../trunk/tests/test_results/test_overview.php".
 If you click on the top testlog, you can see the results of the last test. 

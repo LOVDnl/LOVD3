@@ -8,11 +8,8 @@ SELENIUMTESTFOLDER=${TESTPATH}/phpunit_selenium
 # used for the report name.
 DATE=`date +%Y-%m-%d:%H:%M:%S`
 
-# Default location of phpunit folder
-PHPUNITFOLDER=/home/$USER/bin/vendor/phpunit/phpunit/
-
-# get the exact location of the selenium server.
-SELENIUMSERVER=`locate /bin/selenium-server-standalone-2.44.0.jar`
+# Default location of phpunit folder when installed with composer.
+PHPUNITFOLDER=../../vendor/bin/
 
 for i in "$@"
 do
@@ -26,23 +23,23 @@ do
                 exit
             fi
         ;;
-        -p=*|--phpunit=*)
-            PHPUNITFOLDER="${i#*=}"
-            # check if input is correct is done later.
-        ;;
         --default)
             DEFAULT=YES
         ;;
         *)
             echo Unknown input
             echo Usage:
-            column -t -s "/" <<<'    -f=<file> /|/ --file=<file> / To test one specific file which is loceted in the phpunit_selenium folder.
-        -p=<folder> /|/ --phpunit=<folder> / Define the phpunit folder when you can not call phpunit directly.'
+            column -t -s "/" <<<'    -f=<file> /|/ --file=<file> / To test one specific file which is loceted in the phpunit_selenium folder.'
             echo "Specify no file when you want te test all testfiles in the phpunit_selenium folder."
             exit
         ;;
     esac
 done
+
+# Download selenium server
+SELENIUMSERVER='selenium-server-standalone-2.44.0.jar'
+SELENIUMSERVERLOCATION='http://selenium-release.storage.googleapis.com/2.44/'${SELENIUMSERVER}
+wget ${SELENIUMSERVERLOCATION}
 
 # Check if phpunit folder exists.
 if [ ! -e ${PHPUNITFOLDER}phpunit ]; then
@@ -77,3 +74,6 @@ if [ -n "$PID" ]; then
     echo "Close Selenium Server"
     kill $PID
 fi
+
+rm ${SELENIUMSERVER}
+exit;

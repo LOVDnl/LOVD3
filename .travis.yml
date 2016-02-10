@@ -31,6 +31,12 @@ script:
   # is installed via composer. 
   # Not running phpunit installed via composer gives errors, has to do with the 
   # versions of the dependencies. 
+  
+  # This is a travis test. This test if travis is working as expected. 
+  # Two test are done which are independent of LOVD.
+  - vendor/bin/phpunit ./tests/travis/tests/
+
+  # uncomment one of the folloring lines to run one or more test suites.
 #  - vendor/bin/phpunit ./tests/phpunit_selenium/adminTest.php
 #  - vendor/bin/phpunit ./tests/phpunit_selenium/authorizationTest.php
 #  - vendor/bin/phpunit ./tests/phpunit_selenium/collaboratorTest.php
@@ -39,13 +45,7 @@ script:
 #  - vendor/bin/phpunit ./tests/phpunit_selenium/submitterTest.php
 #  - vendor/bin/phpunit ./tests/phpunit_selenium/tempTest.php
 
-  - vendor/bin/phpunit -v tests/travis/tests/simpleTest.php 
-  - vendor/bin/phpunit ./tests/phpunit_selenium/tempTest.php
-  - vendor/bin/phpunit ./tests/travis/tests/
-  - vendor/bin/phpunit -v -c tests/travis/phpunit.xml 
- 
-  
-## Run all tests
+## Run all test suites.
   - vendor/bin/phpunit -v ./tests/phpunit_selenium/
 
 notifications: 

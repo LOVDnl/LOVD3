@@ -12,7 +12,7 @@ testsuitelist[6]='submitter_suite'
 testsuitelist[7]='import_suite'
 
 # When a php export file is older then a selenium file, the latest changes made in the selenium file might not be included in the php file.
-# There for the user is asked what to do. Default is always ask what to do.
+# Therefore the user is asked what to do. Default is always ask what to do.
 alwaysask=true
 
 # As default it is assumed that 'LOVD3' is the first localhost folder. ie http://localhost/LOVD3
@@ -24,9 +24,9 @@ do
     case $i in
         -p=*|--projectfolder=*)
             PROJECTFOLDER="${i#*=}"
-			#The input is refering to the github project.
-			#For local development: /LOVD3_development
-			#For LUMC development : /LOVD3
+                #The input is refering to the github project.
+                #For local development: /LOVD3_development
+                #For LOVDnl development : /LOVD3
         ;;
         -c|--continueall)
             alwaysask=false
