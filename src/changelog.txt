@@ -57,6 +57,8 @@
    reference.
  * For each shared custom column, the list of genes or diseases that this column
    is active for, is now shown on the column's detailed view.
+ * Fixed bug; Transcript viewlists included non-public variants in the variant
+   counts also for non-authorized users.
 
 
 /**************************
