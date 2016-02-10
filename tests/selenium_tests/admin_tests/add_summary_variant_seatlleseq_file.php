@@ -33,7 +33,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     for ($second = 0; ; $second++) {
         if ($second >= 300) $this->fail("timeout");
         try {
-            if ($this->isElementPresent("id=lovd__progress_message")) break;
+            if ($this->isElementPresent("//input[@value='Continue »']")) break;
         } catch (Exception $e) {}
         sleep(1);
     }
