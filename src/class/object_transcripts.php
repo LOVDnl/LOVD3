@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2016-02-05
+ * Modified    : 2016-02-10
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,6 +52,8 @@ class LOVD_Transcript extends LOVD_Object {
 
     function __construct ()
     {
+        global $_AUTH;
+
         // Default constructor.
 
         // SQL code for loading an entry for an edit form.
@@ -79,7 +81,17 @@ class LOVD_Transcript extends LOVD_Object {
                                           'COUNT(DISTINCT vot.id) AS variants';
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
+                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
+                                          // If user is less than a collaborator, only show public variants and
+                                          // variants owned/created by him.
+                                          (($_AUTH['level'] >= LEVEL_COLLABORATOR)? '' :
+                                              'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
+                                                  '(vot.id = vog.id) AND (vog.statusid >= ' . STATUS_MARKED .
+                                                  ((!$_AUTH)? ')' :
+                                                      ' OR vog.created_by = "' . $_AUTH['id'] . '" OR ' .
+                                                      'vog.owned_by = "' . $_AUTH['id'] . '")'
+                                                  )
+                                          );
         $this->aSQLViewList['GROUP_BY'] = 't.id';
 
         // List of columns and (default?) order for viewing an entry.
