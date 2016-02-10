@@ -7,7 +7,7 @@
  * Modified    : 2016-02-10
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -78,19 +78,19 @@ class LOVD_Transcript extends LOVD_Object {
         // SQL code for viewing the list of transcripts
         $this->aSQLViewList['SELECT']   = 't.*, ' .
                                           'g.chromosome, ' .
-                                          'COUNT(DISTINCT vot.id) AS variants';
+                                          'COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 'vot.id' : 'vog.id') . ') AS variants';
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
                                           // If user is less than a collaborator, only show public variants and
                                           // variants owned/created by him.
-                                          (($_AUTH['level'] >= LEVEL_COLLABORATOR)? '' :
-                                              'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
-                                                  '(vot.id = vog.id) AND (vog.statusid >= ' . STATUS_MARKED .
-                                                  ((!$_AUTH)? ')' :
+                                          ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
+                                                  '(vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
+                                                  (!$_AUTH? '' :
                                                       ' OR vog.created_by = "' . $_AUTH['id'] . '" OR ' .
-                                                      'vog.owned_by = "' . $_AUTH['id'] . '")'
-                                                  )
+                                                      'vog.owned_by = "' . $_AUTH['id'] . '"'
+                                                  ) . ')) '
                                           );
         $this->aSQLViewList['GROUP_BY'] = 't.id';
 

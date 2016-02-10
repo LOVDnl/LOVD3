@@ -48,7 +48,8 @@
    not shown because of a fatal error when trying to log the message.
  * The page titles are made consistent with the dropdown menu options of the
    page tabs, and missing menu items are added.
- * Fixed bug; Transcript viewlists showed an incorrect variant count.
+ * Fixed bug; Transcript viewlists included non-public variants in the variant
+   counts also for non-authorized users.
 
 
 /**************************
