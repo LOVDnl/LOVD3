@@ -47,7 +47,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=VariantOnGenome/Frequency", "55/18000");
     $this->select("name=effect_reported", "label=Affects function");
     $this->select("name=effect_concluded", "label=Affects function");
-    $this->select("name=owned_by", "label=LOVD3 Admin");
+    $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
     $this->select("name=statusid", "label=Public");
     $this->click("//input[@value='Create variant entry']");
     $this->waitForPageToLoad("30000");

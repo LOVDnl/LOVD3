@@ -26,7 +26,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->addSelection("name=Screening/Technique[]", "label=array for SNP typing");
     $this->addSelection("name=genes[]", "label=IVD (isovaleryl-CoA dehydrogenase)");
     $this->check("name=variants_found");
-    $this->select("name=owned_by", "label=LOVD3 Admin");
+    $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
     $this->click("//input[@value='Create screening information entry']");
     $this->waitForPageToLoad("30000");
     $this->assertEquals("Successfully created the screening entry!", $this->getText("css=table[class=info]"));
