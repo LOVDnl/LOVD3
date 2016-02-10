@@ -480,10 +480,7 @@ $sSQLIn = $sSQL;
             // Analyzing the SELECT. This is quite difficult as we can have simple SELECTs but also really complicated ones,
             // such as GROUP_CONCAT() or subselects. These should all be parsed and needed tables should be identified.
             //                    t.* || t.col                    [t.col || "value" || (t.col ... val) || FUNCTION() || CASE ... END] AS alias
-//$aSQL['SELECT'] = '';
             if (preg_match_all('/(([a-z0-9_]+)\.(?:\*|[a-z0-9_]+)|(?:(?:([a-z0-9_]+)\.[a-z0-9_]+|".*"|[A-Z_]*\(.+\)|CASE .+ END) AS +([a-z0-9_]+|`[A-Za-z0-9_\/]+`)))(?:,|$)/U', $aSQL['SELECT'], $aRegs)) {
-//print('<PRE>');
-//var_dump($aSQL['SELECT'], $aRegs);
                 for ($i = 0; $i < count($aRegs[0]); $i ++) {
                     // First we'll store the column information, later we'll loop though it to see which tables they refer to.
                     // 1: entire SELECT string incl. possible alias;
@@ -506,7 +503,6 @@ $sSQLIn = $sSQL;
                             $aTables = array_unique($aRegsTables[1]);
                         }
                     }
-//var_dump($aTables);
                     // Key: alias or, when not available, the SELECT statement (table.col).
                     $aColumnsUsed[($aRegs[4][$i]? $aRegs[4][$i] : $aRegs[1][$i])] = array(
                         'SQL' => $aRegs[1][$i],
@@ -1488,104 +1484,6 @@ SELECT SQL_CALC_FOUND_ROWS vot.*, et.name as vot_effect, vot.id AS row_id, vog.*
 SELECT SQL_CALC_FOUND_ROWS i.*, i.id AS individualid, GROUP_CONCAT(DISTINCT d.id) AS diseaseids, GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ", ") AS genes_screened_, COUNT(DISTINCT vog.id) AS variants_, uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ds.name AS status FROM lovd_v3_individuals AS i LEFT OUTER JOIN lovd_v3_individuals2diseases AS i2d ON (i.id = i2d.individualid) LEFT OUTER JOIN lovd_v3_diseases AS d ON (i2d.diseaseid = d.id) LEFT OUTER JOIN lovd_v3_screenings AS s ON (i.id = s.individualid) LEFT OUTER JOIN lovd_v3_screenings2variants AS s2v ON (s2v.screeningid = s.id) LEFT OUTER JOIN lovd_v3_variants AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= 7)) LEFT OUTER JOIN lovd_v3_screenings2genes AS s2g ON (s.id = s2g.screeningid) LEFT OUTER JOIN lovd_v3_users AS uo ON (i.owned_by = uo.id) LEFT OUTER JOIN lovd_v3_data_status AS ds ON (i.statusid = ds.id) WHERE (i.statusid >= 7) AND (s2g.geneid = "ACE2") GROUP BY i.id LIMIT 0
 SELECT SQL_CALC_FOUND_ROWS s.*, s.id AS screeningid, IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT vog.id)) AS variants_found_, GROUP_CONCAT(DISTINCT s2g.geneid SEPARATOR ", ") AS genes, uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner FROM lovd_v3_screenings AS s LEFT OUTER JOIN lovd_v3_screenings2variants AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN lovd_v3_variants AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= 7)) LEFT OUTER JOIN lovd_v3_screenings2genes AS s2g ON (s.id = s2g.screeningid) LEFT OUTER JOIN lovd_v3_individuals AS i ON (s.individualid = i.id) LEFT OUTER JOIN lovd_v3_users AS uo ON (s.owned_by = uo.id) WHERE (i.statusid >= 7) GROUP BY s.id HAVING (genes LIKE "%ACE2%") LIMIT 0
 SELECT SQL_CALC_FOUND_ROWS s.*, s.id AS screeningid, IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT s2v.variantid)) AS variants_found_, GROUP_CONCAT(DISTINCT s2g.geneid SEPARATOR ", ") AS genes, CASE i.statusid WHEN 7 THEN "marked" WHEN 4 THEN "del" END AS class_name, uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner FROM lovd_v3_screenings AS s LEFT OUTER JOIN lovd_v3_screenings2variants AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN lovd_v3_screenings2genes AS s2g ON (s.id = s2g.screeningid) LEFT OUTER JOIN lovd_v3_individuals AS i ON (s.individualid = i.id) LEFT OUTER JOIN lovd_v3_users AS uo ON (s.owned_by = uo.id) GROUP BY s.id HAVING (genes LIKE "%ACE2%") ORDER BY s.id ASC LIMIT 100 OFFSET 0
-';
-// PERHAPS CHECK ALL POSSIBLE QUERIES AND ISOLATE THEIR SELECT STATEMENTS, CHECK IF THEY'RE ALL SUPPORTED.
-            $sSQLs = '
-SELECT (SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i2d.diseaseid = d.id' . (1 >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') AS individuals, ' .
-            '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . (1 >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
-            'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, ' .
-            'uc.name AS created_by_, ' .
-            'ue.name AS edited_by_, d.*, d.id AS diseaseid, ' .
-            '(SELECT COUNT(DISTINCT i.id) FROM ' . TABLE_IND2DIS . ' AS i2d LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . (1 >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') WHERE i2d.diseaseid = d.id) AS individuals, ' .
-            '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . (1 >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
-            'COUNT(g2d.geneid) AS gene_count, ' .
-            'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, g.*, g.id_entrez AS id_pubmed_gene, ' .
-            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, 0), ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
-            'GROUP_CONCAT(DISTINCT t.id, ";", t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";;") AS __transcripts, ' .
-            '(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, ' .
-            'LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, ' .
-            'GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, ' .
-            'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS __curators, ' .
-            'uc.name AS created_by_, ' .
-            'ue.name AS edited_by_, ' .
-            'uu.name AS updated_by_, ' .
-            '(SELECT COUNT(DISTINCT vog.id) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS variants, ' .
-            '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ' .
-            '"" AS count_individuals, ' .
-            '(SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS hidden_vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS hidden_vot ON (hidden_vog.id = hidden_vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (hidden_vot.transcriptid = t.id) WHERE t.geneid = g.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') AS hidden_variants, g.*, ' .
-            'g.id AS geneid, ' .
-            'GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, ' .
-            'COUNT(DISTINCT t.id) AS transcripts, ' .
-            'COUNT(DISTINCT vog.id) AS variants, ' .
-            'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants, vog.*, ' .
-            'a.name AS allele_, ' .
-            'GROUP_CONCAT(DISTINCT i.id, ";", i.statusid SEPARATOR ";;") AS __individuals, ' .
-            'GROUP_CONCAT(s2v.screeningid SEPARATOR "|") AS screeningids, ' .
-            'uo.name AS owned_by_, ' .
-            'uc.name AS created_by_, ' .
-            'ue.name AS edited_by_, vog.*  FROM test ORDER BY test
-SELECT GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
-            'a.name AS allele_, ' .
-            'e.name AS effect, ' .
-            'uo.name AS owned_by_, ' .
-            'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
-                'CASE vog.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,' .
-            'ds.name AS status, i.*, ' .
-            'GROUP_CONCAT(DISTINCT d.id SEPARATOR ";") AS _diseaseids, ' .
-            'GROUP_CONCAT(DISTINCT d.id, ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
-            'GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS _phenotypes, ' .
-            'GROUP_CONCAT(DISTINCT s.id SEPARATOR ";") AS _screeningids, ' .
-            'uo.id AS owner, ' .
-            'uo.name AS owned_by_, ' .
-            'uc.name AS created_by_, ' .
-            'ue.name AS edited_by_, i.*, ' .
-            'i.id AS individualid, ' .
-            'GROUP_CONCAT(DISTINCT d.id) AS diseaseids, ' .
-            'GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, ' .
-            'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ", ") AS genes_screened_, ' .
-            'GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ", ") AS variants_in_genes_, ' .
-            'COUNT(DISTINCT ' . (1 >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ') AS variants_, ' .
-            'uo.name AS owned_by_, ' .
-            'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
-                'CASE ds.id WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,' .
-            'ds.name AS status, l.*, COUNT(c2l.colid) AS active_columns, GROUP_CONCAT(c2l.colid ORDER BY c2l.colid SEPARATOR ", ") AS active_columns_, uc.name AS created_by_, ue.name AS edited_by_, l.*, COUNT(c2l.colid) AS active_columns, l.*, CONCAT_WS(",", l.name, l.date, l.mtime) AS row_id, "" AS row_link, CONCAT(l.date, " ", l.mtime) AS timestamp, u.name AS user, p.*, ' .
-                'CASE p.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,' .
-            'ds.name AS status, ' .
-            'uo.name AS owned_by_, ' .
-            'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, s.*, ' .
-            'i.statusid AS individual_statusid, ' .
-            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
-            'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . (1 >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
-            'uo.name AS owned_by_, ' .
-            'uc.name AS created_by_, ' .
-            'ue.name AS edited_by_, s.*, ' .
-            's.id AS screeningid, ' .
-            'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . (1 >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
-            'GROUP_CONCAT(DISTINCT s2g.geneid SEPARATOR ", ") AS genes, ' .
-                'CASE i.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" END AS class_name, ' .
-            'uo.name AS owned_by_, ' .
-            'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, sc.*, ' .
-            'SUBSTRING(sc.colid, LOCATE("/", sc.colid)+1) AS colid, ' .
-            'c.id, ' .
-            'c.head_column, ' .
-            'c.form_type, ' .
-            'u.name AS created_by_, u.*, ' .
-            '(u.login_attempts >= 3) AS locked, ' .
-            'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _curates, ' .
-            'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _collaborates, ' .
-            'c.name AS country_, ' .
-            'uc.name AS created_by_, ' .
-            'ue.name AS edited_by_, ' .
-            'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level, u.*, (u.login_attempts >= 3) AS locked, ' .
-                                          'COUNT(CASE u2g.allow_edit WHEN 1 THEN u2g.geneid END) AS curates, ' .
-                                          'c.name AS country_, ' .
-                                          'GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . ')) AS level, ' .
-                                          'CASE GREATEST(u.level, IFNULL(CASE MAX(u2g.allow_edit) WHEN 1 THEN ' . LEVEL_CURATOR . ' WHEN 0 THEN ' . LEVEL_COLLABORATOR . ' END, ' . LEVEL_SUBMITTER . '))asdf END AS level_ FROM test ORDER BY test
-
-
-
-
-
 ';
 /*
 foreach (explode("\n", trim($sSQLs)) as $sSQL) {
