@@ -23,7 +23,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=hg_build", "label=hg19");
     $this->select("name=dbSNP_column", "label=VariantOnGenome/Reference");
     $this->select("name=autocreate", "label=Create genes and transcripts");
-    $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
+    $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
     $this->click("//input[@value='Upload SeattleSeq file']");
     for ($second = 0; ; $second++) {

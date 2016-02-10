@@ -13,7 +13,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]");
     $this->waitForPageToLoad("30000");
     $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/',$this->getLocation()));
-    $this->type("name=Individual/Lab_ID", "12345HealthyCtrl");
+    $this->type("name=Individual/Lab_ID", "1234HealthyCtrl");
     $this->click("link=PubMed");
     $this->type("name=Individual/Reference", "{PMID:[2011]:[21520333]}");
     $this->type("name=Individual/Remarks", "No Remarks");

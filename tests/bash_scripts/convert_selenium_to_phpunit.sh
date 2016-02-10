@@ -47,6 +47,7 @@ SCRIPT=$(readlink -f $0)
 PROJECTPATH=`echo ${SCRIPT} | sed "s@$PROJECTFOLDER.*@$PROJECTFOLDER@"`
 LOCALHOSTDIR=`echo ${PROJECTPATH} | sed "s@.*$PROJECTFOLDER@http://localhost/$PROJECTFOLDER@" | sed "s@/test.*@@"`
 echo Localhost directory: ${LOCALHOSTDIR}
+echo Projectpath: ${PROJECTPATH}
 
 # These are used to replace the locations in the setup script.
 NEWSETBROWSERURL="http://localhost"
@@ -256,8 +257,8 @@ do
         sed "s@this->open(\".*./src@this->open(\"$LOCALHOSTDIR/src@" |
         sed "s@this->open(\".*./tests@this->open(\"$LOCALHOSTDIR/tests@" |
         sed 's/0)$/0);/' |
-        sed "s@name=variant_file.*./tests/test_data_files/@name=variant_file\"\, \"$PROJECTPATH/tests/test_data_files@" |
-        sed "s@name=import.*./tests/test_data_files/@name=import\"\, \"$PROJECTPATH/tests/test_data_files@"`
+        sed "s@name=variant_file.*./tests/test_data_files/@name=variant_file\"\, \"$PROJECTPATH/tests/test_data_files/@" |
+        sed "s@name=import.*./tests/test_data_files/@name=import\"\, \"$PROJECTPATH/tests/test_data_files/@"`
     echo "${data}">${file}
     sleep 1
     echo "done"

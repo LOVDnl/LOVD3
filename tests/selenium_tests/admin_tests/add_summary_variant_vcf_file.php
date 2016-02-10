@@ -30,7 +30,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=genotype_field", "label=Use Phred-scaled genotype likelihoods (PL)");
     $this->check("name=allow_mapping");
     $this->check("name=allow_create_genes");
-    $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
+    $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
     $this->click("//input[@value='Upload VCF file']");
     $this->waitForPageToLoad("30000");

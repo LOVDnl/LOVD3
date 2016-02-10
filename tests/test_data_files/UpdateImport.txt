@@ -62,7 +62,7 @@
 ## Variants_On_Transcripts ## Do not remove or alter this header ##
 ## Count = 3
 "{{id}}"	"{{transcriptid}}"	"{{effectid}}"	"{{position_c_start}}"	"{{position_c_start_intron}}"	"{{position_c_end}}"	"{{position_c_end_intron}}"	"{{VariantOnTranscript/DNA}}"	"{{VariantOnTranscript/Exon}}"	"{{VariantOnTranscript/Protein}}"	"{{VariantOnTranscript/RNA}}"
-"0000000002"	"00001"	"50"	"123"	"0"	"123"	"0"	"c.123A>T"	"1"	"p.(=)"	"r.(=)"
+"0000000002"	"00000001"	"50"	"123"	"0"	"123"	"0"	"c.123A>T"	"1"	"p.(=)"	"r.(=)"
 
 
 ## Screenings_To_Variants ## Do not remove or alter this header ##
