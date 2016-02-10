@@ -435,6 +435,8 @@ class LOVD_Object {
                         }
                     }
                 }
+                // We never need an ORDER BY to get the number of results, so...
+                $aSQL['ORDER_BY'] = '';
             }
         }
         $aColumnsNeeded = array_unique($aColumnsNeeded);
