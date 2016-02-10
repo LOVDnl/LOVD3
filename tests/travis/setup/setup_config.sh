@@ -6,9 +6,8 @@
 
 pwd
 
-exit 1
 echo "Copy lovd config file"
-cp ./config.ini.php-lovd ./config.ini.php
+cp ./src/config.ini.php-lovd ./src/config.ini.php
 
 echo "Set username and password"
 
