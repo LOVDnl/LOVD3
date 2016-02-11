@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2015-12-13
+ * Modified    : 2016-02-09
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -65,6 +66,10 @@ class LOVD_User extends LOVD_Object {
         foreach ($_SETT['user_levels'] as $nLevel => $sLevel) {
             $sLevelQuery .= ' WHEN "' . $nLevel . '" THEN "' . $nLevel . $sLevel . '"';
         }
+
+        // SQL code for preparing view entry query.
+        // Increase DB limits to allow concatenation of large number of gene IDs.
+        $this->sSQLPreViewEntry = 'SET group_concat_max_len = 200000';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
@@ -449,20 +454,10 @@ class LOVD_User extends LOVD_Object {
                 // This is only visible for Curators, so we don't want to mess around with aColumnsViewEntry when this field is no longer there.
                 $this->aColumnsViewEntry['collaborates_'][0] .= ' ' . count($zData['collaborates']) . ' gene' . (count($zData['collaborates']) == 1? '' : 's');
             }
-            $zData['curates_'] = '';
-            $zData['curates_short_'] = '';
-            $i = 0;
-            foreach ($zData['curates'] as $key => $sGene) {
-                $zData['curates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
-                if ($i < 20) {
-                    $zData['curates_short_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
-                    $i++;
-                }
-            }
-            if (count($zData['curates']) > 22) {
-                // Replace long gene list by shorter one, allowing expand.
-                $zData['curates_'] = '<SPAN>' . $zData['curates_short_'] . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($zData['curates']) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $zData['curates_'] . '</SPAN>';
-            }
+
+            // Get HTML links for genes curated by current user.
+            $zData['curates_'] = $this->lovd_getObjectLinksHTML($zData['curates'], 'genes/%s');
+
             $zData['collaborates_'] = '';
             foreach ($zData['collaborates'] as $key => $sGene) {
                 $zData['collaborates_'] .= (!$key? '' : ', ') . '<A href="genes/' . $sGene . '">' . $sGene . '</A>';
