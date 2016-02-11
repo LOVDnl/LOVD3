@@ -12,21 +12,21 @@ testsuitelist[6]='submitter_suite'
 testsuitelist[7]='import_suite'
 
 # When a php export file is older then a selenium file, the latest changes made in the selenium file might not be included in the php file.
-# There for the user is asked what to do. Default is always ask what to do.
+# Therefore the user is asked what to do. Default is always ask what to do.
 alwaysask=true
 
-# As default it is assumed that 'svn' the first localhost folder is. ie http://localhost/svn
+# As default it is assumed that 'LOVD3' is the first localhost folder. ie http://localhost/LOVD3
 # When the first folder is different, it must be given as input.
-FIRSTLOCALHOSTFOLDER='svn'
+PROJECTFOLDER='LOVD3'
 
 for i in "$@"
 do
     case $i in
-        -l=*|--localhost=*)
-            FIRSTLOCALHOSTFOLDER="${i#*=}"
-			#The input is refering to the github project.
-			#For local development: /LOVD3_development
-			#For LUMC development : /LOVD3
+        -p=*|--projectfolder=*)
+            PROJECTFOLDER="${i#*=}"
+                #The input is refering to the github project.
+                #For local development: /LOVD3_development
+                #For LOVDnl development : /LOVD3
         ;;
         -c|--continueall)
             alwaysask=false
@@ -35,7 +35,7 @@ do
         *)
             echo Unknown input
             echo Usage:
-            column -t -s "/" <<<'    -l=<folder> /|/ --localhost=<folder> / Give the first localhost folder when it is not "svn". This is used in the Travis CI test.
+            column -t -s "/" <<<'    -p=<folder> /|/ --projectfolder=<folder> / Give the first localhost folder when it is not "svn". This is used in the Travis CI test.
         -c /|/ --continueall / If set, it will not ask for actions during convert, but always continues with convert. This might create corrupt phpunit test files.'
             echo "Specify no file when you want te test all testfiles in the phpunit_selenium folder."
             exit
@@ -44,23 +44,15 @@ do
 done
 
 SCRIPT=$(readlink -f $0)
-SCRIPTPATH=$(dirname $SCRIPT)
-SELENIUMTESTTPATH=$(dirname $SCRIPTPATH)/selenium_tests
-PHPUNITTESTTPATH=$(dirname $SCRIPTPATH)/phpunit_selenium
-TESTDATATPATH=$(dirname $SCRIPTPATH)/test_data_files/
-#DOCROOT=$(grep -h DocumentRoot /etc/apache2/sites-enabled/*default* | head -n 1 | awk '{print $2}' | sed 's\//\\\//g');
-#LOCALHOSTDIR=`echo $SCRIPTPATH | sed "s/.*${DOCROOT}//" | sed "s@/trunk.*@@"`
-echo ${SCRIPTPATH}
-LOCALHOSTDIR=`echo ${SCRIPTPATH} | sed "s@.*$FIRSTLOCALHOSTFOLDER@/$FIRSTLOCALHOSTFOLDER@" | sed "s@/test.*@@"`
-TRUNKDIR=`echo ${SCRIPT} | sed "s@test.*@@"`
-
+PROJECTPATH=`echo ${SCRIPT} | sed "s@$PROJECTFOLDER.*@$PROJECTFOLDER@"`
+LOCALHOSTDIR=`echo ${PROJECTPATH} | sed "s@.*$PROJECTFOLDER@http://localhost/$PROJECTFOLDER@" | sed "s@/test.*@@"`
 echo Localhost directory: ${LOCALHOSTDIR}
-echo ${TRUNKDIR}
+echo Projectpath: ${PROJECTPATH}
 
 # These are used to replace the locations in the setup script.
-NEWSETBROWSERURL="http://localhost"${LOCALHOSTDIR}
-NEWSCREENSHOTPATH=${TRUNKDIR}"tests/test_results/error_screenshots"
-NEWSCHREENSHOTURL=${NEWSETBROWSERURL}"/tests/test_results/error_screenshots"
+NEWSETBROWSERURL="http://localhost"
+NEWSCREENSHOTPATH=${PROJECTPATH}"/tests/test_results/error_screenshots"
+NEWSCHREENSHOTURL=${LOCALHOSTDIR}"/tests/test_results/error_screenshots"
 
 echo Default browser URL: ${NEWSETBROWSERURL}
 echo Screenshot Path: ${NEWSCREENSHOTPATH}
@@ -77,7 +69,7 @@ totalmethod=0
 numberoftests=0
 totalnumberoftests=0
 
-cd ${SELENIUMTESTTPATH}
+cd ${PROJECTPATH}/tests/selenium_tests
 
 # This is a temporary file used to merge all tests to one file.
 # This file is deleted at the end of a conversion.
@@ -190,7 +182,7 @@ do
     totalnumberoftests=$((totalnumberoftests+numberoftests))
     for file in $files
     do
-        # Test if source and target files exists. If not then the conversion is interupted.
+        # Test if source and target files exists. If not then the conversion is interrupted.
         if [ ! -f "../phpunit_selenium/${newfilename}.php" ]; then
             echo "ERROR (Line:" $LINENO"): target file '"../phpunit_selenium/${dir}.php"' does not exist."
             echo "WARNING (Line:" $LINENO"): Conversion is interupted!"
@@ -258,15 +250,15 @@ echo -----------------------end---------------------------
 # 4 When files are imported the location must be modified, depending on the installation.
 # 5 When files are imported the location must be modified, depending on the installation.
 echo --------------Fix Selenium export bugs---------------
-for file in "${PHPUNITTESTTPATH}"/*
+for file in "${PROJECTPATH}/tests/phpunit_selenium"/*
 do
     echo "Fix:" ${file}
     data=`grep -A 2000 "<?php" ${file} |
         sed "s@this->open(\".*./src@this->open(\"$LOCALHOSTDIR/src@" |
         sed "s@this->open(\".*./tests@this->open(\"$LOCALHOSTDIR/tests@" |
         sed 's/0)$/0);/' |
-        sed "s@name=variant_file.*./tests/test_data_files/@name=variant_file\"\, \"$TESTDATATPATH@" |
-        sed "s@name=import.*./tests/test_data_files/@name=import\"\, \"$TESTDATATPATH@"`
+        sed "s@name=variant_file.*./tests/test_data_files/@name=variant_file\"\, \"$PROJECTPATH/tests/test_data_files/@" |
+        sed "s@name=import.*./tests/test_data_files/@name=import\"\, \"$PROJECTPATH/tests/test_data_files/@"`
     echo "${data}">${file}
     sleep 1
     echo "done"

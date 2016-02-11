@@ -30,12 +30,11 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=owned_by", "label=LOVD3 Admin");
     $this->select("name=statusid", "label=Public");
     $this->click("//input[@value='Upload SeattleSeq file']");
-    $this->waitForPageToLoad("60000");
     for ($second = 0; ; $second++) {
         if ($second >= 300) $this->fail("timeout");
-        if ($this->isElementPresent("//input[@value='Continue »']")) {
-            break;
-        }
+        try {
+            if ($this->isElementPresent("//input[@value='Continue »']")) break;
+        } catch (Exception $e) {}
         sleep(1);
     }
 

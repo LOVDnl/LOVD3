@@ -27,7 +27,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->select("name=statusid", "label=Public");
     $this->click("//input[@value='Upload SeattleSeq file']");
     for ($second = 0; ; $second++) {
-        if ($second >= 180) $this->fail("timeout");
+        if ($second >= 300) $this->fail("timeout");
         try {
             if ($this->isElementPresent("//input[@value='Continue »']")) break;
         } catch (Exception $e) {}

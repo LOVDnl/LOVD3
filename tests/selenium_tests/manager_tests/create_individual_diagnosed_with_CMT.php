@@ -21,7 +21,7 @@ class Example extends PHPUnit_Extensions_SeleniumTestCase
     $this->type("name=Individual/Remarks", "No Remarks");
     $this->type("name=Individual/Remarks_Non_Public", "Still no remarks");
     $this->addSelection("name=active_diseases[]", "label=CMT (Charcot Marie Tooth Disease)");
-    $this->select("name=owned_by", "label=LOVD3 Admin");
+    $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
     $this->select("name=statusid", "label=Public");
     $this->click("//input[@value='Create individual information entry']");
     $this->waitForPageToLoad("30000");
