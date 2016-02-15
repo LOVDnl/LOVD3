@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-02-02
+ * Modified    : 2016-02-15
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -156,7 +157,7 @@ class LOVD_Template {
                         'configuration_' =>
                          array(
                              // The links are only active, when this person has rights on the currently selected gene.
-                             '/view/' . $_SESSION['currdb'] . '?search_var_status=Submitted%7CNon%7CMarked' => array('menu_variants_curate.png', 'View uncurated ' . $_SESSION['currdb'] . ' variants', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
+                             '/view/' . $_SESSION['currdb'] . '?search_var_status=' . urlencode('="In progress"|"Pending"|"Non public"|"Marked"') => array('menu_variants_curate.png', 'View uncurated ' . $_SESSION['currdb'] . ' variants', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
                              '/view/' . $_SESSION['currdb'] => array('menu_variants.png', 'View ' . $_SESSION['currdb'] . ' variants', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
                              'hr',
 /*
