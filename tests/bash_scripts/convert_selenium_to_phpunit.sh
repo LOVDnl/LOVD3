@@ -1,16 +1,6 @@
 #!/bin/bash
 # script for creating phpunit selenium tests from the selenium IDE files. See readme file for details.
 
-# This is a array with all folders which must be included in the test.
-testsuitelist[0]='temp_suite'
-testsuitelist[1]='authorization_suite'
-testsuitelist[2]='admin_suite'
-testsuitelist[3]='manager_suite'
-testsuitelist[4]='curator_suite'
-testsuitelist[5]='collaborator_suite'
-testsuitelist[6]='submitter_suite'
-testsuitelist[7]='import_suite'
-
 # When a php export file is older then a selenium file, the latest changes made in the selenium file might not be included in the php file.
 # Therefore the user is asked what to do. Default is always ask what to do.
 alwaysask=true
@@ -48,6 +38,14 @@ PROJECTPATH=`echo ${SCRIPT} | sed "s@$PROJECTFOLDER.*@$PROJECTFOLDER@"`
 LOCALHOSTDIR=`echo ${PROJECTPATH} | sed "s@.*$PROJECTFOLDER@http://localhost/$PROJECTFOLDER@" | sed "s@/test.*@@"`
 echo Localhost directory: ${LOCALHOSTDIR}
 echo Projectpath: ${PROJECTPATH}
+
+# Here all the selenium suites are placed in an array.
+suites=`ls ${PROJECTPATH}/tests/selenium_tests/ | grep _suite$`
+for suite in $suites
+do
+    testsuitelist[$count]=$suite
+    ((count++))
+done
 
 # These are used to replace the locations in the setup script.
 NEWSETBROWSERURL="http://localhost"
