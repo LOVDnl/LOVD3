@@ -157,8 +157,8 @@ class LOVD_Template {
                         'configuration_' =>
                          array(
                              // The links are only active, when this person has rights on the currently selected gene.
-                             '/view/' . $_SESSION['currdb'] . '?search_var_status=' . urlencode('="Pending"|"Non public"|"Marked"') => array('menu_variants_curate.png', 'View uncurated ' . $_SESSION['currdb'] . ' variants', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
                              '/view/' . $_SESSION['currdb'] => array('menu_variants.png', 'View ' . $_SESSION['currdb'] . ' variants', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
+                             '/view/' . $_SESSION['currdb'] . '?search_var_status=' . urlencode('="Pending"|"Non public"|"Marked"') => array('menu_variants_curate.png', 'View ' . $_SESSION['currdb'] . ' variants that require attention', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
                              'hr',
 /*
                                         array('config_free_edit.php', 'fnr', 'Find &amp; Replace', 'Find &amp; Replace', 'lovd_free_edit_fnr'),
