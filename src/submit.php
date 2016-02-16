@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2015-01-16
- * For LOVD    : 3.0-13
+ * Modified    : 2016-02-16
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1022,7 +1022,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
                 $sMessage . ',' . "\n\n" .
                 $_AUTH['name'] . ($_PE[2] == 'confirmedVariants'? ' has indicated that additional variants were also confirmed by an existing screening.' : ' has ' . (ACTION != 'edit'? 'submitted an addition to' : 'made changes to an existing entry in') . ' the LOVD database.') . "\n";
     if ($bUnpublished) {
-        $sMessage .= '(Part of) this submission won\'t be viewable to the public until you as curator agree with the additions. Below is a ' . (ACTION != 'edit'? 'copy of the submission.' : 'overview of the changes.') . "\n\n";
+        $sMessage .= '(Part of) this submission won\'t be viewable to the public until you as curator agree with the additions. You can do so by viewing the entry in LOVD (make sure you\'re logged in), and selecting "Publish" in the options menu. Below is a ' . (ACTION != 'edit'? 'copy of the submission.' : 'overview of the changes.') . "\n\n";
     }
 
     if ($_CONF['location_url']) {
