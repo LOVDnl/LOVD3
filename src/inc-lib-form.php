@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2015-04-20
- * For LOVD    : 3.0-14
+ * Modified    : 2016-02-16
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -751,7 +752,8 @@ function lovd_viewForm ($a,
                         $sHelpSuffix   = '</TD>',
                         $sDataPrefix   = "\n            <TD class=\"{{ CLASS }}\" width=\"{{ WIDTH }}\">",
                         $sDataSuffix   = '</TD></TR>',
-                        $sNewLine      = '              ')
+                        $sNewLine      = '              ',
+                        $enableAutofillCred = false)
 {
     // Based on a function provided by Ileos.nl.
     /***************************************************************************
@@ -774,6 +776,8 @@ function lovd_viewForm ($a,
      * array('<header>', '<help_text>', 'checkbox', '<field_name>'),
      * array('<header>', '<help_text>', 'submit', '<button_value>', '<field_name>'),
      *
+     * If parameter $enableAutofillCred is false, the function will try to prevent
+     * the browser from automatically filling credential fields (username/password)
      **********/
 
     // Options.
@@ -891,7 +895,12 @@ function lovd_viewForm ($a,
                 list($sHeader, $sHelp, $sType, $sName, $nSize) = $aField;
                 if (!isset($GLOBALS['_' . $sMethod][$sName])) { $GLOBALS['_' . $sMethod][$sName] = ''; }
 
-                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName)? '' : ' class="err"') . '>' . $sDataSuffix);
+                $autofillBlockerAtts = '';
+                if ($sType == 'password' && !$enableAutofillCred) {
+                    // Block editing of the actual password field until onFocus event.
+                    $autofillBlockerAtts = ' readonly onfocus="this.removeAttribute(\'readonly\');" ';
+                }
+                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName)? '' : ' class="err"') . $autofillBlockerAtts . '>' . $sDataSuffix);
                 continue;
 
 
