@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-16
+ * Modified    : 2016-02-17
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -752,8 +752,7 @@ function lovd_viewForm ($a,
                         $sHelpSuffix   = '</TD>',
                         $sDataPrefix   = "\n            <TD class=\"{{ CLASS }}\" width=\"{{ WIDTH }}\">",
                         $sDataSuffix   = '</TD></TR>',
-                        $sNewLine      = '              ',
-                        $enableAutofillCred = false)
+                        $sNewLine      = '              ')
 {
     // Based on a function provided by Ileos.nl.
     /***************************************************************************
@@ -776,8 +775,6 @@ function lovd_viewForm ($a,
      * array('<header>', '<help_text>', 'checkbox', '<field_name>'),
      * array('<header>', '<help_text>', 'submit', '<button_value>', '<field_name>'),
      *
-     * If parameter $enableAutofillCred is false, the function will try to prevent
-     * the browser from automatically filling credential fields (username/password)
      **********/
 
     // Options.
@@ -891,19 +888,42 @@ function lovd_viewForm ($a,
 
 
 
-            } elseif (in_array($aField[2], array('text', 'password', 'file'))) {
+            } elseif (in_array($aField[2], array('text', 'file'))) {
                 list($sHeader, $sHelp, $sType, $sName, $nSize) = $aField;
-                if (!isset($GLOBALS['_' . $sMethod][$sName])) { $GLOBALS['_' . $sMethod][$sName] = ''; }
-
-                $autofillBlockerAtts = '';
-                if ($sType == 'password' && !$enableAutofillCred) {
-                    // Block editing of the actual password field until onFocus event.
-                    $autofillBlockerAtts = ' readonly onfocus="this.removeAttribute(\'readonly\');" ';
+                if (!isset($GLOBALS['_' . $sMethod][$sName])) {
+                    $GLOBALS['_' . $sMethod][$sName] = '';
                 }
-                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName)? '' : ' class="err"') . $autofillBlockerAtts . '>' . $sDataSuffix);
+
+                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName) ? '' : ' class="err"') . '>' . $sDataSuffix);
                 continue;
 
 
+            } elseif ($aField[2] == 'password') {
+                // Add default values to any missing entries at the end of the field array.
+                $aFieldComplete = array_pad($aField, 6, false);
+                list( , , $sType, $sName, $nSize, $bBlockAutofillPass) = $aFieldComplete;
+
+                if (!isset($GLOBALS['_' . $sMethod][$sName])) {
+                    $GLOBALS['_' . $sMethod][$sName] = '';
+                }
+
+                // Setup password field attributes.
+                $sFieldAtts = ' type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '"';
+                if ($bBlockAutofillPass) {
+                    // Block editing of the actual password field until JS onFocus event.
+                    $sFieldAtts .= ' readonly onfocus="this.removeAttribute(\'readonly\');"';
+                }
+
+                // Output a hidden text field before password field, to catch a possible
+                // mistaken automatic fill of a username.
+                print('<INPUT type="text" style="display:none" />' . PHP_EOL);
+                // Print indentation for new line.
+                print($sNewLine);
+
+                print('<INPUT' . $sFieldAtts . ' value="' . htmlspecialchars(
+                        $GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName) ?
+                        '' : ' class="err"') . '>' . $sDataSuffix);
+                continue;
 
             } elseif ($aField[2] == 'textarea') {
                 list($sHeader, $sHelp, $sType, $sName, $nCols, $nRows) = $aField;
