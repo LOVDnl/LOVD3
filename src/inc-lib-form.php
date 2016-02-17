@@ -752,8 +752,7 @@ function lovd_viewForm ($a,
                         $sHelpSuffix   = '</TD>',
                         $sDataPrefix   = "\n            <TD class=\"{{ CLASS }}\">",
                         $sDataSuffix   = '</TD></TR>',
-                        $sNewLine      = '              ',
-                        $enableAutofillCred = false)
+                        $sNewLine      = '              ')
 {
     // Based on a function provided by Ileos.nl.
     /***************************************************************************
@@ -776,8 +775,6 @@ function lovd_viewForm ($a,
      * array('<header>', '<help_text>', 'checkbox', '<field_name>'),
      * array('<header>', '<help_text>', 'submit', '<button_value>', '<field_name>'),
      *
-     * If parameter $enableAutofillCred is false, the function will try to prevent
-     * the browser from automatically filling credential fields (username/password)
      **********/
 
     // Options.
@@ -897,12 +894,7 @@ function lovd_viewForm ($a,
                     $GLOBALS['_' . $sMethod][$sName] = '';
                 }
 
-                $autofillBlockerAtts = '';
-                if ($sType == 'password' && !$enableAutofillCred) {
-                    // Block editing of the actual password field until onFocus event.
-                    $autofillBlockerAtts = ' readonly onfocus="this.removeAttribute(\'readonly\');" ';
-                }
-                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName)? '' : ' class="err"') . $autofillBlockerAtts . '>' . $sDataSuffix);
+                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName) ? '' : ' class="err"') . '>' . $sDataSuffix);
                 continue;
 
 
@@ -932,6 +924,8 @@ function lovd_viewForm ($a,
                         $GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName) ?
                         '' : ' class="err"') . '>' . $sDataSuffix);
                 continue;
+
+
 
             } elseif ($aField[2] == 'textarea') {
                 list($sHeader, $sHelp, $sType, $sName, $nCols, $nRows) = $aField;
