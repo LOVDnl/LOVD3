@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-02-11
- * For LOVD    : 3.0-15
+ * Modified    : 2016-02-18
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -2068,7 +2068,6 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
 
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require ROOT_PATH . 'inc-lib-columns.php';
 
     define('PAGE_TITLE', 'Delete custom data column ' . $sColumnID);
     define('LOG_EVENT', 'ColDelete');
