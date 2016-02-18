@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-02-08
+ * Modified    : 2016-02-18
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -12,7 +12,7 @@
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -41,6 +41,109 @@ if ($_AUTH) {
 }
 
 
+
+function lovd_prepareCuratorLogMessage($sGeneID, $db, $aCurators, $aAllowEdit, $aShown)
+{
+    // Creates a log message showing main differences between current database
+    // status and curator privileges given as parameters ($aCurators,
+    // $aAllowEdit, $aShown).
+    // Parameters:
+    //     $sGeneID: Gene ID.
+    //     $db: LOVD_PDO object.
+    //     $aCurators: array of curator IDs.
+    //     $aAllowEdit: array of curator IDs with edit privileges.
+    //     $aShown: array of curator IDs in order as shown on gene page.
+
+    $sLogMessage = 'Updated curator list for the ' . $sGeneID . ' gene:' . PHP_EOL;
+    $aCurrentCurators = array();
+    $aCurrentNames = array();
+
+    // Get current status of database.
+    $qStatus = $db->query('SELECT userid, name, allow_edit, show_order FROM ' .
+        TABLE_CURATES . ' AS u2g JOIN ' . TABLE_USERS . ' AS u ON' .
+        ' (u.id = u2g.userid) WHERE geneid = ?;',
+        array($sGeneID));
+
+    foreach ($qStatus->fetchAllAssoc() as $zStatus) {
+        // Compare status of current privileges with those about to be submitted.
+        $aCurrentCurators[] = $zStatus['userid'];
+        $aCurrentNames[] = $zStatus['name'];
+
+        if (!in_array($zStatus['userid'], $aCurators)) {
+            $sLogMessage .= 'Removed user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
+                            ').' . PHP_EOL;
+            continue;
+        }
+
+        if ($zStatus['show_order'] == '0' && in_array($zStatus['userid'], $aShown)) {
+            $sLogMessage .= 'Unhidden user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
+                            ').' . PHP_EOL;
+
+        } elseif ($zStatus['show_order'] != '0' && !in_array($zStatus['userid'], $aShown)) {
+            $sLogMessage .= 'Hidden user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
+                            ').' . PHP_EOL;
+        }
+
+        if ($zStatus['allow_edit'] == '0' && in_array($zStatus['userid'], $aAllowEdit)) {
+            $sLogMessage .= 'Given edit privileges to user #' . $zStatus['userid'] . ' (' .
+                            $zStatus['name'] . ').' . PHP_EOL;
+
+        } elseif ($zStatus['allow_edit'] == '1' && !in_array($zStatus['userid'], $aAllowEdit)) {
+            $sLogMessage .= 'Retracted edit privileges from user #' . $zStatus['userid'] .
+                            ' (' . $zStatus['name'] . ').' . PHP_EOL;
+        }
+    }
+
+    // Determine newly added curators.
+    $aNewCuratorIDs = array_diff($_POST['curators'], $aCurrentCurators);
+    $aNewCurators = array();
+
+    if (count($aNewCuratorIDs) > 0) {
+        // Get names for new curators.
+        $qNewNames = $db->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id IN (' .
+            join(', ', $aNewCuratorIDs) . ');');
+        $aNewCurators = $qNewNames->fetchAllAssoc();
+
+        foreach ($aNewCurators as $aNewCurator) {
+            $sLogMessage .= 'Added user #' . $aNewCurator['id'] . ' (' . $aNewCurator['name'] . ')'
+                            . PHP_EOL;
+        }
+    }
+
+    // Format new order of curators with IDs and names.
+    $sLogMessage .= 'Order is now: ';
+    $aCuratorDisplaysShown = array();
+    $aCuratorDisplaysHidden = array();
+
+    foreach ($aCurators as $sCuratorID) {
+        $sCuratorDisplay = 'user #' . $sCuratorID . ' (';
+
+        if (($nIndex = array_search($sCuratorID, $aCurrentCurators, true)) !== false) {
+            $sCuratorDisplay .= $aCurrentNames[$nIndex];
+
+        } else {
+            foreach ($aNewCurators as $aNewCurator) {
+                if ($aNewCurator['id'] == $sCuratorID) {
+                    $sCuratorDisplay .= $aNewCurator['name'];
+                }
+            }
+        }
+        $sCuratorDisplay .= ')';
+
+        if (in_array($sCuratorID, $aShown)) {
+            $aCuratorDisplaysShown[] = $sCuratorDisplay;
+        } else {
+            $aCuratorDisplaysHidden[] = $sCuratorDisplay;
+        }
+    }
+
+    $sLogMessage .= join(', ', $aCuratorDisplaysShown);
+    if (count($aCuratorDisplaysHidden) > 0) {
+        // Hidden curators are separate, their order may be off as it is implicit.
+        $sLogMessage .= ', ' . join(', ', $aCuratorDisplaysHidden);
+    }
+    return $sLogMessage . PHP_EOL;
+}
 
 
 
@@ -1473,6 +1576,13 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
         if (!lovd_error()) {
             // What's by far the most efficient code-wise is just insert/update all we've got and delete everything else.
+
+            // Prepare log for changes.
+            // (depends on current database status, so we create the log message before
+            // the changes are committed, but log the actual message afterwards).
+            $sLogMessage = lovd_prepareCuratorLogMessage($sID, $_DB, $_POST['curators'],
+                                                         $_POST['allow_edit'], $_POST['shown']);
+
             $_DB->beginTransaction();
 
             foreach ($_POST['curators'] as $nOrder => $nUserID) {
@@ -1501,12 +1611,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
             $_DB->commit();
 
             // Write to log...
-            if (ACTION == 'authorize') {
-                $sMessage = 'Updated curator list for the ' . $sID . ' gene';
-            } else {
-                $sMessage = 'Resorted curator list for the ' . $sID . ' gene';
-            }
-            lovd_writeLog('Event', LOG_EVENT, $sMessage);
+            lovd_writeLog('Event', LOG_EVENT, $sLogMessage);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
