@@ -404,7 +404,7 @@ class LOVD_Object {
                             // Real table. We don't need this in the SELECT unless it's also in the HAVING, but we definitely need this in the JOIN.
                             $aTablesNeeded[] = $aRegs[1][$i];
                         } elseif ($aRegs[2][$i]) {
-                            // Alias only. Keep this column for the SELECT. When parsing the SELECT, we'll find out from which table it is.
+                            // Alias only. Keep this column for the SELECT. When parsing the SELECT, we'll find out from which table(s) it is.
                             $aColumnsNeeded[] = $aRegs[2][$i];
                         }
                     }
@@ -501,8 +501,33 @@ class LOVD_Object {
 
         // Analyzing the WHERE... We don't care about AND/OR or anything... we just want tables.
         // WHERE clauses *always* contain the table aliases, so it's going to be easy.
-        if (preg_match_all('/\b(\w+)\./', $aSQL['WHERE'], $aRegs)) {
+        if (preg_match_all('/\b(\w+)\.(?:`|[A-Za-z])/', $aSQL['WHERE'], $aRegs)) {
             $aTablesNeeded = array_merge($aTablesNeeded, $aRegs[1]);
+        }
+
+        // When we're running filters on the custom columns, we never use a table alias,
+        // because we don't know where the column comes from.
+        // To solve this, we must parse the column and fetch the used alias from the query.
+        // We're specifically looking for custom columns *not* prefixed by a table alias.
+        if (preg_match_all('/[^.](?:`(\w+)\/[A-Za-z0-9_\/]+`)/', $aSQL['WHERE'], $aRegs)) {
+            // To not reproduce code, we'll use lovd_getTableInfoByCategory().
+            if (!function_exists('lovd_getTableInfoByCategory')) {
+                // FIXME: Yes, this is messy. This function is getting used in a decent number of places,
+                //  and therefore perhaps we should pull it into inc-lib-init.php?
+                require ROOT_PATH . 'inc-lib-columns.php';
+            }
+            // Loop columns and find tables.
+            foreach ($aRegs[1] as $sCategory) {
+                $aTableInfo = lovd_getTableInfoByCategory($sCategory);
+                if (isset($aTableInfo['table_sql']) && preg_match_all('/' . $aTableInfo['table_sql'] . ' AS (\w+)\b/i', $aSQL['FROM'], $aRegsTables)) {
+                    $aTablesNeeded = array_merge($aTablesNeeded, $aRegsTables[1]);
+                } else {
+                    // OK, this really shouldn't happen. Either the column wasn't a
+                    // category we recognized, or the SQL was too complicated?
+                    // Let's log this.
+                    lovd_writeLog('Error', 'LOVD-Lib', 'LOVD_Object::getRowCountForViewList() - Function identified custom column category ' . $sCategory . ', but couldn\'t find corresponding table alias in query.' . "\n" . 'URL: ' . preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . "\n" . 'From: ' . $aSQL['FROM']);
+                }
+            }
         }
         $aTablesNeeded = array_unique($aTablesNeeded);
 
