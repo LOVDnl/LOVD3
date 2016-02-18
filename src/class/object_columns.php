@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-02-09
+ * Modified    : 2016-02-11
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -276,6 +276,7 @@ class LOVD_Column extends LOVD_Object {
                         array('Column heading', 'This will appear above the column in data tables.', 'text', 'head_column', 30),
                         array('Description on short legend<BR>(HTML enabled)', '', 'textarea', 'description_legend_short', 40, 2),
                         array('Description on full legend<BR>(HTML enabled)', '', 'textarea', 'description_legend_full', 40, 4),
+                        array('', '', 'note', 'The full legend description will also serve as help text. In create and edit forms where this custom column is present, the text will be shown when someone hovers their mouse over the blue question mark next to the input field.'),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Data and form settings</B> (Use data type wizard to change values)'),
