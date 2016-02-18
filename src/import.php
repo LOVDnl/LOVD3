@@ -115,16 +115,57 @@ function lovd_calculateFieldDifferences ($zData, &$aLine)
         // When the database columns do not exist in the import file, the columns are not taken into account in this function.
         // Below we take care of fields that exist in the database but not in the import file.
         if (isset($aLine[$sCol])) {
-            if (strval($sValue) !== $aLine[$sCol]) {
-                if (isset($aSection['update_columns_not_allowed'][$sCol]) &&
-                    $aSection['update_columns_not_allowed'][$sCol]['error_type']) {
-                    // Changes in these fields are ignored during an update import, because they are not allowed to be modified.
-                    // But because we might want to set a warning to inform the user, the fields must be included in the $aDiffs array.
-                    // Whether changes in these columns are soft or hard errors or ignored silently, is defined in $aSection['update_columns_not_allowed'].
-                    $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => true);
-                } else {
-                    $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => false);
-                }
+            if (strval($sValue) === $aLine[$sCol]) {
+                //Database and import file have the same value, continue to the next field.
+                continue;                
+            }
+            
+            // We have to performe an extra check for id's because the import 
+            // file and database can have difference in leading zeros.
+           $temp = $aSection['object']->sObject;
+            if ($aSection['object']->sObject === 'Gene' &&
+                $sCol === 'id') {
+                // The id in section genes is the only id which is not an integer.
+                // Therefor we don't have to do an extra check on gene id and we 
+                // can continue. 
+                continue;
+            }
+            // This is an array of id fields which might have leading zeros.
+            $aCheckIds = array(
+                'id',
+                'transcriptid',
+                'individualid', 
+                'diseaseid', 
+                'screeningid', 
+                'variantid', 
+                'fatherid', 
+                'motherid', 
+                'panelid', 
+                'statusid', 
+                'screeningid', 
+                'owned_by', 
+                'created_by',
+                'edited_by');
+            
+            if (!empty($sValue) &&
+                in_array($sCol, $aCheckIds) &&
+                (int)$sValue === (int)$aLine[$sCol]){
+                //Database and import file have the same value, continue to the next field.
+                continue;
+            }
+            
+            // The field is different in the import file and in the database. 
+            // Now we check what we will do with this difference:
+            // ignore = true; Value in import file is NOT saved in database
+            // ignore = false; Value in import file is saved in database
+            if (isset($aSection['update_columns_not_allowed'][$sCol]) &&
+                $aSection['update_columns_not_allowed'][$sCol]['error_type']) {
+                // Changes in these fields are ignored during an update import, because they are not allowed to be modified.
+                // But because we might want to set a warning to inform the user, the fields must be included in the $aDiffs array.
+                // Whether changes in these columns are soft or hard errors or ignored silently, is defined in $aSection['update_columns_not_allowed'].
+                $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => true);
+            } else {
+                $aDiffs[$sCol] = array('DB' => $sValue, 'file' => $aLine[$sCol], 'ignore' => false);
             }
         } else {
             // During an update import we do not want to update fields, not present in the import file, with the default values.
