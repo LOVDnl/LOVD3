@@ -285,9 +285,22 @@ class LOVD_Gene extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-
+              
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
+            if (lovd_getProjectFile() == '/import.php') {
+                // During import the refseq_genomic is required, else the import 
+                // starts complaining that the selected refseq_genomic is not valid
+                // Therefore we set the refseq_genomic in the aFormData property 
+                // before the getForm() is returned.
+                global $zData;
+                $aSelectRefseqGenomic = array_combine(array($zData['refseq_genomic']), array($zData['refseq_genomic']));
+         
+                $this->aFormData =
+                    array(
+                        array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false)
+                    );
+            }
             return parent::getForm();
         }
 
