@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2015-09-24
- * For LOVD    : 3.0-14
+ * Modified    : 2016-02-11
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *
+ *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
  *
  * This file is part of LOVD.
  *
@@ -66,17 +66,26 @@ class LOVD_Column extends LOVD_Object {
                                'WHERE c.id = ? ' .
                                'GROUP BY c.id';
 
+        // SQL code for preparing view entry query.
+        // Increase DB limits to allow concatenation of large number of gene/disease IDs.
+        $this->sSQLPreViewEntry = 'SET group_concat_max_len = 200000';
+
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'c.*, ' .
                                            'SUBSTRING_INDEX(c.id, "/", 1) AS category, ' .
                                            'SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, ' .
                                            '(a.colid IS NOT NULL) AS active, ' .
                                            'uc.name AS created_by_, ' .
-                                           'ue.name AS edited_by_';
+                                           'ue.name AS edited_by_, ' .
+                                           'GROUP_CONCAT(sc.geneid ORDER BY sc.geneid SEPARATOR ";") AS _genes, ' .
+                                           'GROUP_CONCAT(DISTINCT d.id, ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases';
         $this->aSQLViewEntry['FROM']     = TABLE_COLS . ' AS c ' .
-                                           'LEFT JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
-                                           'LEFT JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) ' .
-                                           'LEFT JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id)';
+                                           'LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS a ON (c.id = a.colid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (c.created_by = uc.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (c.edited_by = ue.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (sc.diseaseid = d.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'c.id';
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'c.*, ' .
@@ -109,6 +118,7 @@ class LOVD_Column extends LOVD_Object {
                         'public_view_' => 'Show to public',
                         'public_add_' => 'Show on submission form',
                         'allow_count_all_' => 'Include in search form',
+                        'parent_objects' => 'Column activated for',
                         'created_by_' => 'Created by',
                         'created_date' => 'Date created',
                         'edited_by_' => 'Last edited by',
@@ -266,6 +276,7 @@ class LOVD_Column extends LOVD_Object {
                         array('Column heading', 'This will appear above the column in data tables.', 'text', 'head_column', 30),
                         array('Description on short legend<BR>(HTML enabled)', '', 'textarea', 'description_legend_short', 40, 2),
                         array('Description on full legend<BR>(HTML enabled)', '', 'textarea', 'description_legend_full', 40, 4),
+                        array('', '', 'note', 'The full legend description will also serve as help text. In create and edit forms where this custom column is present, the text will be shown when someone hovers their mouse over the blue question mark next to the input field.'),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Data and form settings</B> (Use data type wizard to change values)'),
@@ -397,6 +408,21 @@ class LOVD_Column extends LOVD_Object {
             $zData['form_type_']       = lovd_describeFormType($zData) . '<BR>' . $zData['form_type'];
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';
+
+
+            if ($zData['category'] == 'VariantOnTranscript') {
+                // Show genes for which this column is activated.
+                $this->aColumnsViewEntry['parent_objects'] = 'Column activated for genes';
+                $zData['parent_objects'] = $this->lovd_getObjectLinksHTML($zData['genes'], 'genes/%s');
+
+            } elseif ($zData['category'] == 'Phenotype') {
+                // Show diseases for which this column is activated.
+                $this->aColumnsViewEntry['parent_objects'] = "Column activated for diseases";
+                $zData['parent_objects'] = $this->lovd_getObjectLinksHTML($zData['diseases'], 'diseases/%s');
+            } else {
+                unset($this->aColumnsViewEntry['parent_objects']);
+            }
+
         }
         // FIXME; for titles use tooltips?
         $zData['active_']      = '<IMG src="gfx/mark_' . (int) $zData['active'] . '.png" alt="" width="11" height="11">';

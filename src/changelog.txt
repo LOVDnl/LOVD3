@@ -48,6 +48,17 @@
    not shown because of a fatal error when trying to log the message.
  * The page titles are made consistent with the dropdown menu options of the
    page tabs, and missing menu items are added.
+ * Added chapter "View and search data in an LOVD installation" to the manual
+   and added some other improvements.
+ * On data entry forms, the "Owner of this data" field now has the user's ID
+   visible as well, to distinguish between two users with the same name.
+ * When a gene can't be created because another gene with the same HGNC ID
+   already exists in the database, that gene symbol is now displayed for easy
+   reference.
+ * For each shared custom column, the list of genes or diseases that this column
+   is active for, is now shown on the column's detailed view.
+ * Fixed bug; Transcript viewlists included non-public variants in the variant
+   counts also for non-authorized users.
 
 
 /**************************

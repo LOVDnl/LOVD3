@@ -1,18 +1,16 @@
 language: php
 php:
-#  - 5.3.3
-  # aliased to 5.3.29
-#  - 5.3
   # aliased to a recent 5.4.x version
-#  - 5.4
+  - 5.4
   # aliased to a recent 5.5.x version
   - 5.5
   # aliased to a recent 5.6.xversion  
-#  - 5.6
+  - 5.6
   # aliased to a recent 7.x version
-#  - 7.0
-#  - hhvm
-#  - nightly
+  - 7.0
+  
+addons:
+  firefox: "40.0"
 
 sudo: required
 
@@ -20,24 +18,41 @@ before_install:
   - ./tests/travis/setup/setup_mysql.sh
 
 before_script:
-  - ./tests/travis/setup/setup_apache.sh --githubaccount=LUMC
+  - ./tests/travis/setup/setup_apache.sh --githubaccount=LOVDnl
   ## IMPORTANT! convert must be run AFTER the setup_apache.sh
   ## setup_apache.sh fix some assumptions where the files are stored!
-  - ./tests/bash_scripts/convert_selenium_to_phpunit.sh --localhost=LOVD3 --continueall
+  - ./tests/bash_scripts/convert_selenium_to_phpunit.sh --projectfolder=LOVD3 --continueall
+  - ./tests/travis/setup/setup_config.sh
   - ./tests/travis/setup/setup_selenium_server.sh
 
 script:
-  - phpunit ./tests/phpunit_selenium/adminTest.php
-  - phpunit ./tests/phpunit_selenium/authorizationTest.php
-  - phpunit ./tests/phpunit_selenium/collaboratorTest.php
-  - phpunit ./tests/phpunit_selenium/importTest.php
-  - phpunit ./tests/phpunit_selenium/managerTest.php
-  - phpunit ./tests/phpunit_selenium/submitterTest.php
-  - phpunit ./tests/phpunit_selenium/tempTest.php
+  # Use phpunit or vendor/bin/phpunit to start tests.  
+  # vendor/bin/phpunit is the best option to run the tests. Because this one 
+  # is installed via composer. 
+  # Not running phpunit installed via composer gives errors, has to do with the 
+  # versions of the dependencies. 
   
-## Run all tests
-## - phpunit ./tests/phpunit_selenium/
+  # This is a travis test. This test if travis is working as expected. 
+  # Two test are done which are independent of LOVD.
+  - vendor/bin/phpunit ./tests/travis/tests/
 
-notifications:
+  # uncomment one of the folloring lines to run one or more test suites.
+#  - vendor/bin/phpunit ./tests/phpunit_selenium/adminTest.php
+#  - vendor/bin/phpunit ./tests/phpunit_selenium/authorizationTest.php
+#  - vendor/bin/phpunit ./tests/phpunit_selenium/collaboratorTest.php
+#  - vendor/bin/phpunit ./tests/phpunit_selenium/importTest.php
+#  - vendor/bin/phpunit ./tests/phpunit_selenium/managerTest.php
+#  - vendor/bin/phpunit ./tests/phpunit_selenium/submitterTest.php
+#  - vendor/bin/phpunit ./tests/phpunit_selenium/tempTest.php
+
+## Run all test suites.
+  - vendor/bin/phpunit -v ./tests/phpunit_selenium/
+
+notifications: 
   email:
-    - d.asscheman@lumc.nl
+   recipients:
+      - d.asscheman@lumc.nl
+   on_success: never
+   ## [always|never|change] # default: change
+   on_failure: always 
+   ## [always|never|change] # default: always

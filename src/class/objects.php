@@ -7,7 +7,7 @@
  * Modified    : 2016-02-10
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -47,7 +47,9 @@ class LOVD_Object {
     var $sTable = '';
     var $aFormData = array();
     var $aCheckMandatory = array();
+    var $sSQLPreLoadEntry = '';     // Query to be executed before $sSQLLoadEntry (as preparation)
     var $sSQLLoadEntry = '';
+    var $sSQLPreViewEntry = '';     // Query to be executed before $aSQLViewEntry (as preparation)
     var $aSQLViewEntry =
              array(
                     'SELECT' => '',
@@ -664,6 +666,11 @@ class LOVD_Object {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::loadEntry() - Method didn\'t receive ID');
         }
 
+        if ($this->sSQLPreLoadEntry !== '') {
+            // $sSQLPreLoadEntry is defined, execute it.
+            $_DB->query($this->sSQLPreLoadEntry);
+        }
+
         // Build query.
         if ($this->sSQLLoadEntry) {
             $sSQL = $this->sSQLLoadEntry;
@@ -698,6 +705,46 @@ class LOVD_Object {
         $zData = $this->autoExplode($zData);
 
         return $zData;
+    }
+
+
+
+
+
+    public static function lovd_getObjectLinksHTML($aIDs, $sURLFormat)
+    {
+        // Returns a list of object links in HTML format.
+        // Parameter $aIDs is an array with object IDs, and optionally, values.
+        // Parameter $sURLFormat designates the target of the links, where any
+        //   sprintf() recognized format (like %s) will be substituted with the
+        //   object ID, e.g. "genes/%s".
+        // For more information on formats to use, see:
+        //   http://php.net/manual/en/function.sprintf.php
+
+        $sShortDescription = '';
+        $sHTMLoutput = '';
+        $i = 0;
+        foreach ($aIDs as $key => $val) {
+            if (is_array($val)) {
+                $sObjectID = $val[0];
+                $sObjectValue = $val[1];
+            } else {
+                $sObjectID = $sObjectValue = $val;
+            }
+
+            $sHTMLoutput .= (!$key ? '' : ', ') . '<A href="' . sprintf($sURLFormat, $sObjectID) .
+                '">' . $sObjectValue . '</A>';
+            if ($i < 20) {
+                $sShortDescription .= (!$key ? '' : ', ') . '<A href="' .
+                    sprintf($sURLFormat, $sObjectID) . '">' . $sObjectValue . '</A>';
+                $i++;
+            }
+        }
+        if (count($aIDs) > 22) {
+            // Replace long gene list by shorter one, allowing expand.
+            $sHTMLoutput = '<SPAN>' . $sShortDescription . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($aIDs) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $sHTMLoutput . '</SPAN>';
+        }
+        return $sHTMLoutput;
     }
 
 
@@ -914,6 +961,10 @@ class LOVD_Object {
 
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::viewEntry()');
+        }
+
+        if ($this->sSQLPreViewEntry !== '') {
+            $_DB->query($this->sSQLPreViewEntry);
         }
 
         // Manipulate WHERE to include ID, and build query.

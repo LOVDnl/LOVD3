@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2013-06-24
- * For LOVD    : 3.0-06
+ * Modified    : 2016-02-18
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -270,10 +270,6 @@ class LOVD_SharedColumn extends LOVD_Object {
 
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
-
-        if (!function_exists('lovd_describeFormType')) {
-            require ROOT_PATH . 'inc-lib-columns.php';
-        }
 
         if ($sView == 'list') {
             $zData['row_id']      = $zData['id'];
