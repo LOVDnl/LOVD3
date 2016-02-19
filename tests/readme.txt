@@ -70,16 +70,16 @@ The conversion script not only converts selenium php export
 files to phpunit files, but adjust the directory references in the files 
 depending on where you installed you LOVD. 
 To do a conversion run the script "convert_selenium_to_phpunit.sh". This script
-requires input for parameter --projectfolder
-This is the project folder where the folder src and tests are, relative to the 
+requires input for parameter --localhost
+This is the localhost where the folder src and tests are, relative to the 
 localhost. 
 
 Examples local:
-    -http://localhost/LOVD3 --> --projectfolder=LOVD3
-    -http://localhost/svn/LOVD3 --> --projectfolder=svn/LOVD3/
+    -http://localhost/LOVD3 --> --localhost=http://localhost/LOVD3
+    -http://localhost/svn/LOVD3 --> --localhost=http://localhost/svn/LOVD3
 Examples for travis:
     use only the projectname, the githubaccount wil be the root of localhost
-    -->  --projectfolder=LOVD3
+    -->  --localhost=http://localhostLOVD3
     In the travis tests use parameter --continueall this will avoid interruption.
 
 When everything converted fine, the script will output some overview data 
