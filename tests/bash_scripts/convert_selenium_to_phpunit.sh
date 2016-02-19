@@ -34,7 +34,9 @@ do
 done
 
 SCRIPT=$(readlink -f $0)
-PROJECTPATH=`echo ${SCRIPT} | sed "s@$PROJECTFOLDER.*@$PROJECTFOLDER@"`
+PROJECTPATH=$(dirname $SCRIPT)
+PROJECTPATH=${PROJECTPATH%/*/*}
+
 LOCALHOSTDIR=`echo ${PROJECTPATH} | sed "s@.*$PROJECTFOLDER@http://localhost/$PROJECTFOLDER@" | sed "s@/test.*@@"`
 echo Localhost directory: ${LOCALHOSTDIR}
 echo Projectpath: ${PROJECTPATH}
