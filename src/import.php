@@ -122,7 +122,6 @@ function lovd_calculateFieldDifferences ($zData, &$aLine)
             
             // We have to performe an extra check for id's because the import 
             // file and database can have difference in leading zeros.
-           $temp = $aSection['object']->sObject;
             if ($aSection['object']->sObject === 'Gene' &&
                 $sCol === 'id') {
                 // The id in section genes is the only id which is not an integer.
@@ -130,25 +129,8 @@ function lovd_calculateFieldDifferences ($zData, &$aLine)
                 // can continue. 
                 continue;
             }
-            // This is an array of id fields which might have leading zeros.
-            $aCheckIds = array(
-                'id',
-                'transcriptid',
-                'individualid', 
-                'diseaseid', 
-                'screeningid', 
-                'variantid', 
-                'fatherid', 
-                'motherid', 
-                'panelid', 
-                'statusid', 
-                'screeningid', 
-                'owned_by', 
-                'created_by',
-                'edited_by');
-            
             if (!empty($sValue) &&
-                in_array($sCol, $aCheckIds) &&
+                ctype_digit($sValue) &&
                 (int)$sValue === (int)$aLine[$sCol]){
                 //Database and import file have the same value, continue to the next field.
                 continue;
