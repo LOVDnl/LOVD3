@@ -21,7 +21,7 @@ before_script:
   - ./tests/travis/setup/setup_apache.sh --githubaccount=LOVDnl
   ## IMPORTANT! convert must be run AFTER the setup_apache.sh
   ## setup_apache.sh fix some assumptions where the files are stored!
-  - ./tests/bash_scripts/convert_selenium_to_phpunit.sh --projectfolder=LOVD3 --continueall
+  - ./tests/bash_scripts/convert_selenium_to_phpunit.sh --localhost=http://localhost/LOVD3 --continueall
   - ./tests/travis/setup/setup_config.sh
   - ./tests/travis/setup/setup_selenium_server.sh
 

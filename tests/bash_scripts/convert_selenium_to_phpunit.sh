@@ -7,13 +7,13 @@ alwaysask=true
 
 # As default it is assumed that 'LOVD3' is the first localhost folder. ie http://localhost/LOVD3
 # When the first folder is different, it must be given as input.
-PROJECTFOLDER='LOVD3'
+LOCALHOSTDIR='LOVD3'
 
 for i in "$@"
 do
     case $i in
-        -p=*|--projectfolder=*)
-            PROJECTFOLDER="${i#*=}"
+        -l=*|--localhost=*)
+            LOCALHOSTDIR="${i#*=}"
                 #The input is refering to the github project.
                 #For local development: /LOVD3_development
                 #For LOVDnl development : /LOVD3
@@ -25,7 +25,7 @@ do
         *)
             echo Unknown input
             echo Usage:
-            column -t -s "/" <<<'    -p=<folder> /|/ --projectfolder=<folder> / Give the first localhost folder when it is not "svn". This is used in the Travis CI test.
+            column -t -s "/" <<<'    -l=<localhostfolder> /|/ --localhost=<localhostfolder> / Give the localhost and folder where the src folder is stored. This is used in the Travis CI test.
         -c /|/ --continueall / If set, it will not ask for actions during convert, but always continues with convert. This might create corrupt phpunit test files.'
             echo "Specify no file when you want te test all testfiles in the phpunit_selenium folder."
             exit
@@ -37,7 +37,6 @@ SCRIPT=$(readlink -f $0)
 PROJECTPATH=$(dirname $SCRIPT)
 PROJECTPATH=${PROJECTPATH%/*/*}
 
-LOCALHOSTDIR=`echo ${PROJECTPATH} | sed "s@.*$PROJECTFOLDER@http://localhost/$PROJECTFOLDER@" | sed "s@/test.*@@"`
 echo Localhost directory: ${LOCALHOSTDIR}
 echo Projectpath: ${PROJECTPATH}
 
