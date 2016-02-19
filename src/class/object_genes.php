@@ -296,10 +296,7 @@ class LOVD_Gene extends LOVD_Object {
                 global $zData;
                 $aSelectRefseqGenomic = array_combine(array($zData['refseq_genomic']), array($zData['refseq_genomic']));
          
-                $this->aFormData =
-                    array(
-                        array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false)
-                    );
+                $this->aFormData['refseq_genomic'] = array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false);
             }
             return parent::getForm();
         }
@@ -380,7 +377,7 @@ class LOVD_Gene extends LOVD_Object {
                         array('', '', 'print', '<B>Reference sequences (mandatory)</B>'),
                         array('', '', 'note', 'Collecting variants requires a proper reference sequence. Without a genomic and a transcript reference sequence the variants in this LOVD database cannot be interpreted properly or mapped to the genome.'),
                         'hr',
-                        array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false),
+    'refseq_genomic' => array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false),
                         array('', '', 'note', 'Select the genomic reference sequence (NG, NC, LRG accession number). Only the references that are available to LOVD are shown.'),
     'transcripts' =>    array('Transcript reference sequence(s)', 'Select transcript references (NM accession numbers).', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
                         'hr',
