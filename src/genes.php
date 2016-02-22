@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-02-18
+ * Modified    : 2016-02-22
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,7 +42,7 @@ if ($_AUTH) {
 
 
 
-function lovd_prepareCuratorLogMessage($sGeneID, $db, $aCurators, $aAllowEdit, $aShown)
+function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShown)
 {
     // Creates a log message showing main differences between current database
     // status and curator privileges given as parameters ($aCurators,
@@ -53,13 +53,14 @@ function lovd_prepareCuratorLogMessage($sGeneID, $db, $aCurators, $aAllowEdit, $
     //     $aCurators: array of curator IDs.
     //     $aAllowEdit: array of curator IDs with edit privileges.
     //     $aShown: array of curator IDs in order as shown on gene page.
+    global $_DB;
 
-    $sLogMessage = 'Updated curator list for the ' . $sGeneID . ' gene:' . PHP_EOL;
+    $sLogMessage = 'Updated curator list for the ' . $sGeneID . ' gene:' . LOVD_EOL;
     $aCurrentCurators = array();
     $aCurrentNames = array();
 
     // Get current status of database.
-    $qStatus = $db->query('SELECT userid, name, allow_edit, show_order FROM ' .
+    $qStatus = $_DB->query('SELECT userid, name, allow_edit, show_order FROM ' .
         TABLE_CURATES . ' AS u2g JOIN ' . TABLE_USERS . ' AS u ON' .
         ' (u.id = u2g.userid) WHERE geneid = ?;',
         array($sGeneID));
@@ -71,26 +72,26 @@ function lovd_prepareCuratorLogMessage($sGeneID, $db, $aCurators, $aAllowEdit, $
 
         if (!in_array($zStatus['userid'], $aCurators)) {
             $sLogMessage .= 'Removed user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
-                            ').' . PHP_EOL;
+                            ').' . LOVD_EOL;
             continue;
         }
 
         if ($zStatus['show_order'] == '0' && in_array($zStatus['userid'], $aShown)) {
             $sLogMessage .= 'Unhidden user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
-                            ').' . PHP_EOL;
+                            ').' . LOVD_EOL;
 
         } elseif ($zStatus['show_order'] != '0' && !in_array($zStatus['userid'], $aShown)) {
             $sLogMessage .= 'Hidden user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
-                            ').' . PHP_EOL;
+                            ').' . LOVD_EOL;
         }
 
         if ($zStatus['allow_edit'] == '0' && in_array($zStatus['userid'], $aAllowEdit)) {
             $sLogMessage .= 'Given edit privileges to user #' . $zStatus['userid'] . ' (' .
-                            $zStatus['name'] . ').' . PHP_EOL;
+                            $zStatus['name'] . ').' . LOVD_EOL;
 
         } elseif ($zStatus['allow_edit'] == '1' && !in_array($zStatus['userid'], $aAllowEdit)) {
             $sLogMessage .= 'Retracted edit privileges from user #' . $zStatus['userid'] .
-                            ' (' . $zStatus['name'] . ').' . PHP_EOL;
+                            ' (' . $zStatus['name'] . ').' . LOVD_EOL;
         }
     }
 
@@ -100,13 +101,13 @@ function lovd_prepareCuratorLogMessage($sGeneID, $db, $aCurators, $aAllowEdit, $
 
     if (count($aNewCuratorIDs) > 0) {
         // Get names for new curators.
-        $qNewNames = $db->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id IN (' .
+        $qNewNames = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id IN (' .
             join(', ', $aNewCuratorIDs) . ');');
         $aNewCurators = $qNewNames->fetchAllAssoc();
 
         foreach ($aNewCurators as $aNewCurator) {
             $sLogMessage .= 'Added user #' . $aNewCurator['id'] . ' (' . $aNewCurator['name'] . ')'
-                            . PHP_EOL;
+                            . LOVD_EOL;
         }
     }
 
@@ -142,7 +143,7 @@ function lovd_prepareCuratorLogMessage($sGeneID, $db, $aCurators, $aAllowEdit, $
         // Hidden curators are separate, their order may be off as it is implicit.
         $sLogMessage .= ', ' . join(', ', $aCuratorDisplaysHidden);
     }
-    return $sLogMessage . PHP_EOL;
+    return $sLogMessage . LOVD_EOL;
 }
 
 
