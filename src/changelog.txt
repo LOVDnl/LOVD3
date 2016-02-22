@@ -59,6 +59,11 @@
    is active for, is now shown on the column's detailed view.
  * Fixed bug; Transcript viewlists included non-public variants in the variant
    counts also for non-authorized users.
+ * Fixed bug; automatic filling of certain password fields in forms is now
+   blocked and a fake text field is used to capture auto-filled usernames.
+   Closes #30
+ * Fixed bug; fixed link in drop-down under Configuration tab to variants that
+   require attention. Closes #28.
 
 
 /**************************
