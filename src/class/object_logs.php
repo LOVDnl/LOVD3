@@ -130,7 +130,6 @@ class LOVD_Log extends LOVD_Object {
             case 'GeneEmpty':
             case 'TranscriptCreate':
                 $zData['entry'] = preg_replace('/(database|entry|gene|the) ([A-Z][A-Za-z0-9-]+)([ ;].+)?$/', '$1 <A href="genes/$2">$2</A>$3', $zData['entry']);
-                $zData['entry'] = preg_replace('/(ID|user) (#)?([0-9]+)/', '$1 $2<A href="users/$3">$3</A>', $zData['entry']);
                 break;
             case 'IndividualCreate':
             case 'IndividualEdit':
