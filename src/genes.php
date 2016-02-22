@@ -56,58 +56,52 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
     global $_DB;
 
     $sLogMessage = 'Updated curator list for the ' . $sGeneID . ' gene:' . LOVD_EOL;
-    $aCurrentCurators = array();
-    $aCurrentNames = array();
+
+    $sIDParams = join(', ', array_pad(array(), count($aCurators), '?'));
+
 
     // Get current status of database.
-    $qStatus = $_DB->query('SELECT userid, name, allow_edit, show_order FROM ' .
-        TABLE_CURATES . ' AS u2g JOIN ' . TABLE_USERS . ' AS u ON' .
-        ' (u.id = u2g.userid) WHERE geneid = ?;',
-        array($sGeneID));
+    $qStatus = $_DB->query('SELECT u.id, u.name,' .
+        '(SELECT u2g.allow_edit FROM lovd_v3_users2genes AS u2g WHERE u2g.geneid = ? AND ' .
+        'u2g.userid = u.id) AS allow_edit,' .
+        '(SELECT u2g.show_order FROM lovd_v3_users2genes AS u2g WHERE u2g.geneid = ? AND ' .
+        'u2g.userid = u.id) AS show_order ' .
+        'FROM lovd_v3_users AS u WHERE u.id IN (' . $sIDParams . ') OR u.id IN ' .
+        '(SELECT u2g.userid FROM lovd_v3_users2genes AS u2g WHERE u2g.geneid = ?);',
+        array_merge(array($sGeneID, $sGeneID), $aCurators, array($sGeneID)));
+    $aStatusResult = $qStatus->fetchAllAssoc();
 
-    foreach ($qStatus->fetchAllAssoc() as $zStatus) {
+    foreach ($aStatusResult as $zStatus) {
         // Compare status of current privileges with those about to be submitted.
-        $aCurrentCurators[] = $zStatus['userid'];
-        $aCurrentNames[] = $zStatus['name'];
 
-        if (!in_array($zStatus['userid'], $aCurators)) {
-            $sLogMessage .= 'Removed user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
-                            ').' . LOVD_EOL;
+        if (!in_array($zStatus['id'], $aCurators)) {
+            $sLogMessage .= 'Removed user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' . 
+                            LOVD_EOL;
             continue;
         }
 
-        if ($zStatus['show_order'] == '0' && in_array($zStatus['userid'], $aShown)) {
-            $sLogMessage .= 'Unhidden user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
-                            ').' . LOVD_EOL;
-
-        } elseif ($zStatus['show_order'] != '0' && !in_array($zStatus['userid'], $aShown)) {
-            $sLogMessage .= 'Hidden user #' . $zStatus['userid'] . ' (' . $zStatus['name'] .
-                            ').' . LOVD_EOL;
+        if (is_null($zStatus['allow_edit']) && is_null($zStatus['show_order'])) {
+            $sLogMessage .= 'Added user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' . 
+                            LOVD_EOL;
+            continue;
         }
 
-        if ($zStatus['allow_edit'] == '0' && in_array($zStatus['userid'], $aAllowEdit)) {
-            $sLogMessage .= 'Given edit privileges to user #' . $zStatus['userid'] . ' (' .
+        if ($zStatus['show_order'] == '0' && in_array($zStatus['id'], $aShown)) {
+            $sLogMessage .= 'Unhidden user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' .
+                            LOVD_EOL;
+
+        } elseif ($zStatus['show_order'] != '0' && !in_array($zStatus['id'], $aShown)) {
+            $sLogMessage .= 'Hidden user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' .
+                            LOVD_EOL;
+        }
+
+        if ($zStatus['allow_edit'] == '0' && in_array($zStatus['id'], $aAllowEdit)) {
+            $sLogMessage .= 'Given edit privileges to user #' . $zStatus['id'] . ' (' .
                             $zStatus['name'] . ').' . LOVD_EOL;
 
-        } elseif ($zStatus['allow_edit'] == '1' && !in_array($zStatus['userid'], $aAllowEdit)) {
-            $sLogMessage .= 'Retracted edit privileges from user #' . $zStatus['userid'] .
-                            ' (' . $zStatus['name'] . ').' . LOVD_EOL;
-        }
-    }
-
-    // Determine newly added curators.
-    $aNewCuratorIDs = array_diff($_POST['curators'], $aCurrentCurators);
-    $aNewCurators = array();
-
-    if (count($aNewCuratorIDs) > 0) {
-        // Get names for new curators.
-        $qNewNames = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' WHERE id IN (' .
-            join(', ', $aNewCuratorIDs) . ');');
-        $aNewCurators = $qNewNames->fetchAllAssoc();
-
-        foreach ($aNewCurators as $aNewCurator) {
-            $sLogMessage .= 'Added user #' . $aNewCurator['id'] . ' (' . $aNewCurator['name'] . ')'
-                            . LOVD_EOL;
+        } elseif ($zStatus['allow_edit'] == '1' && !in_array($zStatus['id'], $aAllowEdit)) {
+            $sLogMessage .= 'Retracted edit privileges from user #' . $zStatus['id'] . ' (' .
+                            $zStatus['name'] . ').' . LOVD_EOL;
         }
     }
 
@@ -117,24 +111,17 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
     $aCuratorDisplaysHidden = array();
 
     foreach ($aCurators as $sCuratorID) {
-        $sCuratorDisplay = 'user #' . $sCuratorID . ' (';
+        foreach ($aStatusResult as $zStatus) {
+            if ($zStatus['id'] == $sCuratorID) {
+                $sCuratorDisplay = 'user #' . $sCuratorID . ' (' . $zStatus['name'] . ')';
 
-        if (($nIndex = array_search($sCuratorID, $aCurrentCurators, true)) !== false) {
-            $sCuratorDisplay .= $aCurrentNames[$nIndex];
-
-        } else {
-            foreach ($aNewCurators as $aNewCurator) {
-                if ($aNewCurator['id'] == $sCuratorID) {
-                    $sCuratorDisplay .= $aNewCurator['name'];
+                if (in_array($sCuratorID, $aShown)) {
+                    $aCuratorDisplaysShown[] = $sCuratorDisplay;
+                } else {
+                    $aCuratorDisplaysHidden[] = $sCuratorDisplay;
                 }
+                break;
             }
-        }
-        $sCuratorDisplay .= ')';
-
-        if (in_array($sCuratorID, $aShown)) {
-            $aCuratorDisplaysShown[] = $sCuratorDisplay;
-        } else {
-            $aCuratorDisplaysHidden[] = $sCuratorDisplay;
         }
     }
 
@@ -143,7 +130,7 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
         // Hidden curators are separate, their order may be off as it is implicit.
         $sLogMessage .= ', ' . join(', ', $aCuratorDisplaysHidden);
     }
-    return $sLogMessage . LOVD_EOL;
+    return $sLogMessage;
 }
 
 
@@ -1581,7 +1568,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
             // Prepare log for changes.
             // (depends on current database status, so we create the log message before
             // the changes are committed, but log the actual message afterwards).
-            $sLogMessage = lovd_prepareCuratorLogMessage($sID, $_DB, $_POST['curators'],
+            $sLogMessage = lovd_prepareCuratorLogMessage($sID, $_POST['curators'],
                                                          $_POST['allow_edit'], $_POST['shown']);
 
             $_DB->beginTransaction();
