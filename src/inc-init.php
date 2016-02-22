@@ -118,6 +118,9 @@ define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which
 // Define constant to quickly check if we're on Windows, since sending emails on Windows requires different settings.
 define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 
+// Default newline-style to be used for all browser-related content.
+define('LOVD_EOL', "\r\n");
+
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
