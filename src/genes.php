@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-02-18
+ * Modified    : 2016-02-23
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -926,41 +926,58 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     // Check whether user has submitted and confirmed the form/action.
     $bFormSubmit = !empty($_POST);
-    $bConfirmation = isset($_GET['confirm']) && $_GET['confirm'] == 'true';
 
+    $bValidPassword = false;
+    if ($bFormSubmit) {
 
-    if ($bFormSubmit && $bConfirmation) {
         lovd_errorClean();
 
         // Mandatory fields.
         if (empty($_POST['password'])) {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-        }
 
-        // User had to enter his/her password for authorization.
-        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+
+        } else {
+            $bValidPassword = true;
         }
 
-        if (!lovd_error()) {
-            // This also deletes the entries in gen2dis and transcripts.
-            $_DATA->deleteEntry($sID);
-
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
-
-            // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
-
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully deleted the gene information entry!', 'success');
-
-            $_T->printFooter();
-            exit;
-        }
+        // Remove password from default values shown in confirmation form.
+        unset($_POST['password']);
     }
 
+    // One can only set validation to true with a valid password.
+    $sConfirmCountVar = 'confirmDeleteGene' . $sID;
+    if (!isset($_SESSION[$sConfirmCountVar])) {
+        $_SESSION[$sConfirmCountVar] = 0;
+    } elseif ($bValidPassword) {
+        $_SESSION[$sConfirmCountVar]++;
+    }
+
+    // User should have filled in a correct password at least 2 times.
+    $bConfirmation = $_SESSION[$sConfirmCountVar] >= 2;
+
+    if ($bValidPassword && $bConfirmation) {
+        // This also deletes the entries in gen2dis and transcripts.
+        $_DATA->deleteEntry($sID);
+
+        // Delete the confirmation counter.
+        unset($_SESSION[$sConfirmCountVar]);
+
+        // Write to log...
+        lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
+
+        // Thank the user...
+        header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
+
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Successfully deleted the gene information entry!', 'success');
+
+        $_T->printFooter();
+        exit;
+    }
 
 
     $_T->printHeader();
@@ -970,19 +987,15 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
                         <B>If you also wish to remove all information on individuals with variants in ' . $zData['id'] . ', first <A href="' . $_PE[0] . '/' . $sID . '?empty">empty</A> the gene database.</B>', 'warning');
 
 
-    if ($bFormSubmit && !$bConfirmation) {
+    if ($_SESSION[$sConfirmCountVar] == 1) {
         lovd_showInfoTable('<B>Please note the message above and fill in your password one more ' .
                            'time to confirm the removal of gene ' . $sID . '</B>', 'warning');
-
-        // Remove password from default values shown in confirmation form.
-        unset($_POST['password']);
     }
 
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . '&confirm=' .
-          ($bFormSubmit ? 'true' : 'false') .  '" method="post">' . "\n");
+    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

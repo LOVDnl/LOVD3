@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2016-02-18
+ * Modified    : 2016-02-23
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -468,40 +468,59 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     // Check whether user has submitted and confirmed the form/action.
     $bFormSubmit = !empty($_POST);
-    $bConfirmation = isset($_GET['confirm']) && $_GET['confirm'] == 'true';
 
-    if ($bFormSubmit && $bConfirmation) {
+    // Check authorization password.
+    $bValidPassword = false;
+    if ($bFormSubmit) {
         lovd_errorClean();
 
         // Mandatory fields.
         if (empty($_POST['password'])) {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-        }
 
-        // User had to enter his/her password for authorization.
-        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+
+        } else {
+            $bValidPassword = true;
         }
 
-        if (!lovd_error()) {
-            // Query text.
-            // This also deletes the entries in gen2dis.
-            $_DATA->deleteEntry($nID);
+        // Remove password from default values shown in confirmation form.
+        unset($_POST['password']);
+    }
 
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted disease information entry ' . $nID . ' - ' . $zData['symbol'] . ' (' . $zData['name'] . ')');
+    // One can only set validation to true with a valid password.
+    $sConfirmCountVar = 'confirmDeleteDisease' . $nID;
+    if (!isset($_SESSION[$sConfirmCountVar])) {
+        $_SESSION[$sConfirmCountVar] = 0;
+    } elseif ($bValidPassword) {
+        $_SESSION[$sConfirmCountVar]++;
+    }
 
-            // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'diseases');
+    // User should have filled in a correct password at least 2 times.
+    $bConfirmation = $_SESSION[$sConfirmCountVar] >= 2;
 
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully deleted the disease information entry!', 'success');
+    if ($bValidPassword && $bConfirmation) {
+        // Query text.
+        // This also deletes the entries in gen2dis.
+        $_DATA->deleteEntry($nID);
 
-            $_T->printFooter();
-            exit;
+        // Delete the confirmation counter.
+        unset($_SESSION[$sConfirmCountVar]);
 
-        }
+        // Write to log...
+        lovd_writeLog('Event', LOG_EVENT, 'Deleted disease information entry ' . $nID . ' - ' . $zData['symbol'] . ' (' . $zData['name'] . ')');
+
+        // Thank the user...
+        header('Refresh: 3; url=' . lovd_getInstallURL() . 'diseases');
+
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Successfully deleted the disease information entry!', 'success');
+
+        $_T->printFooter();
+        exit;
+
     }
 
 
@@ -514,20 +533,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                        'phenotypes will be deleted too. Related genes and individuals will ' .
                        'not be deleted, but remain in the database.', 'warning');
 
-    if ($bFormSubmit && !$bConfirmation) {
+    if ($_SESSION[$sConfirmCountVar] == 1) {
         lovd_showInfoTable('<B>Please note the message above and fill in your password one more ' .
                            'time to confirm the removal of disease ' . $zData['id'] . '</B>',
                            'warning');
-
-        // Remove password from default values shown in confirmation form.
-        unset($_POST['password']);
     }
 
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '&confirm=' .
-          ($bFormSubmit ? 'true' : 'false') . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(
