@@ -59,6 +59,9 @@
    is active for, is now shown on the column's detailed view.
  * Fixed bug; Transcript viewlists included non-public variants in the variant
    counts also for non-authorized users.
+ * Added second confirmation step on deletion of gene and disease. The
+   confirmation warning shows how many related entities are going to be
+   removed.
 
 
 /**************************
