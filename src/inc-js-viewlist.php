@@ -467,6 +467,16 @@ function lovd_activateMenu (sViewListID)
         });
     }
 }
+
+
+
+function lovd_findAndReplaceWidget(sViewListID)
+{
+    // stub
+    alert('lovd_findAndReplaceWidget(' + sViewListID + ');');
+}
+
+
 <?php
 if (!isset($_GET['nohistory'])) {
 ?>
