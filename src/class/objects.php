@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-10
+ * Modified    : 2016-02-24
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -371,8 +371,7 @@ class LOVD_Object {
 
 
 
-//    function getRowCountForViewList (&$aSessionViewList)
-    function getRowCountForViewList ($aSQL)
+    function getRowCountForViewList ($aSQL, $aArgs = array(), $bDebug = false)
     {
         // Attempt to speed up the "counting" part of the VL queries.
         // ViewList queries are counting the number of total hits using the
@@ -380,9 +379,10 @@ class LOVD_Object {
         // sorted on non-indexed fields, where the query itself also requires a
         // full scan through the results. However,for queries that are normally
         // fast when LIMITed, this slows down the query a lot.
-        // This function will attempt to reduce the given query to a simple
+        // This function here will attempt to reduce the given query to a simple
         // SELECT COUNT(*) statement with as few joins as needed, resulting in
-        // as fast query as possible.
+        // an as fast query as possible.
+        // The $bDebug argument lets this function just return the SQL that is produced.
         global $_DB;
 
         // If we don't have a HAVING clause, we can simply drop the SELECT information.
@@ -569,12 +569,16 @@ class LOVD_Object {
 
 
 
-        // If we have no SELECT left, we can surely do a simple SELECT COUNT(*) FROM ... or a SELECT COUNT(*) FROM (SELECT ...)A.
-        // We can't do a simple SELECT COUNT(*) if we have a GROUP_BY, because it will make the separate the counts.
-        // We can't do the subquery if we still have a SELECT, because if there are double columns in there, there will be a query error.
-        // So in the last case we just keep using the SQL_CALC_FOUND_ROWS();
+        // If we have no SELECT left, we can surely do a simple SELECT COUNT(*) FROM ... or
+        // a SELECT COUNT(*) FROM (SELECT ...)A. We can't do a simple SELECT COUNT(*) if
+        // we have a GROUP_BY, because it will separate the counts.
+        // In case we still have a SELECT, and we create a subquery while the
+        // SELECT has double columns (happens rarely), we get a query error. In
+        // that case we could drop the first column's declaration, or otherwise
+        // keep using the SQL_CALC_FOUND_ROWS().
+        // For now, we'll just take our chances. If this query will fail, LOVD
+        // will fall back on the original SQL_CALC_FOUND_ROWS() method.
         $bInSubQuery = false;
-        $bUseCalcFoundRows = false;
         if (!$aSQL['SELECT']) {
             // If we just have one table left, we might be able to drop the GROUP BY.
             // If so, we can use a simple COUNT(*) query instead of a nested one.
@@ -594,14 +598,13 @@ class LOVD_Object {
                 $bInSubQuery = true;
                 $aSQL['SELECT'] = '1';
             }
-            // So delete LIMIT, we don't want that anymore...
-            $aSQL['LIMIT'] = '';
         } else {
             // SELECT is left (meaning we had a HAVING), we have to use a subquery!
             $bInSubQuery = true;
-            // Delete LIMIT, we don't want that anymore...
-            $aSQL['LIMIT'] = '';
         }
+
+        // Delete LIMIT, we don't want that anymore...
+        $aSQL['LIMIT'] = '';
 
 
 
@@ -616,7 +619,19 @@ class LOVD_Object {
             $sSQLOut = 'SELECT COUNT(*) FROM (' . $sSQLOut . ')A';
         }
 
-        return $sSQLOut;
+        if ($bDebug) {
+            return $sSQLOut;
+        }
+
+        // Run the query, fetch the result and return.
+        // We'll return false when we failed.
+        $nCount = false;
+        $qCount = $_DB->query($sSQLOut, $aArgs, false);
+        if ($qCount !== false) {
+            $nCount = $qCount->fetchColumn();
+        }
+
+        return $nCount;
     }
 
 

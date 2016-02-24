@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-02-10
- * Modified    : 2016-02-10
+ * Modified    : 2016-02-24
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -132,7 +132,7 @@ foreach ($aSQL as $sSQLInput => $sSQLExpectedOutput) {
     assert("strpos('$sSQLInput', 'SQL_CALC_FOUND_ROWS') !== false");
 
     // Check if outcome is as expected.
-    $sSQLOutput = $o->getRowCountForViewList(lovd_splitSQL($sSQLInput));
+    $sSQLOutput = $o->getRowCountForViewList(lovd_splitSQL($sSQLInput), array(), true);
     assert("'$sSQLOutput' == '$sSQLExpectedOutput'");
 
     // If we're here, the output was as expected. Now run both queries, and time
@@ -158,7 +158,7 @@ foreach ($aSQL as $sSQLInput => $sSQLExpectedOutput) {
         $tSQLOutput = microtime(true) - $t;
     } while ($tSQLOutput > $tSQLInput || $nTries >= 5);
 
-    printf('Query %02d. Size remaining %4d/%4d bytes. Run time: %3d%% (%.5f/%.5f) = %.5f s in %d tries. Rows: %4d.' . "\n",
+    printf('Query %02d. Size remaining %4d/%4d bytes. Run time: %3d%% (%.5f/%.5f) = %.5f s in %d tries. Rows: %5d.' . "\n",
         $i, strlen($sSQLOutput), strlen($sSQLInput), ($tSQLOutput/$tSQLInput)*100, $tSQLOutput, $tSQLInput, ($tSQLOutput-$tSQLInput), $nTries, $nFoundOutput);
 
     // Run the assertions on query time and results.
