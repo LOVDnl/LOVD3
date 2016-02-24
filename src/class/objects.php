@@ -643,6 +643,9 @@ class LOVD_Object {
         }
 
         if ($nCount === false) {
+            // We failed, log this. Actually, why aren't query errors logged if they're not fatal?
+            lovd_queryError('QueryOptimizer', $sSQLOut, 'Error in ' . __FUNCTION__ . '() while executing optimized query.', false);
+
             // As a fallback, use SQL_CALC_FOUND_ROWS() for MySQL instances, or
             // a count() on a full result set otherwise. The latter is super
             // inefficient, and only meant for small SQLite databases.
@@ -1385,7 +1388,7 @@ class LOVD_Object {
             $aSessionViewList['row_link'] = $this->sRowLink; // Implies array creation.
         }
 
-        $nTotal = 0;
+        $nTotal = 0; // Overwrites the previous $nTotal.
         if (!count($aBadSyntaxColumns)) {
             // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
             // function, but we'll try to avoid that due to extreme slowness in some cases.
@@ -1415,31 +1418,9 @@ class LOVD_Object {
             // Also if last count was >15min ago, request again.
             $bTrueCount = false; // Indicates whether or not we are sure about the number of results.
             $sFilterMD5 = md5($WHERE . '||' . $HAVING . '||' . implode('|', $aArgs)); // A signature for the filters, NOTE that this depends on the column order!
-            if (!isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
+            if (true || !isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
                 $t = microtime(true);
-                if ($_INI['database']['driver'] == 'mysql') {
-                    $_DB->query('SELECT SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'] .
-                        ' FROM ' . $this->aSQLViewList['FROM'] .
-                        (!$this->aSQLViewList['WHERE']? '' :
-                            ' WHERE ' . $this->aSQLViewList['WHERE']) .
-                        (!$this->aSQLViewList['GROUP_BY']? '' :
-                            ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
-                        (!$this->aSQLViewList['HAVING']? '' :
-                            ' HAVING ' . $this->aSQLViewList['HAVING']) .
-                        ' LIMIT 0', $aArgs);
-                    // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
-                    $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
-                } else {
-                    // Super inefficient, only for low-volume (sqlite) databases!
-                    $nTotal = count($_DB->query('SELECT ' . $this->aSQLViewList['SELECT'] .
-                        ' FROM ' . $this->aSQLViewList['FROM'] .
-                        (!$this->aSQLViewList['WHERE']? '' :
-                            ' WHERE ' . $this->aSQLViewList['WHERE']) .
-                        (!$this->aSQLViewList['GROUP_BY']? '' :
-                            ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
-                        (!$this->aSQLViewList['HAVING']? '' :
-                            ' HAVING ' . $this->aSQLViewList['HAVING']), $aArgs)->fetchAllColumn());
-                }
+                $nTotal = $this->getRowCountForViewList($this->aSQLViewList, $aArgs);
                 $tQ = microtime(true) - $t;
                 $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
                 $aSessionViewList['counts'][$sFilterMD5]['t'] = $tQ;
@@ -1451,6 +1432,7 @@ class LOVD_Object {
 
             // Manipulate SELECT to include SQL_CALC_FOUND_ROWS.
             $bSQLCALCFOUNDROWS = false;
+            // TODO: Remove this block. For now, this will be bypassed because $bTrueCount will always be true.
             if (!$bTrueCount && $_INI['database']['driver'] == 'mysql' && ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 || $aSessionViewList['counts'][$sFilterMD5]['d'] < (time() - (60*15)))) {
                 // But only if we're using MySQL and it takes less than a second to get the correct number of results, or it's been more than 15 minutes since the last check!
                 $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
@@ -1513,7 +1495,6 @@ class LOVD_Object {
             // Insert query optimizer here.
 
 
-            // FIXME: How will we still know that we can't use ORDER BY????????????????
             // ORDER BY will only occur when we estimate we have time for it.
             if ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 && $aSessionViewList['counts'][$sFilterMD5]['n'] <= $_SETT['lists']['max_sortable_rows']) {
                 $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
