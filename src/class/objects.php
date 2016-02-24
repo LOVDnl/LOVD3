@@ -131,6 +131,22 @@ class LOVD_Object {
 
 
 
+    function buildSQL ($aSQL)
+    {
+        // Takes an $aSQL as commonly used in LOVD objects, and turns it into a normal SQL string.
+        $sSQLOut = '';
+        foreach ($aSQL as $sClause => $sValue) {
+            if ($sValue !== '') {
+                $sSQLOut .= (!$sSQLOut? '' : ' ') . str_replace('_', ' ', $sClause) . ' ' . $sValue;
+            }
+        }
+        return $sSQLOut;
+    }
+
+
+
+
+
     function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
@@ -383,7 +399,7 @@ class LOVD_Object {
         // SELECT COUNT(*) statement with as few joins as needed, resulting in
         // an as fast query as possible.
         // The $bDebug argument lets this function just return the SQL that is produced.
-        global $_DB;
+        global $_DB, $_INI;
 
         // If we don't have a HAVING clause, we can simply drop the SELECT information.
         $aColumnsNeeded = array();
@@ -608,12 +624,7 @@ class LOVD_Object {
 
 
 
-        $sSQLOut = '';
-        foreach ($aSQL as $sClause => $sValue) {
-            if ($sValue !== '') {
-                $sSQLOut .= (!$sSQLOut? '' : ' ') . str_replace('_', ' ', $sClause) . ' ' . $sValue;
-            }
-        }
+        $sSQLOut = $this->buildSQL($aSQL);
         // Now, build the subquery if we need it.
         if ($bInSubQuery) {
             $sSQLOut = 'SELECT COUNT(*) FROM (' . $sSQLOut . ')A';
@@ -629,6 +640,21 @@ class LOVD_Object {
         $qCount = $_DB->query($sSQLOut, $aArgs, false);
         if ($qCount !== false) {
             $nCount = $qCount->fetchColumn();
+        }
+
+        if ($nCount === false) {
+            // As a fallback, use SQL_CALC_FOUND_ROWS() for MySQL instances, or
+            // a count() on a full result set otherwise. The latter is super
+            // inefficient, and only meant for small SQLite databases.
+            if ($_INI['database']['driver'] == 'mysql') {
+                $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
+                $this->aSQLViewList['LIMIT'] = '0';
+                $_DB->query($this->buildSQL($this->aSQLViewList), $aArgs);
+                $nCount = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+            } else {
+                // Super inefficient, only for low-volume (sqlite) databases!
+                $nCount = count($_DB->query($this->buildSQL($this->aSQLViewList), $aArgs)->fetchAllColumn());
+            }
         }
 
         return $nCount;
@@ -1361,7 +1387,9 @@ class LOVD_Object {
 
         $nTotal = 0;
         if (!count($aBadSyntaxColumns)) {
-            // Using the SQL_CALC_FOUND_ROWS technique to find the amount of hits in one go.
+            // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
+            // function, but we'll try to avoid that due to extreme slowness in some cases.
+            // getRowCountForViewList() will take care of that.
             // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
             // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
             // Last checked 2010-01-25, by Ivo Fokkema.
@@ -1378,14 +1406,13 @@ class LOVD_Object {
             }
 
             // For ALL viewlists, we store the number of hits that we get, including the current filters.
-            // For large tables, using SQL_CALC_FOUND_ROWS takes a lot of time, also still quite a lot for smaller result sets, since the entire table needs to be read out.
-            //   Unfortunately, we can't automatically get us an SQL_CALC_FOUND_ROWS which leaves out unnecessary joins. Is there a way to do this?
-            // ORDER BY is absolutely killing on large result sets, but when used you might as well use SQL_CALC_FOUND_ROWS, since it needs to read the entire table anyways.
-            // So, long time to retrieve count (>1s) => no SQL_CALC_FOUND_ROWS and no sort.
+            // For large tables, getting a count can take a long time (especially when using SQL_CALC_FOUND_ROWS).
+            // ORDER BY is absolutely killing on large result sets.
+            // So, long time to retrieve count (>1s) => don't count again, and no sort.
             // Count OK (<=1s), but big result set (250K) => no sort. ($_SETT['lists']['max_sortable_rows'])
 
-            // 1) If we don't have a count in memory, request count separately, using SQL_CALC_FOUND_ROWS, since it handles all complex queries.
-            // Also if last count was >30min ago, request again.
+            // 1) If we don't have a count in memory, request count separately.
+            // Also if last count was >15min ago, request again.
             $bTrueCount = false; // Indicates whether or not we are sure about the number of results.
             $sFilterMD5 = md5($WHERE . '||' . $HAVING . '||' . implode('|', $aArgs)); // A signature for the filters, NOTE that this depends on the column order!
             if (!isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
