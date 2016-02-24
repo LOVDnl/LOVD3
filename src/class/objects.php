@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-09
+ * Modified    : 2016-02-24
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -1550,19 +1550,52 @@ class LOVD_Object {
                   '        // This has to be run when the document has finished loading everything, because only then can it get the proper width from IE7 and lower!' . "\n" .
                   '        $( function () {lovd_stretchInputs(\'' . $sViewListID . '\');});' . "\n");
             if ($bOptions) {
-                print("\n" .
-                      '        // If menu\'s UL doesn\'t exist yet, create it.' . "\n" .
-                      '        if ($(\'#viewlistMenu_' . $sViewListID . '\').attr(\'id\') == undefined) {' . "\n" .
-                      '          var oUL = window.document.createElement(\'ul\');' . "\n" .
-                      '          oUL.setAttribute(\'id\', \'viewlistMenu_' . $sViewListID . '\');' . "\n" .
-                      '          oUL.className = \'jeegoocontext jeegooviewlist\';' . "\n" .
-                      '          window.document.body.appendChild(oUL);' . "\n" .
-                      '        }' . "\n" .
-                      '        // Fix the top border that could not be set through jeegoo\'s style.css.' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').attr(\'style\', \'border-top : 1px solid #000;\');' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').prepend(\'<LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'all\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>Select all <SPAN>entries</SPAN></A></LI><LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'none\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Unselect all</A></LI>\');' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').append(\'<LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', true);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries (summary data)</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', false);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download selected entries (summary data)</A></LI>\');' . "\n" .
-                      '        lovd_activateMenu(\'' . $sViewListID . '\');' . "\n\n");
+                print(<<<OPMENU
+        // If menu's UL doesn't exist yet, create it.
+        if ($('#viewlistMenu_$sViewListID').attr('id') == undefined) {
+          var oUL = window.document.createElement('ul');
+          oUL.setAttribute('id', 'viewlistMenu_$sViewListID');
+          oUL.className = 'jeegoocontext jeegooviewlist';
+          window.document.body.appendChild(oUL);
+        }
+        // Fix the top border that could not be set through jeegoo's style.css.
+        $('#viewlistMenu_$sViewListID').attr('style', 'border-top : 1px solid #000;');
+        $('#viewlistMenu_$sViewListID').prepend(
+'            <LI class="icon">' +
+'                <A click="check_list[\'$sViewListID\'] = \'all\'; lovd_AJAX_viewListSubmit(\'$sViewListID\');">' +
+'                    <SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>' +
+'                    Select all <SPAN>entries</SPAN>' +
+'                </A>' +
+'            </LI>' +
+'            <LI class="icon">' +
+'                <A click="check_list[\'$sViewListID\'] = \'none\'; lovd_AJAX_viewListSubmit(\'$sViewListID\');">' +
+'                    <SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>' +
+'                    Unselect all' +
+'                </A>' +
+'            </LI>' +
+'            <LI class="icon">' +
+'                <A click="lovd_findAndReplaceWidget(\'$sViewListID\');">' +
+'                    <SPAN class="icon" style=""></SPAN>' +
+'                    Find and replace text in column' +
+'                </A>' +
+'            </LI>');
+        $('#viewlistMenu_$sViewListID').append(
+'            <LI class="icon">' +
+'                <A click="lovd_AJAX_viewListSubmit(\'$sViewListID\', function(){lovd_AJAX_viewListDownload(\'$sViewListID\', true);});">' +
+'                    <SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>' +
+'                    Download all entries (summary data)' +
+'                </A>' +
+'            </LI>' +
+'            <LI class="icon">' +
+'                <A click="lovd_AJAX_viewListSubmit(\'$sViewListID\', function(){lovd_AJAX_viewListDownload(\'$sViewListID\', false);});">' +
+'                    <SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>' +
+'                    Download selected entries (summary data)' +
+'                </A>' +
+'            </LI>');
+        lovd_activateMenu('$sViewListID');
+OPMENU
+);
+
             }
             print('        check_list[\'' . $sViewListID . '\'] = [];' . "\n" .
                   '      </SCRIPT>' . "\n\n");
