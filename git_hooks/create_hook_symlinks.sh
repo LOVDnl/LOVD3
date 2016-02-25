@@ -16,12 +16,11 @@ SCRIPT_DIR=../../git_hooks
 
 for hook in $HOOK_NAMES; do
 
-    if [ -a $HOOK_DIR/$hook ]; then
-        echo "Hook $hook already exists, skipping!"
-        continue
-    fi
-
     if [ -x $HOOK_DIR/$SCRIPT_DIR/$hook ]; then
+        if [ -a $HOOK_DIR/$hook ]; then
+            echo "Hook $hook already exists, skipping!"
+            continue
+        fi
         # Executable hook script found. Creating a symlink for it.
         cmd="ln -s $SCRIPT_DIR/$hook $HOOK_DIR/$hook"
         echo $cmd
