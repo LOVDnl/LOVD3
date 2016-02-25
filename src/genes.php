@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-02-22
+ * Modified    : 2016-02-25
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,13 +49,12 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
     // $aAllowEdit, $aShown).
     // Parameters:
     //     $sGeneID: Gene ID.
-    //     $db: LOVD_PDO object.
     //     $aCurators: array of curator IDs.
     //     $aAllowEdit: array of curator IDs with edit privileges.
     //     $aShown: array of curator IDs in order as shown on gene page.
     global $_DB;
 
-    $sLogMessage = 'Updated curator list for the ' . $sGeneID . ' gene:' . LOVD_EOL;
+    $sLogMessage = 'Updated curator list for the ' . $sGeneID . ' gene:' . "\n";
 
     $sIDParams = join(', ', array_pad(array(), count($aCurators), '?'));
 
@@ -75,33 +74,33 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
         // Compare status of current privileges with those about to be submitted.
 
         if (!in_array($zStatus['id'], $aCurators)) {
-            $sLogMessage .= 'Removed user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' . 
-                            LOVD_EOL;
+            $sLogMessage .= 'Removed user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' .
+                            "\n";
             continue;
         }
 
         if (is_null($zStatus['allow_edit']) && is_null($zStatus['show_order'])) {
             $sLogMessage .= 'Added user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' . 
-                            LOVD_EOL;
+                            "\n";
             continue;
         }
 
         if ($zStatus['show_order'] == '0' && in_array($zStatus['id'], $aShown)) {
             $sLogMessage .= 'Unhidden user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' .
-                            LOVD_EOL;
+                            "\n";
 
         } elseif ($zStatus['show_order'] != '0' && !in_array($zStatus['id'], $aShown)) {
             $sLogMessage .= 'Hidden user #' . $zStatus['id'] . ' (' . $zStatus['name'] . ').' .
-                            LOVD_EOL;
+                            "\n";
         }
 
         if ($zStatus['allow_edit'] == '0' && in_array($zStatus['id'], $aAllowEdit)) {
             $sLogMessage .= 'Given edit privileges to user #' . $zStatus['id'] . ' (' .
-                            $zStatus['name'] . ').' . LOVD_EOL;
+                            $zStatus['name'] . ').' . "\n";
 
         } elseif ($zStatus['allow_edit'] == '1' && !in_array($zStatus['id'], $aAllowEdit)) {
             $sLogMessage .= 'Retracted edit privileges from user #' . $zStatus['id'] . ' (' .
-                            $zStatus['name'] . ').' . LOVD_EOL;
+                            $zStatus['name'] . ').' . "\n";
         }
     }
 
