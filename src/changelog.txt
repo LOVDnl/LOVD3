@@ -59,6 +59,8 @@
    is active for, is now shown on the column's detailed view.
  * Fixed bug; Transcript viewlists included non-public variants in the variant
    counts also for non-authorized users.
+ * Fixed bug; You couldn't switch to a different transcript on the unique
+   variant view.
 
 
 /**************************
