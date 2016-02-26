@@ -56,13 +56,17 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
 
     $sLogMessage = 'Updated curator list for the ' . $sGeneID . ' gene:' . "\n";
 
-    $sIDParams = join(', ', array_pad(array(), count($aCurators), '?'));
+    // Generate SQL condition for curator ID. This condition is needed to select
+    // users that are currently not associated with the gene.
+    $sSQLUserWhereCondition = '';
+    if (count($aCurators) > 0) {
+        $sSQLUserWhereCondition = 'u.id IN (?' . str_repeat(', ?', count($aCurators) - 1) . ') OR';
+    }
 
-
-    // Get current status of database.
+    // Get all curators (past and new) from database.
     $qUser = $_DB->query('SELECT u.id, u.name, u2g.allow_edit, u2g.show_order FROM ' .
         TABLE_USERS . ' AS u LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid ' .
-        'AND u2g.geneid = ?) WHERE u.id IN (' . $sIDParams . ') OR u2g.geneid IS NOT NULL',
+        'AND u2g.geneid = ?) WHERE ' . $sSQLUserWhereCondition . ' u2g.geneid IS NOT NULL',
         array_merge(array($sGeneID), $aCurators));
     $aUserResult = $qUser->fetchAllAssoc();
     $zUsers = array();
