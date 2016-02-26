@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-02-25
+ * Modified    : 2016-02-26
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -62,7 +62,7 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
     // Get current status of database.
     $qUser = $_DB->query('SELECT u.id, u.name, u2g.allow_edit, u2g.show_order FROM ' .
         TABLE_USERS . ' AS u LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid ' .
-        'AND u2g.geneid = ?) WHERE u.id IN (' . $sIDParams . ') OR u2g.geneid IS NOT NULL;',
+        'AND u2g.geneid = ?) WHERE u.id IN (' . $sIDParams . ') OR u2g.geneid IS NOT NULL',
         array_merge(array($sGeneID), $aCurators));
     $aUserResult = $qUser->fetchAllAssoc();
     $zUsers = array();
@@ -70,32 +70,32 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
         $zUsers[$zResult['id']] = $zResult;
     }
 
-    foreach ($zUsers as $sUserID => $zUser) {
+    foreach ($zUsers as $nUserID => $zUser) {
         // Compare status of current privileges with those about to be submitted.
 
-        if (!in_array($sUserID, $aCurators)) {
-            $sLogMessage .= 'Removed user #' . $sUserID . ' (' . $zUser['name'] . ').' . "\n";
+        if (!in_array($nUserID, $aCurators)) {
+            $sLogMessage .= 'Removed user #' . $nUserID . ' (' . $zUser['name'] . ').' . "\n";
             continue;
         }
 
         if (is_null($zUser['allow_edit']) && is_null($zUser['show_order'])) {
-            $sLogMessage .= 'Added user #' . $sUserID . ' (' . $zUser['name'] . ').' . "\n";
+            $sLogMessage .= 'Added user #' . $nUserID . ' (' . $zUser['name'] . ').' . "\n";
             continue;
         }
 
-        if ($zUser['show_order'] == '0' && in_array($sUserID, $aShown)) {
-            $sLogMessage .= 'Displayed user #' . $sUserID . ' (' . $zUser['name'] . ').' . "\n";
+        if ($zUser['show_order'] == '0' && in_array($nUserID, $aShown)) {
+            $sLogMessage .= 'Displayed user #' . $nUserID . ' (' . $zUser['name'] . ').' . "\n";
 
-        } elseif ($zUser['show_order'] != '0' && !in_array($sUserID, $aShown)) {
-            $sLogMessage .= 'Hid user #' . $sUserID . ' (' . $zUser['name'] . ').' . "\n";
+        } elseif ($zUser['show_order'] != '0' && !in_array($nUserID, $aShown)) {
+            $sLogMessage .= 'Hid user #' . $nUserID . ' (' . $zUser['name'] . ').' . "\n";
         }
 
-        if ($zUser['allow_edit'] == '0' && in_array($sUserID, $aAllowEdit)) {
-            $sLogMessage .= 'Given edit privileges to user #' . $sUserID . ' (' .
+        if ($zUser['allow_edit'] == '0' && in_array($nUserID, $aAllowEdit)) {
+            $sLogMessage .= 'Given edit privileges to user #' . $nUserID . ' (' .
                             $zUser['name'] . ').' . "\n";
 
-        } elseif ($zUser['allow_edit'] == '1' && !in_array($sUserID, $aAllowEdit)) {
-            $sLogMessage .= 'Retracted edit privileges from user #' . $sUserID . ' (' .
+        } elseif ($zUser['allow_edit'] == '1' && !in_array($nUserID, $aAllowEdit)) {
+            $sLogMessage .= 'Retracted edit privileges from user #' . $nUserID . ' (' .
                             $zUser['name'] . ').' . "\n";
         }
     }
