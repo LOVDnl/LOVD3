@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2016-01-20
+ * Modified    : 2016-02-18
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -201,14 +201,15 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
     if ($bUnique) {
         define('PAGE_TITLE', 'View unique variants in gene ' . $sGene);
+        $sViewListID = 'CustomVL_VOTunique_VOG_' . $sGene;
     } else {
         define('PAGE_TITLE', 'View all transcript variants in gene ' . $sGene);
+        $sViewListID = 'CustomVL_VOT_VOG_' . $sGene;
     }
     $_T->printHeader();
     $_T->printTitle();
     lovd_printGeneHeader();
 
-    $sViewListID = 'CustomVL_VOT_VOG_' . $sGene;
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
     list($nTranscriptID, $sTranscript) = each($aTranscripts);
@@ -237,9 +238,8 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
         if ($bUnique) {
             // When this ViewListID is changed, also change the prepareData in object_custom_viewluists.php
-            $sViewListID = 'CustomVL_VOTunique_VOG_' . $sGene;
             $_DATA = new LOVD_CustomViewList(array('VariantOnTranscriptUnique', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
-            $_DATA->setRowLink($sViewListID, 'variants/' . $sGene . '?search_position_c_start={{position_c_start}}&search_position_c_start_intron={{position_c_start_intron}}&search_position_c_end={{position_c_end}}&search_position_c_end_intron={{position_c_end_intron}}&search_vot_clean_dna_change=%3D%22{{vot_clean_dna_change}}%22');
+            $_DATA->setRowLink($sViewListID, 'variants/' . $sGene . '?search_position_c_start={{position_c_start}}&search_position_c_start_intron={{position_c_start_intron}}&search_position_c_end={{position_c_end}}&search_position_c_end_intron={{position_c_end_intron}}&search_vot_clean_dna_change=%3D%22{{vot_clean_dna_change}}%22&search_transcriptid={{transcriptid}}');
         } else {
             $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome'), $sGene); // Restrict view to gene (correct custom column set, correct order).
         }
