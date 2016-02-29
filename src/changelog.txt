@@ -70,6 +70,9 @@
    Configuration area".
  * Fixed bug; You couldn't switch to a different transcript on the unique
    variant view.
+ * Added second confirmation step on deletion of gene and disease. The
+   confirmation warning shows how many related entities are going to be
+   removed.
 
 
 /**************************

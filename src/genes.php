@@ -1011,40 +1011,43 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     $sID = $zData['id'];
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (!empty($_POST)) {
+    // Check whether user has submitted and confirmed the form/action.
+    $bValidPassword = false;
+    $bConfirmation = !empty($_GET['confirm']);
+    if (POST) {
         lovd_errorClean();
 
         // Mandatory fields.
         if (empty($_POST['password'])) {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-        }
 
-        // User had to enter his/her password for authorization.
-        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
-
-        if (!lovd_error()) {
-            // This also deletes the entries in gen2dis and transcripts.
-            $_DATA->deleteEntry($sID);
-
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
-
-            // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
-
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully deleted the gene information entry!', 'success');
-
-            $_T->printFooter();
-            exit;
 
         } else {
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
+            $bValidPassword = true;
         }
+
+        // Remove password from default values shown in confirmation form.
+        unset($_POST['password']);
+    }
+
+    if ($bValidPassword && $bConfirmation) {
+        // This also deletes the entries in gen2dis and transcripts.
+        $_DATA->deleteEntry($sID);
+
+        // Write to log...
+        lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
+
+        // Thank the user...
+        header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
+
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Successfully deleted the gene information entry!', 'success');
+
+        $_T->printFooter();
+        exit;
     }
 
 
@@ -1055,10 +1058,26 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     lovd_showInfoTable('This will delete the ' . $zData['id'] . ' gene, all transcripts of this gene, and all annotations on variants specific for ' . $zData['id'] . '. The genomic variants and all individual-related information, including screenings, phenotypes and diseases, will not be deleted, so these might be left without a curator able to manage the data.<BR>
                         <B>If you also wish to remove all information on individuals with variants in ' . $zData['id'] . ', first <A href="' . $_PE[0] . '/' . $sID . '?empty">empty</A> the gene database.</B>', 'warning');
 
+    if ($bValidPassword) {
+        $zCounts = $_DB->query('SELECT count(DISTINCT t.id) AS tcount, count(DISTINCT vot.id) AS votcount
+                                FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                                 LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                                WHERE t.geneid = ?', array($sID))->fetchAssoc();
+        if ($zCounts['tcount'] || $zCounts['votcount']) {
+            lovd_showInfoTable('<B>You are about to delete ' . $zCounts['tcount'] .
+                ' transcript(s) and related information on ' . $zCounts['votcount'] .
+                ' variant(s) on those transcripts. Please fill in your password one more time ' .
+                'to confirm the removal of gene ' . $sID . '</B>', 'warning');
+        } else {
+            lovd_showInfoTable('<B>Please note the message above and fill in your password one ' .
+                'more time to confirm the removal of gene ' . $sID . '</B>', 'warning');
+        }
+    }
+
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . (!$bValidPassword? '' : '&confirm=true') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
