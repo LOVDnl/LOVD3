@@ -1340,6 +1340,9 @@ class LOVD_Object {
                     lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
+                // Print placeholder for column-based Find & Replace form
+                print('<DIV id="viewlistFRFormContainer_' . $sViewListID . '" display="hidden"></DIV>');
+
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
                       '        <THEAD>' . "\n" .
@@ -1360,7 +1363,8 @@ class LOVD_Object {
                         $sImg = ($aOrder[1] == 'DESC'? '_desc' : '_asc');
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
-                    print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') . '>' . "\n" .
+                    print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
+                        'data-fieldname="' . $sField . '" data-displayname="' . $aCol['view'][0] .'" >' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .
