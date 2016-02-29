@@ -165,6 +165,9 @@ table.data tr.marked:hover td            {background : #FAD5D5;}
 table.data tr.marked:hover td.ordered    {background : #FFB5B5;}
 table.data tr.marked:hover td.checkbox   {background : #FFF0F0; cursor : default;}
 
+div.vl_overlay {background : #000000; opacity : 0.4; filter: alpha(opacity=40); /* For IE8 and earlier */}
+div.vl_overlay:hover {background : #000000; opacity : 0.1; filter: alpha(opacity=10); /* For IE8 and earlier */}
+
 /*table.data tr.del td.ordered    {background : #F0F3FF;}
 table.data tr.del_hover td.ordered    {background : #AFC8FA;}
 table.data tr.marked td.ordered {background : #FFD5D5;}

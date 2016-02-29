@@ -470,10 +470,75 @@ function lovd_activateMenu (sViewListID)
 
 
 
-function lovd_findAndReplaceWidget(sViewListID)
+function lovd_findAndReplaceWidget (sViewListID, sStep, aOptions)
 {
-    // stub
-    alert('lovd_findAndReplaceWidget(' + sViewListID + ');');
+
+    // aOptions: {sFieldname, sDisplayname, sSearch, sReplace, nReplaceType}
+    var sViewListDivID = 'viewlistDiv_' + sViewListID;
+    if ($('#' + sViewListDivID).length == 0) {
+        // No viewlist with ID sViewListID found
+        return
+    }
+
+    // ID of element where FR options form is placed.
+    var sFRcontainerID = 'viewlistFRFormContainer_' + sViewListID;
+
+
+    if (typeof sStep == 'undefined') {
+        sStep = 'column_selector';
+    }
+
+    switch (sStep) {
+        case 'column_selector':
+            var sVLTableSelector = '#viewlistTable_' + sViewListID;
+            var tableHeight = $(sVLTableSelector).css('height');
+
+            $(sVLTableSelector).find('th').each(function(index) {
+                // Place divs overlaying table columns to get column selection.
+                var overlayDiv = $().add('<div class="vl_overlay"></div>');
+                var ePos = $(this).offset();
+                overlayDiv.css({
+                    position: 'absolute',
+                    top: ePos.top,
+                    left: ePos.left,
+                    height: tableHeight,
+                    width: $(this).outerWidth(),
+                    cursor: 'pointer'
+                });
+
+                var aCurrentOptions = {'sFieldname': $(this).data('fieldname'),
+                                       'sDisplayname': $(this).data('displayname')};
+                overlayDiv.on('click', function() {
+                    $('.vl_overlay').remove();
+                    lovd_findAndReplaceWidget(sViewListID, 'show_options', aCurrentOptions);
+                });
+
+                $('#' + sViewListDivID).append(overlayDiv);
+            });
+
+            break;
+
+        case 'show_options':
+            var FRoptions = $().add('Find &amp; Replace for column ' + aOptions['displayname'] +
+                ' <INPUT type="text" name="FRSearch_' + sViewListID + '" />' +
+                '<INPUT type="text" name="FRReplace_' + sViewListID + '" />' +
+                '<INPUT id="FRPreview_' + sViewListID + '" type="button" value="preview" />' +
+                '<INPUT id="FRCancel_' + sViewListID + '" type="button" value="cancel" />');
+            FRoptions.find('#FRCancel_' + sViewListID).on('click', function() {
+                lovd_findAndReplaceWidget(sViewListID, 'cancel');
+            });
+            $('#' + sFRcontainerID).append(FRoptions).show();
+            break;
+        case 'preview':
+            // pass
+            break;
+        case 'submit':
+            // pass
+            break;
+        case 'cancel':
+            // pass
+            break;
+    }
 }
 
 
