@@ -70,9 +70,12 @@ LOVD DEVELOPMENT TEAM
 =====================
 The LOVD development team currently consists of:
 Ivo Fokkema
-Daan Asscheman
+Mark Kroon
 
 And is supported by:
 Johan den Dunnen
+Jeroen Laros
+Martijn Vermaat
+Julia López Hernández
 
 All from the Leiden University Medical Center, Leiden, Netherlands.
