@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-02-08
+ * Modified    : 2016-02-26
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -12,7 +12,7 @@
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -41,6 +41,93 @@ if ($_AUTH) {
 }
 
 
+
+function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShown)
+{
+    // Creates a log message showing main differences between current database
+    // status and curator privileges given as parameters ($aCurators,
+    // $aAllowEdit, $aShown).
+    // Parameters:
+    //     $sGeneID: Gene ID.
+    //     $aCurators: array of curator IDs.
+    //     $aAllowEdit: array of curator IDs with edit privileges.
+    //     $aShown: array of curator IDs in order as shown on gene page.
+    global $_DB;
+
+    $sLogMessage = 'Updated curator list for the ' . $sGeneID . ' gene:' . "\n";
+
+    // Generate SQL condition for curator ID. This condition is needed to select
+    // users that are currently not associated with the gene.
+    $sSQLUserWhereCondition = '';
+    if (count($aCurators) > 0) {
+        $sSQLUserWhereCondition = 'u.id IN (?' . str_repeat(', ?', count($aCurators) - 1) . ') OR';
+    }
+
+    // Get all curators (past and new) from database.
+    $qUser = $_DB->query('SELECT u.id, u.name, u2g.allow_edit, u2g.show_order FROM ' .
+        TABLE_USERS . ' AS u LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid ' .
+        'AND u2g.geneid = ?) WHERE ' . $sSQLUserWhereCondition . ' u2g.geneid IS NOT NULL',
+        array_merge(array($sGeneID), $aCurators));
+    $aUserResult = $qUser->fetchAllAssoc();
+    $zUsers = array();
+    foreach ($aUserResult as $zResult) {
+        $zUsers[$zResult['id']] = $zResult;
+    }
+
+    foreach ($zUsers as $nUserID => $zUser) {
+        // Compare status of current privileges with those about to be submitted.
+
+        if (!in_array($nUserID, $aCurators)) {
+            $sLogMessage .= 'Removed user #' . $nUserID . ' (' . $zUser['name'] . ').' . "\n";
+            continue;
+        }
+
+        if (is_null($zUser['allow_edit']) && is_null($zUser['show_order'])) {
+            $sLogMessage .= 'Added user #' . $nUserID . ' (' . $zUser['name'] . ').' . "\n";
+            continue;
+        }
+
+        if ($zUser['show_order'] == '0' && in_array($nUserID, $aShown)) {
+            $sLogMessage .= 'Displayed user #' . $nUserID . ' (' . $zUser['name'] . ').' . "\n";
+
+        } elseif ($zUser['show_order'] != '0' && !in_array($nUserID, $aShown)) {
+            $sLogMessage .= 'Hid user #' . $nUserID . ' (' . $zUser['name'] . ').' . "\n";
+        }
+
+        if ($zUser['allow_edit'] == '0' && in_array($nUserID, $aAllowEdit)) {
+            $sLogMessage .= 'Given edit privileges to user #' . $nUserID . ' (' .
+                            $zUser['name'] . ').' . "\n";
+
+        } elseif ($zUser['allow_edit'] == '1' && !in_array($nUserID, $aAllowEdit)) {
+            $sLogMessage .= 'Retracted edit privileges from user #' . $nUserID . ' (' .
+                            $zUser['name'] . ').' . "\n";
+        }
+    }
+
+    // Format new order of curators with IDs and names.
+    $sLogMessage .= 'Order is now: ';
+    $aCuratorDisplaysShown = array();
+    $aCuratorDisplaysHidden = array();
+
+    foreach ($aCurators as $sCuratorID) {
+        if (isset($zUsers[$sCuratorID])) {
+            $sCuratorDisplay = 'user #' . $sCuratorID . ' (' . $zUsers[$sCuratorID]['name'] . ')';
+
+            if (in_array($sCuratorID, $aShown)) {
+                $aCuratorDisplaysShown[] = $sCuratorDisplay;
+            } else {
+                $aCuratorDisplaysHidden[] = $sCuratorDisplay;
+            }
+        }
+    }
+
+    $sLogMessage .= join(', ', $aCuratorDisplaysShown);
+    if (count($aCuratorDisplaysHidden) > 0) {
+        // Hidden curators are separate, their order may be off as it is implicit.
+        $sLogMessage .= ', ' . join(', ', $aCuratorDisplaysHidden);
+    }
+    return $sLogMessage;
+}
 
 
 
@@ -924,40 +1011,43 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     $sID = $zData['id'];
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (!empty($_POST)) {
+    // Check whether user has submitted and confirmed the form/action.
+    $bValidPassword = false;
+    $bConfirmation = !empty($_GET['confirm']);
+    if (POST) {
         lovd_errorClean();
 
         // Mandatory fields.
         if (empty($_POST['password'])) {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-        }
 
-        // User had to enter his/her password for authorization.
-        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
-
-        if (!lovd_error()) {
-            // This also deletes the entries in gen2dis and transcripts.
-            $_DATA->deleteEntry($sID);
-
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
-
-            // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
-
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully deleted the gene information entry!', 'success');
-
-            $_T->printFooter();
-            exit;
 
         } else {
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
+            $bValidPassword = true;
         }
+
+        // Remove password from default values shown in confirmation form.
+        unset($_POST['password']);
+    }
+
+    if ($bValidPassword && $bConfirmation) {
+        // This also deletes the entries in gen2dis and transcripts.
+        $_DATA->deleteEntry($sID);
+
+        // Write to log...
+        lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
+
+        // Thank the user...
+        header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
+
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Successfully deleted the gene information entry!', 'success');
+
+        $_T->printFooter();
+        exit;
     }
 
 
@@ -968,10 +1058,26 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     lovd_showInfoTable('This will delete the ' . $zData['id'] . ' gene, all transcripts of this gene, and all annotations on variants specific for ' . $zData['id'] . '. The genomic variants and all individual-related information, including screenings, phenotypes and diseases, will not be deleted, so these might be left without a curator able to manage the data.<BR>
                         <B>If you also wish to remove all information on individuals with variants in ' . $zData['id'] . ', first <A href="' . $_PE[0] . '/' . $sID . '?empty">empty</A> the gene database.</B>', 'warning');
 
+    if ($bValidPassword) {
+        $zCounts = $_DB->query('SELECT count(DISTINCT t.id) AS tcount, count(DISTINCT vot.id) AS votcount
+                                FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                                 LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                                WHERE t.geneid = ?', array($sID))->fetchAssoc();
+        if ($zCounts['tcount'] || $zCounts['votcount']) {
+            lovd_showInfoTable('<B>You are about to delete ' . $zCounts['tcount'] .
+                ' transcript(s) and related information on ' . $zCounts['votcount'] .
+                ' variant(s) on those transcripts. Please fill in your password one more time ' .
+                'to confirm the removal of gene ' . $sID . '</B>', 'warning');
+        } else {
+            lovd_showInfoTable('<B>Please note the message above and fill in your password one ' .
+                'more time to confirm the removal of gene ' . $sID . '</B>', 'warning');
+        }
+    }
+
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . (!$bValidPassword? '' : '&confirm=true') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -1473,6 +1579,13 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
         if (!lovd_error()) {
             // What's by far the most efficient code-wise is just insert/update all we've got and delete everything else.
+
+            // Prepare log for changes.
+            // (depends on current database status, so we create the log message before
+            // the changes are committed, but log the actual message afterwards).
+            $sLogMessage = lovd_prepareCuratorLogMessage($sID, $_POST['curators'],
+                                                         $_POST['allow_edit'], $_POST['shown']);
+
             $_DB->beginTransaction();
 
             foreach ($_POST['curators'] as $nOrder => $nUserID) {
@@ -1501,12 +1614,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
             $_DB->commit();
 
             // Write to log...
-            if (ACTION == 'authorize') {
-                $sMessage = 'Updated curator list for the ' . $sID . ' gene';
-            } else {
-                $sMessage = 'Resorted curator list for the ' . $sID . ' gene';
-            }
-            lovd_writeLog('Event', LOG_EVENT, $sMessage);
+            lovd_writeLog('Event', LOG_EVENT, $sLogMessage);
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
