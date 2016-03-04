@@ -19,9 +19,6 @@ before_install:
 
 before_script:
   - ./tests/travis/setup/setup_apache.sh --githubaccount=LOVDnl
-  ## IMPORTANT! convert must be run AFTER the setup_apache.sh
-  ## setup_apache.sh fix some assumptions where the files are stored!
-  - ./tests/bash_scripts/convert_selenium_to_phpunit.sh --localhost=http://localhost/LOVD3 --continueall
   - ./tests/travis/setup/setup_config.sh
   - ./tests/travis/setup/setup_selenium_server.sh
 
@@ -36,17 +33,15 @@ script:
   # Two test are done which are independent of LOVD.
   - vendor/bin/phpunit ./tests/travis/tests/
 
-  # uncomment one of the folloring lines to run one or more test suites.
-#  - vendor/bin/phpunit ./tests/phpunit_selenium/adminTest.php
-#  - vendor/bin/phpunit ./tests/phpunit_selenium/authorizationTest.php
-#  - vendor/bin/phpunit ./tests/phpunit_selenium/collaboratorTest.php
-#  - vendor/bin/phpunit ./tests/phpunit_selenium/importTest.php
-#  - vendor/bin/phpunit ./tests/phpunit_selenium/managerTest.php
-#  - vendor/bin/phpunit ./tests/phpunit_selenium/submitterTest.php
-#  - vendor/bin/phpunit ./tests/phpunit_selenium/tempTest.php
-
 ## Run all test suites.
-  - vendor/bin/phpunit -v ./tests/phpunit_selenium/
+  - vendor/bin/phpunit -v --testsuite admin_tests --configuration ./tests/phpunit_selenium/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite authorization_tests --configuration ./tests/phpunit_selenium/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite collaboration_tests --configuration ./tests/phpunit_selenium/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite curator_tests --configuration ./tests/phpunit_selenium/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite import_tests --configuration ./tests/phpunit_selenium/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite manager_tests --configuration ./tests/phpunit_selenium/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/phpunit_selenium/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite temp_tests --configuration ./tests/phpunit_selenium/phpunit.xml
 
 notifications: 
   email:

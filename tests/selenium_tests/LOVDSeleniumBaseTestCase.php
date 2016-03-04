@@ -3,12 +3,12 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2014-12-19
- * Modified    : 2014-06-24
- * For LOVD    : 3.0-12
+ * Created     : 2016-03-02
+ * Modified    : 2016-03-02
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2014 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -28,19 +28,28 @@
  *
  *************/
 
-class setupscript extends PHPUnit_Extensions_SeleniumTestCase
+
+abstract class LOVDSeleniumBaseTestCase extends PHPUnit_Extensions_SeleniumTestCase
 {
+
     protected $captureScreenshotOnFailure = TRUE;
-    protected $screenshotPath = 'Determined on convert';
-    protected $screenshotUrl = 'Determined on convert';
-  
+    protected $screenshotPath;
+    protected $screenshotUrl;
+
+    protected $baseUrl;
+
     protected function setUp()
     {
+        // Set selenium general settings.
         $this->setHost('localhost');
         $this->setPort(4444);
         $this->setBrowser("firefox");
-        $this->setBrowserUrl("Determined on convert");
+        $this->setBrowserUrl(ROOT_URL);
         $this->shareSession(true);
+
+        // Set selenium screenshot paths.
+        $this->screenshotUrl = ROOT_URL . '/tests/test_results/error_screenshots';
+        $this->screenshotPath = ROOT_PATH . '/tests/test_results/error_screenshots';
     }
 }
-?>
+
