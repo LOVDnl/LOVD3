@@ -38,10 +38,3 @@ database =
 # Please use alphanumeric characters only. Defaults to 'lovd'.
 #
 table_prefix = lovd
-
-
-[test]
-
-# Root URL (base URL to reach this installation via a web browser)
-# This is only needed for running tests.
-root_url = http://localhost
