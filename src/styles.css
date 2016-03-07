@@ -9,6 +9,7 @@
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -165,6 +166,7 @@ table.data tr.marked:hover td            {background : #FAD5D5;}
 table.data tr.marked:hover td.ordered    {background : #FFB5B5;}
 table.data tr.marked:hover td.checkbox   {background : #FFF0F0; cursor : default;}
 
+/* Viewlist find and replace column selectors */
 div.vl_overlay {background : #000000; opacity : 0.4; filter: alpha(opacity=40); /* For IE8 and earlier */}
 div.vl_overlay:hover {background : #000000; opacity : 0.1; filter: alpha(opacity=10); /* For IE8 and earlier */}
 

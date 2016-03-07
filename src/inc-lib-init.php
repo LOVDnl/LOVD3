@@ -32,6 +32,26 @@
 
 
 
+function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
+{
+    // Insert $new_key, $new_value pair after entry $key in array $array.
+    // Courtesy of http://eosrei.net/
+    if (array_key_exists($key, $array)) {
+        $new = array();
+        foreach ($array as $k => $value) {
+            $new[$k] = $value;
+            if ($k === $key) {
+                $new[$new_key] = $new_value;
+            }
+        }
+        return $new;
+    }
+    return FALSE;
+}
+
+
+
+
 
 function lovd_calculateVersion ($sVersion)
 {
