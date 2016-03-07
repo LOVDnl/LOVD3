@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-02-24
+ * Modified    : 2016-03-07
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -468,6 +468,25 @@ function lovd_activateMenu (sViewListID)
 
 
 
+function lovd_getFindReplaceOptionsElement (sViewListID, aOptions)
+{
+    var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
+    FRoptions.find('#FRCancel_' + sViewListID).on('click', function () {
+        lovd_findAndReplaceWidget(sViewListID, 'cancel');
+    });
+    FRoptions.find('#FRPreview_' + sViewListID).on('click', function () {
+        lovd_findAndReplaceWidget(sViewListID, 'preview', aOptions);
+    });
+    FRoptions.find('#FRSubmit_' + sViewListID).on('click', function () {
+        lovd_findAndReplaceWidget(sViewListID, 'submit', aOptions);
+    });
+    FRoptions.find('#viewlistFRColDisplay_' + sViewListID).html(aOptions['sDisplayname']);
+    FRoptions.find('#FRFieldname_' + sViewListID).val(aOptions['sFieldname']);
+    FRoptions.find('#FRFieldDisplayname_' + sViewListID).val(aOptions['sDisplayname']);
+    return FRoptions;
+}
+
+
 function lovd_findAndReplaceWidget (sViewListID, sStep, aOptions)
 {
 
@@ -504,37 +523,56 @@ function lovd_findAndReplaceWidget (sViewListID, sStep, aOptions)
                     cursor: 'pointer'
                 });
 
-                var aCurrentOptions = {'sFieldname': $(this).data('fieldname'),
-                                       'sDisplayname': $(this).data('displayname')};
+                var aCurrentOptions = {sFieldname: $(this).data('fieldname'),
+                                       sDisplayname: $(this).data('displayname')};
                 overlayDiv.on('click', function() {
                     $('.vl_overlay').remove();
                     lovd_findAndReplaceWidget(sViewListID, 'show_options', aCurrentOptions);
                 });
 
                 $('#' + sViewListDivID).append(overlayDiv);
+
+                if (index == 0) {
+                    overlayDiv.tooltip({
+                        items: '.vl_overlay',
+                        content: '<DIV class="ui-tooltip arrow"><B>Select a column to use for Find ' +
+                                 '& Replace</B></DIV>',
+                        position: {
+                            my: 'left bottom',
+                            at: 'right top'
+                        }
+                    }).tooltip('open');
+                }
             });
 
             break;
 
         case 'show_options':
-            var FRoptions = $().add('Find &amp; Replace for column ' + aOptions['displayname'] +
-                ' <INPUT type="text" name="FRSearch_' + sViewListID + '" />' +
-                '<INPUT type="text" name="FRReplace_' + sViewListID + '" />' +
-                '<INPUT id="FRPreview_' + sViewListID + '" type="button" value="preview" />' +
-                '<INPUT id="FRCancel_' + sViewListID + '" type="button" value="cancel" />');
-            FRoptions.find('#FRCancel_' + sViewListID).on('click', function() {
-                lovd_findAndReplaceWidget(sViewListID, 'cancel');
-            });
-            $('#' + sFRcontainerID).append(FRoptions).show();
+            lovd_getFindReplaceOptionsElement(sViewListID, aOptions);
+            $('#' + sFRcontainerID).find('#FRSearch_' + sViewListID).tooltip({
+                items: '#FRSearch_' + sViewListID,
+                content: '<DIV class="ui-tooltip arrow"><B>Define what text should be replaced and ' +
+                         'how</B></DIV>',
+                position: {
+                    my: 'center top',
+                    at: 'center bottom'
+                }
+            }).tooltip('open');
+            $('#' + sFRcontainerID).show();
             break;
         case 'preview':
-            // pass
+            $('#FRPreviewClicked_' + sViewListID).val('1');
+            lovd_AJAX_viewListSubmit(sViewListID, function() {
+                var FRoptions = lovd_getFindReplaceOptionsElement(sViewListID, aOptions);
+                $('#' + sFRcontainerID).show();
+                FRoptions.find('FRSubmit_' + sViewListID).show();
+            });
             break;
         case 'submit':
             // pass
             break;
         case 'cancel':
-            // pass
+            alert('cancel ' + sViewListID);
             break;
     }
 }

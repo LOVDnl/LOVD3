@@ -801,6 +801,45 @@ class LOVD_Object {
 
 
 
+    private function previewColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
+                                                  $aOptions)
+    {
+        var_dump($sFRFieldname);
+        var_dump($sFRSearchValue);
+        var_dump($sFRReplaceValue);
+        var_dump($aOptions);
+
+        // Translate field name to field in database (note that a field name returned by an SQL
+        // query may be different from the fieldname in the table due to aliases).
+        $sFRTableFieldname = $sFRFieldname;
+        $match = array();
+        preg_match('([\w`]+\.)?([\w`]+)\s+AS\s+' . preg_quote($sFRFieldname) . '/i',
+                   $this->aSQLViewList['SELECT'], $match);
+        if (count($match) >= 3) {
+            $sFRTableFieldname = $match[1] . $match[2];
+        }
+
+        $sPreviewColname = $sFRFieldname . '_FR';
+
+        // Edit sql in $this->aSQLViewList to include an F&R column.
+        $this->aSQLViewList['SELECT'] .= ",\n";
+        $this->aSQLViewList['SELECT'] .= 'REPLACE(`' . $sFRTableFieldname . '`, "' .
+                                         $sFRSearchValue . '", "' . $sFRReplaceValue . '") AS `' .
+                                         $sPreviewColname . '`';
+
+        // Edit $this->aColumnsViewList to include the F&R column in the display.
+        $aFRColValues = array('view' => array('Screening ID', 110, 'style="text-align : right;"'),
+                              'db' => array($sPreviewColname, 'ASC', true));
+        lovd_arrayInsertAfter($sFRFieldname, $this->aColumnsViewList, $sPreviewColname,
+                              $aFRColValues);
+    }
+
+    private function applyColumnFindAndReplace ($sFRColname, $sFRSearchValue, $sFRReplaceValue,
+                                                $aOptions) {
+
+    }
+
+
 
 
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOptions = false, $bOnlyRows = false)
@@ -1089,8 +1128,33 @@ class LOVD_Object {
             $aSessionViewList['row_link'] = $this->sRowLink; // Implies array creation.
         }
 
+        // Get column Find & Replace input values
+        $bFRSubmit = isset($_GET['FRSubmitClicked_' . $sViewListID]) &&
+                     $_GET['FRSubmitClicked_' . $sViewListID] == '1';
+        $bFRPreview = isset($_GET['FRPreviewClicked_' . $sViewListID]) &&
+                      $_GET['FRPreviewClicked_' . $sViewListID] == '1';
+        $sFRFieldname = isset($_GET['FRFieldname_' . $sViewListID])?
+                      $_GET['FRFieldname_' . $sViewListID] : '';
+        $sFRFieldDisplayname = isset($_GET['FRFieldDisplayname_' . $sViewListID])?
+                             $_GET['FRFieldname_' . $sViewListID] : '';
+        $sFRSearchValue = isset($_GET['FRSearch_' . $sViewListID])?
+                          $_GET['FRSearch_' . $sViewListID] : '';
+        $sFRReplaceValue = isset($_GET['FRReplace_' . $sViewListID])?
+                           $_GET['FRReplace_' . $sViewListID] : '';
+
         $nTotal = 0;
         if (!count($aBadSyntaxColumns)) {
+
+            if ($bFRSubmit) {
+                // User has submitted Find&Replace form, apply changes.
+                $this->applyColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue);
+            } else if ($bFRPreview) {
+                // User clicked 'preview' in Find&Replace form, add F&R changes as a separate
+                // column in the query.
+                $this->previewColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue);
+            }
+
+
             // Using the SQL_CALC_FOUND_ROWS technique to find the amount of hits in one go.
             // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
             // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
@@ -1340,8 +1404,29 @@ class LOVD_Object {
                     lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
-                // Print placeholder for column-based Find & Replace form
-                print('<DIV id="viewlistFRFormContainer_' . $sViewListID . '" display="hidden"></DIV>');
+
+
+
+
+                print('<DIV id="viewlistFRFormContainer_' . $sViewListID .
+                    '" style="display: none">' .
+                    '<SPAN>Find &amp; Replace for column ' .
+                    '<B id="viewlistFRColDisplay_' . $sViewListID . '">' . $sFRFieldname . '</B> ' .
+                    '<INPUT id="FRFieldname_' . $sViewListID . '" type="hidden" name="FRFieldname_' .
+                    $sViewListID . '" value="' . $sFRFieldname . '" />' .
+                    '<INPUT id="FRFieldDisplayname_' . $sViewListID . '" type="hidden" name="FRFieldDisplayname_' .
+                    $sViewListID . '" value="' . $sFRFieldDisplayname . '" />' .
+                    '<INPUT type="text" name="FRSearch_' . $sViewListID . '" value="' . $sFRSearchValue . '" />' .
+                    '<INPUT type="text" name="FRReplace_' . $sViewListID . '" value="' . $sFRReplaceValue . '" />' .
+                    '<INPUT id="FRPreview_' . $sViewListID . '" type="button" value="preview" />' .
+                    '<INPUT id="FRPreviewClicked_' . $sViewListID . '" type="hidden" name="FRPreviewClicked_' .
+                    $sViewListID . '" value="0" /> ' .
+                    '<INPUT id="FRCancel_' . $sViewListID . '" type="button" value="cancel" /> ' .
+                    '<INPUT id="FRSubmit_' . $sViewListID . '" type="button" value="submit" />' .
+                    '<INPUT id="FRSubmitClicked_' . $sViewListID . '" type="hidden" name="FRSubmitClicked_' .
+                    $sViewListID . '" value="0" />' .
+                    '</SPAN>' .
+                    '</DIV>');
 
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
