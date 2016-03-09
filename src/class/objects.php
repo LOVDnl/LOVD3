@@ -130,6 +130,15 @@ class LOVD_Object {
 
 
 
+    private function applyColumnFindAndReplace ($sFRColname, $sFRSearchValue, $sFRReplaceValue,
+                                                $aOptions) {
+        // stub
+
+    }
+
+
+
+
 
     function checkFields ($aData, $zData = false)
     {
@@ -589,6 +598,45 @@ class LOVD_Object {
 
 
 
+    private function previewColumnFindAndReplace ($sFRFieldname, $sFRFieldDisplayname,
+                                                  $sFRSearchValue, $sFRReplaceValue, $aOptions)
+    {
+        // Translate field name to field in database (note that a field name returned by an SQL
+        // query may be different from the fieldname in the table due to aliases).
+        $sFRTableFieldname = $sFRFieldname;
+        $match = array();
+        preg_match('/([\w`]+\.)?([\w`]+)\s+AS\s+' . preg_quote($sFRFieldname) . '/i',
+            $this->aSQLViewList['SELECT'], $match);
+        if (count($match) >= 3) {
+            $sFRTableFieldname = $match[1] . $match[2];
+        }
+
+        $sPreviewFieldname = $sFRFieldname . '_FR';
+        $sPreviewFieldDisplayname = $sFRFieldDisplayname . '_FR';
+
+        // Edit sql in $this->aSQLViewList to include an F&R column.
+        $this->aSQLViewList['SELECT'] .= ",\n";
+        $this->aSQLViewList['SELECT'] .= 'REPLACE(' . $sFRTableFieldname . ', "' .
+            $sFRSearchValue . '", "' . $sFRReplaceValue . '") AS `' .
+            $sPreviewFieldname . '`';
+
+        // Add description of preview-field in $this->aColumnsViewList based on original field.
+        $aFRColValues = $this->aColumnsViewList[$sFRFieldname];
+        if (!isset($aFRColValues['view'])) {
+            $aFRColValues['view'] = array($sPreviewFieldDisplayname, 160, 'class="FRPreview"');
+        } else {
+            $aFRColValues['view'][0] = $sPreviewFieldDisplayname;
+        }
+        // Fixme: check whether the non-existing database field name breaks anything
+        $aFRColValues['db'] = array($sFRFieldname);
+
+        $this->aColumnsViewList = lovd_arrayInsertAfter($sFRFieldname, $this->aColumnsViewList,
+            $sPreviewFieldname, $aFRColValues);
+    }
+
+
+    
+
 
     function setDefaultValues ()
     {
@@ -799,45 +847,6 @@ class LOVD_Object {
         return $zData;
     }
 
-
-
-    private function previewColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
-                                                  $aOptions)
-    {
-        var_dump($sFRFieldname);
-        var_dump($sFRSearchValue);
-        var_dump($sFRReplaceValue);
-        var_dump($aOptions);
-
-        // Translate field name to field in database (note that a field name returned by an SQL
-        // query may be different from the fieldname in the table due to aliases).
-        $sFRTableFieldname = $sFRFieldname;
-        $match = array();
-        preg_match('([\w`]+\.)?([\w`]+)\s+AS\s+' . preg_quote($sFRFieldname) . '/i',
-                   $this->aSQLViewList['SELECT'], $match);
-        if (count($match) >= 3) {
-            $sFRTableFieldname = $match[1] . $match[2];
-        }
-
-        $sPreviewColname = $sFRFieldname . '_FR';
-
-        // Edit sql in $this->aSQLViewList to include an F&R column.
-        $this->aSQLViewList['SELECT'] .= ",\n";
-        $this->aSQLViewList['SELECT'] .= 'REPLACE(`' . $sFRTableFieldname . '`, "' .
-                                         $sFRSearchValue . '", "' . $sFRReplaceValue . '") AS `' .
-                                         $sPreviewColname . '`';
-
-        // Edit $this->aColumnsViewList to include the F&R column in the display.
-        $aFRColValues = array('view' => array('Screening ID', 110, 'style="text-align : right;"'),
-                              'db' => array($sPreviewColname, 'ASC', true));
-        lovd_arrayInsertAfter($sFRFieldname, $this->aColumnsViewList, $sPreviewColname,
-                              $aFRColValues);
-    }
-
-    private function applyColumnFindAndReplace ($sFRColname, $sFRSearchValue, $sFRReplaceValue,
-                                                $aOptions) {
-
-    }
 
 
 
@@ -1136,7 +1145,7 @@ class LOVD_Object {
         $sFRFieldname = isset($_GET['FRFieldname_' . $sViewListID])?
                       $_GET['FRFieldname_' . $sViewListID] : '';
         $sFRFieldDisplayname = isset($_GET['FRFieldDisplayname_' . $sViewListID])?
-                             $_GET['FRFieldname_' . $sViewListID] : '';
+                             $_GET['FRFieldDisplayname_' . $sViewListID] : '';
         $sFRSearchValue = isset($_GET['FRSearch_' . $sViewListID])?
                           $_GET['FRSearch_' . $sViewListID] : '';
         $sFRReplaceValue = isset($_GET['FRReplace_' . $sViewListID])?
@@ -1151,7 +1160,7 @@ class LOVD_Object {
             } else if ($bFRPreview) {
                 // User clicked 'preview' in Find&Replace form, add F&R changes as a separate
                 // column in the query.
-                $this->previewColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue);
+                $this->previewColumnFindAndReplace($sFRFieldname, $sFRFieldDisplayname, $sFRSearchValue, $sFRReplaceValue);
             }
 
 
@@ -1419,12 +1428,8 @@ class LOVD_Object {
                     '<INPUT type="text" name="FRSearch_' . $sViewListID . '" value="' . $sFRSearchValue . '" />' .
                     '<INPUT type="text" name="FRReplace_' . $sViewListID . '" value="' . $sFRReplaceValue . '" />' .
                     '<INPUT id="FRPreview_' . $sViewListID . '" type="button" value="preview" />' .
-                    '<INPUT id="FRPreviewClicked_' . $sViewListID . '" type="hidden" name="FRPreviewClicked_' .
-                    $sViewListID . '" value="0" /> ' .
                     '<INPUT id="FRCancel_' . $sViewListID . '" type="button" value="cancel" /> ' .
                     '<INPUT id="FRSubmit_' . $sViewListID . '" type="button" value="submit" />' .
-                    '<INPUT id="FRSubmitClicked_' . $sViewListID . '" type="hidden" name="FRSubmitClicked_' .
-                    $sViewListID . '" value="0" />' .
                     '</SPAN>' .
                     '</DIV>');
 
@@ -1663,7 +1668,7 @@ class LOVD_Object {
 '                </A>' +
 '            </LI>' +
 '            <LI class="icon">' +
-'                <A click="lovd_findAndReplaceWidget(\'$sViewListID\');">' +
+'                <A click="lovd_FRColumnSelector(\'$sViewListID\');">' +
 '                    <SPAN class="icon" style=""></SPAN>' +
 '                    Find and replace text in column' +
 '                </A>' +
