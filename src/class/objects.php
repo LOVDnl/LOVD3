@@ -133,15 +133,36 @@ class LOVD_Object {
     private function applyColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
                                                 $aOptions) {
         global $_DB;
-        $sReplaceStmt = $this->generateViewListFRReplaceStatement($sFRFieldname, $sFRSearchValue,
-                                                                  $sFRReplaceValue, $aOptions);
+        list($_, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
+
         $sSelectSQL = $this->generateViewListSelectQuerySQL();
+        $sSubqueryAlias = 'subq';
+        $sReplaceStmt = $this->generateViewListFRReplaceStatement($sSubqueryAlias,
+            $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
 
-        $sTableFieldname = $this->getTableAndFieldName($sFRFieldname);
-        // Fixme: stub, implement update query
-        $sUpdateSQL = 'UPDATE ' . ', (' . $sSelectSQL . ') ';
+        if (!isset($this->sTable) || !defined($this->sTable)) {
+            $sErr = 'Cannot run update query for object with unknown table (object=' .
+                get_class($this) . ').';
+            lovd_displayError('LOVD_ERR_UNKOWN_TABLE', $sErr);
+            return;
+        }
 
-//        $result = $_DB->query()
+        // Fixme: refactor so that processViewListSearchArgs isn't called unnecessarily
+        list($_, $_, $args, $_, $_) = $this->processViewListSearchArgs();
+
+        // ID field to connect rows from the original viewlist select query with rows in the
+        // update query.
+        // Note: this is hard-coded for now, meaning that each table must have this as its
+        // ID field and each viewlist select query must include it. A more involved approach
+        // would be to get the primary key in a separate query and include that in both the
+        // update query and select subquery.
+        $sIDField = 'id';
+
+        $sUpdateSQL = 'UPDATE ' . constant($this->sTable) .  ', (' . $sSelectSQL . ') AS ' .
+                      $sSubqueryAlias . ' SET ' . constant($this->sTable) . '.`' . $sFieldname .
+                      '`=' . $sReplaceStmt . ' WHERE ' . constant($this->sTable) . '.' . $sIDField .
+                      ' = ' . $sSubqueryAlias . '.' . $sIDField;
+        $_DB->query($sUpdateSQL, array_merge($args['WHERE'], $args['HAVING']));
     }
 
 
@@ -356,21 +377,20 @@ class LOVD_Object {
 
 
 
-    private function generateViewListFRReplaceStatement($sFRFieldname, $sFRSearchValue,
+    private function generateViewListFRReplaceStatement($sTablename, $sFieldname, $sFRSearchValue,
                                                         $sFRReplaceValue, $aOptions)
     {
         // Return a SQL REPLACE statement for given field name and options.
         // Params:
-        // - $sFRFieldname      Name of the field for which replace is called, as it appears in
-        //                      the viewlist query (possibly as an alias).
+        // - $sTableName        Name of the table.
+        // - $sFieldname        Name of the table's field on which replace will be called.
         // - $sFRSearchValue    Find & replace search value.
         // - $sFRReplaceValue   Find & replace replace value.
         // - $aOptions          Array with options on how to perform replace.
-        $sFRTableFieldname = $this->getTableAndFieldName($sFRFieldname);
 
         // Return replace statement.
-        return 'REPLACE(' . $sFRTableFieldname . ', "' . $sFRSearchValue . '", "' .
-        $sFRReplaceValue . '")';
+        return 'REPLACE(' . $sTablename . '.`' . $sFieldname . '`, "' . $sFRSearchValue . '", "' .
+               $sFRReplaceValue . '")';
     }
 
 
@@ -387,7 +407,7 @@ class LOVD_Object {
         list($sSearchWhere, $sSearchHaving, $_, $_, $_) = $this->processViewListSearchArgs();
         $sSQL = 'SELECT ';
 
-        if (in_array('SQL_CALC_FOUND_ROWS', $aOptions) && $aOptions['SQL_CALC_FOUND_ROWS']) {
+        if (array_key_exists('bSQL_CALC_FOUND_ROWS', $aOptions) && $aOptions['bSQL_CALC_FOUND_ROWS']) {
             $sSQL .= ' SQL_CALC_FOUND_ROWS ';
         }
 
@@ -406,18 +426,19 @@ class LOVD_Object {
 
         if ($this->aSQLViewList['HAVING'] && $sSearchHaving) {
             $sSQL .= ' HAVING ' . $this->aSQLViewList['HAVING'] . ' AND ' . $sSearchHaving;
-        } else if ($this->aSQLViewList['WHERE']) {
+        } else if ($this->aSQLViewList['HAVING']) {
             $sSQL .= ' HAVING ' . $this->aSQLViewList['HAVING'];
         } else if ($sSearchHaving) {
             $sSQL .= ' HAVING ' . $sSearchHaving;
         }
 
-        if (in_array('sSortFieldName', $aOptions) && !is_null($aOptions['sSortFieldname'])) {
+        if (array_key_exists('sSortFieldName', $aOptions) &&
+            !is_null($aOptions['sSortFieldname'])) {
             $sSQL .= ' ORDER BY ' . $aOptions['sSortFieldname'];
         }
 
-        if (in_array('nLimit', $aOptions) && !is_null($aOptions['nLimit'])) {
-            $sSQL .= ' LIMIT ' . strval($aOptions['nLimit']);
+        if (array_key_exists('sLimit', $aOptions) && !is_null($aOptions['sLimit'])) {
+            $sSQL .= ' LIMIT ' . strval($aOptions['sLimit']);
         }
         return $sSQL;
     }
@@ -466,29 +487,40 @@ class LOVD_Object {
 
 
 
-    private function getTableAndFieldName($sFRFieldname)
+    private function getTableAndFieldNameFromSelect($sFRFieldname)
     {
         // Try to translate UI field name to fieldname and tablename in the database based on
         // the SQL query definitions. (note that a field name returned by the interface (returned
         // by the select query) may be different from the fieldname in the table due to aliases).
-        $sFRTableFieldname = $sFRFieldname;
+
+        // Default return values.
+        $sFieldname = $sFRFieldname;
+        $sTablename = null;
+
+        // Match $sFRFieldname as field or alias
         $match = array();
-        preg_match('/([\w`]+\.)?([\w`]+)\s+AS\s+' . preg_quote($sFRFieldname) . '/i',
+        preg_match('/((?<table>[\w`]+)\.)?((?<field>[\w`]+)\sAS\s)?' . preg_quote($sFRFieldname) . '/i',
                    $this->aSQLViewList['SELECT'], $match);
-        if (count($match) >= 3) {
-            $sFRTableFieldname = $match[1] . $match[2];
-            return $sFRTableFieldname;
+        if (count($match) > 0) {
+            if (isset($match['table']) && !empty($match['table'])) {
+                $sTablename = $match['table'];
+            }
+
+            if (isset($match['field']) && !empty($match['field'])) {
+                $sFieldname = $match['field'];
+            }
+        } else {
+            // $sFRFieldname is not explicitly named in select statement.
+
+            preg_match('/([\w`]+).\*/', $this->aSQLViewList['SELECT'], $match);
+            if (count($match) >= 2) {
+                // Assume $sFRFieldname is part of 'tablename.*' selection.
+                $sTablename = $match[1];
+            }
         }
 
-        $match = array();
-        preg_match('//i', $this->aSQLViewEntry['FROM'], $match);
-        if (count($match) >= 3) {
-
-        }
-        // Fixme: this is a stub, get the table name
-        $sTablename = 'dummy';
-
-        return array($sTablename, $sFRTableFieldname);
+        // Note: tablename may be an alias.
+        return array($sTablename, $sFieldname);
     }
 
 
@@ -706,13 +738,18 @@ class LOVD_Object {
     private function previewColumnFindAndReplace ($sFRFieldname, $sFRFieldDisplayname,
                                                   $sFRSearchValue, $sFRReplaceValue, $aOptions)
     {
+        // Try to discover the tablename and fieldname, as $sFRFieldname may be
+        // an alias.
+        list($sTablename, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
+        $sReplaceStmt = $this->generateViewListFRReplaceStatement($sTablename, $sFieldname,
+            $sFRSearchValue, $sFRReplaceValue, $aOptions);
 
         $sPreviewFieldname = $sFRFieldname . '_FR';
         $sPreviewFieldDisplayname = $sFRFieldDisplayname . '_FR';
-        $sReplaceStmt = $this->generateViewListFRReplaceStatement($sFRFieldname, $sFRSearchValue,
-                                                          $sFRReplaceValue, $aOptions);
 
         // Edit sql in $this->aSQLViewList to include an F&R column.
+        // Fixme: remove modification of aSQLViewList, add statements in
+        //        generateViewListSelectQuerySQL()
         $this->aSQLViewList['SELECT'] .= ",\n";
         $this->aSQLViewList['SELECT'] .= $sReplaceStmt . ' AS `' . $sPreviewFieldname . '`';
 
@@ -1311,8 +1348,8 @@ class LOVD_Object {
                 $t = microtime(true);
                 if ($_INI['database']['driver'] == 'mysql') {
                     $aQueryOptions = array(
-                        'nLimit' => 0,
-                        'SQL_CALC_FOUND_ROWS' => true
+                        'sLimit' => '0',
+                        'bSQL_CALC_FOUND_ROWS' => true
                     );
                     $sSQLZeroLimit = $this->generateViewListSelectQuerySQL($aQueryOptions);
                     $_DB->query($sSQLZeroLimit, $aArgs);
@@ -1421,7 +1458,7 @@ class LOVD_Object {
 
             $aQueryOptions = array(
                 'sSortFieldName' => $sSelectSortField,
-                'nLimit' => $nSelectLimit
+                'sLimit' => $nSelectLimit
             );
             $sSQL = $this->generateViewListSelectQuerySQL($aQueryOptions);
 
