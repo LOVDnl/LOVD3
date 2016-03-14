@@ -540,7 +540,7 @@ function lovd_FRColumnSelector (sViewListID)
             top: ePos.top,
             left: ePos.left,
             height: tableHeight,
-            width: $(this).outerWidth(),
+            width: $(this).outerWidth() + 1,
             cursor: 'pointer'
         });
 
@@ -560,11 +560,19 @@ function lovd_FRColumnSelector (sViewListID)
         if (index == 0) {
             overlayDiv.tooltip({
                 items: '.vl_overlay',
-                content: '<DIV class="ui-tooltip arrow"><B>Select a column to use for Find ' +
-                '& Replace</B></DIV>',
+                content: 'Select a column to use for Find & Replace',
                 position: {
                     my: 'left bottom',
-                    at: 'right top'
+                    at: 'right top',
+                    using: function(position, feedback) {
+                        $(this).css(position);
+                        $('<div>')
+                            .addClass('arrow')
+                            .addClass(feedback.vertical)
+                            .addClass(feedback.horizontal)
+                            .appendTo(this);
+                        $(this).removeClass('ui-widget-content');
+                    }
                 }
             }).tooltip('open');
         }
@@ -577,22 +585,32 @@ function lovd_FRShowOptionsMenu(sViewListID, oOptions)
     // Display the options menu for column-wise find & replace in the given
     // viewlist.
     lovd_getFROptionsElement(sViewListID, oOptions);
-    var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
-    $(sFRcontainerSelector).find('#FRSearch_' + sViewListID).tooltip({
-        items: '#FRSearch_' + sViewListID,
-        content: '<DIV class="ui-tooltip arrow"><B>Define what text should be replaced and ' +
-        'how</B></DIV>',
+    $('#viewlistFRFormContainer_' + sViewListID).show();
+    $('#viewlistFRColDisplay_' + sViewListID).tooltip({
+        items: '#viewlistFRColDisplay_' + sViewListID,
+        content: 'Specify find & replace options',
         position: {
-            my: 'center top',
-            at: 'center bottom'
+            my: 'left top',
+            at: 'center bottom',
+            using: function(position, feedback) {
+                position['top'] += 20; // default position of tooltip is too high
+                $(this).css(position);
+                $('<div>')
+                    .addClass('arrow')
+                    .addClass(feedback.vertical)
+                    .addClass(feedback.horizontal)
+                    .appendTo(this);
+                $(this).removeClass('ui-widget-content');
+            }
         }
     }).tooltip('open');
-    $(sFRcontainerSelector).show();
 }
 
 
 function lovd_FRPreview(sViewListID, oOptions)
 {
+    // Hide options tooltip.
+    $('#viewlistFRColDisplay_' + sViewListID).tooltip('close');
     // Show a preview of column-wise find & replace result.
     var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
     var oGetParams = {};
@@ -611,7 +629,10 @@ function lovd_FRCancel(sViewListID)
     // Clear all settings and displayed elements concerning find & replace.
     lovd_getFROptionsElement(sViewListID, {});
     var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
-    $(sFRcontainerSelector).hide()
+    $(sFRcontainerSelector).hide();
+
+    // Hide options tooltip.
+    $('#viewlistFRColDisplay_' + sViewListID).tooltip('close');
 }
 
 
