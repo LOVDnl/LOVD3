@@ -1893,9 +1893,11 @@ class LOVD_Object {
                     $sViewListID . '" value="' . $sFRFieldname . '" />' .
                     '<INPUT id="FRFieldDisplayname_' . $sViewListID . '" type="hidden" name="FRFieldDisplayname_' .
                     $sViewListID . '" value="' . $sFRFieldDisplayname . '" />' .
-                    '<INPUT type="text" name="FRSearch_' . $sViewListID . '" value="' . $sFRSearchValue . '" />' .
-                    '<INPUT type="text" name="FRReplace_' . $sViewListID . '" value="' . $sFRReplaceValue . '" />' .
-                    '<INPUT id="FRPreview_' . $sViewListID . '" type="button" value="preview" />' .
+                    '<INPUT type="text" name="FRSearch_' . $sViewListID . '" value="' .
+                    $sFRSearchValue . '" style="width: 110px" /> ' .
+                    '<INPUT type="text" name="FRReplace_' . $sViewListID . '" value="' .
+                    $sFRReplaceValue . '" style="width: 110px" /> ' .
+                    '<INPUT id="FRPreview_' . $sViewListID . '" type="button" value="preview" /> ' .
                     '<INPUT id="FRCancel_' . $sViewListID . '" type="button" value="cancel" /> ' .
                     '<INPUT id="FRSubmit_' . $sViewListID . '" type="button" value="submit" />' .
                     '</SPAN>' .
