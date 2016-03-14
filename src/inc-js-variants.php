@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2016-02-05
+ * Modified    : 2016-03-14
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  * This file is part of LOVD.
  *
@@ -50,6 +50,9 @@ function lovd_checkHGVS (e)
     // This will run the Mutalyzer checkHGVS module (if needed) and will return the response to the user.
 
     var oVariantDNA = $(this);
+    oVariantDNA.removeClass();
+
+    // Remove current markup, it will be updated according to HGVS checks.
     oVariantDNA.removeClass();
 
     // If we're a "preliminary" trigger, actually run when a key has been pressed, we just want a quick check
@@ -470,8 +473,12 @@ $(function ()
     oGenomicVariant.change(lovd_checkHGVS);
     // Add same function to the onKeyUp event, but then it will check itself if the variant is likely to be complete.
     oGenomicVariant.keyup(lovd_checkHGVS);
-    // Then, trigger it already because if we're on an edit form we want the buttons to be ready.
-    oGenomicVariant.change();
+
+    if (oGenomicVariant.val() !== '') {
+        // Variant field already has content, check HGVS now.
+        oGenomicVariant.change();
+    }
+
     if (oTranscriptVariants[0] != undefined) {
         // Add the buttons and images at the end of the transcripts DNA fields.
         oTranscriptVariants.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to genome</BUTTON>');
@@ -491,7 +498,9 @@ $(function ()
             oProteinVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" style="display:inline;" align="top" width="16" height="16">&nbsp;<BUTTON class="proteinChange" type="button" onclick="lovd_getProteinChange(this); return false;" style="display:none;">Predict</BUTTON>');
         }
 
-        // Then, trigger it already because if we're on an edit form we want the buttons to be ready.
-        oTranscriptVariants.change();
+        if (oTranscriptVariants.val() !== '') {
+            // Variant field already has content, check HGVS now.
+            oTranscriptVariants.change();
+        }
     }
 });
