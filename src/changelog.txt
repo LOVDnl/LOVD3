@@ -73,6 +73,7 @@
  * Added second confirmation step on deletion of gene and disease. The
    confirmation warning shows how many related entities are going to be
    removed.
+ * Implemented speed optimization in one specific LOVD database function.
 
 
 /**************************
