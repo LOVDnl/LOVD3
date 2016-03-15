@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2016-03-14
+ * Modified    : 2016-03-15
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,9 +50,6 @@ function lovd_checkHGVS (e)
     // This will run the Mutalyzer checkHGVS module (if needed) and will return the response to the user.
 
     var oVariantDNA = $(this);
-    oVariantDNA.removeClass();
-
-    // Remove current markup, it will be updated according to HGVS checks.
     oVariantDNA.removeClass();
 
     // If we're a "preliminary" trigger, actually run when a key has been pressed, we just want a quick check
@@ -475,7 +472,8 @@ $(function ()
     oGenomicVariant.keyup(lovd_checkHGVS);
 
     if (oGenomicVariant.val() !== '') {
-        // Variant field already has content, check HGVS now.
+        // Variant field already has content, check HGVS now because if we're on an edit form we
+        // want the buttons to be ready.
         oGenomicVariant.change();
     }
 
@@ -499,7 +497,8 @@ $(function ()
         }
 
         if (oTranscriptVariants.val() !== '') {
-            // Variant field already has content, check HGVS now.
+            // Variant field already has content, check HGVS now because if we're on an edit form we
+            // want the buttons to be ready.
             oTranscriptVariants.change();
         }
     }
