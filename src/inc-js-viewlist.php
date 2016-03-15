@@ -592,8 +592,8 @@ function lovd_FRShowOptionsMenu(sViewListID, oOptions)
         items: '#viewlistFRColDisplay_' + sViewListID,
         content: 'Specify find & replace options',
         position: {
-            my: 'left top',
-            at: 'center bottom',
+            my: 'left center',
+            at: 'right center',
             using: function(position, feedback) {
                 position['top'] += 20; // default position of tooltip is too high
                 $(this).css(position);

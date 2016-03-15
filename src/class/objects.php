@@ -1885,23 +1885,44 @@ class LOVD_Object {
 
 
 
-                print('<DIV id="viewlistFRFormContainer_' . $sViewListID .
-                    '" style="display: none">' .
-                    '<SPAN>Find &amp; Replace for column ' .
-                    '<B id="viewlistFRColDisplay_' . $sViewListID . '">' . $sFRFieldname . '</B> ' .
-                    '<INPUT id="FRFieldname_' . $sViewListID . '" type="hidden" name="FRFieldname_' .
-                    $sViewListID . '" value="' . $sFRFieldname . '" />' .
-                    '<INPUT id="FRFieldDisplayname_' . $sViewListID . '" type="hidden" name="FRFieldDisplayname_' .
-                    $sViewListID . '" value="' . $sFRFieldDisplayname . '" />' .
-                    '<INPUT type="text" name="FRSearch_' . $sViewListID . '" value="' .
-                    $sFRSearchValue . '" style="width: 110px" /> ' .
-                    '<INPUT type="text" name="FRReplace_' . $sViewListID . '" value="' .
-                    $sFRReplaceValue . '" style="width: 110px" /> ' .
-                    '<INPUT id="FRPreview_' . $sViewListID . '" type="button" value="preview" /> ' .
-                    '<INPUT id="FRCancel_' . $sViewListID . '" type="button" value="cancel" /> ' .
-                    '<INPUT id="FRSubmit_' . $sViewListID . '" type="button" value="submit" />' .
-                    '</SPAN>' .
-                    '</DIV>');
+                print(<<<FROptions
+<DIV id="viewlistFRFormContainer_$sViewListID" style="display: none">
+    <SPAN>Find &amp; Replace for column
+        <B id="viewlistFRColDisplay_$sViewListID">$sFRFieldname</B>
+        <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"
+               value="$sFRFieldname" />
+        <INPUT id="FRFieldDisplayname_$sViewListID" type="hidden"
+               name="FRFieldDisplayname_$sViewListID" value="$sFRFieldDisplayname" />
+    </SPAN>
+    <BR />
+    <TABLE>
+        <TR>
+            <TD>Text to find</TD>
+            <TD>
+                <INPUT type="text" name="FRSearch_$sViewListID" value="$sFRSearchValue"
+                       style="width: 110px" />
+            </TD>
+        </TR>
+        <TR>
+            <TD>Replace with</TD>
+            <TD>
+                <INPUT type="text" name="FRReplace_$sViewListID" value="$sFRReplaceValue"
+                       style="width: 110px" />
+            </TD>
+        </TR>
+    </TABLE>
+    <INPUT type="radio" name="FRMatchType_$sViewListID" value="0" checked />Match anywhere
+    <INPUT type="radio" name="FRMatchType_$sViewListID" value="1" />Match at beginning of field
+    <INPUT type="radio" name="FRMatchType_$sViewListID" value="2" />Match at end of field
+    <BR />
+    <INPUT type="checkbox" name="FRReplaceType_$sViewListID" />Replace everything in field
+    <BR />
+    <INPUT id="FRPreview_$sViewListID" type="button" value="preview" />
+    <INPUT id="FRCancel_$sViewListID" type="button" value="cancel" />
+    <INPUT id="FRSubmit_$sViewListID" type="button" value="submit" />
+</DIV>
+FROptions
+                );
 
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
