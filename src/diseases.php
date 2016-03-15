@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2016-02-08
+ * Modified    : 2016-02-25
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -466,41 +466,44 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (!empty($_POST)) {
+    // Check whether user has submitted and confirmed the form/action.
+    $bValidPassword = false;
+    $bConfirmation = !empty($_GET['confirm']);
+    if (POST) {
         lovd_errorClean();
 
         // Mandatory fields.
         if (empty($_POST['password'])) {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-        }
 
-        // User had to enter his/her password for authorization.
-        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
-
-        if (!lovd_error()) {
-            // Query text.
-            // This also deletes the entries in gen2dis.
-            $_DATA->deleteEntry($nID);
-
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted disease information entry ' . $nID . ' - ' . $zData['symbol'] . ' (' . $zData['name'] . ')');
-
-            // Thank the user...
-            header('Refresh: 3; url=' . lovd_getInstallURL() . 'diseases');
-
-            $_T->printHeader();
-            $_T->printTitle();
-            lovd_showInfoTable('Successfully deleted the disease information entry!', 'success');
-
-            $_T->printFooter();
-            exit;
 
         } else {
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
+            $bValidPassword = true;
         }
+
+        // Remove password from default values shown in confirmation form.
+        unset($_POST['password']);
+    }
+
+    if ($bValidPassword && $bConfirmation) {
+        // Query text.
+        // This also deletes the entries in gen2dis.
+        $_DATA->deleteEntry($nID);
+
+        // Write to log...
+        lovd_writeLog('Event', LOG_EVENT, 'Deleted disease information entry ' . $nID . ' - ' . $zData['symbol'] . ' (' . $zData['name'] . ')');
+
+        // Thank the user...
+        header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
+
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Successfully deleted the disease information entry!', 'success');
+
+        $_T->printFooter();
+        exit;
     }
 
 
@@ -508,10 +511,29 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $_T->printHeader();
     $_T->printTitle();
 
+    lovd_showInfoTable('This will delete the ' . $zData['id'] . ' disease, all related  ' .
+        'phenotypes will be deleted too. Related genes and individuals will ' .
+        'not be deleted, but remain in the database.', 'warning');
+
+    if ($bValidPassword) {
+        $nCount = $_DB->query('SELECT count(DISTINCT p.id)
+                               FROM ' . TABLE_DISEASES . ' AS d
+                                LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid)
+                               WHERE d.id = ?', array($nID))->fetchColumn();
+        if ($nCount) {
+            lovd_showInfoTable('<B>You are about to delete ' . $nCount .
+                ' phenotype(s). Please fill in your password one more time ' .
+                'to confirm the removal of disease ' . $nID . '.</B>', 'warning');
+        } else {
+            lovd_showInfoTable('<B>Please note the message above and fill in your password one more ' .
+                'time to confirm the removal of disease ' . $nID . '.</B>', 'warning');
+        }
+    }
+
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . (!$bValidPassword? '' : '&confirm=true') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(

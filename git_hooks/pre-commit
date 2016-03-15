@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+
+"""
+Git hook to check source files for modification date and author.
+Requires python 3
+"""
+
+import datetime
+import functools
+import re
+import subprocess
+import sys
+
+
+# Max number of header lines.
+HEADER_LINE_COUNT = 40
+
+# Message showed when checks fail.
+ABORT_MESSAGE = "Commit aborted, you can ignore this check by " \
+                "running 'git commit --no-verify'."
+
+# Source file regex (only source files are checked).
+SRC_REGEX = re.compile(r"\.php$")
+
+
+def get_cmd_output(cmd):
+    """Execute command <cmd> and return a newline-separated output as
+    a list of strings."""
+
+    popen_args = {"universal_newlines": True}
+    output = subprocess.check_output(cmd.split(" "), **popen_args)
+    return output.strip().split("\n")
+
+
+def setup_checks():
+    current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    current_year = current_date.split("-")[0]
+    git_user_name = get_cmd_output("git config user.name")[0]
+    git_user_email = get_cmd_output("git config user.email")[0]
+    author_ID = "{} <{}>".format(git_user_name, git_user_email)
+
+    mod_date_regex = re.compile(r"Modified\s*:\s*{}".format(current_date))
+    author_regex = re.compile(r"{}".format(author_ID))
+    copyright_regex = re.compile(r"Copyright\s*:\s*({0}|\d+-{0})".format(current_year))
+
+    # Line checks, where if regex pattern applied to line returns None for
+    # all lines in the header, message <message> will be shown.
+    return [{"regex": mod_date_regex,
+             "msg": "Modification date ({}) missing.".format(current_date)},
+            {"regex": author_regex,
+             "msg": "Author ({}) missing.".format(author_ID)},
+            {"regex": copyright_regex,
+             "msg": "Copyright ({}) missing.".format(current_year)}]
+
+
+def colored_text(str, color="red"):
+    """Returns given string as ASCII-colored text."""
+
+    if color == "red":
+        return "\033[91m{}\033[0m".format(str)
+    if color == "green":
+        return "\033[92m{}\033[0m".format(str)
+
+
+def check_files(files, checks):
+    """Run given checks on given filenames."""
+    output = []
+    for filename in files:
+        if SRC_REGEX.search(filename) is None:
+            # Skip non-source files.
+            continue
+        flink = open(filename, "r")
+
+        validation = [False] * len(checks)
+        linecount = 0
+        for line in flink.readlines():
+            if not (False in validation):
+                # All checks passed.
+                break
+
+            linecount += 1
+            if linecount > HEADER_LINE_COUNT:
+                # Passed through header.
+                break
+
+            for i, check in enumerate(checks):
+                if not (check["regex"].search(line) is None):
+                    validation[i] = True
+
+        if False in validation:
+            for check, validated in zip(checks, validation):
+                if not validated:
+                    output.append("{}: {}".format(filename, check["msg"]))
+        flink.close()
+    
+    return len(output) == 0, output
+
+
+def main():
+    """Main loop, returns program exit code"""
+
+    print("Checking file headers (pre-commit hook)... ", end="")
+
+    checks = setup_checks()
+    diff_output = get_cmd_output("git status --porcelain")
+
+    # Get files ready to commit (assuming `git commit -a`)
+    modified_files = []
+    for line in diff_output:
+        line = line[3:]
+        if "->" in line:
+            line = line.split("->")[1]
+        line = line.strip("\" ")
+        modified_files.append(line)
+
+    result, checks_output = check_files(modified_files, checks)
+    
+    if result == False:
+        print(colored_text("FAIL", "red"))
+        print("\n".join(checks_output))
+        print(colored_text(ABORT_MESSAGE, "red"))
+        return 1
+
+    print(colored_text("OK", "green"))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
