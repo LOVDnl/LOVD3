@@ -340,8 +340,12 @@ if (!isset($_GET['nohistory'])) {
             });
         }
 
+        // Put values into a GET param string for all input fields, except fields named check_*
+        // and non-checked radio buttons and checkboxes
         $(oForm).find('input').each(function(){
-            if (!this.disabled && this.value && this.name.substring(0,6) != 'check_') {
+            if (!this.disabled && this.value && this.name.substring(0,6) != 'check_' &&
+                (this.type != 'radio' || this.checked) &&
+                (this.type != 'checkbox' || this.checked)) {
                 sGET += (sGET? '&' : '') + this.name + '=' + encodeURIComponent(this.value);
             }
         });
@@ -505,9 +509,13 @@ function lovd_getFROptionsElement (sViewListID, oOptions)
     // Hide buttons based on options.
     if (typeof oOptions.showSubmit == 'undefined' || !oOptions.showSubmit) {
         FRoptions.find('#FRSubmit_' + sViewListID).hide();
+    } else {
+        FRoptions.find('#FRSubmit_' + sViewListID).show();
     }
     if (typeof oOptions.showPreview == 'undefined' || !oOptions.showPreview) {
         FRoptions.find('#FRPreview_' + sViewListID).hide();
+    } else {
+        FRoptions.find('#FRPreview_' + sViewListID).show();
     }
 
     if (oOptions.hasOwnProperty('sDisplayname')) {
@@ -612,7 +620,11 @@ function lovd_FRShowOptionsMenu(sViewListID, oOptions)
 function lovd_FRPreview(sViewListID, oOptions)
 {
     // Hide options tooltip.
-    $('#viewlistFRColDisplay_' + sViewListID).tooltip('close');
+    try {
+        $('#viewlistFRColDisplay_' + sViewListID).tooltip('close');
+    } catch (err) {
+        // Tooltip was already closed.
+    }
     // Show a preview of column-wise find & replace result.
     var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
     var oGetParams = {};
@@ -628,13 +640,20 @@ function lovd_FRPreview(sViewListID, oOptions)
 
 function lovd_FRCancel(sViewListID)
 {
+    // Reload the viewlist to remove a potential preview column.
+    lovd_AJAX_viewListSubmit(sViewListID);
+
     // Clear all settings and displayed elements concerning find & replace.
     lovd_getFROptionsElement(sViewListID, {});
     var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
     $(sFRcontainerSelector).hide();
 
     // Hide options tooltip.
-    $('#viewlistFRColDisplay_' + sViewListID).tooltip('close');
+    try {
+        $('#viewlistFRColDisplay_' + sViewListID).tooltip('close');
+    } catch(err) {
+        // Tooltip was already closed.
+    }
 }
 
 

@@ -414,6 +414,28 @@ class LOVD_Object {
 
 
 
+    private function generateFRSearchCondition($sFRSearchValue, $sTablename, $sFieldname,
+                                               $aOptions)
+    {
+        // Return an SQL search condition for given search string, field name and match options.
+        // Default is to match the search string anywhere in the field.
+        $sFRSearchCondition = $sTablename . '.`' . $sFieldname . '` LIKE "%' . $sFRSearchValue . '%"';
+        if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+            // Match search string at beginning of field.
+            $sFRSearchCondition = 'SUBSTRING(' . $sTablename . '.`' . $sFieldname . '`, 1, ' .
+                                  strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
+        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
+            // Match search string at end of field.
+            $sFRSearchCondition = 'SUBSTRING(' . $sTablename . '.`' . $sFieldname . '`, -' .
+                                  strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
+        }
+        return $sFRSearchCondition;
+    }
+
+
+
+
+
     private function generateViewListFRReplaceStatement($sTablename, $sFieldname, $sFRSearchValue,
                                                         $sFRReplaceValue, $aOptions)
     {
@@ -425,9 +447,43 @@ class LOVD_Object {
         // - $sFRReplaceValue   Find & replace replace value.
         // - $aOptions          Array with options on how to perform replace.
 
+        if (isset($aOptions['bFRReplaceAll']) && $aOptions['bFRReplaceAll']) {
+            return '"' . $sFRReplaceValue . '"';
+        }
+
+        // Default is to replace occurrances anywhere in the field.
+        $sReplaceStmt = 'REPLACE(' . $sTablename . '.`' . $sFieldname . '`, "' . $sFRSearchValue .
+                        '", "' . $sFRReplaceValue . '")';
+
+        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sTablename,
+                                                               $sFieldname, $aOptions);
+        $sCompositeFieldname = $sTablename . '.`' . $sFieldname . '`';
+        $nSearchStrLen = strlen($sFRSearchValue);
+        if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+            // Match search string at beginning of field.
+            // E.g.:
+            // CASE WHEN SUBSTRING(table.`field`, 1, 6) = "search"
+            // THEN CONCAT("replace", SUBSTRING(table.`field`, 6))
+            // ELSE table.`field` END
+            $sReplaceStmt = 'CASE WHEN ' . $sFRSearchCondition . ' THEN CONCAT("' .
+                            $sFRReplaceValue . '", SUBSTRING(' . $sCompositeFieldname . ', ' .
+                            strval($nSearchStrLen + 1) . ')) ELSE ' . $sCompositeFieldname .
+                            ' END ';
+
+        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
+            // Match search string at end of field.
+            // E.g.:
+            // CASE WHEN SUBSTRING(table.`field`, - 6) = "search"
+            // THEN CONCAT(SUBSTRING(table.`field`, 1, CHAR_LENGTH(table.`field`) - 6), "replace")
+            // ELSE table.`field` END
+            $sReplaceStmt = 'CASE WHEN ' . $sFRSearchCondition . ' THEN CONCAT(' .
+                'SUBSTRING(' . $sCompositeFieldname . ', 1, CHAR_LENGTH(' . $sCompositeFieldname .
+                ') - ' . strval($nSearchStrLen) . '), "' . $sFRReplaceValue . '") ELSE ' .
+                $sCompositeFieldname . ' END ';
+        }
+
         // Return replace statement.
-        return 'REPLACE(' . $sTablename . '.`' . $sFieldname . '`, "' . $sFRSearchValue . '", "' .
-               $sFRReplaceValue . '")';
+        return $sReplaceStmt;
     }
 
 
@@ -1074,9 +1130,10 @@ class LOVD_Object {
 
         // Run query with search field to compute number of affected rows.
         list($sSelectSQL, $aArgs) = $this->generateViewListSelectQuerySQL();
-        $oResult = $_DB->query('SELECT count(*) FROM (' . $sSelectSQL . ') AS subq WHERE subq.`' .
-                               $sFieldname . '` LIKE "%' . $sFRSearchValue . '%";',
-                               array_merge($aArgs));
+        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
+                                                               $sFRFieldname, $aOptions);
+        $oResult = $_DB->query('SELECT count(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
+                               $sFRSearchCondition, $aArgs);
         $nAffectedRows = intval($oResult->fetchColumn());
 
         $sReplaceStmt = $this->generateViewListFRReplaceStatement($sTablename, $sFieldname,
@@ -1635,29 +1692,39 @@ class LOVD_Object {
         }
 
         // Get column Find & Replace input values
-        $bFRSubmit = isset($_GET['FRSubmitClicked_' . $sViewListID]) &&
-                     $_GET['FRSubmitClicked_' . $sViewListID] == '1';
-        $bFRPreview = isset($_GET['FRPreviewClicked_' . $sViewListID]) &&
-                      $_GET['FRPreviewClicked_' . $sViewListID] == '1';
-        $sFRFieldname = isset($_GET['FRFieldname_' . $sViewListID])?
-                      $_GET['FRFieldname_' . $sViewListID] : '';
-        $sFRFieldDisplayname = isset($_GET['FRFieldDisplayname_' . $sViewListID])?
-                             $_GET['FRFieldDisplayname_' . $sViewListID] : '';
-        $sFRSearchValue = isset($_GET['FRSearch_' . $sViewListID])?
-                          $_GET['FRSearch_' . $sViewListID] : '';
-        $sFRReplaceValue = isset($_GET['FRReplace_' . $sViewListID])?
-                           $_GET['FRReplace_' . $sViewListID] : '';
+        $bFRSubmit =            isset($_GET['FRSubmitClicked_' . $sViewListID]) &&
+                                $_GET['FRSubmitClicked_' . $sViewListID] == '1';
+        $bFRPreview =           isset($_GET['FRPreviewClicked_' . $sViewListID]) &&
+                                $_GET['FRPreviewClicked_' . $sViewListID] == '1';
+        $sFRFieldname =         isset($_GET['FRFieldname_' . $sViewListID])?
+                                $_GET['FRFieldname_' . $sViewListID] : null;
+        $sFRFieldDisplayname =  isset($_GET['FRFieldDisplayname_' . $sViewListID])?
+                                $_GET['FRFieldDisplayname_' . $sViewListID] : null;
+        $sFRSearchValue =       isset($_GET['FRSearch_' . $sViewListID])?
+                                $_GET['FRSearch_' . $sViewListID] : null;
+        $sFRReplaceValue =      isset($_GET['FRReplace_' . $sViewListID])?
+                                $_GET['FRReplace_' . $sViewListID] : null;
+        $sFRMatchType =         isset($_GET['FRMatchType_' . $sViewListID])?
+                                $_GET['FRMatchType_' . $sViewListID] : null;
+        $bFRReplaceAll =        isset($_GET['FRReplaceAll_' . $sViewListID]) &&
+                                $_GET['FRReplaceAll_' . $sViewListID] == '1';
+        $aFROptions = array(
+            'sFRMatchType' =>   $sFRMatchType,
+            'bFRReplaceAll' =>  $bFRReplaceAll
+        );
 
         $nTotal = 0;
         if (!count($aBadSyntaxColumns)) {
 
             if ($bFRSubmit) {
                 // User has submitted Find&Replace form, apply changes.
-                $this->applyColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue, array());
+                $this->applyColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
+                                                 $aFROptions);
             } else if ($bFRPreview) {
                 // User clicked 'preview' in Find&Replace form, add F&R changes as a separate
                 // column in the query.
-                $this->previewColumnFindAndReplace($sFRFieldname, $sFRFieldDisplayname, $sFRSearchValue, $sFRReplaceValue, array());
+                $this->previewColumnFindAndReplace($sFRFieldname, $sFRFieldDisplayname,
+                                                   $sFRSearchValue, $sFRReplaceValue, $aFROptions);
             }
 
 
@@ -1893,9 +1960,10 @@ class LOVD_Object {
                     lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
-
-
-
+                $sFRMatchtypeCheck1 = (!isset($sFRMatchType) || $sFRMatchType == '1')? 'checked' : '';
+                $sFRMatchtypeCheck2 = ($sFRMatchType == '2')? 'checked' : '';
+                $sFRMatchtypeCheck3 = ($sFRMatchType == '3')? 'checked' : '';
+                $sFRReplaceAllCheck = $bFRReplaceAll? 'checked' : '';
 
                 print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" style="display: none">
@@ -1923,11 +1991,11 @@ class LOVD_Object {
             </TD>
         </TR>
     </TABLE>
-    <INPUT type="radio" name="FRMatchType_$sViewListID" value="0" checked />Match anywhere
-    <INPUT type="radio" name="FRMatchType_$sViewListID" value="1" />Match at beginning of field
-    <INPUT type="radio" name="FRMatchType_$sViewListID" value="2" />Match at end of field
+    <INPUT type="radio" name="FRMatchType_$sViewListID" value="1" $sFRMatchtypeCheck1 />Match anywhere
+    <INPUT type="radio" name="FRMatchType_$sViewListID" value="2" $sFRMatchtypeCheck2 />Match at beginning of field
+    <INPUT type="radio" name="FRMatchType_$sViewListID" value="3" $sFRMatchtypeCheck3 />Match at end of field
     <BR />
-    <INPUT type="checkbox" name="FRReplaceType_$sViewListID" />Replace everything in field
+    <INPUT type="checkbox" name="FRReplaceAll_$sViewListID" value="1" $sFRReplaceAllCheck />Replace everything in field
     <BR />
     <INPUT id="FRPreview_$sViewListID" type="button" value="preview" />
     <INPUT id="FRCancel_$sViewListID" type="button" value="cancel" />
