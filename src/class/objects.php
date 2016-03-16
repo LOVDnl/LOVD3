@@ -135,7 +135,7 @@ class LOVD_Object {
         global $_DB;
         list($_, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
 
-        $sSelectSQL = $this->generateViewListSelectQuerySQL();
+        list($sSelectSQL, $aArgs) = $this->generateViewListSelectQuerySQL();
         $sSubqueryAlias = 'subq';
         $sReplaceStmt = $this->generateViewListFRReplaceStatement($sSubqueryAlias,
             $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
@@ -146,9 +146,6 @@ class LOVD_Object {
             lovd_displayError('LOVD_ERR_UNKOWN_TABLE', $sErr);
             return;
         }
-
-        // Fixme: refactor so that processViewListSearchArgs isn't called unnecessarily
-        list($_, $_, $args, $_, $_) = $this->processViewListSearchArgs();
 
         // ID field to connect rows from the original viewlist select query with rows in the
         // update query.
@@ -162,7 +159,7 @@ class LOVD_Object {
                       $sSubqueryAlias . ' SET ' . constant($this->sTable) . '.`' . $sFieldname .
                       '`=' . $sReplaceStmt . ' WHERE ' . constant($this->sTable) . '.' . $sIDField .
                       ' = ' . $sSubqueryAlias . '.' . $sIDField;
-        $_DB->query($sUpdateSQL, array_merge($args['WHERE'], $args['HAVING']));
+        $_DB->query($sUpdateSQL, $aArgs);
     }
 
 
@@ -439,12 +436,17 @@ class LOVD_Object {
 
     private function generateViewListSelectQuerySQL($aOptions = array())
     {
-        // Generate a select query for a viewlist, parameters are passed through $aOptions:
+        // Generate a select query and arguments for a viewlist, parameters are passed through
+        // $aOptions:
         // - key: 'sSortFieldName'      If string, value will be used in the ORDER BY clause.
         // - key: 'nLimit'              If integer, value will be used in the LIMIT clause
         // - key: 'SQL_CALC_FOUND_ROWS' If true, flag SQL_CALC_FOUND_ROWS will be set in query.
+        //
+        // Returns a 2-element array:
+        // array( 0 => SQL statement as string
+        //        1 => Arguments for placeholders in SQL as an array of strings )
 
-        list($sSearchWhere, $sSearchHaving, $_, $_, $_) = $this->processViewListSearchArgs();
+        list($sSearchWhere, $sSearchHaving, $aArgs, $_, $_) = $this->processViewListSearchArgs();
         $sSQL = 'SELECT ';
 
         if (array_key_exists('bSQL_CALC_FOUND_ROWS', $aOptions) && $aOptions['bSQL_CALC_FOUND_ROWS']) {
@@ -480,7 +482,7 @@ class LOVD_Object {
         if (array_key_exists('sLimit', $aOptions) && !is_null($aOptions['sLimit'])) {
             $sSQL .= ' LIMIT ' . strval($aOptions['sLimit']);
         }
-        return $sSQL;
+        return array($sSQL, array_merge($aArgs['WHERE'], $aArgs['HAVING']));
     }
 
 
@@ -1064,9 +1066,19 @@ class LOVD_Object {
     private function previewColumnFindAndReplace ($sFRFieldname, $sFRFieldDisplayname,
                                                   $sFRSearchValue, $sFRReplaceValue, $aOptions)
     {
+        global $_DB;
+
         // Try to discover the tablename and fieldname, as $sFRFieldname may be
         // an alias.
         list($sTablename, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
+
+        // Run query with search field to compute number of affected rows.
+        list($sSelectSQL, $aArgs) = $this->generateViewListSelectQuerySQL();
+        $oResult = $_DB->query('SELECT count(*) FROM (' . $sSelectSQL . ') AS subq WHERE subq.`' .
+                               $sFieldname . '` LIKE "%' . $sFRSearchValue . '%";',
+                               array_merge($aArgs));
+        $nAffectedRows = intval($oResult->fetchColumn());
+
         $sReplaceStmt = $this->generateViewListFRReplaceStatement($sTablename, $sFieldname,
             $sFRSearchValue, $sFRReplaceValue, $aOptions);
 
@@ -1712,7 +1724,7 @@ class LOVD_Object {
                         // If the select all button was clicked, fetch all entries and mark them as 'checked' in session.
                         // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
                         // of the query.
-                        $sSQL = $this->generateViewListSelectQuerySQL();
+                        list($sSQL, $aArgs) = $this->generateViewListSelectQuerySQL();
                         $q = $_DB->query($sSQL, $aArgs);
                         while ($zData = $q->fetchAssoc()) {
                             $zData = $this->generateRowID($zData);
@@ -1783,7 +1795,7 @@ class LOVD_Object {
                 'sSortFieldName' => $sSelectSortField,
                 'sLimit' => $nSelectLimit
             );
-            $sSQL = $this->generateViewListSelectQuerySQL($aQueryOptions);
+            list($sSQL, $_) = $this->generateViewListSelectQuerySQL($aQueryOptions);
 
             // Run the viewList query.
             // FIXME; what if using AJAX? Probably we should generate a number here, if this query fails, telling the system to try once more. If that fails also, the JS should throw a general error, maybe.
