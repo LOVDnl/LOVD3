@@ -1160,6 +1160,8 @@ class LOVD_Object {
 
         $this->aColumnsViewList = lovd_arrayInsertAfter($sFRFieldname, $this->aColumnsViewList,
             $sPreviewFieldname, $aFRColValues);
+
+        return $nAffectedRows;
     }
 
 
@@ -1708,6 +1710,7 @@ class LOVD_Object {
                                 $_GET['FRMatchType_' . $sViewListID] : null;
         $bFRReplaceAll =        isset($_GET['FRReplaceAll_' . $sViewListID]) &&
                                 $_GET['FRReplaceAll_' . $sViewListID] == '1';
+        $nFRRowsAffected = null;
         $aFROptions = array(
             'sFRMatchType' =>   $sFRMatchType,
             'bFRReplaceAll' =>  $bFRReplaceAll
@@ -1723,8 +1726,8 @@ class LOVD_Object {
             } else if ($bFRPreview) {
                 // User clicked 'preview' in Find&Replace form, add F&R changes as a separate
                 // column in the query.
-                $this->previewColumnFindAndReplace($sFRFieldname, $sFRFieldDisplayname,
-                                                   $sFRSearchValue, $sFRReplaceValue, $aFROptions);
+                $nFRRowsAffected = $this->previewColumnFindAndReplace($sFRFieldname,
+                    $sFRFieldDisplayname, $sFRSearchValue, $sFRReplaceValue, $aFROptions);
             }
 
 
@@ -1964,6 +1967,7 @@ class LOVD_Object {
                 $sFRMatchtypeCheck2 = ($sFRMatchType == '2')? 'checked' : '';
                 $sFRMatchtypeCheck3 = ($sFRMatchType == '3')? 'checked' : '';
                 $sFRReplaceAllCheck = $bFRReplaceAll? 'checked' : '';
+                $sFRRowsAffected = (!is_null($nFRRowsAffected))? strval($nFRRowsAffected) : '';
 
                 print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" style="display: none">
@@ -1973,6 +1977,7 @@ class LOVD_Object {
                value="$sFRFieldname" />
         <INPUT id="FRFieldDisplayname_$sViewListID" type="hidden"
                name="FRFieldDisplayname_$sViewListID" value="$sFRFieldDisplayname" />
+        <INPUT id="FRRowsAffected_$sViewListID" type="hidden" value="$sFRRowsAffected" />
     </SPAN>
     <BR />
     <TABLE>
