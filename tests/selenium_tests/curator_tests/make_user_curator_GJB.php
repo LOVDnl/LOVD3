@@ -5,7 +5,7 @@ class MakeUserCuratorGJBTest extends LOVDSeleniumBaseTestCase
 {
     public function testMakeUserCuratorGJB()
     {
-        $this->open("http://localhost/~mkroon/LOVD/LOVD3/src/genes/GJB1?authorize");
+        $this->open(ROOT_URL . "/src/genes/GJB1?authorize");
         $this->click("link=Test Curator");
         $this->type("name=password", "test1234");
         $this->click("//input[@value='Save curator list']");
