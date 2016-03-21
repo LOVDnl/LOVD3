@@ -32,7 +32,7 @@
             <file>admin_tests/post_finish_add_screening_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_phenotype_info_to_IVA_individual.php</file>
             <file>admin_tests/delete_gene_IVD.php</file>
-            <file>admin_tests/uninstall_LOVD.php</file>
+            <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="authorization_tests">
             <file>shared_tests/install_LOVD.php</file>
@@ -50,7 +50,7 @@
             <file>authorization_tests/make_user_curator_IVD.php</file>
             <file>authorization_tests/make_user_collaborator_IVD.php</file>
             <file>authorization_tests/authorization.php</file>
-            <file>shared/uninstall_LOVD.php</file>
+            <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="collaborator_tests">
             <file>shared_tests/install_LOVD.php</file>
