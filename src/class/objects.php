@@ -1224,7 +1224,9 @@ class LOVD_Object {
 
 
 
-    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOptions = false, $bOnlyRows = false)
+    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false,
+                       $bHideNav = false, $bOptions = false, $bOnlyRows = false,
+                       $bFindReplace = false)
     {
         // Views list of entries in the database, allowing search.
         global $_DB, $_INI, $_SETT;
@@ -1908,6 +1910,19 @@ FROptions
                   '        // This has to be run when the document has finished loading everything, because only then can it get the proper width from IE7 and lower!' . "\n" .
                   '        $( function () {lovd_stretchInputs(\'' . $sViewListID . '\');});' . "\n");
             if ($bOptions) {
+
+                $sFRMenuOption = '';
+                if ($bFindReplace) {
+                    $sFRMenuOption = <<<FRITEM
+'            <LI class="icon">' +
+'                <A click="lovd_FRColumnSelector(\'$sViewListID\');">' +
+'                    <SPAN class="icon" style=""></SPAN>' +
+'                    Find and replace text in column' +
+'                </A>' +
+'            </LI>' +
+FRITEM;
+                }
+
                 print(<<<OPMENU
         // If menu's UL doesn't exist yet, create it.
         if ($('#viewlistMenu_$sViewListID').attr('id') == undefined) {
@@ -1931,12 +1946,8 @@ FROptions
 '                    Unselect all' +
 '                </A>' +
 '            </LI>' +
-'            <LI class="icon">' +
-'                <A click="lovd_FRColumnSelector(\'$sViewListID\');">' +
-'                    <SPAN class="icon" style=""></SPAN>' +
-'                    Find and replace text in column' +
-'                </A>' +
-'            </LI>');
+$sFRMenuOption
+'            ');
         $('#viewlistMenu_$sViewListID').append(
 '            <LI class="icon">' +
 '                <A click="lovd_AJAX_viewListSubmit(\'$sViewListID\', function(){lovd_AJAX_viewListDownload(\'$sViewListID\', true);});">' +
