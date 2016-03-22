@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-03-18
+ * Modified    : 2016-03-22
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -144,6 +144,16 @@ class LOVD_Object {
             $sErr = 'Cannot run update query for object with unknown table (object=' .
                 get_class($this) . ').';
             lovd_displayError('LOVD_ERR_UNKOWN_TABLE', $sErr);
+            return;
+        }
+
+        $oResult = $_DB->query('SELECT c.id FROM ' . TABLE_COLS . ' AS c JOIN ' .
+                               TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?;',
+                               array($sFieldname));
+        if (count($oResult->fetchAll()) == 0) {
+            // Given field name is not an active custom column.
+            $sErr = 'Cannot apply find & replace to column "' . $sFieldname . '".';
+            lovd_displayError('LOVD_ERR_INVALID_CUSTOM_COL', $sErr);
             return;
         }
 
@@ -1707,7 +1717,8 @@ FROptions
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
                     print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
-                        'data-fieldname="' . $sField . '" data-displayname="' . $aCol['view'][0] .'" >' . "\n" .
+                                'data-custom="' . (isset($aCol['custom'])? $aCol['custom'] : '') . '" data-fieldname="' . $sField .
+                                '" data-displayname="' . $aCol['view'][0] .'" >' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .
