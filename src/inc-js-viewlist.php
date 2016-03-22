@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-03-18
+ * Modified    : 2016-03-22
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -543,25 +543,36 @@ function lovd_FRColumnSelector (sViewListID)
         // Place divs overlaying table columns to get column selection.
         var overlayDiv = $().add('<div class="vl_overlay"></div>');
         var ePos = $(this).offset();
+        var bIsCustomColumn = $(this).data('custom') == '1';
+        var overlayCursor = 'not-allowed';
+        if (bIsCustomColumn) {
+            overlayCursor = 'pointer';
+        }
         overlayDiv.css({
             position: 'absolute',
             top: ePos.top,
             left: ePos.left,
             height: tableHeight,
             width: $(this).outerWidth() + 1,
-            cursor: 'pointer'
+            cursor: overlayCursor
         });
 
-        var oCurrentOptions = {
-            sFieldname: $(this).data('fieldname'),
-            sDisplayname: $(this).data('displayname'),
-            showPreview: true,
-            showSubmit: false
-        };
-        overlayDiv.on('click', function() {
-            $('.vl_overlay').remove();
-            lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
-        });
+        if (bIsCustomColumn) {
+            var oCurrentOptions = {
+                sFieldname: $(this).data('fieldname'),
+                sDisplayname: $(this).data('displayname'),
+                showPreview: true,
+                showSubmit: false
+            };
+            overlayDiv.on('click', function () {
+                $('.vl_overlay').remove();
+                lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
+            });
+        } else {
+            overlayDiv.on('click', function () {
+                alert('This column is not available for find & replace.');
+            })
+        }
 
         $(sViewListDivSelector).append(overlayDiv);
 
@@ -617,12 +628,9 @@ function lovd_FRShowOptionsMenu(sViewListID, oOptions)
 
 function lovd_FRPreview(sViewListID, oOptions)
 {
-    // Hide options tooltip.
-    try {
-        $('#viewlistFRColDisplay_' + sViewListID).tooltip('close');
-    } catch (err) {
-        // Tooltip was already closed.
-    }
+    // Hide all current tooltips.
+    $('div[role="tooltip"]').remove();
+
     // Show a preview of column-wise find & replace result.
     var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
     var oGetParams = {};
@@ -656,22 +664,20 @@ function lovd_FRPreview(sViewListID, oOptions)
 }
 
 
-function lovd_FRCancel(sViewListID)
+function lovd_FRCancel(sViewListID, bSubmitVL)
 {
-    // Reload the viewlist to remove a potential preview column.
-    lovd_AJAX_viewListSubmit(sViewListID);
+    if (typeof bSubmitVL != 'undefined' && bSubmitVL) {
+        // Reload the viewlist to remove a potential preview column.
+        lovd_AJAX_viewListSubmit(sViewListID);
+    }
 
     // Clear all settings and displayed elements concerning find & replace.
     lovd_getFROptionsElement(sViewListID, {});
     var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
     $(sFRcontainerSelector).hide();
 
-    // Hide options tooltip.
-    try {
-        $('#viewlistFRColDisplay_' + sViewListID).tooltip('close');
-    } catch(err) {
-        // Tooltip was already closed.
-    }
+    // Hide all tooltips.
+    $('div[role="tooltip"]').remove();
 }
 
 
@@ -680,7 +686,7 @@ function lovd_FRSubmit(sViewListID, oOptions) {
     oGetParams['FRSubmitClicked_' + sViewListID] = 1;
     lovd_AJAX_viewListSubmit(sViewListID, function() {
         // Call cancel afterwards to clean up.
-        lovd_FRCancel(sViewListID);
+        lovd_FRCancel(sViewListID, false);
     }, oGetParams);
 }
 
