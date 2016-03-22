@@ -147,6 +147,16 @@ class LOVD_Object {
             return;
         }
 
+        $oResult = $_DB->query('SELECT c.id FROM ' . TABLE_COLS . ' AS c JOIN ' .
+                               TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?;',
+                               array($sFieldname));
+        if (count($oResult->fetchAll()) == 0) {
+            // Given field name is not an active custom column.
+            $sErr = 'Cannot apply find & replace to column "' . $sFieldname . '".';
+            lovd_displayError('LOVD_ERR_INVALID_CUSTOM_COL', $sErr);
+            return;
+        }
+
         // ID field to connect rows from the original viewlist select query with rows in the
         // update query.
         // Note: this is hard-coded for now, meaning that each table must have this as its
@@ -2030,7 +2040,8 @@ FROptions
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
                     print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
-                        'data-fieldname="' . $sField . '" data-displayname="' . $aCol['view'][0] .'" >' . "\n" .
+                                'data-custom="' . (isset($aCol['custom'])? $aCol['custom'] : '') . '" data-fieldname="' . $sField .
+                                '" data-displayname="' . $aCol['view'][0] .'" >' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .
