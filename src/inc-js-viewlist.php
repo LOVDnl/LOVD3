@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-03-22
+ * Modified    : 2016-03-23
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -604,15 +604,15 @@ function lovd_FRShowOptionsMenu(sViewListID, oOptions)
     // Display the options menu for column-wise find & replace in the given
     // viewlist.
     lovd_getFROptionsElement(sViewListID, oOptions);
-    $('#viewlistFRFormContainer_' + sViewListID).show();
+    var sVLWidth = $('#viewlistTable_' + sViewListID).outerWidth();
+    $('#viewlistFRFormContainer_' + sViewListID).outerWidth(sVLWidth).show();
     $('#viewlistFRColDisplay_' + sViewListID).tooltip({
         items: '#viewlistFRColDisplay_' + sViewListID,
         content: 'Specify find & replace options',
         position: {
-            my: 'left center',
-            at: 'right center',
+            my: 'left bottom',
+            at: 'left-40 top-15',
             using: function(position, feedback) {
-                position['top'] += 20; // default position of tooltip is too high
                 $(this).css(position);
                 $('<div>')
                     .addClass('arrow')

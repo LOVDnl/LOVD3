@@ -1666,7 +1666,7 @@ class LOVD_Object {
                 $sFRRowsAffected = (!is_null($nFRRowsAffected))? strval($nFRRowsAffected) : '';
 
                 print(<<<FROptions
-<DIV id="viewlistFRFormContainer_$sViewListID" style="display: none">
+<DIV id="viewlistFRFormContainer_$sViewListID" class="optionsmenu" style="display: none;">
     <SPAN>Find &amp; Replace for column
         <B id="viewlistFRColDisplay_$sViewListID">$sFRFieldname</B>
         <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"
@@ -1683,6 +1683,11 @@ class LOVD_Object {
                 <INPUT type="text" name="FRSearch_$sViewListID" value="$sFRSearchValue"
                        style="width: 110px" />
             </TD>
+            <TD>
+                <INPUT type="radio" name="FRMatchType_$sViewListID" value="1" $sFRMatchtypeCheck1 />Match anywhere
+                <INPUT type="radio" name="FRMatchType_$sViewListID" value="2" $sFRMatchtypeCheck2 />Match at beginning of field
+                <INPUT type="radio" name="FRMatchType_$sViewListID" value="3" $sFRMatchtypeCheck3 />Match at end of field
+            </TD>
         </TR>
         <TR>
             <TD>Replace with</TD>
@@ -1690,14 +1695,11 @@ class LOVD_Object {
                 <INPUT type="text" name="FRReplace_$sViewListID" value="$sFRReplaceValue"
                        style="width: 110px" />
             </TD>
+            <TD>
+                <INPUT type="checkbox" name="FRReplaceAll_$sViewListID" value="1" $sFRReplaceAllCheck />Replace everything in field
+            </TD>
         </TR>
     </TABLE>
-    <INPUT type="radio" name="FRMatchType_$sViewListID" value="1" $sFRMatchtypeCheck1 />Match anywhere
-    <INPUT type="radio" name="FRMatchType_$sViewListID" value="2" $sFRMatchtypeCheck2 />Match at beginning of field
-    <INPUT type="radio" name="FRMatchType_$sViewListID" value="3" $sFRMatchtypeCheck3 />Match at end of field
-    <BR />
-    <INPUT type="checkbox" name="FRReplaceAll_$sViewListID" value="1" $sFRReplaceAllCheck />Replace everything in field
-    <BR />
     <INPUT id="FRPreview_$sViewListID" type="button" value="preview" />
     <INPUT id="FRCancel_$sViewListID" type="button" value="cancel" />
     <INPUT id="FRSubmit_$sViewListID" type="button" value="submit" />
