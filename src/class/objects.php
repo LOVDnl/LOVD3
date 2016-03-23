@@ -132,7 +132,7 @@ class LOVD_Object {
 
     private function applyColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
                                                 $aOptions) {
-        global $_DB;
+        global $_DB, $_AUTH;
         list($_, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
 
         list($sSelectSQL, $aArgs) = $this->generateViewListSelectQuerySQL();
@@ -154,6 +154,13 @@ class LOVD_Object {
             // Given field name is not an active custom column.
             $sErr = 'Cannot apply find & replace to column "' . $sFieldname . '".';
             lovd_displayError('LOVD_ERR_INVALID_CUSTOM_COL', $sErr);
+            return;
+        }
+
+        // Fixme: check if authorization level is correctly set for viewlist data.
+        if ($_AUTH['level'] < LEVEL_CURATOR) {
+            $sErr = 'You do not have authorization to perform this action.';
+            lovd_displayError('LOVD_ERR_AUTH_FR', $sErr);
             return;
         }
 
