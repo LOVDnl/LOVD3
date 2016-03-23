@@ -489,8 +489,10 @@ function lovd_activateMenu (sViewListID)
 
 function lovd_getFROptionsElement (sViewListID, oOptions)
 {
-    // Set behavior for column find & replace options and return it as a
+    // Display find & replace options menu, set its options and return it as a
     // jQuery object.
+
+    // Bind actions to cancel, preview and submit buttons
     var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
     FRoptions.find('#FRCancel_' + sViewListID).on('click', function () {
         lovd_FRCancel(sViewListID);
@@ -504,7 +506,7 @@ function lovd_getFROptionsElement (sViewListID, oOptions)
         lovd_FRSubmit(sViewListID, oOptions);
     });
 
-    // Hide buttons based on options.
+    // Hide/show buttons based on options.
     if (typeof oOptions.showSubmit == 'undefined' || !oOptions.showSubmit) {
         FRoptions.find('#FRSubmit_' + sViewListID).hide();
     } else {
@@ -516,6 +518,7 @@ function lovd_getFROptionsElement (sViewListID, oOptions)
         FRoptions.find('#FRPreview_' + sViewListID).show();
     }
 
+    // Set selected column name (and display name) in menu text.
     if (oOptions.hasOwnProperty('sDisplayname')) {
         FRoptions.find('#viewlistFRColDisplay_' + sViewListID).html(oOptions['sDisplayname']);
         FRoptions.find('#FRFieldDisplayname_' + sViewListID).val(oOptions['sDisplayname']);
@@ -530,12 +533,15 @@ function lovd_getFROptionsElement (sViewListID, oOptions)
 
 function lovd_FRColumnSelector (sViewListID)
 {
+    // Show a find & replace column selector for the given viewlist.
+
     var sViewListDivSelector = '#viewlistDiv_' + sViewListID;
     if ($(sViewListDivSelector).length == 0) {
         // No viewlist with ID sViewListID found
-        return
+        return;
     }
 
+    // Get viewlist table element and its height.
     var sVLTableSelector = '#viewlistTable_' + sViewListID;
     var tableHeight = $(sVLTableSelector).css('height');
 
@@ -544,10 +550,14 @@ function lovd_FRColumnSelector (sViewListID)
         var overlayDiv = $().add('<div class="vl_overlay"></div>');
         var ePos = $(this).offset();
         var bIsCustomColumn = $(this).data('custom') == '1';
+
+        // Show 'not-allowed' cursor type for non-custom columns.
         var overlayCursor = 'not-allowed';
         if (bIsCustomColumn) {
             overlayCursor = 'pointer';
         }
+
+        // Position div over current column.
         overlayDiv.css({
             position: 'absolute',
             top: ePos.top,
@@ -557,6 +567,7 @@ function lovd_FRColumnSelector (sViewListID)
             cursor: overlayCursor
         });
 
+        // Only make custom columns selectable.
         if (bIsCustomColumn) {
             var oCurrentOptions = {
                 sFieldname: $(this).data('fieldname'),
@@ -577,6 +588,7 @@ function lovd_FRColumnSelector (sViewListID)
         $(sViewListDivSelector).append(overlayDiv);
 
         if (index == 0) {
+            // Show tooltip near first column.
             overlayDiv.tooltip({
                 items: '.vl_overlay',
                 content: 'Select a column to use for Find & Replace',
@@ -604,8 +616,12 @@ function lovd_FRShowOptionsMenu(sViewListID, oOptions)
     // Display the options menu for column-wise find & replace in the given
     // viewlist.
     lovd_getFROptionsElement(sViewListID, oOptions);
+
+    // Set the option menu width equal to the viewlist's width
     var sVLWidth = $('#viewlistTable_' + sViewListID).outerWidth();
     $('#viewlistFRFormContainer_' + sViewListID).outerWidth(sVLWidth).show();
+
+    // Display a tooltip for the options menu
     $('#viewlistFRColDisplay_' + sViewListID).tooltip({
         items: '#viewlistFRColDisplay_' + sViewListID,
         content: 'Specify find & replace options',
@@ -628,20 +644,26 @@ function lovd_FRShowOptionsMenu(sViewListID, oOptions)
 
 function lovd_FRPreview(sViewListID, oOptions)
 {
+    // Show a preview for find & replace for the given viewlist ID and options.
+
     // Hide all current tooltips.
     $('div[role="tooltip"]').remove();
 
-    // Show a preview of column-wise find & replace result.
-    var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
+    // Set GET parameter indicating that user clicked preview.
     var oGetParams = {};
     oGetParams['FRPreviewClicked_' + sViewListID] = 1;
+
+    // Submit the current viewlist with find & replace options
     lovd_AJAX_viewListSubmit(sViewListID, function() {
         // Update the options menu and show the submit button.
         oOptions['showSubmit'] = true;
         var FRoptions = lovd_getFROptionsElement(sViewListID, oOptions);
-        $(sFRcontainerSelector).show();
+        $('#viewlistFRFormContainer_' + sViewListID).show();
 
+        // Get the predicted number of affected rows from the retrieved HTML.
         var sFRRowsAffected = $('#FRRowsAffected_' + sViewListID).val();
+
+        // Show tooltip above column with changes about to be applied.
         var FRPreviewHeader = $('th[data-fieldname="' + oOptions['sFieldname'] + '_FR' + '"]');
         FRPreviewHeader.tooltip({
             items: 'th',
@@ -666,6 +688,8 @@ function lovd_FRPreview(sViewListID, oOptions)
 
 function lovd_FRCancel(sViewListID, bSubmitVL)
 {
+    // Clear any user interface elements relating to find & replace for the
+    // given viewlist.
     if (typeof bSubmitVL != 'undefined' && bSubmitVL) {
         // Reload the viewlist to remove a potential preview column.
         lovd_AJAX_viewListSubmit(sViewListID);
@@ -681,7 +705,12 @@ function lovd_FRCancel(sViewListID, bSubmitVL)
 }
 
 
-function lovd_FRSubmit(sViewListID, oOptions) {
+function lovd_FRSubmit(sViewListID, oOptions)
+{
+    // Submit a find & replace action for the given viewlist.
+
+    // Add a GET parameter to the AJAX request to indicate the user has pushed
+    // submit.
     var oGetParams = {};
     oGetParams['FRSubmitClicked_' + sViewListID] = 1;
     lovd_AJAX_viewListSubmit(sViewListID, function() {

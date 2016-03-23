@@ -165,7 +165,7 @@ table.data tr.marked:hover td.checkbox   {background : #FFF0F0; cursor : default
 div.vl_overlay {background : #224488; opacity : 0.4; filter: alpha(opacity=40); /* For IE8 and earlier */}
 div.vl_overlay:hover {background : #224488; opacity : 0.1; filter: alpha(opacity=10); /* For IE8 and earlier */}
 
-/* Options menu */
+/* Options menu (used for find & replace in viewlists) */
 div.optionsmenu {background: #F0F3FF; border: 1px solid #AFC8FA; padding: 4px;}
 
 /* Large, outstanding tooltips */
