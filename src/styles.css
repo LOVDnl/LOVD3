@@ -170,6 +170,9 @@ table.data tr.marked:hover td.checkbox   {background : #FFF0F0; cursor : default
 div.vl_overlay {background : #224488; opacity : 0.4; filter: alpha(opacity=40); /* For IE8 and earlier */}
 div.vl_overlay:hover {background : #224488; opacity : 0.1; filter: alpha(opacity=10); /* For IE8 and earlier */}
 
+/* Options menu */
+div.optionsmenu {background: #F0F3FF; border: 1px solid #AFC8FA; padding: 4px;}
+
 /* Large, outstanding tooltips */
 .ui-tooltip, .arrow:after { background: #224488; border: 2px solid white;}
 .ui-tooltip         {padding: 10px 20px; color: white; border-radius: 20px; width: 340px;
