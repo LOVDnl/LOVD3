@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-03-23
+ * Modified    : 2016-03-24
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -518,8 +518,8 @@ class LOVD_Object {
         }
 
         if (array_key_exists('sSortFieldName', $aOptions) &&
-            !is_null($aOptions['sSortFieldname'])) {
-            $sSQL .= ' ORDER BY ' . $aOptions['sSortFieldname'];
+            !is_null($aOptions['sSortFieldName'])) {
+            $sSQL .= ' ORDER BY ' . $aOptions['sSortFieldName'];
         }
 
         if (array_key_exists('sLimit', $aOptions) && !is_null($aOptions['sLimit'])) {
@@ -584,7 +584,7 @@ class LOVD_Object {
 
         // Match $sFRFieldname as field or alias
         $match = array();
-        preg_match('/((?<table>[\w`]+)\.)?((?<field>[\w`]+)\sAS\s)?' . preg_quote($sFRFieldname) . '/i',
+        preg_match('/((?<table>[\w`]+)\.)?((?<field>[\w`]+)\sAS\s)?' . preg_quote($sFRFieldname, '/') . '/i',
                    $this->aSQLViewList['SELECT'], $match);
         if (count($match) > 0) {
             if (isset($match['table']) && !empty($match['table'])) {
@@ -601,6 +601,18 @@ class LOVD_Object {
             if (count($match) >= 2) {
                 // Assume $sFRFieldname is part of 'tablename.*' selection.
                 $sTablename = $match[1];
+            }
+        }
+
+        if ($sFieldname == $sFRFieldname) {
+            // Field name could not be found in select query. Check that input
+            // follows custom column naming rules in order to counter SQL
+            // injections. These rules are specified to the user on page
+            // columns?create
+            if (!preg_match('/^[a-zA-Z_\/_]+$/', $sFieldname)) {
+                $sErr = 'Request contains invalid field name "' . $sFieldname . '".';
+                lovd_displayError('LOVD_ERR_INVALID_FR_FIELD_NAME', $sErr);
+                exit;
             }
         }
 
