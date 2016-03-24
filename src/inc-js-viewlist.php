@@ -529,6 +529,10 @@ function lovd_getFROptionsElement (sViewListID, oOptions)
         FRoptions.find('#FRFieldname_' + sViewListID).val(oOptions['sFieldname']);
     }
 
+    // Set the option menu width equal to the viewlist's width
+    var sVLWidth = $('#viewlistTable_' + sViewListID).outerWidth();
+    FRoptions.outerWidth(sVLWidth).show();
+
     return FRoptions;
 }
 
@@ -618,10 +622,6 @@ function lovd_FRShowOptionsMenu(sViewListID, oOptions)
     // Display the options menu for column-wise find & replace in the given
     // viewlist.
     lovd_getFROptionsElement(sViewListID, oOptions);
-
-    // Set the option menu width equal to the viewlist's width
-    var sVLWidth = $('#viewlistTable_' + sViewListID).outerWidth();
-    $('#viewlistFRFormContainer_' + sViewListID).outerWidth(sVLWidth).show();
 
     // Display a tooltip for the options menu
     $('#viewlistFRColDisplay_' + sViewListID).tooltip({
