@@ -3,12 +3,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2012-12-06
- * For LOVD    : 3.0-beta-12
+ * Modified    : 2016-03-23
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -159,6 +160,28 @@ table.data tr.marked td.ordered          {background : #FAD5D5;}
 table.data tr.marked:hover td            {background : #FAD5D5;}
 table.data tr.marked:hover td.ordered    {background : #FFB5B5;}
 table.data tr.marked:hover td.checkbox   {background : #FFF0F0; cursor : default;}
+
+/* Viewlist find and replace column selectors */
+div.vl_overlay {background : #224488; opacity : 0.4; filter: alpha(opacity=40); /* For IE8 and earlier */}
+div.vl_overlay:hover {background : #224488; opacity : 0.1; filter: alpha(opacity=10); /* For IE8 and earlier */}
+
+/* Options menu (used for find & replace in viewlists) */
+div.optionsmenu {background: #F0F3FF; border: 1px solid #AFC8FA; padding: 4px;}
+
+/* Large, outstanding tooltips */
+.ui-tooltip, .arrow:after { background: #224488; border: 2px solid white;}
+.ui-tooltip         {padding: 10px 20px; color: white; border-radius: 20px; width: 340px;
+                     font: bold 14px "Helvetica Neue", Sans-Serif; text-transform: uppercase;
+                     box-shadow: 0 0 7px black; text-align: center}
+.arrow              {width: 70px; height: 16px; overflow: hidden; position: absolute; left: 50%;
+                     margin-left: -35px; bottom: -16px;}
+.arrow.top          {top: -16px; bottom: auto;}
+.arrow.left         {left: 20%;}
+.arrow:after        {content: ""; position: absolute; left: 20px; top: -20px; width: 25px;
+                     height: 25px; box-shadow: 6px 5px 9px -9px black;
+                     -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg);
+                     transform: rotate(45deg);}
+.arrow.top:after    {bottom: -20px; top: auto;}
 
 /*table.data tr.del td.ordered    {background : #F0F3FF;}
 table.data tr.del_hover td.ordered    {background : #AFC8FA;}
