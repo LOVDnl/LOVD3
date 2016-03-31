@@ -1012,11 +1012,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Check whether user has submitted and confirmed the form/action.
-    $bFormSubmit = !empty($_POST);
-
     $bValidPassword = false;
-    if ($bFormSubmit) {
-
+    $bConfirmation = !empty($_GET['confirm']);
+    if (POST) {
         lovd_errorClean();
 
         // Mandatory fields.
@@ -1034,23 +1032,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
         unset($_POST['password']);
     }
 
-    // One can only set validation to true with a valid password.
-    $sConfirmCountVar = 'confirmDeleteGene' . $sID;
-    if (!isset($_SESSION[$sConfirmCountVar])) {
-        $_SESSION[$sConfirmCountVar] = 0;
-    } elseif ($bValidPassword) {
-        $_SESSION[$sConfirmCountVar]++;
-    }
-
-    // User should have filled in a correct password at least 2 times.
-    $bConfirmation = $_SESSION[$sConfirmCountVar] >= 2;
-
     if ($bValidPassword && $bConfirmation) {
         // This also deletes the entries in gen2dis and transcripts.
         $_DATA->deleteEntry($sID);
-
-        // Delete the confirmation counter.
-        unset($_SESSION[$sConfirmCountVar]);
 
         // Write to log...
         lovd_writeLog('Event', LOG_EVENT, 'Deleted gene information entry ' . $sID . ' - ' . $zData['id'] . ' (' . $zData['name'] . ')');
@@ -1067,19 +1051,19 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     }
 
 
+
     $_T->printHeader();
     $_T->printTitle();
 
     lovd_showInfoTable('This will delete the ' . $zData['id'] . ' gene, all transcripts of this gene, and all annotations on variants specific for ' . $zData['id'] . '. The genomic variants and all individual-related information, including screenings, phenotypes and diseases, will not be deleted, so these might be left without a curator able to manage the data.<BR>
                         <B>If you also wish to remove all information on individuals with variants in ' . $zData['id'] . ', first <A href="' . $_PE[0] . '/' . $sID . '?empty">empty</A> the gene database.</B>', 'warning');
 
-
-
-    if ($_SESSION[$sConfirmCountVar] == 1) {
-        $zCounts = $_DB->query('SELECT count(DISTINCT t.id) AS tcount, count(DISTINCT vot.id) AS ' .
-            'votcount FROM lovd_v3_transcripts AS t JOIN lovd_v3_variants_on_transcripts AS vot ' .
-            'ON (t.id = vot.transcriptid) WHERE t.geneid = ?;', array($sID))->fetchAssoc();
-        if ($zCounts){
+    if ($bValidPassword) {
+        $zCounts = $_DB->query('SELECT count(DISTINCT t.id) AS tcount, count(DISTINCT vot.id) AS votcount
+                                FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                                 LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                                WHERE t.geneid = ?', array($sID))->fetchAssoc();
+        if ($zCounts['tcount'] || $zCounts['votcount']) {
             lovd_showInfoTable('<B>You are about to delete ' . $zCounts['tcount'] .
                 ' transcript(s) and related information on ' . $zCounts['votcount'] .
                 ' variant(s) on those transcripts. Please fill in your password one more time ' .
@@ -1093,7 +1077,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . (!$bValidPassword? '' : '&confirm=true') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
