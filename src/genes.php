@@ -1074,9 +1074,20 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
                         <B>If you also wish to remove all information on individuals with variants in ' . $zData['id'] . ', first <A href="' . $_PE[0] . '/' . $sID . '?empty">empty</A> the gene database.</B>', 'warning');
 
 
+
     if ($_SESSION[$sConfirmCountVar] == 1) {
-        lovd_showInfoTable('<B>Please note the message above and fill in your password one more ' .
-                           'time to confirm the removal of gene ' . $sID . '</B>', 'warning');
+        $zCounts = $_DB->query('SELECT count(DISTINCT t.id) AS tcount, count(DISTINCT vot.id) AS ' .
+            'votcount FROM lovd_v3_transcripts AS t JOIN lovd_v3_variants_on_transcripts AS vot ' .
+            'ON (t.id = vot.transcriptid) WHERE t.geneid = ?;', array($sID))->fetchAssoc();
+        if ($zCounts){
+            lovd_showInfoTable('<B>You are about to delete ' . $zCounts['tcount'] .
+                ' transcript(s) and related information on ' . $zCounts['votcount'] .
+                ' variant(s) on those transcripts. Please fill in your password one more time ' .
+                'to confirm the removal of gene ' . $sID . '</B>', 'warning');
+        } else {
+            lovd_showInfoTable('<B>Please note the message above and fill in your password one ' .
+                'more time to confirm the removal of gene ' . $sID . '</B>', 'warning');
+        }
     }
 
     lovd_errorPrint();

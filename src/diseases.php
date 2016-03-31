@@ -534,9 +534,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                        'not be deleted, but remain in the database.', 'warning');
 
     if ($_SESSION[$sConfirmCountVar] == 1) {
-        lovd_showInfoTable('<B>Please note the message above and fill in your password one more ' .
-                           'time to confirm the removal of disease ' . $zData['id'] . '</B>',
-                           'warning');
+        $zCounts = $_DB->query('SELECT count(DISTINCT p.id) as pcount FROM lovd_v3_diseases AS d' .
+            ' JOIN lovd_v3_phenotypes AS p ON (d.id = p.diseaseid) WHERE d.id = ?;',
+            array($nID))->fetchAssoc();
+        if ($zCounts){
+            lovd_showInfoTable('<B>You are about to delete ' . $zCounts['pcount'] .
+                ' phenotype(s). Please fill in your password one more time ' .
+                'to confirm the removal of disease ' . $nID . '.</B>', 'warning');
+        } else {
+            lovd_showInfoTable('<B>Please note the message above and fill in your password one more ' .
+                'time to confirm the removal of disease ' . $zData['id'] . '.</B>', 'warning');
+        }
     }
 
     lovd_errorPrint();
