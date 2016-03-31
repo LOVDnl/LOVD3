@@ -68,6 +68,8 @@
    its name to "Variants that require attention".
    Closes #26: "Wrong link for uncurated variants in drop-down menu
    Configuration area".
+ * Fixed bug; You couldn't switch to a different transcript on the unique
+   variant view.
 
 
 /**************************
