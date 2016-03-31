@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2016-02-08
+ * Modified    : 2016-02-18
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -466,7 +466,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (!empty($_POST)) {
+    // Check whether user has submitted and confirmed the form/action.
+    $bFormSubmit = !empty($_POST);
+    $bConfirmation = isset($_GET['confirm']) && $_GET['confirm'] == 'true';
+
+    if ($bFormSubmit && $bConfirmation) {
         lovd_errorClean();
 
         // Mandatory fields.
@@ -497,9 +501,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             $_T->printFooter();
             exit;
 
-        } else {
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
         }
     }
 
@@ -508,10 +509,25 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $_T->printHeader();
     $_T->printTitle();
 
+
+    lovd_showInfoTable('This will delete the ' . $zData['id'] . ' disease, all related  ' .
+                       'phenotypes will be deleted too. Related genes and individuals will ' .
+                       'not be deleted, but remain in the database.', 'warning');
+
+    if ($bFormSubmit && !$bConfirmation) {
+        lovd_showInfoTable('<B>Please note the message above and fill in your password one more ' .
+                           'time to confirm the removal of disease ' . $zData['id'] . '</B>',
+                           'warning');
+
+        // Remove password from default values shown in confirmation form.
+        unset($_POST['password']);
+    }
+
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '&confirm=' .
+          ($bFormSubmit ? 'true' : 'false') . '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array(

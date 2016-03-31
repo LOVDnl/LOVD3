@@ -1011,7 +1011,12 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     $sID = $zData['id'];
     require ROOT_PATH . 'inc-lib-form.php';
 
-    if (!empty($_POST)) {
+    // Check whether user has submitted and confirmed the form/action.
+    $bFormSubmit = !empty($_POST);
+    $bConfirmation = isset($_GET['confirm']) && $_GET['confirm'] == 'true';
+
+
+    if ($bFormSubmit && $bConfirmation) {
         lovd_errorClean();
 
         // Mandatory fields.
@@ -1040,10 +1045,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
             $_T->printFooter();
             exit;
-
-        } else {
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
         }
     }
 
@@ -1055,10 +1056,20 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     lovd_showInfoTable('This will delete the ' . $zData['id'] . ' gene, all transcripts of this gene, and all annotations on variants specific for ' . $zData['id'] . '. The genomic variants and all individual-related information, including screenings, phenotypes and diseases, will not be deleted, so these might be left without a curator able to manage the data.<BR>
                         <B>If you also wish to remove all information on individuals with variants in ' . $zData['id'] . ', first <A href="' . $_PE[0] . '/' . $sID . '?empty">empty</A> the gene database.</B>', 'warning');
 
+
+    if ($bFormSubmit && !$bConfirmation) {
+        lovd_showInfoTable('<B>Please note the message above and fill in your password one more ' .
+                           'time to confirm the removal of gene ' . $sID . '</B>', 'warning');
+
+        // Remove password from default values shown in confirmation form.
+        unset($_POST['password']);
+    }
+
     lovd_errorPrint();
 
     // Table.
-    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . $_PE[0] . '/' . $sID . '?' . ACTION . '&confirm=' .
+          ($bFormSubmit ? 'true' : 'false') .  '" method="post">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
