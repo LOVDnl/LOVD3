@@ -1911,7 +1911,7 @@ class LOVD_Object {
                 }
             }
 
-            $nSelectLimit = 0;
+            $nSelectLimit = null;
             if (!$bHideNav && FORMAT == 'text/html') {
                 // Implement LIMIT only if navigation is not hidden.
                 // We have a problem here, because we don't know how many hits there are,
