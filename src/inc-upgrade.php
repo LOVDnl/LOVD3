@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-02-03
+ * Modified    : 2016-04-07
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -418,6 +419,17 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-14d' =>
                      array(
                          'UPDATE ' . TABLE_DISEASES . ' SET symbol = "Healthy/Control" WHERE id_omim IS NULL AND created_by = 0 AND symbol = "Healty/Control"',
+                     ),
+                 '3.0-14e' =>
+                     array('CREATE TABLE ' . TABLE_COLLEAGUES . '(
+                            userid_from SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+                            userid_to   SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+                            CONSTRAINT `PRIMARY` PRIMARY KEY (userid_from, userid_to),
+                            CONSTRAINT lovd_v3_colleagues_fk_userid_from FOREIGN KEY (userid_from) REFERENCES lovd_v3_users (id),
+                            CONSTRAINT lovd_v3_colleagues_fk_userid_to FOREIGN KEY (userid_to) REFERENCES lovd_v3_users (id)
+                            );',
+                           'CREATE INDEX userid_to ON ' . TABLE_COLLEAGUES . '(userid_to);',
+                           'CREATE INDEX userid_from ON ' . TABLE_COLLEAGUES . ' (userid_from);'
                      ),
              );
 
