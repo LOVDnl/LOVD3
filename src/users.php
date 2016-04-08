@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-03-21
+ * Modified    : 2016-04-15
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -123,6 +123,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     } elseif ($_AUTH['id'] == $nID) {
         // Viewing himself!
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Update your registration', 1);
+        $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to your entries with other users', 1);
         $aNavigation['download/all/mine']    = array('menu_save.png', 'Download all my data', 1);
     } elseif ($_AUTH['level'] >= LEVEL_MANAGER) {
         // Managers and up, not viewing own account, not higher level than other user.
@@ -1120,4 +1121,167 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     $_T->printFooter();
     exit;
 }
+
+
+
+function lovd_shareAccessForm($sUserID, $sUserListID) {
+    // Returns HTML for form to share access of a user's objects with another
+    // user.
+
+    global $_DB;
+
+    require_once ROOT_PATH . 'inc-lib-form.php';
+    require_once ROOT_PATH . 'class/object_users.php';
+    lovd_includeJS('inc-js-list.php');
+
+    // Get colleagues of given user from database.
+    $sQuery = 'SELECT
+                 u.id,
+                 u.name
+               FROM ' . TABLE_COLLEAGUES . ' AS c
+               LEFT JOIN lovd_v3_users AS u ON (u.id = c.userid_to)
+               WHERE c.userid_from = ?;';
+    $colleagues = $_DB->query($sQuery, array($sUserID));
+    $aColleagues = $colleagues->fetchAllAssoc();
+
+    // HTML for row in colleague list. This contains 2 string directives:
+    // 1=user's ID, 2=user's name. Note: this is to be parsed by sprintf(), so
+    // remember to escape %-signs.
+    $sTableColleaguesRow = <<<DOCCOLROW
+<LI id="li_%1\$s">
+    <INPUT type="hidden" name="colleagues[]" value="%1\$s">
+    <TABLE width="100%%">
+        <TR>
+            <TD>%2\$s (#%1\$s)</TD>
+        </TR>
+    </TABLE>
+</LI>
+DOCCOLROW;
+
+    // HTML for list (table) of users.
+    $sTableColleagues = <<<DOCCOL
+<TABLE class="sortable_head" style="width : 552px;">
+    <TR>
+        <TH>Name</TH>
+    </TR>
+</TABLE>
+<FORM action="users/$sUserID?share_access" method="post">
+<UL id="$sUserListID" class="sortable" style="margin-top : 0px; width : 550px;">
+%s
+</UL>
+<INPUT type="submit" value="Save">
+<SPAN>&nbsp;</SPAN>
+<INPUT type="submit" value="Cancel" onclick="window.location.href=\'users/$sUserID\'; return false;" style="border : 1px solid #FF4422;">
+</FORM>
+<BR />
+DOCCOL;
+
+    // Construct list of colleagues
+    $sOutput = '';
+    foreach ($aColleagues as $aUserFields) {
+        $sOutput .= sprintf($sTableColleaguesRow, $aUserFields['id'], $aUserFields['name']);
+    }
+    return sprintf($sTableColleagues, $sOutput);
+}
+
+
+
+
+function lovd_setColleagues($sUserID, $aColleagues) {
+    // Removes all existing colleagues for user $sUserID and replaces them with
+    // all IDs in $aColleagues.
+    // Throws an exception (Exception) when something goes wrong.
+
+    global $_DB;
+
+    $sLogEvent = 'SetColleagues';
+
+    try {
+        $_DB->beginTransaction();
+        $_DB->query('DELETE FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from=?;', array($sUserID));
+
+        if (count($aColleagues) > 0) {
+            // Build parts for multi-row insert query.
+            $sPlaceholders = '(?,?)' . str_repeat(',(?,?)', count($aColleagues)-1);
+            $aData = array();
+            foreach ($aColleagues as $sColeagueID) {
+                array_push($aData, $sUserID, $sColeagueID);
+            }
+
+            $_DB->query('INSERT INTO ' . TABLE_COLLEAGUES . ' (userid_from, userid_to) VALUES ' .
+                        $sPlaceholders, $aData);
+        }
+        $_DB->commit();
+
+    } catch (Exception $e) {
+        $_DB->rollBack();
+        $sMessage = 'Failed to update shared access for user (' . $sUserID . '), caused by: ' .
+                    $e->getMessage();
+        lovd_writeLog('Error', $sLogEvent, $sMessage);
+        throw new Exception($sMessage);
+    }
+
+    $sMessage = 'updated colleagues for user (' . $sUserID . ') with (' .
+                join(', ', $aColleagues) . ')';
+    lovd_writeLog('Event', $sLogEvent, $sMessage);
+}
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
+    // e.g.: users/000123?share_access
+
+
+    // Fixme: check for authorization
+
+    $sUserID = $_PE[1];
+    $sUserListID = 'user_share_access_' . $sUserID;
+
+    if (isset($_REQUEST['colleagues']) && is_array($_REQUEST['colleagues'])) {
+        // Form submitted
+
+        // Remove duplicates
+        $aColleagues = array_unique($_REQUEST['colleagues']);
+
+        try {
+            lovd_setColleagues($sUserID, $aColleagues);
+        } catch (Exception $e) {
+            $sErrMsg = 'Something went wrong while saving the list of users. Please notify the
+                       administrators if this problem persists.';
+            lovd_displayError('ERR_SET_COLLEAGUES', $sErrMsg);
+        }
+    }
+
+    $sQuery = 'SELECT
+                 u.name
+               FROM ' . TABLE_USERS . ' AS u
+               WHERE u.id = ?;';
+    $sUserName = $_DB->query($sQuery, array($sUserID))->fetchColumn();
+
+    $_T->printHeader();
+    $_T->printTitle('Sharing access');
+    lovd_showInfoTable('<B>' . $sUserName . ' (' . $sUserID . ')</B> shares access to all
+                       data owned by him with the users listed below.', 'information');
+
+    print(lovd_shareAccessForm($sUserID, $sUserListID));
+
+    $_T->printTitle('Select other users', 'H4');
+    lovd_showInfoTable('To share access with other users, click on the user in the list below to
+                       add them to the selection. Then click <B>save</B> to save the changes.',
+                       'information');
+
+    // Set number of items per page for viewlist.
+    $_GET['page_size'] = 10;
+
+    $_DATA = new LOVD_User();
+    $_DATA->setRowLink('users_share_access', 'javascript:lovd_selectViewlistRow("{{ViewListID}}",
+            "{{ID}}", "lovd_addUserToShareAccess"); return false;');
+    $_DATA->viewList('users_share_access', array('id', 'status_', 'last_login_', 'created_date_'),
+                     true);
+
+    $_T->printFooter();
+    exit;
+}
+
 ?>
