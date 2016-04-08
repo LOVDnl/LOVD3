@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-01-29
+ * Modified    : 2016-04-08
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -568,19 +569,15 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
             return lovd_isAuthorized('gene', $aGenes, $bSetUserLevel);
         case 'variant':
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
-            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'individual':
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
-            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'phenotype':
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (s.individualid = p.individualid) WHERE p.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
-            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'screening':
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
-            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         default:
             return false;
@@ -592,7 +589,8 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         // Level has already been set by recursive call.
         return 1;
     }
-    // Check for ownership.
+
+    $bOwner = lovd_isOwner($sType, $Data, true);
     if ($bOwner && $_CONF['allow_submitter_mods']) {
         if ($bSetUserLevel) {
             $_AUTH['level'] = LEVEL_OWNER;
@@ -612,6 +610,69 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     return false;
 }
 
+
+
+function lovd_isOwner($sType, $Data, $bIncludeSharedPermissions=false)
+{
+    // Checks if the current user (specified by global $_AUTH) is owner of the
+    // data objects.
+    // Params:
+    // $sType       Type of the data object to check (string)
+    // $Data        ID of object (string) or array of IDs of multiple objects
+    //              (array of strings). Returns true if user is owner for any
+    //              of the objects.
+    // $bIncludeSharedPermissions
+    //              Flag, if true this function returns true if any of the
+    //              objects is owned by a user that shares his permissions with
+    //              the current user (via TABLE_COLLEAGUES).
+    // Return: True if any of the objects of type $sType with an ID in $Data is
+    //         owned or created by current user (or optionally by one of his
+    //         'colleagues')
+    global $_AUTH, $_DB;
+
+    if (!is_array($Data)) {
+        $Data = array($Data);
+    }
+
+    $aOwnerIds = array($_AUTH['id']);
+    if ($bIncludeSharedPermissions) {
+        $aOwnerIds = array_merge($aOwnerIds, $_AUTH['colleagues_from']);
+    }
+    $sColleaguePlaceholders = '(?' . str_repeat(', ?', count($aOwnerIds) - 1) . ')';
+    $sDataPlaceholders = '(?' . str_repeat(', ?', count($Data) - 1) . ')';
+
+    $query = '';
+    switch ($sType) {
+        case 'variant':
+            $query = 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN ' .
+                $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
+                ' OR created_by IN ' . $sColleaguePlaceholders . ')';
+            break;
+        case 'individual':
+            $query = 'SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN ' .
+                $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
+                ' OR created_by IN ' . $sColleaguePlaceholders . ')';
+            break;
+        case 'phenotype':
+            $query = 'SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' WHERE id IN ' .
+                $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
+                ' OR created_by IN ' . $sColleaguePlaceholders . ')';
+            break;
+        case 'screening':
+            $query = 'SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE id IN ' .
+                $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
+                ' OR created_by IN ' . $sColleaguePlaceholders . ')';
+            break;
+    }
+
+    $oResult = $_DB->query($query, array_merge($Data, $aOwnerIds, $aOwnerIds));
+    $bOwner = false;
+    if ($oResult !== false) {
+        $bOwner = intval($oResult->fetchColumn()) > 0;
+        return $bOwner;
+    }
+    return $bOwner;
+}
 
 
 
