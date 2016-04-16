@@ -25,7 +25,7 @@ users on the objects that they own.
 
 ## Database strucure
 
-![db_structure](db.png)
+![db_structure](db.svg)
 
 The diagram above shows part of the LOVD3 database schema relevant to access 
 control. Users are stored together with their global user level in table 
@@ -34,13 +34,13 @@ control. Users are stored together with their global user level in table
 and descriptions how they are determined.
 
 
-COLLABORATOR
+**COLLABORATOR**
 
-:   For an object X, a user's level is set to *COLLABORATOR* when X can be
-    linked to a gene ID via joining with table *genes* (optionally via joins 
-    on other tables like *genes2diseases*), and there is a record in 
-    *users2genes* with the gene ID and the user's ID and *allow_edit* is set
-    to false. The user can view but not edit X. Example SQL:
+* For an object X, a user's level is set to *COLLABORATOR* when X can be
+  linked to a gene ID via joining with table *genes* (optionally via joins 
+  on other tables like *genes2diseases*), and there is a record in 
+  *users2genes* with the gene ID and the user's ID and *allow_edit* is set
+  to false. The user can view but not edit X. Example SQL:
 ~~~SQL
     SELECT
       userid,
@@ -50,12 +50,12 @@ COLLABORATOR
 ~~~
 
 
-COLLEAGUE
+**COLLEAGUE**
 
-:   *(proposition, april 2016)* For an object X, owned by user A. User B 
-    obtains level *COLLEAGUE* when there is a record in *colleagues* where
-    *userid_from* is A's ID and *userid_to* is B's ID. User B can view/edit
-    object X. Example SQL:
+* *(proposition, april 2016)* For an object X, owned by user A. User B 
+  obtains level *COLLEAGUE* when there is a record in *colleagues* where
+  *userid_from* is A's ID and *userid_to* is B's ID. User B can view/edit
+  object X. Example SQL:
 ~~~SQL
     SELECT
       *
@@ -64,17 +64,17 @@ COLLEAGUE
 ~~~
 
 
-OWNER
+**OWNER**
 
-:   For an object X, user A can view/edit X if the object's field *owned_by* is
-    A's ID. Then the user level is set to *OWNER*.
+* For an object X, user A can view/edit X if the object's field *owned_by* is
+  A's ID. Then the user level is set to *OWNER*.
 
 
-CURATOR
+**CURATOR**
 
-:   The *CURATOR* user level is set in a similar manner compared to level 
-    COLLABORATOR, only now the field *allow_edit* in table *users2genes* is
-    true and the user can also edit the object.
+* The *CURATOR* user level is set in a similar manner compared to level 
+  COLLABORATOR, only now the field *allow_edit* in table *users2genes* is
+  true and the user can also edit the object.
 
 
 
