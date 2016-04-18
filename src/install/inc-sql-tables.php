@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2015-12-04
+ * Modified    : 2016-04-19
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -708,7 +709,17 @@ $aTableSQL =
     installed_date DATE NOT NULL,
     updated_date DATE,
     PRIMARY KEY (id))
-    ' . $sSettings
+    ' . $sSettings,
+
+    'TABLE_COLLEAGUES' =>
+    'CREATE TABLE ' . TABLE_COLLEAGUES . '(
+    userid_from SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+    userid_to   SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+    CONSTRAINT `PRIMARY` PRIMARY KEY (userid_from, userid_to),
+    INDEX (userid_to),
+    CONSTRAINT ' . TABLE_COLLEAGUES .  '_fk_userid_from FOREIGN KEY (userid_from) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT ' . TABLE_COLLEAGUES . '_fk_userid_to FOREIGN KEY (userid_to) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE
+    ) ' . $sSettings
           );
 
 // DMD_SPECIFIC;

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-04-07
+ * Modified    : 2016-04-19
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -425,11 +425,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             userid_from SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
                             userid_to   SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
                             CONSTRAINT `PRIMARY` PRIMARY KEY (userid_from, userid_to),
-                            CONSTRAINT lovd_v3_colleagues_fk_userid_from FOREIGN KEY (userid_from) REFERENCES lovd_v3_users (id),
-                            CONSTRAINT lovd_v3_colleagues_fk_userid_to FOREIGN KEY (userid_to) REFERENCES lovd_v3_users (id)
-                            );',
-                           'CREATE INDEX userid_to ON ' . TABLE_COLLEAGUES . '(userid_to);',
-                           'CREATE INDEX userid_from ON ' . TABLE_COLLEAGUES . ' (userid_from);'
+                            INDEX (userid_to),
+                            CONSTRAINT ' . TABLE_COLLEAGUES .  '_fk_userid_from FOREIGN KEY (userid_from) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+                            CONSTRAINT ' . TABLE_COLLEAGUES . '_fk_userid_to FOREIGN KEY (userid_to) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE
+                            ) ENGINE=InnoDB, DEFAULT CHARACTER SET utf8;',
                      ),
              );
 

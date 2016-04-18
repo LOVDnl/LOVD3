@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-04-15
+ * Modified    : 2016-04-20
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1132,7 +1132,6 @@ function lovd_shareAccessForm($sUserID, $sUserListID) {
 
     require_once ROOT_PATH . 'inc-lib-form.php';
     require_once ROOT_PATH . 'class/object_users.php';
-    lovd_includeJS('inc-js-list.php');
 
     // Get colleagues of given user from database.
     $sQuery = 'SELECT
@@ -1150,7 +1149,7 @@ function lovd_shareAccessForm($sUserID, $sUserListID) {
     $sTableColleaguesRow = <<<DOCCOLROW
 <LI id="li_%1\$s">
     <INPUT type="hidden" name="colleagues[]" value="%1\$s">
-    <TABLE width="100%%">
+    <TABLE>
         <TR>
             <TD>%2\$s (#%1\$s)</TD>
         </TR>
@@ -1174,14 +1173,27 @@ DOCCOLROW;
 <INPUT type="submit" value="Cancel" onclick="window.location.href=\'users/$sUserID\'; return false;" style="border : 1px solid #FF4422;">
 </FORM>
 <BR />
+<SCRIPT type='text/javascript'>
+function lovd_addUserShareAccess(viewlistItem) {
+    $('#$sUserListID').append(
+        '<LI id="li_' + viewlistItem.ID + '">' +
+            '<INPUT type="hidden" name="colleagues[]" value="' + viewlistItem.ID + '">' +
+            '<TABLE>' +
+                '<TR>' +
+                    '<TD>' + viewlistItem.Name + ' (#' + viewlistItem.ID + ')</TD>' +
+                '</TR>' +
+            '</TABLE>' +
+        '</LI>');
+}
+</SCRIPT>
 DOCCOL;
 
     // Construct list of colleagues
-    $sOutput = '';
+    $sColleaguesHTML = '';
     foreach ($aColleagues as $aUserFields) {
-        $sOutput .= sprintf($sTableColleaguesRow, $aUserFields['id'], $aUserFields['name']);
+        $sColleaguesHTML .= sprintf($sTableColleaguesRow, $aUserFields['id'], $aUserFields['name']);
     }
-    return sprintf($sTableColleagues, $sOutput);
+    return sprintf($sTableColleagues, $sColleaguesHTML);
 }
 
 
@@ -1276,9 +1288,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
 
     $_DATA = new LOVD_User();
     $_DATA->setRowLink('users_share_access', 'javascript:lovd_selectViewlistRow("{{ViewListID}}",
-            "{{ID}}", "lovd_addUserToShareAccess"); return false;');
-    $_DATA->viewList('users_share_access', array('id', 'status_', 'last_login_', 'created_date_'),
-                     true);
+            "{{ID}}", lovd_addUserShareAccess); return false;');
+    $_DATA->viewList($sUserListID, array('status_', 'last_login_', 'created_date_'), true);
 
     $_T->printFooter();
     exit;

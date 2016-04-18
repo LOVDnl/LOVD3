@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2015-09-21
- * For LOVD    : 3.0-14
+ * Modified    : 2016-04-20
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -480,3 +481,37 @@ window.onload = function ()
 <?php
 }
 ?>
+
+
+
+function lovd_selectViewlistRow(sViewlistID, sRowID, callback) {
+    // Select item at row (sRowID) of viewlist (sViewlistID) and provide the
+    // item to a callback function (callback) as an object.
+
+    // Collect table headings
+    var aHeadings = [];
+    $('#viewlistDiv_' + sViewlistID).find('thead th').each(function(index) {
+        aHeadings.push($(this).text().trim());
+    });
+
+    var aFields = [];
+    $('#' + sRowID).find('td').each(function (index) {
+        aFields.push($(this).text().trim());
+    });
+
+    if (aHeadings.length != aFields.length) {
+        throw 'Error: unable to select row from viewlist properly.';
+    }
+
+    var callbackArg = {};
+    for (var i=0;i < aHeadings.length; i++) {
+        callbackArg[aHeadings[i]] = aFields[i];
+    }
+
+    // Function call to callback with the viewlist row as argument. Format:
+    // {'fieldname': 'cell-value'}
+    callback(callbackArg);
+}
+
+
+
