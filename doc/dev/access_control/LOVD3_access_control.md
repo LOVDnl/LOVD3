@@ -25,7 +25,7 @@ users on the objects that they own.
 
 ## Database strucure
 
-![db_structure](db.svg)
+![db_structure](db.png)
 
 The diagram above shows part of the LOVD3 database schema relevant to access 
 control. Users are stored together with their global user level in table 
