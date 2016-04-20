@@ -60,6 +60,9 @@ def colored_text(str, color="red"):
         return "\033[91m{}\033[0m".format(str)
     if color == "green":
         return "\033[92m{}\033[0m".format(str)
+    if color == "yellow":
+        return "\033[93m{}\033[0m".format(str)
+    return str
 
 
 def check_files(files, checks):
@@ -101,19 +104,25 @@ def main():
 
     print("Checking file headers (pre-commit hook)... ", end="")
 
-    checks = setup_checks()
-    diff_output = get_cmd_output("git status --porcelain")
+    try:
+        checks = setup_checks()
+        diff_output = get_cmd_output("git status --porcelain")
 
-    # Get files ready to commit (assuming `git commit -a`)
-    modified_files = []
-    for line in diff_output:
-        line = line[3:]
-        if "->" in line:
-            line = line.split("->")[1]
-        line = line.strip("\" ")
-        modified_files.append(line)
+        # Get files ready to commit (assuming `git commit -a`)
+        modified_files = []
+        for line in diff_output:
+            line = line[3:]
+            if "->" in line:
+                line = line.split("->")[1]
+            line = line.strip("\" ")
+            modified_files.append(line)
 
-    result, checks_output = check_files(modified_files, checks)
+        result, checks_output = check_files(modified_files, checks)
+    except BaseException:
+        print(colored_text("ERROR", "yellow"))
+        print("Something went wrong while checking.")
+        print(colored_text(ABORT_MESSAGE, "yellow"))
+        return 1
     
     if result == False:
         print(colored_text("FAIL", "red"))
