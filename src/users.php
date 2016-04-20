@@ -1149,9 +1149,14 @@ function lovd_shareAccessForm($sUserID, $sUserListID) {
     $sTableColleaguesRow = <<<DOCCOLROW
 <LI id="li_%1\$s">
     <INPUT type="hidden" name="colleagues[]" value="%1\$s">
-    <TABLE>
+    <TABLE width="100%%">
         <TR>
             <TD>%2\$s (#%1\$s)</TD>
+            <TD width="30" align="right">
+                <A href="#" onclick="$('#li_%1\$s').remove(); return false;" title="Remove user">
+                    <IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0">
+                </A>
+            </TD>
         </TR>
     </TABLE>
 </LI>
@@ -1185,6 +1190,7 @@ function lovd_addUserShareAccess(viewlistItem) {
             '</TABLE>' +
         '</LI>');
 }
+
 </SCRIPT>
 DOCCOL;
 
