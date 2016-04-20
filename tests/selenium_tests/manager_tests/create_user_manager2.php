@@ -1,16 +1,11 @@
 <?php
-class Example extends PHPUnit_Extensions_SeleniumTestCase
-{
-  protected function setUp()
-  {
-    $this->setBrowser("*chrome");
-    $this->setBrowserUrl("https://localhost/svn/LOVD3/trunk/src/install/");
-  }
+require_once 'LOVDSeleniumBaseTestCase.php';
 
-  public function testMyTestCase()
-  {
-    $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
-    $this->assertNotEquals("Manager", $this->getSelectedLabel("name=level"));
-  }
+class CreateUserManager2Test extends LOVDSeleniumBaseTestCase
+{
+    public function testCreateUserManager2()
+    {
+        $this->open(ROOT_URL . "/src/users?create&no_orcid");
+        $this->assertNotEquals("Manager", $this->getSelectedLabel("name=level"));
+    }
 }
-?>

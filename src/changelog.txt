@@ -59,6 +59,20 @@
    is active for, is now shown on the column's detailed view.
  * Fixed bug; Transcript viewlists included non-public variants in the variant
    counts also for non-authorized users.
+ * Fixed bug; Automatic filling of certain password fields in forms is now
+   blocked and a fake text field is used to capture auto-filled usernames.
+   Closes #30: "Prevent browsers from auto-filling usernames in data entry
+   forms".
+ * Fixed bug; Fixed the "View uncurated variants" link in the drop-down menu of
+   the Configuration tab as it didn't show all uncurated variants, and changed
+   its name to "Variants that require attention".
+   Closes #26: "Wrong link for uncurated variants in drop-down menu
+   Configuration area".
+ * Fixed bug; You couldn't switch to a different transcript on the unique
+   variant view.
+ * Added second confirmation step on deletion of gene and disease. The
+   confirmation warning shows how many related entities are going to be
+   removed.
 
 
 /**************************

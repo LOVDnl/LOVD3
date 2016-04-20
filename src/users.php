@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-02-08
+ * Modified    : 2016-03-21
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -1089,7 +1089,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         $_DATA = new LOVD_Individual();
         $_GET['search_individualid'] = implode('|', $aUnfinished);
         $_GET['page_size'] = '10';
-        $_DATA->setRowLink('Individuals_submissions', ($_AUTH['id'] == $nID? 'submit/individual/' . $_DATA->sRowID : ''));
+        if ($_AUTH['id'] == $nID) {
+            $_DATA->setRowLink('Individuals_submissions', 'submit/individual/' . $_DATA->sRowID);
+        } else {
+            $_DATA->setRowLink('Individuals_submissions', 'individuals/' . $_DATA->sRowID);
+        }
         $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true);
         unset($_GET['search_individualid']);
     } else {
@@ -1103,7 +1107,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         $_DATA = new LOVD_Screening();
         $_GET['search_screeningid'] = implode('|', $aUnfinished);
         $_GET['page_size'] = '10';
-        $_DATA->setRowLink('Screenings_submissions', ($_AUTH['id'] == $nID? 'submit/screening/' . $_DATA->sRowID : ''));
+        if ($_AUTH['id'] == $nID) {
+            $_DATA->setRowLink('Screenings_submissions', 'submit/screening/' . $_DATA->sRowID);
+        } else {
+            $_DATA->setRowLink('Individuals_submissions', 'screenings/' . $_DATA->sRowID);
+        }
         $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true);
     } else {
         lovd_showInfoTable('No submissions of variant screenings found!', 'stop');
