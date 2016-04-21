@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-04-21
+ * Modified    : 2016-04-22
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -27,6 +27,79 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
+// Email body to be sent to users who are the recipient of shared access to
+// someone's data. The text contains wildcards for the following information:
+// 1. Recipient's name
+// 2. LOVD installation identifier (url)
+// 3. Sender's name (user who shares access to their data)
+// 4. Sender's user ID
+// 5. URL to recipient's user account
+// 6. List of administrator names and email addresses
+define('EMAIL_NEW_COLLEAGUE', <<<EMAILDOC
+Dear %1\$s,
+
+Someone has given you access to their data in LOVD located at:
+%2\$s
+
+You can now view and edit all data owned by %3\$s (%4\$s).
+
+If you know this person, you can consider to share access to them so
+they can view and edit your data. You can do so by going to your
+account, click "Share access to your entries with other users", select
+the appropriate user accounts and click "save".
+Access your account here: %5\$s
+
+If you think this email is not intended for you, please let us know by
+contacting one of the administrators:
+%6\$s
+
+Kind regards,
+    LOVD system at Leiden University Medical Center
+EMAILDOC
+);
+
+
+
+function lovd_mailNewColleagues($sUserID, $sUserFullname, $aNewColleagues) {
+    // Send an email to users with an ID in $aNewColleagues, letting them know
+    // the user denoted by $sUserID has shared access to his data with them.
+    require_once 'inc-lib-form.php';
+    global $_DB, $_SETT;
+
+    if (count($aNewColleagues) == 0) {
+        // Nothing to be done.
+        return;
+    }
+
+    $sApplicationURL = lovd_getInstallURL();
+    $aAdminEmails = preg_split('/(\r\n|\r|\n)+/', trim($_SETT['admin']['email']));
+    $sAdminContacts = $_SETT['admin']['name'] . ', ' . $aAdminEmails[0] . "\n";
+
+
+    // Fetch names/email addresses for new colleagues.
+    $sPlaceholders = '(?' . str_repeat(',?', count($aNewColleagues)-1) . ')';
+    $sColleagueQuery = 'SELECT id, name, email FROM ' . TABLE_USERS . ' WHERE id IN ' . $sPlaceholders;
+    $result = $_DB->query($sColleagueQuery, $aNewColleagues);
+
+    while (($zColleague = $result->fetch(PDO::FETCH_ASSOC)) !== false) {
+        $sRecipientAccountURL = $sApplicationURL . 'users/' . $zColleague['id'];
+
+        // Setup mail text and fill placeholders.
+        $sMailBody = sprintf(EMAIL_NEW_COLLEAGUE, $zColleague['name'], $sApplicationURL,
+            $sUserFullname, $sUserID, $sRecipientAccountURL, $sAdminContacts);
+
+        // Only use Windows-style line endings, so that it looks good on all platforms.
+        $sMailBody = str_replace("\n", "\r\n", $sMailBody);
+
+        // Note: email field is new-line separated list of email addresses.
+        lovd_sendMail(array(array($zColleague['name'], $zColleague['email'])),
+                      'LOVD access sharing', $sMailBody, $_SETT['email_headers'], false);
+    }
+}
+
+
+
 
 
 function lovd_shareAccessForm($sUserID, $sUserListID) {
@@ -88,9 +161,14 @@ function lovd_addUserShareAccess(viewlistItem) {
     $('#$sUserListID').append(
         '<LI id="li_' + viewlistItem.ID + '">' +
             '<INPUT type="hidden" name="colleagues[]" value="' + viewlistItem.ID + '">' +
-            '<TABLE>' +
+            '<TABLE width="100%%">' +
                 '<TR>' +
                     '<TD>' + viewlistItem.Name + ' (#' + viewlistItem.ID + ')</TD>' +
+                    '<TD width="30" align="right">' +
+                        '<A href="#" onclick="$(\'#li_' + viewlistItem.ID + '\').remove(); return false;" title="Remove user">' +
+                            '<IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0">' +
+                        '</A>' +
+                    '</TD>' +
                 '</TR>' +
             '</TABLE>' +
         '</LI>');
@@ -110,14 +188,15 @@ DOCCOL;
 
 
 
-function lovd_setColleagues($sUserID, $aColleagues) {
+function lovd_setColleagues($sUserID, $sUserName, $aColleagues) {
     // Removes all existing colleagues for user $sUserID and replaces them with
     // all IDs in $aColleagues.
     // Throws an exception (Exception) when something goes wrong.
 
     global $_DB;
 
-    $sLogEvent = 'SetColleagues';
+    $sOldColleaguesQuery = 'SELECT userid_to FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from=?;';
+    $aOldColleagues = $_DB->query($sOldColleaguesQuery, array($sUserID))->fetchAllColumn();
 
     try {
         $_DB->beginTransaction();
@@ -142,14 +221,20 @@ function lovd_setColleagues($sUserID, $aColleagues) {
         $_DB->rollBack();
         $sMessage = 'Failed to update shared access for user (' . $sUserID . '), caused by: ' .
             $e->getMessage();
-        lovd_writeLog('Error', $sLogEvent, $sMessage);
+        lovd_writeLog('Error', LOG_EVENT, $sMessage);
         throw new Exception($sMessage);
     }
+
+    // Notify only the newly added colleagues by email.
+    // Note: call array_values() on the parameter array to make sure the
+    // indices are normalized to what PDO expects.
+    $aNewColleagues = array_values(array_diff($aColleagues, $aOldColleagues));
+    lovd_mailNewColleagues($sUserID, $sUserName, $aNewColleagues);
 
     // Write to log.
     $sMessage = 'updated colleagues for user (' . $sUserID . ') with (' .
         join(', ', $aColleagues) . ')';
-    lovd_writeLog('Event', $sLogEvent, $sMessage);
+    lovd_writeLog('Event', LOG_EVENT, $sMessage);
 }
 
 

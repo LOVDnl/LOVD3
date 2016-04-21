@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-04-21
+ * Modified    : 2016-04-22
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1127,16 +1127,27 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
+    // Let the user share access to his objects to other users.
     // e.g.: users/000123?share_access
+
+    define('LOG_EVENT', 'ShareAccess');
 
     $sUserID = $_PE[1];
     $sUserListID = 'user_share_access_' . $sUserID;
+
+    $sNameQuery = 'SELECT
+                 u.name
+               FROM ' . TABLE_USERS . ' AS u
+               WHERE u.id = ?;';
+    $sUserFullname = $_DB->query($sNameQuery, array($sUserID))->fetchColumn();
+
 
     if (!lovd_isAuthorized('user', $sUserID)) {
         lovd_showPageAccessDenied();
         exit;
     }
 
+    $bSuccessfulUpdate = false;
     if (isset($_REQUEST['colleagues']) && is_array($_REQUEST['colleagues'])) {
         // Form submitted
 
@@ -1144,23 +1155,22 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         $aColleagues = array_unique($_REQUEST['colleagues']);
 
         try {
-            lovd_setColleagues($sUserID, $aColleagues);
+            lovd_setColleagues($sUserID, $sUserFullname, $aColleagues);
+            $bSuccessfulUpdate = true;
         } catch (Exception $e) {
             $sErrMsg = 'Something went wrong while saving the list of users. Please notify the
-                       administrators if this problem persists.';
+                        administrators if this problem persists.';
             lovd_displayError('ERR_SET_COLLEAGUES', $sErrMsg);
         }
     }
 
-    $sQuery = 'SELECT
-                 u.name
-               FROM ' . TABLE_USERS . ' AS u
-               WHERE u.id = ?;';
-    $sUserName = $_DB->query($sQuery, array($sUserID))->fetchColumn();
-
     $_T->printHeader();
     $_T->printTitle('Sharing access');
-    lovd_showInfoTable('<B>' . $sUserName . ' (' . $sUserID . ')</B> shares access to all
+    if ($bSuccessfulUpdate) {
+        lovd_showInfoTable('Saved changes successfully.', 'information');
+    }
+
+    lovd_showInfoTable('<B>' . $sUserFullname . ' (' . $sUserID . ')</B> shares access to all
                        data owned by him with the users listed below.', 'information');
 
     print(lovd_shareAccessForm($sUserID, $sUserListID));
