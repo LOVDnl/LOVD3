@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-04-20
+ * Modified    : 2016-04-21
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1246,15 +1246,28 @@ function lovd_setColleagues($sUserID, $aColleagues) {
 
 
 
+function lovd_showPageDenied() {
+    global $_T;
+
+    $_T->printHeader();
+    $_T->printTitle('Access denied');
+    lovd_showInfoTable('You do not have access to this content.', 'warning');
+    $_T->printFooter();
+}
+
+
+
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // e.g.: users/000123?share_access
 
-
-    // Fixme: check for authorization
-
     $sUserID = $_PE[1];
     $sUserListID = 'user_share_access_' . $sUserID;
+
+    if (!lovd_isAuthorized('user', $sUserID)) {
+        lovd_showPageDenied();
+        exit;
+    }
 
     if (isset($_REQUEST['colleagues']) && is_array($_REQUEST['colleagues'])) {
         // Form submitted
