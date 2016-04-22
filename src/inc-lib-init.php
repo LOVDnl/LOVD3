@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-04-08
+ * Modified    : 2016-04-22
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -630,12 +630,17 @@ function lovd_isOwner($sType, $Data, $bIncludeSharedPermissions=false)
     //         'colleagues')
     global $_AUTH, $_DB;
 
+    if (!isset($_AUTH) || !$_AUTH) {
+        // No authentication -- cannot be owner of anything.
+        return false;
+    }
+
     if (!is_array($Data)) {
         $Data = array($Data);
     }
 
     $aOwnerIds = array($_AUTH['id']);
-    if ($bIncludeSharedPermissions) {
+    if ($bIncludeSharedPermissions && isset($_AUTH['colleagues_from'])) {
         $aOwnerIds = array_merge($aOwnerIds, $_AUTH['colleagues_from']);
     }
     $sColleaguePlaceholders = '(?' . str_repeat(', ?', count($aOwnerIds) - 1) . ')';
