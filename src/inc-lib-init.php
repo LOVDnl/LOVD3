@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-04-22
+ * Modified    : 2016-04-26
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -651,26 +651,26 @@ function lovd_isOwner($sType, $Data, $bIncludeSharedPermissions=false)
         case 'variant':
             $query = 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN ' .
                 $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
-                ' OR created_by IN ' . $sColleaguePlaceholders . ')';
+                ' OR created_by = ?)';
             break;
         case 'individual':
             $query = 'SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN ' .
                 $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
-                ' OR created_by IN ' . $sColleaguePlaceholders . ')';
+                ' OR created_by = ?)';
             break;
         case 'phenotype':
             $query = 'SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' WHERE id IN ' .
                 $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
-                ' OR created_by IN ' . $sColleaguePlaceholders . ')';
+                ' OR created_by = ?)';
             break;
         case 'screening':
             $query = 'SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE id IN ' .
                 $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
-                ' OR created_by IN ' . $sColleaguePlaceholders . ')';
+                ' OR created_by = ?)';
             break;
     }
 
-    $oResult = $_DB->query($query, array_merge($Data, $aOwnerIds, $aOwnerIds));
+    $oResult = $_DB->query($query, array_merge($Data, $aOwnerIds, array($_AUTH['id'])));
     $bOwner = false;
     if ($oResult !== false) {
         $bOwner = intval($oResult->fetchColumn()) > 0;
