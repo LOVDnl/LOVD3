@@ -74,6 +74,8 @@
    confirmation warning shows how many related entities are going to be
    removed.
  * Implemented speed optimization in one specific LOVD database function.
+ * Fixed bug; The Owner information on data listings wasn't shown for users that
+   had quotes in one of the account fields.
 
 
 /**************************
