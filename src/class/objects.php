@@ -1421,7 +1421,7 @@ class LOVD_Object {
             // Also if last count was >15min ago, request again.
             $bTrueCount = false; // Indicates whether or not we are sure about the number of results.
             $sFilterMD5 = md5($WHERE . '||' . $HAVING . '||' . implode('|', $aArgs)); // A signature for the filters, NOTE that this depends on the column order!
-            // FIMXE: If this count takes longer than 1s, we don't estimate anymore.
+            // FIXME: If this count takes longer than 1s, we don't estimate anymore like we used to (see line 1543).
             if (true || !isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
                 $t = microtime(true);
                 $nTotal = $this->getRowCountForViewList($this->aSQLViewList, $aArgs);
