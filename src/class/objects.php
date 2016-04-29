@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-24
+ * Modified    : 2016-04-28
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -865,7 +865,10 @@ class LOVD_Object {
                     if (count($aLinkData) >= 6) {
                         list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $aLinkData;
                         // Call the tooltip function with a request to move the tooltip left, because "Owner" is often the last column in the table, and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
-                        $zData['owned_by_'] .= (!$zData['owned_by_']? '' : ', ') . '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>\', this, [-200, 0]);">' . $sName . '</SPAN>';
+                        $zData['owned_by_'] .= (!$zData['owned_by_']? '' : ', ') .
+                            '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
+                            addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') .
+                            '\', this, [-200, 0]);">' . $sName . '</SPAN>';
                     }
                 }
             }
@@ -1180,7 +1183,7 @@ class LOVD_Object {
                 if ($sColType == 'DATETIME') {
                     $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($_GET['search_' . $sColumn]));
                 } else {
-                    $sSearch = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
+                    $sSearch = preg_replace_callback('/("[^"]*")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
                 }
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {

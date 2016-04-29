@@ -1,15 +1,11 @@
 <?php
-class Example extends PHPUnit_Extensions_SeleniumTestCase
-{
-  protected function setUp()
-  {
-    $this->setBrowser("*chrome");
-    $this->setBrowserUrl("https://localhost/svn/LOVD3/trunk/src/install/");
-  }
+require_once 'LOVDSeleniumBaseTestCase.php';
 
-  public function testMyTestCase()
+class CreateUserCollaboratorTest extends LOVDSeleniumBaseTestCase
+{
+  public function testCreateUserCollaborator()
   {
-    $this->open("/svn/LOVD3/trunk/src/users?create&no_orcid");
+    $this->open(ROOT_URL . "/src/users?create&no_orcid");
     $this->type("name=name", "Test Collaborator");
     $this->type("name=institute", "Leiden University Medical Center");
     $this->type("name=department", "Human Genetics");

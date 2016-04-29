@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2015-09-21
- * For LOVD    : 3.0-14
+ * Modified    : 2016-02-17
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -209,7 +210,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'skip',
                         array('', '', 'note', 'The following two fields only apply if the proxy server requires authentication.'),
                         array('Proxy server username', 'In case the proxy server requires authentication, please enter the required username here.', 'text', 'proxy_username', 20),
-                        array('Proxy server password', 'In case the proxy server requires authentication, please enter the required password here.', 'password', 'proxy_password', 20),
+                        array('Proxy server password', 'In case the proxy server requires authentication, please enter the required password here.', 'password', 'proxy_password', 20, true),
                         'hr',
                         'skip',
                         'skip',

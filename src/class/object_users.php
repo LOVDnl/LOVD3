@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-09
+ * Modified    : 2016-02-17
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -348,8 +348,8 @@ class LOVD_User extends LOVD_Object {
                         array('Email address(es), one per line', '', 'textarea', 'email', 30, 3),
                         array('Telephone (optional)', '', 'text', 'telephone', 20),
           'username' => array('Username', '', 'text', 'username', 20),
-            'passwd' => array('Password', 'A proper password is at least 4 characters long and contains at least one number or special character.', 'password', 'password_1', 20),
-    'passwd_confirm' => array('Password (confirm)', '', 'password', 'password_2', 20),
+            'passwd' => array('Password', 'A proper password is at least 4 characters long and contains at least one number or special character.', 'password', 'password_1', 20, true),
+    'passwd_confirm' => array('Password (confirm)', '', 'password', 'password_2', 20, true),
      'passwd_change' => array('Must change password at next logon', '', 'checkbox', 'password_force_change'),
                         'hr',
                         'skip',
@@ -393,8 +393,8 @@ class LOVD_User extends LOVD_Object {
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
        'change_self' => array('Current password', '', 'password', 'password', 20),
-                        array('New password', '', 'password', 'password_1', 20),
-                        array('New password (confirm)', '', 'password', 'password_2', 20),
+                        array('New password', '', 'password', 'password_1', 20, true),
+                        array('New password (confirm)', '', 'password', 'password_2', 20, true),
                         'skip',
       'change_other' => array('Enter your password for authorization', '', 'password', 'password', 20));
             if ($_PE[1] == $_AUTH['id']) {
