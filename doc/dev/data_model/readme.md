@@ -1,0 +1,33 @@
+
+# LOVD3 data model
+
+Tables and foreign key relations for LOVD v3.0-14. Files were generated
+with [SchemaSpy](http://schemaspy.sourceforge.net/)
+
+* [active_columns](active_columns.svg)
+* [alleles](alleles.svg)
+* [chromosomes](chromosomes.svg)
+* [columns2links](columns2links.svg)
+* [columns](columns.svg)
+* [countries](countries.svg)
+* [data_status](data_status.svg)
+* [diseases](diseases.svg)
+* [external_sources](external_sources.svg)
+* [genes2diseases](genes2diseases.svg)
+* [genes](genes.svg)
+* [individuals2diseases](individuals2diseases.svg)
+* [individuals](individuals.svg)
+* [links](links.svg)
+* [logs](logs.svg)
+* [modules](modules.svg)
+* [phenotypes](phenotypes.svg)
+* [screenings2genes](screenings2genes.svg)
+* [screenings2variants](screenings2variants.svg)
+* [screenings](screenings.svg)
+* [shared_columns](shared_columns.svg)
+* [transcripts](transcripts.svg)
+* [users2genes](users2genes.svg)
+* [users](users.svg)
+* [variant_effect](variant_effect.svg)
+* [variants_on_transcripts](variants_on_transcripts.svg)
+* [variants](variants.svg)
