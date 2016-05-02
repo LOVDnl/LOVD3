@@ -4,7 +4,7 @@ Did you run all unit tests?
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
 If bugs have been closed, mark them in the changelog.
-Commit, svn update, svn log, create svn tag.
+git pull, git commit, git log, create git tag.
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
 Update download.php, news.php (mark closed bugs), package_update.php, sync docs dirs. Update trac. Update Facebook & twitter.
