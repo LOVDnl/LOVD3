@@ -131,6 +131,22 @@ class LOVD_Object {
 
 
 
+    function buildSQL ($aSQL)
+    {
+        // Takes an $aSQL as commonly used in LOVD objects, and turns it into a normal SQL string.
+        $sSQLOut = '';
+        foreach ($aSQL as $sClause => $sValue) {
+            if ($sValue !== '') {
+                $sSQLOut .= (!$sSQLOut? '' : ' ') . str_replace('_', ' ', $sClause) . ' ' . $sValue;
+            }
+        }
+        return $sSQLOut;
+    }
+
+
+
+
+
     function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
@@ -366,6 +382,289 @@ class LOVD_Object {
         // Returns the $this->aFormData variable, to build a form.
         return $this->aFormData;
     }
+
+
+
+
+
+    function getRowCountForViewList ($aSQL, $aArgs = array(), $bDebug = false)
+    {
+        // Attempt to speed up the "counting" part of the VL queries.
+        // ViewList queries are counting the number of total hits using the
+        // MySQL extension SQL_CALC_FOUND_ROWS. This works well for queries
+        // sorted on non-indexed fields, where the query itself also requires a
+        // full scan through the results. However,for queries that are normally
+        // fast when LIMITed, this slows down the query a lot.
+        // This function here will attempt to reduce the given query to a simple
+        // SELECT COUNT(*) statement with as few joins as needed, resulting in
+        // an as fast query as possible.
+        // The $bDebug argument lets this function just return the SQL that is produced.
+        global $_DB, $_INI;
+
+        // If we don't have a HAVING clause, we can simply drop the SELECT information.
+        $aColumnsNeeded = array();
+        $aTablesNeeded = array();
+        if (!$aSQL['GROUP_BY'] && !$aSQL['HAVING'] && !$aSQL['ORDER_BY']) {
+            $aSQL['SELECT'] = '';
+        } else {
+            if ($aSQL['GROUP_BY']) {
+                // We do have GROUP BY... We'll need to keep only the columns in the SELECT that are aliases,
+                // but non-alias columns that are used for grouping must also be kept in the JOIN!
+                // Parse GROUP BY! Can be a mix of real columns and aliases.
+                if (preg_match_all('/\b(?:(\w+)\.)?(\w+)\b/', $aSQL['GROUP_BY'], $aRegs)) {
+                    // This code is the same as for the ORDER BY parsing.
+                    for ($i = 0; $i < count($aRegs[0]); $i ++) {
+                        // 1: table referred to (real columns without alias only);
+                        // 2: alias, or column name in given table.
+                        if ($aRegs[1][$i]) {
+                            // Real table. We don't need this in the SELECT unless it's also in the HAVING, but we definitely need this in the JOIN.
+                            $aTablesNeeded[] = $aRegs[1][$i];
+                        } elseif ($aRegs[2][$i]) {
+                            // Alias only. Keep this column for the SELECT. When parsing the SELECT, we'll find out from which table(s) it is.
+                            $aColumnsNeeded[] = $aRegs[2][$i];
+                        }
+                    }
+                }
+            }
+            if ($aSQL['HAVING']) {
+                // We do have HAVING, so now we'll have to see what we need to keep, the rest we toss out.
+                // Parse HAVING! These are no fields directly from tables, but all aliases, so this parsing is different from parsing WHERE.
+                // We don't care about AND/OR or anything... we just want the aliases.
+                if (preg_match_all('/\b(\w+)\s(?:[!><=]+|IS (?:NOT )?NULL|LIKE )/', $aSQL['HAVING'], $aRegs)) {
+                    $aColumnsNeeded = array_merge($aColumnsNeeded, $aRegs[1]);
+                }
+            }
+            if ($aSQL['ORDER_BY']) {
+                // We do have ORDER BY... We'll need to keep only the columns in the SELECT that are aliases,
+                // but non-alias columns that are used for sorting must also be kept in the JOIN!
+                // Parse ORDER BY! Can be a mix of real columns and aliases.
+                // Adding a comma in the end, so we can use a simpler pattern that always ends with one.
+                // FIXME: Wait, why are we parsing the ORDER_BY??? We can just drop it... and drop the cols which it uses... right?
+                if (false && preg_match_all('/\b(?:(\w+)\.)?(\w+)(?:\s(?:ASC|DESC))?,/', $aSQL['ORDER_BY'] . ',', $aRegs)) {
+                    // This code is the same as for the GROUP BY parsing.
+                    for ($i = 0; $i < count($aRegs[0]); $i ++) {
+                        // 1: table referred to (real columns without alias only);
+                        // 2: alias, or column name in given table.
+                        if ($aRegs[1][$i]) {
+                            // Real table. We don't need this in the SELECT unless it's also in the HAVING, but we definitely need this in the JOIN.
+                            $aTablesNeeded[] = $aRegs[1][$i];
+                        } elseif ($aRegs[2][$i]) {
+                            // Alias only. Keep this column for the SELECT. When parsing the SELECT, we'll find out from which table it is.
+                            $aColumnsNeeded[] = $aRegs[2][$i];
+                        }
+                    }
+                }
+                // We never need an ORDER BY to get the number of results, so...
+                $aSQL['ORDER_BY'] = '';
+            }
+        }
+        $aColumnsNeeded = array_unique($aColumnsNeeded);
+        if (!$aColumnsNeeded) {
+            $aSQL['SELECT'] = '';
+        }
+
+
+
+        // Now that we know which columns we should keep, we can parse the SELECT clause to see what we can remove.
+        $aColumnsUsed = array(); // Will contain limited information on the columns defined in the SELECT syntax.
+        if ($aSQL['SELECT'] && $aColumnsNeeded) {
+            // Analyzing the SELECT. This is quite difficult as we can have simple SELECTs but also really complicated ones,
+            // such as GROUP_CONCAT() or subselects. These should all be parsed and needed tables should be identified.
+            //                    t.* || t.col                    [t.col || "value" || (t.col ... val) || FUNCTION() || CASE ... END] AS alias
+            if (preg_match_all('/(([a-z0-9_]+)\.(?:\*|[a-z0-9_]+)|(?:(?:([a-z0-9_]+)\.[a-z0-9_]+|".*"|[A-Z_]*\(.+\)|CASE .+ END) AS +([a-z0-9_]+|`[A-Za-z0-9_\/]+`)))(?:,|$)/U', $aSQL['SELECT'], $aRegs)) {
+                for ($i = 0; $i < count($aRegs[0]); $i ++) {
+                    // First we'll store the column information, later we'll loop though it to see which tables they refer to.
+                    // 1: entire SELECT string incl. possible alias;
+                    // 2: table referred to (fields without alias only);
+                    // 3: table referred to (simple fields with alias only);
+                    // 4: alias, if present.
+                    // Try to see which table(s) is/are used here.
+                    $aTables = array();
+                    $sTable = ($aRegs[2][$i]? $aRegs[2][$i] : $aRegs[3][$i]);
+                    if ($sTable) {
+                        $aTables[] = $sTable;
+                    } else {
+                        // OK, this was no simple SELECT string. This was GROUP_CONCAT, COUNT() or similar.
+                        // Especially (GROUP_)CONCAT can contain quite some different columns and even tables.
+                        // Analyzing the field definition... We don't care about its structure or anything... we just want tables.
+                        // There should *always* be table aliases, so it's going to be easy.
+                        // With subqueries however, this will fail a bit. It will find table aliases that may be of tables in the subquery.
+                        //  However, in the worst case scenario it will keep tables that are not necessary to be kept.
+                        if (preg_match_all('/\b(\w+)\.(?:`|[A-Za-z]|\*)/', $aRegs[1][$i], $aRegsTables)) {
+                            $aTables = array_unique($aRegsTables[1]);
+                        }
+                    }
+                    // Key: alias or, when not available, the SELECT statement (table.col).
+                    $aColumnsUsed[($aRegs[4][$i]? $aRegs[4][$i] : $aRegs[1][$i])] = array(
+                        'SQL' => $aRegs[1][$i],
+                        'tables' => $aTables,
+                    );
+                    // We don't need more info anyway.
+                }
+            }
+
+            // Now, loop the parsed columns, check which fields are needed, rebuild the SELECT statement, and store which tables will be needed.
+            $aSQL['SELECT'] = '';
+            foreach ($aColumnsUsed as $sCol => $aCol) {
+                if (in_array($sCol, $aColumnsNeeded)) {
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . $aCol['SQL'];
+                    $aTablesNeeded = array_merge($aTablesNeeded, $aCol['tables']);
+                }
+            }
+        }
+
+
+
+        // Analyzing the WHERE... We don't care about AND/OR or anything... we just want tables.
+        // WHERE clauses *always* contain the table aliases, so it's going to be easy.
+        if (preg_match_all('/\b(\w+)\.(?:`|[A-Za-z])/', $aSQL['WHERE'], $aRegs)) {
+            $aTablesNeeded = array_merge($aTablesNeeded, $aRegs[1]);
+        }
+
+        // When we're running filters on the custom columns, we never use a table alias,
+        // because we don't know where the column comes from.
+        // To solve this, we must parse the column and fetch the used alias from the query.
+        // We're specifically looking for custom columns *not* prefixed by a table alias.
+        if (preg_match_all('/[^.](?:`(\w+)\/[A-Za-z0-9_\/]+`)/', $aSQL['WHERE'], $aRegs)) {
+            // To not reproduce code, we'll use lovd_getTableInfoByCategory().
+            if (!function_exists('lovd_getTableInfoByCategory')) {
+                // FIXME: Yes, this is messy. This function is getting used in a decent number of places,
+                //  and therefore perhaps we should pull it into inc-lib-init.php?
+                require ROOT_PATH . 'inc-lib-columns.php';
+            }
+            // Loop columns and find tables.
+            foreach ($aRegs[1] as $sCategory) {
+                $aTableInfo = lovd_getTableInfoByCategory($sCategory);
+                if (isset($aTableInfo['table_sql']) && preg_match_all('/' . $aTableInfo['table_sql'] . ' AS (\w+)\b/i', $aSQL['FROM'], $aRegsTables)) {
+                    $aTablesNeeded = array_merge($aTablesNeeded, $aRegsTables[1]);
+                } else {
+                    // OK, this really shouldn't happen. Either the column wasn't a
+                    // category we recognized, or the SQL was too complicated?
+                    // Let's log this.
+                    lovd_writeLog('Error', 'LOVD-Lib', 'LOVD_Object::getRowCountForViewList() - Function identified custom column category ' . $sCategory . ', but couldn\'t find corresponding table alias in query.' . "\n" . 'URL: ' . preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . "\n" . 'From: ' . $aSQL['FROM']);
+                }
+            }
+        }
+        $aTablesNeeded = array_unique($aTablesNeeded);
+
+
+
+        // Now, SELECT should be as small as possible. What's left in the SELECT is needed.
+        // See which tables we can't remove from the JOIN because they're in SELECT, or because they're in the WHERE.
+        // (INNER JOINs will never be removed).
+        // Now shorten the JOIN as much as possible!
+        // Tables *always* use aliases so we'll just search for those.
+        // While matching, we add a space before the FROM so that we can match the first table as well, but it won't have a JOIN statement captured.
+        $aTablesUsed = array();
+        if (preg_match_all('/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9]+)\s/', ' ' . $aSQL['FROM'], $aRegs)) {
+            for ($i = 0; $i < count($aRegs[0]); $i ++) {
+                // 1: JOIN syntax;
+                // 2: full table name;
+                // 3: table alias.
+                $aTablesUsed[$aRegs[3][$i]] = array(
+                    'name' => $aRegs[2][$i], // We don't actually use the name, but well...
+                    'join' => $aRegs[1][$i],
+                );
+            }
+        }
+
+        // Loop these tables in reverse, and remove JOINs as much as possible!
+        foreach (array_reverse(array_keys($aTablesUsed)) as $sTableAlias) {
+            if (!$aTablesUsed[$sTableAlias]['join'] || in_array($sTableAlias, $aTablesNeeded)) {
+                // We've reached a table that we need, abort now.
+                break;
+                // FIXME: Actually, it's possible that more tables can be left out, although in most cases we're really done now.
+                //   To find out, we'd actually need to analyze which tables we're joining together.
+            }
+            // OK, this table is not needed. Get rid of it.
+            if ($aTablesUsed[$sTableAlias]['join'] != 'INNER JOIN' && ($nPosition = strrpos($aSQL['FROM'], $aTablesUsed[$sTableAlias]['join'])) !== false) {
+                $aSQL['FROM'] = rtrim(substr($aSQL['FROM'], 0, $nPosition));
+                unset($aTablesUsed[$sTableAlias]);
+            }
+        }
+
+
+
+        // If we have no SELECT left, we can surely do a simple SELECT COUNT(*) FROM ... or
+        // a SELECT COUNT(*) FROM (SELECT ...)A. We can't do a simple SELECT COUNT(*) if
+        // we have a GROUP_BY, because it will separate the counts.
+        // In case we still have a SELECT, and we create a subquery while the
+        // SELECT has double columns (happens rarely), we get a query error. In
+        // that case we could drop the first column's declaration, or otherwise
+        // keep using the SQL_CALC_FOUND_ROWS().
+        // For now, we'll just take our chances. If this query will fail, LOVD
+        // will fall back on the original SQL_CALC_FOUND_ROWS() method.
+        $bInSubQuery = false;
+        if (!$aSQL['SELECT']) {
+            // If we just have one table left, we might be able to drop the GROUP BY.
+            // If so, we can use a simple COUNT(*) query instead of a nested one.
+            // In 99%, if not all, of the cases we can just drop the GROUP BY since
+            // we "always" put it on the first table's ID, but just to be sure:
+            if (count($aTablesUsed) == 1 && $aSQL['GROUP_BY'] == current(array_keys($aTablesUsed)) . '.id') {
+                // Using one table, and grouping on its ID.
+                $aSQL['GROUP_BY'] = '';
+            }
+
+            if (!$aSQL['GROUP_BY']) {
+                // Simple SELECT COUNT(*) FROM ...
+                $aSQL['SELECT'] = 'COUNT(*)';
+            } else {
+                // We'll have to create a bigger query around this...
+                // We'll build that query in the end.
+                $bInSubQuery = true;
+                $aSQL['SELECT'] = '1';
+            }
+        } else {
+            // SELECT is left (meaning we had a HAVING), we have to use a subquery!
+            $bInSubQuery = true;
+        }
+
+        // Delete LIMIT, we don't want that anymore...
+        $aSQL['LIMIT'] = '';
+
+
+
+        $sSQLOut = $this->buildSQL($aSQL);
+        // Now, build the subquery if we need it.
+        if ($bInSubQuery) {
+            $sSQLOut = 'SELECT COUNT(*) FROM (' . $sSQLOut . ')A';
+        }
+
+        if ($bDebug) {
+            return $sSQLOut;
+        }
+
+        // Run the query, fetch the result and return.
+        // We'll return false when we failed.
+        $nCount = false;
+        $qCount = $_DB->query($sSQLOut, $aArgs, false);
+        if ($qCount !== false) {
+            $nCount = $qCount->fetchColumn();
+        }
+
+        if ($nCount === false) {
+            // We failed, log this. Actually, why aren't query errors logged if they're not fatal?
+            lovd_queryError('QueryOptimizer', $sSQLOut, 'Error in ' . __FUNCTION__ . '() while executing optimized query.', false);
+
+            // As a fallback, use SQL_CALC_FOUND_ROWS() for MySQL instances, or
+            // a count() on a full result set otherwise. The latter is super
+            // inefficient, and only meant for small SQLite databases.
+            if ($_INI['database']['driver'] == 'mysql') {
+                $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
+                $this->aSQLViewList['LIMIT'] = '0';
+                $_DB->query($this->buildSQL($this->aSQLViewList), $aArgs);
+                $nCount = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+            } else {
+                // Super inefficient, only for low-volume (sqlite) databases!
+                $nCount = count($_DB->query($this->buildSQL($this->aSQLViewList), $aArgs)->fetchAllColumn());
+            }
+        }
+
+        return $nCount;
+    }
+
+
+
 
 
 
@@ -1092,9 +1391,11 @@ class LOVD_Object {
             $aSessionViewList['row_link'] = $this->sRowLink; // Implies array creation.
         }
 
-        $nTotal = 0;
+        $nTotal = 0; // Overwrites the previous $nTotal.
         if (!count($aBadSyntaxColumns)) {
-            // Using the SQL_CALC_FOUND_ROWS technique to find the amount of hits in one go.
+            // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
+            // function, but we'll try to avoid that due to extreme slowness in some cases.
+            // getRowCountForViewList() will take care of that.
             // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
             // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
             // Last checked 2010-01-25, by Ivo Fokkema.
@@ -1111,41 +1412,19 @@ class LOVD_Object {
             }
 
             // For ALL viewlists, we store the number of hits that we get, including the current filters.
-            // For large tables, using SQL_CALC_FOUND_ROWS takes a lot of time, also still quite a lot for smaller result sets, since the entire table needs to be read out.
-            //   Unfortunately, we can't automatically get us an SQL_CALC_FOUND_ROWS which leaves out unnecessary joins. Is there a way to do this?
-            // ORDER BY is absolutely killing on large result sets, but when used you might as well use SQL_CALC_FOUND_ROWS, since it needs to read the entire table anyways.
-            // So, long time to retrieve count (>1s) => no SQL_CALC_FOUND_ROWS and no sort.
+            // For large tables, getting a count can take a long time (especially when using SQL_CALC_FOUND_ROWS).
+            // ORDER BY is absolutely killing on large result sets.
+            // So, long time to retrieve count (>1s) => don't count again, and no sort.
             // Count OK (<=1s), but big result set (250K) => no sort. ($_SETT['lists']['max_sortable_rows'])
 
-            // 1) If we don't have a count in memory, request count separately, using SQL_CALC_FOUND_ROWS, since it handles all complex queries.
-            // Also if last count was >30min ago, request again.
+            // 1) If we don't have a count in memory, request count separately.
+            // Also if last count was >15min ago, request again.
             $bTrueCount = false; // Indicates whether or not we are sure about the number of results.
             $sFilterMD5 = md5($WHERE . '||' . $HAVING . '||' . implode('|', $aArgs)); // A signature for the filters, NOTE that this depends on the column order!
-            if (!isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
+            // FIXME: If this count takes longer than 1s, we don't estimate anymore like we used to (see line 1543).
+            if (true || !isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
                 $t = microtime(true);
-                if ($_INI['database']['driver'] == 'mysql') {
-                    $_DB->query('SELECT SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'] .
-                        ' FROM ' . $this->aSQLViewList['FROM'] .
-                        (!$this->aSQLViewList['WHERE']? '' :
-                            ' WHERE ' . $this->aSQLViewList['WHERE']) .
-                        (!$this->aSQLViewList['GROUP_BY']? '' :
-                            ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
-                        (!$this->aSQLViewList['HAVING']? '' :
-                            ' HAVING ' . $this->aSQLViewList['HAVING']) .
-                        ' LIMIT 0', $aArgs);
-                    // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
-                    $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
-                } else {
-                    // Super inefficient, only for low-volume (sqlite) databases!
-                    $nTotal = count($_DB->query('SELECT ' . $this->aSQLViewList['SELECT'] .
-                        ' FROM ' . $this->aSQLViewList['FROM'] .
-                        (!$this->aSQLViewList['WHERE']? '' :
-                            ' WHERE ' . $this->aSQLViewList['WHERE']) .
-                        (!$this->aSQLViewList['GROUP_BY']? '' :
-                            ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
-                        (!$this->aSQLViewList['HAVING']? '' :
-                            ' HAVING ' . $this->aSQLViewList['HAVING']), $aArgs)->fetchAllColumn());
-                }
+                $nTotal = $this->getRowCountForViewList($this->aSQLViewList, $aArgs);
                 $tQ = microtime(true) - $t;
                 $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
                 $aSessionViewList['counts'][$sFilterMD5]['t'] = $tQ;
@@ -1157,6 +1436,7 @@ class LOVD_Object {
 
             // Manipulate SELECT to include SQL_CALC_FOUND_ROWS.
             $bSQLCALCFOUNDROWS = false;
+            // TODO: Remove this block. For now, this will be bypassed because $bTrueCount will always be true.
             if (!$bTrueCount && $_INI['database']['driver'] == 'mysql' && ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 || $aSessionViewList['counts'][$sFilterMD5]['d'] < (time() - (60*15)))) {
                 // But only if we're using MySQL and it takes less than a second to get the correct number of results, or it's been more than 15 minutes since the last check!
                 $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
