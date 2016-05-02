@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-04-29
+ * Modified    : 2016-05-02
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -137,6 +137,7 @@ class LOVD_Object {
         global $_AUTH, $_SETT;
 
         $aForm = $this->getForm();
+        $aFormInfo = array();
         if ($aForm) {
             $aFormInfo = $aForm[0];
             if (!in_array($aFormInfo[0], array('GET', 'POST'))) {
@@ -231,10 +232,13 @@ class LOVD_Object {
                 }
             }
         }
-        
+
+        // Check all fields that we receive for data type and maximum length.
+        // No longer to this through $aForm, because when importing,
+        //  we do have data to check but no $aForm entry linked to it.
         foreach ($aData as $sFieldname => $sFieldvalue) {
             $sNameClean = preg_replace('/^\d{' . $_SETT['objectid_length']['transcripts'] . '}_/', '', $sFieldname); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
-            if (array_key_exists($sFieldname, $aHeaders)) {
+            if (isset($aHeaders[$sFieldname])) {
                 $sHeader = $aHeaders[$sFieldname];
             } else {
                 $sHeader = $sFieldname;
@@ -268,12 +272,12 @@ class LOVD_Object {
                     switch ($sMySQLType) {
                         case 'DATE':
                             if (!lovd_matchDate($sFieldvalue)) {
-                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a date in the format YYYY-MM-DD.');
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a date in the format YYYY-MM-DD, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
                             }
                             break;
                         case 'DATETIME':
                             if (!preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}\:[0-9]{2})?$/', $sFieldvalue)) {
-                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time, in the format YYYY-MM-DD HH:MM:SS.');
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time, in the format YYYY-MM-DD HH:MM:SS, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
                             }
                             break;
                         case 'DECIMAL':
@@ -281,13 +285,13 @@ class LOVD_Object {
                         case 'FLOAT':
                         case 'FLOAT_UNSIGNED':
                             if (!is_numeric($sFieldvalue) || (substr($sMySQLType, -8) == 'UNSIGNED' && $sFieldvalue < 0)) {
-                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a' . (substr($sMySQLType, -8) != 'UNSIGNED' ? '' : ' positive') . ' number.');
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a' . (substr($sMySQLType, -8) != 'UNSIGNED' ? '' : ' positive') . ' number, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
                             }
                             break;
                         case 'INT':
                         case 'INT_UNSIGNED':
                             if (!preg_match('/^' . ($sMySQLType != 'INT' ? '' : '\-?') . '[0-9]*$/', $sFieldvalue)) {
-                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a' . ($sMySQLType == 'INT' ? 'n' : ' positive') . ' integer.');
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a' . ($sMySQLType == 'INT' ? 'n' : ' positive') . ' integer, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
                             }
                             break;
                     }

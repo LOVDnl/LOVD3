@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-04-29
+ * Modified    : 2016-05-02
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -117,27 +117,27 @@ function lovd_calculateFieldDifferences ($zData, &$aLine)
         // Below we take care of fields that exist in the database but not in the import file.
         if (isset($aLine[$sCol])) {
             if (strval($sValue) === $aLine[$sCol]) {
-                //Database and import file have the same value, continue to the next field.
-                continue;                
+                // Database and import file have the same value, continue to the next field.
+                continue;
             }
-            
-            // We have to performe an extra check for id's because the import 
-            // file and database can have difference in leading zeros.
+
+            // We have to perform an extra check for IDs because the import
+            // file and database can have a difference in leading zeros.
             if ($aSection['object']->sObject === 'Gene' &&
                 $sCol === 'id') {
-                // The id in section genes is the only id which is not an integer.
-                // Therefor we don't have to do an extra check on gene id and we 
-                // can continue. 
+                // The ID in section genes is the only ID which is not an integer.
+                // Therefore, we don't have to do an extra check on gene ID and we
+                // can continue.
                 continue;
             }
             if (!empty($sValue) &&
                 ctype_digit($sValue) &&
-                (int)$sValue === (int)$aLine[$sCol]){
-                //Database and import file have the same value, continue to the next field.
+                (int) $sValue === (int) $aLine[$sCol]) {
+                // Database and import file have the same value, continue to the next field.
                 continue;
             }
-            
-            // The field is different in the import file and in the database. 
+
+            // The field is different in the import file and in the database.
             // Now we check what we will do with this difference:
             // ignore = true; Value in import file is NOT saved in database
             // ignore = false; Value in import file is saved in database
@@ -570,9 +570,11 @@ if (POST) {
                                         'individualid' => array('message' => 'Not allowed to change the individual.', 'error_type' => 'hard'),
                                     )
                                 );
-                            // We don't create an object here, because we need to do that per disease. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
+                            // We don't create an object here, because we need to do that per disease (since different diseases
+                            // may have different custom columns). This means the field headers are not checked for
+                            // mandatory fields. Mandatory fields are still checked below with a disease-specific
+                            // instantiation of LOVD_Phenotype.
                             $aSection['objects'] = array();
-                            $aSection['object'] = new LOVD_Phenotype();
                             break;
                         case 'Screenings':
                             // The following columns are allowed for update: variants_found, owned_by.
