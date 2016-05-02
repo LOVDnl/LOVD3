@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-02-03
+ * Modified    : 2016-05-02
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -116,27 +117,27 @@ function lovd_calculateFieldDifferences ($zData, &$aLine)
         // Below we take care of fields that exist in the database but not in the import file.
         if (isset($aLine[$sCol])) {
             if (strval($sValue) === $aLine[$sCol]) {
-                //Database and import file have the same value, continue to the next field.
-                continue;                
+                // Database and import file have the same value, continue to the next field.
+                continue;
             }
-            
-            // We have to performe an extra check for id's because the import 
-            // file and database can have difference in leading zeros.
+
+            // We have to perform an extra check for IDs because the import
+            // file and database can have a difference in leading zeros.
             if ($aSection['object']->sObject === 'Gene' &&
                 $sCol === 'id') {
-                // The id in section genes is the only id which is not an integer.
-                // Therefor we don't have to do an extra check on gene id and we 
-                // can continue. 
+                // The ID in section genes is the only ID which is not an integer.
+                // Therefore, we don't have to do an extra check on gene ID and we
+                // can continue.
                 continue;
             }
             if (!empty($sValue) &&
                 ctype_digit($sValue) &&
-                (int)$sValue === (int)$aLine[$sCol]){
-                //Database and import file have the same value, continue to the next field.
+                (int) $sValue === (int) $aLine[$sCol]) {
+                // Database and import file have the same value, continue to the next field.
                 continue;
             }
-            
-            // The field is different in the import file and in the database. 
+
+            // The field is different in the import file and in the database.
             // Now we check what we will do with this difference:
             // ignore = true; Value in import file is NOT saved in database
             // ignore = false; Value in import file is saved in database
@@ -542,7 +543,9 @@ if (POST) {
                             $aSection['object'] = new LOVD_Disease();
                             break;
                         case 'Genes_To_Diseases':
+                            require_once ROOT_PATH . 'class/object_basic.php';
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_GEN2DIS';
+                            $aSection['object'] = new LOVD_Basic($sTableName);
                             break;
                         case 'Individuals':
                             // The following columns are allowed for update: fatherid, motherid, panelid, panel_size, owned_by, statusid.
@@ -550,7 +553,9 @@ if (POST) {
                             $aSection['object'] = new LOVD_Individual();
                             break;
                         case 'Individuals_To_Diseases':
+                            require_once ROOT_PATH . 'class/object_basic.php';
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_IND2DIS';
+                            $aSection['object'] = new LOVD_Basic($sTableName);
                             break;
                         case 'Phenotypes':
                             // The following columns are allowed for update: owned_by, statusid.
@@ -565,7 +570,10 @@ if (POST) {
                                         'individualid' => array('message' => 'Not allowed to change the individual.', 'error_type' => 'hard'),
                                     )
                                 );
-                            // We don't create an object here, because we need to do that per disease. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
+                            // We don't create an object here, because we need to do that per disease (since different diseases
+                            // may have different custom columns). This means the field headers are not checked for
+                            // mandatory fields. Mandatory fields are still checked below with a disease-specific
+                            // instantiation of LOVD_Phenotype.
                             $aSection['objects'] = array();
                             break;
                         case 'Screenings':
@@ -582,7 +590,9 @@ if (POST) {
                             $aSection['object'] = new LOVD_Screening();
                             break;
                         case 'Screenings_To_Genes':
+                            require_once ROOT_PATH . 'class/object_basic.php';
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_SCR2GENE';
+                            $aSection['object'] = new LOVD_Basic($sTableName);
                             break;
                         case 'Variants_On_Genome':
                             // The following columns are allowed for update: effectid, type, mapping_flags, average_frequency.
@@ -617,11 +627,16 @@ if (POST) {
                                         'position_c_end_intron' => array('message' => 'Not allowed to change the intronic end position.', 'error_type' => 'hard'),
                                     )
                                 );
-                            // We don't create an object here, because we need to do that per gene. This means we don't have a general check for mandatory columns, which is not so much a problem I think.
+                            // We don't create an object here, because we need to do that per gene (since different genes
+                            // may have different custom columns). This means the field headers are not checked for
+                            // mandatory fields. Mandatory fields are still checked below with a gene-specific
+                            // instantiation of LOVD_TranscriptVariant.
                             $aSection['objects'] = array();
                             break;
                         case 'Screenings_To_Variants':
+                            require_once ROOT_PATH . 'class/object_basic.php';
                             $sTableName = $aParsed[$sCurrentSection]['table_name'] = 'TABLE_SCR2VAR';
+                            $aSection['object'] = new LOVD_Basic($sTableName);
                             break;
                         default:
                             // Category not recognized!
@@ -995,9 +1010,6 @@ if (POST) {
                 if ($sCurrentSection == 'Columns' || $sCurrentSection == 'Genes') {
                     $ID = $aLine['id'];
                 } else {
-                    if (!ctype_digit($aLine['id'])) {
-                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ID "' . htmlspecialchars($aLine['id']) . '" is not a numerical value.');
-                    }
                     $ID = (int) $aLine['id'];
                 }
                 if (isset($aSection['data'][$ID])) {
@@ -1517,12 +1529,6 @@ if (POST) {
                     break;
 
                 case 'Variants_On_Genome':
-                    foreach (array('position_g_start', 'position_g_end', 'mapping_flags') as $sCol) {
-                        if ($aLine[$sCol] && !ctype_digit($aLine[$sCol])) {
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Invalid value in the \'' . $sCol . '\' field: "' . htmlspecialchars($aLine[$sCol]) . '" is not a numerical value.');
-                        }
-                    }
-
                     if ($zData) {
                         if ($nDifferences) {
                             $aLine['todo'] = 'update'; // OK, update only when there are differences.
@@ -1562,13 +1568,6 @@ if (POST) {
                     if ($aLine['id'] && !$bVariantInFile && !$bVariantInDB) {
                         // Variant does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Genomic Variant "' . htmlspecialchars($aLine['variantid']) . '" does not exist in the database and is not defined in this import file.');
-                    }
-
-                    foreach (array('position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron') as $sCol) {
-                        if ($aLine[$sCol] && !is_numeric($aLine[$sCol])) {
-                            // No ctype_digit() here, because that doesn't match negative numbers.
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Invalid value in the \'' . $sCol . '\' field: "' . htmlspecialchars($aLine[$sCol]) . '" is not a numerical value.');
-                        }
                     }
 
                     if ($zData) {

@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-04-28
+ * Modified    : 2016-05-02
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -153,21 +153,26 @@ class LOVD_Object {
         global $_AUTH, $_SETT;
 
         $aForm = $this->getForm();
-        if (!$aForm) {
-            return false;
-        }
-        $aFormInfo = $aForm[0];
-        if (!in_array($aFormInfo[0], array('GET', 'POST'))) {
-            // We're not working on a full form array, possibly an incomplete VOT form.
-            $aFormInfo = array('POST');
+        $aFormInfo = array();
+        if ($aForm) {
+            $aFormInfo = $aForm[0];
+            if (!in_array($aFormInfo[0], array('GET', 'POST'))) {
+                // We're not working on a full form array, possibly an incomplete VOT form.
+                $aFormInfo = array('POST');
+            } else {
+                unset($aForm[0]);
+            }
         } else {
-            unset($aForm[0]);
+            // No form information available.
+            $aForm = array();
         }
 
         if (lovd_getProjectFile() != '/import.php') {
             // Always mandatory... unless importing.
             $this->aCheckMandatory[] = 'password';
         }
+
+        $aHeaders = array();
 
         // Validate form by looking at the form itself, and check what's needed.
         foreach ($aForm as $aField) {
@@ -176,11 +181,11 @@ class LOVD_Object {
                 continue;
             }
             @list($sHeader, $sHelp, $sType, $sName) = $aField;
-            $sNameClean = preg_replace('/^\d{' . $_SETT['objectid_length']['transcripts'] . '}_/', '', $sName); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
             if (lovd_getProjectFile() == '/import.php') {
                 // During import, we don't mention the field names how they appear on screen, but using their IDs which are used in the file.
                 $sHeader = $sName;
             }
+            $aHeaders[$sName] = $sHeader;
 
             // Trim() all fields. We don't want those spaces in the database anyway.
             if (lovd_getProjectFile() != '/import.php' && isset($aData[$sName]) && !is_array($aData[$sName])) {
@@ -193,60 +198,7 @@ class LOVD_Object {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
             }
 
-            // Checking free text fields for max length, data types, etc.
-            if (in_array($sType, array('text', 'textarea')) && $sMySQLType = lovd_getColumnType(constant($this->sTable), $sNameClean)) {
-                // FIXME; we're assuming here, that $sName equals the database name. Which is true in probably most/every case, but even so...
-                // FIXME; select fields might also benefit from having this check (especially for import).
-
-                // Check max length.
-                $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
-                if (!empty($aData[$sName])) {
-                    // For numerical columns, maxlength works differently!
-                    if (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'FLOAT', 'FLOAT_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
-                        // SIGNED cols: negative values.
-                        if (in_array($sMySQLType, array('DECIMAL', 'INT')) && (int) $aData[$sName] < (int)('-' . str_repeat('9', $nMaxLength))) {
-                            lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to numbers no lower than -' . str_repeat('9', $nMaxLength) . '.');
-                        }
-                        // ALL numerical cols (except floats): positive values.
-                        if (substr($sMySQLType, 0, 5) != 'FLOAT' && (int) $aData[$sName] > (int) str_repeat('9', $nMaxLength)) {
-                            lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . str_repeat('9', $nMaxLength) . '.');
-                        }
-                    } elseif (strlen($aData[$sName]) > $nMaxLength) {
-                        lovd_errorAdd($sName, 'The \'' . $sHeader . '\' field is limited to ' . $nMaxLength . ' characters, you entered ' . strlen($aData[$sName]) . '.');
-                    }
-                }
-
-                // Check data type.
-                if (!empty($aData[$sName])) {
-                    switch ($sMySQLType) {
-                        case 'DATE':
-                            if (!lovd_matchDate($aData[$sName])) {
-                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date in the format YYYY-MM-DD.');
-                            }
-                            break;
-                        case 'DATETIME':
-                            if (!preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}\:[0-9]{2})?$/', $aData[$sName])) {
-                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time, in the format YYYY-MM-DD HH:MM:SS.');
-                            }
-                            break;
-                        case 'DECIMAL':
-                        case 'DECIMAL_UNSIGNED':
-                        case 'FLOAT':
-                        case 'FLOAT_UNSIGNED':
-                            if (!is_numeric($aData[$sName]) || (substr($sMySQLType, -8) == 'UNSIGNED' && $aData[$sName] < 0)) {
-                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a' . (substr($sMySQLType, -8) != 'UNSIGNED'? '' : ' positive') . ' number.');
-                            }
-                            break;
-                        case 'INT':
-                        case 'INT_UNSIGNED':
-                            if (!preg_match('/^' . ($sMySQLType != 'INT'? '' : '\-?') . '[0-9]*$/', $aData[$sName])) {
-                                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain a' . ($sMySQLType == 'INT'? 'n' : ' positive') . ' integer.');
-                            }
-                            break;
-                    }
-                }
-
-            } elseif ($sType == 'select') {
+            if ($sType == 'select') {
                 if (!empty($aField[7])) {
                     // The browser fails to send value if selection list w/ multiple selection options is left empty.
                     // This is causing notices in the code.
@@ -293,6 +245,72 @@ class LOVD_Object {
                 // Password is in the form, it must be checked. Assuming here that it is also considered mandatory.
                 if (!empty($aData['password']) && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
                     lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+                }
+            }
+        }
+
+        // Check all fields that we receive for data type and maximum length.
+        // No longer to this through $aForm, because when importing,
+        //  we do have data to check but no $aForm entry linked to it.
+        foreach ($aData as $sFieldname => $sFieldvalue) {
+            $sNameClean = preg_replace('/^\d{' . $_SETT['objectid_length']['transcripts'] . '}_/', '', $sFieldname); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
+            if (isset($aHeaders[$sFieldname])) {
+                $sHeader = $aHeaders[$sFieldname];
+            } else {
+                $sHeader = $sFieldname;
+            }
+
+            // Checking free text fields for max length, data types, etc.
+            if ($sMySQLType = lovd_getColumnType(constant($this->sTable), $sNameClean)) {
+                // FIXME; we're assuming here, that $sName equals the database name. Which is true in probably most/every case, but even so...
+                // FIXME; select fields might also benefit from having this check (especially for import).
+
+                // Check max length.
+                $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
+                if (!empty($sFieldvalue)) {
+                    // For numerical columns, maxlength works differently!
+                    if (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'FLOAT', 'FLOAT_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
+                        // SIGNED cols: negative values.
+                        if (in_array($sMySQLType, array('DECIMAL', 'INT')) && (int)$sFieldvalue < (int)('-' . str_repeat('9', $nMaxLength))) {
+                            lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no lower than -' . str_repeat('9', $nMaxLength) . '.');
+                        }
+                        // ALL numerical cols (except floats): positive values.
+                        if (substr($sMySQLType, 0, 5) != 'FLOAT' && (int)$sFieldvalue > (int)str_repeat('9', $nMaxLength)) {
+                            lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . str_repeat('9', $nMaxLength) . '.');
+                        }
+                    } elseif (strlen($sFieldvalue) > $nMaxLength) {
+                        lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to ' . $nMaxLength . ' characters, you entered ' . strlen($sFieldvalue) . '.');
+                    }
+                }
+
+                // Check data type.
+                if (!empty($sFieldvalue)) {
+                    switch ($sMySQLType) {
+                        case 'DATE':
+                            if (!lovd_matchDate($sFieldvalue)) {
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a date in the format YYYY-MM-DD, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
+                            }
+                            break;
+                        case 'DATETIME':
+                            if (!preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}( [0-9]{2}\:[0-9]{2}\:[0-9]{2})?$/', $sFieldvalue)) {
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a date, possibly including a time, in the format YYYY-MM-DD HH:MM:SS, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
+                            }
+                            break;
+                        case 'DECIMAL':
+                        case 'DECIMAL_UNSIGNED':
+                        case 'FLOAT':
+                        case 'FLOAT_UNSIGNED':
+                            if (!is_numeric($sFieldvalue) || (substr($sMySQLType, -8) == 'UNSIGNED' && $sFieldvalue < 0)) {
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a' . (substr($sMySQLType, -8) != 'UNSIGNED' ? '' : ' positive') . ' number, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
+                            }
+                            break;
+                        case 'INT':
+                        case 'INT_UNSIGNED':
+                            if (!preg_match('/^' . ($sMySQLType != 'INT' ? '' : '\-?') . '[0-9]*$/', $sFieldvalue)) {
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a' . ($sMySQLType == 'INT' ? 'n' : ' positive') . ' integer, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
+                            }
+                            break;
+                    }
                 }
             }
         }
