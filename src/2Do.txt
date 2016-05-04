@@ -4,7 +4,7 @@ Did you run all unit tests?
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
 If bugs have been closed, mark them in the changelog.
-Commit, svn update, svn log, create svn tag.
+git pull, git commit, git log, create git tag.
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
 Update download.php, news.php (mark closed bugs), package_update.php, sync docs dirs. Update trac. Update Facebook & twitter.
@@ -32,16 +32,15 @@ Website:
   - Storage could still anyways be one column (bit column), but it makes it a bit more simple for the querying method.
 - Multiple builds: (LOVD 3.5): We should add the flag on which genome is leading also to the transcript side.
 - Email (registration): Add a header similar to "NOTE: this mail contains your password, do not forward to others"
-- Config area variant status list: uncurated does not show pending variants.
 - Emails: "was previously empty" is also given when "0" is changed to "" (at least in a text field), and that's not correct.
 - During installation, the URL check doesn't work. It says the URL is accessible, but it's not the mail URL of the installation.
   The reason is, that the checker tries to find a cookie, but the page loaded doesn't send a cookie, but instead a page saying the settings could not be loaded.
 - Create LOVD2/Simple table -> LOVD3 converter (or student).
 - Check all column definitions, do we need to remove help text somewhere, because the legend is now in place?
-- Adapt column form, so make clear that the full legend text is also put under the question mark icon, and add with the question mark field, that the full legend will be included by default, so that this is really meant for data entry help.
 - When enabled, data sent to LOVD.nl needs to be extended with HGNC ID, diseases, etc. See LSDB list needs.
   - Add clearly that selecting the installation to be published, allows us to publish the LOVD installation on our site, and allows us to try and increase traffic to this LOVD by publishing genomic variant locations on genome browsers and non-commercial variant annotation services.
 - Link to Ensembl doesn't seem to work anymore, I guess they changed things on their side again (AJAX error)
+  * From the gene home page, we have several links to genome browsers; the UCSC, Ensembl, and the NCBI sequence viewer. These viewers should load the gene's variant track, ...  (note: requires access to server)
   * Fix problem with Ajax error, check how to properly load the URL.
 - After creating a new screening and selecting that you want to confirm variants, you are requested your password, but nowhere in a complete submission are you ever requested your password...
   - We should remove that thing, if we're in a complete submission (check how it's done in other forms).
@@ -59,13 +58,11 @@ Website:
   Of misschien gewoon een file die opnieuw gegenereerd wordt, als er een gen wordt toegevoegd of verwijderd?
   Toch hier misschien nog even heel goed over nadenken...
 - Import, VOG met VOT, DBID die wordt uitgedeeld is toch van chr, niet van gen (2014-02-03).
-- Probleem met username in het Re-site veld; browser kiest eerste veld voor het password veld. Zet daar een veld met random name en style=display:none. Anders type=hidden.
 - Reading frame checker porten, zou niet zo veel werk moeten zijn nu.
 - Waarom kan deze variant niet handmatig gemapped worden?
   http://databases.lovd.nl/shared/variants/0000021573?edit#23851,23850
 - DBID met 6 nullen: foutmelding is een beetje vaag (alsof hij het wel gaat accepteren, maar toch niet). Moet dit niet gewoon altijd kunnen?
 - Fix HGNC probleem correct? Gebruik oude functie niet meer?
-- Import / update laten werken. Nieuwe data toevoegen mag, andere velden veranderen is max 1 veld per entry wijzigen, voor de zekerheid.
 - Ziekte: + description en alias, maar wat doen we met die alias?
 - Editing preg_pattern voor kolom, LOVD geeft waarschuwing tijdens het editen dat het lang gaat duren (WGS install), terwijl het geen alter table nodig heeft.
 - RNA/Protein prediction: variant over gehele gen geeft p.0? maar als 't een dup is, slaat dat nergens op.
@@ -134,7 +131,6 @@ Website:
   + Nieuwe API ondersteunt login mogelijkheden?
   + (student / medewerker?)
 - Download/all/mine gebruikt te veel geheugen, niet alles laten prefetchen!
-- Curator authorize: report diffs in logs, toch wel handig, denk ik.
 - Updated date van genen klopt niet (variant map, screening add/edit/delete, phenotype?, individual).
 - Het is niet duidelijk, hoe een variant aan een bestaande individu toe te voegen (moet dus via screening). Dat moet duidelijk gemaakt worden.
 - VCF importer:
@@ -142,8 +138,6 @@ Website:
   + Voor multi-sample files, geef aan welke sample je wilt importeren. Dat scheelt gebruikers veel werk.
   + Homozygoot gevonden? Dat weet je niet, kan ook hemizygoot zijn. Dus: allele=4? (homo/hemizygous)
 - Ensembl compact view toont geen varianten.
-- Gene delete heeft GEEN CORRECTE reminder bij het verwijderen!!!
-  + Disease verwijderen hoort ook een reminder te geven, dat alle phenotype data verdwijnt, mits aanwezig.
 - Authorizatieprobleem voorleggen bij groep;
   + Curator maakt per ongeluk een screening teveel aan bij een patient, die van haar is (en ze is curator hiervan). Screening kan niet verwijderd worden, omdat ze LEVEL_OWNER is.
     * We kunnen zeggen: LEVEL_OWNER icm ergens curator van: rechten op screening. NU kan een curator al rechten verwerven door aan deze submissie een variant in haar gen toe te voegen; dan kan ze de hele individu verwijderen.

@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2012-11-27
- * Modified    : 2016-05-02
+ * Created     : 2016-02-10
+ * Modified    : 2016-02-10
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -28,27 +28,17 @@
  *
  *************/
 
-define('ROOT_PATH', '../');
-define('TAB_SELECTED', 'docs');
-require ROOT_PATH . 'inc-init.php';
+assert_options(ASSERT_ACTIVE, 1);
+assert_options(ASSERT_WARNING, 0);
+assert_options(ASSERT_BAIL, 1);
+assert_options(ASSERT_QUIET_EVAL, 0);
+assert_options(ASSERT_CALLBACK, 'lovd_assertFailed');
 
-
-
-
-
-if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /docs
-    // Provide link to PDF and HTML file.
-
-    define('PAGE_TITLE', 'LOVD 3.0 documentation');
-    $_T->printHeader();
-    $_T->printTitle();
-
-    print('      The LOVD 3.0 documentation is continuously being updated.<BR>Currently available is the LOVD 3.0 user manual, in PDF and HTML formats.<BR>' .
-          '      <UL>' . "\n" .
-          '        <LI>LOVD manual 3.0-15 (<A href="docs/LOVD_manual_3.0.pdf" target="_blank"><B>PDF</B>, 79 pages, 1.3Mb</A>) (<A href="docs/manual.html" target="_blank"><B>HTML</B>, single file, 4.3Mb</A>) - last updated February 5th 2016</LI></UL>' . "\n\n");
-
-    $_T->printFooter();
-    exit;
+function lovd_assertFailed ($sFile, $nLine, $sCode)
+{
+    print('Assertion Failed!' . "\n" .
+//          '  File: ' . $sFile . "\n" .
+          '  Line: ' . $nLine . "\n" .
+          '  Code: ' . $sCode . "\n\n");
 }
 ?>

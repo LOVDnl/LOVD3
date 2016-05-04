@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2015-03-05
- * For LOVD    : 3.0-13
+ * Modified    : 2016-03-15
+ * For LOVD    : 3.0-15
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -275,18 +275,35 @@ class LOVD_PDOStatement extends PDOStatement {
 
     function fetchAllCombine ($nCol1 = 0, $nCol2 = 1)
     {
-        // Wrapper around PDOStatement::fetchAll() that creates an array with one field's results as the keys and the other field's results as values.
+        // Wrapper around PDOStatement::fetchAll() that creates an array with one field's
+        //  results as the keys and the other field's results as values.
         if (!ctype_digit($nCol1) && !is_int($nCol1)) {
             $nCol1 = 0;
         }
         if (!ctype_digit($nCol2) && !is_int($nCol2)) {
             $nCol2 = 1;
         }
+        // Optimization when using the first column as a key, we can rely on PDO's features.
+        if ($nCol1 == 0) {
+            return $this->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_COLUMN, $nCol2);
+        }
+
         $a = array();
         while ($r = $this->fetchRow()) {
             $a[$r[$nCol1]] = $r[$nCol2];
         }
         return $a;
+    }
+
+
+
+
+
+    function fetchAllGroupAssoc ()
+    {
+        // Wrapper around PDOStatement::fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC).
+        // THIS WRAPPER DOES NOT SUPPORT ANY OF THE PDOStatement::fetchAll() ARGUMENTS!
+        return $this->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
     }
 
 
