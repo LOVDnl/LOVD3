@@ -424,6 +424,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      array('CREATE TABLE IF NOT EXISTS ' . TABLE_COLLEAGUES . '(
                             userid_from SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
                             userid_to   SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+                            allow_edit  BOOLEAN NOT NULL DEFAULT 0,
                             CONSTRAINT `PRIMARY` PRIMARY KEY (userid_from, userid_to),
                             INDEX (userid_to),
                             CONSTRAINT ' . TABLE_COLLEAGUES .  '_fk_userid_from FOREIGN KEY (userid_from) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,

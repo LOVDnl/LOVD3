@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-04-22
- * For LOVD    : 3.0-15
+ * Modified    : 2016-05-09
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -102,7 +102,7 @@ function lovd_mailNewColleagues($sUserID, $sUserFullname, $aNewColleagues) {
 
 
 
-function lovd_shareAccessForm($sUserID, $sUserListID) {
+function lovd_shareAccessForm($sUserID, $sUserListID, $bAllowGrantEdit=true) {
     // Returns HTML for form to share access of a user's objects with another
     // user.
 
@@ -114,24 +114,31 @@ function lovd_shareAccessForm($sUserID, $sUserListID) {
     // Get colleagues of given user from database.
     $sQuery = 'SELECT
                  u.id,
-                 u.name
+                 u.name,
+                 c.allow_edit
                FROM ' . TABLE_COLLEAGUES . ' AS c
                LEFT JOIN lovd_v3_users AS u ON (u.id = c.userid_to)
                WHERE c.userid_from = ?;';
     $colleagues = $_DB->query($sQuery, array($sUserID));
     $aColleagues = $colleagues->fetchAllAssoc();
 
-    // HTML for row in colleague list. This contains 2 string directives:
-    // 1=user's ID, 2=user's name. Note: this is to be parsed by sprintf(), so
-    // remember to escape %-signs.
+    $sEditStyleAttribute = $bAllowGrantEdit ? '' : 'display: none;';
+
+    // HTML for row in colleague list. This contains 4 string directives:
+    // 1=user's ID, 2=user's name, 3=attribute for edit checkbox (e.g.
+    // "checked" or an empty string), 4=css style for the edit checkbox.
+    // Note: this is to be parsed by sprintf(), so remember to escape %-signs.
     $sTableColleaguesRow = <<<DOCCOLROW
 <LI id="li_%1\$s">
     <INPUT type="hidden" name="colleagues[]" value="%1\$s">
     <TABLE width="100%%">
         <TR>
             <TD>%2\$s (#%1\$s)</TD>
+            <TD style="width: 100; text-align: right;">
+                <INPUT type="checkbox" name="allow_edit[]" value="%1\$s" %3\$s style="%4\$s" />
+            </TD>
             <TD width="30" align="right">
-                <A href="#" onclick="$('#li_%1\$s').remove(); return false;" title="Remove user">
+                <A href="#" onclick="$('#li_%1\$s').remove(); return false;" title="Remove">
                     <IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0">
                 </A>
             </TD>
@@ -140,16 +147,21 @@ function lovd_shareAccessForm($sUserID, $sUserListID) {
 </LI>
 DOCCOLROW;
 
-    // HTML for list (table) of users.
+    // HTML for list (table) of users. This contains 2 string directives:
+    // 1=row html (as in $sTableColleaguesRow), 2=style for the edit checkboxes
+    // and table heading. Note: this is to be parsed by sprintf(), so
+    // remember to escape %-signs.
     $sTableColleagues = <<<DOCCOL
 <TABLE class="sortable_head" style="width : 552px;">
     <TR>
         <TH>Name</TH>
+        <TH style="width: 100; text-align: right;"><SPAN style="%2\$s\$" />Allow edit</SPAN></TH>
+        <TH width="30">&nbsp;</TH>
     </TR>
 </TABLE>
 <FORM action="users/$sUserID?share_access" method="post">
 <UL id="$sUserListID" class="sortable" style="margin-top : 0px; width : 550px;">
-%s
+%1\$s
 </UL>
 <INPUT type="submit" value="Save">
 <SPAN>&nbsp;</SPAN>
@@ -164,6 +176,9 @@ function lovd_addUserShareAccess(viewlistItem) {
             '<TABLE width="100%%">' +
                 '<TR>' +
                     '<TD>' + viewlistItem.Name + ' (#' + viewlistItem.ID + ')</TD>' +
+                    '<TD style="width: 100; text-align: right;">' +
+                        '<INPUT type="checkbox" name="allow_edit[]" value="' + viewlistItem.ID + '" style="%2\$s" />' +
+                    '</TD>' +
                     '<TD width="30" align="right">' +
                         '<A href="#" onclick="$(\'#li_' + viewlistItem.ID + '\').remove(); return false;" title="Remove user">' +
                             '<IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0">' +
@@ -180,23 +195,34 @@ DOCCOL;
     // Construct list of colleagues
     $sColleaguesHTML = '';
     foreach ($aColleagues as $aUserFields) {
-        $sColleaguesHTML .= sprintf($sTableColleaguesRow, $aUserFields['id'], $aUserFields['name']);
+        $sChecked = $aUserFields['allow_edit'] == '1'? 'checked' : '';
+        $sColleaguesHTML .= sprintf($sTableColleaguesRow, $aUserFields['id'], $aUserFields['name'],
+                                    $sChecked, $sEditStyleAttribute);
     }
-    return sprintf($sTableColleagues, $sColleaguesHTML);
+    return sprintf($sTableColleagues, $sColleaguesHTML, $sEditStyleAttribute);
 }
 
 
 
 
-function lovd_setColleagues($sUserID, $sUserName, $aColleagues) {
+function lovd_setColleagues($sUserID, $sUserName, $aColleagues, $bAllowGrantEdit=true) {
     // Removes all existing colleagues for user $sUserID and replaces them with
     // all IDs in $aColleagues.
     // Throws an exception (Exception) when something goes wrong.
 
     global $_DB;
 
+    if (!$bAllowGrantEdit) {
+        foreach ($aColleagues as $aColleague) {
+            if ($aColleague['allow_edit']) {
+                throw new Exception('Not allowed to grant edit permissions.');
+            }
+        }
+    }
+
     $sOldColleaguesQuery = 'SELECT userid_to FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from=?;';
-    $aOldColleagues = $_DB->query($sOldColleaguesQuery, array($sUserID))->fetchAllColumn();
+    $aOldColleagueIDs = $_DB->query($sOldColleaguesQuery, array($sUserID))->fetchAllColumn();
+    $aColleagueIDs = array();
 
     try {
         $_DB->beginTransaction();
@@ -206,13 +232,14 @@ function lovd_setColleagues($sUserID, $sUserName, $aColleagues) {
 
         if (count($aColleagues) > 0) {
             // Build parts for multi-row insert query.
-            $sPlaceholders = '(?,?)' . str_repeat(',(?,?)', count($aColleagues)-1);
+            $sPlaceholders = '(?,?,?)' . str_repeat(',(?,?,?)', count($aColleagues)-1);
             $aData = array();
-            foreach ($aColleagues as $sColeagueID) {
-                array_push($aData, $sUserID, $sColeagueID);
+            foreach ($aColleagues as $aColleague) {
+                array_push($aColleagueIDs, $aColleague['id']);
+                array_push($aData, $sUserID, $aColleague['id'], $aColleague['allow_edit']);
             }
 
-            $_DB->query('INSERT INTO ' . TABLE_COLLEAGUES . ' (userid_from, userid_to) VALUES ' .
+            $_DB->query('INSERT INTO ' . TABLE_COLLEAGUES . ' (userid_from, userid_to, allow_edit) VALUES ' .
                 $sPlaceholders, $aData);
         }
         $_DB->commit();
@@ -228,12 +255,12 @@ function lovd_setColleagues($sUserID, $sUserName, $aColleagues) {
     // Notify only the newly added colleagues by email.
     // Note: call array_values() on the parameter array to make sure the
     // indices are normalized to what PDO expects.
-    $aNewColleagues = array_values(array_diff($aColleagues, $aOldColleagues));
-    lovd_mailNewColleagues($sUserID, $sUserName, $aNewColleagues);
+    $aNewColleagueIDs = array_values(array_diff($aColleagueIDs, $aOldColleagueIDs));
+    lovd_mailNewColleagues($sUserID, $sUserName, $aNewColleagueIDs);
 
     // Write to log.
     $sMessage = 'updated colleagues for user (' . $sUserID . ') with (' .
-        join(', ', $aColleagues) . ')';
+        join(', ', $aColleagueIDs) . ')';
     lovd_writeLog('Event', LOG_EVENT, $sMessage);
 }
 

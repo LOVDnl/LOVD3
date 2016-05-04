@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-04-22
- * For LOVD    : 3.0-15
+ * Modified    : 2016-05-09
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1132,9 +1132,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
 
     define('LOG_EVENT', 'ShareAccess');
 
+    // Boolean flag setting whether users can give edit-permissions to their colleagues.
+    $bAllowGrantEdit = true;
+
     $sUserID = $_PE[1];
     $sUserListID = 'user_share_access_' . $sUserID;
 
+    // Get the current user's full name to use in interface/e-mail.
     $sNameQuery = 'SELECT
                  u.name
                FROM ' . TABLE_USERS . ' AS u
@@ -1151,11 +1155,19 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     if (isset($_REQUEST['colleagues']) && is_array($_REQUEST['colleagues'])) {
         // Form submitted
 
-        // Remove duplicates
-        $aColleagues = array_unique($_REQUEST['colleagues']);
+        // Remove duplicates and combine with edit permissions.
+        $aColleagueIDs = array_unique($_REQUEST['colleagues']);
+        $aColleagues = array();
+        foreach ($aColleagueIDs as $sID) {
+            $bAllowEdit = false;
+            if (in_array($sID, $_REQUEST['allow_edit'])) {
+                $bAllowEdit = true;
+            }
+            $aColleagues[] = array('id' => $sID, 'allow_edit' => $bAllowEdit);
+        }
 
         try {
-            lovd_setColleagues($sUserID, $sUserFullname, $aColleagues);
+            lovd_setColleagues($sUserID, $sUserFullname, $aColleagues, $bAllowGrantEdit);
             $bSuccessfulUpdate = true;
         } catch (Exception $e) {
             $sErrMsg = 'Something went wrong while saving the list of users. Please notify the
@@ -1173,7 +1185,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     lovd_showInfoTable('<B>' . $sUserFullname . ' (' . $sUserID . ')</B> shares access to all
                        data owned by him with the users listed below.', 'information');
 
-    print(lovd_shareAccessForm($sUserID, $sUserListID));
+    print(lovd_shareAccessForm($sUserID, $sUserListID, $bAllowGrantEdit));
 
     $_T->printTitle('Select other users', 'H4');
     lovd_showInfoTable('To share access with other users, click on the user in the list below to
@@ -1183,10 +1195,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Set number of items per page for viewlist.
     $_GET['page_size'] = 10;
 
+    // Show viewlist to select new users to share access with.
     $_DATA = new LOVD_User();
     $_DATA->setRowLink('users_share_access', 'javascript:lovd_selectViewlistRow("{{ViewListID}}",
             "{{ID}}", lovd_addUserShareAccess); return false;');
-    $_DATA->viewList($sUserListID, array('status_', 'last_login_', 'created_date_'), true);
+    $_DATA->viewList($sUserListID, array('status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
 
     $_T->printFooter();
     exit;
