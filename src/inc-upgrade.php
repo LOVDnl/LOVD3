@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-04-19
- * For LOVD    : 3.0-15
+ * Modified    : 2016-05-04
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -420,8 +420,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      array(
                          'UPDATE ' . TABLE_DISEASES . ' SET symbol = "Healthy/Control" WHERE id_omim IS NULL AND created_by = 0 AND symbol = "Healty/Control"',
                      ),
-                 '3.0-14e' =>
-                     array('CREATE TABLE ' . TABLE_COLLEAGUES . '(
+                 '3.0-15a' =>
+                     array('CREATE TABLE IF NOT EXISTS ' . TABLE_COLLEAGUES . '(
                             userid_from SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
                             userid_to   SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
                             CONSTRAINT `PRIMARY` PRIMARY KEY (userid_from, userid_to),
