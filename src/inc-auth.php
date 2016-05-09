@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2016-04-07
+ * Modified    : 2016-05-09
  * For LOVD    : 3.0-beta-08
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -62,13 +62,13 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
         $_AUTH['saved_work'] = (!empty($_AUTH['saved_work'])? ($_AUTH['saved_work']{0} == 'a'? unserialize($_AUTH['saved_work']) : json_decode($_AUTH['saved_work'])) : array());
 
         // Get an array of IDs of users that share their permissions with current user.
-        $oQuery = $_DB->query('SELECT userid_from FROM ' . TABLE_COLLEAGUES .
+        $oQuery = $_DB->query('SELECT userid_from, allow_edit FROM ' . TABLE_COLLEAGUES .
                               ' WHERE userid_to = ?', array($_AUTH['id']), false);
         if ($oQuery === false) {
             // Query to TABLE_COLLEAGUES failed (note: this table was introduced in 3.0-14e).
             $_AUTH['colleagues_from'] = array();
         } else {
-            $_AUTH['colleagues_from'] = $oQuery->fetchAllColumn();
+            $_AUTH['colleagues_from'] = $oQuery->fetchAllCombine();
         }
     }
 }

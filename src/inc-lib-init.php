@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-04-26
+ * Modified    : 2016-05-10
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -590,15 +590,15 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         return 1;
     }
 
-    $bOwner = lovd_isOwner($sType, $Data, true);
-    if ($bOwner && $_CONF['allow_submitter_mods']) {
+    $bOwner = lovd_isOwner($sType, $Data);
+    if (($bOwner || lovd_isColleagueOfOwner($sType, $Data, true)) && $_CONF['allow_submitter_mods']) {
         if ($bSetUserLevel) {
             $_AUTH['level'] = LEVEL_OWNER;
         }
         return 1;
     }
     // Collaborator OR Owner, but not allowed to edit own entries.
-    if ($Auth === 0 || $bOwner) {
+    if ($Auth === 0 || $bOwner || lovd_isColleagueOfOwner($sType, $Data, false)) {
         if ($bSetUserLevel) {
             $_AUTH['level'] = LEVEL_COLLABORATOR;
         }
@@ -612,22 +612,18 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
 
 
 
-function lovd_isOwner($sType, $Data, $bIncludeSharedPermissions=false)
+
+function lovd_isOwner($sType, $Data)
 {
     // Checks if the current user (specified by global $_AUTH) is owner of the
     // data objects.
     // Params:
     // $sType       Type of the data object to check (string)
     // $Data        ID of object (string) or array of IDs of multiple objects
-    //              (array of strings). Returns true if user is owner for any
+    //              (array of strings). Returns true if user is owner for ALL
     //              of the objects.
-    // $bIncludeSharedPermissions
-    //              Flag, if true this function returns true if any of the
-    //              objects is owned by a user that shares his permissions with
-    //              the current user (via TABLE_COLLEAGUES).
-    // Return: True if any of the objects of type $sType with an ID in $Data is
-    //         owned or created by current user (or optionally by one of his
-    //         'colleagues')
+    // Return: True if all of the objects of type $sType with an ID in $Data
+    //         are owned or created by current user.
     global $_AUTH, $_DB;
 
     if (!isset($_AUTH) || !$_AUTH) {
@@ -639,45 +635,88 @@ function lovd_isOwner($sType, $Data, $bIncludeSharedPermissions=false)
         $Data = array($Data);
     }
 
-    $aOwnerIds = array($_AUTH['id']);
-    if ($bIncludeSharedPermissions && isset($_AUTH['colleagues_from'])) {
-        $aOwnerIds = array_merge($aOwnerIds, $_AUTH['colleagues_from']);
-    }
-    $sColleaguePlaceholders = '(?' . str_repeat(', ?', count($aOwnerIds) - 1) . ')';
     $sDataPlaceholders = '(?' . str_repeat(', ?', count($Data) - 1) . ')';
 
-    $query = '';
-    switch ($sType) {
-        case 'variant':
-            $query = 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN ' .
-                $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
-                ' OR created_by = ?)';
-            break;
-        case 'individual':
-            $query = 'SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN ' .
-                $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
-                ' OR created_by = ?)';
-            break;
-        case 'phenotype':
-            $query = 'SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' WHERE id IN ' .
-                $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
-                ' OR created_by = ?)';
-            break;
-        case 'screening':
-            $query = 'SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE id IN ' .
-                $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders .
-                ' OR created_by = ?)';
-            break;
+    $aTablesByType = array('variant' => TABLE_VARIANTS,
+                           'individual' => TABLE_INDIVIDUALS,
+                           'phenotype' => TABLE_PHENOTYPES,
+                           'screening' => TABLE_SCREENINGS);
+
+    if (!array_key_exists($sType, $aTablesByType)) {
+        // Unknown data type, return false by default.
+        return false;
     }
 
-    $oResult = $_DB->query($query, array_merge($Data, $aOwnerIds, array($_AUTH['id'])));
-    $bOwner = false;
-    if ($oResult !== false) {
-        $bOwner = intval($oResult->fetchColumn()) > 0;
-        return $bOwner;
-    }
-    return $bOwner;
+    $query = 'SELECT COUNT(*) FROM ' . $aTablesByType[$sType] . ' WHERE id IN ' .
+             $sDataPlaceholders . ' AND (owned_by = ? OR created_by = ?)';
+    $oResult = $_DB->query($query, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
+
+    return $oResult !== false && intval($oResult->fetchColumn()) == count($Data);
 }
+
+
+
+
+
+function lovd_isColleagueOfOwner($sType, $Data, $bMustHaveEditPermission=true) {
+    // Checks if the current user (specified by global $_AUTH) is owner of the
+    // data objects.
+    // Params:
+    // $sType       Type of the data object to check (string)
+    // $Data        ID of object (string) or array of IDs of multiple objects
+    //              (array of strings). Returns true if user is a colleague of
+    //              some owner for ALL of the objects.
+    // $bMustHaveEditPermission
+    //              Flag, if true this function returns only true if the
+    //              current user is a colleague of the owner of $Data with
+    //              explicit edit permission as defined by field 'allow_edit'
+    //              in TABLE_COLLEAGUES.
+    // Return: True if all of the objects of type $sType with an ID in $Data
+    //         are owned or created by a colleague of the current user.
+
+    global $_AUTH, $_DB;
+
+    if (!isset($_AUTH) || !$_AUTH || !isset($_AUTH['colleagues_from']) ||
+        count($_AUTH['colleagues_from']) == 0) {
+        // No authentication or no colleagues.
+        return false;
+    }
+
+    if (!is_array($Data)) {
+        $Data = array($Data);
+    }
+
+    $aOwnerIDs = array();
+    foreach ($_AUTH['colleagues_from'] as $sID => $sAllowEdit) {
+        if (!$bMustHaveEditPermission || $sAllowEdit == '1') {
+            $aOwnerIDs[] = $sID;
+        }
+    }
+    if (count($aOwnerIDs) == 0) {
+        // No colleagues that give this user the enough permissions.
+        return false;
+    }
+    $sColleaguePlaceholders = '(?' . str_repeat(', ?', count($aOwnerIDs) - 1) . ')';
+    $sDataPlaceholders = '(?' . str_repeat(', ?', count($Data) - 1) . ')';
+
+    $aTablesByType = array('variant' => TABLE_VARIANTS,
+        'individual' => TABLE_INDIVIDUALS,
+        'phenotype' => TABLE_PHENOTYPES,
+        'screening' => TABLE_SCREENINGS);
+
+    if (!array_key_exists($sType, $aTablesByType)) {
+        // Unknown data type, return false by default.
+        return false;
+    }
+
+    $query = 'SELECT COUNT(*) FROM ' . $aTablesByType[$sType] . ' WHERE id IN ' .
+        $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders . ')';
+    $oResult = $_DB->query($query, array_merge($Data, $aOwnerIDs));
+
+    return $oResult !== false && intval($oResult->fetchColumn()) == count($Data);
+}
+
+
 
 
 
