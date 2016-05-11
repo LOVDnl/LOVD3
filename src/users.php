@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-05-09
+ * Modified    : 2016-05-11
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -124,12 +124,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     } elseif ($_AUTH['id'] == $nID) {
         // Viewing himself!
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Update your registration', 1);
-        $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to your entries with other users', 1);
         $aNavigation['download/all/mine']    = array('menu_save.png', 'Download all my data', 1);
     } elseif ($_AUTH['level'] >= LEVEL_MANAGER) {
         // Managers and up, not viewing own account, not higher level than other user.
         $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     }
+
+    if ($_AUTH['id'] == $nID || $_AUTH['level'] >= LEVEL_MANAGER) {
+        $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to your entries with other users', 1);
+    }
+
     lovd_showJGNavigation($aNavigation, 'Users');
 
 
@@ -1135,18 +1139,20 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Boolean flag setting whether users can give edit-permissions to their colleagues.
     $bAllowGrantEdit = true;
 
-    $sUserID = $_PE[1];
-    $sUserListID = 'user_share_access_' . $sUserID;
+    $sID = sprintf('%05d', $_PE[1]);
+    $sUserListID = 'user_share_access_' . $sID;
 
     // Get the current user's full name to use in interface/e-mail.
     $sNameQuery = 'SELECT
-                 u.name
+                 u.name,
+                 u.level
                FROM ' . TABLE_USERS . ' AS u
                WHERE u.id = ?;';
-    $sUserFullname = $_DB->query($sNameQuery, array($sUserID))->fetchColumn();
+    $zData = $_DB->query($sNameQuery, array($sID))->fetchAssoc();
 
-
-    if (!lovd_isAuthorized('user', $sUserID)) {
+    // Require special clearance, if user is not editing himself.
+    // Neccessary level depends on level of user. Special case.
+    if ($sID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         lovd_showPageAccessDenied();
         exit;
     }
@@ -1167,7 +1173,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         }
 
         try {
-            lovd_setColleagues($sUserID, $sUserFullname, $aColleagues, $bAllowGrantEdit);
+            lovd_setColleagues($sID, $zData['name'], $aColleagues, $bAllowGrantEdit);
             $bSuccessfulUpdate = true;
         } catch (Exception $e) {
             $sErrMsg = 'Something went wrong while saving the list of users. Please notify the
@@ -1182,15 +1188,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         lovd_showInfoTable('Saved changes successfully.', 'information');
     }
 
-    lovd_showInfoTable('<B>' . $sUserFullname . ' (' . $sUserID . ')</B> shares access to all
+    lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $sID . ')</B> shares access to all
                        data owned by him with the users listed below.', 'information');
 
-    print(lovd_shareAccessForm($sUserID, $sUserListID, $bAllowGrantEdit));
+    print(lovd_shareAccessForm($sID, $sUserListID, $bAllowGrantEdit));
 
     $_T->printTitle('Select other users', 'H4');
-    lovd_showInfoTable('To share access with other users, click on the user in the list below to
-                       add them to the selection. Then click <B>save</B> to save the changes.',
-                       'information');
+    lovd_showInfoTable('To share access with other users, find the user in the list below, click on
+                       the user to add him to the selection. Then click <B>save</B> to save the
+                       changes.', 'information');
 
     // Set number of items per page for viewlist.
     $_GET['page_size'] = 10;
