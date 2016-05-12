@@ -6,7 +6,21 @@ class InstallLOVDTest extends LOVDSeleniumBaseTestCase
 {
     public function testInstallLOVD()
     {
-        $this->open(ROOT_URL . "/src/install");
+
+        // Check if an XDebug session needs to be started, and if so, add the
+        // XDebug get parameter.
+        // Note: this has to be done once per session. Starting XDebug in
+        //       setUp() is not possible as the session may not have
+        //       initialized yet. The current method is the common starting
+        //       point for most selenium tests.
+        global $bXDebugStatus;
+        if (XDEBUG_ENABLED && isset($bXDebugStatus) && !$bXDebugStatus) {
+            $this->open(ROOT_URL . '/src/install/?XDEBUG_SESSION_START=test');
+            $bXDebugStatus = true;
+        } else {
+            $this->open(ROOT_URL . "/src/install");
+        }
+
         $this->assertContains("install", $this->getBodyText());
         $this->isElementPresent("//input[@value='Start >>']");
         $this->click("//input[@value='Start >>']");
