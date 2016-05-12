@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-05-11
+ * Modified    : 2016-05-12
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1164,12 +1164,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         // Remove duplicates and combine with edit permissions.
         $aColleagueIDs = array_unique($_REQUEST['colleagues']);
         $aColleagues = array();
-        foreach ($aColleagueIDs as $sID) {
+        foreach ($aColleagueIDs as $sColleagueID) {
             $bAllowEdit = false;
-            if (in_array($sID, $_REQUEST['allow_edit'])) {
+            if (in_array($sColleagueID, $_REQUEST['allow_edit'])) {
                 $bAllowEdit = true;
             }
-            $aColleagues[] = array('id' => $sID, 'allow_edit' => $bAllowEdit);
+            $aColleagues[] = array('id' => $sColleagueID, 'allow_edit' => $bAllowEdit);
         }
 
         try {

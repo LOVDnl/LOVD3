@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-05-09
+ * Modified    : 2016-05-12
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,7 +51,7 @@ the appropriate user accounts and click "save".
 Access your account here: %5\$s
 
 If you think this email is not intended for you, please let us know by
-contacting one of the administrators:
+contacting the administrator:
 %6\$s
 
 Kind regards,
@@ -74,7 +74,7 @@ function lovd_mailNewColleagues($sUserID, $sUserFullname, $aNewColleagues) {
 
     $sApplicationURL = lovd_getInstallURL();
     $aAdminEmails = preg_split('/(\r\n|\r|\n)+/', trim($_SETT['admin']['email']));
-    $sAdminContacts = $_SETT['admin']['name'] . ', ' . $aAdminEmails[0] . "\n";
+    $sAdminContact = $_SETT['admin']['name'] . ', ' . $aAdminEmails[0] . "\n";
 
 
     // Fetch names/email addresses for new colleagues.
@@ -87,7 +87,7 @@ function lovd_mailNewColleagues($sUserID, $sUserFullname, $aNewColleagues) {
 
         // Setup mail text and fill placeholders.
         $sMailBody = sprintf(EMAIL_NEW_COLLEAGUE, $zColleague['name'], $sApplicationURL,
-            $sUserFullname, $sUserID, $sRecipientAccountURL, $sAdminContacts);
+            $sUserFullname, $sUserID, $sRecipientAccountURL, $sAdminContact);
 
         // Only use Windows-style line endings, so that it looks good on all platforms.
         $sMailBody = str_replace("\n", "\r\n", $sMailBody);
