@@ -21,6 +21,7 @@ before_script:
   - ./tests/travis/setup/setup_apache.sh --githubaccount=LOVDnl
   - ./tests/travis/setup/setup_config.sh
   - ./tests/travis/setup/setup_selenium_server.sh
+  - phpenv config-rm xdebug.ini
 
 script:
   # Use phpunit or vendor/bin/phpunit to start tests.  
