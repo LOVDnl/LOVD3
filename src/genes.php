@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-02-26
- * For LOVD    : 3.0-15
+ * Modified    : 2016-05-12
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1067,7 +1067,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
             lovd_showInfoTable('<B>You are about to delete ' . $zCounts['tcount'] .
                 ' transcript(s) and related information on ' . $zCounts['votcount'] .
                 ' variant(s) on those transcripts. Please fill in your password one more time ' .
-                'to confirm the removal of gene ' . $sID . '</B>', 'warning');
+                'to confirm the removal of gene ' . $sID . '.</B>', 'warning');
         } else {
             lovd_showInfoTable('<B>Please note the message above and fill in your password one ' .
                 'more time to confirm the removal of gene ' . $sID . '</B>', 'warning');

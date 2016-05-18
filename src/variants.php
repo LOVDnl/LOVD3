@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2016-02-18
- * For LOVD    : 3.0-15
+ * Modified    : 2016-05-12
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -436,7 +436,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     // We don't want to show an error message about the screening if the user isn't allowed to come here.
     // 2012-07-10; 3.0-beta-07; Submitters are no longer allowed to add variants without individual data.
     if (!isset($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)) {
-        lovd_requireAUTH(LEVEL_OWNER);
+        lovd_requireAUTH(LEVEL_CURATOR);
     }
     lovd_requireAUTH(empty($_PE[1])? LEVEL_SUBMITTER : LEVEL_MANAGER);
 
