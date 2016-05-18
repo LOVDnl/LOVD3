@@ -28,10 +28,10 @@
  *
  *************/
 
-// DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', '../');
     require ROOT_PATH . 'inc-init.php';
+    lovd_requireAUTH(LEVEL_MANAGER);
 }
 
 // Country list, taken from http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm at 2009-10-05
@@ -288,7 +288,6 @@ $aCountrySQL =
                 'INSERT INTO ' . TABLE_COUNTRIES . ' VALUES ("ZW", "Zimbabwe")',
               );
 
-// DMD_SPECIFIC;
 if (lovd_getProjectFile() == '/install/inc-sql-countries.php') {
     header('Content-type: text/plain; charset=UTF-8');
     var_dump(implode(";\n", $aCountrySQL) . ';');

@@ -53,7 +53,6 @@ define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
 
 /*
-// DMD_SPECIFIC : remove block.
 // I believe these are all Status codes I need to implement in the future. Those with asterisks are not yet implemented.
     HTTP/1.0 200 OK
 *   HTTP/1.0 201 Created

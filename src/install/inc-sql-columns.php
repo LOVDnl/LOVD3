@@ -29,10 +29,10 @@
  *
  *************/
 
-// DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', '../');
     require ROOT_PATH . 'inc-init.php';
+    lovd_requireAUTH(LEVEL_MANAGER);
 }
 
 $aColSQL =
@@ -88,7 +88,6 @@ $aColSQL =
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/RNA",                      6, 200, 1, 1, 1, "RNA change",           "", "Description of variant at RNA level (following HGVS recommendations).", "Description of variant at RNA level (following HGVS recommendations).<BR>\r\n<UL style=\"margin-top : 0px;\">\r\n  <LI>r.123c>u</LI>\r\n  <LI>r.? = unknown</LI>\r\n  <LI>r.(?) = RNA not analysed but probably transcribed copy of DNA variant</LI>\r\n  <LI>r.spl? = RNA not analysed but variant probably affects splicing</LI>\r\n  <LI>r.(spl?) = RNA not analysed but variant may affect splicing</LI>\r\n  <LI>r.0? = change expected to abolish transcription</LI>\r\n</UL>", "VARCHAR(100)", "RNA change (HGVS format)|Description of variant at RNA level (following HGVS recommendations); e.g. r.123c>u, r.? = unknown, r.(?) = RNA not analysed but probably transcribed copy of DNA variant, r.spl? = RNA not analysed but variant probably affects splicing, r.(spl?) = RNA not analysed but variant may affect splicing.|text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
               );
 
-// DMD_SPECIFIC;
 if (lovd_getProjectFile() == '/install/inc-sql-columns.php') {
     header('Content-type: text/plain; charset=UTF-8');
     var_dump($aColSQL);

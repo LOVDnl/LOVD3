@@ -530,10 +530,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     // Try to update the upgrade lock.
     $sQ = 'UPDATE ' . TABLE_STATUS . ' SET lock_update = 1 WHERE lock_update = 0';
     $nMax = 30;
-    // DMD_SPECIFIC
-    if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
-        $nMax = 3;
-    }
 
     for ($i = 0; $i < $nMax; $i ++) {
         $bLocked = !$_DB->exec($sQ);
