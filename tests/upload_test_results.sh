@@ -3,8 +3,8 @@
 # Base test directory (where this script is located).
 GLOB="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Loop through screenshot files.
-for file in `ls ${GLOB}/test_results/error_screenshots/*.png`; do
+# Loop through screenshot files (oldest to newest).
+for file in `ls -l -t -r ${GLOB}/test_results/error_screenshots/*.png`; do
     echo "Uploading file: ${file}";
 
     # Upload to transfer.sh, this command will output the URL on which the
