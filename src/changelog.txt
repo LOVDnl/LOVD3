@@ -10,6 +10,7 @@
  *********/
  * Fixed bug; RNA prediction of a variant affecting splicing was 'r.(?)' instead
    of 'r.spl?'.
+ * Protein prediction for non-coding transcripts now defaults to "-".
 
 
 /**************************

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2016-05-20
+ * Modified    : 2016-05-27
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -130,7 +130,7 @@ function lovd_getRNAProteinPrediction ($sVariant, $sGene)
             // Non-coding transcript, Mutalyzer does not return a protein field, but also no error.
             // FIXME: Check for intronic variants here, that do not span over an exon, and give them r.(=).
             $aMutalyzerData['predict']['RNA'] = 'r.(?)';
-            $aMutalyzerData['predict']['protein'] = 'p.0';
+            $aMutalyzerData['predict']['protein'] = '-';
         } elseif ($aMutalyzerData['predict']['protein'] == 'p.?') {
             $aMutalyzerData['predict']['RNA'] = 'r.?';
         } elseif ($aMutalyzerData['predict']['protein'] == 'p.(=)') {
