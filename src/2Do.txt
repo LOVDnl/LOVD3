@@ -4,7 +4,7 @@ Did you run all unit tests?
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
 If bugs have been closed, mark them in the changelog.
-git pull, git commit, git log, create git tag.
+git pull, git commit, git log, git tag -a -m 'Tag 3.0-15' '3.0-15', git push, git push --tags
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
 Update download.php, news.php (mark closed bugs), package_update.php, sync docs dirs. Update trac. Update Facebook & twitter.
@@ -12,11 +12,11 @@ Update download.php, news.php (mark closed bugs), package_update.php, sync docs 
 Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /antwerpen/ heeft aangepaste .htaccess.
-/my_genome/ heeft een aangepaste ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/template.php, individuals.php, screenings.php, submit.php, variants.php.
+/my_genome/ heeft een aangepaste ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, class/template.php, individuals.php, screenings.php, submit.php, variants.php. Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
 /shared/ heeft een aangepaste class/graphs.php en class/template.php.
 /VKGL/ heeft aangepaste .htaccess.
-/whole_genome/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
-/whole_genome_mirror/ heeft aangepaste files (o.a. inc-upgrade.php, users.php en class/template.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! (MAG WEL VAN WHOLE_GENOME, excl. de config.ini)
+/whole_genome/ heeft aangepaste files (class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, users.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
+/whole_genome_mirror/ heeft aangepaste files (zie hierboven), NOOIT ZOMAAR OVERSCHRIJVEN!!! (MAG WEL VAN WHOLE_GENOME, excl. de config.ini)
 After updating all installations, send email to team with all improvements summarized.
 
 To debug: XDEBUG_PROFILE=1
@@ -26,6 +26,10 @@ Prioritize:
 Website:
 - Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
 
+- Internationalization (student project?):
+  - Create internationalized LOVD instance, put all text in a translation (.po?) file, starting with template.php (menus), objects.php, etc.
+  - Later page headers, custom columns, statuses, page's texts, etc.
+  - Johan wants this (2016-05-04).
 - Data licensing:
   - How to store and select the license; should we just store the license code, or store the attributes of the license - allowed to share, allowed for commercial parties, etc.
   - The Flickr search site (search.flickr.com) has an example of how a search could look like - so not for license, but for ``I want data that I can edit, that I can use commercially'', etc.
