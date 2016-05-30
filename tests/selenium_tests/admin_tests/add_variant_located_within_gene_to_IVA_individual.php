@@ -1,27 +1,32 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class AddVariantLocatedWithinGeneToIVAIndividualTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class AddVariantLocatedWithinGeneToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testMyTestCase()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/', $this->getLocation()));
-        $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/', $this->getLocation()));
-        $this->click("//table[2]/tbody/tr/td[2]/b");
-        $this->click("css=td.ordered");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=IVD&target=0000000002$/', $this->getLocation()));
-        $this->uncheck("name=ignore_00000001");
-        $this->type("name=00000001_VariantOnTranscript/Exon", "2");
-        $this->type("name=00000001_VariantOnTranscript/DNA", "c.345G>T");
-        $this->click("css=button.mapVariant");
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/', $this->driver->getCurrentURL()));
+        $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
+        $element->click();
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/', $this->driver->getCurrentURL()));
+        $element = $this->driver->findElement(WebDriverBy::xpath("//table[2]/tbody/tr/td[2]/b"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::cssSelector("td.ordered"));
+        $element->click();
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=IVD&target=0000000002$/', $this->driver->getCurrentURL()));
+        $this->uncheck(WebDriverBy::name("ignore_00000001"));
+        $this->enterValue(WebDriverBy::name("00000001_VariantOnTranscript/Exon"), "2");
+        $this->enterValue(WebDriverBy::name("00000001_VariantOnTranscript/DNA"), "c.345G>T");
+        $element = $this->driver->findElement(WebDriverBy::cssSelector("button.mapVariant"));
+        $element->click();
         sleep(3);
         for ($second = 0; ; $second++) {
             if ($second >= 60) $this->fail("timeout");
             try {
-                if ($this->isElementPresent("css=img[alt=\"Prediction OK!\"]")) break;
+                if ($this->isElementPresent(WebDriverBy::cssSelector("img[alt='Prediction OK!']"))) break;
             } catch (Exception $e) {
             }
             sleep(1);
@@ -32,19 +37,27 @@ class AddVariantLocatedWithinGeneToIVAIndividualTest extends LOVDSeleniumBaseTes
         $this->assertEquals("p.(Met115Ile)", $this->getExpression($ProteinChange));
         $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[10].value");
         $this->assertEquals("g.40702876G>T", $this->getExpression($GenomicDnaChange));
-        $this->select("name=00000001_effect_reported", "label=Effect unknown");
-        $this->select("name=00000001_effect_concluded", "label=Effect unknown");
-        $this->select("name=allele", "label=Paternal (confirmed)");
-        $this->click("link=PubMed");
-        $this->type("name=VariantOnGenome/Reference", "{PMID:[2011]:[2150333]}");
-        $this->type("name=VariantOnGenome/Frequency", "0.05");
-        $this->select("name=effect_reported", "label=Effect unknown");
-        $this->select("name=effect_concluded", "label=Effect unknown");
-        $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
-        $this->select("name=statusid", "label=Public");
-        $this->click("//input[@value='Create variant entry']");
-        $this->waitForPageToLoad("30000");
-        $this->assertEquals("Successfully created the variant entry!", $this->getText("css=table[class=info]"));
-        $this->waitForPageToLoad("4000");
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_reported"]/option[text()="Effect unknown"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_concluded"]/option[text()="Effect unknown"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="allele"]/option[text()="Paternal (confirmed)"]'));
+        $option->click();
+        $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
+        $element->click();
+        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[2150333]}");
+        $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "0.05");
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Effect unknown"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_concluded"]/option[text()="Effect unknown"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
+        $option->click();
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create variant entry']"));
+        $element->click();
+        $this->assertEquals("Successfully created the variant entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
+        $element->click();
     }
 }

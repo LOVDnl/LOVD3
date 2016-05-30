@@ -1,25 +1,32 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class CreateIndividualDiagnosedWithIVATest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class CreateIndividualDiagnosedWithIVATest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testCreateIndividualDiagnosedWithIVA()
     {
-        $this->open(ROOT_URL . "/src/submit");
-        $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/', $this->getLocation()));
-        $this->type("name=Individual/Lab_ID", "12345IVA");
-        $this->click("link=PubMed");
-        $this->type("name=Individual/Reference", "{PMID:[2011]:[21520333]}");
-        $this->type("name=Individual/Remarks", "No Remarks");
-        $this->type("name=Individual/Remarks_Non_Public", "Still no remarks");
-        $this->addSelection("name=active_diseases[]", "label=IVA (isovaleric acidemia)");
-        $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
-        $this->select("name=statusid", "label=Public");
-        $this->click("//input[@value='Create individual information entry']");
-        $this->waitForPageToLoad("30000");
-        $this->assertEquals("Successfully created the individual information entry!", $this->getText("css=table[class=info]"));
-        $this->waitForPageToLoad("4000");
+        $this->driver->get(ROOT_URL . "/src/submit");
+        $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
+        $element->click();
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/', $this->driver->getCurrentURL()));
+        $this->enterValue(WebDriverBy::name("Individual/Lab_ID"), "12345IVA");
+        $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
+        $element->click();
+        $this->enterValue(WebDriverBy::name("Individual/Reference"), "{PMID:[2011]:[21520333]}");
+        $this->enterValue(WebDriverBy::name("Individual/Remarks"), "No Remarks");
+        $this->enterValue(WebDriverBy::name("Individual/Remarks_Non_Public"), "Still no remarks");
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="active_diseases[]"]/option[text()="IVA (isovaleric acidemia)"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
+        $option->click();
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create individual information entry']"));
+        $element->click();
+        $this->assertEquals("Successfully created the individual information entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
+        $element->click();
     }
 }

@@ -1,28 +1,35 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class PostFinishAddPhenotypeInfoToIVAIndividualTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class PostFinishAddPhenotypeInfoToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testPostFinishAddPhenotypeInfoToIVAIndividual()
     {
-        $this->click("id=tab_individuals");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/IVD$/', $this->getLocation()));
-        $this->click("css=#00000002 > td.ordered");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000002$/', $this->getLocation()));
-        $this->click("id=viewentryOptionsButton_Individuals");
-        $this->click("link=Add phenotype information to individual");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes[\s\S]create&target=00000002$/', $this->getLocation()));
-        $this->type("name=Phenotype/Additional", "Additional phenotype information");
-        $this->select("name=Phenotype/Inheritance", "label=Familial");
-        $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
-        $this->select("name=statusid", "label=Public");
-        $this->click("//input[@value='Create phenotype information entry']");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->getText("css=table[class=info]")));
-        $this->waitForPageToLoad("4000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes\/0000000003$/', $this->getLocation()));
+        $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
+        $element->click();
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/IVD$/', $this->driver->getCurrentURL()));
+        $element = $this->driver->findElement(WebDriverBy::cssSelector("#00000002 > td.ordered"));
+        $element->click();
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000002$/', $this->driver->getCurrentURL()));
+        $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Individuals"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::linkText("Add phenotype information to individual"));
+        $element->click();
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes[\s\S]create&target=00000002$/', $this->driver->getCurrentURL()));
+        $this->enterValue(WebDriverBy::name("Phenotype/Additional"), "Additional phenotype information");
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="Phenotype/Inheritance"]/option[text()="Familial"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
+        $option->click();
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create phenotype information entry']"));
+        $element->click();
+        $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
+        $element->click();
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes\/0000000003$/', $this->driver->getCurrentURL()));
     }
 }
