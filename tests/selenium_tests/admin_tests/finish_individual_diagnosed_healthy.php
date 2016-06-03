@@ -8,6 +8,9 @@ class FinishIndividualDiagnosedHealthyTest extends LOVDSeleniumWebdriverBaseTest
 {
     public function testFinishIndividualDiagnosedHealthy()
     {
+        // wait for page redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//tr[3]/td[2]/b"));
         $element->click();

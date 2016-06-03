@@ -9,7 +9,7 @@ class AddSeattleseqFileToHealthyIndividualTest extends LOVDSeleniumWebdriverBase
     public function testAddSeattleseqFileToHealthyIndividual()
     {
         // wait for page redirect
-        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]")));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of screening"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]"));
@@ -33,6 +33,7 @@ class AddSeattleseqFileToHealthyIndividualTest extends LOVDSeleniumWebdriverBase
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Upload SeattleSeq file']"));
+        $element->click();
         for ($second = 0; ; $second++) {
             if ($second >= 300) $this->fail("timeout");
             try {

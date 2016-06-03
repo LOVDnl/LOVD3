@@ -1,16 +1,20 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class LoginAsCollaboratorTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class LoginAsCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testLoginAsCollaborator()
     {
-        $this->open(ROOT_URL . "/src/logout");
-        $this->open(ROOT_URL . "/src/login");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/login$/', $this->getLocation()));
-        $this->type("name=username", "collaborator");
-        $this->type("name=password", "test1234");
-        $this->click("//input[@value='Log in']");
-        $this->waitForPageToLoad("30000");
+        $this->driver->get(ROOT_URL . "/src/logout");
+        $this->driver->get(ROOT_URL . "/src/login");
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/login$/', $this->driver->getCurrentURL()));
+        $this->enterValue(WebDriverBy::name("username"), "collaborator");
+        $this->enterValue(WebDriverBy::name("password"), "test1234");
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
+        $element->click();
+        
     }
 }

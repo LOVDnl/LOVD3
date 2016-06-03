@@ -11,7 +11,8 @@ class PostFinishAddPhenotypeInfoToIVAIndividualTest extends LOVDSeleniumWebdrive
         $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/IVD$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::cssSelector("#00000002 > td.ordered"));
+//        $element = $this->driver->findElement(WebDriverBy::cssSelector("#00000002 > td.ordered"));
+        $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='00000002']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000002$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Individuals"));
@@ -29,7 +30,10 @@ class PostFinishAddPhenotypeInfoToIVAIndividualTest extends LOVDSeleniumWebdrive
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create phenotype information entry']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
-        $element->click();
+
+        // Wait for page redirect.
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("View phenotype"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes\/0000000003$/', $this->driver->getCurrentURL()));
     }
 }

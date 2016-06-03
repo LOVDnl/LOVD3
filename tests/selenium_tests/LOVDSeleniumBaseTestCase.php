@@ -29,8 +29,9 @@
  *************/
 
 
-use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
+use \Facebook\WebDriver\Exception\NoSuchElementException;
+use \Facebook\WebDriver\Remote\LocalFileDetector;
 
 
 
@@ -44,7 +45,6 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     protected function setUp()
     {
         // This method is called before every test invocation.
-
         $this->driver = getWebDriverInstance();
     }
 
@@ -63,6 +63,24 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         // Convenience function to let the webdriver type text $text in an
         // element specified by $locator.
         $element = $this->driver->findElement($locator);
+
+        if ($element->getAttribute('type') == 'file') {
+            // Separate handling of file input elements, as they need a file
+            // detector (see: https://github.com/facebook/php-webdriver/wiki/Upload-a-file)
+            // Also, calling click() on the file input element would open a
+            // dialog on some platforms, and getting the value of the file
+            // input element is also problematic (at least in firefox).
+            $element->setFileDetector(new LocalFileDetector());
+            $element->sendKeys($sText);
+            return;
+        }
+
+        if (!is_null($element->getAttribute('readonly'))) {
+            // Try to remove the readonly attribute from the field (usually password fields).
+            $this->removeAttribute($element, 'readonly');
+        }
+
+        // Make sure we get focus on the element.
         $element->click();
 
         // Try to clear field and set value for a time period. This is needed
@@ -70,10 +88,6 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         // the first sendKeys() calls may be ignored as javascript has to be
         // executed.
         $this->waitUntil(function ($driver) use ($element, $sText) {
-
-            if (!is_null($element->getAttribute('readonly'))) {
-                return false;
-            }
             $element->clear();
             $element->sendKeys($sText);
             return $element->getAttribute('value') == $sText;
@@ -100,5 +114,38 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     protected  function unCheck($locator)
     {
         $this->setCheckBoxValue($locator, false);
+    }
+
+
+    protected function isElementPresent($locator) {
+        try {
+            $this->driver->findElement($locator);
+            return true;
+        } catch (NoSuchElementException $e) {
+            return false;
+        }
+    }
+
+
+    protected function chooseOkOnNextConfirmation()
+    {
+        $this->waitUntil(WebDriverExpectedCondition::alertIsPresent());
+        $this->driver->switchTo()->alert()->accept();
+    }
+
+
+    protected function getConfirmation()
+    {
+        // Return text displayed by confirmation dialog box.
+        return $this->driver->switchTo()->alert()->getText();
+    }
+
+
+    protected function removeAttribute($element, $attrName)
+    {
+        // Remove attribute in current DOM. For element $element, remove
+        // attribute with name $attrName.
+        $this->driver->executeScript('arguments[0].removeAttribute(arguments[1]);',
+                                     array($element, $attrName));
     }
 }

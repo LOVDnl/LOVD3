@@ -8,15 +8,17 @@ class AddSummaryVariantVCFFileTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testAddSummaryVariantVCFFile()
     {
+        // Mouse hover over Submit tab, to make 'submit new data' link visible.
+        $tabElement = $this->driver->findElement(WebDriverBy::xpath("//img[@id='tab_submit']"));
+        $this->driver->getMouse()->mouseMove($tabElement->getCoordinates());
+
         $element = $this->driver->findElement(WebDriverBy::linkText("Submit new data"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/', $this->driver->getCurrentURL()));
-        $this->chooseOkOnNextConfirmation();
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/', $this->getConfirmation()));
-        $this->setTimeout(60000);
-        sleep(4);
+        $this->chooseOkOnNextConfirmation();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//tr[3]/td[2]/b"));
         $element->click();
@@ -43,15 +45,15 @@ class AddSummaryVariantVCFFileTest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Continue »']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
-        $element->click();
+
         for ($second = 0; ; $second++) {
             if ($second >= 600) $this->fail("timeout");
             $this->driver->get(ROOT_URL . "/src/ajax/map_variants.php");
-            $element->click();
-            if (strcmp("0 99 There are no variants to map in the database", $this->getBodyText())) {
+
+            if (strcmp("0 99 There are no variants to map in the database", $this->driver->findElement(WebDriverBy::tagName("body"))->getText())) {
                 break;
             }
-            $this->assertNotContains("of 25 variants", $this->getBodyText());
+            $this->assertNotContains("of 25 variants", $this->driver->findElement(WebDriverBy::tagName("body"))->getText());
             sleep(1);
         }
     }

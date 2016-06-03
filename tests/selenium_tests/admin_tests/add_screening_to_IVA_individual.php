@@ -8,6 +8,9 @@ class AddScreeningToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testAddScreeningToIVAIndividual()
     {
+        // wait for page redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000002$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
@@ -30,6 +33,5 @@ class AddScreeningToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create screening information entry']"));
         $element->click();
         $this->assertEquals("Successfully created the screening entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        $element->click();
     }
 }

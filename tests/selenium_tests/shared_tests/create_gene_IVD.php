@@ -8,13 +8,8 @@ class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testCreateGeneIVD()
     {
-        $this->driver->get(ROOT_URL . "/src/logout");
-        $this->driver->get(ROOT_URL . "/src/login");
-        $this->enterValue(WebDriverBy::name("username"), "admin");
-        $this->enterValue(WebDriverBy::name("password"), "test1234");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $element->click();
         $this->driver->get(ROOT_URL . "/src/genes?create");
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::name("hgnc_id")));
         $this->enterValue(WebDriverBy::name("hgnc_id"), "IVD");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Continue »']"));
         $element->click();

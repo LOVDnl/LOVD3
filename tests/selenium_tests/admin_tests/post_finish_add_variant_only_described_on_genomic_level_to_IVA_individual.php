@@ -12,7 +12,8 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends
         $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/IVD$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
+//        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
+        $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='0000000002']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/0000000002$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Screenings"));
@@ -43,7 +44,10 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create variant entry']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
-        $element->click();
+
+        // wait for page redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000333$/', $this->driver->getCurrentURL()));
     }
 }

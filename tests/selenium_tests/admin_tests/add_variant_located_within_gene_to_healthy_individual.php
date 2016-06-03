@@ -24,6 +24,7 @@ class AddVariantLocatedWithinGeneToHealthyIndividualTest extends LOVDSeleniumWeb
         $this->enterValue(WebDriverBy::name("00000001_VariantOnTranscript/Exon"), "2");
         $this->enterValue(WebDriverBy::name("00000001_VariantOnTranscript/DNA"), "c.456T>G");
         $element = $this->driver->findElement(WebDriverBy::cssSelector("button.mapVariant"));
+        $element->click();
         sleep(3);
         for ($second = 0; ; $second++) {
             if ($second >= 60) $this->fail("timeout");
@@ -33,12 +34,12 @@ class AddVariantLocatedWithinGeneToHealthyIndividualTest extends LOVDSeleniumWeb
             }
             sleep(1);
         }
-        $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
-        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $this->getExpression($RnaChange)));
-        $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
-        $this->assertTrue((bool)preg_match('/^p\.\(Tyr152[\s\S]*\)$/', $this->getExpression($ProteinChange)));
-        $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[10].value");
-        $this->assertEquals("g.40702987T>G", $this->getExpression($GenomicDnaChange));
+        $RnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[4].value");
+        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChange));
+        $ProteinChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[5].value");
+        $this->assertTrue((bool)preg_match('/^p\.\(Tyr152[\s\S]*\)$/', $ProteinChange));
+        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[10].value");
+        $this->assertEquals("g.40702987T>G", $GenomicDnaChange);
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_reported"]/option[text()="Effect unknown"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_concluded"]/option[text()="Effect unknown"]'));

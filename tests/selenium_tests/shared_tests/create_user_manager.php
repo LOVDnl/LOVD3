@@ -20,11 +20,15 @@ class CreateUserManagerTest extends LOVDSeleniumWebdriverBaseTestCase
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="countryid"]/option[text()="Netherlands"]'));
         $option->click();
         $this->enterValue(WebDriverBy::name("city"), "Leiden");
-        $this->select(WebDriverBy::name("level"), "Manager");
+//        $this->select(WebDriverBy::name("level"), "Manager");
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="level"]/option[text()="Manager"]'));
+        $option->click();
         $element = $this->driver->findElement(WebDriverBy::name("send_email"));
+        $element->click();
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create user']"));
         $element->click();
-        $this->assertEquals("Successfully created the user account!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
+        $this->assertEquals("Successfully created the user account!",
+            $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
     }
 }

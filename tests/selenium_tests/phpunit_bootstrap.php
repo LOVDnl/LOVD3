@@ -104,25 +104,31 @@ define('WEBDRIVER_MAX_WAIT_DEFAULT', 120);
 // Interval between webdriver tests for condition during wait (in miliseconds)
 define('WEBDRIVER_POLL_INTERVAL_DEFAULT', 1000);
 
-define('WEBDRIVER_WAIT_FOR_REDIRECT', 10);
+define('WEBDRIVER_IMPLICIT_WAIT', 10);
 
 function getWebDriverInstance()
 {
     // Provide a re-usable webdriver for selenium tests.
 
+    global $_INI;
     static $webDriver;
 
     if (!isset($webDriver)) {
         // Create Firefox webdriver
         $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
-        // $connection_timeout_in_ms = null,
-//        $request_timeout_in_ms = null,
         $webDriver = RemoteWebDriver::create('http://localhost:4444/wd/hub', $capabilities,
                                              WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
                                              WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
 
         // Set time for trying to access DOM elements
-        $webDriver->manage()->timeouts()->implicitlyWait(10);
+        $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
+
+        if (isset($_INI['test']['xdebug_enabled']) && $_INI['test']['xdebug_enabled'] == 'true') {
+            // Enable remote debugging by setting XDebug session cookie.
+            $webDriver->manage()->addCookie(array(
+                'name' => 'XDEBUG_SESSION',
+                'value' => 'selenium'));
+        }
     }
     return $webDriver;
 }

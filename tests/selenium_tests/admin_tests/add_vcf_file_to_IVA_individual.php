@@ -8,6 +8,9 @@ class AddVCFFileToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testAddVCFFileToIVAIndividual()
     {
+        // wait for page redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000003$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
         $element->click();
@@ -38,12 +41,12 @@ class AddVCFFileToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
         $element->click();
         for ($second = 0; ; $second++) {
             if ($second >= 600) $this->fail("timeout");
-            $this->driver->get(ROOT_PATH . "/src/ajax/map_variants.php");
-            $element->click();
-            if (strcmp("0 99 There are no variants to map in the database", $this->getBodyText())) {
+            $this->driver->get(ROOT_URL . "/src/ajax/map_variants.php");
+
+            if (strcmp("0 99 There are no variants to map in the database", $this->driver->findElement(WebDriverBy::tagName("body"))->getText())) {
                 break;
             }
-            $this->assertNotContains("of 25 variants", $this->getBodyText());
+            $this->assertNotContains("of 25 variants", $this->driver->findElement(WebDriverBy::tagName("body"))->getText());
             sleep(1);
         }
     }

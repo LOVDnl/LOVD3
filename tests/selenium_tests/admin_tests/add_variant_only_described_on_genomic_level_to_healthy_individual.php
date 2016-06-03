@@ -35,6 +35,5 @@ class AddVariantOnlyDescribedOnGenomicLevelToHealthyIndividualTest extends LOVDS
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create variant entry']"));
         $element->click();
         $this->assertEquals("Successfully created the variant entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        $element->click();
     }
 }

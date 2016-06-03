@@ -11,7 +11,8 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
         $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/IVD$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
+//        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
+        $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='0000000002']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/0000000002$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Screenings"));
@@ -39,12 +40,12 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
             sleep(1);
         }
 
-        $RnaChange = $this->getEval("window.document.getElementById('variantForm').elements[4].value");
-        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $this->getExpression($RnaChange)));
-        $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
-        $this->assertEquals("p.(Met115Ile)", $this->getExpression($ProteinChange));
-        $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[10].value");
-        $this->assertEquals("g.40702876G>T", $this->getExpression($GenomicDnaChange));
+        $RnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[4].value");
+        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChange));
+        $ProteinChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[5].value");
+        $this->assertEquals("p.(Met115Ile)", $ProteinChange);
+        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[10].value");
+        $this->assertEquals("g.40702876G>T", $GenomicDnaChange);
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_reported"]/option[text()="Effect unknown"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_concluded"]/option[text()="Effect unknown"]'));
@@ -66,7 +67,10 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create variant entry']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
-        $element->click();
+
+        // Wait for page redirect.
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+
         $this->assertContains("/src/variants/0000000334", $this->driver->getCurrentURL());
     }
 }

@@ -8,12 +8,16 @@ class ConfirmVariantToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCas
 {
     public function testConfirmVariantToIVAIndividual()
     {
+        // wait for page redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/', $this->driver->getCurrentURL()));
-        $this->chooseOkOnNextConfirmation();
+
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*Are you sure you are done with submitting the variants found with this screening[\s\S]*$/', $this->getConfirmation()));
-        sleep(4);
+        $this->chooseOkOnNextConfirmation();
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000002$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
@@ -36,7 +40,10 @@ class ConfirmVariantToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCas
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create screening information entry']"));
         $element->click();
         $this->assertEquals("Successfully created the screening entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        $element->click();
+
+        // wait for page redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000003$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
         $element->click();
@@ -49,7 +56,9 @@ class ConfirmVariantToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCas
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Save variant list']"));
         $element->click();
-        $this->assertEquals("Successfully confirmed the variant entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        $element->click();
+
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Confirm variant"));
+        $text = $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText();
+        $this->assertEquals("Successfully confirmed the variant entry!", $text);
     }
 }

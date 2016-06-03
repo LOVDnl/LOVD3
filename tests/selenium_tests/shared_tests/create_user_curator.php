@@ -20,8 +20,10 @@ class CreateUserCuratorTest extends LOVDSeleniumWebdriverBaseTestCase
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="countryid"]/option[text()="Netherlands"]'));
         $option->click();
         $this->enterValue(WebDriverBy::name("city"), "Leiden");
-        $this->select(WebDriverBy::name("level"), "Submitter");
+        $levelOption = $this->driver->findElement(WebDriverBy::xpath('//select[@name="level"]/option[text()="Submitter"]'));
+        $levelOption->click();
         $element = $this->driver->findElement(WebDriverBy::name("send_email"));
+        $element->click();
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create user']"));
         $element->click();

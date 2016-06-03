@@ -8,6 +8,9 @@ class AddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends LOVDSelen
 {
     public function testAddVariantOnlyDescribedOnGenomicLevelToIVAIndividual()
     {
+        // wait for page redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000002$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
         $element->click();
@@ -35,6 +38,5 @@ class AddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends LOVDSelen
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create variant entry']"));
         $element->click();
         $this->assertEquals("Successfully created the variant entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        $element->click();
     }
 }

@@ -27,6 +27,5 @@ class CreateIndividualDiagnosedWithIVATest extends LOVDSeleniumWebdriverBaseTest
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create individual information entry']"));
         $element->click();
         $this->assertEquals("Successfully created the individual information entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        $element->click();
     }
 }

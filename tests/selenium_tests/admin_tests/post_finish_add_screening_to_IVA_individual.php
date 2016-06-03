@@ -11,7 +11,8 @@ class PostFinishAddScreeningToIVAIndividualTest extends LOVDSeleniumWebdriverBas
         $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/IVD$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::cssSelector("#00000002 > td.ordered"));
+//        $element = $this->driver->findElement(WebDriverBy::cssSelector("#00000002 > td.ordered"));
+        $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='00000002']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000002$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Individuals"));
@@ -37,7 +38,10 @@ class PostFinishAddScreeningToIVAIndividualTest extends LOVDSeleniumWebdriverBas
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create screening information entry']"));
         $element->click();
         $this->assertEquals("Successfully created the screening entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        $element->click();
+
+        // wait for page redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000004$/', $this->driver->getCurrentURL()));
     }
 }
